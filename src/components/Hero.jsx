@@ -5,56 +5,84 @@ function Hero() {
   return (
     <section
       id="home"
-      className="min-h-screen bg-gradient-to-r from-blue-900 to-black text-white flex items-center justify-center px-6"
+      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white flex items-center px-6 pt-24"
     >
-      <div className="max-w-6xl grid md:grid-cols-2 gap-10 items-center">
-        
-        {/* Left Side */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-500/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+
+      <div className="relative z-10 max-w-7xl mx-auto grid md:grid-cols-2 gap-14 items-center">
         <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1 }}
+          initial={{ opacity: 0, y: 35 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9 }}
         >
-          <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-            Your Gateway To Global Education
+          <span className="inline-block mb-5 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-2 text-sm text-yellow-300">
+            Trusted Study Abroad Guidance
+          </span>
+
+          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
+            Build Your Future With{" "}
+            <span className="text-yellow-400">Global Education</span>
           </h1>
 
-          <p className="mt-6 text-lg text-gray-300">
-            Zaifan Consultancy helps students secure admissions, scholarships,
-            visas, and career opportunities abroad.
+          <p className="mt-6 max-w-xl text-lg text-gray-300 leading-relaxed">
+            Zaifan Consultancy helps students with university admissions, visa
+            guidance, scholarships, SOPs, documentation, and complete study
+            abroad planning.
           </p>
 
-          <div className="mt-8 flex gap-4">
-              <a
-                href="#contact"
-                className="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400"
-              >
-                Book Free Consultation
-              </a>
+          <div className="mt-8 flex flex-col sm:flex-row gap-4">
+            <a
+              href="#contact"
+              className="bg-yellow-400 text-black px-7 py-3 rounded-xl font-bold hover:bg-yellow-300 transition shadow-lg shadow-yellow-500/20 text-center"
+            >
+              Book Free Consultation
+            </a>
 
-              <a
-                href="#countries"
-                className="border border-white px-6 py-3 rounded-lg hover:bg-white hover:text-black"
-              >
-                Explore Countries
-              </a>
+            <a
+              href="#countries"
+              className="border border-white/30 px-7 py-3 rounded-xl font-semibold hover:bg-white hover:text-black transition text-center"
+            >
+              Explore Countries
+            </a>
+          </div>
+
+          <div className="mt-10 grid grid-cols-3 gap-4 max-w-md">
+            <div>
+              <h3 className="text-2xl font-bold text-yellow-400">10+</h3>
+              <p className="text-sm text-gray-400">Countries</p>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-yellow-400">500+</h3>
+              <p className="text-sm text-gray-400">Students Guided</p>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-yellow-400">24/7</h3>
+              <p className="text-sm text-gray-400">Support</p>
+            </div>
           </div>
         </motion.div>
 
-        {/* Right Side */}
         <motion.div
-          className="flex justify-center"
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1 }}
+          className="relative flex justify-center"
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9 }}
         >
+          <div className="absolute -inset-4 rounded-3xl bg-yellow-400/20 blur-2xl"></div>
+
           <img
             src={studentImage}
-            alt="Students"
-            className="rounded-2xl shadow-2xl w-full max-w-md h-[500px] object-cover"
+            alt="Study abroad student"
+            className="relative rounded-3xl shadow-2xl w-full max-w-md h-[520px] object-cover border border-white/10"
           />
-        </motion.div>
 
+          <div className="absolute -bottom-6 left-2 bg-white text-black rounded-2xl shadow-xl p-4 max-w-xs">
+            <p className="text-sm font-semibold">
+              Complete guidance from profile evaluation to visa preparation.
+            </p>
+          </div>
+        </motion.div>
       </div>
     </section>
   )
