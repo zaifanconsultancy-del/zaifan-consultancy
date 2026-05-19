@@ -14,21 +14,33 @@ import Chatbot from "./components/Chatbot";
 
 function App() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden">
+    <main className="overflow-x-hidden bg-[#050505] text-white selection:bg-[#D4AF37] selection:text-black">
+
+      {/* Navbar */}
       <Navbar />
+
+      {/* Main Sections */}
       <Hero />
-      <Services />
-      <About />
-      <Trust />
-      <Countries />
-      <Process />
-      <Testimonials />
-      <FAQ />
-      <Contact />
+
+      <div className="relative">
+        <Services />
+        <About />
+        <Trust />
+        <Countries />
+        <Process />
+        <Testimonials />
+        <FAQ />
+        <Contact />
+      </div>
+
+      {/* Footer */}
       <Footer />
+
+      {/* Floating Buttons */}
       <WhatsAppButton />
       <Chatbot />
-    </div>
+
+    </main>
   );
 }
 
