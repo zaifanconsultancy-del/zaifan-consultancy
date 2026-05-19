@@ -1,17 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import logo from "../assets/logo.jpeg";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
 
   const navLinks = [
-    { name: "Home", href: "#home" },
-    { name: "Services", href: "#services" },
-    { name: "About", href: "#about" },
-    { name: "Countries", href: "#countries" },
-    { name: "Contact", href: "#contact" },
+    { name: "Home", href: "#home", id: "home" },
+    { name: "Services", href: "#services", id: "services" },
+    { name: "About", href: "#about", id: "about" },
+    { name: "Countries", href: "#countries", id: "countries" },
+    { name: "Contact", href: "#contact", id: "contact" },
   ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = navLinks.map((link) => document.getElementById(link.id));
+
+      sections.forEach((section) => {
+        if (!section) return;
+
+        const rect = section.getBoundingClientRect();
+
+        if (rect.top <= 160 && rect.bottom >= 160) {
+          setActiveSection(section.id);
+        }
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <nav className="fixed left-0 top-0 z-[9999] w-full border-b border-white/10 bg-[#0b0b0b]/80 backdrop-blur-2xl">
@@ -31,12 +53,16 @@ function Navbar() {
           </div>
         </a>
 
-        <div className="hidden items-center gap-9 text-sm font-medium text-gray-400 md:flex">
+        <div className="hidden items-center gap-9 text-sm font-medium md:flex">
           {navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
-              className="transition hover:text-[#D4AF37]"
+              className={`transition ${
+                activeSection === link.id
+                  ? "text-[#D4AF37]"
+                  : "text-gray-400 hover:text-[#D4AF37]"
+              }`}
             >
               {link.name}
             </a>
@@ -66,7 +92,11 @@ function Navbar() {
                 key={link.name}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="block text-lg text-gray-300 transition hover:text-[#D4AF37]"
+                className={`block text-lg transition ${
+                  activeSection === link.id
+                    ? "text-[#D4AF37]"
+                    : "text-gray-300 hover:text-[#D4AF37]"
+                }`}
               >
                 {link.name}
               </a>
