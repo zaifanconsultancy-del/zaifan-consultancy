@@ -1,10 +1,17 @@
+import PageHeader from "../components/PageHeader";
 import Services from "../components/Services";
 
 function ServicesPage() {
   return (
-    <div className="pt-20">
+    <>
+      <PageHeader
+        badge="Our Services"
+        title="Premium support for your"
+        highlight="study journey."
+        text="Explore our complete consultancy services for admissions, scholarships, SOPs, documentation and visa preparation."
+      />
       <Services />
-    </div>
+    </>
   );
 }
 
