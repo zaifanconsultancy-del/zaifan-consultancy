@@ -5,84 +5,113 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white flex items-center px-6 pt-24"
+      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0F0F10] via-[#171717] to-[#111111] text-white flex items-center px-6 pt-32 pb-20"
     >
-      <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-500/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+      {/* Background Glow */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-amber-400/10 rounded-full blur-3xl"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto grid md:grid-cols-2 gap-14 items-center">
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-yellow-200/10 rounded-full blur-3xl"></div>
+
+      <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
+
+        {/* LEFT SIDE */}
         <motion.div
           initial={{ opacity: 0, y: 35 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9 }}
         >
-          <span className="inline-block mb-5 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-2 text-sm text-yellow-300">
-            Trusted Study Abroad Guidance
+          <span className="inline-block mb-6 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm text-gray-300 backdrop-blur-md">
+            Study Abroad Consultancy
           </span>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
-            Build Your Future With{" "}
-            <span className="text-yellow-400">Global Education</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight max-w-2xl">
+            Global Education.
+            <br />
+            Clear Guidance.
+            <br />
+            Better Future.
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg text-gray-300 leading-relaxed">
-            Zaifan Consultancy helps students with university admissions, visa
-            guidance, scholarships, SOPs, documentation, and complete study
-            abroad planning.
+          <p className="mt-7 max-w-xl text-base md:text-lg text-gray-300 leading-relaxed">
+            Zaifan Consultancy helps students with admissions,
+            scholarships, visa guidance, SOPs, documentation and
+            complete study abroad planning.
           </p>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-4">
+          {/* Buttons */}
+          <div className="mt-9 flex flex-col sm:flex-row gap-4">
             <a
               href="#contact"
-              className="bg-yellow-400 text-black px-7 py-3 rounded-xl font-bold hover:bg-yellow-300 transition shadow-lg shadow-yellow-500/20 text-center"
+              className="bg-[#D6CEC2] text-[#111111] px-7 py-3 rounded-full font-bold hover:bg-[#E4DBCF] transition text-center shadow-xl"
             >
               Book Free Consultation
             </a>
 
             <a
               href="#countries"
-              className="border border-white/30 px-7 py-3 rounded-xl font-semibold hover:bg-white hover:text-black transition text-center"
+              className="border border-white/20 bg-white/5 backdrop-blur-md px-7 py-3 rounded-full font-semibold hover:bg-white hover:text-black transition text-center"
             >
               Explore Countries
             </a>
           </div>
 
-          <div className="mt-10 grid grid-cols-3 gap-4 max-w-md">
+          {/* Stats */}
+          <div className="mt-12 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg border-t border-white/10 pt-8">
             <div>
-              <h3 className="text-2xl font-bold text-yellow-400">10+</h3>
-              <p className="text-sm text-gray-400">Countries</p>
+              <h3 className="text-2xl sm:text-3xl font-bold">
+                10+
+              </h3>
+
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                Countries
+              </p>
             </div>
+
             <div>
-              <h3 className="text-2xl font-bold text-yellow-400">500+</h3>
-              <p className="text-sm text-gray-400">Students Guided</p>
+              <h3 className="text-2xl sm:text-3xl font-bold">
+                500+
+              </h3>
+
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                Students Guided
+              </p>
             </div>
+
             <div>
-              <h3 className="text-2xl font-bold text-yellow-400">24/7</h3>
-              <p className="text-sm text-gray-400">Support</p>
+              <h3 className="text-2xl sm:text-3xl font-bold">
+                24/7
+              </h3>
+
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                Support
+              </p>
             </div>
           </div>
         </motion.div>
 
+        {/* RIGHT SIDE IMAGE */}
         <motion.div
-          className="relative flex justify-center"
-          initial={{ opacity: 0, scale: 0.92 }}
+          className="relative hidden lg:flex justify-end"
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.9 }}
         >
-          <div className="absolute -inset-4 rounded-3xl bg-yellow-400/20 blur-2xl"></div>
+          <div className="absolute inset-0 bg-amber-200/10 blur-3xl rounded-full"></div>
 
           <img
             src={studentImage}
             alt="Study abroad student"
-            className="relative rounded-3xl shadow-2xl w-full max-w-md h-[520px] object-cover border border-white/10"
+            className="relative rounded-[2.5rem] shadow-2xl w-full max-w-lg h-[620px] object-cover border border-white/10"
           />
 
-          <div className="absolute -bottom-6 left-2 bg-white text-black rounded-2xl shadow-xl p-4 max-w-xs">
-            <p className="text-sm font-semibold">
+          {/* Floating Card */}
+          <div className="absolute -bottom-6 left-0 bg-white/95 backdrop-blur-xl text-black rounded-3xl shadow-2xl p-6 max-w-sm border border-white/30">
+            <p className="text-sm font-semibold leading-relaxed">
               Complete guidance from profile evaluation to visa preparation.
             </p>
           </div>
         </motion.div>
+
       </div>
     </section>
   )

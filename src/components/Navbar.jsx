@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { FaBars, FaTimes } from "react-icons/fa"
+import logo from "../assets/logo.jpeg"
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -13,20 +14,26 @@ function Navbar() {
   ]
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-slate-950/70 backdrop-blur-xl border-b border-white/10">
+    <nav className="fixed top-0 left-0 w-full z-[9999] bg-[#0F0F10] border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="#home" className="text-xl md:text-2xl font-extrabold tracking-wide text-white">
-          Zaifan
-          <span className="text-yellow-400"> Consultancy</span>
+        <a href="#home" className="flex items-center gap-3">
+          <img
+            src={logo}
+            alt="Zaifan Consultancy"
+            className="h-12 w-12 rounded-full object-cover border border-[#D6CEC2]/40"
+          />
+
+          <div className="hidden sm:block leading-tight">
+            <h1 className="text-white font-extrabold text-lg">Zaifan</h1>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-[#D6CEC2]">
+              Consultancy
+            </p>
+          </div>
         </a>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-200">
+        <div className="hidden md:flex items-center gap-9 text-sm font-medium text-gray-400">
           {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className="hover:text-yellow-400 transition"
-            >
+            <a key={link.name} href={link.href} className="hover:text-[#D6CEC2]">
               {link.name}
             </a>
           ))}
@@ -34,40 +41,41 @@ function Navbar() {
 
         <a
           href="#contact"
-          className="hidden md:inline-block bg-yellow-400 text-black px-5 py-2.5 rounded-xl font-bold hover:bg-yellow-300 transition shadow-lg shadow-yellow-500/20"
+          className="hidden md:inline-flex bg-[#D6CEC2] text-[#111111] px-6 py-3 rounded-full font-semibold"
         >
-          Apply Now
+          Free Consultation
         </a>
 
         <button
           className="md:hidden text-white text-2xl"
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
         >
           {menuOpen ? <FaTimes /> : <FaBars />}
         </button>
       </div>
 
       {menuOpen && (
-        <div className="md:hidden mx-4 mb-4 rounded-2xl bg-slate-900 border border-white/10 text-white px-6 py-5 space-y-4 shadow-xl">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className="block hover:text-yellow-400 transition"
-            >
-              {link.name}
-            </a>
-          ))}
+        <div className="md:hidden bg-[#0F0F10] border-t border-white/10 px-6 py-6">
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-5">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="block text-lg text-gray-300 hover:text-[#D6CEC2]"
+              >
+                {link.name}
+              </a>
+            ))}
 
-          <a
-            href="#contact"
-            onClick={() => setMenuOpen(false)}
-            className="block bg-yellow-400 text-black text-center px-5 py-3 rounded-xl font-bold hover:bg-yellow-300 transition"
-          >
-            Apply Now
-          </a>
+            <a
+              href="#contact"
+              onClick={() => setMenuOpen(false)}
+              className="block bg-[#D6CEC2] text-[#111111] text-center py-4 rounded-full font-semibold"
+            >
+              Free Consultation
+            </a>
+          </div>
         </div>
       )}
     </nav>

@@ -1,79 +1,108 @@
 function Countries() {
   const countries = [
     {
-      name: "United Kingdom",
-      flag: "🇬🇧",
-      desc: "Top universities, strong career pathways and global recognition."
-    },
-    {
-      name: "Canada",
-      flag: "🇨🇦",
-      desc: "Affordable education with post-study work opportunities."
-    },
-    {
-      name: "Australia",
-      flag: "🇦🇺",
-      desc: "Excellent education system and student-friendly lifestyle."
+      name: "Italy",
+      flag: "🇮🇹",
+      highlight: "Scholarship Friendly",
+      desc: "Popular for affordable education, regional scholarships and manageable living costs.",
+      points: ["Scholarship routes", "Affordable tuition", "Good for budget students"],
     },
     {
       name: "Germany",
       flag: "🇩🇪",
-      desc: "Low tuition options and high-quality engineering programs."
-    },
-    {
-      name: "Italy",
-      flag: "🇮🇹",
-      desc: "Scholarship opportunities and affordable living costs."
+      highlight: "Low Tuition Options",
+      desc: "Known for quality education, engineering programs and strong career pathways.",
+      points: ["Low tuition", "Strong academics", "Career-focused programs"],
     },
     {
       name: "Turkey",
       flag: "🇹🇷",
-      desc: "Budget-friendly universities with growing international demand."
+      highlight: "Budget Friendly",
+      desc: "A practical option for students looking for affordable universities close to Pakistan.",
+      points: ["Affordable fees", "Easy travel access", "Growing demand"],
+    },
+    {
+      name: "United Kingdom",
+      flag: "🇬🇧",
+      highlight: "Global Recognition",
+      desc: "Ideal for students looking for globally recognized degrees and strong academic exposure.",
+      points: ["Top universities", "Shorter degrees", "Career exposure"],
+    },
+    {
+      name: "Canada",
+      flag: "🇨🇦",
+      highlight: "Future Pathways",
+      desc: "Popular for quality education, multicultural environment and long-term opportunities.",
+      points: ["Student-friendly", "Quality education", "Work pathways"],
+    },
+    {
+      name: "Australia",
+      flag: "🇦🇺",
+      highlight: "Modern Education",
+      desc: "Known for modern campuses, student lifestyle and internationally respected degrees.",
+      points: ["Modern universities", "Student lifestyle", "Global degrees"],
     },
   ]
 
   return (
     <section
       id="countries"
-      className="py-24 bg-slate-950 text-white px-6"
+      className="py-28 bg-[#111111] text-white px-6 relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-amber-300/10 rounded-full blur-3xl"></div>
 
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold">
-            Popular Study Destinations
+      <div className="relative max-w-7xl mx-auto">
+        <div className="max-w-2xl">
+          <span className="text-base md:text-lg uppercase tracking-[0.3em] font-semibold text-amber-200/70">
+            Destinations
+          </span>
+
+          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
+            Study destinations with real direction.
           </h2>
 
-          <p className="text-gray-400 mt-4 text-lg">
-            Explore countries where we help students build their future.
+          <p className="mt-5 text-lg text-gray-400 leading-relaxed">
+            We help students compare countries based on budget, academics,
+            opportunities and long-term goals.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mt-16">
+        <div className="grid md:grid-cols-3 gap-6 mt-16">
           {countries.map((country, index) => (
             <div
               key={index}
-              className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-8 hover:border-yellow-400 hover:-translate-y-2 transition duration-300"
+              className="group bg-white/5 border border-white/10 rounded-[2rem] p-8 hover:bg-[#FFFCF6] hover:text-[#111111] transition duration-300"
             >
-              <div className="text-5xl mb-5">
-                {country.flag}
+              <div className="flex items-center justify-between">
+                <div className="text-5xl">{country.flag}</div>
+
+                <span className="text-xs uppercase tracking-[0.2em] text-amber-100 bg-white/10 px-3 py-2 rounded-full group-hover:bg-[#111111] group-hover:text-amber-100">
+                  {country.highlight}
+                </span>
               </div>
 
-              <h3 className="text-2xl font-bold mb-3">
+              <h3 className="text-2xl font-bold mt-8 mb-4">
                 {country.name}
               </h3>
 
-              <p className="text-gray-400 leading-relaxed">
+              <p className="text-gray-400 leading-relaxed group-hover:text-stone-700">
                 {country.desc}
               </p>
 
-              <button className="mt-6 text-yellow-400 font-semibold hover:text-yellow-300">
-                Learn More →
-              </button>
+              <ul className="mt-6 space-y-3">
+                {country.points.map((point, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-sm text-gray-300 group-hover:text-stone-700"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-200"></span>
+                    {point}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
-
       </div>
     </section>
   )

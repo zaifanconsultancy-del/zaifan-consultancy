@@ -1,79 +1,60 @@
-import {
-  FaUniversity,
-  FaPassport,
-  FaFileAlt,
-  FaGlobe,
-  FaGraduationCap,
-  FaUserTie
-} from "react-icons/fa"
-
 function Services() {
   const services = [
     {
       title: "University Admissions",
-      description: "Complete admission support for top international universities.",
-      icon: <FaUniversity size={28} />
+      text: "Guidance for selecting universities and completing admission applications properly.",
     },
     {
-      title: "Visa Assistance",
-      description: "Professional visa filing and interview preparation support.",
-      icon: <FaPassport size={28} />
+      title: "Scholarship Assistance",
+      text: "Helping students explore scholarship opportunities based on profile strength.",
     },
     {
-      title: "Documentation",
-      description: "SOPs, financial docs, application paperwork and more.",
-      icon: <FaFileAlt size={28} />
+      title: "Visa Guidance",
+      text: "Complete support for visa preparation, financial documents and interviews.",
     },
     {
-      title: "Country Selection",
-      description: "Helping students choose the right country and pathway.",
-      icon: <FaGlobe size={28} />
-    },
-    {
-      title: "Scholarships",
-      description: "Find scholarships and affordable study opportunities.",
-      icon: <FaGraduationCap size={28} />
-    },
-    {
-      title: "Career Guidance",
-      description: "Long-term planning for education and career growth.",
-      icon: <FaUserTie size={28} />
+      title: "SOP & Documentation",
+      text: "Professional guidance for SOPs, motivation letters and required paperwork.",
     },
   ]
 
   return (
-    <section
-      id="services"
-      className="py-24 bg-gradient-to-b from-white to-gray-100 px-6"
-    >
-      <div className="max-w-7xl mx-auto">
+    <section className="py-28 bg-[#111111] text-white px-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-300/10 blur-3xl rounded-full"></div>
 
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-            Our Premium Services
+      <div className="relative max-w-7xl mx-auto">
+
+        <div className="max-w-2xl">
+          <span className="text-base md:text-lg uppercase tracking-[0.3em] font-semibold text-amber-200/70">
+            Services
+          </span>
+
+          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
+            Professional guidance for your global education journey.
           </h2>
 
-          <p className="text-gray-600 mt-4 text-lg">
-            We simplify your entire study abroad journey from admission to visa approval.
+          <p className="mt-5 text-lg text-gray-400 leading-relaxed">
+            Zaifan Consultancy supports students throughout admissions,
+            scholarships, documentation and visa preparation.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mt-16">
+        <div className="mt-20 grid md:grid-cols-2 xl:grid-cols-4 gap-6">
           {services.map((service, index) => (
             <div
               key={index}
-              className="bg-white p-8 rounded-3xl shadow-md hover:shadow-2xl hover:-translate-y-2 transition duration-300 border border-gray-100"
+              className="bg-white/5 border border-white/10 rounded-[2rem] p-8 hover:bg-amber-200/5 hover:border-amber-200/20 transition duration-300"
             >
-              <div className="w-14 h-14 rounded-2xl bg-yellow-400 text-black flex items-center justify-center mb-6">
-                {service.icon}
+              <div className="w-14 h-14 rounded-2xl bg-amber-200/10 flex items-center justify-center text-amber-200 text-2xl font-bold">
+                0{index + 1}
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="mt-8 text-2xl font-bold">
                 {service.title}
               </h3>
 
-              <p className="text-gray-600 leading-relaxed">
-                {service.description}
+              <p className="mt-4 text-gray-400 leading-relaxed">
+                {service.text}
               </p>
             </div>
           ))}
