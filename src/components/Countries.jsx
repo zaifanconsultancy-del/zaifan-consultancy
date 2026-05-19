@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 function Countries() {
   const countries = [
     {
@@ -42,70 +44,90 @@ function Countries() {
       desc: "Known for modern campuses, student lifestyle and internationally respected degrees.",
       points: ["Modern universities", "Student lifestyle", "Global degrees"],
     },
-  ]
+  ];
 
   return (
     <section
       id="countries"
-      className="py-28 bg-[#111111] text-white px-6 relative overflow-hidden"
+      className="relative overflow-hidden bg-[#0b0b0b] py-32 px-6 text-white"
     >
-      <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-amber-300/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-amber-300/10 blur-3xl"></div>
+      <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-yellow-100/5 blur-3xl"></div>
 
-      <div className="relative max-w-7xl mx-auto">
-        <div className="max-w-2xl">
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div
+          initial={{ opacity: 0, y: 45 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.85 }}
+          viewport={{ once: true }}
+          className="max-w-3xl"
+        >
           <span className="text-base md:text-lg uppercase tracking-[0.3em] font-semibold text-amber-200/70">
             Destinations
           </span>
 
-          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
-            Study destinations with real direction.
+          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            Study destinations with{" "}
+            <span className="text-[#D4AF37]">real direction.</span>
           </h2>
 
-          <p className="mt-5 text-lg text-gray-400 leading-relaxed">
+          <p className="mt-5 text-lg leading-relaxed text-gray-400">
             We help students compare countries based on budget, academics,
             opportunities and long-term goals.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 mt-16">
+        <div className="mt-16 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {countries.map((country, index) => (
-            <div
+            <motion.div
               key={index}
-              className="group bg-white/5 border border-white/10 rounded-[2rem] p-8 hover:bg-[#FFFCF6] hover:text-[#111111] transition duration-300"
+              initial={{ opacity: 0, y: 55 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.65,
+                delay: index * 0.08,
+              }}
+              viewport={{ once: true }}
+              whileHover={{ y: -10, scale: 1.02 }}
+              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/30"
             >
-              <div className="flex items-center justify-between">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/10 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100"></div>
+
+              <div className="relative z-10 flex items-center justify-between gap-4">
                 <div className="text-5xl">{country.flag}</div>
 
-                <span className="text-xs uppercase tracking-[0.2em] text-amber-100 bg-white/10 px-3 py-2 rounded-full group-hover:bg-[#111111] group-hover:text-amber-100">
+                <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-2 text-xs uppercase tracking-[0.2em] text-[#E7C768]">
                   {country.highlight}
                 </span>
               </div>
 
-              <h3 className="text-2xl font-bold mt-8 mb-4">
+              <h3 className="relative z-10 mt-8 text-2xl font-bold">
                 {country.name}
               </h3>
 
-              <p className="text-gray-400 leading-relaxed group-hover:text-stone-700">
+              <p className="relative z-10 mt-4 leading-relaxed text-gray-400">
                 {country.desc}
               </p>
 
-              <ul className="mt-6 space-y-3">
+              <ul className="relative z-10 mt-6 space-y-3">
                 {country.points.map((point, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-3 text-sm text-gray-300 group-hover:text-stone-700"
+                    className="flex items-center gap-3 text-sm text-gray-300"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-200"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]"></span>
                     {point}
                   </li>
                 ))}
               </ul>
-            </div>
+
+              <div className="relative z-10 mt-8 h-[2px] w-0 bg-[#D4AF37] transition-all duration-500 group-hover:w-full"></div>
+            </motion.div>
           ))}
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default Countries
+export default Countries;

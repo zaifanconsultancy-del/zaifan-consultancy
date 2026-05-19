@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 function Process() {
   const steps = [
     {
@@ -25,50 +27,84 @@ function Process() {
       title: "Departure Support",
       text: "Students receive final guidance before travelling abroad for studies.",
     },
-  ]
+  ];
 
   return (
-    <section className="py-28 bg-[#111111] text-white px-6 relative overflow-hidden">
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-amber-300/10 rounded-full blur-3xl"></div>
+    <section className="relative overflow-hidden bg-[#111111] py-32 px-6 text-white">
 
-      <div className="relative max-w-7xl mx-auto">
-        <div className="max-w-2xl">
+      {/* Glow */}
+      <div className="absolute top-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-amber-300/10 blur-3xl"></div>
+
+      <div className="relative mx-auto max-w-7xl">
+
+        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 45 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.85 }}
+          viewport={{ once: true }}
+          className="max-w-3xl"
+        >
           <span className="text-base md:text-lg uppercase tracking-[0.3em] font-semibold text-amber-200/70">
             Process
           </span>
 
-          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
-            Your study abroad journey step by step.
+          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            Your study abroad journey{" "}
+            <span className="text-[#D4AF37]">step by step.</span>
           </h2>
 
-          <p className="mt-5 text-lg text-gray-400 leading-relaxed">
+          <p className="mt-5 text-lg leading-relaxed text-gray-400">
             A structured process designed to make international admissions simple and clear.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="mt-20 grid md:grid-cols-5 gap-6">
+        {/* Cards */}
+        <div className="mt-20 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
           {steps.map((step, index) => (
-            <div
+            <motion.div
               key={index}
-              className="relative bg-white/5 rounded-[2rem] p-8 border border-white/10 hover:border-amber-200/30 hover:bg-amber-200/5 transition duration-300"
+              initial={{ opacity: 0, y: 55 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.65,
+                delay: index * 0.08,
+              }}
+              viewport={{ once: true }}
+              whileHover={{ y: -10 }}
+              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/30"
             >
-              <div className="text-5xl font-extrabold text-amber-100/40">
+
+              {/* Hover Glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/10 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100"></div>
+
+              {/* Number */}
+              <div className="relative z-10 text-5xl font-extrabold text-[#D4AF37]/35">
                 {step.number}
               </div>
 
-              <h3 className="mt-8 text-xl font-bold">
+              {/* Title */}
+              <h3 className="relative z-10 mt-8 text-2xl font-bold leading-snug">
                 {step.title}
               </h3>
 
-              <p className="mt-4 text-gray-400 leading-relaxed text-sm">
+              {/* Text */}
+              <p className="relative z-10 mt-4 leading-relaxed text-gray-400">
                 {step.text}
               </p>
-            </div>
+
+              {/* Line */}
+              <div className="relative z-10 mt-8 h-[2px] w-0 bg-[#D4AF37] transition-all duration-500 group-hover:w-full"></div>
+
+            </motion.div>
           ))}
+
         </div>
+
       </div>
     </section>
-  )
+  );
 }
 
-export default Process
+export default Process;

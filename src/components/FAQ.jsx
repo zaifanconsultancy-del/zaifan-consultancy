@@ -1,5 +1,6 @@
-import { useState } from "react"
-import { FaPlus, FaMinus } from "react-icons/fa"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { FaPlus, FaMinus } from "react-icons/fa";
 
 function FAQ() {
   const faqs = [
@@ -28,62 +29,97 @@ function FAQ() {
       answer:
         "You can contact Zaifan Consultancy through WhatsApp or the consultation form on the website.",
     },
-  ]
+  ];
 
-  const [active, setActive] = useState(null)
+  const [active, setActive] = useState(null);
 
   const toggleFAQ = (index) => {
-    setActive(active === index ? null : index)
-  }
+    setActive(active === index ? null : index);
+  };
 
   return (
-    <section className="py-28 bg-[#111111] text-white px-6">
-      <div className="max-w-5xl mx-auto">
+    <section className="relative overflow-hidden bg-[#111111] py-32 px-6 text-white">
 
-        <div className="text-center max-w-2xl mx-auto">
+      {/* Glow */}
+      <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-amber-200/10 blur-3xl"></div>
+
+      <div className="relative mx-auto max-w-5xl">
+
+        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 45 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.85 }}
+          viewport={{ once: true }}
+          className="mx-auto max-w-3xl text-center"
+        >
           <span className="text-base md:text-lg uppercase tracking-[0.3em] font-semibold text-amber-200/70">
             FAQ
           </span>
 
-          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
-            Frequently asked questions.
+          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            Frequently asked{" "}
+            <span className="text-[#D4AF37]">
+              questions.
+            </span>
           </h2>
 
-          <p className="mt-5 text-lg text-gray-400 leading-relaxed">
+          <p className="mt-5 text-lg leading-relaxed text-gray-400">
             Clear answers for students planning their international education journey.
           </p>
-        </div>
+        </motion.div>
 
+        {/* FAQ Items */}
         <div className="mt-16 space-y-5">
+
           {faqs.map((faq, index) => (
-            <div
+            <motion.div
               key={index}
-              className="bg-white/5 border border-white/10 rounded-[2rem] overflow-hidden"
+              initial={{ opacity: 0, y: 45 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.6,
+                delay: index * 0.08,
+              }}
+              viewport={{ once: true }}
+              className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-xl"
             >
+
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex items-center justify-between text-left px-8 py-6"
+                className="flex w-full items-center justify-between px-8 py-7 text-left transition duration-300 hover:bg-white/[0.03]"
               >
-                <h3 className="text-lg md:text-xl font-semibold">
+                <h3 className="text-lg md:text-xl font-semibold text-white">
                   {faq.question}
                 </h3>
 
-                <div className="text-amber-200">
+                <div className="text-[#D4AF37] text-sm">
                   {active === index ? <FaMinus /> : <FaPlus />}
                 </div>
               </button>
 
-              {active === index && (
-                <div className="px-8 pb-8 text-gray-400 leading-relaxed">
+              <motion.div
+                initial={false}
+                animate={{
+                  height: active === index ? "auto" : 0,
+                  opacity: active === index ? 1 : 0,
+                }}
+                transition={{ duration: 0.35 }}
+                className="overflow-hidden"
+              >
+                <div className="px-8 pb-8 leading-relaxed text-gray-400">
                   {faq.answer}
                 </div>
-              )}
-            </div>
+              </motion.div>
+
+            </motion.div>
           ))}
+
         </div>
+
       </div>
     </section>
-  )
+  );
 }
 
-export default FAQ
+export default FAQ;
