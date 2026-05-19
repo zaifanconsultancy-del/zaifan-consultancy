@@ -1,38 +1,30 @@
-import Navbar from "../components/Navbar"
-import Hero from "../components/Hero"
-import Stats from "../components/Stats"
-import Services from "../components/Services"
-import About from "../components/About"
-import Trust from "../components/Trust"
-import Countries from "../components/Countries"
-import Process from "../components/Process"
-import Testimonials from "../components/Testimonials"
-import FAQ from "../components/FAQ"
-import Contact from "../components/Contact"
-import Footer from "../components/Footer"
-import WhatsAppButton from "../components/WhatsAppButton"
-import Chatbot from "../components/Chatbot"
+import Hero from "../components/Hero";
+import Services from "../components/Services";
+import About from "../components/About";
+import Trust from "../components/Trust";
+import Countries from "../components/Countries";
+import Process from "../components/Process";
+import Testimonials from "../components/Testimonials";
+import FAQ from "../components/FAQ";
+import Contact from "../components/Contact";
 
 function Home() {
   return (
     <>
-      <Navbar />
       <Hero />
-      <Stats />
-      <Services />
-      <Process />
-      <About />
-      <Trust />
-      <Countries />
-      <Process />
-      <Testimonials />
-      <FAQ />
-      <Contact />
-      <Footer />
-      <WhatsAppButton />
-      <Chatbot />
+
+      <div className="relative">
+        <Services />
+        <About />
+        <Trust />
+        <Countries />
+        <Process />
+        <Testimonials />
+        <FAQ />
+        <Contact />
+      </div>
     </>
-  )
+  );
 }
 
-export default Home
+export default Home;

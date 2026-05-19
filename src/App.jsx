@@ -1,16 +1,15 @@
+import { Routes, Route } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import Services from "./components/Services";
-import About from "./components/About";
-import Trust from "./components/Trust";
-import Countries from "./components/Countries";
-import Process from "./components/Process";
-import Testimonials from "./components/Testimonials";
-import FAQ from "./components/FAQ";
-import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 import Chatbot from "./components/Chatbot";
+
+import Home from "./pages/Home";
+import ServicesPage from "./pages/ServicesPage";
+import AboutPage from "./pages/AboutPage";
+import CountriesPage from "./pages/CountriesPage";
+import ContactPage from "./pages/ContactPage";
 
 function App() {
   return (
@@ -19,19 +18,37 @@ function App() {
       {/* Navbar */}
       <Navbar />
 
-      {/* Main Sections */}
-      <Hero />
+      {/* Routes */}
+      <Routes>
 
-      <div className="relative">
-        <Services />
-        <About />
-        <Trust />
-        <Countries />
-        <Process />
-        <Testimonials />
-        <FAQ />
-        <Contact />
-      </div>
+        {/* Home */}
+        <Route path="/" element={<Home />} />
+
+        {/* Services */}
+        <Route
+          path="/services"
+          element={<ServicesPage />}
+        />
+
+        {/* About */}
+        <Route
+          path="/about"
+          element={<AboutPage />}
+        />
+
+        {/* Countries */}
+        <Route
+          path="/countries"
+          element={<CountriesPage />}
+        />
+
+        {/* Contact */}
+        <Route
+          path="/contact"
+          element={<ContactPage />}
+        />
+
+      </Routes>
 
       {/* Footer */}
       <Footer />

@@ -1,44 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
 import logo from "../assets/logo.jpeg";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("home");
+
+  const location = useLocation();
 
   const navLinks = [
-    { name: "Home", href: "#home", id: "home" },
-    { name: "Services", href: "#services", id: "services" },
-    { name: "About", href: "#about", id: "about" },
-    { name: "Countries", href: "#countries", id: "countries" },
-    { name: "Contact", href: "#contact", id: "contact" },
+    { name: "Home", path: "/" },
+    { name: "Services", path: "/services" },
+    { name: "About", path: "/about" },
+    { name: "Countries", path: "/countries" },
+    { name: "Contact", path: "/contact" },
   ];
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = navLinks.map((link) => document.getElementById(link.id));
-
-      sections.forEach((section) => {
-        if (!section) return;
-
-        const rect = section.getBoundingClientRect();
-
-        if (rect.top <= 160 && rect.bottom >= 160) {
-          setActiveSection(section.id);
-        }
-      });
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   return (
     <nav className="fixed left-0 top-0 z-[9999] w-full border-b border-white/10 bg-[#0b0b0b]/80 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <a href="#home" className="flex items-center gap-3">
+        
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3">
           <img
             src={logo}
             alt="Zaifan Consultancy"
@@ -46,36 +29,42 @@ function Navbar() {
           />
 
           <div className="hidden leading-tight sm:block">
-            <h1 className="text-lg font-extrabold text-white">Zaifan</h1>
+            <h1 className="text-lg font-extrabold text-white">
+              Zaifan
+            </h1>
+
             <p className="text-[11px] uppercase tracking-[0.25em] text-[#D4AF37]">
               Consultancy
             </p>
           </div>
-        </a>
+        </Link>
 
+        {/* Desktop Links */}
         <div className="hidden items-center gap-9 text-sm font-medium md:flex">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.name}
-              href={link.href}
+              to={link.path}
               className={`transition ${
-                activeSection === link.id
+                location.pathname === link.path
                   ? "text-[#D4AF37]"
                   : "text-gray-400 hover:text-[#D4AF37]"
               }`}
             >
               {link.name}
-            </a>
+            </Link>
           ))}
         </div>
 
-        <a
-          href="#contact"
+        {/* CTA */}
+        <Link
+          to="/contact"
           className="hidden rounded-full bg-[#D4AF37] px-6 py-3 font-semibold text-black shadow-[0_0_25px_rgba(212,175,55,0.16)] transition hover:scale-105 hover:bg-[#E7C768] md:inline-flex"
         >
           Free Consultation
-        </a>
+        </Link>
 
+        {/* Mobile Button */}
         <button
           className="text-2xl text-white md:hidden"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -84,31 +73,34 @@ function Navbar() {
         </button>
       </div>
 
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="border-t border-white/10 bg-[#0b0b0b]/95 px-6 py-6 backdrop-blur-xl md:hidden">
           <div className="space-y-5 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
-                href={link.href}
+                to={link.path}
                 onClick={() => setMenuOpen(false)}
                 className={`block text-lg transition ${
-                  activeSection === link.id
+                  location.pathname === link.path
                     ? "text-[#D4AF37]"
                     : "text-gray-300 hover:text-[#D4AF37]"
                 }`}
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
 
-            <a
-              href="#contact"
+            <Link
+              to="/contact"
               onClick={() => setMenuOpen(false)}
               className="block rounded-full bg-[#D4AF37] py-4 text-center font-semibold text-black"
             >
               Free Consultation
-            </a>
+            </Link>
+
           </div>
         </div>
       )}
