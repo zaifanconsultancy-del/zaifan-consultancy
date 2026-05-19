@@ -21,7 +21,10 @@ function Services() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#111111] py-32 px-6 text-white">
+    <section
+      id="services"
+      className="relative overflow-hidden bg-[#111111] py-32 px-6 text-white"
+    >
       
       {/* Premium Background Glow */}
       <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-amber-300/10 blur-3xl"></div>

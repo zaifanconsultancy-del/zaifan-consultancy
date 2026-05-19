@@ -29,3 +29,11 @@ body {
   opacity: 0.12;
   pointer-events: none;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #080807;
+}
