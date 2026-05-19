@@ -1,120 +1,102 @@
-import studentImage from "../assets/student.jpg"
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
+import studentImage from "../assets/student.jpg";
 
 function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0F0F10] via-[#171717] to-[#111111] text-white flex items-center px-6 pt-32 pb-20"
+      className="relative min-h-screen overflow-hidden bg-[#0b0b0b] text-white px-6 pt-32 pb-20"
     >
-      {/* Background Glow */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-amber-400/10 rounded-full blur-3xl"></div>
+      {/* Premium background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(212,175,55,0.20),transparent_30%),radial-gradient(circle_at_80%_60%,rgba(245,222,179,0.10),transparent_30%)]"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#0b0b0b]/70 to-[#050505]"></div>
 
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-yellow-200/10 rounded-full blur-3xl"></div>
-
-      <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
-
-        {/* LEFT SIDE */}
-        <motion.div
-          initial={{ opacity: 0, y: 35 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9 }}
-        >
-          <span className="inline-block mb-6 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm text-gray-300 backdrop-blur-md">
+      <motion.div
+        initial={{ opacity: 0, y: 55 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9 }}
+        className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center min-h-[75vh]"
+      >
+        {/* Left */}
+        <div>
+          <div className="inline-flex items-center rounded-full border border-[#D4AF37]/30 bg-white/5 px-5 py-2 text-sm text-[#E8D8B0] mb-8 backdrop-blur-md">
             Study Abroad Consultancy
-          </span>
+          </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight max-w-2xl">
+          <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight">
             Global Education.
             <br />
             Clear Guidance.
             <br />
-            Better Future.
+            <span className="text-[#D4AF37]">Better Future.</span>
           </h1>
 
-          <p className="mt-7 max-w-xl text-base md:text-lg text-gray-300 leading-relaxed">
-            Zaifan Consultancy helps students with admissions,
-            scholarships, visa guidance, SOPs, documentation and
-            complete study abroad planning.
+          <p className="mt-7 max-w-xl text-lg leading-relaxed text-gray-300">
+            Zaifan Consultancy helps students with admissions, scholarships,
+            visa guidance, SOPs, documentation and complete study abroad
+            planning.
           </p>
 
-          {/* Buttons */}
-          <div className="mt-9 flex flex-col sm:flex-row gap-4">
+          <div className="mt-9 flex flex-wrap gap-4">
             <a
               href="#contact"
-              className="bg-[#D6CEC2] text-[#111111] px-7 py-3 rounded-full font-bold hover:bg-[#E4DBCF] transition text-center shadow-xl"
+              className="rounded-full bg-[#E2BC48] px-8 py-4 font-semibold text-black shadow-[0_0_35px_rgba(212,175,55,0.25)] transition hover:scale-105"
             >
               Book Free Consultation
             </a>
 
             <a
               href="#countries"
-              className="border border-white/20 bg-white/5 backdrop-blur-md px-7 py-3 rounded-full font-semibold hover:bg-white hover:text-black transition text-center"
+              className="rounded-full border border-white/20 bg-white/5 px-8 py-4 font-semibold text-white backdrop-blur-md transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
             >
               Explore Countries
             </a>
           </div>
 
-          {/* Stats */}
-          <div className="mt-12 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg border-t border-white/10 pt-8">
+          <div className="mt-14 grid grid-cols-3 gap-6 border-t border-white/10 pt-8 max-w-lg">
             <div>
-              <h3 className="text-2xl sm:text-3xl font-bold">
-                10+
-              </h3>
-
-              <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                Countries
-              </p>
+              <h3 className="text-3xl font-bold text-white">10+</h3>
+              <p className="text-sm text-gray-400">Countries</p>
             </div>
-
             <div>
-              <h3 className="text-2xl sm:text-3xl font-bold">
-                500+
-              </h3>
-
-              <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                Students Guided
-              </p>
+              <h3 className="text-3xl font-bold text-white">500+</h3>
+              <p className="text-sm text-gray-400">Students Guided</p>
             </div>
-
             <div>
-              <h3 className="text-2xl sm:text-3xl font-bold">
-                24/7
-              </h3>
-
-              <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                Support
-              </p>
+              <h3 className="text-3xl font-bold text-white">24/7</h3>
+              <p className="text-sm text-gray-400">Support</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* RIGHT SIDE IMAGE */}
+        {/* Right */}
         <motion.div
-          className="relative hidden lg:flex justify-end"
-          initial={{ opacity: 0, scale: 0.94 }}
+          initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.9 }}
+          transition={{ duration: 1, delay: 0.15 }}
+          className="relative hidden lg:block"
         >
-          <div className="absolute inset-0 bg-amber-200/10 blur-3xl rounded-full"></div>
+          <div className="absolute -inset-8 rounded-[45px] bg-[#D4AF37]/10 blur-3xl"></div>
 
-          <img
-            src={studentImage}
-            alt="Study abroad student"
-            className="relative rounded-[2.5rem] shadow-2xl w-full max-w-lg h-[620px] object-cover border border-white/10"
-          />
+          <div className="relative overflow-hidden rounded-[36px] border border-[#D4AF37]/20 bg-white/5 shadow-2xl">
+            <img
+              src={studentImage}
+              alt="Student studying abroad"
+              className="h-[520px] w-full object-cover"
+            />
 
-          {/* Floating Card */}
-          <div className="absolute -bottom-6 left-0 bg-white/95 backdrop-blur-xl text-black rounded-3xl shadow-2xl p-6 max-w-sm border border-white/30">
-            <p className="text-sm font-semibold leading-relaxed">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          </div>
+
+          <div className="absolute -bottom-7 -left-10 max-w-xs rounded-3xl border border-white/10 bg-[#f5efe3] p-5 text-black shadow-2xl">
+            <p className="text-sm font-bold">
               Complete guidance from profile evaluation to visa preparation.
             </p>
           </div>
         </motion.div>
-
-      </div>
+      </motion.div>
     </section>
-  )
+  );
 }
 
-export default Hero
+export default Hero;

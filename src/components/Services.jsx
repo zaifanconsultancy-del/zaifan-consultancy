@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 function Services() {
   const services = [
     {
@@ -16,53 +18,92 @@ function Services() {
       title: "SOP & Documentation",
       text: "Professional guidance for SOPs, motivation letters and required paperwork.",
     },
-  ]
+  ];
 
   return (
-    <section className="py-28 bg-[#111111] text-white px-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-300/10 blur-3xl rounded-full"></div>
+    <section className="relative overflow-hidden bg-[#111111] py-32 px-6 text-white">
+      
+      {/* Premium Background Glow */}
+      <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-amber-300/10 blur-3xl"></div>
+
+      <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-yellow-100/5 blur-3xl"></div>
 
       <div className="relative max-w-7xl mx-auto">
 
-        <div className="max-w-2xl">
-          <span className="text-base md:text-lg uppercase tracking-[0.3em] font-semibold text-amber-200/70">
+        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="max-w-3xl"
+        >
+          <span className="text-base md:text-lg uppercase tracking-[0.35em] font-semibold text-[#E7C768]/80">
             Services
           </span>
 
-          <h2 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
-            Professional guidance for your global education journey.
+          <h2 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            Professional guidance for your{" "}
+            <span className="text-[#D4AF37]">
+              global education journey.
+            </span>
           </h2>
 
-          <p className="mt-5 text-lg text-gray-400 leading-relaxed">
+          <p className="mt-6 text-lg leading-relaxed text-gray-400">
             Zaifan Consultancy supports students throughout admissions,
             scholarships, documentation and visa preparation.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="mt-20 grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Cards */}
+        <div className="mt-20 grid gap-7 md:grid-cols-2 xl:grid-cols-4">
+          
           {services.map((service, index) => (
-            <div
+            <motion.div
               key={index}
-              className="bg-white/5 border border-white/10 rounded-[2rem] p-8 hover:bg-amber-200/5 hover:border-amber-200/20 transition duration-300"
+              initial={{ opacity: 0, y: 60 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.7,
+                delay: index * 0.12,
+              }}
+              viewport={{ once: true }}
+              whileHover={{
+                y: -12,
+                scale: 1.02,
+              }}
+              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/30"
             >
-              <div className="w-14 h-14 rounded-2xl bg-amber-200/10 flex items-center justify-center text-amber-200 text-2xl font-bold">
+
+              {/* Hover Glow */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#D4AF37]/10 via-transparent to-transparent"></div>
+
+              {/* Number */}
+              <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-2xl font-bold text-[#E7C768]">
                 0{index + 1}
               </div>
 
-              <h3 className="mt-8 text-2xl font-bold">
+              {/* Title */}
+              <h3 className="relative z-10 mt-8 text-2xl font-bold leading-snug">
                 {service.title}
               </h3>
 
-              <p className="mt-4 text-gray-400 leading-relaxed">
+              {/* Text */}
+              <p className="relative z-10 mt-5 leading-relaxed text-gray-400">
                 {service.text}
               </p>
-            </div>
+
+              {/* Bottom Accent */}
+              <div className="relative z-10 mt-8 h-[2px] w-0 bg-[#D4AF37] transition-all duration-500 group-hover:w-full"></div>
+
+            </motion.div>
           ))}
+
         </div>
 
       </div>
     </section>
-  )
+  );
 }
 
-export default Services
+export default Services;
