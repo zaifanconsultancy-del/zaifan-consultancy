@@ -13,7 +13,7 @@ function Trust() {
       <div className="absolute bottom-[-20%] left-[-20%] h-[420px] w-[420px] rounded-full bg-amber-200/10 blur-3xl"></div>
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-2 lg:gap-16">
-        
+
         {/* LEFT */}
         <motion.div
           initial={{ opacity: 0, x: -35 }}
@@ -54,7 +54,7 @@ function Trust() {
                 viewport={{ once: true }}
                 className="flex items-center gap-4"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-amber-200/20 bg-amber-200/10 font-bold text-amber-200 md:h-12 md:w-12">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-amber-200/20 bg-amber-200/10 font-bold text-amber-200 transition duration-300 hover:-translate-y-1 hover:scale-110 md:h-12 md:w-12">
                   ✓
                 </div>
 

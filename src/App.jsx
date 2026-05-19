@@ -1,62 +1,56 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 import Chatbot from "./components/Chatbot";
+import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
 import ServicesPage from "./pages/ServicesPage";
 import AboutPage from "./pages/AboutPage";
 import CountriesPage from "./pages/CountriesPage";
 import ContactPage from "./pages/ContactPage";
+import AdminPage from "./pages/AdminPage";
+import NotFoundPage from "./pages/NotFoundPage";
+
+function PageTransition({ children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -18 }}
+      transition={{ duration: 0.35 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 function App() {
+  const location = useLocation();
+
   return (
     <main className="overflow-x-hidden bg-[#050505] text-white selection:bg-[#D4AF37] selection:text-black">
-
-      {/* Navbar */}
+      <ScrollToTop />
       <Navbar />
 
-      {/* Routes */}
-      <Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+          <Route path="/services" element={<PageTransition><ServicesPage /></PageTransition>} />
+          <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
+          <Route path="/countries" element={<PageTransition><CountriesPage /></PageTransition>} />
+          <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
+          <Route path="/admin" element={<PageTransition><AdminPage /></PageTransition>} />
+          <Route path="*" element={<PageTransition><NotFoundPage /></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
 
-        {/* Home */}
-        <Route path="/" element={<Home />} />
-
-        {/* Services */}
-        <Route
-          path="/services"
-          element={<ServicesPage />}
-        />
-
-        {/* About */}
-        <Route
-          path="/about"
-          element={<AboutPage />}
-        />
-
-        {/* Countries */}
-        <Route
-          path="/countries"
-          element={<CountriesPage />}
-        />
-
-        {/* Contact */}
-        <Route
-          path="/contact"
-          element={<ContactPage />}
-        />
-
-      </Routes>
-
-      {/* Footer */}
       <Footer />
-
-      {/* Floating Buttons */}
       <WhatsAppButton />
       <Chatbot />
-
     </main>
   );
 }
