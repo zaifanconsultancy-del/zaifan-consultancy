@@ -2,93 +2,73 @@ import { motion } from "framer-motion";
 
 function About() {
   const features = [
-    "Profile evaluation based on academics & budget",
-    "University shortlist guidance",
-    "Visa & documentation support",
-    "Scholarship assistance",
     "Transparent consultation process",
     "Step-by-step student guidance",
+    "Support from admission to visa",
+    "Profile-based country recommendations",
   ];
 
   return (
     <section
       id="about"
-      className="relative overflow-hidden bg-[#0b0b0b] py-32 px-6 text-white"
+      className="relative overflow-hidden bg-[#050505] px-6 py-28 text-white"
     >
-      <div className="absolute top-[-15%] left-[-10%] h-[520px] w-[520px] rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-yellow-100/5 blur-3xl"></div>
+      {/* SAME PREMIUM BLOBS */}
+      <div className="absolute top-[-15%] right-[-10%] h-[500px] w-[500px] rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
+
+      <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
+        {/* LEFT */}
         <motion.div
-          initial={{ opacity: 0, x: -55 }}
+          initial={{ opacity: 0, x: -40 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.85 }}
+          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <span className="text-base md:text-lg uppercase tracking-[0.35em] font-semibold text-[#E7C768]/80">
-            About
-          </span>
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#D4AF37]">
+            About Us
+          </p>
 
-          <h2 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-            Honest guidance for students planning to{" "}
-            <span className="text-[#D4AF37]">study abroad.</span>
+          <h2 className="mt-6 text-4xl font-extrabold leading-tight md:text-6xl">
+            Building student futures with{" "}
+            <span className="text-[#D4AF37]">honest guidance.</span>
           </h2>
 
-          <p className="mt-7 text-lg leading-relaxed text-gray-400">
-            Zaifan Consultancy helps students navigate the study abroad process
-            with clarity, structure and professional support.
+          <p className="mt-8 max-w-xl text-lg leading-relaxed text-gray-400">
+            Zaifan Consultancy helps students explore international education
+            opportunities with clarity, strategy and professional support.
           </p>
 
-          <p className="mt-5 text-lg leading-relaxed text-gray-400">
-            From university applications to scholarships, documents and visa
-            preparation — every step is handled with careful guidance.
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-gray-400">
+            From university admissions to scholarships and visa preparation,
+            we guide students through every important step.
           </p>
-
-          <div className="mt-10 grid grid-cols-2 gap-5 max-w-lg">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-              <h3 className="text-3xl font-bold text-[#D4AF37]">100%</h3>
-              <p className="mt-2 text-sm text-gray-400">Transparent Process</p>
-            </div>
-
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-              <h3 className="text-3xl font-bold text-[#D4AF37]">1-on-1</h3>
-              <p className="mt-2 text-sm text-gray-400">Student Guidance</p>
-            </div>
-          </div>
         </motion.div>
 
+        {/* RIGHT */}
         <motion.div
-          initial={{ opacity: 0, x: 55 }}
+          initial={{ opacity: 0, x: 40 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.85 }}
+          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="relative rounded-[2.5rem] border border-white/10 bg-white/[0.05] p-10 backdrop-blur-xl shadow-2xl"
+          className="rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-2xl"
         >
-          <div className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-br from-[#D4AF37]/20 via-transparent to-transparent opacity-60 blur-xl"></div>
+          <div className="space-y-7">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="group flex items-center gap-5"
+              >
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-2xl text-[#D4AF37] transition duration-300 group-hover:-translate-y-1">
+                  ✓
+                </div>
 
-          <div className="relative">
-            <h3 className="text-3xl font-bold text-white">
-              Why Students Choose Us
-            </h3>
-
-            <div className="mt-10 space-y-6">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.08 }}
-                  viewport={{ once: true }}
-                  className="group flex items-center gap-4"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 font-bold text-[#E7C768] transition group-hover:scale-110">
-                    ✓
-                  </div>
-
-                  <p className="text-lg text-gray-300">{feature}</p>
-                </motion.div>
-              ))}
-            </div>
+                <p className="text-xl leading-relaxed text-gray-300">
+                  {feature}
+                </p>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
