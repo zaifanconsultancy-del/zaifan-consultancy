@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -9,13 +10,31 @@ function AdminPage() {
   const [inquiries, setInquiries] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [loading, setLoading] = useState(false);
+
+  const fetchInquiries = async () => {
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from("inquiries")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      alert("Failed to load inquiries.");
+    } else {
+      setInquiries(data || []);
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const savedInquiries =
-      JSON.parse(localStorage.getItem("zaifanInquiries")) || [];
-
-    setInquiries(savedInquiries);
-  }, []);
+    if (isLoggedIn) {
+      fetchInquiries();
+    }
+  }, [isLoggedIn]);
 
   const handleLogin = (event) => {
     event.preventDefault();
@@ -34,33 +53,56 @@ function AdminPage() {
     setIsLoggedIn(false);
   };
 
-  const saveInquiries = (updatedInquiries) => {
-    localStorage.setItem("zaifanInquiries", JSON.stringify(updatedInquiries));
-    setInquiries(updatedInquiries);
+  const deleteInquiry = async (id) => {
+    const { error } = await supabase.from("inquiries").delete().eq("id", id);
+
+    if (error) {
+      console.error(error);
+      alert("Failed to delete inquiry.");
+      return;
+    }
+
+    setInquiries(inquiries.filter((inquiry) => inquiry.id !== id));
   };
 
-  const clearInquiries = () => {
-    localStorage.removeItem("zaifanInquiries");
+  const toggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === "contacted" ? "new" : "contacted";
+
+    const { error } = await supabase
+      .from("inquiries")
+      .update({ status: newStatus })
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      alert("Failed to update status.");
+      return;
+    }
+
+    setInquiries(
+      inquiries.map((inquiry) =>
+        inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
+      )
+    );
+  };
+
+  const clearInquiries = async () => {
+    const confirmDelete = confirm("Are you sure you want to delete all inquiries?");
+
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+      .from("inquiries")
+      .delete()
+      .neq("id", 0);
+
+    if (error) {
+      console.error(error);
+      alert("Failed to clear inquiries.");
+      return;
+    }
+
     setInquiries([]);
-  };
-
-  const deleteInquiry = (id) => {
-    const updatedInquiries = inquiries.filter((inquiry) => inquiry.id !== id);
-    saveInquiries(updatedInquiries);
-  };
-
-  const toggleStatus = (id) => {
-    const updatedInquiries = inquiries.map((inquiry) => {
-      if (inquiry.id === id) {
-        return {
-          ...inquiry,
-          status: inquiry.status === "Contacted" ? "New" : "Contacted",
-        };
-      }
-      return inquiry;
-    });
-
-    saveInquiries(updatedInquiries);
   };
 
   const exportToCSV = () => {
@@ -69,16 +111,24 @@ function AdminPage() {
       return;
     }
 
-    const headers = ["Name", "Email", "Phone", "Country", "Message", "Status", "Date"];
+    const headers = [
+      "Name",
+      "Email",
+      "Phone",
+      "Country",
+      "Message",
+      "Status",
+      "Date",
+    ];
 
     const rows = inquiries.map((inquiry) => [
-      inquiry.name,
+      inquiry.full_name,
       inquiry.email,
       inquiry.phone,
       inquiry.country,
       inquiry.message,
-      inquiry.status || "New",
-      inquiry.date,
+      inquiry.status || "new",
+      inquiry.created_at,
     ]);
 
     const csvContent = [
@@ -106,25 +156,26 @@ function AdminPage() {
 
   const filteredInquiries = inquiries.filter((inquiry) => {
     const searchText = search.toLowerCase();
-    const status = inquiry.status || "New";
+    const status = inquiry.status || "new";
 
     const matchesSearch =
-      inquiry.name.toLowerCase().includes(searchText) ||
-      inquiry.email.toLowerCase().includes(searchText) ||
-      inquiry.phone.toLowerCase().includes(searchText) ||
-      inquiry.country.toLowerCase().includes(searchText);
+      inquiry.full_name?.toLowerCase().includes(searchText) ||
+      inquiry.email?.toLowerCase().includes(searchText) ||
+      inquiry.phone?.toLowerCase().includes(searchText) ||
+      inquiry.country?.toLowerCase().includes(searchText);
 
-    const matchesStatus = statusFilter === "All" || status === statusFilter;
+    const matchesStatus =
+      statusFilter === "All" || status === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
 
   const newCount = inquiries.filter(
-    (inquiry) => (inquiry.status || "New") === "New"
+    (inquiry) => (inquiry.status || "new") === "new"
   ).length;
 
   const contactedCount = inquiries.filter(
-    (inquiry) => inquiry.status === "Contacted"
+    (inquiry) => inquiry.status === "contacted"
   ).length;
 
   if (!isLoggedIn) {
@@ -135,9 +186,7 @@ function AdminPage() {
             Admin Login
           </p>
 
-          <h1 className="mt-4 text-4xl font-extrabold">
-            Enter Password
-          </h1>
+          <h1 className="mt-4 text-4xl font-extrabold">Enter Password</h1>
 
           <form onSubmit={handleLogin} className="mt-8 space-y-5">
             <input
@@ -183,12 +232,20 @@ function AdminPage() {
               </p>
 
               <p>
-                Contacted: <span className="text-green-400">{contactedCount}</span>
+                Contacted:{" "}
+                <span className="text-green-400">{contactedCount}</span>
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <button
+              onClick={fetchInquiries}
+              className="rounded-full border border-white/10 px-6 py-3 text-sm text-gray-300 transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
+            >
+              Refresh
+            </button>
+
             <button
               onClick={exportToCSV}
               className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:scale-105 hover:bg-[#E7C768]"
@@ -238,7 +295,11 @@ function AdminPage() {
           </div>
         </div>
 
-        {inquiries.length === 0 ? (
+        {loading ? (
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-10 text-gray-400">
+            Loading inquiries...
+          </div>
+        ) : inquiries.length === 0 ? (
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-10 text-gray-400">
             No inquiries yet. Fill the contact form once to test it.
           </div>
@@ -257,22 +318,22 @@ function AdminPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <h2 className="text-2xl font-bold text-white">
-                        {inquiry.name}
+                        {inquiry.full_name}
                       </h2>
 
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          inquiry.status === "Contacted"
+                          inquiry.status === "contacted"
                             ? "bg-green-400/10 text-green-400"
                             : "bg-[#D4AF37]/10 text-[#D4AF37]"
                         }`}
                       >
-                        {inquiry.status || "New"}
+                        {inquiry.status === "contacted" ? "Contacted" : "New"}
                       </span>
                     </div>
 
                     <p className="mt-2 text-sm text-gray-500">
-                      {inquiry.date}
+                      {new Date(inquiry.created_at).toLocaleString()}
                     </p>
                   </div>
 
@@ -307,10 +368,10 @@ function AdminPage() {
                 </div>
 
                 <button
-                  onClick={() => toggleStatus(inquiry.id)}
+                  onClick={() => toggleStatus(inquiry.id, inquiry.status)}
                   className="mt-6 rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition hover:scale-105 hover:bg-[#E7C768]"
                 >
-                  {inquiry.status === "Contacted"
+                  {inquiry.status === "contacted"
                     ? "Mark as New"
                     : "Mark as Contacted"}
                 </button>
