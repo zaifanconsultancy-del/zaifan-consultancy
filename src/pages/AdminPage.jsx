@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 function AdminPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("zaifanAdminLoggedIn") === "true"
-  );
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [inquiries, setInquiries] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -31,26 +30,52 @@ function AdminPage() {
   };
 
   useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (data.session) {
+        setIsLoggedIn(true);
+      }
+    };
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (isLoggedIn) {
       fetchInquiries();
     }
   }, [isLoggedIn]);
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
 
-    if (password === "zaifan123") {
-      localStorage.setItem("zaifanAdminLoggedIn", "true");
-      setIsLoggedIn(true);
-      setPassword("");
-    } else {
-      alert("Wrong password.");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
     }
+
+    setEmail("");
+    setPassword("");
   };
 
-  const logout = () => {
-    localStorage.removeItem("zaifanAdminLoggedIn");
+  const logout = async () => {
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
+    setInquiries([]);
   };
 
   const deleteInquiry = async (id) => {
@@ -87,14 +112,13 @@ function AdminPage() {
   };
 
   const clearInquiries = async () => {
-    const confirmDelete = confirm("Are you sure you want to delete all inquiries?");
+    const confirmDelete = confirm(
+      "Are you sure you want to delete all inquiries?"
+    );
 
     if (!confirmDelete) return;
 
-    const { error } = await supabase
-      .from("inquiries")
-      .delete()
-      .neq("id", 0);
+    const { error } = await supabase.from("inquiries").delete().neq("id", 0);
 
     if (error) {
       console.error(error);
@@ -186,9 +210,17 @@ function AdminPage() {
             Admin Login
           </p>
 
-          <h1 className="mt-4 text-4xl font-extrabold">Enter Password</h1>
+          <h1 className="mt-4 text-4xl font-extrabold">Enter Admin Details</h1>
 
           <form onSubmit={handleLogin} className="mt-8 space-y-5">
+            <input
+              type="email"
+              placeholder="Admin email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
+            />
+
             <input
               type="password"
               placeholder="Admin password"
@@ -224,7 +256,8 @@ function AdminPage() {
 
             <div className="mt-4 flex flex-wrap gap-4 text-gray-400">
               <p>
-                Total: <span className="text-[#D4AF37]">{inquiries.length}</span>
+                Total:{" "}
+                <span className="text-[#D4AF37]">{inquiries.length}</span>
               </p>
 
               <p>
