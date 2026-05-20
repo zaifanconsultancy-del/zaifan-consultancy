@@ -1,3 +1,4 @@
+import { supabase } from "../lib/supabaseClient";
 import PageHeader from "../components/PageHeader";
 import Contact from "../components/Contact";
 

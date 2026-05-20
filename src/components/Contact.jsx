@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
+import { supabase } from "../lib/supabaseClient";
 
 function Contact() {
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const form = event.target;
@@ -36,23 +37,22 @@ function Contact() {
       return;
     }
 
-    const newInquiry = {
-      id: Date.now(),
-      name,
-      email,
-      phone,
-      country,
-      message,
-      status: "New",
-      date: new Date().toLocaleString(),
-    };
+    const { error } = await supabase.from("inquiries").insert([
+      {
+        full_name: name,
+        email,
+        phone,
+        country,
+        message,
+        status: "new",
+      },
+    ]);
 
-    const oldInquiries =
-      JSON.parse(localStorage.getItem("zaifanInquiries")) || [];
-
-    const updatedInquiries = [newInquiry, ...oldInquiries];
-
-    localStorage.setItem("zaifanInquiries", JSON.stringify(updatedInquiries));
+    if (error) {
+      console.error(error);
+      alert("Something went wrong. Inquiry was not saved.");
+      return;
+    }
 
     const whatsappNumber = "923305718131";
 
@@ -76,7 +76,7 @@ Message: ${message}
 
     form.reset();
 
-    alert("Inquiry saved and WhatsApp opened!");
+    alert("Inquiry saved to database and WhatsApp opened!");
   };
 
   return (
