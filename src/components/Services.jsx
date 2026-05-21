@@ -25,27 +25,22 @@ function Services() {
       id="services"
       className="relative overflow-hidden bg-[#111111] py-32 px-6 text-white"
     >
-      
-      {/* Premium Background Glow */}
       <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-amber-300/10 blur-3xl"></div>
-
       <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-yellow-100/5 blur-3xl"></div>
 
-      <div className="relative max-w-7xl mx-auto">
-
-        {/* Heading */}
+      <div className="relative mx-auto max-w-7xl">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 45 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
           viewport={{ once: true }}
           className="max-w-3xl"
         >
-          <span className="text-base md:text-lg uppercase tracking-[0.35em] font-semibold text-[#E7C768]/80">
+          <span className="text-base font-semibold uppercase tracking-[0.35em] text-[#E7C768]/80 md:text-lg">
             Services
           </span>
 
-          <h2 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+          <h2 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
             Professional guidance for your{" "}
             <span className="text-[#D4AF37]">
               global education journey.
@@ -58,52 +53,44 @@ function Services() {
           </p>
         </motion.div>
 
-        {/* Cards */}
         <div className="mt-20 grid gap-7 md:grid-cols-2 xl:grid-cols-4">
-          
           {services.map((service, index) => (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              key={service.title}
+              initial={{ opacity: 0, y: 70, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               transition={{
-                duration: 0.7,
+                duration: 0.75,
                 delay: index * 0.12,
+                ease: [0.22, 1, 0.36, 1],
               }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.25 }}
               whileHover={{
                 y: -12,
-                scale: 1.02,
+                scale: 1.025,
               }}
-              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/30"
+              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/40 hover:bg-white/[0.06] hover:shadow-[0_25px_80px_rgba(212,175,55,0.12)]"
             >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/0 via-transparent to-transparent opacity-0 transition duration-500 group-hover:from-[#D4AF37]/12 group-hover:opacity-100"></div>
 
-              {/* Hover Glow */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#D4AF37]/10 via-transparent to-transparent"></div>
+              <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#D4AF37]/0 blur-2xl transition duration-500 group-hover:bg-[#D4AF37]/10"></div>
 
-              {/* Number */}
-              <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-2xl font-bold text-[#E7C768]">
+              <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-2xl font-bold text-[#E7C768] transition duration-500 group-hover:scale-110 group-hover:bg-[#D4AF37] group-hover:text-black">
                 0{index + 1}
               </div>
 
-              {/* Title */}
-              <h3 className="relative z-10 mt-8 text-2xl font-bold leading-snug">
+              <h3 className="relative z-10 mt-8 text-2xl font-bold leading-snug text-white">
                 {service.title}
               </h3>
 
-              {/* Text */}
               <p className="relative z-10 mt-5 leading-relaxed text-gray-400">
                 {service.text}
               </p>
 
-              {/* Bottom Accent */}
               <div className="relative z-10 mt-8 h-[2px] w-0 bg-[#D4AF37] transition-all duration-500 group-hover:w-full"></div>
-
             </motion.div>
           ))}
-
         </div>
-
       </div>
     </section>
   );

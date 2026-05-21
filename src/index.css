@@ -1,22 +1,23 @@
 @import "tailwindcss";
+
 html {
   scroll-behavior: smooth;
-}
-body {
-  background-color: #f5f5f3;
-  color: #111111;
-}
-html {
-  scroll-behavior: smooth;
+  background: #050505;
 }
 
 body {
-  background: #0f0f10;
+  background: #050505;
+  color: #ffffff;
   overflow-x: hidden;
 }
 
+#root {
+  background: #050505;
+  min-height: 100vh;
+}
+
 ::selection {
-  background: #d6cec2;
+  background: #d4af37;
   color: #111111;
 }
 
@@ -28,12 +29,4 @@ body {
   filter: blur(120px);
   opacity: 0.12;
   pointer-events: none;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  background: #080807;
 }

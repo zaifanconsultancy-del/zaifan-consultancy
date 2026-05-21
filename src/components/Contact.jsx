@@ -1,9 +1,17 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabaseClient";
 
 function Contact() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
 
     const form = event.target;
 
@@ -19,23 +27,30 @@ function Contact() {
 
     if (!nameValid) {
       alert("Please enter a valid full name.");
+      setIsSubmitting(false);
       return;
     }
 
     if (!emailValid) {
       alert("Please enter a valid email address.");
+      setIsSubmitting(false);
       return;
     }
 
     if (!phoneValid) {
       alert("Please enter a valid phone number.");
+      setIsSubmitting(false);
       return;
     }
 
     if (!country) {
       alert("Please select a preferred country.");
+      setIsSubmitting(false);
       return;
     }
+
+    // OPEN WHATSAPP EARLY
+    const whatsappWindow = window.open("", "_blank");
 
     // SAVE TO DATABASE
     const { error } = await supabase.from("inquiries").insert([
@@ -51,11 +66,18 @@ function Contact() {
 
     if (error) {
       console.error(error);
+
       alert("Something went wrong. Inquiry was not saved.");
+
+      if (whatsappWindow) {
+        whatsappWindow.close();
+      }
+
+      setIsSubmitting(false);
       return;
     }
 
-    // SEND EMAIL NOTIFICATION
+    // SEND EMAIL
     try {
       const { error: emailError } = await supabase.functions.invoke(
         "send-email",
@@ -96,11 +118,17 @@ Message: ${message}
       whatsappMessage
     )}`;
 
-    window.open(whatsappLink, "_blank");
+    // REDIRECT OPENED WINDOW
+    if (whatsappWindow) {
+      whatsappWindow.location.href = whatsappLink;
+    } else {
+      window.location.href = whatsappLink;
+    }
 
     form.reset();
 
-    alert("Inquiry saved, email notification sent, and WhatsApp opened!");
+    setShowSuccess(true);
+    setIsSubmitting(false);
   };
 
   return (
@@ -108,11 +136,54 @@ Message: ${message}
       id="contact"
       className="relative overflow-hidden bg-[#0b0b0b] py-32 px-6 text-white"
     >
+      {/* SUCCESS POPUP */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.95 }}
+              transition={{ duration: 0.35 }}
+              className="relative max-w-md rounded-[2rem] border border-[#D4AF37]/30 bg-[#101010] p-8 text-center shadow-[0_0_80px_rgba(212,175,55,0.18)]"
+            >
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#D4AF37] text-3xl text-black shadow-[0_0_35px_rgba(212,175,55,0.4)]">
+                ✓
+              </div>
+
+              <h3 className="mt-6 text-2xl font-bold text-white">
+                Inquiry Submitted Successfully
+              </h3>
+
+              <p className="mt-4 leading-relaxed text-gray-400">
+                Thank you for contacting Zaifan Consultancy. Our team has
+                received your details and will contact you soon for study abroad
+                guidance.
+              </p>
+
+              <button
+                onClick={() => setShowSuccess(false)}
+                className="mt-7 w-full rounded-2xl bg-[#D4AF37] py-3 font-semibold text-black transition hover:scale-[1.02] hover:bg-[#E7C768]"
+              >
+                Continue
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* BACKGROUND GLOWS */}
       <div className="absolute top-[-15%] right-[-10%] h-[520px] w-[520px] rounded-full bg-amber-300/10 blur-3xl"></div>
 
       <div className="absolute bottom-[-20%] left-[-10%] h-[520px] w-[520px] rounded-full bg-yellow-100/5 blur-3xl"></div>
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
+        {/* LEFT SIDE */}
         <motion.div
           initial={{ opacity: 0, x: -45 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -170,6 +241,7 @@ Message: ${message}
           </div>
         </motion.div>
 
+        {/* RIGHT SIDE */}
         <motion.div
           initial={{ opacity: 0, x: 45 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -258,9 +330,10 @@ Message: ${message}
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-[#D4AF37] py-4 font-semibold text-black shadow-[0_0_35px_rgba(212,175,55,0.18)] transition hover:scale-[1.02] hover:bg-[#E7C768]"
+              disabled={isSubmitting}
+              className="w-full rounded-2xl bg-[#D4AF37] py-4 font-semibold text-black shadow-[0_0_35px_rgba(212,175,55,0.18)] transition hover:scale-[1.02] hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Submit Inquiry
+              {isSubmitting ? "Submitting..." : "Submit Inquiry"}
             </button>
           </form>
         </motion.div>
