@@ -37,6 +37,7 @@ function Contact() {
       return;
     }
 
+    // SAVE TO DATABASE
     const { error } = await supabase.from("inquiries").insert([
       {
         full_name: name,
@@ -54,6 +55,29 @@ function Contact() {
       return;
     }
 
+    // SEND EMAIL NOTIFICATION
+    try {
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-email",
+        {
+          body: {
+            name,
+            email,
+            phone,
+            country,
+            message,
+          },
+        }
+      );
+
+      if (emailError) {
+        console.error("Email notification failed:", emailError);
+      }
+    } catch (emailError) {
+      console.error("Email notification failed:", emailError);
+    }
+
+    // WHATSAPP
     const whatsappNumber = "923305718131";
 
     const whatsappMessage = `
@@ -76,7 +100,7 @@ Message: ${message}
 
     form.reset();
 
-    alert("Inquiry saved to database and WhatsApp opened!");
+    alert("Inquiry saved, email notification sent, and WhatsApp opened!");
   };
 
   return (
@@ -236,7 +260,7 @@ Message: ${message}
               type="submit"
               className="w-full rounded-2xl bg-[#D4AF37] py-4 font-semibold text-black shadow-[0_0_35px_rgba(212,175,55,0.18)] transition hover:scale-[1.02] hover:bg-[#E7C768]"
             >
-              Submit Inquiry on WhatsApp
+              Submit Inquiry
             </button>
           </form>
         </motion.div>
