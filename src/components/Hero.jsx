@@ -9,6 +9,7 @@ function Hero() {
       className="relative min-h-screen overflow-hidden bg-[#050505] px-6 pt-32 pb-20 text-white"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(212,175,55,0.14),transparent_32%),radial-gradient(circle_at_85%_60%,rgba(255,244,214,0.06),transparent_30%)]"></div>
+
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#050505]/80 to-[#050505]"></div>
 
       <motion.div
@@ -57,7 +58,7 @@ function Hero() {
             className="mt-10 flex flex-wrap gap-4"
           >
             <MagneticButton
-              href="#contact"
+              href="/appointment"
               className="block rounded-full bg-[#D4AF37] px-9 py-4 font-bold text-black shadow-[0_0_35px_rgba(212,175,55,0.24)] transition hover:bg-[#E7C768]"
             >
               Book Free Consultation

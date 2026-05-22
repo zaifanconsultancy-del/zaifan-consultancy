@@ -9,6 +9,7 @@ import WhatsAppButton from "./components/WhatsAppButton";
 import Chatbot from "./components/Chatbot";
 import ScrollToTop from "./components/ScrollToTop";
 import CursorGlow from "./components/CursorGlow";
+import AppointmentBooking from "./components/AppointmentBooking";
 
 import Home from "./pages/Home";
 import ServicesPage from "./pages/ServicesPage";
@@ -88,7 +89,6 @@ function App() {
       {!loading && (
         <>
           <ScrollToTop />
-
           <Navbar />
 
           <AnimatePresence mode="wait">
@@ -139,6 +139,15 @@ function App() {
               />
 
               <Route
+                path="/appointment"
+                element={
+                  <PageTransition>
+                    <AppointmentBooking />
+                  </PageTransition>
+                }
+              />
+
+              <Route
                 path="/admin"
                 element={
                   <PageTransition>
@@ -157,6 +166,7 @@ function App() {
               />
             </Routes>
           </AnimatePresence>
+
           <LivePopup />
           <Footer />
           <WhatsAppButton />

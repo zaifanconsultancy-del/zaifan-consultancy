@@ -45,7 +45,6 @@ function Navbar() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6 md:py-4">
-        {/* LOGO */}
         <button
           type="button"
           onClick={goHome}
@@ -70,7 +69,6 @@ function Navbar() {
           </div>
         </button>
 
-        {/* DESKTOP LINKS */}
         <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-2 py-2 text-sm font-medium backdrop-blur-xl md:flex">
           {navLinks.map((link) => (
             <NavLink
@@ -90,16 +88,14 @@ function Navbar() {
           ))}
         </div>
 
-        {/* DESKTOP CTA */}
         <Link
-          to="/contact"
+          to="/appointment"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="hidden shrink-0 rounded-full bg-[#D4AF37] px-7 py-4 font-semibold text-black shadow-[0_0_25px_rgba(212,175,55,0.16)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#E7C768] md:inline-flex"
         >
           Free Consultation
         </Link>
 
-        {/* MOBILE MENU BUTTON */}
         <button
           type="button"
           aria-label="Toggle menu"
@@ -110,7 +106,6 @@ function Navbar() {
         </button>
       </div>
 
-      {/* MOBILE MENU */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -148,7 +143,7 @@ function Navbar() {
               ))}
 
               <Link
-                to="/contact"
+                to="/appointment"
                 onClick={() => {
                   setMenuOpen(false);
                   window.scrollTo({ top: 0, behavior: "smooth" });
