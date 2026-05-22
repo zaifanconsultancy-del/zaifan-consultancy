@@ -6,10 +6,10 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen overflow-hidden bg-[#080807] px-6 pt-32 pb-20 text-white"
+      className="relative min-h-screen overflow-hidden bg-[#050505] px-6 pt-32 pb-20 text-white"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(212,175,55,0.18),transparent_32%),radial-gradient(circle_at_85%_60%,rgba(255,244,214,0.08),transparent_30%)]"></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#080807]/80 to-[#050505]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(212,175,55,0.14),transparent_32%),radial-gradient(circle_at_85%_60%,rgba(255,244,214,0.06),transparent_30%)]"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#050505]/80 to-[#050505]"></div>
 
       <motion.div
         initial={{ opacity: 0, y: 45 }}
@@ -17,6 +17,7 @@ function Hero() {
         transition={{ duration: 0.9 }}
         className="relative z-10 mx-auto grid min-h-[76vh] max-w-7xl items-center gap-16 lg:grid-cols-[1fr_0.95fr]"
       >
+        {/* LEFT */}
         <div>
           <motion.p
             initial={{ opacity: 0, y: 18 }}
@@ -64,7 +65,7 @@ function Hero() {
 
             <MagneticButton
               href="#countries"
-              className="block rounded-full border border-[#D4AF37]/40 bg-white/[0.04] px-9 py-4 font-bold text-white backdrop-blur-md transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
+              className="block rounded-full bg-white/[0.05] px-9 py-4 font-bold text-white backdrop-blur-md transition hover:bg-white/[0.08] hover:text-[#D4AF37]"
             >
               Explore Countries
             </MagneticButton>
@@ -93,46 +94,37 @@ function Hero() {
           </motion.div>
         </div>
 
+        {/* RIGHT IMAGE */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, x: 30 }}
+          initial={{ opacity: 0, scale: 0.96, x: 30 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           transition={{ duration: 1, delay: 0.25 }}
           className="relative hidden justify-center lg:flex"
         >
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="relative"
-          >
-            <div className="absolute -inset-10 rounded-[3.2rem] bg-[#D4AF37]/10 blur-3xl"></div>
+          <div className="absolute -inset-8 rounded-[3rem] bg-[#D4AF37]/10 blur-3xl"></div>
 
-            <div className="relative w-full max-w-[530px] rounded-[2.7rem] border border-white/10 bg-white/[0.03] p-3 shadow-[0_30px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-              <div className="overflow-hidden rounded-[2.2rem]">
-                <img
-                  src={studentImage}
-                  alt="Student studying abroad"
-                  className="h-[470px] w-full object-cover transition duration-700 hover:scale-105"
-                />
-              </div>
+          <div className="relative w-full max-w-[530px] overflow-hidden rounded-[2rem] bg-white/[0.03] p-2 shadow-2xl shadow-black/60">
+            <div className="relative h-[470px] overflow-hidden rounded-[1.6rem]">
+              <img
+                src={studentImage}
+                alt="Student studying abroad"
+                className="h-full w-full object-cover brightness-[0.8] contrast-110 transition duration-700 hover:scale-105"
+              />
 
-              <div className="absolute inset-3 rounded-[2.2rem] bg-gradient-to-t from-black/60 via-black/5 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/25 to-transparent"></div>
 
-              <div className="absolute bottom-6 left-6 right-6 rounded-[1.6rem] border border-white/10 bg-black/45 px-6 py-5 text-white shadow-2xl backdrop-blur-xl">
+              <div className="absolute bottom-0 left-0 right-0 p-7">
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
                   Guided Process
                 </p>
 
-                <p className="mt-2 text-sm font-medium leading-relaxed text-gray-200">
+                <p className="mt-3 max-w-sm text-base font-semibold leading-relaxed text-white">
                   From profile evaluation to visa preparation — guided with
-                  clarity, strategy and confidence.
+                  clarity and confidence.
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       </motion.div>
     </section>

@@ -11,6 +11,9 @@ function AdminPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
 
+  const cardClass =
+    "group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055]";
+
   const fetchInquiries = async () => {
     setLoading(true);
 
@@ -32,10 +35,7 @@ function AdminPage() {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-
-      if (data.session) {
-        setIsLoggedIn(true);
-      }
+      if (data.session) setIsLoggedIn(true);
     };
 
     checkSession();
@@ -50,9 +50,7 @@ function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchInquiries();
-    }
+    if (isLoggedIn) fetchInquiries();
   }, [isLoggedIn]);
 
   const handleLogin = async (event) => {
@@ -79,6 +77,9 @@ function AdminPage() {
   };
 
   const deleteInquiry = async (id) => {
+    const confirmDelete = confirm("Delete this inquiry?");
+    if (!confirmDelete) return;
+
     const { error } = await supabase.from("inquiries").delete().eq("id", id);
 
     if (error) {
@@ -139,7 +140,13 @@ function AdminPage() {
       "Name",
       "Email",
       "Phone",
+      "Field Of Interest",
+      "Study Level",
       "Country",
+      "Counseling Mode",
+      "Preferred Date",
+      "Time Slot",
+      "City",
       "Message",
       "Status",
       "Date",
@@ -149,7 +156,13 @@ function AdminPage() {
       inquiry.full_name,
       inquiry.email,
       inquiry.phone,
+      inquiry.field_of_interest,
+      inquiry.study_level,
       inquiry.country,
+      inquiry.counseling_mode,
+      inquiry.preferred_date,
+      inquiry.time_slot,
+      inquiry.city,
       inquiry.message,
       inquiry.status || "new",
       inquiry.created_at,
@@ -186,7 +199,10 @@ function AdminPage() {
       inquiry.full_name?.toLowerCase().includes(searchText) ||
       inquiry.email?.toLowerCase().includes(searchText) ||
       inquiry.phone?.toLowerCase().includes(searchText) ||
-      inquiry.country?.toLowerCase().includes(searchText);
+      inquiry.country?.toLowerCase().includes(searchText) ||
+      inquiry.city?.toLowerCase().includes(searchText) ||
+      inquiry.field_of_interest?.toLowerCase().includes(searchText) ||
+      inquiry.study_level?.toLowerCase().includes(searchText);
 
     const matchesStatus =
       statusFilter === "All" || status === statusFilter.toLowerCase();
@@ -204,8 +220,8 @@ function AdminPage() {
 
   if (!isLoggedIn) {
     return (
-      <section className="flex min-h-screen items-center justify-center bg-[#0b0b0b] px-6 text-white">
-        <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 shadow-2xl">
+      <section className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-white">
+        <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 shadow-2xl backdrop-blur-xl">
           <p className="text-sm uppercase tracking-[0.3em] text-[#D4AF37]">
             Admin Login
           </p>
@@ -242,7 +258,7 @@ function AdminPage() {
   }
 
   return (
-    <section className="min-h-screen bg-[#0b0b0b] px-6 pt-36 pb-20 text-white">
+    <section className="min-h-screen bg-[#050505] px-6 pt-36 pb-20 text-white">
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-center">
           <div>
@@ -281,7 +297,7 @@ function AdminPage() {
 
             <button
               onClick={exportToCSV}
-              className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:scale-105 hover:bg-[#E7C768]"
+              className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:bg-[#E7C768]"
             >
               Export CSV
             </button>
@@ -305,7 +321,7 @@ function AdminPage() {
         <div className="mb-8 grid gap-4 md:grid-cols-[1fr_auto]">
           <input
             type="text"
-            placeholder="Search by name, email, phone or country..."
+            placeholder="Search by name, email, phone, country, city, field..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
@@ -329,29 +345,24 @@ function AdminPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-10 text-gray-400">
-            Loading inquiries...
-          </div>
+          <div className={cardClass}>Loading inquiries...</div>
         ) : inquiries.length === 0 ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-10 text-gray-400">
+          <div className={cardClass}>
             No inquiries yet. Fill the contact form once to test it.
           </div>
         ) : filteredInquiries.length === 0 ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-10 text-gray-400">
-            No inquiries found.
-          </div>
+          <div className={cardClass}>No inquiries found.</div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
             {filteredInquiries.map((inquiry) => (
-              <div
-                key={inquiry.id}
-                className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 transition hover:border-[#D4AF37]/30"
-              >
+              <div key={inquiry.id} className={cardClass}>
+                <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition duration-500 group-hover:scale-x-100"></div>
+
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <h2 className="text-2xl font-bold text-white">
-                        {inquiry.full_name}
+                        {inquiry.full_name || "Unnamed Student"}
                       </h2>
 
                       <span
@@ -366,7 +377,9 @@ function AdminPage() {
                     </div>
 
                     <p className="mt-2 text-sm text-gray-500">
-                      {new Date(inquiry.created_at).toLocaleString()}
+                      {inquiry.created_at
+                        ? new Date(inquiry.created_at).toLocaleString()
+                        : "No date"}
                     </p>
                   </div>
 
@@ -378,31 +391,64 @@ function AdminPage() {
                   </button>
                 </div>
 
-                <div className="mt-5 space-y-3 text-gray-300">
+                <div className="mt-6 grid gap-3 text-sm text-gray-300 md:grid-cols-2">
                   <p>
                     <span className="text-[#D4AF37]">Email:</span>{" "}
-                    {inquiry.email}
+                    {inquiry.email || "-"}
                   </p>
 
                   <p>
                     <span className="text-[#D4AF37]">Phone:</span>{" "}
-                    {inquiry.phone}
+                    {inquiry.phone || "-"}
                   </p>
 
                   <p>
                     <span className="text-[#D4AF37]">Country:</span>{" "}
-                    {inquiry.country}
+                    {inquiry.country || "-"}
                   </p>
 
                   <p>
-                    <span className="text-[#D4AF37]">Message:</span>{" "}
-                    {inquiry.message}
+                    <span className="text-[#D4AF37]">City:</span>{" "}
+                    {inquiry.city || "-"}
+                  </p>
+
+                  <p>
+                    <span className="text-[#D4AF37]">Field:</span>{" "}
+                    {inquiry.field_of_interest || "-"}
+                  </p>
+
+                  <p>
+                    <span className="text-[#D4AF37]">Study Level:</span>{" "}
+                    {inquiry.study_level || "-"}
+                  </p>
+
+                  <p>
+                    <span className="text-[#D4AF37]">Mode:</span>{" "}
+                    {inquiry.counseling_mode || "-"}
+                  </p>
+
+                  <p>
+                    <span className="text-[#D4AF37]">Preferred Date:</span>{" "}
+                    {inquiry.preferred_date || "-"}
+                  </p>
+
+                  <p>
+                    <span className="text-[#D4AF37]">Time Slot:</span>{" "}
+                    {inquiry.time_slot || "-"}
+                  </p>
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <p className="text-sm text-[#D4AF37]">Message</p>
+
+                  <p className="mt-2 whitespace-pre-wrap leading-relaxed text-gray-300">
+                    {inquiry.message || "-"}
                   </p>
                 </div>
 
                 <button
                   onClick={() => toggleStatus(inquiry.id, inquiry.status)}
-                  className="mt-6 rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition hover:scale-105 hover:bg-[#E7C768]"
+                  className="mt-6 rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#E7C768]"
                 >
                   {inquiry.status === "contacted"
                     ? "Mark as New"
