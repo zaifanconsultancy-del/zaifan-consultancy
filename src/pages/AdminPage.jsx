@@ -4,12 +4,12 @@ import { supabase } from "../lib/supabaseClient";
 import AdminLogin from "../components/admin/AdminLogin";
 import AdminHeader from "../components/admin/AdminHeader";
 import AdminStats from "../components/admin/AdminStats";
-import AdminFilters from "../components/admin/AdminFilters";
-import InquiryCard from "../components/admin/InquiryCard";
-import AppointmentCard from "../components/admin/AppointmentCard";
 import SearchToolbar from "../components/admin/SearchToolbar";
 import DashboardContent from "../components/admin/DashboardContent";
 import DashboardOverview from "../components/admin/DashboardOverview";
+import ActivityTimeline from "../components/admin/ActivityTimeline";
+import NotificationCenter from "../components/admin/NotificationCenter";
+import AdminSidebar from "../components/admin/AdminSidebar";
 
 function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,13 +21,6 @@ function AdminPage() {
   const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const appointmentStatuses = [
-  "All",
-  "Pending",
-  "Confirmed",
-  "Completed",
-  "Cancelled",
-];
   const [loading, setLoading] = useState(false);
 
   const cardClass =
@@ -188,9 +181,7 @@ function AdminPage() {
 
     setAppointments(
       appointments.map((appointment) =>
-        appointment.id === id
-          ? { ...appointment, status: newStatus }
-          : appointment
+        appointment.id === id ? { ...appointment, status: newStatus } : appointment
       )
     );
 
@@ -413,20 +404,6 @@ function AdminPage() {
     (appointment) => appointment.status === "cancelled"
   ).length;
 
-  const formatWhatsAppNumber = (phoneNumber) => {
-    let cleanedNumber = String(phoneNumber || "").replace(/\D/g, "");
-
-    if (cleanedNumber.startsWith("0")) {
-      cleanedNumber = `92${cleanedNumber.slice(1)}`;
-    }
-
-    if (!cleanedNumber.startsWith("92") && cleanedNumber.length === 10) {
-      cleanedNumber = `92${cleanedNumber}`;
-    }
-
-    return cleanedNumber;
-  };
-
   const latestInquiry = inquiries[0];
   const latestAppointment = appointments[0];
 
@@ -450,98 +427,110 @@ function AdminPage() {
       : ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
 
   if (!isLoggedIn) {
-  return (
-    <AdminLogin
-      email={email}
-      password={password}
-      setEmail={setEmail}
-      setPassword={setPassword}
-      handleLogin={handleLogin}
-      inputClass={inputClass}
-    />
-  );
-}
+    return (
+      <AdminLogin
+        email={email}
+        password={password}
+        setEmail={setEmail}
+        setPassword={setPassword}
+        handleLogin={handleLogin}
+        inputClass={inputClass}
+      />
+    );
+  }
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[#050505] px-6 pt-36 pb-20 text-white">
+    <section className="relative min-h-screen overflow-hidden bg-[#050505] text-white">
       <div className="absolute right-[-12%] top-[-18%] h-[520px] w-[520px] rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
       <div className="absolute bottom-[-25%] left-[-12%] h-[520px] w-[520px] rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
 
-      <div className="relative mx-auto max-w-7xl">
-        <AdminHeader
-  inquiries={inquiries}
-  appointments={appointments}
-  appointmentPendingCount={appointmentPendingCount}
-  fetchAllData={fetchAllData}
-  activeTab={activeTab}
-  exportInquiriesToCSV={exportInquiriesToCSV}
-  exportAppointmentsToCSV={exportAppointmentsToCSV}
-  logout={logout}
-  clearInquiries={clearInquiries}
-  clearAppointments={clearAppointments}
-/>
+      <div className="relative flex">
+        <AdminSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          logout={logout}
+        />
 
-       <AdminStats
-  cardClass={cardClass}
-  inquiries={inquiries}
-  inquiryNewCount={inquiryNewCount}
-  inquiryContactedCount={inquiryContactedCount}
-  appointments={appointments}
-  appointmentPendingCount={appointmentPendingCount}
-  appointmentConfirmedCount={appointmentConfirmedCount}
-  appointmentCompletedCount={appointmentCompletedCount}
-  appointmentCancelledCount={appointmentCancelledCount}
-/>
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 xl:px-10">
+          <AdminHeader
+            inquiries={inquiries}
+            appointments={appointments}
+            appointmentPendingCount={appointmentPendingCount}
+            fetchAllData={fetchAllData}
+            activeTab={activeTab}
+            exportInquiriesToCSV={exportInquiriesToCSV}
+            exportAppointmentsToCSV={exportAppointmentsToCSV}
+            logout={logout}
+            clearInquiries={clearInquiries}
+            clearAppointments={clearAppointments}
+          />
 
-       <DashboardOverview
-  cardClass={cardClass}
-  todayInquiriesCount={todayInquiriesCount}
-  todayAppointmentsCount={todayAppointmentsCount}
-  latestInquiry={latestInquiry}
-  latestAppointment={latestAppointment}
-/>
+          <NotificationCenter
+            cardClass={cardClass}
+            inquiryNewCount={inquiryNewCount}
+            appointmentPendingCount={appointmentPendingCount}
+            appointmentConfirmedCount={appointmentConfirmedCount}
+          />
 
-       <AdminFilters
-  activeTab={activeTab}
-  setActiveTab={setActiveTab}
-  search={search}
-  setSearch={setSearch}
-  statusFilter={statusFilter}
-  setStatusFilter={setStatusFilter}
-  appointmentStatuses={appointmentStatuses}
-/>
+          <AdminStats
+            cardClass={cardClass}
+            inquiries={inquiries}
+            inquiryNewCount={inquiryNewCount}
+            inquiryContactedCount={inquiryContactedCount}
+            appointments={appointments}
+            appointmentPendingCount={appointmentPendingCount}
+            appointmentConfirmedCount={appointmentConfirmedCount}
+            appointmentCompletedCount={appointmentCompletedCount}
+            appointmentCancelledCount={appointmentCancelledCount}
+          />
 
-      <SearchToolbar
-  activeTab={activeTab}
-  search={search}
-  setSearch={setSearch}
-  statusOptions={statusOptions}
-  statusFilter={statusFilter}
-  setStatusFilter={setStatusFilter}
-/>
-      <AnimatePresence mode="wait">
-  <motion.div
-    key={activeTab}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.3 }}
-  >
-    <DashboardContent
-      loading={loading}
-      activeTab={activeTab}
-      inquiries={inquiries}
-      filteredInquiries={filteredInquiries}
-      appointments={appointments}
-      filteredAppointments={filteredAppointments}
-      cardClass={cardClass}
-      toggleInquiryStatus={toggleInquiryStatus}
-      deleteInquiry={deleteInquiry}
-      updateAppointmentStatus={updateAppointmentStatus}
-      deleteAppointment={deleteAppointment}
-    />
-  </motion.div>
-</AnimatePresence>
+          <DashboardOverview
+            cardClass={cardClass}
+            todayInquiriesCount={todayInquiriesCount}
+            todayAppointmentsCount={todayAppointmentsCount}
+            latestInquiry={latestInquiry}
+            latestAppointment={latestAppointment}
+          />
+
+          <ActivityTimeline
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
+
+          <SearchToolbar
+            activeTab={activeTab}
+            search={search}
+            setSearch={setSearch}
+            statusOptions={statusOptions}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DashboardContent
+                loading={loading}
+                activeTab={activeTab}
+                inquiries={inquiries}
+                filteredInquiries={filteredInquiries}
+                appointments={appointments}
+                filteredAppointments={filteredAppointments}
+                cardClass={cardClass}
+                toggleInquiryStatus={toggleInquiryStatus}
+                deleteInquiry={deleteInquiry}
+                updateAppointmentStatus={updateAppointmentStatus}
+                deleteAppointment={deleteAppointment}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </main>
       </div>
     </section>
   );

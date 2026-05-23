@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 function AdminHeader({
   inquiries,
   appointments,
@@ -10,79 +12,81 @@ function AdminHeader({
   clearInquiries,
   clearAppointments,
 }) {
+  const summaryItems = [
+    { label: "Inquiries", value: inquiries.length },
+    { label: "Appointments", value: appointments.length },
+    { label: "Pending", value: appointmentPendingCount },
+  ];
+
   return (
-    <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-center">
-      <div>
-        <p className="text-sm uppercase tracking-[0.3em] text-[#D4AF37]">
-          Admin Dashboard
-        </p>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
+      className="mb-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl"
+    >
+      <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-center">
+        <div>
+          <div className="inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
+            Admin Dashboard
+          </div>
 
-        <h1 className="mt-4 text-4xl font-extrabold md:text-6xl">
-          Zaifan CRM
-        </h1>
+          <h1 className="mt-4 text-3xl font-extrabold text-white md:text-5xl">
+            Zaifan CRM
+          </h1>
 
-        <div className="mt-4 flex flex-wrap gap-4 text-gray-400">
-          <p>
-            Inquiries:{" "}
-            <span className="text-[#D4AF37]">{inquiries.length}</span>
-          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {summaryItems.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-gray-400"
+              >
+                {item.label}:{" "}
+                <span className="font-semibold text-[#D4AF37]">
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-          <p>
-            Appointments:{" "}
-            <span className="text-[#D4AF37]">
-              {appointments.length}
-            </span>
-          </p>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:min-w-[560px]">
+          <button
+            onClick={fetchAllData}
+            className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+          >
+            Refresh
+          </button>
 
-          <p>
-            Pending Bookings:{" "}
-            <span className="text-[#D4AF37]">
-              {appointmentPendingCount}
-            </span>
-          </p>
+          <button
+            onClick={
+              activeTab === "inquiries"
+                ? exportInquiriesToCSV
+                : exportAppointmentsToCSV
+            }
+            className="rounded-2xl bg-[#D4AF37] px-4 py-3 text-sm font-bold text-black transition hover:bg-[#E7C768]"
+          >
+            Export CSV
+          </button>
+
+          <button
+            onClick={logout}
+            className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37] xl:hidden"
+          >
+            Logout
+          </button>
+
+          <button
+            onClick={
+              activeTab === "inquiries" ? clearInquiries : clearAppointments
+            }
+            className="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm font-semibold text-red-300 transition hover:border-red-400 hover:bg-red-400/15"
+          >
+            Clear {activeTab === "inquiries" ? "Inquiries" : "Appointments"}
+          </button>
         </div>
       </div>
-
-      <div className="flex flex-wrap gap-3">
-        <button
-          onClick={fetchAllData}
-          className="rounded-full border border-white/10 px-6 py-3 text-sm text-gray-300 transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
-        >
-          Refresh
-        </button>
-
-        <button
-          onClick={
-            activeTab === "inquiries"
-              ? exportInquiriesToCSV
-              : exportAppointmentsToCSV
-          }
-          className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:bg-[#E7C768]"
-        >
-          Export CSV
-        </button>
-
-        <button
-          onClick={logout}
-          className="rounded-full border border-white/10 px-6 py-3 text-sm text-gray-300 transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
-        >
-          Logout
-        </button>
-
-        <button
-          onClick={
-            activeTab === "inquiries"
-              ? clearInquiries
-              : clearAppointments
-          }
-          className="rounded-full border border-white/10 px-6 py-3 text-sm text-gray-300 transition hover:border-red-400 hover:text-red-400"
-        >
-          Clear {activeTab === "inquiries"
-            ? "Inquiries"
-            : "Appointments"}
-        </button>
-      </div>
-    </div>
+    </motion.div>
   );
 }
 
