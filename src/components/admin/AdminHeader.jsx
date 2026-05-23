@@ -23,15 +23,15 @@ function AdminHeader({
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="mb-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl"
+      className="mb-6 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl"
     >
-      <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-center">
+      <div className="flex flex-col gap-6">
         <div>
-          <div className="inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
+          <div className="inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
             Admin Dashboard
           </div>
 
-          <h1 className="mt-4 text-3xl font-extrabold text-white md:text-5xl">
+          <h1 className="mt-4 text-3xl font-extrabold leading-tight text-white md:text-5xl">
             Zaifan CRM
           </h1>
 
@@ -50,7 +50,7 @@ function AdminHeader({
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:min-w-[560px]">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <button
             onClick={fetchAllData}
             className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"

@@ -70,6 +70,8 @@ function App() {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
 
+  const isAdminPage = location.pathname === "/admin";
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
@@ -89,7 +91,8 @@ function App() {
       {!loading && (
         <>
           <ScrollToTop />
-          <Navbar />
+
+          {!isAdminPage && <Navbar />}
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -167,10 +170,14 @@ function App() {
             </Routes>
           </AnimatePresence>
 
-          <LivePopup />
-          <Footer />
-          <WhatsAppButton />
-          <Chatbot />
+          {!isAdminPage && (
+            <>
+              <LivePopup />
+              <Footer />
+              <WhatsAppButton />
+              <Chatbot />
+            </>
+          )}
         </>
       )}
     </main>

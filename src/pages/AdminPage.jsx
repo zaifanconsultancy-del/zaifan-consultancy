@@ -10,6 +10,7 @@ import DashboardOverview from "../components/admin/DashboardOverview";
 import ActivityTimeline from "../components/admin/ActivityTimeline";
 import NotificationCenter from "../components/admin/NotificationCenter";
 import AdminSidebar from "../components/admin/AdminSidebar";
+import DashboardAnalytics from "../components/admin/DashboardAnalytics";
 
 function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -483,6 +484,12 @@ function AdminPage() {
             appointmentCompletedCount={appointmentCompletedCount}
             appointmentCancelledCount={appointmentCancelledCount}
           />
+
+          <DashboardAnalytics
+  cardClass={cardClass}
+  inquiries={inquiries}
+  appointments={appointments}
+/>
 
           <DashboardOverview
             cardClass={cardClass}
