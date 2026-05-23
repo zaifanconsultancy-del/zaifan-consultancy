@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaCalendarAlt, FaClock, FaWhatsapp } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaPaperPlane } from "react-icons/fa";
 import { supabase } from "../lib/supabaseClient";
 
 function AppointmentBooking() {
@@ -59,12 +59,13 @@ function AppointmentBooking() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     setLoading(true);
     setSuccess("");
     setError("");
 
-    const { error } = await supabase.from("appointments").insert([
-      {
+    try {
+      const appointmentData = {
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,
@@ -74,28 +75,62 @@ function AppointmentBooking() {
         appointment_time: formData.appointment_time,
         message: formData.message,
         status: "pending",
-      },
-    ]);
+      };
 
-    if (error) {
-      console.log("FULL SUPABASE ERROR:", error);
-      setError(error.message || "Something went wrong. Please try again.");
-      setLoading(false);
-      return;
+      const { error: insertError } = await supabase
+        .from("appointments")
+        .insert([appointmentData]);
+
+      if (insertError) {
+        console.log("FULL SUPABASE ERROR:", insertError);
+        setError(insertError.message || "Appointment could not be saved.");
+        setLoading(false);
+        return;
+      }
+
+      const { data: emailData, error: emailError } =
+        await supabase.functions.invoke("send-appointment-email", {
+          body: {
+            fullName: formData.full_name,
+            email: formData.email,
+            phone: formData.phone,
+            country: formData.country_interest,
+            service: formData.consultation_type,
+            appointmentDate: formData.appointment_date,
+            appointmentTime: formData.appointment_time,
+            message: formData.message,
+          },
+        });
+
+      console.log("EMAIL FUNCTION DATA:", emailData);
+      console.log("EMAIL FUNCTION ERROR:", emailError);
+
+      if (emailError) {
+        setError(
+          "Appointment saved, but email was not sent. Check Supabase function logs."
+        );
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(
+        "Your consultation booking request has been submitted. Confirmation email sent."
+      );
+
+      setFormData({
+        full_name: "",
+        email: "",
+        phone: "",
+        country_interest: "",
+        consultation_type: "",
+        appointment_date: "",
+        appointment_time: "",
+        message: "",
+      });
+    } catch (err) {
+      console.log("APPOINTMENT SUBMIT ERROR:", err);
+      setError("Something went wrong. Please try again.");
     }
-
-    setSuccess("Your consultation booking request has been submitted.");
-
-    setFormData({
-      full_name: "",
-      email: "",
-      phone: "",
-      country_interest: "",
-      consultation_type: "",
-      appointment_date: "",
-      appointment_time: "",
-      message: "",
-    });
 
     setLoading(false);
   };
@@ -282,7 +317,7 @@ function AppointmentBooking() {
               disabled={loading}
               className="flex w-full items-center justify-center gap-3 rounded-full bg-[#D4AF37] px-8 py-4 font-bold text-black transition duration-300 hover:-translate-y-1 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <FaWhatsapp />
+              <FaPaperPlane />
               {loading ? "Submitting..." : "Request Appointment"}
             </button>
           </form>
