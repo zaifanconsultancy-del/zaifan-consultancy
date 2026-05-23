@@ -6,110 +6,150 @@ function AppointmentCard({
 }) {
   const status = appointment.status || "pending";
 
+  const statusStyles = {
+    pending:
+      "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
+    confirmed:
+      "border-green-500/30 bg-green-500/10 text-green-400",
+    completed:
+      "border-blue-500/30 bg-blue-500/10 text-blue-400",
+    cancelled:
+      "border-red-500/30 bg-red-500/10 text-red-400",
+  };
+
   return (
-    <div className={cardClass}>
+    <div
+      className={`${cardClass} group relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/20 bg-gradient-to-br from-white/[0.04] to-white/[0.02] p-7 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/40`}
+    >
+      {/* TOP HOVER LINE */}
       <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition duration-500 group-hover:scale-x-100"></div>
 
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+      {/* HEADER */}
+      <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <h2 className="break-words text-2xl font-bold text-white">
+          <p className="text-[11px] uppercase tracking-[0.35em] text-gray-500">
+            Consultation Booking
+          </p>
+
+          <h2 className="mt-3 text-3xl font-bold leading-tight text-white">
             {appointment.full_name || "Unnamed Student"}
           </h2>
-
-          <p className="mt-2 break-all text-sm text-gray-400">
-            {appointment.email || "-"}
-          </p>
-
-          <p className="mt-1 break-words text-sm text-gray-500">
-            {appointment.phone || "-"}
-          </p>
         </div>
 
         <span
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-            status === "confirmed"
-              ? "bg-green-400/10 text-green-400"
-              : status === "completed"
-              ? "bg-blue-400/10 text-blue-400"
-              : status === "cancelled"
-              ? "bg-red-400/10 text-red-400"
-              : "bg-[#D4AF37]/10 text-[#D4AF37]"
+          className={`w-fit rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
+            statusStyles[status]
           }`}
         >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {status}
         </span>
       </div>
 
-      <div className="mt-6 rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-5">
-        <p className="text-sm uppercase tracking-[0.22em] text-[#D4AF37]">
-          Booking Slot
+      {/* BOOKING SLOT */}
+      <div className="mt-7 rounded-[1.7rem] border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-6">
+        <p className="text-[11px] uppercase tracking-[0.35em] text-[#D4AF37]">
+          Appointment Slot
         </p>
 
-        <h3 className="mt-3 break-words text-2xl font-extrabold text-white">
-          {appointment.appointment_date || "No date"} ·{" "}
-          {appointment.appointment_time || "No time"}
-        </h3>
+        <div className="mt-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <h3 className="text-2xl font-bold text-white">
+            {appointment.appointment_date || "No Date"}
+          </h3>
+
+          <span className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-medium text-gray-300">
+            {appointment.appointment_time || "No Time"}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-6 grid min-w-0 gap-3 text-sm text-gray-300 sm:grid-cols-2">
-        <p className="min-w-0 break-words">
-          <span className="text-[#D4AF37]">Email:</span>{" "}
-          <span className="break-all">{appointment.email || "-"}</span>
+      {/* INFO GRID */}
+      <div className="mt-7 grid gap-4 lg:grid-cols-2">
+        <InfoCard
+          label="Email"
+          value={appointment.email}
+          singleLine={true}
+        />
+
+        <InfoCard
+          label="Phone"
+          value={appointment.phone}
+        />
+
+        <InfoCard
+          label="Country Interest"
+          value={appointment.country_interest}
+        />
+
+        <InfoCard
+          label="Consultation Type"
+          value={appointment.consultation_type}
+        />
+      </div>
+
+      {/* MESSAGE */}
+      <div className="mt-7 rounded-[1.5rem] border border-white/10 bg-black/25 p-6">
+        <p className="text-[11px] uppercase tracking-[0.35em] text-gray-500">
+          Student Message
         </p>
 
-        <p className="min-w-0 break-words">
-          <span className="text-[#D4AF37]">Phone:</span>{" "}
-          <span className="break-all">{appointment.phone || "-"}</span>
-        </p>
-
-        <p className="min-w-0 break-words">
-          <span className="text-[#D4AF37]">Country:</span>{" "}
-          {appointment.country_interest || "-"}
-        </p>
-
-        <p className="min-w-0 break-words">
-          <span className="text-[#D4AF37]">Type:</span>{" "}
-          {appointment.consultation_type || "-"}
+        <p className="mt-4 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-gray-300">
+          {appointment.message || "No message provided."}
         </p>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-        <p className="text-sm text-[#D4AF37]">Message</p>
-
-        <p className="mt-2 whitespace-pre-wrap break-words leading-relaxed text-gray-300">
-          {appointment.message || "-"}
-        </p>
-      </div>
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      {/* ACTIONS */}
+      <div className="mt-7 flex flex-col gap-4 border-t border-white/10 pt-6 lg:flex-row lg:items-center lg:justify-between">
         <select
           value={status}
           onChange={(event) =>
             updateAppointmentStatus(appointment.id, event.target.value)
           }
-          className="min-w-0 rounded-full border border-white/10 bg-black/30 px-5 py-3 text-sm font-semibold text-white outline-none transition focus:border-[#D4AF37]"
+          className="rounded-full border border-white/10 bg-black/40 px-6 py-3 pr-12 text-sm font-semibold text-white outline-none transition duration-300 focus:border-[#D4AF37]"
         >
-          <option value="pending" className="text-black">
+          <option value="pending" className="bg-[#111111] text-white">
             Pending
           </option>
-          <option value="confirmed" className="text-black">
+
+          <option value="confirmed" className="bg-[#111111] text-white">
             Confirmed
           </option>
-          <option value="completed" className="text-black">
+
+          <option value="completed" className="bg-[#111111] text-white">
             Completed
           </option>
-          <option value="cancelled" className="text-black">
+
+          <option value="cancelled" className="bg-[#111111] text-white">
             Cancelled
           </option>
         </select>
 
         <button
           onClick={() => deleteAppointment(appointment.id)}
-          className="rounded-full border border-white/10 px-5 py-3 text-sm font-semibold text-gray-300 transition hover:border-red-400 hover:text-red-400"
+          className="rounded-full border border-red-500/30 px-7 py-3 text-sm font-semibold text-red-400 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/10"
         >
-          Delete
+          Delete Appointment
         </button>
       </div>
+    </div>
+  );
+}
+
+function InfoCard({ label, value, singleLine = false }) {
+  return (
+    <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-5 transition duration-300 hover:border-[#D4AF37]/20 hover:bg-white/[0.05]">
+      <p className="text-[11px] uppercase tracking-[0.3em] text-gray-500">
+        {label}
+      </p>
+
+      <p
+        className={`mt-3 text-[15px] text-gray-200 ${
+          singleLine
+            ? "overflow-hidden text-ellipsis whitespace-nowrap"
+            : "break-words"
+        }`}
+      >
+        {value || "-"}
+      </p>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import AdminLogin from "../components/admin/AdminLogin";
@@ -6,6 +7,9 @@ import AdminStats from "../components/admin/AdminStats";
 import AdminFilters from "../components/admin/AdminFilters";
 import InquiryCard from "../components/admin/InquiryCard";
 import AppointmentCard from "../components/admin/AppointmentCard";
+import SearchToolbar from "../components/admin/SearchToolbar";
+import DashboardContent from "../components/admin/DashboardContent";
+import DashboardOverview from "../components/admin/DashboardOverview";
 
 function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -489,59 +493,13 @@ function AdminPage() {
   appointmentCancelledCount={appointmentCancelledCount}
 />
 
-        <div className="mb-8 grid gap-5 lg:grid-cols-3">
-          <div className={cardClass}>
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
-
-            <p className="text-sm uppercase tracking-[0.22em] text-gray-500">
-              Today Activity
-            </p>
-
-            <h2 className="mt-3 text-3xl font-extrabold text-[#D4AF37]">
-              {todayInquiriesCount + todayAppointmentsCount}
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-400">
-              {todayInquiriesCount} inquiries · {todayAppointmentsCount} bookings
-            </p>
-          </div>
-
-          <div className={cardClass}>
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
-
-            <p className="text-sm uppercase tracking-[0.22em] text-gray-500">
-              Latest Inquiry
-            </p>
-
-            <h2 className="mt-3 text-2xl font-extrabold text-white">
-              {latestInquiry?.full_name || "No inquiry yet"}
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-400">
-              {latestInquiry?.country || "Waiting for first contact form"}
-            </p>
-          </div>
-
-          <div className={cardClass}>
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
-
-            <p className="text-sm uppercase tracking-[0.22em] text-gray-500">
-              Latest Appointment
-            </p>
-
-            <h2 className="mt-3 text-2xl font-extrabold text-white">
-              {latestAppointment?.full_name || "No booking yet"}
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-400">
-              {latestAppointment
-                ? `${latestAppointment.appointment_date || "No date"} · ${
-                    latestAppointment.appointment_time || "No time"
-                  }`
-                : "Waiting for first appointment"}
-            </p>
-          </div>
-        </div>
+       <DashboardOverview
+  cardClass={cardClass}
+  todayInquiriesCount={todayInquiriesCount}
+  todayAppointmentsCount={todayAppointmentsCount}
+  latestInquiry={latestInquiry}
+  latestAppointment={latestAppointment}
+/>
 
        <AdminFilters
   activeTab={activeTab}
@@ -553,77 +511,37 @@ function AdminPage() {
   appointmentStatuses={appointmentStatuses}
 />
 
-        <div className="mb-8 grid gap-4 md:grid-cols-[1fr_auto]">
-          <input
-            type="text"
-            placeholder={
-              activeTab === "inquiries"
-                ? "Search by name, email, phone, country, city, field..."
-                : "Search by name, email, phone, country, type, date, time..."
-            }
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className={inputClass}
-          />
-
-          <div className="flex flex-wrap gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-2">
-            {statusOptions.map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                  statusFilter === status
-                    ? "bg-[#D4AF37] text-black"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-        </div>
-
-       {loading ? (
-  <div className={cardClass}>Loading dashboard data...</div>
-) : activeTab === "inquiries" ? (
-  inquiries.length === 0 ? (
-    <div className={cardClass}>
-      No inquiries yet. Fill the contact form once to test it.
-    </div>
-  ) : filteredInquiries.length === 0 ? (
-    <div className={cardClass}>No inquiries found.</div>
-  ) : (
-    <div className="grid gap-6 md:grid-cols-2">
-      {filteredInquiries.map((inquiry) => (
-        <InquiryCard
-          key={inquiry.id}
-          inquiry={inquiry}
-          cardClass={cardClass}
-          updateInquiryStatus={toggleInquiryStatus}
-          deleteInquiry={deleteInquiry}
-        />
-      ))}
-    </div>
-  )
-) : appointments.length === 0 ? (
-  <div className={cardClass}>
-    No appointments yet. Submit one booking request to test it.
-  </div>
-) : filteredAppointments.length === 0 ? (
-  <div className={cardClass}>No appointments found.</div>
-) : (
-  <div className="grid gap-6 md:grid-cols-2">
-    {filteredAppointments.map((appointment) => (
-      <AppointmentCard
-        key={appointment.id}
-        appointment={appointment}
-        cardClass={cardClass}
-        updateAppointmentStatus={updateAppointmentStatus}
-        deleteAppointment={deleteAppointment}
-      />
-    ))}
-  </div>
-)}
+      <SearchToolbar
+  activeTab={activeTab}
+  search={search}
+  setSearch={setSearch}
+  statusOptions={statusOptions}
+  statusFilter={statusFilter}
+  setStatusFilter={setStatusFilter}
+/>
+      <AnimatePresence mode="wait">
+  <motion.div
+    key={activeTab}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    transition={{ duration: 0.3 }}
+  >
+    <DashboardContent
+      loading={loading}
+      activeTab={activeTab}
+      inquiries={inquiries}
+      filteredInquiries={filteredInquiries}
+      appointments={appointments}
+      filteredAppointments={filteredAppointments}
+      cardClass={cardClass}
+      toggleInquiryStatus={toggleInquiryStatus}
+      deleteInquiry={deleteInquiry}
+      updateAppointmentStatus={updateAppointmentStatus}
+      deleteAppointment={deleteAppointment}
+    />
+  </motion.div>
+</AnimatePresence>
       </div>
     </section>
   );
