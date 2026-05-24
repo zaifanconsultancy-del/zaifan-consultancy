@@ -1,7 +1,9 @@
+import { useState } from "react";
 import InquiryCard from "./InquiryCard";
 import AppointmentCard from "./AppointmentCard";
 import { AnimatePresence, motion } from "framer-motion";
 import AnimatedSection from "./AnimatedSection";
+import StudentDetailModal from "./StudentDetailModal";
 
 function DashboardContent({
   loading,
@@ -17,6 +19,23 @@ function DashboardContent({
   updateAppointmentStatus,
   deleteAppointment,
 }) {
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [modalType, setModalType] = useState("inquiry");
+
+  const openInquiryModal = (student) => {
+    setSelectedStudent(student);
+    setModalType("inquiry");
+  };
+
+  const openAppointmentModal = (student) => {
+    setSelectedStudent(student);
+    setModalType("appointment");
+  };
+
+  const closeModal = () => {
+    setSelectedStudent(null);
+  };
+
   const inquiryNewCount = inquiries.filter(
     (inquiry) => (inquiry.status || "new") === "new"
   ).length;
@@ -165,98 +184,119 @@ function DashboardContent({
   }
 
   return (
-    <AnimatePresence mode="wait">
-      {activeTab === "inquiries" ? (
-        <AnimatedSection key="inquiries">
-          <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {pipelineStages.map((stage, index) => (
-              <PipelineStage key={stage.label} stage={stage} index={index} cardClass={cardClass} />
-            ))}
-          </div>
-
-          {inquiries.length === 0 ? (
-            <EmptyState
-              icon="✦"
-              title="No Inquiries Yet"
-              text="Your contact form submissions will appear here once students start reaching out."
-              gold
-            />
-          ) : filteredInquiries.length === 0 ? (
-            <EmptyState
-              icon="⌕"
-              title="No Matching Results"
-              text="Try adjusting your search keywords or status filters."
-            />
-          ) : (
-            <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
-              {filteredInquiries.map((inquiry, index) => (
-                <motion.div
-                  key={inquiry.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.28,
-                    delay: Math.min(index * 0.025, 0.18),
-                  }}
-                >
-                  <InquiryCard
-                    inquiry={inquiry}
-                    cardClass={cardClass}
-                    updateInquiryStatus={toggleInquiryStatus}
-                    updateInquiryPriority={updateInquiryPriority}
-                    deleteInquiry={deleteInquiry}
-                  />
-                </motion.div>
+    <>
+      <AnimatePresence mode="wait">
+        {activeTab === "inquiries" ? (
+          <AnimatedSection key="inquiries">
+            <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {pipelineStages.map((stage, index) => (
+                <PipelineStage
+                  key={stage.label}
+                  stage={stage}
+                  index={index}
+                  cardClass={cardClass}
+                />
               ))}
             </div>
-          )}
-        </AnimatedSection>
-      ) : (
-        <AnimatedSection key="appointments">
-          <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {pipelineStages.map((stage, index) => (
-              <PipelineStage key={stage.label} stage={stage} index={index} cardClass={cardClass} />
-            ))}
-          </div>
 
-          {appointments.length === 0 ? (
-            <EmptyState
-              icon="📅"
-              title="No Appointments Yet"
-              text="Consultation bookings will appear here after students reserve appointment slots."
-              gold
-            />
-          ) : filteredAppointments.length === 0 ? (
-            <EmptyState
-              icon="⌕"
-              title="No Matching Results"
-              text="Try changing the appointment filters or search query."
-            />
-          ) : (
-            <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
-              {filteredAppointments.map((appointment, index) => (
-                <motion.div
-                  key={appointment.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.28,
-                    delay: Math.min(index * 0.025, 0.18),
-                  }}
-                >
-                  <AppointmentCard
-                    appointment={appointment}
-                    cardClass={cardClass}
-                    updateAppointmentStatus={updateAppointmentStatus}
-                    deleteAppointment={deleteAppointment}
-                  />
-                </motion.div>
+            {inquiries.length === 0 ? (
+              <EmptyState
+                icon="✦"
+                title="No Inquiries Yet"
+                text="Your contact form submissions will appear here once students start reaching out."
+                gold
+              />
+            ) : filteredInquiries.length === 0 ? (
+              <EmptyState
+                icon="⌕"
+                title="No Matching Results"
+                text="Try adjusting your search keywords or status filters."
+              />
+            ) : (
+              <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
+                {filteredInquiries.map((inquiry, index) => (
+                  <motion.div
+                    key={inquiry.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.28,
+                      delay: Math.min(index * 0.025, 0.18),
+                    }}
+                  >
+                    <InquiryCard
+                      inquiry={inquiry}
+                      cardClass={cardClass}
+                      updateInquiryStatus={toggleInquiryStatus}
+                      updateInquiryPriority={updateInquiryPriority}
+                      deleteInquiry={deleteInquiry}
+                      openModal={openInquiryModal}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </AnimatedSection>
+        ) : (
+          <AnimatedSection key="appointments">
+            <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {pipelineStages.map((stage, index) => (
+                <PipelineStage
+                  key={stage.label}
+                  stage={stage}
+                  index={index}
+                  cardClass={cardClass}
+                />
               ))}
             </div>
-          )}
-        </AnimatedSection>
-      )}
-    </AnimatePresence>
+
+            {appointments.length === 0 ? (
+              <EmptyState
+                icon="📅"
+                title="No Appointments Yet"
+                text="Consultation bookings will appear here after students reserve appointment slots."
+                gold
+              />
+            ) : filteredAppointments.length === 0 ? (
+              <EmptyState
+                icon="⌕"
+                title="No Matching Results"
+                text="Try changing the appointment filters or search query."
+              />
+            ) : (
+              <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
+                {filteredAppointments.map((appointment, index) => (
+                  <motion.div
+                    key={appointment.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.28,
+                      delay: Math.min(index * 0.025, 0.18),
+                    }}
+                  >
+                    <AppointmentCard
+                      appointment={appointment}
+                      cardClass={cardClass}
+                      updateAppointmentStatus={updateAppointmentStatus}
+                      deleteAppointment={deleteAppointment}
+                      openModal={openAppointmentModal}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </AnimatedSection>
+        )}
+      </AnimatePresence>
+
+      <StudentDetailModal
+        isOpen={!!selectedStudent}
+        onClose={closeModal}
+        student={selectedStudent}
+        type={modalType}
+      />
+    </>
   );
 }
 

@@ -5,6 +5,7 @@ function AppointmentCard({
   cardClass,
   updateAppointmentStatus,
   deleteAppointment,
+  openModal,
 }) {
   const status = appointment.status || "pending";
 
@@ -19,7 +20,8 @@ function AppointmentCard({
     <motion.div
       whileHover={{ y: -3 }}
       transition={{ duration: 0.25 }}
-      className={`${cardClass} group relative overflow-hidden rounded-[1.5rem] border border-[#D4AF37]/20 bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-black/30 p-4 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/45 hover:shadow-[0_20px_60px_rgba(212,175,55,0.07)] sm:rounded-[2rem] sm:p-5`}
+      onClick={() => openModal(appointment)}
+      className={`${cardClass} group relative cursor-pointer overflow-hidden rounded-[1.5rem] border border-[#D4AF37]/20 bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-black/30 p-4 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/45 hover:shadow-[0_20px_60px_rgba(212,175,55,0.07)] sm:rounded-[2rem] sm:p-5`}
     >
       <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#D4AF37]/10 blur-3xl transition duration-700 group-hover:bg-[#D4AF37]/20 sm:h-48 sm:w-48"></div>
 
@@ -81,44 +83,56 @@ function AppointmentCard({
           Student Message
         </p>
 
-        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-300 sm:mt-3">
+        <p className="mt-2 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-300 sm:mt-3">
           {appointment.message || "No message provided."}
         </p>
       </div>
 
-      <div className="relative mt-4 flex flex-col gap-2.5 border-t border-white/10 pt-4 sm:mt-5 sm:gap-3 sm:pt-5 lg:flex-row lg:items-center lg:justify-between">
-        <select
-          value={status}
-          onChange={(event) =>
-            updateAppointmentStatus(appointment.id, event.target.value)
-          }
-          className={`w-full rounded-full border px-4 py-2.5 pr-10 text-xs font-semibold outline-none transition duration-300 backdrop-blur-xl hover:scale-[1.01] sm:w-fit sm:px-5 sm:py-3 sm:text-sm
-          ${statusStyles[status]}
-          focus:border-[#D4AF37]`}
-        >
-          <option value="pending" className="bg-[#111111] text-white">
-            Pending
-          </option>
-
-          <option value="confirmed" className="bg-[#111111] text-white">
-            Confirmed
-          </option>
-
-          <option value="completed" className="bg-[#111111] text-white">
-            Completed
-          </option>
-
-          <option value="cancelled" className="bg-[#111111] text-white">
-            Cancelled
-          </option>
-        </select>
-
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="relative mt-4 flex flex-col gap-2.5 border-t border-white/10 pt-4 sm:mt-5 sm:gap-3 sm:pt-5 lg:flex-row lg:items-center lg:justify-between"
+      >
         <button
-          onClick={() => deleteAppointment(appointment.id)}
-          className="w-full rounded-full border border-red-500/30 px-4 py-2.5 text-xs font-semibold text-red-400 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/10 sm:w-fit sm:px-6 sm:py-3 sm:text-sm"
+          onClick={() => openModal(appointment)}
+          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white transition duration-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.08] sm:w-fit sm:px-6 sm:py-3 sm:text-sm"
         >
-          Delete Appointment
+          Open CRM
         </button>
+
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <select
+            value={status}
+            onChange={(event) =>
+              updateAppointmentStatus(appointment.id, event.target.value)
+            }
+            className={`w-full rounded-full border px-4 py-2.5 pr-10 text-xs font-semibold outline-none transition duration-300 backdrop-blur-xl hover:scale-[1.01] sm:w-fit sm:px-5 sm:py-3 sm:text-sm
+            ${statusStyles[status]}
+            focus:border-[#D4AF37]`}
+          >
+            <option value="pending" className="bg-[#111111] text-white">
+              Pending
+            </option>
+
+            <option value="confirmed" className="bg-[#111111] text-white">
+              Confirmed
+            </option>
+
+            <option value="completed" className="bg-[#111111] text-white">
+              Completed
+            </option>
+
+            <option value="cancelled" className="bg-[#111111] text-white">
+              Cancelled
+            </option>
+          </select>
+
+          <button
+            onClick={() => deleteAppointment(appointment.id)}
+            className="w-full rounded-full border border-red-500/30 px-4 py-2.5 text-xs font-semibold text-red-400 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/10 sm:w-fit sm:px-6 sm:py-3 sm:text-sm"
+          >
+            Delete Appointment
+          </button>
+        </div>
       </div>
     </motion.div>
   );
