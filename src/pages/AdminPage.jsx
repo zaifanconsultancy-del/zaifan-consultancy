@@ -25,7 +25,7 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   const cardClass =
-    "group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055]";
+    "group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055] sm:rounded-[2rem] sm:p-6";
 
   const inputClass =
     "w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]";
@@ -182,7 +182,9 @@ function AdminPage() {
 
     setAppointments(
       appointments.map((appointment) =>
-        appointment.id === id ? { ...appointment, status: newStatus } : appointment
+        appointment.id === id
+          ? { ...appointment, status: newStatus }
+          : appointment
       )
     );
 
@@ -442,17 +444,18 @@ function AdminPage() {
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#050505] text-white">
-      <div className="absolute right-[-12%] top-[-18%] h-[520px] w-[520px] rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-      <div className="absolute bottom-[-25%] left-[-12%] h-[520px] w-[520px] rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
+      <div className="absolute right-[-35%] top-[-12%] h-[320px] w-[320px] rounded-full bg-[#D4AF37]/10 blur-3xl sm:right-[-12%] sm:top-[-18%] sm:h-[520px] sm:w-[520px]"></div>
 
-      <div className="relative flex">
+      <div className="absolute bottom-[-18%] left-[-35%] h-[320px] w-[320px] rounded-full bg-[#D4AF37]/5 blur-3xl sm:bottom-[-25%] sm:left-[-12%] sm:h-[520px] sm:w-[520px]"></div>
+
+      <div className="relative flex flex-col xl:flex-row">
         <AdminSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           logout={logout}
         />
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 xl:px-10">
+        <main className="min-w-0 flex-1 overflow-hidden px-3 py-4 sm:px-6 sm:py-6 xl:px-10">
           <AdminHeader
             inquiries={inquiries}
             appointments={appointments}
@@ -486,10 +489,10 @@ function AdminPage() {
           />
 
           <DashboardAnalytics
-  cardClass={cardClass}
-  inquiries={inquiries}
-  appointments={appointments}
-/>
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
 
           <DashboardOverview
             cardClass={cardClass}
@@ -517,10 +520,10 @@ function AdminPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
             >
               <DashboardContent
                 loading={loading}
