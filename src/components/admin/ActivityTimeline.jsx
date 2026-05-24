@@ -1,16 +1,31 @@
 import { motion } from "framer-motion";
 
 function ActivityTimeline({ cardClass, inquiries, appointments }) {
+  const priorityStyles = {
+    vip: "border-purple-400/30 bg-purple-500/10 text-purple-300",
+    high: "border-red-400/30 bg-red-500/10 text-red-300",
+    medium: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
+    low: "border-white/10 bg-white/[0.04] text-gray-400",
+  };
+
   const activities = [
-    ...inquiries.slice(0, 4).map((inquiry) => ({
-      id: `inquiry-${inquiry.id}`,
-      type: "Inquiry",
-      name: inquiry.full_name || "Unknown Student",
-      detail: inquiry.country || inquiry.field_of_interest || "New inquiry received",
-      date: inquiry.created_at,
-      icon: "📨",
-      style: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
-    })),
+    ...inquiries.slice(0, 4).map((inquiry) => {
+      const priority = inquiry.priority || "low";
+
+      return {
+        id: `inquiry-${inquiry.id}`,
+        type: "Inquiry",
+        priority,
+        name: inquiry.full_name || "Unknown Student",
+        detail:
+          inquiry.country || inquiry.field_of_interest || "New inquiry received",
+        date: inquiry.created_at,
+        icon: priority === "vip" ? "👑" : priority === "high" ? "🔥" : "📨",
+        style: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
+        priorityStyle: priorityStyles[priority] || priorityStyles.low,
+      };
+    }),
+
     ...appointments.slice(0, 4).map((appointment) => ({
       id: `appointment-${appointment.id}`,
       type: "Appointment",
@@ -86,6 +101,14 @@ function ActivityTimeline({ cardClass, inquiries, appointments }) {
                   >
                     {activity.type}
                   </span>
+
+                  {activity.priority && (
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] sm:px-3 sm:text-[10px] sm:tracking-[0.18em] ${activity.priorityStyle}`}
+                    >
+                      {activity.priority}
+                    </span>
+                  )}
 
                   <span className="text-[10px] text-gray-500 sm:text-[11px]">
                     {formatDate(activity.date)}

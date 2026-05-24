@@ -14,7 +14,7 @@ function SearchToolbar({
             type="text"
             placeholder={
               activeTab === "inquiries"
-                ? "Search inquiries..."
+                ? "Search name, email, phone, country, priority..."
                 : "Search appointments..."
             }
             value={search}
@@ -28,19 +28,32 @@ function SearchToolbar({
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1 xl:flex-wrap xl:overflow-visible xl:pb-0">
-          {statusOptions.map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`whitespace-nowrap rounded-[0.9rem] px-3.5 py-2.5 text-[11px] font-semibold transition duration-300 sm:rounded-[1.1rem] sm:px-4 sm:py-3 sm:text-xs ${
-                statusFilter === status
-                  ? "bg-[#D4AF37] text-black shadow-[0_0_24px_rgba(212,175,55,0.22)]"
-                  : "border border-white/10 bg-white/[0.035] text-gray-400 hover:border-[#D4AF37]/25 hover:text-white"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+          {statusOptions.map((status) => {
+            const isActive = statusFilter === status;
+            const isPriority =
+              status === "VIP" ||
+              status === "High" ||
+              status === "Medium" ||
+              status === "Low";
+
+            return (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`whitespace-nowrap rounded-[0.9rem] px-3.5 py-2.5 text-[11px] font-semibold transition duration-300 sm:rounded-[1.1rem] sm:px-4 sm:py-3 sm:text-xs ${
+                  isActive
+                    ? isPriority
+                      ? "bg-white text-black shadow-[0_0_24px_rgba(255,255,255,0.16)]"
+                      : "bg-[#D4AF37] text-black shadow-[0_0_24px_rgba(212,175,55,0.22)]"
+                    : isPriority
+                    ? "border border-[#D4AF37]/20 bg-[#D4AF37]/5 text-[#D4AF37] hover:border-[#D4AF37]/35 hover:bg-[#D4AF37]/10"
+                    : "border border-white/10 bg-white/[0.035] text-gray-400 hover:border-[#D4AF37]/25 hover:text-white"
+                }`}
+              >
+                {status}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

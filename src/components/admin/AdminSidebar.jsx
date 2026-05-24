@@ -4,8 +4,8 @@ function AdminSidebar({ activeTab, setActiveTab, logout }) {
   const navItems = [
     { id: "inquiries", label: "Inquiries", icon: "📨", active: true },
     { id: "appointments", label: "Appointments", icon: "📅", active: true },
-    { id: "analytics", label: "Analytics Soon", icon: "📊", active: false },
-    { id: "settings", label: "Settings Soon", icon: "⚙️", active: false },
+    { id: "analytics", label: "Analytics", icon: "📊", active: true },
+    { id: "settings", label: "Settings", icon: "⚙️", active: true },
   ];
 
   const openWebsite = () => {
@@ -44,25 +44,23 @@ function AdminSidebar({ activeTab, setActiveTab, logout }) {
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {navItems
-            .filter((item) => item.active)
-            .map((item) => {
-              const isActive = activeTab === item.id;
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
 
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`whitespace-nowrap rounded-xl px-3.5 py-2.5 text-[11px] font-semibold transition duration-300 ${
-                    isActive
-                      ? "bg-[#D4AF37] text-black shadow-[0_0_24px_rgba(212,175,55,0.2)]"
-                      : "border border-white/10 bg-white/[0.04] text-gray-400"
-                  }`}
-                >
-                  {item.icon} {item.label}
-                </button>
-              );
-            })}
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`whitespace-nowrap rounded-xl px-3.5 py-2.5 text-[11px] font-semibold transition duration-300 ${
+                  isActive
+                    ? "bg-[#D4AF37] text-black shadow-[0_0_24px_rgba(212,175,55,0.2)]"
+                    : "border border-white/10 bg-white/[0.04] text-gray-400"
+                }`}
+              >
+                {item.icon} {item.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -95,14 +93,11 @@ function AdminSidebar({ activeTab, setActiveTab, logout }) {
                   initial={{ opacity: 0, x: -18 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.35, delay: index * 0.06 }}
-                  onClick={() => item.active && setActiveTab(item.id)}
-                  disabled={!item.active}
+                  onClick={() => setActiveTab(item.id)}
                   className={`flex w-full items-center gap-3 rounded-2xl px-5 py-4 text-left text-sm font-semibold transition duration-300 ${
                     isActive
                       ? "bg-[#D4AF37] text-black shadow-[0_0_30px_rgba(212,175,55,0.22)]"
-                      : item.active
-                      ? "border border-white/10 bg-white/[0.03] text-gray-400 hover:border-[#D4AF37]/20 hover:text-white"
-                      : "cursor-not-allowed border border-white/10 bg-white/[0.02] text-gray-600"
+                      : "border border-white/10 bg-white/[0.03] text-gray-400 hover:border-[#D4AF37]/20 hover:text-white"
                   }`}
                 >
                   <span>{item.icon}</span>

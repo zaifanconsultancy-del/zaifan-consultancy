@@ -77,6 +77,31 @@ function DashboardAnalytics({ cardClass, inquiries, appointments }) {
     (appointment) => appointment.status === "confirmed"
   ).length;
 
+  const priorityMetrics = [
+    {
+      label: "VIP Leads",
+      value: inquiries.filter((inquiry) => inquiry.priority === "vip").length,
+      color: "text-purple-300",
+    },
+    {
+      label: "High",
+      value: inquiries.filter((inquiry) => inquiry.priority === "high").length,
+      color: "text-red-300",
+    },
+    {
+      label: "Medium",
+      value: inquiries.filter((inquiry) => inquiry.priority === "medium")
+        .length,
+      color: "text-[#D4AF37]",
+    },
+    {
+      label: "Low",
+      value: inquiries.filter((inquiry) => (inquiry.priority || "low") === "low")
+        .length,
+      color: "text-gray-300",
+    },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -120,6 +145,17 @@ function DashboardAnalytics({ cardClass, inquiries, appointments }) {
             color="text-green-400"
           />
         </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+        {priorityMetrics.map((metric) => (
+          <MiniMetric
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+            color={metric.color}
+          />
+        ))}
       </div>
 
       <div className="h-[240px] overflow-hidden rounded-[1.2rem] border border-white/10 bg-black/20 p-2 sm:h-[310px] sm:rounded-[1.5rem] sm:p-4">

@@ -12,10 +12,98 @@ function DashboardContent({
   filteredAppointments,
   cardClass,
   toggleInquiryStatus,
+  updateInquiryPriority,
   deleteInquiry,
   updateAppointmentStatus,
   deleteAppointment,
 }) {
+  const inquiryNewCount = inquiries.filter(
+    (inquiry) => (inquiry.status || "new") === "new"
+  ).length;
+
+  const inquiryContactedCount = inquiries.filter(
+    (inquiry) => inquiry.status === "contacted"
+  ).length;
+
+  const priorityCounts = {
+    vip: inquiries.filter((inquiry) => inquiry.priority === "vip").length,
+    high: inquiries.filter((inquiry) => inquiry.priority === "high").length,
+    medium: inquiries.filter((inquiry) => inquiry.priority === "medium").length,
+    low: inquiries.filter((inquiry) => (inquiry.priority || "low") === "low")
+      .length,
+  };
+
+  const appointmentPendingCount = appointments.filter(
+    (appointment) => (appointment.status || "pending") === "pending"
+  ).length;
+
+  const appointmentConfirmedCount = appointments.filter(
+    (appointment) => appointment.status === "confirmed"
+  ).length;
+
+  const appointmentCompletedCount = appointments.filter(
+    (appointment) => appointment.status === "completed"
+  ).length;
+
+  const appointmentCancelledCount = appointments.filter(
+    (appointment) => appointment.status === "cancelled"
+  ).length;
+
+  const pipelineStages =
+    activeTab === "inquiries"
+      ? [
+          {
+            label: "New Leads",
+            value: inquiryNewCount,
+            icon: "✨",
+            color: "text-[#D4AF37]",
+          },
+          {
+            label: "Contacted",
+            value: inquiryContactedCount,
+            icon: "📞",
+            color: "text-green-400",
+          },
+          {
+            label: "VIP",
+            value: priorityCounts.vip,
+            icon: "👑",
+            color: "text-purple-300",
+          },
+          {
+            label: "High Priority",
+            value: priorityCounts.high,
+            icon: "🔥",
+            color: "text-red-300",
+          },
+        ]
+      : [
+          {
+            label: "Pending",
+            value: appointmentPendingCount,
+            icon: "⏳",
+            color: "text-orange-300",
+          },
+          {
+            label: "Confirmed",
+            value: appointmentConfirmedCount,
+            icon: "✅",
+            color: "text-green-400",
+          },
+          {
+            label: "Completed",
+            value: appointmentCompletedCount,
+            icon: "🎯",
+            color: "text-blue-400",
+          },
+          {
+            label: "Cancelled",
+            value: appointmentCancelledCount,
+            icon: "❌",
+            color: "text-red-400",
+          },
+        ];
+
   const EmptyState = ({ icon, title, text, gold = false }) => (
     <AnimatedSection key={`${activeTab}-${title}`}>
       <div
@@ -80,6 +168,12 @@ function DashboardContent({
     <AnimatePresence mode="wait">
       {activeTab === "inquiries" ? (
         <AnimatedSection key="inquiries">
+          <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {pipelineStages.map((stage, index) => (
+              <PipelineStage key={stage.label} stage={stage} index={index} cardClass={cardClass} />
+            ))}
+          </div>
+
           {inquiries.length === 0 ? (
             <EmptyState
               icon="✦"
@@ -109,6 +203,7 @@ function DashboardContent({
                     inquiry={inquiry}
                     cardClass={cardClass}
                     updateInquiryStatus={toggleInquiryStatus}
+                    updateInquiryPriority={updateInquiryPriority}
                     deleteInquiry={deleteInquiry}
                   />
                 </motion.div>
@@ -118,6 +213,12 @@ function DashboardContent({
         </AnimatedSection>
       ) : (
         <AnimatedSection key="appointments">
+          <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {pipelineStages.map((stage, index) => (
+              <PipelineStage key={stage.label} stage={stage} index={index} cardClass={cardClass} />
+            ))}
+          </div>
+
           {appointments.length === 0 ? (
             <EmptyState
               icon="📅"
@@ -159,10 +260,39 @@ function DashboardContent({
   );
 }
 
+function PipelineStage({ stage, index, cardClass }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.28,
+        delay: index * 0.04,
+      }}
+      className={`${cardClass} flex items-center justify-between p-4 sm:p-5`}
+    >
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
+          {stage.label}
+        </p>
+
+        <h2 className={`mt-2 text-3xl font-black ${stage.color}`}>
+          {stage.value}
+        </h2>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-2xl">
+        {stage.icon}
+      </div>
+    </motion.div>
+  );
+}
+
 function MiniEmptyCard({ icon, text }) {
   return (
     <div className="rounded-[1rem] border border-white/10 bg-white/[0.03] p-3 sm:rounded-[1.3rem] sm:p-4">
       <p className="text-xl sm:text-2xl">{icon}</p>
+
       <p className="mt-1.5 text-[11px] font-semibold text-gray-300 sm:mt-2 sm:text-xs">
         {text}
       </p>

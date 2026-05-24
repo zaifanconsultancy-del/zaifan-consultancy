@@ -162,6 +162,25 @@ function AdminPage() {
     );
   };
 
+  const updateInquiryPriority = async (id, newPriority) => {
+    const { error } = await supabase
+      .from("inquiries")
+      .update({ priority: newPriority })
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      alert("Failed to update inquiry priority.");
+      return;
+    }
+
+    setInquiries(
+      inquiries.map((inquiry) =>
+        inquiry.id === id ? { ...inquiry, priority: newPriority } : inquiry
+      )
+    );
+  };
+
   const updateAppointmentStatus = async (id, newStatus) => {
     const selectedAppointment = appointments.find(
       (appointment) => appointment.id === id
@@ -288,6 +307,7 @@ function AdminPage() {
       "City",
       "Message",
       "Status",
+      "Priority",
       "Date",
     ];
 
@@ -304,6 +324,7 @@ function AdminPage() {
       inquiry.city,
       inquiry.message,
       inquiry.status || "new",
+      inquiry.priority || "low",
       inquiry.created_at,
     ]);
 
@@ -353,13 +374,16 @@ function AdminPage() {
       inquiry.full_name?.toLowerCase().includes(searchText) ||
       inquiry.email?.toLowerCase().includes(searchText) ||
       inquiry.phone?.toLowerCase().includes(searchText) ||
+      inquiry.priority?.toLowerCase().includes(searchText) ||
       inquiry.country?.toLowerCase().includes(searchText) ||
       inquiry.city?.toLowerCase().includes(searchText) ||
       inquiry.field_of_interest?.toLowerCase().includes(searchText) ||
       inquiry.study_level?.toLowerCase().includes(searchText);
 
     const matchesStatus =
-      statusFilter === "All" || status === statusFilter.toLowerCase();
+  statusFilter === "All" ||
+  status === statusFilter.toLowerCase() ||
+  (inquiry.priority || "low") === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
@@ -425,9 +449,9 @@ function AdminPage() {
   ).length;
 
   const statusOptions =
-    activeTab === "inquiries"
-      ? ["All", "New", "Contacted"]
-      : ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
+  activeTab === "inquiries"
+    ? ["All", "New", "Contacted", "VIP", "High", "Medium", "Low"]
+    : ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
 
   if (!isLoggedIn) {
     return (
@@ -469,77 +493,122 @@ function AdminPage() {
             clearAppointments={clearAppointments}
           />
 
-          <NotificationCenter
-            cardClass={cardClass}
-            inquiryNewCount={inquiryNewCount}
-            appointmentPendingCount={appointmentPendingCount}
-            appointmentConfirmedCount={appointmentConfirmedCount}
-          />
+          {activeTab !== "analytics" && activeTab !== "settings" && (
+            <>
+              <NotificationCenter
+                cardClass={cardClass}
+                inquiryNewCount={inquiryNewCount}
+                appointmentPendingCount={appointmentPendingCount}
+                appointmentConfirmedCount={appointmentConfirmedCount}
+              />
 
-          <AdminStats
-            cardClass={cardClass}
-            inquiries={inquiries}
-            inquiryNewCount={inquiryNewCount}
-            inquiryContactedCount={inquiryContactedCount}
-            appointments={appointments}
-            appointmentPendingCount={appointmentPendingCount}
-            appointmentConfirmedCount={appointmentConfirmedCount}
-            appointmentCompletedCount={appointmentCompletedCount}
-            appointmentCancelledCount={appointmentCancelledCount}
-          />
+              <AdminStats
+                cardClass={cardClass}
+                inquiries={inquiries}
+                inquiryNewCount={inquiryNewCount}
+                inquiryContactedCount={inquiryContactedCount}
+                appointments={appointments}
+                appointmentPendingCount={appointmentPendingCount}
+                appointmentConfirmedCount={appointmentConfirmedCount}
+                appointmentCompletedCount={appointmentCompletedCount}
+                appointmentCancelledCount={appointmentCancelledCount}
+              />
+            </>
+          )}
 
-          <DashboardAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-
-          <DashboardOverview
-            cardClass={cardClass}
-            todayInquiriesCount={todayInquiriesCount}
-            todayAppointmentsCount={todayAppointmentsCount}
-            latestInquiry={latestInquiry}
-            latestAppointment={latestAppointment}
-          />
-
-          <ActivityTimeline
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-
-          <SearchToolbar
-            activeTab={activeTab}
-            search={search}
-            setSearch={setSearch}
-            statusOptions={statusOptions}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-          />
-
-          <AnimatePresence mode="wait">
+          {activeTab === "analytics" ? (
             <motion.div
-              key={activeTab}
+              key="analytics"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.22 }}
+              className="space-y-6"
             >
-              <DashboardContent
-                loading={loading}
-                activeTab={activeTab}
-                inquiries={inquiries}
-                filteredInquiries={filteredInquiries}
-                appointments={appointments}
-                filteredAppointments={filteredAppointments}
+              <DashboardAnalytics
                 cardClass={cardClass}
-                toggleInquiryStatus={toggleInquiryStatus}
-                deleteInquiry={deleteInquiry}
-                updateAppointmentStatus={updateAppointmentStatus}
-                deleteAppointment={deleteAppointment}
+                inquiries={inquiries}
+                appointments={appointments}
+              />
+
+              <DashboardOverview
+                cardClass={cardClass}
+                todayInquiriesCount={todayInquiriesCount}
+                todayAppointmentsCount={todayAppointmentsCount}
+                latestInquiry={latestInquiry}
+                latestAppointment={latestAppointment}
+              />
+
+              <ActivityTimeline
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
               />
             </motion.div>
-          </AnimatePresence>
+          ) : activeTab === "settings" ? (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+              className={`${cardClass} flex flex-col items-center justify-center px-6 py-16 text-center`}
+            >
+              <div className="rounded-[1.7rem] border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-6 text-5xl">
+                ⚙️
+              </div>
+
+              <p className="mt-6 text-[11px] uppercase tracking-[0.35em] text-[#D4AF37]">
+                Settings Panel
+              </p>
+
+              <h2 className="mt-3 text-4xl font-black text-white">
+                Coming Soon
+              </h2>
+
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gray-400">
+                Advanced CRM customization, admin preferences, role management,
+                notification controls, integrations, analytics configuration,
+                branding settings, and automation tools will be added here.
+              </p>
+            </motion.div>
+          ) : (
+            <>
+              <SearchToolbar
+                activeTab={activeTab}
+                search={search}
+                setSearch={setSearch}
+                statusOptions={statusOptions}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+              />
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.22 }}
+                >
+                  <DashboardContent
+                    loading={loading}
+                    activeTab={activeTab}
+                    inquiries={inquiries}
+                    filteredInquiries={filteredInquiries}
+                    appointments={appointments}
+                    filteredAppointments={filteredAppointments}
+                    cardClass={cardClass}
+                    toggleInquiryStatus={toggleInquiryStatus}
+                    updateInquiryPriority={updateInquiryPriority}
+                    deleteInquiry={deleteInquiry}
+                    updateAppointmentStatus={updateAppointmentStatus}
+                    deleteAppointment={deleteAppointment}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </>
+          )}
         </main>
       </div>
     </section>
