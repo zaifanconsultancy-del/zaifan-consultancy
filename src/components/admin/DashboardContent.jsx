@@ -15,12 +15,14 @@ function DashboardContent({
   cardClass,
   toggleInquiryStatus,
   updateInquiryPriority,
+  updateAppointmentPriority,
   deleteInquiry,
   updateAppointmentStatus,
   deleteAppointment,
 }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [modalType, setModalType] = useState("inquiry");
+  const [viewMode, setViewMode] = useState("list");
 
   const openInquiryModal = (student) => {
     setSelectedStudent(student);
@@ -36,6 +38,41 @@ function DashboardContent({
     setSelectedStudent(null);
   };
 
+  const priorityColumns = [
+    {
+      value: "vip",
+      label: "VIP Leads",
+      icon: "👑",
+      color: "text-purple-300",
+      border: "border-purple-400/25",
+      bg: "bg-purple-500/5",
+    },
+    {
+      value: "high",
+      label: "High Priority",
+      icon: "🔥",
+      color: "text-red-300",
+      border: "border-red-400/25",
+      bg: "bg-red-500/5",
+    },
+    {
+      value: "medium",
+      label: "Medium Priority",
+      icon: "⭐",
+      color: "text-[#D4AF37]",
+      border: "border-[#D4AF37]/25",
+      bg: "bg-[#D4AF37]/5",
+    },
+    {
+      value: "low",
+      label: "Low Priority",
+      icon: "🌙",
+      color: "text-gray-300",
+      border: "border-white/10",
+      bg: "bg-white/[0.025]",
+    },
+  ];
+
   const inquiryNewCount = inquiries.filter(
     (inquiry) => (inquiry.status || "new") === "new"
   ).length;
@@ -43,14 +80,6 @@ function DashboardContent({
   const inquiryContactedCount = inquiries.filter(
     (inquiry) => inquiry.status === "contacted"
   ).length;
-
-  const priorityCounts = {
-    vip: inquiries.filter((inquiry) => inquiry.priority === "vip").length,
-    high: inquiries.filter((inquiry) => inquiry.priority === "high").length,
-    medium: inquiries.filter((inquiry) => inquiry.priority === "medium").length,
-    low: inquiries.filter((inquiry) => (inquiry.priority || "low") === "low")
-      .length,
-  };
 
   const appointmentPendingCount = appointments.filter(
     (appointment) => (appointment.status || "pending") === "pending"
@@ -67,6 +96,24 @@ function DashboardContent({
   const appointmentCancelledCount = appointments.filter(
     (appointment) => appointment.status === "cancelled"
   ).length;
+
+  const priorityCounts =
+    activeTab === "inquiries"
+      ? {
+          vip: inquiries.filter((item) => item.priority === "vip").length,
+          high: inquiries.filter((item) => item.priority === "high").length,
+          medium: inquiries.filter((item) => item.priority === "medium").length,
+          low: inquiries.filter((item) => (item.priority || "low") === "low")
+            .length,
+        }
+      : {
+          vip: appointments.filter((item) => item.priority === "vip").length,
+          high: appointments.filter((item) => item.priority === "high").length,
+          medium: appointments.filter((item) => item.priority === "medium")
+            .length,
+          low: appointments.filter((item) => (item.priority || "low") === "low")
+            .length,
+        };
 
   const pipelineStages =
     activeTab === "inquiries"
@@ -123,6 +170,9 @@ function DashboardContent({
           },
         ];
 
+  const activeItems =
+    activeTab === "inquiries" ? filteredInquiries : filteredAppointments;
+
   const EmptyState = ({ icon, title, text, gold = false }) => (
     <AnimatedSection key={`${activeTab}-${title}`}>
       <div
@@ -170,12 +220,10 @@ function DashboardContent({
           >
             <div className="h-3.5 w-24 rounded-full bg-white/10 sm:h-4 sm:w-28"></div>
             <div className="h-7 w-44 rounded-2xl bg-white/10 sm:h-8 sm:w-56"></div>
-
             <div className="grid gap-2.5 sm:gap-3 lg:grid-cols-2">
               <div className="h-16 rounded-2xl bg-white/10 sm:h-20"></div>
               <div className="h-16 rounded-2xl bg-white/10 sm:h-20"></div>
             </div>
-
             <div className="h-24 rounded-2xl bg-white/10 sm:h-28"></div>
           </div>
         ))}
@@ -186,108 +234,189 @@ function DashboardContent({
   return (
     <>
       <AnimatePresence mode="wait">
-        {activeTab === "inquiries" ? (
-          <AnimatedSection key="inquiries">
-            <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {pipelineStages.map((stage, index) => (
-                <PipelineStage
-                  key={stage.label}
-                  stage={stage}
-                  index={index}
-                  cardClass={cardClass}
-                />
-              ))}
+        <AnimatedSection key={activeTab}>
+          <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {pipelineStages.map((stage, index) => (
+              <PipelineStage
+                key={stage.label}
+                stage={stage}
+                index={index}
+                cardClass={cardClass}
+              />
+            ))}
+          </div>
+
+          <div className="mb-4 flex flex-col gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+                CRM View Mode
+              </p>
+              <h3 className="mt-1 text-lg font-bold text-white">
+                {viewMode === "kanban" ? "Kanban Pipeline" : "Card List"}
+              </h3>
             </div>
 
-            {inquiries.length === 0 ? (
-              <EmptyState
-                icon="✦"
-                title="No Inquiries Yet"
-                text="Your contact form submissions will appear here once students start reaching out."
-                gold
-              />
-            ) : filteredInquiries.length === 0 ? (
-              <EmptyState
-                icon="⌕"
-                title="No Matching Results"
-                text="Try adjusting your search keywords or status filters."
-              />
-            ) : (
-              <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
-                {filteredInquiries.map((inquiry, index) => (
+            <div className="grid grid-cols-2 gap-2 rounded-full border border-white/10 bg-black/25 p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition duration-300 ${
+                  viewMode === "list"
+                    ? "bg-[#D4AF37] text-black"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                List
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode("kanban")}
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition duration-300 ${
+                  viewMode === "kanban"
+                    ? "bg-[#D4AF37] text-black"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                Kanban
+              </button>
+            </div>
+          </div>
+
+          {activeTab === "inquiries" && inquiries.length === 0 ? (
+            <EmptyState
+              icon="✦"
+              title="No Inquiries Yet"
+              text="Your contact form submissions will appear here once students start reaching out."
+              gold
+            />
+          ) : activeTab === "appointments" && appointments.length === 0 ? (
+            <EmptyState
+              icon="📅"
+              title="No Appointments Yet"
+              text="Consultation bookings will appear here after students reserve appointment slots."
+              gold
+            />
+          ) : activeItems.length === 0 ? (
+            <EmptyState
+              icon="⌕"
+              title="No Matching Results"
+              text="Try adjusting your search keywords or status filters."
+            />
+          ) : viewMode === "kanban" ? (
+            <div className="grid gap-4 xl:grid-cols-4">
+              {priorityColumns.map((column, columnIndex) => {
+                const columnItems = activeItems.filter(
+                  (item) => (item.priority || "low") === column.value
+                );
+
+                return (
                   <motion.div
-                    key={inquiry.id}
-                    initial={{ opacity: 0, y: 12 }}
+                    key={column.value}
+                    initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
-                      duration: 0.28,
-                      delay: Math.min(index * 0.025, 0.18),
+                      duration: 0.3,
+                      delay: columnIndex * 0.04,
                     }}
+                    className={`min-h-[360px] rounded-[1.7rem] border ${column.border} ${column.bg} p-3 backdrop-blur-xl`}
                   >
+                    <div className="mb-3 flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-black/25 p-4">
+                      <div>
+                        <p className="text-xl">{column.icon}</p>
+                        <h3 className={`mt-2 text-sm font-bold ${column.color}`}>
+                          {column.label}
+                        </h3>
+                      </div>
+
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-bold text-white">
+                        {columnItems.length}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {columnItems.length === 0 ? (
+                        <div className="rounded-[1.2rem] border border-dashed border-white/10 bg-black/20 p-5 text-center">
+                          <p className="text-xs text-gray-500">
+                            No leads in this column.
+                          </p>
+                        </div>
+                      ) : (
+                        columnItems.map((item, index) => (
+                          <motion.div
+                            key={item.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.24,
+                              delay: Math.min(index * 0.02, 0.12),
+                            }}
+                          >
+                            {activeTab === "inquiries" ? (
+                              <InquiryCard
+                                inquiry={item}
+                                cardClass="p-0"
+                                updateInquiryStatus={toggleInquiryStatus}
+                                updateInquiryPriority={updateInquiryPriority}
+                                deleteInquiry={deleteInquiry}
+                                openModal={openInquiryModal}
+                                compact
+                              />
+                            ) : (
+                              <AppointmentCard
+                                appointment={item}
+                                cardClass="p-0"
+                                updateAppointmentStatus={updateAppointmentStatus}
+                                updateAppointmentPriority={updateAppointmentPriority}
+                                deleteAppointment={deleteAppointment}
+                                openModal={openAppointmentModal}
+                                compact
+                              />
+                            )}
+                          </motion.div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
+              {activeItems.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.28,
+                    delay: Math.min(index * 0.025, 0.18),
+                  }}
+                >
+                  {activeTab === "inquiries" ? (
                     <InquiryCard
-                      inquiry={inquiry}
+                      inquiry={item}
                       cardClass={cardClass}
                       updateInquiryStatus={toggleInquiryStatus}
                       updateInquiryPriority={updateInquiryPriority}
                       deleteInquiry={deleteInquiry}
                       openModal={openInquiryModal}
                     />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </AnimatedSection>
-        ) : (
-          <AnimatedSection key="appointments">
-            <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {pipelineStages.map((stage, index) => (
-                <PipelineStage
-                  key={stage.label}
-                  stage={stage}
-                  index={index}
-                  cardClass={cardClass}
-                />
-              ))}
-            </div>
-
-            {appointments.length === 0 ? (
-              <EmptyState
-                icon="📅"
-                title="No Appointments Yet"
-                text="Consultation bookings will appear here after students reserve appointment slots."
-                gold
-              />
-            ) : filteredAppointments.length === 0 ? (
-              <EmptyState
-                icon="⌕"
-                title="No Matching Results"
-                text="Try changing the appointment filters or search query."
-              />
-            ) : (
-              <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
-                {filteredAppointments.map((appointment, index) => (
-                  <motion.div
-                    key={appointment.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.28,
-                      delay: Math.min(index * 0.025, 0.18),
-                    }}
-                  >
+                  ) : (
                     <AppointmentCard
-                      appointment={appointment}
+                      appointment={item}
                       cardClass={cardClass}
                       updateAppointmentStatus={updateAppointmentStatus}
+                      updateAppointmentPriority={updateAppointmentPriority}
                       deleteAppointment={deleteAppointment}
                       openModal={openAppointmentModal}
                     />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </AnimatedSection>
-        )}
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </AnimatedSection>
       </AnimatePresence>
 
       <StudentDetailModal

@@ -4,35 +4,67 @@ function AppointmentCard({
   appointment,
   cardClass,
   updateAppointmentStatus,
+  updateAppointmentPriority,
   deleteAppointment,
   openModal,
+  compact = false,
 }) {
   const status = appointment.status || "pending";
+  const priority = appointment.priority || "low";
+
+  const priorityStyles = {
+    vip: {
+      badge: "border-purple-400/40 bg-purple-500/10 text-purple-300",
+      card:
+        "border-purple-400/25 hover:border-purple-400/50 hover:shadow-[0_20px_60px_rgba(168,85,247,0.12)]",
+      glow: "bg-purple-500/10 group-hover:bg-purple-500/20",
+    },
+    high: {
+      badge: "border-red-400/40 bg-red-500/10 text-red-300",
+      card:
+        "border-red-400/25 hover:border-red-400/50 hover:shadow-[0_20px_60px_rgba(239,68,68,0.12)]",
+      glow: "bg-red-500/10 group-hover:bg-red-500/20",
+    },
+    medium: {
+      badge: "border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]",
+      card:
+        "border-[#D4AF37]/20 hover:border-[#D4AF37]/45 hover:shadow-[0_20px_60px_rgba(212,175,55,0.08)]",
+      glow: "bg-[#D4AF37]/10 group-hover:bg-[#D4AF37]/20",
+    },
+    low: {
+      badge: "border-white/10 bg-white/[0.04] text-gray-400",
+      card:
+        "border-white/10 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(255,255,255,0.04)]",
+      glow: "bg-white/5 group-hover:bg-white/10",
+    },
+  };
 
   const statusStyles = {
-    pending: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
-    confirmed: "border-green-500/30 bg-green-500/10 text-green-400",
-    completed: "border-blue-500/30 bg-blue-500/10 text-blue-400",
-    cancelled: "border-red-500/30 bg-red-500/10 text-red-400",
+    pending: "border-orange-400/30 bg-orange-500/10 text-orange-300",
+    confirmed: "border-green-400/30 bg-green-500/10 text-green-300",
+    completed: "border-blue-400/30 bg-blue-500/10 text-blue-300",
+    cancelled: "border-red-400/30 bg-red-500/10 text-red-300",
   };
+
+  const activePriority = priorityStyles[priority] || priorityStyles.low;
 
   return (
     <motion.div
       whileHover={{ y: -3 }}
       transition={{ duration: 0.25 }}
       onClick={() => openModal(appointment)}
-      className={`${cardClass} group relative cursor-pointer overflow-hidden rounded-[1.5rem] border border-[#D4AF37]/20 bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-black/30 p-4 backdrop-blur-xl transition duration-500 hover:border-[#D4AF37]/45 hover:shadow-[0_20px_60px_rgba(212,175,55,0.07)] sm:rounded-[2rem] sm:p-5`}
+      className={`${cardClass} group relative cursor-pointer overflow-hidden rounded-[1.5rem] border ${activePriority.card} bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-black/30 p-4 backdrop-blur-xl transition duration-500 sm:rounded-[2rem] sm:p-5`}
     >
-      <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#D4AF37]/10 blur-3xl transition duration-700 group-hover:bg-[#D4AF37]/20 sm:h-48 sm:w-48"></div>
-
-      <div className="pointer-events-none absolute -bottom-20 left-10 h-36 w-36 rounded-full bg-white/5 blur-3xl sm:h-44 sm:w-44"></div>
+      <div
+        className={`pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full blur-3xl transition duration-700 sm:h-48 sm:w-48 ${activePriority.glow}`}
+      ></div>
 
       <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition duration-500 group-hover:scale-x-100"></div>
 
-      <div className="relative flex flex-col gap-3 border-b border-white/10 pb-4 sm:gap-4 sm:pb-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="relative flex flex-col gap-3 border-b border-white/10 pb-4 sm:gap-4 sm:pb-5">
         <div className="min-w-0">
           <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
-            Consultation Booking
+            Appointment Student
           </p>
 
           <h2 className="mt-1.5 break-words text-xl font-bold leading-tight text-white sm:mt-2 sm:text-2xl">
@@ -40,99 +72,117 @@ function AppointmentCard({
           </h2>
         </div>
 
-        <span
-          className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] sm:px-4 sm:py-2 sm:text-[11px] sm:tracking-[0.18em] ${
-            statusStyles[status]
-          }`}
+        <div
+          className="flex flex-wrap gap-2"
+          onClick={(event) => event.stopPropagation()}
         >
-          {status}
-        </span>
-      </div>
+          <span
+            className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${activePriority.badge}`}
+          >
+            {priority}
+          </span>
 
-      <div className="relative mt-4 rounded-[1.2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 transition duration-300 group-hover:border-[#D4AF37]/35 sm:mt-5 sm:rounded-[1.4rem] sm:p-5">
-        <p className="text-[9px] uppercase tracking-[0.24em] text-[#D4AF37] sm:text-[10px] sm:tracking-[0.32em]">
-          Appointment Slot
-        </p>
-
-        <div className="mt-2 flex flex-col gap-2 sm:mt-3 lg:flex-row lg:items-center lg:justify-between">
-          <h3 className="break-words text-lg font-bold text-white sm:text-xl">
-            {appointment.appointment_date || "No Date"}
-          </h3>
-
-          <span className="w-fit rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-medium text-gray-300 sm:px-4 sm:py-2 sm:text-sm">
-            {appointment.appointment_time || "No Time"}
+          <span
+            className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+              statusStyles[status] || statusStyles.pending
+            }`}
+          >
+            {status}
           </span>
         </div>
       </div>
 
       <div className="relative mt-4 grid gap-2.5 sm:mt-5 sm:gap-3 lg:grid-cols-2">
         <InfoCard label="Email" value={appointment.email} />
-        <InfoCard label="Phone" value={appointment.phone} />
+        {!compact && <InfoCard label="Phone" value={appointment.phone} />}
         <InfoCard
-          label="Country Interest"
-          value={appointment.country_interest}
+          label="Date"
+          value={
+            appointment.appointment_date && appointment.appointment_time
+              ? `${appointment.appointment_date} · ${appointment.appointment_time}`
+              : appointment.appointment_date || appointment.appointment_time
+          }
         />
-        <InfoCard
-          label="Consultation Type"
-          value={appointment.consultation_type}
-        />
+
+        <div
+          onClick={(event) => event.stopPropagation()}
+          className="rounded-[1rem] border border-white/10 bg-white/[0.035] p-3 transition duration-300 hover:-translate-y-0.5 hover:border-[#D4AF37]/25 hover:bg-white/[0.055] sm:rounded-[1.25rem] sm:p-4"
+        >
+          <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 sm:text-[10px] sm:tracking-[0.28em]">
+            Priority
+          </p>
+
+          <select
+            value={priority}
+            onChange={(event) =>
+              updateAppointmentPriority(appointment.id, event.target.value)
+            }
+            className={`mt-2 w-full rounded-xl border bg-black/30 px-3 py-2 text-sm font-semibold outline-none transition duration-300 ${activePriority.badge}`}
+          >
+            <option value="low" className="bg-[#111111] text-white">
+              Low
+            </option>
+            <option value="medium" className="bg-[#111111] text-white">
+              Medium
+            </option>
+            <option value="high" className="bg-[#111111] text-white">
+              High
+            </option>
+            <option value="vip" className="bg-[#111111] text-white">
+              VIP
+            </option>
+          </select>
+        </div>
       </div>
 
-      <div className="relative mt-4 rounded-[1.2rem] border border-white/10 bg-black/25 p-4 transition duration-300 group-hover:border-[#D4AF37]/20 sm:mt-5 sm:rounded-[1.4rem] sm:p-5">
-        <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
-          Student Message
-        </p>
+      {!compact && (
+        <div className="relative mt-4 rounded-[1.2rem] border border-white/10 bg-black/25 p-4 transition duration-300 group-hover:border-[#D4AF37]/20 sm:mt-5 sm:rounded-[1.4rem] sm:p-5">
+          <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
+            Message
+          </p>
 
-        <p className="mt-2 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-300 sm:mt-3">
-          {appointment.message || "No message provided."}
-        </p>
-      </div>
+          <p className="mt-2 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-300 sm:mt-3">
+            {appointment.message || "No message provided."}
+          </p>
+        </div>
+      )}
 
       <div
         onClick={(event) => event.stopPropagation()}
-        className="relative mt-4 flex flex-col gap-2.5 border-t border-white/10 pt-4 sm:mt-5 sm:gap-3 sm:pt-5 lg:flex-row lg:items-center lg:justify-between"
+        className="relative mt-4 flex flex-col gap-2.5 border-t border-white/10 pt-4 sm:mt-5 sm:gap-3 sm:pt-5"
       >
         <button
           onClick={() => openModal(appointment)}
-          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white transition duration-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.08] sm:w-fit sm:px-6 sm:py-3 sm:text-sm"
+          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white transition duration-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.08] sm:px-6 sm:py-3 sm:text-sm"
         >
           Open CRM
         </button>
 
-        <div className="flex flex-col gap-2.5 sm:flex-row">
-          <select
-            value={status}
-            onChange={(event) =>
-              updateAppointmentStatus(appointment.id, event.target.value)
-            }
-            className={`w-full rounded-full border px-4 py-2.5 pr-10 text-xs font-semibold outline-none transition duration-300 backdrop-blur-xl hover:scale-[1.01] sm:w-fit sm:px-5 sm:py-3 sm:text-sm
-            ${statusStyles[status]}
-            focus:border-[#D4AF37]`}
-          >
-            <option value="pending" className="bg-[#111111] text-white">
-              Pending
-            </option>
+        {!compact && (
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {["pending", "confirmed", "completed", "cancelled"].map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => updateAppointmentStatus(appointment.id, item)}
+                className={`rounded-full px-4 py-2.5 text-xs font-semibold capitalize transition duration-300 hover:-translate-y-0.5 sm:px-5 sm:py-3 sm:text-sm ${
+                  status === item
+                    ? "bg-[#D4AF37] text-black"
+                    : "border border-white/10 bg-white/[0.04] text-gray-300 hover:border-[#D4AF37]/30 hover:text-white"
+                }`}
+              >
+                {item}
+              </button>
+            ))}
 
-            <option value="confirmed" className="bg-[#111111] text-white">
-              Confirmed
-            </option>
-
-            <option value="completed" className="bg-[#111111] text-white">
-              Completed
-            </option>
-
-            <option value="cancelled" className="bg-[#111111] text-white">
-              Cancelled
-            </option>
-          </select>
-
-          <button
-            onClick={() => deleteAppointment(appointment.id)}
-            className="w-full rounded-full border border-red-500/30 px-4 py-2.5 text-xs font-semibold text-red-400 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/10 sm:w-fit sm:px-6 sm:py-3 sm:text-sm"
-          >
-            Delete Appointment
-          </button>
-        </div>
+            <button
+              onClick={() => deleteAppointment(appointment.id)}
+              className="rounded-full border border-red-500/30 px-4 py-2.5 text-xs font-semibold text-red-400 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/10 sm:col-span-2 sm:px-6 sm:py-3 sm:text-sm"
+            >
+              Delete Appointment
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );

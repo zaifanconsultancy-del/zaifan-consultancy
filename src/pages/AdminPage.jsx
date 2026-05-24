@@ -87,6 +87,32 @@ function AdminPage() {
     if (isLoggedIn) fetchAllData();
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const channel = supabase
+      .channel("zaifan-crm-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "inquiries" },
+        () => {
+          fetchInquiries();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          fetchAppointments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isLoggedIn]);
+
   const handleLogin = async (event) => {
     event.preventDefault();
 
@@ -123,7 +149,7 @@ function AdminPage() {
       return;
     }
 
-    setInquiries(inquiries.filter((inquiry) => inquiry.id !== id));
+    setInquiries((current) => current.filter((inquiry) => inquiry.id !== id));
   };
 
   const deleteAppointment = async (id) => {
@@ -138,7 +164,9 @@ function AdminPage() {
       return;
     }
 
-    setAppointments(appointments.filter((appointment) => appointment.id !== id));
+    setAppointments((current) =>
+      current.filter((appointment) => appointment.id !== id)
+    );
   };
 
   const toggleInquiryStatus = async (id, currentStatus) => {
@@ -155,8 +183,8 @@ function AdminPage() {
       return;
     }
 
-    setInquiries(
-      inquiries.map((inquiry) =>
+    setInquiries((current) =>
+      current.map((inquiry) =>
         inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
       )
     );
@@ -174,9 +202,30 @@ function AdminPage() {
       return;
     }
 
-    setInquiries(
-      inquiries.map((inquiry) =>
+    setInquiries((current) =>
+      current.map((inquiry) =>
         inquiry.id === id ? { ...inquiry, priority: newPriority } : inquiry
+      )
+    );
+  };
+
+  const updateAppointmentPriority = async (id, newPriority) => {
+    const { error } = await supabase
+      .from("appointments")
+      .update({ priority: newPriority })
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      alert("Failed to update appointment priority.");
+      return;
+    }
+
+    setAppointments((current) =>
+      current.map((appointment) =>
+        appointment.id === id
+          ? { ...appointment, priority: newPriority }
+          : appointment
       )
     );
   };
@@ -199,8 +248,8 @@ function AdminPage() {
       return;
     }
 
-    setAppointments(
-      appointments.map((appointment) =>
+    setAppointments((current) =>
+      current.map((appointment) =>
         appointment.id === id
           ? { ...appointment, status: newStatus }
           : appointment
@@ -347,6 +396,7 @@ function AdminPage() {
       "Appointment Time",
       "Message",
       "Status",
+      "Priority",
       "Created At",
     ];
 
@@ -360,6 +410,7 @@ function AdminPage() {
       appointment.appointment_time,
       appointment.message,
       appointment.status || "pending",
+      appointment.priority || "low",
       appointment.created_at,
     ]);
 
@@ -369,21 +420,22 @@ function AdminPage() {
   const filteredInquiries = inquiries.filter((inquiry) => {
     const searchText = search.toLowerCase();
     const status = inquiry.status || "new";
+    const priority = inquiry.priority || "low";
 
     const matchesSearch =
       inquiry.full_name?.toLowerCase().includes(searchText) ||
       inquiry.email?.toLowerCase().includes(searchText) ||
       inquiry.phone?.toLowerCase().includes(searchText) ||
-      inquiry.priority?.toLowerCase().includes(searchText) ||
+      priority.toLowerCase().includes(searchText) ||
       inquiry.country?.toLowerCase().includes(searchText) ||
       inquiry.city?.toLowerCase().includes(searchText) ||
       inquiry.field_of_interest?.toLowerCase().includes(searchText) ||
       inquiry.study_level?.toLowerCase().includes(searchText);
 
     const matchesStatus =
-  statusFilter === "All" ||
-  status === statusFilter.toLowerCase() ||
-  (inquiry.priority || "low") === statusFilter.toLowerCase();
+      statusFilter === "All" ||
+      status === statusFilter.toLowerCase() ||
+      priority === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
@@ -391,6 +443,7 @@ function AdminPage() {
   const filteredAppointments = appointments.filter((appointment) => {
     const searchText = search.toLowerCase();
     const status = appointment.status || "pending";
+    const priority = appointment.priority || "low";
 
     const matchesSearch =
       appointment.full_name?.toLowerCase().includes(searchText) ||
@@ -399,10 +452,13 @@ function AdminPage() {
       appointment.country_interest?.toLowerCase().includes(searchText) ||
       appointment.consultation_type?.toLowerCase().includes(searchText) ||
       appointment.appointment_date?.toLowerCase().includes(searchText) ||
-      appointment.appointment_time?.toLowerCase().includes(searchText);
+      appointment.appointment_time?.toLowerCase().includes(searchText) ||
+      priority.toLowerCase().includes(searchText);
 
     const matchesStatus =
-      statusFilter === "All" || status === statusFilter.toLowerCase();
+      statusFilter === "All" ||
+      status === statusFilter.toLowerCase() ||
+      priority === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
@@ -449,9 +505,19 @@ function AdminPage() {
   ).length;
 
   const statusOptions =
-  activeTab === "inquiries"
-    ? ["All", "New", "Contacted", "VIP", "High", "Medium", "Low"]
-    : ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
+    activeTab === "inquiries"
+      ? ["All", "New", "Contacted", "VIP", "High", "Medium", "Low"]
+      : [
+          "All",
+          "Pending",
+          "Confirmed",
+          "Completed",
+          "Cancelled",
+          "VIP",
+          "High",
+          "Medium",
+          "Low",
+        ];
 
   if (!isLoggedIn) {
     return (
@@ -601,6 +667,7 @@ function AdminPage() {
                     cardClass={cardClass}
                     toggleInquiryStatus={toggleInquiryStatus}
                     updateInquiryPriority={updateInquiryPriority}
+                    updateAppointmentPriority={updateAppointmentPriority}
                     deleteInquiry={deleteInquiry}
                     updateAppointmentStatus={updateAppointmentStatus}
                     deleteAppointment={deleteAppointment}
