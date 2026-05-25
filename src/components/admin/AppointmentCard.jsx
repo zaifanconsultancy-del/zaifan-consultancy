@@ -8,9 +8,39 @@ function AppointmentCard({
   deleteAppointment,
   openModal,
   compact = false,
+  role = "staff",
+  permissions = {},
 }) {
   const status = appointment.status || "pending";
   const priority = appointment.priority || "low";
+
+  const safePermissions = {
+    canDelete: false,
+    canUpdateStatus: true,
+    canUpdatePriority: true,
+    canConfirmAppointments: true,
+    ...permissions,
+  };
+
+  const roleConfig = {
+    staff: {
+      label: "Staff",
+      icon: "🧑‍💼",
+      badge: "border-blue-400/20 bg-blue-500/10 text-blue-300",
+    },
+    admin: {
+      label: "Admin",
+      icon: "🛡️",
+      badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
+    },
+    super_admin: {
+      label: "Super Admin",
+      icon: "👑",
+      badge: "border-purple-400/25 bg-purple-500/10 text-purple-300",
+    },
+  };
+
+  const currentRole = roleConfig[role] || roleConfig.staff;
 
   const priorityStyles = {
     vip: {
@@ -48,6 +78,38 @@ function AppointmentCard({
 
   const activePriority = priorityStyles[priority] || priorityStyles.low;
 
+  const handleDelete = () => {
+    if (!safePermissions.canDelete || !deleteAppointment) {
+      alert("Only Admin and Super Admin can delete appointments.");
+      return;
+    }
+
+    deleteAppointment(appointment.id);
+  };
+
+  const handlePriorityUpdate = (value) => {
+    if (!safePermissions.canUpdatePriority) {
+      alert("You do not have permission to update appointment priority.");
+      return;
+    }
+
+    updateAppointmentPriority(appointment.id, value);
+  };
+
+  const handleStatusUpdate = (newStatus) => {
+    if (!safePermissions.canUpdateStatus) {
+      alert("You do not have permission to update appointment status.");
+      return;
+    }
+
+    if (newStatus === "confirmed" && !safePermissions.canConfirmAppointments) {
+      alert("You do not have permission to confirm appointments.");
+      return;
+    }
+
+    updateAppointmentStatus(appointment.id, newStatus);
+  };
+
   return (
     <motion.div
       whileHover={{ y: -3 }}
@@ -62,14 +124,23 @@ function AppointmentCard({
       <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition duration-500 group-hover:scale-x-100"></div>
 
       <div className="relative flex flex-col gap-3 border-b border-white/10 pb-4 sm:gap-4 sm:pb-5">
-        <div className="min-w-0">
-          <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
-            Appointment Student
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
+              Appointment Student
+            </p>
 
-          <h2 className="mt-1.5 break-words text-xl font-bold leading-tight text-white sm:mt-2 sm:text-2xl">
-            {appointment.full_name || "Unnamed Student"}
-          </h2>
+            <h2 className="mt-1.5 break-words text-xl font-bold leading-tight text-white sm:mt-2 sm:text-2xl">
+              {appointment.full_name || "Unnamed Student"}
+            </h2>
+          </div>
+
+          <div
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${currentRole.badge}`}
+          >
+            <span>{currentRole.icon}</span>
+            {currentRole.label}
+          </div>
         </div>
 
         <div
@@ -89,12 +160,20 @@ function AppointmentCard({
           >
             {status}
           </span>
+
+          {!safePermissions.canDelete && (
+            <span className="w-fit shrink-0 rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-300">
+              Delete Locked
+            </span>
+          )}
         </div>
       </div>
 
       <div className="relative mt-4 grid gap-2.5 sm:mt-5 sm:gap-3 lg:grid-cols-2">
         <InfoCard label="Email" value={appointment.email} />
+
         {!compact && <InfoCard label="Phone" value={appointment.phone} />}
+
         <InfoCard
           label="Date"
           value={
@@ -114,20 +193,26 @@ function AppointmentCard({
 
           <select
             value={priority}
-            onChange={(event) =>
-              updateAppointmentPriority(appointment.id, event.target.value)
-            }
-            className={`mt-2 w-full rounded-xl border bg-black/30 px-3 py-2 text-sm font-semibold outline-none transition duration-300 ${activePriority.badge}`}
+            onChange={(event) => handlePriorityUpdate(event.target.value)}
+            disabled={!safePermissions.canUpdatePriority}
+            className={`mt-2 w-full rounded-xl border bg-black/30 px-3 py-2 text-sm font-semibold outline-none transition duration-300 ${activePriority.badge} ${
+              !safePermissions.canUpdatePriority
+                ? "cursor-not-allowed opacity-60"
+                : ""
+            }`}
           >
             <option value="low" className="bg-[#111111] text-white">
               Low
             </option>
+
             <option value="medium" className="bg-[#111111] text-white">
               Medium
             </option>
+
             <option value="high" className="bg-[#111111] text-white">
               High
             </option>
+
             <option value="vip" className="bg-[#111111] text-white">
               VIP
             </option>
@@ -164,11 +249,18 @@ function AppointmentCard({
               <button
                 key={item}
                 type="button"
-                onClick={() => updateAppointmentStatus(appointment.id, item)}
-                className={`rounded-full px-4 py-2.5 text-xs font-semibold capitalize transition duration-300 hover:-translate-y-0.5 sm:px-5 sm:py-3 sm:text-sm ${
+                onClick={() => handleStatusUpdate(item)}
+                disabled={
+                  !safePermissions.canUpdateStatus ||
+                  (item === "confirmed" &&
+                    !safePermissions.canConfirmAppointments)
+                }
+                className={`rounded-full px-4 py-2.5 text-xs font-semibold capitalize transition duration-300 sm:px-5 sm:py-3 sm:text-sm ${
                   status === item
                     ? "bg-[#D4AF37] text-black"
-                    : "border border-white/10 bg-white/[0.04] text-gray-300 hover:border-[#D4AF37]/30 hover:text-white"
+                    : safePermissions.canUpdateStatus
+                    ? "border border-white/10 bg-white/[0.04] text-gray-300 hover:-translate-y-0.5 hover:border-[#D4AF37]/30 hover:text-white"
+                    : "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500"
                 }`}
               >
                 {item}
@@ -176,10 +268,17 @@ function AppointmentCard({
             ))}
 
             <button
-              onClick={() => deleteAppointment(appointment.id)}
-              className="rounded-full border border-red-500/30 px-4 py-2.5 text-xs font-semibold text-red-400 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/10 sm:col-span-2 sm:px-6 sm:py-3 sm:text-sm"
+              onClick={handleDelete}
+              disabled={!safePermissions.canDelete}
+              className={`rounded-full px-4 py-2.5 text-xs font-semibold transition duration-300 sm:col-span-2 sm:px-6 sm:py-3 sm:text-sm ${
+                safePermissions.canDelete
+                  ? "border border-red-500/30 text-red-400 hover:-translate-y-0.5 hover:bg-red-500/10"
+                  : "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500"
+              }`}
             >
-              Delete Appointment
+              {safePermissions.canDelete
+                ? "Delete Appointment"
+                : "Delete Locked"}
             </button>
           </div>
         )}

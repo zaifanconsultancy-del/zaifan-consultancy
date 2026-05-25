@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import LeadAssignmentPanel from "./LeadAssignmentPanel";
 
 function StudentDetailModal({ isOpen, onClose, student, type = "inquiry" }) {
   const [noteText, setNoteText] = useState("");
@@ -385,6 +386,13 @@ END:VCALENDAR`;
                 </Section>
 
                 <Section title="Priority Control">
+                  <Section title="Lead Assignment">
+  <LeadAssignmentPanel
+    lead={student}
+    leadType={type}
+    currentAdmin={null}
+  />
+</Section>
                   <div className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5">
                     <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>

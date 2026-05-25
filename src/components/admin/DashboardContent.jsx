@@ -19,10 +19,44 @@ function DashboardContent({
   deleteInquiry,
   updateAppointmentStatus,
   deleteAppointment,
+  role = "staff",
+  adminProfile = null,
+  permissions = {},
 }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [modalType, setModalType] = useState("inquiry");
   const [viewMode, setViewMode] = useState("list");
+
+  const safePermissions = {
+    canDelete: false,
+    canClearAll: false,
+    canExport: false,
+    canManageAdmins: false,
+    canUpdateStatus: true,
+    canUpdatePriority: true,
+    canConfirmAppointments: true,
+    ...permissions,
+  };
+
+  const roleConfig = {
+    staff: {
+      label: "Staff",
+      icon: "🧑‍💼",
+      badge: "border-blue-400/20 bg-blue-500/10 text-blue-300",
+    },
+    admin: {
+      label: "Admin",
+      icon: "🛡️",
+      badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
+    },
+    super_admin: {
+      label: "Super Admin",
+      icon: "👑",
+      badge: "border-purple-400/20 bg-purple-500/10 text-purple-300",
+    },
+  };
+
+  const currentRole = roleConfig[role] || roleConfig.staff;
 
   const openInquiryModal = (student) => {
     setSelectedStudent(student);
@@ -196,10 +230,17 @@ function DashboardContent({
           {text}
         </p>
 
-        <div className="mt-5 grid w-full max-w-2xl gap-2.5 sm:mt-6 sm:gap-3 md:grid-cols-3">
-          <MiniEmptyCard icon="📊" text="Analytics Ready" />
-          <MiniEmptyCard icon="⚡" text="Live CRM Feed" />
-          <MiniEmptyCard icon="🔔" text="Alerts Enabled" />
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <div
+            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] ${currentRole.badge}`}
+          >
+            <span>{currentRole.icon}</span>
+            {currentRole.label}
+          </div>
+
+          <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-gray-400">
+            Enterprise CRM Active
+          </div>
         </div>
       </div>
     </AnimatedSection>
@@ -235,6 +276,42 @@ function DashboardContent({
     <>
       <AnimatePresence mode="wait">
         <AnimatedSection key={activeTab}>
+          <div className="mb-4 flex flex-col gap-4 rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+                CRM Access Layer
+              </p>
+
+              <h2 className="mt-2 text-2xl font-black text-white">
+                Lead Management Center
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
+                Manage inquiries, appointments, lead pipelines, priorities,
+                statuses, and enterprise CRM workflows with protected actions.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] ${currentRole.badge}`}
+              >
+                <span>{currentRole.icon}</span>
+                {currentRole.label}
+              </div>
+
+              <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-gray-400">
+                {adminProfile?.full_name || "Admin User"}
+              </div>
+
+              {!safePermissions.canDelete && (
+                <div className="rounded-full border border-red-400/20 bg-red-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-red-300">
+                  Delete Locked
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {pipelineStages.map((stage, index) => (
               <PipelineStage
@@ -251,8 +328,11 @@ function DashboardContent({
               <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
                 CRM View Mode
               </p>
+
               <h3 className="mt-1 text-lg font-bold text-white">
-                {viewMode === "kanban" ? "Kanban Pipeline" : "Card List"}
+                {viewMode === "kanban"
+                  ? "Kanban Pipeline"
+                  : "Enterprise Card View"}
               </h3>
             </div>
 
@@ -324,6 +404,7 @@ function DashboardContent({
                     <div className="mb-3 flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-black/25 p-4">
                       <div>
                         <p className="text-xl">{column.icon}</p>
+
                         <h3 className={`mt-2 text-sm font-bold ${column.color}`}>
                           {column.label}
                         </h3>
@@ -358,19 +439,35 @@ function DashboardContent({
                                 cardClass="p-0"
                                 updateInquiryStatus={toggleInquiryStatus}
                                 updateInquiryPriority={updateInquiryPriority}
-                                deleteInquiry={deleteInquiry}
+                                deleteInquiry={
+                                  safePermissions.canDelete
+                                    ? deleteInquiry
+                                    : null
+                                }
                                 openModal={openInquiryModal}
                                 compact
+                                role={role}
+                                permissions={safePermissions}
                               />
                             ) : (
                               <AppointmentCard
                                 appointment={item}
                                 cardClass="p-0"
-                                updateAppointmentStatus={updateAppointmentStatus}
-                                updateAppointmentPriority={updateAppointmentPriority}
-                                deleteAppointment={deleteAppointment}
+                                updateAppointmentStatus={
+                                  updateAppointmentStatus
+                                }
+                                updateAppointmentPriority={
+                                  updateAppointmentPriority
+                                }
+                                deleteAppointment={
+                                  safePermissions.canDelete
+                                    ? deleteAppointment
+                                    : null
+                                }
                                 openModal={openAppointmentModal}
                                 compact
+                                role={role}
+                                permissions={safePermissions}
                               />
                             )}
                           </motion.div>
@@ -399,17 +496,29 @@ function DashboardContent({
                       cardClass={cardClass}
                       updateInquiryStatus={toggleInquiryStatus}
                       updateInquiryPriority={updateInquiryPriority}
-                      deleteInquiry={deleteInquiry}
+                      deleteInquiry={
+                        safePermissions.canDelete ? deleteInquiry : null
+                      }
                       openModal={openInquiryModal}
+                      role={role}
+                      permissions={safePermissions}
                     />
                   ) : (
                     <AppointmentCard
                       appointment={item}
                       cardClass={cardClass}
                       updateAppointmentStatus={updateAppointmentStatus}
-                      updateAppointmentPriority={updateAppointmentPriority}
-                      deleteAppointment={deleteAppointment}
+                      updateAppointmentPriority={
+                        updateAppointmentPriority
+                      }
+                      deleteAppointment={
+                        safePermissions.canDelete
+                          ? deleteAppointment
+                          : null
+                      }
                       openModal={openAppointmentModal}
+                      role={role}
+                      permissions={safePermissions}
                     />
                   )}
                 </motion.div>
@@ -454,18 +563,6 @@ function PipelineStage({ stage, index, cardClass }) {
         {stage.icon}
       </div>
     </motion.div>
-  );
-}
-
-function MiniEmptyCard({ icon, text }) {
-  return (
-    <div className="rounded-[1rem] border border-white/10 bg-white/[0.03] p-3 sm:rounded-[1.3rem] sm:p-4">
-      <p className="text-xl sm:text-2xl">{icon}</p>
-
-      <p className="mt-1.5 text-[11px] font-semibold text-gray-300 sm:mt-2 sm:text-xs">
-        {text}
-      </p>
-    </div>
   );
 }
 
