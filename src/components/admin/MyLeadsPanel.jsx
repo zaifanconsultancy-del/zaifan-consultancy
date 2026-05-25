@@ -14,59 +14,114 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
 
     setLoading(true);
 
-    const { data: assignmentData, error: assignmentError } = await supabase
-      .from("lead_assignments")
-      .select("*")
-      .eq("assigned_admin_id", adminId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data: assignmentData, error: assignmentError } = await supabase
+        .from("lead_assignments")
+        .select("*")
+        .eq("assigned_admin_id", adminId)
+        .order("created_at", { ascending: false });
 
-    if (assignmentError) {
-      console.error(assignmentError);
+      if (assignmentError) {
+        console.error("My leads assignment error:", assignmentError);
+        alert("Failed to load assigned leads.");
+        return;
+      }
+
+      const safeAssignments = assignmentData || [];
+      setAssignments(safeAssignments);
+
+      const inquiryIds = [
+        ...new Set(
+          safeAssignments
+            .filter((item) => item.lead_type === "inquiry")
+            .map((item) => item.lead_id)
+        ),
+      ];
+
+      const appointmentIds = [
+        ...new Set(
+          safeAssignments
+            .filter((item) => item.lead_type === "appointment")
+            .map((item) => item.lead_id)
+        ),
+      ];
+
+      if (inquiryIds.length > 0) {
+        const { data, error } = await supabase
+          .from("inquiries")
+          .select("*")
+          .in("id", inquiryIds)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("My leads inquiries error:", error);
+          setInquiries([]);
+        } else {
+          setInquiries(data || []);
+        }
+      } else {
+        setInquiries([]);
+      }
+
+      if (appointmentIds.length > 0) {
+        const { data, error } = await supabase
+          .from("appointments")
+          .select("*")
+          .in("id", appointmentIds)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("My leads appointments error:", error);
+          setAppointments([]);
+        } else {
+          setAppointments(data || []);
+        }
+      } else {
+        setAppointments([]);
+      }
+    } catch (error) {
+      console.error("My leads crash:", error);
+      alert("Something went wrong while loading My Leads.");
+    } finally {
       setLoading(false);
-      alert("Failed to load assigned leads.");
-      return;
     }
-
-    const safeAssignments = assignmentData || [];
-    setAssignments(safeAssignments);
-
-    const inquiryIds = safeAssignments
-      .filter((item) => item.lead_type === "inquiry")
-      .map((item) => item.lead_id);
-
-    const appointmentIds = safeAssignments
-      .filter((item) => item.lead_type === "appointment")
-      .map((item) => item.lead_id);
-
-    if (inquiryIds.length > 0) {
-      const { data, error } = await supabase
-        .from("inquiries")
-        .select("*")
-        .in("id", inquiryIds);
-
-      if (error) console.error(error);
-      setInquiries(data || []);
-    } else {
-      setInquiries([]);
-    }
-
-    if (appointmentIds.length > 0) {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("*")
-        .in("id", appointmentIds);
-
-      if (error) console.error(error);
-      setAppointments(data || []);
-    } else {
-      setAppointments([]);
-    }
-
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchMyLeads();
+  }, [adminId]);
+
+  useEffect(() => {
+    if (!adminId) return;
+
+    const channel = supabase
+      .channel(`my-leads-${adminId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "lead_assignments" },
+        () => {
+          fetchMyLeads();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "inquiries" },
+        () => {
+          fetchMyLeads();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          fetchMyLeads();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [adminId]);
 
   return (
@@ -87,9 +142,10 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
 
           <button
             onClick={fetchMyLeads}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white"
+            disabled={loading}
+            className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Refresh
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
       </div>
@@ -174,13 +230,13 @@ function LeadColumn({ title, icon, items }) {
           {items.map((item) => (
             <div
               key={item.id}
-              className="rounded-[1.3rem] border border-white/10 bg-black/25 p-4"
+              className="rounded-[1.3rem] border border-white/10 bg-black/25 p-4 transition hover:border-[#D4AF37]/25"
             >
               <h4 className="text-base font-black text-white">
                 {item.full_name || "Unnamed Student"}
               </h4>
 
-              <p className="mt-2 text-sm text-gray-400">
+              <p className="mt-2 break-words text-sm text-gray-400">
                 {item.email || "No email"}
               </p>
 

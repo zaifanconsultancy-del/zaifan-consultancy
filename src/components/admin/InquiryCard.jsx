@@ -13,6 +13,8 @@ function InquiryCard({
 }) {
   const status = inquiry.status || "new";
   const priority = inquiry.priority || "low";
+  const assignedAdmin =
+  inquiry.assigned_admin_name || inquiry.assigned_to || null;
 
   const safePermissions = {
     canDelete: false,
@@ -133,7 +135,11 @@ function InquiryCard({
         <div
           className="flex flex-wrap gap-2"
           onClick={(event) => event.stopPropagation()}
-        >
+        >{assignedAdmin && (
+  <span className="w-fit shrink-0 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-300">
+    Assigned: {assignedAdmin}
+  </span>
+)}
           <span
             className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${activePriority.badge}`}
           >

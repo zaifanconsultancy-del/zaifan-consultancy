@@ -18,10 +18,11 @@ function LeadAssignmentPanel({
   const fetchAdmins = async () => {
     const { data, error } = await supabase
       .from("admin_profiles")
-      .select("id, full_name, role");
+      .select("id, full_name, role")
+      .order("full_name", { ascending: true });
 
     if (error) {
-      console.error(error);
+      console.error("Admins error:", error);
       return;
     }
 
@@ -29,28 +30,46 @@ function LeadAssignmentPanel({
   };
 
   const fetchAssignment = async () => {
-    if (!leadId) return;
-
-    setLoading(true);
-
-    const { data, error } = await supabase
-  .from("lead_assignments")
-  .select("*")
-  .eq("lead_type", leadType)
-  .eq("lead_id", leadId)
-  .limit(1);
-
-const currentAssignment = data?.[0] || null;
-
-    setLoading(false);
-
-    if (error) {
-      console.error(error);
+    if (!leadId) {
+      setLoading(false);
       return;
     }
 
-    setAssignment(currentAssignment);
-setSelectedAdminId(currentAssignment?.assigned_admin_id || "");
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("lead_assignments")
+        .select("*")
+        .eq("lead_type", leadType)
+        .eq("lead_id", leadId);
+
+      if (error) {
+        console.error("Assignment error:", error);
+        setAssignment(null);
+        setSelectedAdminId("");
+        return;
+      }
+
+      const rows = data || [];
+      const mainAssignment = rows[0] || null;
+
+      if (rows.length > 1) {
+        const duplicateIds = rows.slice(1).map((item) => item.id);
+
+        await supabase
+          .from("lead_assignments")
+          .delete()
+          .in("id", duplicateIds);
+      }
+
+      setAssignment(mainAssignment);
+      setSelectedAdminId(mainAssignment?.assigned_admin_id || "");
+    } catch (error) {
+      console.error("Assignment crash:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -75,51 +94,80 @@ setSelectedAdminId(currentAssignment?.assigned_admin_id || "");
 
     setSaving(true);
 
-    if (assignment?.id) {
-      const { error } = await supabase
+    try {
+      const { data: existingRows, error: checkError } = await supabase
         .from("lead_assignments")
-        .update({
+        .select("*")
+        .eq("lead_type", leadType)
+        .eq("lead_id", leadId);
+
+      if (checkError) {
+        console.error("Check error:", checkError);
+        alert("Failed to check assignment.");
+        return;
+      }
+
+      const rows = existingRows || [];
+      const existingAssignment = rows[0] || null;
+
+      if (rows.length > 1) {
+        const duplicateIds = rows.slice(1).map((item) => item.id);
+
+        await supabase
+          .from("lead_assignments")
+          .delete()
+          .in("id", duplicateIds);
+      }
+
+      if (existingAssignment?.id) {
+        const { error } = await supabase
+          .from("lead_assignments")
+          .update({
+            assigned_admin_id: selectedAdmin.id,
+            assigned_admin_name: selectedAdmin.full_name,
+          })
+          .eq("id", existingAssignment.id);
+
+        if (error) {
+          console.error("Update error:", error);
+          alert("Failed to update assignment.");
+          return;
+        }
+      } else {
+        const { error } = await supabase.from("lead_assignments").insert({
+          lead_type: leadType,
+          lead_id: leadId,
           assigned_admin_id: selectedAdmin.id,
           assigned_admin_name: selectedAdmin.full_name,
-        })
-        .eq("id", assignment.id);
+        });
 
-      if (error) {
-        console.error(error);
-        setSaving(false);
-        alert("Failed to update assignment.");
-        return;
+        if (error) {
+          console.error("Insert error:", error);
+          alert("Failed to assign lead.");
+          return;
+        }
       }
-    } else {
-      const { error } = await supabase.from("lead_assignments").insert({
-        lead_type: leadType,
-        lead_id: leadId,
-        assigned_admin_id: selectedAdmin.id,
-        assigned_admin_name: selectedAdmin.full_name,
+
+      await supabase.from("activity_logs").insert({
+        admin_id: currentAdmin?.id || null,
+        admin_name: currentAdmin?.full_name || "Unknown Admin",
+        action: existingAssignment?.id
+          ? "Updated lead assignment"
+          : "Assigned lead",
+        target_type: leadType,
+        target_id: leadId,
+        details: `Assigned ${leadType} to ${selectedAdmin.full_name}.`,
       });
 
-      if (error) {
-        console.error(error);
-        setSaving(false);
-        alert("Failed to assign lead.");
-        return;
-      }
+      await fetchAssignment();
+      onAssigned();
+      alert("Lead assigned successfully.");
+    } catch (error) {
+      console.error("Assign crash:", error);
+      alert("Something went wrong while assigning.");
+    } finally {
+      setSaving(false);
     }
-
-    await supabase.from("activity_logs").insert({
-      admin_id: currentAdmin?.id || null,
-      admin_name: currentAdmin?.full_name || "Unknown Admin",
-      action: "Assigned lead",
-      target_type: leadType,
-      target_id: leadId,
-      details: `Assigned ${leadType} to ${selectedAdmin.full_name}.`,
-    });
-
-    setSaving(false);
-    await fetchAssignment();
-    onAssigned();
-
-    alert("Lead assigned successfully.");
   };
 
   return (
@@ -152,6 +200,7 @@ setSelectedAdminId(currentAssignment?.assigned_admin_id || "");
         <select
           value={selectedAdminId}
           onChange={(event) => setSelectedAdminId(event.target.value)}
+          disabled={loading || saving}
           className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
         >
           <option value="" className="bg-[#111] text-white">
@@ -168,10 +217,10 @@ setSelectedAdminId(currentAssignment?.assigned_admin_id || "");
         <button
           type="button"
           onClick={assignLead}
-          disabled={saving}
+          disabled={saving || loading}
           className="rounded-2xl bg-[#D4AF37] px-6 py-3 text-sm font-black text-black transition hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {saving ? "Assigning..." : "Assign Lead"}
+          {saving ? "Saving..." : assignment?.id ? "Update" : "Assign Lead"}
         </button>
       </div>
     </div>

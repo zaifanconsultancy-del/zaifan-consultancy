@@ -103,34 +103,74 @@ function AdminPage() {
 };
 
   const fetchInquiries = async () => {
-    const { data, error } = await supabase
-      .from("inquiries")
-      .select("*")
-      .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("inquiries")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error(error);
-      alert("Failed to load inquiries.");
-      return;
-    }
+  if (error) {
+    console.error(error);
+    alert("Failed to load inquiries.");
+    return;
+  }
 
-    setInquiries(data || []);
-  };
+  const inquiryIds = (data || []).map((item) => String(item.id));
+
+  const { data: assignments } = await supabase
+    .from("lead_assignments")
+    .select("*")
+    .eq("lead_type", "inquiry")
+    .in("lead_id", inquiryIds);
+
+  const mergedInquiries = (data || []).map((inquiry) => {
+    const assignment = assignments?.find(
+      (item) => item.lead_id === String(inquiry.id)
+    );
+
+    return {
+      ...inquiry,
+      assigned_admin_id: assignment?.assigned_admin_id || null,
+      assigned_admin_name: assignment?.assigned_admin_name || null,
+    };
+  });
+
+  setInquiries(mergedInquiries);
+};
 
   const fetchAppointments = async () => {
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error(error);
-      alert("Failed to load appointments.");
-      return;
-    }
+  if (error) {
+    console.error(error);
+    alert("Failed to load appointments.");
+    return;
+  }
 
-    setAppointments(data || []);
-  };
+  const appointmentIds = (data || []).map((item) => String(item.id));
+
+  const { data: assignments } = await supabase
+    .from("lead_assignments")
+    .select("*")
+    .eq("lead_type", "appointment")
+    .in("lead_id", appointmentIds);
+
+  const mergedAppointments = (data || []).map((appointment) => {
+    const assignment = assignments?.find(
+      (item) => item.lead_id === String(appointment.id)
+    );
+
+    return {
+      ...appointment,
+      assigned_admin_id: assignment?.assigned_admin_id || null,
+      assigned_admin_name: assignment?.assigned_admin_name || null,
+    };
+  });
+
+  setAppointments(mergedAppointments);
+};
 
   const fetchAllData = async () => {
     setLoading(true);
