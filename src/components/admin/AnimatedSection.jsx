@@ -1,12 +1,18 @@
 import { motion } from "framer-motion";
 
-function AnimatedSection({ children, className = "" }) {
+function AnimatedSection({
+  children,
+  className = "",
+  delay = 0,
+  y = 18,
+  duration = 0.35,
+}) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -18 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+      exit={{ opacity: 0, y: -y }}
+      transition={{ duration, delay, ease: "easeOut" }}
       className={className}
     >
       {children}

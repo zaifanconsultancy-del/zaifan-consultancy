@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 import AdminLogin from "../components/admin/AdminLogin";
@@ -15,6 +15,20 @@ import DashboardAnalytics from "../components/admin/DashboardAnalytics";
 import AdminManagement from "../components/admin/AdminManagement";
 import AdminActivityLogs from "../components/admin/AdminActivityLogs";
 import MyLeadsPanel from "../components/admin/MyLeadsPanel";
+
+const REQUEST_TIMEOUT_MS = 8000;
+
+function withTimeout(promise, label = "Request") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`${label} timed out.`)),
+        REQUEST_TIMEOUT_MS
+      )
+    ),
+  ]);
+}
 
 function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -32,6 +46,10 @@ function AdminPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+
+  const mountedRef = useRef(true);
+  const loadingRef = useRef(false);
 
   const cardClass =
     "group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055] sm:rounded-[2rem] sm:p-6";
@@ -79,121 +97,241 @@ function AdminPage() {
 
   const currentPermissions = permissions[role] || permissions.staff;
 
+  const safeSetState = (callback) => {
+    if (mountedRef.current) callback();
+  };
+
+  const fetchAssignmentsForLeadType = async (leadType, ids = []) => {
+    if (!ids.length) return [];
+
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("lead_assignments")
+          .select("*")
+          .eq("lead_type", leadType)
+          .in(
+            "lead_id",
+            ids.map((id) => String(id))
+          ),
+        `${leadType} assignments fetch`
+      );
+
+      if (error) {
+        console.error("Assignment fetch error:", error);
+        return [];
+      }
+
+      const uniqueAssignments = [];
+      const seen = new Set();
+
+      for (const assignment of data || []) {
+        const key = `${assignment.lead_type}-${assignment.lead_id}`;
+
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueAssignments.push(assignment);
+        }
+      }
+
+      return uniqueAssignments;
+    } catch (error) {
+      console.error("Assignment timeout/error:", error);
+      return [];
+    }
+  };
+
   const loadAdminProfile = async (userId) => {
-  if (!adminProfile) {
-    setProfileLoading(true);
-  }
+    safeSetState(() => {
+      if (!adminProfile) setProfileLoading(true);
+    });
 
-  const { data, error } = await supabase
-    .from("admin_profiles")
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("admin_profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle(),
+        "Admin profile fetch"
+      );
 
-  if (error) {
-    console.error("Admin profile error:", error);
-    setAdminProfile(null);
-    setProfileLoading(false);
-    return null;
-  }
+      if (error) {
+        console.error("Admin profile error:", error);
+        safeSetState(() => {
+          setAdminProfile(null);
+          setProfileLoading(false);
+        });
+        return null;
+      }
 
-  setAdminProfile(data);
-  setProfileLoading(false);
-  return data;
-};
+      safeSetState(() => {
+        setAdminProfile(data);
+        setProfileLoading(false);
+      });
+
+      return data;
+    } catch (error) {
+      console.error("Admin profile timeout/error:", error);
+      safeSetState(() => {
+        setAdminProfile(null);
+        setProfileLoading(false);
+      });
+      return null;
+    }
+  };
 
   const fetchInquiries = async () => {
-  const { data, error } = await supabase
-    .from("inquiries")
-    .select("*")
-    .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("inquiries")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        "Inquiries fetch"
+      );
 
-  if (error) {
-    console.error(error);
-    alert("Failed to load inquiries.");
-    return;
-  }
+      if (error) {
+        console.error(error);
+        throw new Error("Failed to load inquiries.");
+      }
 
-  const inquiryIds = (data || []).map((item) => String(item.id));
+      const inquiryRows = data || [];
+      const inquiryIds = inquiryRows.map((item) => String(item.id));
+      const assignments = await fetchAssignmentsForLeadType("inquiry", inquiryIds);
 
-  const { data: assignments } = await supabase
-    .from("lead_assignments")
-    .select("*")
-    .eq("lead_type", "inquiry")
-    .in("lead_id", inquiryIds);
+      const mergedInquiries = inquiryRows.map((inquiry) => {
+        const assignment = assignments.find(
+          (item) => String(item.lead_id) === String(inquiry.id)
+        );
 
-  const mergedInquiries = (data || []).map((inquiry) => {
-    const assignment = assignments?.find(
-      (item) => item.lead_id === String(inquiry.id)
-    );
+        return {
+          ...inquiry,
+          assigned_admin_id: assignment?.assigned_admin_id || null,
+          assigned_admin_name: assignment?.assigned_admin_name || null,
+        };
+      });
 
-    return {
-      ...inquiry,
-      assigned_admin_id: assignment?.assigned_admin_id || null,
-      assigned_admin_name: assignment?.assigned_admin_name || null,
-    };
-  });
-
-  setInquiries(mergedInquiries);
-};
+      safeSetState(() => setInquiries(mergedInquiries));
+      return mergedInquiries;
+    } catch (error) {
+      console.error("Inquiries fetch crash:", error);
+      throw error;
+    }
+  };
 
   const fetchAppointments = async () => {
-  const { data, error } = await supabase
-    .from("appointments")
-    .select("*")
-    .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("appointments")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        "Appointments fetch"
+      );
 
-  if (error) {
-    console.error(error);
-    alert("Failed to load appointments.");
-    return;
-  }
+      if (error) {
+        console.error(error);
+        throw new Error("Failed to load appointments.");
+      }
 
-  const appointmentIds = (data || []).map((item) => String(item.id));
+      const appointmentRows = data || [];
+      const appointmentIds = appointmentRows.map((item) => String(item.id));
+      const assignments = await fetchAssignmentsForLeadType(
+        "appointment",
+        appointmentIds
+      );
 
-  const { data: assignments } = await supabase
-    .from("lead_assignments")
-    .select("*")
-    .eq("lead_type", "appointment")
-    .in("lead_id", appointmentIds);
+      const mergedAppointments = appointmentRows.map((appointment) => {
+        const assignment = assignments.find(
+          (item) => String(item.lead_id) === String(appointment.id)
+        );
 
-  const mergedAppointments = (data || []).map((appointment) => {
-    const assignment = assignments?.find(
-      (item) => item.lead_id === String(appointment.id)
-    );
+        return {
+          ...appointment,
+          assigned_admin_id: assignment?.assigned_admin_id || null,
+          assigned_admin_name: assignment?.assigned_admin_name || null,
+        };
+      });
 
-    return {
-      ...appointment,
-      assigned_admin_id: assignment?.assigned_admin_id || null,
-      assigned_admin_name: assignment?.assigned_admin_name || null,
-    };
-  });
+      safeSetState(() => setAppointments(mergedAppointments));
+      return mergedAppointments;
+    } catch (error) {
+      console.error("Appointments fetch crash:", error);
+      throw error;
+    }
+  };
 
-  setAppointments(mergedAppointments);
-};
+  const fetchAllData = async ({ silent = false } = {}) => {
+    if (loadingRef.current && !silent) return;
 
-  const fetchAllData = async () => {
-    setLoading(true);
-    await Promise.all([fetchInquiries(), fetchAppointments()]);
-    setLoading(false);
+    loadingRef.current = true;
+
+    safeSetState(() => {
+      setLoadError("");
+      if (!silent) setLoading(true);
+    });
+
+    try {
+      const results = await Promise.allSettled([fetchInquiries(), fetchAppointments()]);
+      const failed = results.filter((result) => result.status === "rejected");
+
+      if (failed.length > 0) {
+        console.error("CRM fetch failures:", failed);
+        safeSetState(() => {
+          setLoadError(
+            "Some CRM data could not load. Check your internet and refresh."
+          );
+        });
+      } else {
+        safeSetState(() => setLoadError(""));
+      }
+    } catch (error) {
+      console.error("Fetch all data crash:", error);
+      safeSetState(() => {
+        setLoadError("CRM refresh timed out. Check your internet and retry.");
+      });
+    } finally {
+      loadingRef.current = false;
+      safeSetState(() => setLoading(false));
+    }
   };
 
   useEffect(() => {
+    mountedRef.current = true;
+
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      try {
+        const { data } = await withTimeout(
+          supabase.auth.getSession(),
+          "Session check"
+        );
 
-      if (data.session?.user) {
-        setIsLoggedIn(true);
-        setAdminUser(data.session.user);
-        await loadAdminProfile(data.session.user.id);
-      } else {
-        setIsLoggedIn(false);
-        setAdminUser(null);
-        setAdminProfile(null);
-        setProfileLoading(false);
+        if (data.session?.user) {
+          safeSetState(() => {
+            setIsLoggedIn(true);
+            setAdminUser(data.session.user);
+          });
+          await loadAdminProfile(data.session.user.id);
+        } else {
+          safeSetState(() => {
+            setIsLoggedIn(false);
+            setAdminUser(null);
+            setAdminProfile(null);
+            setProfileLoading(false);
+          });
+        }
+      } catch (error) {
+        console.error("Session check failed:", error);
+        safeSetState(() => {
+          setIsLoggedIn(false);
+          setAdminUser(null);
+          setAdminProfile(null);
+          setProfileLoading(false);
+        });
+      } finally {
+        safeSetState(() => setSessionChecked(true));
       }
-
-      setSessionChecked(true);
     };
 
     checkSession();
@@ -201,20 +339,26 @@ function AdminPage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setIsLoggedIn(!!session);
-      setAdminUser(session?.user || null);
+      safeSetState(() => {
+        setIsLoggedIn(!!session);
+        setAdminUser(session?.user || null);
+      });
 
       if (session?.user) {
         await loadAdminProfile(session.user.id);
       } else {
-        setAdminProfile(null);
-        setProfileLoading(false);
+        safeSetState(() => {
+          setAdminProfile(null);
+          setProfileLoading(false);
+        });
       }
 
-      setSessionChecked(true);
+      safeSetState(() => setSessionChecked(true));
     });
 
     return () => {
+      mountedRef.current = false;
+
       if (subscription) {
         subscription.unsubscribe();
       }
@@ -223,66 +367,92 @@ function AdminPage() {
 
   useEffect(() => {
     if (isLoggedIn && adminProfile) fetchAllData();
-  }, [isLoggedIn, adminProfile]);
+  }, [isLoggedIn, adminProfile?.id]);
 
   useEffect(() => {
     if (!isLoggedIn || !adminProfile) return;
 
+    let refreshTimeout;
+
+    const refreshCRM = () => {
+      clearTimeout(refreshTimeout);
+
+      refreshTimeout = setTimeout(() => {
+        fetchAllData({ silent: true });
+      }, 500);
+    };
+
     const channel = supabase
-      .channel("zaifan-crm-realtime")
+      .channel(`zaifan-crm-realtime-${adminProfile.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "inquiries" },
-        () => {
-          fetchInquiries();
-        }
+        refreshCRM
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "appointments" },
-        () => {
-          fetchAppointments();
-        }
+        refreshCRM
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "lead_assignments" },
+        refreshCRM
       )
       .subscribe();
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
+      clearTimeout(refreshTimeout);
+      supabase.removeChannel(channel);
     };
-  }, [isLoggedIn, adminProfile]);
+  }, [isLoggedIn, adminProfile?.id]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        "Login"
+      );
 
-    if (error) {
-      alert(error.message);
-      return;
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      if (data.user) {
+        safeSetState(() => setAdminUser(data.user));
+        await loadAdminProfile(data.user.id);
+      }
+
+      safeSetState(() => {
+        setEmail("");
+        setPassword("");
+      });
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Login request timed out or failed. Check internet and try again.");
     }
-
-    if (data.user) {
-      setAdminUser(data.user);
-      await loadAdminProfile(data.user.id);
-    }
-
-    setEmail("");
-    setPassword("");
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setIsLoggedIn(false);
-    setSessionChecked(true);
-    setAdminUser(null);
-    setAdminProfile(null);
-    setInquiries([]);
-    setAppointments([]);
+    try {
+      await withTimeout(supabase.auth.signOut(), "Logout");
+    } catch (error) {
+      console.error("Logout timeout/error:", error);
+    }
+
+    safeSetState(() => {
+      setIsLoggedIn(false);
+      setSessionChecked(true);
+      setAdminUser(null);
+      setAdminProfile(null);
+      setInquiries([]);
+      setAppointments([]);
+      setLoading(false);
+      setLoadError("");
+    });
   };
 
   const blockAction = (message) => {
@@ -290,17 +460,24 @@ function AdminPage() {
   };
 
   const logActivity = async ({ action, targetType, targetId, details }) => {
-    const { error } = await supabase.from("activity_logs").insert({
-      admin_id: adminUser?.id || null,
-      admin_name: adminProfile?.full_name || "Unknown Admin",
-      action,
-      target_type: targetType,
-      target_id: String(targetId || ""),
-      details,
-    });
+    try {
+      const { error } = await withTimeout(
+        supabase.from("activity_logs").insert({
+          admin_id: adminUser?.id || null,
+          admin_name: adminProfile?.full_name || "Unknown Admin",
+          action,
+          target_type: targetType,
+          target_id: String(targetId || ""),
+          details,
+        }),
+        "Activity log insert"
+      );
 
-    if (error) {
-      console.error("Activity log failed:", error);
+      if (error) {
+        console.error("Activity log failed:", error);
+      }
+    } catch (error) {
+      console.error("Activity log timeout/error:", error);
     }
   };
 
@@ -313,22 +490,32 @@ function AdminPage() {
     const confirmDelete = confirm("Delete this inquiry?");
     if (!confirmDelete) return;
 
-    const { error } = await supabase.from("inquiries").delete().eq("id", id);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("inquiries").delete().eq("id", id),
+        "Delete inquiry"
+      );
 
-    if (error) {
+      if (error) {
+        console.error(error);
+        alert("Failed to delete inquiry.");
+        return;
+      }
+
+      safeSetState(() =>
+        setInquiries((current) => current.filter((inquiry) => inquiry.id !== id))
+      );
+
+      await logActivity({
+        action: "Deleted inquiry",
+        targetType: "inquiry",
+        targetId: id,
+        details: "Inquiry deleted",
+      });
+    } catch (error) {
       console.error(error);
-      alert("Failed to delete inquiry.");
-      return;
+      alert("Delete inquiry request timed out or failed.");
     }
-
-    setInquiries((current) => current.filter((inquiry) => inquiry.id !== id));
-
-    await logActivity({
-      action: "Deleted inquiry",
-      targetType: "inquiry",
-      targetId: id,
-      details: "Inquiry deleted",
-    });
   };
 
   const deleteAppointment = async (id) => {
@@ -340,38 +527,53 @@ function AdminPage() {
     const confirmDelete = confirm("Delete this appointment?");
     if (!confirmDelete) return;
 
-    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("appointments").delete().eq("id", id),
+        "Delete appointment"
+      );
 
-    if (error) {
+      if (error) {
+        console.error(error);
+        alert("Failed to delete appointment.");
+        return;
+      }
+
+      safeSetState(() =>
+        setAppointments((current) =>
+          current.filter((appointment) => appointment.id !== id)
+        )
+      );
+
+      await logActivity({
+        action: "Deleted appointment",
+        targetType: "appointment",
+        targetId: id,
+        details: "Appointment deleted",
+      });
+    } catch (error) {
       console.error(error);
-      alert("Failed to delete appointment.");
-      return;
+      alert("Delete appointment request timed out or failed.");
     }
-
-    setAppointments((current) =>
-      current.filter((appointment) => appointment.id !== id)
-    );
-
-    await logActivity({
-      action: "Deleted appointment",
-      targetType: "appointment",
-      targetId: id,
-      details: "Appointment deleted",
-    });
   };
 
-  const toggleInquiryStatus = async (id, currentStatus) => {
-    if (!currentPermissions.canUpdateStatus) {
-      blockAction("You do not have permission to update inquiry status.");
-      return;
-    }
+  const toggleInquiryStatus = async (id, newStatus) => {
+  if (!currentPermissions.canUpdateStatus) {
+    blockAction("You do not have permission to update inquiry status.");
+    return;
+  }
 
-    const newStatus = currentStatus === "contacted" ? "new" : "contacted";
+  const selectedInquiry = inquiries.find(
+    (inquiry) => inquiry.id === id
+  );
 
-    const { error } = await supabase
-      .from("inquiries")
-      .update({ status: newStatus })
-      .eq("id", id);
+  const oldStatus = selectedInquiry?.status || "new";
+
+  try {
+    const { error } = await withTimeout(
+      supabase.from("inquiries").update({ status: newStatus }).eq("id", id),
+      "Update inquiry status"
+    );
 
     if (error) {
       console.error(error);
@@ -379,21 +581,27 @@ function AdminPage() {
       return;
     }
 
-    setInquiries((current) =>
-      current.map((inquiry) =>
-        inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
+    safeSetState(() =>
+      setInquiries((current) =>
+        current.map((inquiry) =>
+          inquiry.id === id
+            ? { ...inquiry, status: newStatus }
+            : inquiry
+        )
       )
     );
 
     await logActivity({
-      action: "Updated inquiry status",
+      action: "Updated inquiry pipeline",
       targetType: "inquiry",
       targetId: id,
-      details: `Changed inquiry status from ${
-        currentStatus || "new"
-      } to ${newStatus}.`,
+      details: `Changed inquiry stage from ${oldStatus} to ${newStatus}.`,
     });
-  };
+  } catch (error) {
+    console.error(error);
+    alert("Pipeline update timed out or failed.");
+  }
+};
 
   const updateInquiryPriority = async (id, newPriority) => {
     if (!currentPermissions.canUpdatePriority) {
@@ -401,29 +609,36 @@ function AdminPage() {
       return;
     }
 
-    const { error } = await supabase
-      .from("inquiries")
-      .update({ priority: newPriority })
-      .eq("id", id);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("inquiries").update({ priority: newPriority }).eq("id", id),
+        "Update inquiry priority"
+      );
 
-    if (error) {
+      if (error) {
+        console.error(error);
+        alert("Failed to update inquiry priority.");
+        return;
+      }
+
+      safeSetState(() =>
+        setInquiries((current) =>
+          current.map((inquiry) =>
+            inquiry.id === id ? { ...inquiry, priority: newPriority } : inquiry
+          )
+        )
+      );
+
+      await logActivity({
+        action: "Updated inquiry priority",
+        targetType: "inquiry",
+        targetId: id,
+        details: `Changed inquiry priority to ${newPriority}.`,
+      });
+    } catch (error) {
       console.error(error);
-      alert("Failed to update inquiry priority.");
-      return;
+      alert("Priority update timed out or failed.");
     }
-
-    setInquiries((current) =>
-      current.map((inquiry) =>
-        inquiry.id === id ? { ...inquiry, priority: newPriority } : inquiry
-      )
-    );
-
-    await logActivity({
-      action: "Updated inquiry priority",
-      targetType: "inquiry",
-      targetId: id,
-      details: `Changed inquiry priority to ${newPriority}.`,
-    });
   };
 
   const updateAppointmentPriority = async (id, newPriority) => {
@@ -432,31 +647,41 @@ function AdminPage() {
       return;
     }
 
-    const { error } = await supabase
-      .from("appointments")
-      .update({ priority: newPriority })
-      .eq("id", id);
+    try {
+      const { error } = await withTimeout(
+        supabase
+          .from("appointments")
+          .update({ priority: newPriority })
+          .eq("id", id),
+        "Update appointment priority"
+      );
 
-    if (error) {
+      if (error) {
+        console.error(error);
+        alert("Failed to update appointment priority.");
+        return;
+      }
+
+      safeSetState(() =>
+        setAppointments((current) =>
+          current.map((appointment) =>
+            appointment.id === id
+              ? { ...appointment, priority: newPriority }
+              : appointment
+          )
+        )
+      );
+
+      await logActivity({
+        action: "Updated appointment priority",
+        targetType: "appointment",
+        targetId: id,
+        details: `Changed appointment priority to ${newPriority}.`,
+      });
+    } catch (error) {
       console.error(error);
-      alert("Failed to update appointment priority.");
-      return;
+      alert("Priority update timed out or failed.");
     }
-
-    setAppointments((current) =>
-      current.map((appointment) =>
-        appointment.id === id
-          ? { ...appointment, priority: newPriority }
-          : appointment
-      )
-    );
-
-    await logActivity({
-      action: "Updated appointment priority",
-      targetType: "appointment",
-      targetId: id,
-      details: `Changed appointment priority to ${newPriority}.`,
-    });
   };
 
   const updateAppointmentStatus = async (id, newStatus) => {
@@ -471,56 +696,65 @@ function AdminPage() {
 
     const oldStatus = selectedAppointment?.status || "pending";
 
-    const { error } = await supabase
-      .from("appointments")
-      .update({ status: newStatus })
-      .eq("id", id);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("appointments").update({ status: newStatus }).eq("id", id),
+        "Update appointment status"
+      );
 
-    if (error) {
-      console.error(error);
-      alert("Failed to update appointment status.");
-      return;
-    }
-
-    setAppointments((current) =>
-      current.map((appointment) =>
-        appointment.id === id
-          ? { ...appointment, status: newStatus }
-          : appointment
-      )
-    );
-
-    await logActivity({
-      action: "Updated appointment status",
-      targetType: "appointment",
-      targetId: id,
-      details: `Changed appointment status from ${oldStatus} to ${newStatus}.`,
-    });
-
-    if (newStatus === "confirmed" && oldStatus !== "confirmed") {
-      const { data: emailData, error: emailError } =
-        await supabase.functions.invoke("send-appointment-status-email", {
-          body: {
-            fullName: selectedAppointment?.full_name,
-            email: selectedAppointment?.email,
-            phone: selectedAppointment?.phone,
-            country: selectedAppointment?.country_interest,
-            service: selectedAppointment?.consultation_type,
-            appointmentDate: selectedAppointment?.appointment_date,
-            appointmentTime: selectedAppointment?.appointment_time,
-            status: newStatus,
-          },
-        });
-
-      console.log("STATUS EMAIL DATA:", emailData);
-      console.log("STATUS EMAIL ERROR:", emailError);
-
-      if (emailError) {
-        alert("Status updated, but confirmation email failed.");
+      if (error) {
+        console.error(error);
+        alert("Failed to update appointment status.");
         return;
       }
 
-      alert("Appointment confirmed and confirmation email sent.");
+      safeSetState(() =>
+        setAppointments((current) =>
+          current.map((appointment) =>
+            appointment.id === id
+              ? { ...appointment, status: newStatus }
+              : appointment
+          )
+        )
+      );
+
+      await logActivity({
+        action: "Updated appointment status",
+        targetType: "appointment",
+        targetId: id,
+        details: `Changed appointment status from ${oldStatus} to ${newStatus}.`,
+      });
+
+      if (newStatus === "confirmed" && oldStatus !== "confirmed") {
+        const { data: emailData, error: emailError } = await withTimeout(
+          supabase.functions.invoke("send-appointment-status-email", {
+            body: {
+              fullName: selectedAppointment?.full_name,
+              email: selectedAppointment?.email,
+              phone: selectedAppointment?.phone,
+              country: selectedAppointment?.country_interest,
+              service: selectedAppointment?.consultation_type,
+              appointmentDate: selectedAppointment?.appointment_date,
+              appointmentTime: selectedAppointment?.appointment_time,
+              status: newStatus,
+            },
+          }),
+          "Appointment status email"
+        );
+
+        console.log("STATUS EMAIL DATA:", emailData);
+        console.log("STATUS EMAIL ERROR:", emailError);
+
+        if (emailError) {
+          alert("Status updated, but confirmation email failed.");
+          return;
+        }
+
+        alert("Appointment confirmed and confirmation email sent.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Appointment status update timed out or failed.");
     }
   };
 
@@ -530,27 +764,33 @@ function AdminPage() {
       return;
     }
 
-    const confirmDelete = confirm(
-      "Are you sure you want to delete all inquiries?"
-    );
+    const confirmDelete = confirm("Are you sure you want to delete all inquiries?");
     if (!confirmDelete) return;
 
-    const { error } = await supabase.from("inquiries").delete().neq("id", 0);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("inquiries").delete().neq("id", 0),
+        "Clear inquiries"
+      );
 
-    if (error) {
+      if (error) {
+        console.error(error);
+        alert("Failed to clear inquiries.");
+        return;
+      }
+
+      safeSetState(() => setInquiries([]));
+
+      await logActivity({
+        action: "Cleared all inquiries",
+        targetType: "inquiries",
+        targetId: "all",
+        details: "Super Admin cleared all inquiry records.",
+      });
+    } catch (error) {
       console.error(error);
-      alert("Failed to clear inquiries.");
-      return;
+      alert("Clear inquiries request timed out or failed.");
     }
-
-    setInquiries([]);
-
-    await logActivity({
-      action: "Cleared all inquiries",
-      targetType: "inquiries",
-      targetId: "all",
-      details: "Super Admin cleared all inquiry records.",
-    });
   };
 
   const clearAppointments = async () => {
@@ -564,22 +804,30 @@ function AdminPage() {
     );
     if (!confirmDelete) return;
 
-    const { error } = await supabase.from("appointments").delete().neq("id", 0);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("appointments").delete().neq("id", 0),
+        "Clear appointments"
+      );
 
-    if (error) {
+      if (error) {
+        console.error(error);
+        alert("Failed to clear appointments.");
+        return;
+      }
+
+      safeSetState(() => setAppointments([]));
+
+      await logActivity({
+        action: "Cleared all appointments",
+        targetType: "appointments",
+        targetId: "all",
+        details: "Super Admin cleared all appointment records.",
+      });
+    } catch (error) {
       console.error(error);
-      alert("Failed to clear appointments.");
-      return;
+      alert("Clear appointments request timed out or failed.");
     }
-
-    setAppointments([]);
-
-    await logActivity({
-      action: "Cleared all appointments",
-      targetType: "appointments",
-      targetId: "all",
-      details: "Super Admin cleared all appointment records.",
-    });
   };
 
   const downloadCSV = (filename, headers, rows) => {
@@ -634,6 +882,7 @@ function AdminPage() {
       "Message",
       "Status",
       "Priority",
+      "Assigned Admin",
       "Date",
     ];
 
@@ -651,6 +900,7 @@ function AdminPage() {
       inquiry.message,
       inquiry.status || "new",
       inquiry.priority || "low",
+      inquiry.assigned_admin_name || "Unassigned",
       inquiry.created_at,
     ]);
 
@@ -679,6 +929,7 @@ function AdminPage() {
       "Message",
       "Status",
       "Priority",
+      "Assigned Admin",
       "Created At",
     ];
 
@@ -693,6 +944,7 @@ function AdminPage() {
       appointment.message,
       appointment.status || "pending",
       appointment.priority || "low",
+      appointment.assigned_admin_name || "Unassigned",
       appointment.created_at,
     ]);
 
@@ -712,7 +964,8 @@ function AdminPage() {
       inquiry.country?.toLowerCase().includes(searchText) ||
       inquiry.city?.toLowerCase().includes(searchText) ||
       inquiry.field_of_interest?.toLowerCase().includes(searchText) ||
-      inquiry.study_level?.toLowerCase().includes(searchText);
+      inquiry.study_level?.toLowerCase().includes(searchText) ||
+      inquiry.assigned_admin_name?.toLowerCase().includes(searchText);
 
     const matchesStatus =
       statusFilter === "All" ||
@@ -735,7 +988,8 @@ function AdminPage() {
       appointment.consultation_type?.toLowerCase().includes(searchText) ||
       appointment.appointment_date?.toLowerCase().includes(searchText) ||
       appointment.appointment_time?.toLowerCase().includes(searchText) ||
-      priority.toLowerCase().includes(searchText);
+      priority.toLowerCase().includes(searchText) ||
+      appointment.assigned_admin_name?.toLowerCase().includes(searchText);
 
     const matchesStatus =
       statusFilter === "All" ||
@@ -771,7 +1025,6 @@ function AdminPage() {
 
   const latestInquiry = inquiries[0];
   const latestAppointment = appointments[0];
-
   const todayDate = new Date().toDateString();
 
   const todayInquiriesCount = inquiries.filter((inquiry) =>
@@ -870,7 +1123,6 @@ function AdminPage() {
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#050505] text-white">
       <div className="absolute right-[-35%] top-[-12%] h-[320px] w-[320px] rounded-full bg-[#D4AF37]/10 blur-3xl sm:right-[-12%] sm:top-[-18%] sm:h-[520px] sm:w-[520px]"></div>
-
       <div className="absolute bottom-[-18%] left-[-35%] h-[320px] w-[320px] rounded-full bg-[#D4AF37]/5 blur-3xl sm:bottom-[-25%] sm:left-[-12%] sm:h-[520px] sm:w-[520px]"></div>
 
       <div className="relative flex flex-col xl:flex-row">
@@ -913,6 +1165,21 @@ function AdminPage() {
             </div>
           </div>
 
+          {loadError && (
+            <div className="mb-5 rounded-[1.5rem] border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p>{loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => fetchAllData()}
+                  className="rounded-full bg-[#D4AF37] px-5 py-2.5 text-xs font-black text-black transition hover:bg-[#E7C768]"
+                >
+                  Retry Refresh
+                </button>
+              </div>
+            </div>
+          )}
+
           <AdminHeader
             inquiries={inquiries}
             appointments={appointments}
@@ -930,10 +1197,10 @@ function AdminPage() {
           />
 
           {activeTab !== "analytics" &&
-activeTab !== "settings" &&
-activeTab !== "admin-management" &&
-activeTab !== "activity-logs" &&
-activeTab !== "my-leads" && (
+            activeTab !== "settings" &&
+            activeTab !== "admin-management" &&
+            activeTab !== "activity-logs" &&
+            activeTab !== "my-leads" && (
               <>
                 <NotificationCenter
                   cardClass={cardClass}
@@ -959,13 +1226,10 @@ activeTab !== "my-leads" && (
             )}
 
           {activeTab === "my-leads" ? (
-  <MyLeadsPanel
-    cardClass={cardClass}
-    adminProfile={adminProfile}
-  />
-) : activeTab === "activity-logs" ? (
-  <AdminActivityLogs cardClass={cardClass} />
-) : activeTab === "admin-management" ? (
+            <MyLeadsPanel cardClass={cardClass} adminProfile={adminProfile} />
+          ) : activeTab === "activity-logs" ? (
+            <AdminActivityLogs cardClass={cardClass} />
+          ) : activeTab === "admin-management" ? (
             <AdminManagement
               cardClass={cardClass}
               role={role}
@@ -1062,7 +1326,7 @@ activeTab !== "my-leads" && (
                     appointments={appointments}
                     filteredAppointments={filteredAppointments}
                     cardClass={cardClass}
-                    toggleInquiryStatus={toggleInquiryStatus}
+                    updateInquiryStatus={toggleInquiryStatus}
                     updateInquiryPriority={updateInquiryPriority}
                     updateAppointmentPriority={updateAppointmentPriority}
                     deleteInquiry={deleteInquiry}

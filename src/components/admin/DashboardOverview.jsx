@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 
 function DashboardOverview({
-  cardClass,
-  todayInquiriesCount,
-  todayAppointmentsCount,
-  latestInquiry,
-  latestAppointment,
+  cardClass = "",
+  todayInquiriesCount = 0,
+  todayAppointmentsCount = 0,
+  latestInquiry = null,
+  latestAppointment = null,
 }) {
   const totalToday = todayInquiriesCount + todayAppointmentsCount;
 
@@ -17,175 +17,300 @@ function DashboardOverview({
       ? 0
       : Math.round((todayAppointmentsCount / totalToday) * 100);
 
-  const chartBars = [
-    { label: "Mon", value: 35 },
-    { label: "Tue", value: 55 },
-    { label: "Wed", value: 42 },
-    { label: "Thu", value: 72 },
-    { label: "Fri", value: 60 },
-    { label: "Sat", value: 88 },
-    { label: "Sun", value: 50 },
-  ];
-
-  const overviewCards = [
-    {
-      title: "Today Activity",
-      value: totalToday,
-      description: `${todayInquiriesCount} new inquiries · ${todayAppointmentsCount} appointments`,
-      icon: "✦",
-      gold: true,
-      bars: [
-        { label: "Inquiries", value: inquiryPercent },
-        { label: "Appointments", value: appointmentPercent },
-      ],
-    },
+  const latestCards = [
     {
       title: "Latest Inquiry",
-      value: latestInquiry?.full_name || "No inquiry yet",
-      description: latestInquiry?.country || "Waiting for first inquiry",
       icon: "📨",
+      lead: latestInquiry,
+      fallbackTitle: "No inquiry yet",
+      fallbackText: "Waiting for first website inquiry",
+      type: "inquiry",
+      accent: "gold",
+      detail: latestInquiry?.country || latestInquiry?.field_of_interest,
+      time: latestInquiry?.created_at,
     },
     {
       title: "Latest Appointment",
-      value: latestAppointment?.full_name || "No booking yet",
-      description: latestAppointment
+      icon: "📅",
+      lead: latestAppointment,
+      fallbackTitle: "No booking yet",
+      fallbackText: "Waiting for first consultation booking",
+      type: "appointment",
+      accent: "green",
+      detail: latestAppointment
         ? `${latestAppointment.appointment_date || "No date"} · ${
             latestAppointment.appointment_time || "No time"
           }`
-        : "Waiting for first appointment",
+        : "",
+      time: latestAppointment?.created_at,
+    },
+  ];
+
+  const todayBars = [
+    {
+      label: "Inquiries",
+      value: inquiryPercent,
+      count: todayInquiriesCount,
+      icon: "📨",
+    },
+    {
+      label: "Appointments",
+      value: appointmentPercent,
+      count: todayAppointmentsCount,
       icon: "📅",
     },
   ];
 
+  const pulseBars = buildPulseBars(todayInquiriesCount, todayAppointmentsCount);
+
   return (
-    <div className="mb-5 grid gap-3 xl:mb-6 xl:grid-cols-3 xl:gap-4">
+    <div className="mb-5 grid gap-3 xl:mb-6 xl:grid-cols-[1.25fr_0.95fr] xl:gap-4">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
-        className={`${cardClass} p-4 sm:p-5 xl:col-span-2`}
+        className={`${cardClass} p-4 sm:p-5`}
       >
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
 
-        <div className="mb-4 flex items-start justify-between gap-3 sm:mb-6 sm:gap-5">
+        <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 sm:text-[11px] sm:tracking-[0.35em]">
-              Weekly Analytics
+              Daily Operations
             </p>
 
             <h2 className="mt-2 text-2xl font-black text-white sm:mt-3 sm:text-3xl">
-              CRM Activity Flow
+              Today&apos;s CRM Pulse
             </h2>
 
             <p className="mt-1.5 text-xs leading-relaxed text-gray-400 sm:mt-2 sm:text-sm">
-              Visual overview for recent inquiry and appointment activity.
+              Real-time overview of today&apos;s student activity from inquiries and
+              consultation bookings.
             </p>
           </div>
 
           <div className="shrink-0 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-2 text-xs font-bold text-[#D4AF37] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm">
-            Live
+            {totalToday} Today
           </div>
         </div>
 
-        <div className="flex h-36 items-end gap-2 rounded-[1.2rem] border border-white/10 bg-black/20 p-4 sm:h-48 sm:gap-3 sm:rounded-[1.5rem] sm:p-5">
-          {chartBars.map((bar, index) => (
-            <div
-              key={bar.label}
-              className="flex flex-1 flex-col items-center gap-2 sm:gap-3"
-            >
-              <div className="flex h-24 w-full items-end rounded-full bg-white/[0.04] p-1 sm:h-32">
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${bar.value}%` }}
-                  transition={{ duration: 0.7, delay: index * 0.06 }}
-                  className="w-full rounded-full bg-gradient-to-t from-[#D4AF37] to-[#E7C768]"
-                ></motion.div>
-              </div>
+        <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="rounded-[1.5rem] border border-[#D4AF37]/15 bg-[#D4AF37]/5 p-5">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+              Activity Count
+            </p>
 
-              <span className="text-[10px] text-gray-500 sm:text-[11px]">
-                {bar.label}
-              </span>
+            <h3 className="mt-3 text-5xl font-black text-[#D4AF37]">
+              {totalToday}
+            </h3>
+
+            <p className="mt-3 text-sm leading-relaxed text-gray-400">
+              {totalToday === 0
+                ? "No new CRM activity today yet."
+                : `${todayInquiriesCount} inquiries and ${todayAppointmentsCount} appointments logged today.`}
+            </p>
+
+            <div className="mt-5 space-y-4">
+              {todayBars.map((bar) => (
+                <div key={bar.label}>
+                  <div className="mb-2 flex items-center justify-between text-xs text-gray-400">
+                    <span>
+                      {bar.icon} {bar.label}
+                    </span>
+                    <span>
+                      {bar.count} · {bar.value}%
+                    </span>
+                  </div>
+
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${bar.value}%` }}
+                      transition={{ duration: 0.8, delay: 0.15 }}
+                      className="h-full rounded-full bg-[#D4AF37]"
+                    ></motion.div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div className="flex h-64 items-end gap-2 rounded-[1.5rem] border border-white/10 bg-black/20 p-4 sm:gap-3 sm:p-5">
+            {pulseBars.map((bar, index) => (
+              <div
+                key={bar.label}
+                className="flex flex-1 flex-col items-center gap-2 sm:gap-3"
+              >
+                <div className="flex h-40 w-full items-end rounded-full bg-white/[0.04] p-1">
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${bar.value}%` }}
+                    transition={{ duration: 0.7, delay: index * 0.05 }}
+                    className={`w-full rounded-full ${
+                      bar.active
+                        ? "bg-gradient-to-t from-[#D4AF37] to-[#E7C768]"
+                        : "bg-white/10"
+                    }`}
+                  ></motion.div>
+                </div>
+
+                <span className="text-[10px] text-gray-500 sm:text-[11px]">
+                  {bar.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </motion.div>
 
       <div className="grid gap-3 xl:gap-4">
-        {overviewCards.map((card, index) => (
-          <motion.div
+        {latestCards.map((card, index) => (
+          <LatestLeadCard
             key={card.title}
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.45,
-              delay: index * 0.08,
-            }}
-            className={`${cardClass} group relative p-4 sm:p-5 ${
-              card.gold
-                ? "border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/10 to-transparent"
-                : ""
-            }`}
-          >
-            <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition duration-500 group-hover:scale-x-100"></div>
-
-            <div className="flex items-start justify-between gap-3 sm:gap-5">
-              <div className="min-w-0">
-                <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 sm:text-[10px] sm:tracking-[0.3em]">
-                  {card.title}
-                </p>
-
-                <h2
-                  className={`mt-2 break-words font-black leading-tight sm:mt-3 ${
-                    card.gold
-                      ? "text-3xl text-[#D4AF37] sm:text-4xl"
-                      : "text-xl text-white sm:text-2xl"
-                  }`}
-                >
-                  {card.value}
-                </h2>
-
-                <p className="mt-1.5 text-xs leading-relaxed text-gray-400 sm:mt-2 sm:text-sm">
-                  {card.description}
-                </p>
-              </div>
-
-              <div
-                className={`shrink-0 rounded-xl border p-2.5 text-lg sm:rounded-2xl sm:p-3 sm:text-xl ${
-                  card.gold
-                    ? "border-[#D4AF37]/20 bg-[#D4AF37]/10"
-                    : "border-white/10 bg-white/[0.04]"
-                }`}
-              >
-                {card.icon}
-              </div>
-            </div>
-
-            {card.bars && (
-              <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
-                {card.bars.map((bar) => (
-                  <div key={bar.label}>
-                    <div className="mb-1.5 flex items-center justify-between text-[11px] text-gray-500 sm:mb-2 sm:text-xs">
-                      <span>{bar.label}</span>
-                      <span>{bar.value}%</span>
-                    </div>
-
-                    <div className="h-1.5 overflow-hidden rounded-full bg-white/10 sm:h-2">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${bar.value}%` }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="h-full rounded-full bg-[#D4AF37]"
-                      ></motion.div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
+            card={card}
+            cardClass={cardClass}
+            index={index}
+          />
         ))}
       </div>
     </div>
   );
+}
+
+function LatestLeadCard({ card, cardClass, index }) {
+  const hasLead = Boolean(card.lead);
+  const assignedAdmin =
+    card.lead?.assigned_admin_name || card.lead?.assigned_to || null;
+
+  const priority = card.lead?.priority || "low";
+  const status =
+    card.type === "inquiry"
+      ? card.lead?.status || "new"
+      : card.lead?.status || "pending";
+
+  const accentClass =
+    card.accent === "green"
+      ? "border-green-400/20 bg-green-400/10 text-green-300"
+      : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: index * 0.08 }}
+      className={`${cardClass} group relative p-4 sm:p-5`}
+    >
+      <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition duration-500 group-hover:scale-x-100"></div>
+
+      <div className="flex items-start justify-between gap-3 sm:gap-5">
+        <div className="min-w-0">
+          <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 sm:text-[10px] sm:tracking-[0.3em]">
+            {card.title}
+          </p>
+
+          <h2 className="mt-2 break-words text-xl font-black leading-tight text-white sm:mt-3 sm:text-2xl">
+            {hasLead ? card.lead.full_name || "Unnamed Student" : card.fallbackTitle}
+          </h2>
+
+          <p className="mt-1.5 text-xs leading-relaxed text-gray-400 sm:mt-2 sm:text-sm">
+            {hasLead ? card.detail || "No detail available" : card.fallbackText}
+          </p>
+        </div>
+
+        <div
+          className={`shrink-0 rounded-xl border p-2.5 text-lg sm:rounded-2xl sm:p-3 sm:text-xl ${accentClass}`}
+        >
+          {card.icon}
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${accentClass}`}>
+          {card.type}
+        </span>
+
+        {hasLead && (
+          <>
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-300">
+              {priority}
+            </span>
+
+            <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+              {status}
+            </span>
+
+            <span
+              className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${
+                assignedAdmin
+                  ? "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
+                  : "border-orange-400/20 bg-orange-400/10 text-orange-300"
+              }`}
+            >
+              {assignedAdmin ? `Assigned: ${assignedAdmin}` : "Open Pool"}
+            </span>
+          </>
+        )}
+      </div>
+
+      {hasLead && (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <MiniInfo label="Email" value={card.lead.email} />
+          <MiniInfo label="Created" value={formatDate(card.time)} />
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function MiniInfo({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xs font-semibold text-gray-300">
+        {value || "-"}
+      </p>
+    </div>
+  );
+}
+
+function buildPulseBars(todayInquiriesCount, todayAppointmentsCount) {
+  const total = todayInquiriesCount + todayAppointmentsCount;
+
+  if (total === 0) {
+    return [
+      { label: "Now", value: 18, active: false },
+      { label: "Leads", value: 28, active: false },
+      { label: "Calls", value: 20, active: false },
+      { label: "Apps", value: 32, active: false },
+      { label: "CRM", value: 24, active: false },
+      { label: "Flow", value: 36, active: false },
+      { label: "Live", value: 22, active: false },
+    ];
+  }
+
+  const inquiryBoost = Math.min(90, 30 + todayInquiriesCount * 15);
+  const appointmentBoost = Math.min(95, 35 + todayAppointmentsCount * 18);
+
+  return [
+    { label: "Start", value: 25, active: true },
+    { label: "Inq", value: inquiryBoost, active: todayInquiriesCount > 0 },
+    { label: "Follow", value: Math.max(35, inquiryBoost - 12), active: true },
+    { label: "Book", value: appointmentBoost, active: todayAppointmentsCount > 0 },
+    { label: "Work", value: Math.max(40, appointmentBoost - 15), active: true },
+    { label: "Close", value: Math.min(88, 45 + total * 10), active: true },
+    { label: "Live", value: Math.min(96, 50 + total * 12), active: true },
+  ];
+}
+
+function formatDate(date) {
+  if (!date) return "No date";
+
+  return new Date(date).toLocaleString("en-PK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 export default DashboardOverview;

@@ -6,19 +6,20 @@ import AnimatedSection from "./AnimatedSection";
 import StudentDetailModal from "./StudentDetailModal";
 
 function DashboardContent({
-  loading,
-  activeTab,
-  inquiries,
-  filteredInquiries,
-  appointments,
-  filteredAppointments,
-  cardClass,
-  toggleInquiryStatus,
-  updateInquiryPriority,
-  updateAppointmentPriority,
-  deleteInquiry,
-  updateAppointmentStatus,
-  deleteAppointment,
+  loading = false,
+  activeTab = "inquiries",
+  inquiries = [],
+  filteredInquiries = [],
+  appointments = [],
+  filteredAppointments = [],
+  cardClass = "",
+  toggleInquiryStatus = () => {},
+updateInquiryStatus = toggleInquiryStatus,
+  updateInquiryPriority = () => {},
+  updateAppointmentPriority = () => {},
+  deleteInquiry = null,
+  updateAppointmentStatus = () => {},
+  deleteAppointment = null,
   role = "staff",
   adminProfile = null,
   permissions = {},
@@ -131,23 +132,23 @@ function DashboardContent({
     (appointment) => appointment.status === "cancelled"
   ).length;
 
-  const priorityCounts =
-    activeTab === "inquiries"
-      ? {
-          vip: inquiries.filter((item) => item.priority === "vip").length,
-          high: inquiries.filter((item) => item.priority === "high").length,
-          medium: inquiries.filter((item) => item.priority === "medium").length,
-          low: inquiries.filter((item) => (item.priority || "low") === "low")
-            .length,
-        }
-      : {
-          vip: appointments.filter((item) => item.priority === "vip").length,
-          high: appointments.filter((item) => item.priority === "high").length,
-          medium: appointments.filter((item) => item.priority === "medium")
-            .length,
-          low: appointments.filter((item) => (item.priority || "low") === "low")
-            .length,
-        };
+  const activeSourceItems = activeTab === "inquiries" ? inquiries : appointments;
+  const activeItems =
+    activeTab === "inquiries" ? filteredInquiries : filteredAppointments;
+
+  const assignedCount = activeSourceItems.filter(
+    (item) => item.assigned_admin_id
+  ).length;
+
+  const unassignedCount = Math.max(activeSourceItems.length - assignedCount, 0);
+
+  const priorityCounts = {
+    vip: activeSourceItems.filter((item) => item.priority === "vip").length,
+    high: activeSourceItems.filter((item) => item.priority === "high").length,
+    medium: activeSourceItems.filter((item) => item.priority === "medium").length,
+    low: activeSourceItems.filter((item) => (item.priority || "low") === "low")
+      .length,
+  };
 
   const pipelineStages =
     activeTab === "inquiries"
@@ -165,16 +166,16 @@ function DashboardContent({
             color: "text-green-400",
           },
           {
-            label: "VIP",
-            value: priorityCounts.vip,
-            icon: "👑",
-            color: "text-purple-300",
+            label: "Assigned",
+            value: assignedCount,
+            icon: "📌",
+            color: "text-cyan-300",
           },
           {
-            label: "High Priority",
-            value: priorityCounts.high,
-            icon: "🔥",
-            color: "text-red-300",
+            label: "Open Pool",
+            value: unassignedCount,
+            icon: "🧭",
+            color: "text-orange-300",
           },
         ]
       : [
@@ -204,8 +205,8 @@ function DashboardContent({
           },
         ];
 
-  const activeItems =
-    activeTab === "inquiries" ? filteredInquiries : filteredAppointments;
+  const viewTitle = activeTab === "inquiries" ? "Inquiry Pipeline" : "Appointment Pipeline";
+  const totalLabel = activeTab === "inquiries" ? "Total inquiries" : "Total appointments";
 
   const EmptyState = ({ icon, title, text, gold = false }) => (
     <AnimatedSection key={`${activeTab}-${title}`}>
@@ -247,29 +248,7 @@ function DashboardContent({
   );
 
   if (loading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="grid gap-3 sm:gap-4 2xl:grid-cols-2"
-      >
-        {[1, 2, 3, 4].map((item) => (
-          <div
-            key={item}
-            className={`${cardClass} animate-pulse space-y-3 p-4 sm:space-y-4 sm:p-5`}
-          >
-            <div className="h-3.5 w-24 rounded-full bg-white/10 sm:h-4 sm:w-28"></div>
-            <div className="h-7 w-44 rounded-2xl bg-white/10 sm:h-8 sm:w-56"></div>
-            <div className="grid gap-2.5 sm:gap-3 lg:grid-cols-2">
-              <div className="h-16 rounded-2xl bg-white/10 sm:h-20"></div>
-              <div className="h-16 rounded-2xl bg-white/10 sm:h-20"></div>
-            </div>
-            <div className="h-24 rounded-2xl bg-white/10 sm:h-28"></div>
-          </div>
-        ))}
-      </motion.div>
-    );
+    return <LoadingSkeleton cardClass={cardClass} />;
   }
 
   return (
@@ -283,12 +262,12 @@ function DashboardContent({
               </p>
 
               <h2 className="mt-2 text-2xl font-black text-white">
-                Lead Management Center
+                {viewTitle}
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
-                Manage inquiries, appointments, lead pipelines, priorities,
-                statuses, and enterprise CRM workflows with protected actions.
+                Manage lead ownership, priorities, statuses, and protected CRM
+                actions from one polished operational workspace.
               </p>
             </div>
 
@@ -302,6 +281,10 @@ function DashboardContent({
 
               <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-gray-400">
                 {adminProfile?.full_name || "Admin User"}
+              </div>
+
+              <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">
+                {activeItems.length}/{activeSourceItems.length} Showing
               </div>
 
               {!safePermissions.canDelete && (
@@ -323,43 +306,62 @@ function DashboardContent({
             ))}
           </div>
 
-          <div className="mb-4 flex flex-col gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
-                CRM View Mode
-              </p>
+          <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_auto]">
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+                    CRM View Mode
+                  </p>
 
-              <h3 className="mt-1 text-lg font-bold text-white">
-                {viewMode === "kanban"
-                  ? "Kanban Pipeline"
-                  : "Enterprise Card View"}
-              </h3>
+                  <h3 className="mt-1 text-lg font-bold text-white">
+                    {viewMode === "kanban"
+                      ? "Kanban Priority Pipeline"
+                      : "Enterprise Card View"}
+                  </h3>
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    {totalLabel}: {activeSourceItems.length} · Assigned: {assignedCount} · Open: {unassignedCount}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 rounded-full border border-white/10 bg-black/25 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`rounded-full px-4 py-2 text-xs font-semibold transition duration-300 ${
+                      viewMode === "list"
+                        ? "bg-[#D4AF37] text-black"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    List
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("kanban")}
+                    className={`rounded-full px-4 py-2 text-xs font-semibold transition duration-300 ${
+                      viewMode === "kanban"
+                        ? "bg-[#D4AF37] text-black"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    Kanban
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 rounded-full border border-white/10 bg-black/25 p-1">
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition duration-300 ${
-                  viewMode === "list"
-                    ? "bg-[#D4AF37] text-black"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                List
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewMode("kanban")}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition duration-300 ${
-                  viewMode === "kanban"
-                    ? "bg-[#D4AF37] text-black"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                Kanban
-              </button>
+            <div className="grid grid-cols-4 gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-3">
+              {priorityColumns.map((column) => (
+                <div key={column.value} className="rounded-2xl border border-white/10 bg-black/20 p-3 text-center">
+                  <p className="text-lg">{column.icon}</p>
+                  <p className={`mt-1 text-lg font-black ${column.color}`}>
+                    {priorityCounts[column.value] || 0}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -384,146 +386,37 @@ function DashboardContent({
               text="Try adjusting your search keywords or status filters."
             />
           ) : viewMode === "kanban" ? (
-            <div className="grid gap-4 xl:grid-cols-4">
-              {priorityColumns.map((column, columnIndex) => {
-                const columnItems = activeItems.filter(
-                  (item) => (item.priority || "low") === column.value
-                );
-
-                return (
-                  <motion.div
-                    key={column.value}
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.3,
-                      delay: columnIndex * 0.04,
-                    }}
-                    className={`min-h-[360px] rounded-[1.7rem] border ${column.border} ${column.bg} p-3 backdrop-blur-xl`}
-                  >
-                    <div className="mb-3 flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-black/25 p-4">
-                      <div>
-                        <p className="text-xl">{column.icon}</p>
-
-                        <h3 className={`mt-2 text-sm font-bold ${column.color}`}>
-                          {column.label}
-                        </h3>
-                      </div>
-
-                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-bold text-white">
-                        {columnItems.length}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {columnItems.length === 0 ? (
-                        <div className="rounded-[1.2rem] border border-dashed border-white/10 bg-black/20 p-5 text-center">
-                          <p className="text-xs text-gray-500">
-                            No leads in this column.
-                          </p>
-                        </div>
-                      ) : (
-                        columnItems.map((item, index) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              duration: 0.24,
-                              delay: Math.min(index * 0.02, 0.12),
-                            }}
-                          >
-                            {activeTab === "inquiries" ? (
-                              <InquiryCard
-                                inquiry={item}
-                                cardClass="p-0"
-                                updateInquiryStatus={toggleInquiryStatus}
-                                updateInquiryPriority={updateInquiryPriority}
-                                deleteInquiry={
-                                  safePermissions.canDelete
-                                    ? deleteInquiry
-                                    : null
-                                }
-                                openModal={openInquiryModal}
-                                compact
-                                role={role}
-                                permissions={safePermissions}
-                              />
-                            ) : (
-                              <AppointmentCard
-                                appointment={item}
-                                cardClass="p-0"
-                                updateAppointmentStatus={
-                                  updateAppointmentStatus
-                                }
-                                updateAppointmentPriority={
-                                  updateAppointmentPriority
-                                }
-                                deleteAppointment={
-                                  safePermissions.canDelete
-                                    ? deleteAppointment
-                                    : null
-                                }
-                                openModal={openAppointmentModal}
-                                compact
-                                role={role}
-                                permissions={safePermissions}
-                              />
-                            )}
-                          </motion.div>
-                        ))
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+            <KanbanView
+              activeTab={activeTab}
+              activeItems={activeItems}
+              priorityColumns={priorityColumns}
+              safePermissions={safePermissions}
+              toggleInquiryStatus={updateInquiryStatus}
+              updateInquiryPriority={updateInquiryPriority}
+              updateAppointmentPriority={updateAppointmentPriority}
+              deleteInquiry={deleteInquiry}
+              updateAppointmentStatus={updateAppointmentStatus}
+              deleteAppointment={deleteAppointment}
+              openInquiryModal={openInquiryModal}
+              openAppointmentModal={openAppointmentModal}
+              role={role}
+            />
           ) : (
-            <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
-              {activeItems.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.28,
-                    delay: Math.min(index * 0.025, 0.18),
-                  }}
-                >
-                  {activeTab === "inquiries" ? (
-                    <InquiryCard
-                      inquiry={item}
-                      cardClass={cardClass}
-                      updateInquiryStatus={toggleInquiryStatus}
-                      updateInquiryPriority={updateInquiryPriority}
-                      deleteInquiry={
-                        safePermissions.canDelete ? deleteInquiry : null
-                      }
-                      openModal={openInquiryModal}
-                      role={role}
-                      permissions={safePermissions}
-                    />
-                  ) : (
-                    <AppointmentCard
-                      appointment={item}
-                      cardClass={cardClass}
-                      updateAppointmentStatus={updateAppointmentStatus}
-                      updateAppointmentPriority={
-                        updateAppointmentPriority
-                      }
-                      deleteAppointment={
-                        safePermissions.canDelete
-                          ? deleteAppointment
-                          : null
-                      }
-                      openModal={openAppointmentModal}
-                      role={role}
-                      permissions={safePermissions}
-                    />
-                  )}
-                </motion.div>
-              ))}
-            </div>
+            <ListView
+              activeTab={activeTab}
+              activeItems={activeItems}
+              cardClass={cardClass}
+              safePermissions={safePermissions}
+              toggleInquiryStatus={updateInquiryStatus}
+              updateInquiryPriority={updateInquiryPriority}
+              updateAppointmentPriority={updateAppointmentPriority}
+              deleteInquiry={deleteInquiry}
+              updateAppointmentStatus={updateAppointmentStatus}
+              deleteAppointment={deleteAppointment}
+              openInquiryModal={openInquiryModal}
+              openAppointmentModal={openAppointmentModal}
+              role={role}
+            />
           )}
         </AnimatedSection>
       </AnimatePresence>
@@ -538,15 +431,203 @@ function DashboardContent({
   );
 }
 
+function LoadingSkeleton({ cardClass }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
+      className="space-y-4"
+    >
+      <div className={`${cardClass} animate-pulse p-5`}>
+        <div className="h-3.5 w-40 rounded-full bg-white/10"></div>
+        <div className="mt-4 h-9 w-72 max-w-full rounded-2xl bg-white/10"></div>
+        <div className="mt-4 h-4 w-full max-w-2xl rounded-full bg-white/10"></div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[1, 2, 3, 4].map((item) => (
+          <div key={item} className={`${cardClass} animate-pulse p-5`}>
+            <div className="h-3.5 w-24 rounded-full bg-white/10"></div>
+            <div className="mt-4 h-8 w-20 rounded-2xl bg-white/10"></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
+        {[1, 2, 3, 4].map((item) => (
+          <div
+            key={item}
+            className={`${cardClass} animate-pulse space-y-3 p-4 sm:space-y-4 sm:p-5`}
+          >
+            <div className="h-3.5 w-24 rounded-full bg-white/10 sm:h-4 sm:w-28"></div>
+            <div className="h-7 w-44 rounded-2xl bg-white/10 sm:h-8 sm:w-56"></div>
+            <div className="grid gap-2.5 sm:gap-3 lg:grid-cols-2">
+              <div className="h-16 rounded-2xl bg-white/10 sm:h-20"></div>
+              <div className="h-16 rounded-2xl bg-white/10 sm:h-20"></div>
+            </div>
+            <div className="h-24 rounded-2xl bg-white/10 sm:h-28"></div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+function KanbanView({
+  activeTab,
+  activeItems,
+  priorityColumns,
+  safePermissions,
+  toggleInquiryStatus,
+  updateInquiryPriority,
+  updateAppointmentPriority,
+  deleteInquiry,
+  updateAppointmentStatus,
+  deleteAppointment,
+  openInquiryModal,
+  openAppointmentModal,
+  role,
+}) {
+  return (
+    <div className="grid gap-4 xl:grid-cols-4">
+      {priorityColumns.map((column, columnIndex) => {
+        const columnItems = activeItems.filter(
+          (item) => (item.priority || "low") === column.value
+        );
+
+        return (
+          <motion.div
+            key={column.value}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: columnIndex * 0.04 }}
+            className={`min-h-[360px] rounded-[1.7rem] border ${column.border} ${column.bg} p-3 backdrop-blur-xl`}
+          >
+            <div className="mb-3 flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-black/25 p-4">
+              <div>
+                <p className="text-xl">{column.icon}</p>
+
+                <h3 className={`mt-2 text-sm font-bold ${column.color}`}>
+                  {column.label}
+                </h3>
+              </div>
+
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-bold text-white">
+                {columnItems.length}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {columnItems.length === 0 ? (
+                <div className="rounded-[1.2rem] border border-dashed border-white/10 bg-black/20 p-5 text-center">
+                  <p className="text-xs text-gray-500">
+                    No leads in this column.
+                  </p>
+                </div>
+              ) : (
+                columnItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.24, delay: Math.min(index * 0.02, 0.12) }}
+                  >
+                    {activeTab === "inquiries" ? (
+                      <InquiryCard
+                        inquiry={item}
+                        cardClass="p-0"
+                        updateInquiryStatus={toggleInquiryStatus}
+                        updateInquiryPriority={updateInquiryPriority}
+                        deleteInquiry={safePermissions.canDelete ? deleteInquiry : null}
+                        openModal={openInquiryModal}
+                        compact
+                        role={role}
+                        permissions={safePermissions}
+                      />
+                    ) : (
+                      <AppointmentCard
+                        appointment={item}
+                        cardClass="p-0"
+                        updateAppointmentStatus={updateAppointmentStatus}
+                        updateAppointmentPriority={updateAppointmentPriority}
+                        deleteAppointment={safePermissions.canDelete ? deleteAppointment : null}
+                        openModal={openAppointmentModal}
+                        compact
+                        role={role}
+                        permissions={safePermissions}
+                      />
+                    )}
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ListView({
+  activeTab,
+  activeItems,
+  cardClass,
+  safePermissions,
+  toggleInquiryStatus,
+  updateInquiryPriority,
+  updateAppointmentPriority,
+  deleteInquiry,
+  updateAppointmentStatus,
+  deleteAppointment,
+  openInquiryModal,
+  openAppointmentModal,
+  role,
+}) {
+  return (
+    <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
+      {activeItems.map((item, index) => (
+        <motion.div
+          key={item.id}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: Math.min(index * 0.025, 0.18) }}
+        >
+          {activeTab === "inquiries" ? (
+            <InquiryCard
+              inquiry={item}
+              cardClass={cardClass}
+              updateInquiryStatus={toggleInquiryStatus}
+              updateInquiryPriority={updateInquiryPriority}
+              deleteInquiry={safePermissions.canDelete ? deleteInquiry : null}
+              openModal={openInquiryModal}
+              role={role}
+              permissions={safePermissions}
+            />
+          ) : (
+            <AppointmentCard
+              appointment={item}
+              cardClass={cardClass}
+              updateAppointmentStatus={updateAppointmentStatus}
+              updateAppointmentPriority={updateAppointmentPriority}
+              deleteAppointment={safePermissions.canDelete ? deleteAppointment : null}
+              openModal={openAppointmentModal}
+              role={role}
+              permissions={safePermissions}
+            />
+          )}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 function PipelineStage({ stage, index, cardClass }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.28,
-        delay: index * 0.04,
-      }}
+      transition={{ duration: 0.28, delay: index * 0.04 }}
       className={`${cardClass} flex items-center justify-between p-4 sm:p-5`}
     >
       <div>

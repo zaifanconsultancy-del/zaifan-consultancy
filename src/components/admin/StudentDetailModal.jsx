@@ -7,6 +7,7 @@ function StudentDetailModal({ isOpen, onClose, student, type = "inquiry" }) {
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState([]);
   const [notesLoading, setNotesLoading] = useState(false);
+  const [noteSaving, setNoteSaving] = useState(false);
   const [localPriority, setLocalPriority] = useState(student?.priority || "low");
   const [prioritySaving, setPrioritySaving] = useState(false);
 
@@ -31,6 +32,15 @@ function StudentDetailModal({ isOpen, onClose, student, type = "inquiry" }) {
     high: "border-red-400/30 bg-red-500/10 text-red-300",
     medium: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
     low: "border-white/10 bg-white/[0.05] text-gray-300",
+  };
+
+  const statusStyles = {
+    new: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
+    contacted: "border-green-400/25 bg-green-400/10 text-green-300",
+    pending: "border-orange-400/25 bg-orange-400/10 text-orange-300",
+    confirmed: "border-green-400/25 bg-green-400/10 text-green-300",
+    completed: "border-blue-400/25 bg-blue-400/10 text-blue-300",
+    cancelled: "border-red-400/25 bg-red-400/10 text-red-300",
   };
 
   const priorityOptions = [
@@ -158,11 +168,9 @@ function StudentDetailModal({ isOpen, onClose, student, type = "inquiry" }) {
       }
     }
 
-    const scheduleNote = `Consultation scheduled:
-Date: ${scheduleForm.date}
-Time: ${scheduleForm.time}
-Type: ${scheduleForm.consultationType}
-${scheduleForm.note ? `Note: ${scheduleForm.note}` : ""}`;
+    const scheduleNote = `Consultation scheduled:\nDate: ${scheduleForm.date}\nTime: ${scheduleForm.time}\nType: ${scheduleForm.consultationType}\n${
+      scheduleForm.note ? `Note: ${scheduleForm.note}` : ""
+    }`;
 
     await supabase.from("crm_notes").insert({
       student_id: studentId,
@@ -249,11 +257,15 @@ END:VCALENDAR`;
       return;
     }
 
+    setNoteSaving(true);
+
     const { error } = await supabase.from("crm_notes").insert({
       student_id: studentId,
       student_type: type,
       note: noteText.trim(),
     });
+
+    setNoteSaving(false);
 
     if (error) {
       console.error(error);
@@ -288,6 +300,7 @@ END:VCALENDAR`;
       setPrioritySaving(false);
       setScheduleOpen(false);
       setScheduleSaving(false);
+      setNoteSaving(false);
     }
   }, [isOpen, studentId, type, student?.priority]);
 
@@ -324,18 +337,18 @@ END:VCALENDAR`;
           transition={{ duration: 0.25 }}
           className="mx-auto max-w-7xl"
         >
-          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808]/95 backdrop-blur-2xl">
+          <div className="relative max-h-[calc(100vh-1.5rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808]/95 backdrop-blur-2xl sm:max-h-[calc(100vh-3rem)]">
             <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
             <div className="pointer-events-none absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
 
             <div className="relative border-b border-white/10 p-5 sm:p-8">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.35em] text-[#D4AF37]">
                     Student CRM Profile
                   </p>
 
-                  <h2 className="mt-3 text-3xl font-black text-white sm:text-5xl">
+                  <h2 className="mt-3 break-words text-3xl font-black text-white sm:text-5xl">
                     {student.full_name || "Unnamed Student"}
                   </h2>
 
@@ -348,8 +361,16 @@ END:VCALENDAR`;
                       {priority} Priority
                     </span>
 
-                    <span className="rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-green-400">
+                    <span
+                      className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${
+                        statusStyles[status] || statusStyles.new
+                      }`}
+                    >
                       {status}
+                    </span>
+
+                    <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                      {type}
                     </span>
                   </div>
                 </div>
@@ -364,303 +385,308 @@ END:VCALENDAR`;
               </div>
             </div>
 
-            <div className="relative grid gap-6 p-5 sm:p-8 xl:grid-cols-[1.2fr_0.8fr]">
-              <div className="space-y-6">
-                <Section title="Student Information">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <InfoCard label="Email" value={student.email} />
-                    <InfoCard label="Phone" value={student.phone} />
-                    <InfoCard
-                      label={type === "inquiry" ? "Country" : "Country Interest"}
-                      value={student.country || student.country_interest}
-                    />
-                    <InfoCard
-                      label={
-                        type === "inquiry"
-                          ? "Study Level"
-                          : "Consultation Type"
-                      }
-                      value={student.study_level || student.consultation_type}
-                    />
-                  </div>
-                </Section>
-
-                <Section title="Priority Control">
+            <div className="relative max-h-[calc(100vh-12rem)] overflow-y-auto p-5 [scrollbar-width:thin] [scrollbar-color:#D4AF37_transparent] sm:p-8">
+              <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
+                <div className="space-y-6">
                   <Section title="Lead Assignment">
-  <LeadAssignmentPanel
-    lead={student}
-    leadType={type}
-    currentAdmin={null}
-  />
-</Section>
-                  <div className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5">
-                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold text-white">
-                          Lead Priority Level
-                        </h3>
-                        <p className="mt-1 text-xs text-gray-400">
-                          Change student priority instantly from CRM profile.
-                        </p>
+                    <LeadAssignmentPanel
+                      lead={student}
+                      leadType={type}
+                      currentAdmin={null}
+                    />
+                  </Section>
+
+                  <Section title="Student Information">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <InfoCard label="Email" value={student.email} />
+                      <InfoCard label="Phone" value={student.phone} />
+                      <InfoCard
+                        label={type === "inquiry" ? "Country" : "Country Interest"}
+                        value={student.country || student.country_interest}
+                      />
+                      <InfoCard
+                        label={
+                          type === "inquiry" ? "Study Level" : "Consultation Type"
+                        }
+                        value={student.study_level || student.consultation_type}
+                      />
+                      <InfoCard
+                        label={type === "inquiry" ? "Field Of Interest" : "Appointment Date"}
+                        value={student.field_of_interest || student.appointment_date}
+                      />
+                      <InfoCard
+                        label={type === "inquiry" ? "Preferred Time" : "Appointment Time"}
+                        value={student.time_slot || student.appointment_time}
+                      />
+                    </div>
+                  </Section>
+
+                  <Section title="Priority Control">
+                    <div className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5">
+                      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 className="text-sm font-semibold text-white">
+                            Lead Priority Level
+                          </h3>
+                          <p className="mt-1 text-xs text-gray-400">
+                            Change student priority instantly from CRM profile.
+                          </p>
+                        </div>
+
+                        <span className="rounded-full border border-[#D4AF37]/25 bg-black/25 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37]">
+                          {prioritySaving ? "Saving..." : `${priority} active`}
+                        </span>
                       </div>
 
-                      <span className="rounded-full border border-[#D4AF37]/25 bg-black/25 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37]">
-                        {prioritySaving ? "Saving..." : `${priority} active`}
-                      </span>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                      {priorityOptions.map((item) => (
-                        <button
-                          key={item.value}
-                          type="button"
-                          disabled={prioritySaving}
-                          onClick={() => updatePriority(item.value)}
-                          className={`rounded-[1.2rem] border px-4 py-4 text-left transition duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
-                            priority === item.value
-                              ? item.activeClass
-                              : "border-white/10 bg-white/[0.03] text-gray-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.05]"
-                          }`}
-                        >
-                          <span className="block text-2xl">{item.icon}</span>
-                          <span className="mt-3 block text-sm font-bold">
-                            {item.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </Section>
-
-                {scheduleOpen && (
-                  <Section title="Schedule Consultation">
-                    <div className="rounded-[1.5rem] border border-green-500/20 bg-green-500/5 p-5">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                          <label className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
-                            Date
-                          </label>
-                          <input
-                            type="date"
-                            value={scheduleForm.date}
-                            onChange={(event) =>
-                              setScheduleForm({
-                                ...scheduleForm,
-                                date: event.target.value,
-                              })
-                            }
-                            className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
-                            Time
-                          </label>
-                          <input
-                            type="time"
-                            value={scheduleForm.time}
-                            onChange={(event) =>
-                              setScheduleForm({
-                                ...scheduleForm,
-                                time: event.target.value,
-                              })
-                            }
-                            className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
-                          />
-                        </div>
-
-                        <div className="md:col-span-2">
-                          <label className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
-                            Consultation Type
-                          </label>
-                          <input
-                            type="text"
-                            value={scheduleForm.consultationType}
-                            onChange={(event) =>
-                              setScheduleForm({
-                                ...scheduleForm,
-                                consultationType: event.target.value,
-                              })
-                            }
-                            className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
-                            placeholder="University Selection, Visa Guidance, Application Strategy..."
-                          />
-                        </div>
-
-                        <div className="md:col-span-2">
-                          <label className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
-                            Internal Schedule Note
-                          </label>
-                          <textarea
-                            value={scheduleForm.note}
-                            onChange={(event) =>
-                              setScheduleForm({
-                                ...scheduleForm,
-                                note: event.target.value,
-                              })
-                            }
-                            className="mt-2 min-h-[110px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
-                            placeholder="Add meeting agenda, documents required, follow-up instructions..."
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                        <button
-                          type="button"
-                          onClick={downloadCalendarFile}
-                          className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.07]"
-                        >
-                          Download Calendar File
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={scheduleSaving}
-                          onClick={saveSchedule}
-                          className="rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition duration-300 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {scheduleSaving ? "Scheduling..." : "Save Schedule"}
-                        </button>
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        {priorityOptions.map((item) => (
+                          <button
+                            key={item.value}
+                            type="button"
+                            disabled={prioritySaving}
+                            onClick={() => updatePriority(item.value)}
+                            className={`rounded-[1.2rem] border px-4 py-4 text-left transition duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
+                              priority === item.value
+                                ? item.activeClass
+                                : "border-white/10 bg-white/[0.03] text-gray-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.05]"
+                            }`}
+                          >
+                            <span className="block text-2xl">{item.icon}</span>
+                            <span className="mt-3 block text-sm font-bold">
+                              {item.label}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </Section>
-                )}
 
-                <Section title="Student Message">
-                  <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
-                      {student.message || "No message provided."}
-                    </p>
-                  </div>
-                </Section>
+                  {scheduleOpen && (
+                    <Section title="Schedule Consultation">
+                      <div className="rounded-[1.5rem] border border-green-500/20 bg-green-500/5 p-5">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <Field label="Date">
+                            <input
+                              type="date"
+                              value={scheduleForm.date}
+                              onChange={(event) =>
+                                setScheduleForm({
+                                  ...scheduleForm,
+                                  date: event.target.value,
+                                })
+                              }
+                              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
+                            />
+                          </Field>
 
-                <Section title="CRM Notes">
-                  <div className="rounded-[1.5rem] border border-dashed border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
-                    <textarea
-                      value={noteText}
-                      onChange={(event) => setNoteText(event.target.value)}
-                      placeholder="Add internal notes, follow-up reminders, visa updates, consultation summaries..."
-                      className="min-h-[160px] w-full resize-none rounded-[1.2rem] border border-white/10 bg-black/30 p-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
-                    />
+                          <Field label="Time">
+                            <input
+                              type="time"
+                              value={scheduleForm.time}
+                              onChange={(event) =>
+                                setScheduleForm({
+                                  ...scheduleForm,
+                                  time: event.target.value,
+                                })
+                              }
+                              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
+                            />
+                          </Field>
 
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={saveNote}
-                        className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition duration-300 hover:bg-[#E7C768]"
-                      >
-                        Save Note
-                      </button>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {notesLoading ? (
-                        <p className="text-sm text-gray-400">Loading notes...</p>
-                      ) : notes.length === 0 ? (
-                        <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400">
-                          No internal notes yet.
-                        </p>
-                      ) : (
-                        notes.map((note) => (
-                          <div
-                            key={note.id}
-                            className="rounded-[1.2rem] border border-white/10 bg-black/25 p-4"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
-                                {note.note}
-                              </p>
-
-                              <button
-                                type="button"
-                                onClick={() => deleteNote(note.id)}
-                                className="shrink-0 rounded-full border border-red-500/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-400 hover:bg-red-500/10"
-                              >
-                                Delete
-                              </button>
-                            </div>
-
-                            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-gray-500">
-                              {note.created_at
-                                ? new Date(note.created_at).toLocaleString()
-                                : ""}
-                            </p>
+                          <div className="md:col-span-2">
+                            <Field label="Consultation Type">
+                              <input
+                                type="text"
+                                value={scheduleForm.consultationType}
+                                onChange={(event) =>
+                                  setScheduleForm({
+                                    ...scheduleForm,
+                                    consultationType: event.target.value,
+                                  })
+                                }
+                                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
+                                placeholder="University Selection, Visa Guidance, Application Strategy..."
+                              />
+                            </Field>
                           </div>
-                        ))
-                      )}
+
+                          <div className="md:col-span-2">
+                            <Field label="Internal Schedule Note">
+                              <textarea
+                                value={scheduleForm.note}
+                                onChange={(event) =>
+                                  setScheduleForm({
+                                    ...scheduleForm,
+                                    note: event.target.value,
+                                  })
+                                }
+                                className="mt-2 min-h-[110px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
+                                placeholder="Add meeting agenda, documents required, follow-up instructions..."
+                              />
+                            </Field>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                          <button
+                            type="button"
+                            onClick={downloadCalendarFile}
+                            className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.07]"
+                          >
+                            Download Calendar File
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={scheduleSaving}
+                            onClick={saveSchedule}
+                            className="rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition duration-300 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {scheduleSaving ? "Scheduling..." : "Save Schedule"}
+                          </button>
+                        </div>
+                      </div>
+                    </Section>
+                  )}
+
+                  <Section title="Student Message">
+                    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
+                        {student.message || "No message provided."}
+                      </p>
                     </div>
-                  </div>
-                </Section>
-              </div>
+                  </Section>
 
-              <div className="space-y-6">
-                <Section title="Quick Actions">
-                  <div className="grid gap-3">
-                    <ActionButton label="Send Email" icon="✉️" />
-                    <ActionButton
-                      label={
-                        scheduleOpen ? "Hide Schedule Panel" : "Schedule Consultation"
-                      }
-                      icon="📅"
-                      onClick={openSchedulePanel}
-                    />
-                    <ActionButton label="Create Follow Up" icon="⏰" />
-                    <ActionButton
-                      label={
-                        priority === "vip"
-                          ? "VIP Lead Active"
-                          : "Upgrade to VIP Lead"
-                      }
-                      icon="👑"
-                      onClick={() => updatePriority("vip")}
-                    />
-                  </div>
-                </Section>
+                  <Section title="CRM Notes">
+                    <div className="rounded-[1.5rem] border border-dashed border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
+                      <textarea
+                        value={noteText}
+                        onChange={(event) => setNoteText(event.target.value)}
+                        placeholder="Add internal notes, follow-up reminders, visa updates, consultation summaries..."
+                        className="min-h-[150px] w-full resize-none rounded-[1.2rem] border border-white/10 bg-black/30 p-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
+                      />
 
-                <Section title="Lead Timeline">
-                  <div className="space-y-4">
-                    <TimelineItem
-                      title="Lead Created"
-                      text="Student entered CRM system."
-                    />
-                    <TimelineItem
-                      title="Priority Assigned"
-                      text={`${priority.toUpperCase()} priority currently active.`}
-                    />
-                    <TimelineItem
-                      title="Scheduling Ready"
-                      text={
-                        type === "appointment"
-                          ? "This appointment can be confirmed or rescheduled."
-                          : "This inquiry can be converted into a confirmed appointment."
-                      }
-                    />
-                    <TimelineItem
-                      title="Notes Enabled"
-                      text={`${notes.length} internal note${
-                        notes.length === 1 ? "" : "s"
-                      } saved for this profile.`}
-                    />
-                  </div>
-                </Section>
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={saveNote}
+                          disabled={noteSaving}
+                          className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition duration-300 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {noteSaving ? "Saving..." : "Save Note"}
+                        </button>
+                      </div>
 
-                <Section title="CRM Metadata">
-                  <div className="space-y-3">
-                    <MetaItem
-                      label="Created"
-                      value={
-                        student.created_at
-                          ? new Date(student.created_at).toLocaleString()
-                          : "-"
-                      }
-                    />
-                    <MetaItem label="Lead Type" value={type} />
-                    <MetaItem label="Priority" value={priority} />
-                    <MetaItem label="Status" value={status} />
-                  </div>
-                </Section>
+                      <div className="mt-5 space-y-3">
+                        {notesLoading ? (
+                          <p className="text-sm text-gray-400">Loading notes...</p>
+                        ) : notes.length === 0 ? (
+                          <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400">
+                            No internal notes yet.
+                          </p>
+                        ) : (
+                          notes.map((note) => (
+                            <div
+                              key={note.id}
+                              className="rounded-[1.2rem] border border-white/10 bg-black/25 p-4"
+                            >
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-300">
+                                  {note.note}
+                                </p>
+
+                                <button
+                                  type="button"
+                                  onClick={() => deleteNote(note.id)}
+                                  className="shrink-0 rounded-full border border-red-500/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-400 hover:bg-red-500/10"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+
+                              <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-gray-500">
+                                {note.created_at
+                                  ? new Date(note.created_at).toLocaleString()
+                                  : ""}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </Section>
+                </div>
+
+                <div className="space-y-6 xl:sticky xl:top-0 xl:self-start">
+                  <Section title="Quick Actions">
+                    <div className="grid gap-3">
+                      <ActionButton label="Send Email" icon="✉️" />
+                      <ActionButton
+                        label={
+                          scheduleOpen
+                            ? "Hide Schedule Panel"
+                            : "Schedule Consultation"
+                        }
+                        icon="📅"
+                        onClick={openSchedulePanel}
+                      />
+                      <ActionButton label="Create Follow Up" icon="⏰" />
+                      <ActionButton
+                        label={
+                          priority === "vip"
+                            ? "VIP Lead Active"
+                            : "Upgrade to VIP Lead"
+                        }
+                        icon="👑"
+                        onClick={() => updatePriority("vip")}
+                      />
+                    </div>
+                  </Section>
+
+                  <Section title="Lead Timeline">
+                    <div className="space-y-4">
+                      <TimelineItem title="Lead Created" text="Student entered CRM system." />
+                      <TimelineItem
+                        title="Priority Assigned"
+                        text={`${priority.toUpperCase()} priority currently active.`}
+                      />
+                      <TimelineItem
+                        title="Scheduling Ready"
+                        text={
+                          type === "appointment"
+                            ? "This appointment can be confirmed or rescheduled."
+                            : "This inquiry can be converted into a confirmed appointment."
+                        }
+                      />
+                      <TimelineItem
+                        title="Notes Enabled"
+                        text={`${notes.length} internal note${
+                          notes.length === 1 ? "" : "s"
+                        } saved for this profile.`}
+                      />
+                    </div>
+                  </Section>
+
+                  <Section title="CRM Metadata">
+                    <div className="space-y-3">
+                      <MetaItem
+                        label="Created"
+                        value={
+                          student.created_at
+                            ? new Date(student.created_at).toLocaleString()
+                            : "-"
+                        }
+                      />
+                      <MetaItem label="Lead Type" value={type} />
+                      <MetaItem label="Priority" value={priority} />
+                      <MetaItem label="Status" value={status} />
+                      <MetaItem
+                        label="Assigned"
+                        value={student.assigned_admin_name || "Open Pool"}
+                      />
+                    </div>
+                  </Section>
+                </div>
               </div>
             </div>
           </div>
@@ -678,6 +704,17 @@ function Section({ title, children }) {
       </p>
       {children}
     </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="block">
+      <span className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
+        {label}
+      </span>
+      {children}
+    </label>
   );
 }
 

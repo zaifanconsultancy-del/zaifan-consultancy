@@ -2,22 +2,23 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
 function AdminHeader({
-  inquiries,
-  appointments,
-  appointmentPendingCount,
-  fetchAllData,
-  activeTab,
-  exportInquiriesToCSV,
-  exportAppointmentsToCSV,
-  logout,
-  clearInquiries,
-  clearAppointments,
+  inquiries = [],
+  appointments = [],
+  appointmentPendingCount = 0,
+  fetchAllData = () => {},
+  activeTab = "inquiries",
+  exportInquiriesToCSV = () => {},
+  exportAppointmentsToCSV = () => {},
+  logout = () => {},
+  clearInquiries = () => {},
+  clearAppointments = () => {},
   role = "staff",
   adminProfile = null,
   permissions = {},
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotifications, setReadNotifications] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const safePermissions = {
     canDelete: false,
@@ -36,22 +37,26 @@ function AdminHeader({
       icon: "🧑‍💼",
       badge: "border-blue-400/20 bg-blue-500/10 text-blue-300",
       glow: "bg-blue-500/10",
+      helper: "Lead follow-up workspace",
     },
     admin: {
       label: "Admin",
       icon: "🛡️",
       badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
       glow: "bg-[#D4AF37]/10",
+      helper: "Operations and export access",
     },
     super_admin: {
       label: "Super Admin",
       icon: "👑",
       badge: "border-purple-400/25 bg-purple-500/10 text-purple-300",
       glow: "bg-purple-500/10",
+      helper: "Full CRM control enabled",
     },
   };
 
   const currentRole = roleConfig[role] || roleConfig.staff;
+  const allLeads = [...inquiries, ...appointments];
 
   const newInquiries = inquiries.filter(
     (inquiry) => (inquiry.status || "new") === "new"
@@ -61,13 +66,13 @@ function AdminHeader({
     (appointment) => appointment.status === "confirmed"
   ).length;
 
-  const vipLeads = [...inquiries, ...appointments].filter(
-    (lead) => lead.priority === "vip"
-  ).length;
-
-  const highPriorityLeads = [...inquiries, ...appointments].filter(
+  const vipLeads = allLeads.filter((lead) => lead.priority === "vip").length;
+  const highPriorityLeads = allLeads.filter(
     (lead) => lead.priority === "high"
   ).length;
+
+  const assignedLeads = allLeads.filter((lead) => lead.assigned_admin_id).length;
+  const unassignedLeads = Math.max(allLeads.length - assignedLeads, 0);
 
   const notifications = useMemo(
     () => [
@@ -126,6 +131,17 @@ function AdminHeader({
         time: "Urgent",
         priority: "high",
       },
+      {
+        id: "open-leads",
+        icon: "🧭",
+        title: "Open Lead Pool",
+        text: `${unassignedLeads} leads are not assigned yet`,
+        show: unassignedLeads > 0,
+        color: "text-cyan-300",
+        glow: "bg-cyan-500/10",
+        time: "Ownership",
+        priority: "medium",
+      },
     ],
     [
       newInquiries,
@@ -133,6 +149,7 @@ function AdminHeader({
       confirmedAppointments,
       vipLeads,
       highPriorityLeads,
+      unassignedLeads,
     ]
   );
 
@@ -161,9 +178,9 @@ function AdminHeader({
       color: "text-purple-300",
     },
     {
-      label: "Pending",
-      value: appointmentPendingCount,
-      color: "text-orange-300",
+      label: "Open Pool",
+      value: unassignedLeads,
+      color: "text-cyan-300",
     },
   ];
 
@@ -174,6 +191,16 @@ function AdminHeader({
   const markSingleAsRead = (id) => {
     if (readNotifications.includes(id)) return;
     setReadNotifications((current) => [...current, id]);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      await fetchAllData();
+    } finally {
+      setTimeout(() => setRefreshing(false), 350);
+    }
   };
 
   const handleExport = () => {
@@ -216,6 +243,13 @@ function AdminHeader({
     };
   }, []);
 
+  useEffect(() => {
+    const visibleIds = visibleNotifications.map((item) => item.id);
+    setReadNotifications((current) =>
+      current.filter((id) => visibleIds.includes(id))
+    );
+  }, [visibleNotifications.length]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -230,7 +264,7 @@ function AdminHeader({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
-                <span className="h-2 w-2 rounded-full bg-[#D4AF37]"></span>
+                <span className="h-2 w-2 rounded-full bg-[#D4AF37] shadow-[0_0_16px_rgba(212,175,55,0.75)]"></span>
                 Enterprise CRM Dashboard
               </div>
 
@@ -248,27 +282,29 @@ function AdminHeader({
 
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400">
               Premium student management system with real-time analytics,
-              consultation scheduling, priority pipelines, role permissions,
-              and enterprise CRM automation.
+              consultation scheduling, lead ownership, role permissions, and
+              enterprise CRM automation.
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {summaryItems.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-gray-400"
+                  className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs text-gray-400"
                 >
-                  {item.label}:{" "}
-                  <span className={`font-bold ${item.color}`}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500">
+                    {item.label}
+                  </p>
+                  <p className={`mt-1 text-lg font-black ${item.color}`}>
                     {item.value}
-                  </span>
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex shrink-0 items-start gap-3">
-            <div className="hidden rounded-[1.5rem] border border-white/10 bg-black/25 p-4 xl:block">
+          <div className="flex shrink-0 items-start justify-between gap-3 xl:justify-start">
+            <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-4">
               <div className="flex items-center gap-3">
                 <div
                   className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 text-2xl ${currentRole.glow}`}
@@ -276,40 +312,41 @@ function AdminHeader({
                   {currentRole.icon}
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
                     Logged In
                   </p>
 
-                  <h3 className="mt-1 max-w-[180px] truncate text-sm font-black text-white">
+                  <h3 className="mt-1 max-w-[170px] truncate text-sm font-black text-white">
                     {adminProfile?.full_name || "Admin User"}
                   </h3>
 
                   <p className="mt-1 text-xs text-[#D4AF37]">
-                    {currentRole.label}
+                    {currentRole.helper}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="notification-wrapper relative">
+            <div className="notification-wrapper relative flex h-14 w-14 shrink-0 items-center justify-center overflow-visible">
               <button
+                type="button"
                 onClick={(event) => {
                   event.stopPropagation();
                   setShowNotifications(!showNotifications);
                 }}
-                className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] text-2xl text-white transition duration-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10"
+                className="group relative flex h-14 w-14 items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/[0.04] text-2xl text-white transition duration-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10"
               >
-                <span className="relative z-10">🔔</span>
+                <span className="relative z-10 leading-none">🔔</span>
 
                 {notificationCount > 0 && (
-                  <>
-                    <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#D4AF37] px-1.5 text-[10px] font-black text-black shadow-[0_0_20px_rgba(212,175,55,0.6)]">
-                      {notificationCount > 9 ? "9+" : notificationCount}
-                    </span>
+                  <span className="absolute right-1.5 top-1.5 z-20 flex h-5 min-w-5 items-center justify-center rounded-full border border-black/30 bg-[#D4AF37] px-1 text-[9px] font-black leading-none text-black shadow-[0_0_18px_rgba(212,175,55,0.6)]">
+                    {notificationCount > 9 ? "9+" : notificationCount}
+                  </span>
+                )}
 
-                    <span className="absolute inset-0 animate-ping rounded-[1.5rem] border border-[#D4AF37]/20 opacity-30"></span>
-                  </>
+                {notificationCount > 0 && (
+                  <span className="absolute inset-0 rounded-[1.5rem] border border-[#D4AF37]/20 shadow-[0_0_28px_rgba(212,175,55,0.14)]"></span>
                 )}
               </button>
 
@@ -320,7 +357,7 @@ function AdminHeader({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 14, scale: 0.96 }}
                     transition={{ duration: 0.22 }}
-                    className="absolute right-0 top-[72px] z-[999] w-[320px] overflow-hidden rounded-[2rem] border border-white/10 bg-[#070707]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl sm:w-[420px]"
+                    className="absolute right-0 top-[72px] z-[999] w-[min(92vw,420px)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#070707]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl"
                   >
                     <div className="relative overflow-hidden border-b border-white/10 p-5">
                       <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
@@ -336,23 +373,23 @@ function AdminHeader({
                           </h3>
 
                           <p className="mt-2 text-xs leading-relaxed text-gray-400">
-                            Real-time enterprise notifications from your CRM
-                            system.
+                            Real-time operational signals from your CRM system.
                           </p>
                         </div>
 
                         {notificationCount > 0 && (
                           <button
+                            type="button"
                             onClick={markAllAsRead}
                             className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37] transition duration-300 hover:bg-[#D4AF37]/20"
                           >
-                            Mark All Read
+                            Mark Read
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <div className="max-h-[460px] overflow-y-auto p-3">
+                    <div className="max-h-[460px] overflow-y-auto p-3 [scrollbar-width:thin] [scrollbar-color:#D4AF37_transparent]">
                       {visibleNotifications.length === 0 ? (
                         <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-black/25 p-8 text-center">
                           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-3xl">
@@ -375,12 +412,10 @@ function AdminHeader({
                             return (
                               <motion.button
                                 key={item.id}
+                                type="button"
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                  duration: 0.2,
-                                  delay: index * 0.03,
-                                }}
+                                transition={{ duration: 0.2, delay: index * 0.03 }}
                                 onClick={() => markSingleAsRead(item.id)}
                                 className={`group relative w-full overflow-hidden rounded-[1.4rem] border p-4 text-left transition duration-300 ${
                                   isRead
@@ -402,9 +437,7 @@ function AdminHeader({
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
-                                        <p
-                                          className={`text-sm font-black ${item.color}`}
-                                        >
+                                        <p className={`text-sm font-black ${item.color}`}>
                                           {item.title}
                                         </p>
 
@@ -446,23 +479,9 @@ function AdminHeader({
 
                     <div className="border-t border-white/10 p-4">
                       <div className="grid grid-cols-3 gap-2">
-                        <MiniStat
-                          label="Unread"
-                          value={notificationCount}
-                          color="text-[#D4AF37]"
-                        />
-
-                        <MiniStat
-                          label="VIP"
-                          value={vipLeads}
-                          color="text-purple-300"
-                        />
-
-                        <MiniStat
-                          label="Pending"
-                          value={appointmentPendingCount}
-                          color="text-orange-300"
-                        />
+                        <MiniStat label="Unread" value={notificationCount} color="text-[#D4AF37]" />
+                        <MiniStat label="VIP" value={vipLeads} color="text-purple-300" />
+                        <MiniStat label="Open" value={unassignedLeads} color="text-cyan-300" />
                       </div>
                     </div>
                   </motion.div>
@@ -472,49 +491,63 @@ function AdminHeader({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
-          <button
-            onClick={fetchAllData}
-            className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-gray-300 transition duration-300 hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
-          >
-            Refresh
-          </button>
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <ActionButton
+            onClick={handleRefresh}
+            label={refreshing ? "Refreshing..." : "Refresh"}
+            icon="🔄"
+            disabled={refreshing}
+          />
 
-          <button
+          <ActionButton
             onClick={handleExport}
-            className={`rounded-2xl px-4 py-3 text-sm font-black transition duration-300 ${
-              safePermissions.canExport
-                ? "bg-[#D4AF37] text-black hover:bg-[#E7C768]"
-                : "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500"
-            }`}
-          >
-            {safePermissions.canExport ? "Export CSV" : "Export Locked"}
-          </button>
+            label={safePermissions.canExport ? "Export CSV" : "Export Locked"}
+            icon="📤"
+            variant={safePermissions.canExport ? "gold" : "locked"}
+            disabled={!safePermissions.canExport}
+          />
 
-          <button
-            onClick={logout}
-            className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-gray-300 transition duration-300 hover:border-[#D4AF37]/40 hover:text-[#D4AF37] xl:hidden"
-          >
-            Logout
-          </button>
+          <ActionButton onClick={logout} label="Logout" icon="🚪" />
 
-          <button
+          <ActionButton
             onClick={handleClear}
-            className={`rounded-2xl px-4 py-3 text-sm font-semibold transition duration-300 ${
+            label={
               safePermissions.canClearAll
-                ? "border border-red-400/20 bg-red-400/10 text-red-300 hover:border-red-400 hover:bg-red-400/15"
-                : "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500"
-            }`}
-          >
-            {safePermissions.canClearAll
-              ? `Clear ${
-                  activeTab === "inquiries" ? "Inquiries" : "Appointments"
-                }`
-              : "Clear Locked"}
-          </button>
+                ? `Clear ${activeTab === "inquiries" ? "Inquiries" : "Appointments"}`
+                : "Clear Locked"
+            }
+            icon="🗑️"
+            variant={safePermissions.canClearAll ? "danger" : "locked"}
+            disabled={!safePermissions.canClearAll}
+          />
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function ActionButton({ onClick, label, icon, variant = "default", disabled = false }) {
+  const variants = {
+    default:
+      "border border-white/10 bg-white/[0.04] text-gray-300 hover:border-[#D4AF37]/40 hover:text-[#D4AF37]",
+    gold: "bg-[#D4AF37] text-black hover:bg-[#E7C768]",
+    danger:
+      "border border-red-400/20 bg-red-400/10 text-red-300 hover:border-red-400 hover:bg-red-400/15",
+    locked: "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500",
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-2xl px-4 py-3 text-sm font-bold transition duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
+        variants[variant] || variants.default
+      }`}
+    >
+      <span className="mr-2">{icon}</span>
+      {label}
+    </button>
   );
 }
 
