@@ -52,10 +52,11 @@ function AdminSidebar({
     {
       title: "Workspace",
       items: [
-        { id: "inquiries", label: "Inquiries", icon: "📨", locked: false },
-        { id: "appointments", label: "Appointments", icon: "📅", locked: false },
-        { id: "my-leads", label: "My Leads", icon: "📌", locked: false },
-      ],
+  { id: "inquiries", label: "Inquiries", icon: "📩", locked: false },
+  { id: "appointments", label: "Appointments", icon: "📅", locked: false },
+  { id: "my-leads", label: "My Leads", icon: "🎯", locked: false },
+  { id: "followups", label: "Follow-ups", icon: "⏰", locked: false },
+],
     },
     {
       title: "Intelligence",

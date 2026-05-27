@@ -15,6 +15,8 @@ import DashboardAnalytics from "../components/admin/DashboardAnalytics";
 import AdminManagement from "../components/admin/AdminManagement";
 import AdminActivityLogs from "../components/admin/AdminActivityLogs";
 import MyLeadsPanel from "../components/admin/MyLeadsPanel";
+import FollowUpDashboard from "../components/admin/FollowUpDashboard";
+
 
 const REQUEST_TIMEOUT_MS = 25000;
 const PROFILE_RETRY_LIMIT = 3;
@@ -1443,7 +1445,7 @@ function AdminPage() {
             activeTab !== "settings" &&
             activeTab !== "admin-management" &&
             activeTab !== "activity-logs" &&
-            activeTab !== "my-leads" && (
+            activeTab !== "my-leads" && activeTab !== "followups" && (
               <>
                 <NotificationCenter
                   cardClass={cardClass}
@@ -1468,9 +1470,11 @@ function AdminPage() {
               </>
             )}
 
-          {activeTab === "my-leads" ? (
-            <MyLeadsPanel cardClass={cardClass} adminProfile={adminProfile} />
-          ) : activeTab === "activity-logs" ? (
+          {activeTab === "followups" ? (
+  <FollowUpDashboard cardClass={cardClass} />
+) : activeTab === "my-leads" ? (
+  <MyLeadsPanel cardClass={cardClass} adminProfile={adminProfile} />
+) : activeTab === "activity-logs" ? (
             <AdminActivityLogs cardClass={cardClass} />
           ) : activeTab === "admin-management" ? (
             <AdminManagement

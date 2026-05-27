@@ -1,771 +1,563 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import LeadAssignmentPanel from "./LeadAssignmentPanel";
+import CrmTimelinePanel from "./CrmTimelinePanel";
+import { addTimelineEvent } from "../../lib/crmTimeline";
+import {
+  getPipelineStages,
+  getPipelineStageById,
+  getPipelineProgress,
+} from "../../data/crmPipelineConfig";
+import FollowUpReminderPanel from "./FollowUpReminderPanel";
 
-function StudentDetailModal({ isOpen, onClose, student, type = "inquiry" }) {
-  const [noteText, setNoteText] = useState("");
-  const [notes, setNotes] = useState([]);
-  const [notesLoading, setNotesLoading] = useState(false);
-  const [noteSaving, setNoteSaving] = useState(false);
-  const [localPriority, setLocalPriority] = useState(student?.priority || "low");
-  const [prioritySaving, setPrioritySaving] = useState(false);
+function StudentDetailModal({
+  student = null,
+  type = "inquiry",
+  onClose = () => {},
+  cardClass = "",
+  adminProfile = null,
+  permissions = {},
+  updateInquiryPriority = null,
+  updateAppointmentPriority = null,
+  updateAppointmentStatus = null,
+  updateAppointmentStage = null,
+  toggleInquiryStatus = null,
+  deleteInquiry = null,
+  deleteAppointment = null,
+}) {
+  const [activePanel, setActivePanel] = useState("overview");
+  const [savingStage, setSavingStage] = useState(false);
+  const [savingPriority, setSavingPriority] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [localStudent, setLocalStudent] = useState(student);
 
-  const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [scheduleSaving, setScheduleSaving] = useState(false);
-  const [scheduleForm, setScheduleForm] = useState({
-    date: "",
-    time: "",
-    consultationType: "",
-    note: "",
-  });
+  useEffect(() => {
+    setLocalStudent(student);
+  }, [student]);
 
-  const studentId = student?.id ? String(student.id) : "";
-  const priority = localPriority || "low";
-  const status =
-    type === "inquiry"
-      ? student?.status || "new"
-      : student?.status || "pending";
-
-  const priorityStyles = {
-    vip: "border-purple-400/30 bg-purple-500/10 text-purple-300",
-    high: "border-red-400/30 bg-red-500/10 text-red-300",
-    medium: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
-    low: "border-white/10 bg-white/[0.05] text-gray-300",
+  const safePermissions = {
+    canDelete: false,
+    canClearAll: false,
+    canExport: false,
+    canManageAdmins: false,
+    canUpdateStatus: true,
+    canUpdatePriority: true,
+    canConfirmAppointments: true,
+    ...permissions,
   };
 
-  const statusStyles = {
-    new: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
-    contacted: "border-green-400/25 bg-green-400/10 text-green-300",
-    pending: "border-orange-400/25 bg-orange-400/10 text-orange-300",
-    confirmed: "border-green-400/25 bg-green-400/10 text-green-300",
-    completed: "border-blue-400/25 bg-blue-400/10 text-blue-300",
-    cancelled: "border-red-400/25 bg-red-400/10 text-red-300",
+  const workingStudent = localStudent || student;
+
+  const isAppointment = type === "appointment";
+  const isInquiry = type === "inquiry";
+
+  const pipelineType = isAppointment ? "appointment" : "inquiry";
+  const stages = useMemo(() => getPipelineStages(pipelineType), [pipelineType]);
+
+  const currentStageId =
+    workingStudent?.pipeline_stage ||
+    workingStudent?.stage ||
+    workingStudent?.status_stage ||
+    (isAppointment ? workingStudent?.appointment_stage : null) ||
+    stages?.[0]?.id;
+
+  const currentStage = getPipelineStageById(pipelineType, currentStageId) || stages?.[0];
+  const pipelineProgress = getPipelineProgress(pipelineType, currentStageId);
+
+  if (!workingStudent) return null;
+
+  const fullName = workingStudent.full_name || workingStudent.name || "Unknown Student";
+  const email = workingStudent.email || "No email added";
+  const phone = workingStudent.phone || workingStudent.phone_number || "No phone added";
+  const country = workingStudent.country || workingStudent.preferred_country || "Not selected";
+  const field =
+    workingStudent.field_of_interest ||
+    workingStudent.course ||
+    workingStudent.program ||
+    workingStudent.study_field ||
+    "Not selected";
+  const priority = workingStudent.priority || "medium";
+  const status = workingStudent.status || (workingStudent.completed ? "completed" : "pending");
+  const notes = workingStudent.notes || workingStudent.message || workingStudent.consultation_notes || "No notes yet.";
+
+  const appointmentDate = workingStudent.appointment_date || workingStudent.date || "Not selected";
+  const appointmentTime = workingStudent.appointment_time || workingStudent.time || "Not selected";
+  const consultationType = workingStudent.consultation_type || workingStudent.type || "Consultation";
+
+  const createdAt = workingStudent.created_at
+    ? new Date(student.created_at).toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Unknown";
+
+  const priorityOptions = ["vip", "high", "medium", "low"];
+
+  const statusOptions = isAppointment
+    ? ["pending", "confirmed", "completed", "cancelled"]
+    : ["pending", "contacted", "completed"];
+
+  const getPriorityStyle = (value) => {
+    const styles = {
+      vip: "border-[#D4AF37]/40 bg-[#D4AF37]/15 text-[#D4AF37]",
+      high: "border-red-400/30 bg-red-500/10 text-red-300",
+      medium: "border-blue-400/30 bg-blue-500/10 text-blue-300",
+      low: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
+    };
+
+    return styles[value] || styles.medium;
   };
 
-  const priorityOptions = [
-    {
-      value: "vip",
-      label: "VIP",
-      icon: "👑",
-      activeClass: "border-purple-400/40 bg-purple-500/15 text-purple-200",
-    },
-    {
-      value: "high",
-      label: "High",
-      icon: "🔥",
-      activeClass: "border-red-400/40 bg-red-500/15 text-red-200",
-    },
-    {
-      value: "medium",
-      label: "Medium",
-      icon: "⭐",
-      activeClass: "border-[#D4AF37]/40 bg-[#D4AF37]/15 text-[#D4AF37]",
-    },
-    {
-      value: "low",
-      label: "Low",
-      icon: "🌙",
-      activeClass: "border-white/15 bg-white/[0.06] text-gray-200",
-    },
+  const getStatusStyle = (value) => {
+    const styles = {
+      pending: "border-yellow-400/30 bg-yellow-500/10 text-yellow-300",
+      contacted: "border-blue-400/30 bg-blue-500/10 text-blue-300",
+      confirmed: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
+      completed: "border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37]",
+      cancelled: "border-red-400/30 bg-red-500/10 text-red-300",
+    };
+
+    return styles[value] || styles.pending;
+  };
+
+  const handlePriorityChange = async (newPriority) => {
+    if (!safePermissions.canUpdatePriority || newPriority === priority) return;
+
+    const oldPriority = priority;
+    setLocalStudent((prev) => ({ ...(prev || workingStudent), priority: newPriority }));
+    setSavingPriority(true);
+
+    try {
+      if (isAppointment && updateAppointmentPriority) {
+        await updateAppointmentPriority(student.id, newPriority);
+      }
+
+      if (isInquiry && updateInquiryPriority) {
+        await updateInquiryPriority(student.id, newPriority);
+      }
+
+      await addTimelineEvent({
+        studentId: workingStudent.id,
+        studentType: type,
+        actionType: "priority_changed",
+        title: "Priority Updated",
+        description: `${fullName}'s priority was updated.`,
+        oldValue: oldPriority,
+        newValue: newPriority,
+        adminProfile,
+      });
+    } finally {
+      setSavingPriority(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    if (!safePermissions.canUpdateStatus || newStatus === status) return;
+
+    const oldStatus = status;
+    setLocalStudent((prev) => ({
+      ...(prev || workingStudent),
+      status: newStatus,
+      completed: newStatus === "completed",
+    }));
+    setSavingStatus(true);
+
+    try {
+      if (isAppointment && updateAppointmentStatus) {
+        await updateAppointmentStatus(student.id, newStatus);
+      }
+
+      if (isInquiry && toggleInquiryStatus) {
+        await toggleInquiryStatus(student.id, newStatus);
+      }
+
+      await addTimelineEvent({
+        studentId: workingStudent.id,
+        studentType: type,
+        actionType: "status_changed",
+        title: "Status Updated",
+        description: `${fullName}'s status was updated.`,
+        oldValue: oldStatus,
+        newValue: newStatus,
+        adminProfile,
+      });
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
+  const handleStageChange = async (stageId) => {
+    if (!stageId || stageId === currentStageId) return;
+
+    const nextStage = getPipelineStageById(pipelineType, stageId);
+    setLocalStudent((prev) => ({
+      ...(prev || workingStudent),
+      pipeline_stage: stageId,
+      stage: stageId,
+      appointment_stage: isAppointment ? stageId : prev?.appointment_stage,
+    }));
+    setSavingStage(true);
+
+    try {
+      if (updateAppointmentStage && isAppointment) {
+        await updateAppointmentStage(workingStudent.id, stageId);
+      }
+
+      await addTimelineEvent({
+        studentId: workingStudent.id,
+        studentType: type,
+        actionType: "pipeline_stage_changed",
+        title: "Pipeline Stage Updated",
+        description: `${fullName} moved in the CRM pipeline.`,
+        oldValue: currentStage?.label || currentStageId,
+        newValue: nextStage?.label || stageId,
+        adminProfile,
+        metadata: {
+          old_stage_id: currentStageId,
+          new_stage_id: stageId,
+        },
+      });
+    } finally {
+      setSavingStage(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!safePermissions.canDelete) return;
+
+    const confirmed = window.confirm(`Delete ${fullName}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    if (isAppointment && deleteAppointment) {
+      await deleteAppointment(workingStudent.id);
+      onClose();
+      return;
+    }
+
+    if (isInquiry && deleteInquiry) {
+      await deleteInquiry(workingStudent.id);
+      onClose();
+    }
+  };
+
+  const infoRows = [
+    ["Full Name", fullName],
+    ["Email", email],
+    ["Phone", phone],
+    ["Country", country],
+    ["Field / Program", field],
+    ["Created", createdAt],
   ];
 
-  const updatePriority = async (newPriority) => {
-    if (!student?.id) return;
-    if (newPriority === priority) return;
-
-    setPrioritySaving(true);
-
-    const table = type === "appointment" ? "appointments" : "inquiries";
-
-    const { error } = await supabase
-      .from(table)
-      .update({ priority: newPriority })
-      .eq("id", student.id);
-
-    setPrioritySaving(false);
-
-    if (error) {
-      console.error(error);
-      alert("Failed to update priority.");
-      return;
-    }
-
-    setLocalPriority(newPriority);
-    student.priority = newPriority;
-  };
-
-  const openSchedulePanel = () => {
-    setScheduleOpen((current) => !current);
-
-    setScheduleForm({
-      date: student?.appointment_date || student?.preferred_date || "",
-      time: student?.appointment_time || student?.time_slot || "",
-      consultationType:
-        student?.consultation_type ||
-        student?.field_of_interest ||
-        "University Selection",
-      note: "",
-    });
-  };
-
-  const saveSchedule = async () => {
-    if (!student?.id) return;
-
-    if (!scheduleForm.date || !scheduleForm.time) {
-      alert("Please select consultation date and time.");
-      return;
-    }
-
-    setScheduleSaving(true);
-
-    if (type === "appointment") {
-      const { error } = await supabase
-        .from("appointments")
-        .update({
-          appointment_date: scheduleForm.date,
-          appointment_time: scheduleForm.time,
-          consultation_type: scheduleForm.consultationType,
-          status: "confirmed",
-          priority,
-        })
-        .eq("id", student.id);
-
-      if (error) {
-        console.error(error);
-        setScheduleSaving(false);
-        alert("Failed to schedule consultation.");
-        return;
-      }
-
-      student.appointment_date = scheduleForm.date;
-      student.appointment_time = scheduleForm.time;
-      student.consultation_type = scheduleForm.consultationType;
-      student.status = "confirmed";
-    } else {
-      const { error } = await supabase.from("appointments").insert({
-        full_name: student.full_name,
-        email: student.email,
-        phone: student.phone,
-        country_interest: student.country,
-        consultation_type: scheduleForm.consultationType,
-        appointment_date: scheduleForm.date,
-        appointment_time: scheduleForm.time,
-        message:
-          scheduleForm.note ||
-          `Consultation scheduled from inquiry CRM profile. Original message: ${
-            student.message || "No message provided."
-          }`,
-        status: "confirmed",
-        priority,
-      });
-
-      if (error) {
-        console.error(error);
-        setScheduleSaving(false);
-        alert("Failed to create appointment.");
-        return;
-      }
-    }
-
-    const scheduleNote = `Consultation scheduled:\nDate: ${scheduleForm.date}\nTime: ${scheduleForm.time}\nType: ${scheduleForm.consultationType}\n${
-      scheduleForm.note ? `Note: ${scheduleForm.note}` : ""
-    }`;
-
-    await supabase.from("crm_notes").insert({
-      student_id: studentId,
-      student_type: type,
-      note: scheduleNote,
-    });
-
-    setScheduleSaving(false);
-    setScheduleOpen(false);
-    await fetchNotes();
-
-    alert("Consultation scheduled successfully.");
-  };
-
-  const downloadCalendarFile = () => {
-    if (!scheduleForm.date || !scheduleForm.time) {
-      alert("Select date and time first.");
-      return;
-    }
-
-    const cleanName = student?.full_name || "Student Consultation";
-    const start = new Date(`${scheduleForm.date}T${scheduleForm.time}`);
-    const end = new Date(start.getTime() + 45 * 60 * 1000);
-
-    const formatICSDate = (date) =>
-      date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Zaifan Consultancy CRM//EN
-BEGIN:VEVENT
-UID:${Date.now()}@zaifanconsultancy.com
-DTSTAMP:${formatICSDate(new Date())}
-DTSTART:${formatICSDate(start)}
-DTEND:${formatICSDate(end)}
-SUMMARY:Consultation with ${cleanName}
-DESCRIPTION:${scheduleForm.consultationType || "Student Consultation"} - ${
-      scheduleForm.note || "CRM scheduled consultation"
-    }
-END:VEVENT
-END:VCALENDAR`;
-
-    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `zaifan-consultation-${cleanName
-      .toLowerCase()
-      .replaceAll(" ", "-")}.ics`;
-
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const fetchNotes = async () => {
-    if (!studentId || !type) return;
-
-    setNotesLoading(true);
-
-    const { data, error } = await supabase
-      .from("crm_notes")
-      .select("*")
-      .eq("student_id", studentId)
-      .eq("student_type", type)
-      .order("created_at", { ascending: false });
-
-    setNotesLoading(false);
-
-    if (error) {
-      console.error(error);
-      alert("Failed to load notes.");
-      return;
-    }
-
-    setNotes(data || []);
-  };
-
-  const saveNote = async () => {
-    if (!studentId) return;
-
-    if (!noteText.trim()) {
-      alert("Please write a note first.");
-      return;
-    }
-
-    setNoteSaving(true);
-
-    const { error } = await supabase.from("crm_notes").insert({
-      student_id: studentId,
-      student_type: type,
-      note: noteText.trim(),
-    });
-
-    setNoteSaving(false);
-
-    if (error) {
-      console.error(error);
-      alert("Failed to save note.");
-      return;
-    }
-
-    setNoteText("");
-    await fetchNotes();
-  };
-
-  const deleteNote = async (id) => {
-    const confirmDelete = confirm("Delete this note?");
-    if (!confirmDelete) return;
-
-    const { error } = await supabase.from("crm_notes").delete().eq("id", id);
-
-    if (error) {
-      console.error(error);
-      alert("Failed to delete note.");
-      return;
-    }
-
-    setNotes((currentNotes) => currentNotes.filter((note) => note.id !== id));
-  };
-
-  useEffect(() => {
-    if (isOpen && studentId) {
-      fetchNotes();
-      setNoteText("");
-      setLocalPriority(student?.priority || "low");
-      setPrioritySaving(false);
-      setScheduleOpen(false);
-      setScheduleSaving(false);
-      setNoteSaving(false);
-    }
-  }, [isOpen, studentId, type, student?.priority]);
-
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !student) return null;
+  const appointmentRows = [
+    ["Appointment Date", appointmentDate],
+    ["Appointment Time", appointmentTime],
+    ["Consultation Type", consultationType],
+  ];
 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 p-3 backdrop-blur-md sm:p-6"
+        className="fixed inset-0 z-[999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-xl"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        onClick={onClose}
       >
         <motion.div
-          onClick={(event) => event.stopPropagation()}
-          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          initial={{ opacity: 0, y: 30, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 30, scale: 0.96 }}
+          exit={{ opacity: 0, y: 20, scale: 0.97 }}
           transition={{ duration: 0.25 }}
-          className="mx-auto max-w-7xl"
+          className={`max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808] text-white shadow-[0_25px_100px_rgba(0,0,0,0.65)] ${cardClass}`}
         >
-          <div className="relative max-h-[calc(100vh-1.5rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808]/95 backdrop-blur-2xl sm:max-h-[calc(100vh-3rem)]">
-            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-            <div className="pointer-events-none absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
+          <div className="relative border-b border-white/10 bg-white/[0.035] p-5 sm:p-6">
+            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60" />
 
-            <div className="relative border-b border-white/10 p-5 sm:p-8">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-[#D4AF37]">
-                    Student CRM Profile
-                  </p>
-
-                  <h2 className="mt-3 break-words text-3xl font-black text-white sm:text-5xl">
-                    {student.full_name || "Unnamed Student"}
-                  </h2>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <span
-                      className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${
-                        priorityStyles[priority] || priorityStyles.low
-                      }`}
-                    >
-                      {priority} Priority
-                    </span>
-
-                    <span
-                      className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${
-                        statusStyles[status] || statusStyles.new
-                      }`}
-                    >
-                      {status}
-                    </span>
-
-                    <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
-                      {type}
-                    </span>
-                  </div>
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+                    {isAppointment ? "Appointment" : "Inquiry"}
+                  </span>
+                  <span className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getPriorityStyle(priority)}`}>
+                    {priority} priority
+                  </span>
+                  <span className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(status)}`}>
+                    {status}
+                  </span>
                 </div>
 
+                <h2 className="truncate text-2xl font-bold text-white sm:text-3xl">
+                  {fullName}
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm text-white/50">
+                  {country} • {field}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {safePermissions.canDelete ? (
+                  <button
+                    onClick={handleDelete}
+                    className="rounded-full border border-red-400/25 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition hover:border-red-400/50 hover:bg-red-500/15"
+                  >
+                    Delete
+                  </button>
+                ) : null}
+
                 <button
-                  type="button"
                   onClick={onClose}
-                  className="relative z-50 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-gray-300 transition duration-300 hover:border-[#D4AF37]/30 hover:text-white"
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
                 >
                   Close
                 </button>
               </div>
             </div>
+          </div>
 
-            <div className="relative max-h-[calc(100vh-12rem)] overflow-y-auto p-5 [scrollbar-width:thin] [scrollbar-color:#D4AF37_transparent] sm:p-8">
-              <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
-                <div className="space-y-6">
-                  <Section title="Lead Assignment">
-                    <LeadAssignmentPanel
-                      lead={student}
-                      leadType={type}
-                      currentAdmin={null}
-                    />
-                  </Section>
+          <div className="grid max-h-[calc(92vh-132px)] overflow-y-auto lg:grid-cols-[280px_1fr]">
+            <aside className="border-b border-white/10 bg-black/20 p-4 lg:border-b-0 lg:border-r">
+              <div className="space-y-2">
+                {[
+  ["overview", "Overview", "Student details and controls"],
+  ["pipeline", "Pipeline", "Workflow stage tracking"],
+  ["assignment", "Assignment", "Owner and staff handling"],
+  ["timeline", "Timeline", "CRM history and changes"],
+  ["followups", "Follow-ups", "Reminder and next actions"],
+].map(([id, label, description]) => (
+                  <button
+                    key={id}
+                    onClick={() => setActivePanel(id)}
+                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                      activePanel === id
+                        ? "border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37]"
+                        : "border-white/10 bg-white/[0.025] text-white/60 hover:border-white/20 hover:bg-white/[0.04] hover:text-white"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{label}</span>
+                    <span className="mt-1 block text-xs opacity-60">{description}</span>
+                  </button>
+                ))}
+              </div>
 
-                  <Section title="Student Information">
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <InfoCard label="Email" value={student.email} />
-                      <InfoCard label="Phone" value={student.phone} />
-                      <InfoCard
-                        label={type === "inquiry" ? "Country" : "Country Interest"}
-                        value={student.country || student.country_interest}
-                      />
-                      <InfoCard
-                        label={
-                          type === "inquiry" ? "Study Level" : "Consultation Type"
-                        }
-                        value={student.study_level || student.consultation_type}
-                      />
-                      <InfoCard
-                        label={type === "inquiry" ? "Field Of Interest" : "Appointment Date"}
-                        value={student.field_of_interest || student.appointment_date}
-                      />
-                      <InfoCard
-                        label={type === "inquiry" ? "Preferred Time" : "Appointment Time"}
-                        value={student.time_slot || student.appointment_time}
-                      />
-                    </div>
-                  </Section>
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">
+                  Pipeline Progress
+                </p>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-[#D4AF37] transition-all duration-500"
+                    style={{ width: `${pipelineProgress || 0}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-sm text-white/55">
+                  {pipelineProgress || 0}% • {currentStage?.label || "Stage"}
+                </p>
+              </div>
+            </aside>
 
-                  <Section title="Priority Control">
-                    <div className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5">
-                      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <h3 className="text-sm font-semibold text-white">
-                            Lead Priority Level
-                          </h3>
-                          <p className="mt-1 text-xs text-gray-400">
-                            Change student priority instantly from CRM profile.
+            <main className="space-y-5 p-4 sm:p-6">
+              {activePanel === "overview" ? (
+                <div className="space-y-5">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {infoRows.map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"
+                      >
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+                          {label}
+                        </p>
+                        <p className="mt-2 break-words text-sm font-medium text-white/75">
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {isAppointment ? (
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {appointmentRows.map(([label, value]) => (
+                        <div
+                          key={label}
+                          className="rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-4"
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D4AF37]/70">
+                            {label}
+                          </p>
+                          <p className="mt-2 break-words text-sm font-medium text-white/80">
+                            {value}
                           </p>
                         </div>
+                      ))}
+                    </div>
+                  ) : null}
 
-                        <span className="rounded-full border border-[#D4AF37]/25 bg-black/25 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37]">
-                          {prioritySaving ? "Saving..." : `${priority} active`}
-                        </span>
+                  <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+                    <h3 className="text-lg font-semibold text-white">Notes / Message</h3>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/55">
+                      {notes}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-5 lg:grid-cols-2">
+                    <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-white">Priority</h3>
+                        {savingPriority ? (
+                          <span className="text-xs text-white/35">Saving...</span>
+                        ) : null}
                       </div>
 
-                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      <div className="flex flex-wrap gap-2">
                         {priorityOptions.map((item) => (
                           <button
-                            key={item.value}
-                            type="button"
-                            disabled={prioritySaving}
-                            onClick={() => updatePriority(item.value)}
-                            className={`rounded-[1.2rem] border px-4 py-4 text-left transition duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
-                              priority === item.value
-                                ? item.activeClass
-                                : "border-white/10 bg-white/[0.03] text-gray-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.05]"
+                            key={item}
+                            disabled={!safePermissions.canUpdatePriority || savingPriority}
+                            onClick={() => handlePriorityChange(item)}
+                            className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                              priority === item
+                                ? getPriorityStyle(item)
+                                : "border-white/10 bg-white/[0.03] text-white/45 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
                             }`}
                           >
-                            <span className="block text-2xl">{item.icon}</span>
-                            <span className="mt-3 block text-sm font-bold">
-                              {item.label}
-                            </span>
+                            {item}
                           </button>
                         ))}
                       </div>
                     </div>
-                  </Section>
 
-                  {scheduleOpen && (
-                    <Section title="Schedule Consultation">
-                      <div className="rounded-[1.5rem] border border-green-500/20 bg-green-500/5 p-5">
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <Field label="Date">
-                            <input
-                              type="date"
-                              value={scheduleForm.date}
-                              onChange={(event) =>
-                                setScheduleForm({
-                                  ...scheduleForm,
-                                  date: event.target.value,
-                                })
-                              }
-                              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
-                            />
-                          </Field>
-
-                          <Field label="Time">
-                            <input
-                              type="time"
-                              value={scheduleForm.time}
-                              onChange={(event) =>
-                                setScheduleForm({
-                                  ...scheduleForm,
-                                  time: event.target.value,
-                                })
-                              }
-                              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
-                            />
-                          </Field>
-
-                          <div className="md:col-span-2">
-                            <Field label="Consultation Type">
-                              <input
-                                type="text"
-                                value={scheduleForm.consultationType}
-                                onChange={(event) =>
-                                  setScheduleForm({
-                                    ...scheduleForm,
-                                    consultationType: event.target.value,
-                                  })
-                                }
-                                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
-                                placeholder="University Selection, Visa Guidance, Application Strategy..."
-                              />
-                            </Field>
-                          </div>
-
-                          <div className="md:col-span-2">
-                            <Field label="Internal Schedule Note">
-                              <textarea
-                                value={scheduleForm.note}
-                                onChange={(event) =>
-                                  setScheduleForm({
-                                    ...scheduleForm,
-                                    note: event.target.value,
-                                  })
-                                }
-                                className="mt-2 min-h-[110px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
-                                placeholder="Add meeting agenda, documents required, follow-up instructions..."
-                              />
-                            </Field>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                          <button
-                            type="button"
-                            onClick={downloadCalendarFile}
-                            className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.07]"
-                          >
-                            Download Calendar File
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={scheduleSaving}
-                            onClick={saveSchedule}
-                            className="rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition duration-300 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {scheduleSaving ? "Scheduling..." : "Save Schedule"}
-                          </button>
-                        </div>
+                    <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-white">Status</h3>
+                        {savingStatus ? (
+                          <span className="text-xs text-white/35">Saving...</span>
+                        ) : null}
                       </div>
-                    </Section>
-                  )}
 
-                  <Section title="Student Message">
-                    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
-                        {student.message || "No message provided."}
+                      <div className="flex flex-wrap gap-2">
+                        {statusOptions.map((item) => (
+                          <button
+                            key={item}
+                            disabled={!safePermissions.canUpdateStatus || savingStatus}
+                            onClick={() => handleStatusChange(item)}
+                            className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                              status === item
+                                ? getStatusStyle(item)
+                                : "border-white/10 bg-white/[0.03] text-white/45 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {activePanel === "pipeline" ? (
+                <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+                  <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">CRM Pipeline</h3>
+                      <p className="text-sm text-white/45">
+                        Track this student through the consultancy workflow.
                       </p>
                     </div>
-                  </Section>
 
-                  <Section title="CRM Notes">
-                    <div className="rounded-[1.5rem] border border-dashed border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
-                      <textarea
-                        value={noteText}
-                        onChange={(event) => setNoteText(event.target.value)}
-                        placeholder="Add internal notes, follow-up reminders, visa updates, consultation summaries..."
-                        className="min-h-[150px] w-full resize-none rounded-[1.2rem] border border-white/10 bg-black/30 p-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
-                      />
+                    {savingStage ? (
+                      <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#D4AF37]">
+                        Saving stage...
+                      </span>
+                    ) : null}
+                  </div>
 
-                      <div className="mt-4 flex justify-end">
+                  <div className="space-y-3">
+                    {stages.map((stage, index) => {
+                      const isActive = stage.id === currentStageId;
+                      const isPassed = index < (stages.findIndex((item) => item.id === currentStageId) || 0);
+
+                      return (
                         <button
-                          type="button"
-                          onClick={saveNote}
-                          disabled={noteSaving}
-                          className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition duration-300 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-60"
+                          key={stage.id}
+                          onClick={() => handleStageChange(stage.id)}
+                          disabled={savingStage}
+                          className={`group w-full rounded-2xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            isActive
+                              ? "border-[#D4AF37]/40 bg-[#D4AF37]/10"
+                              : isPassed
+                              ? "border-emerald-400/20 bg-emerald-500/5"
+                              : "border-white/10 bg-white/[0.03] hover:border-[#D4AF37]/25 hover:bg-white/[0.045]"
+                          }`}
                         >
-                          {noteSaving ? "Saving..." : "Save Note"}
-                        </button>
-                      </div>
-
-                      <div className="mt-5 space-y-3">
-                        {notesLoading ? (
-                          <p className="text-sm text-gray-400">Loading notes...</p>
-                        ) : notes.length === 0 ? (
-                          <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400">
-                            No internal notes yet.
-                          </p>
-                        ) : (
-                          notes.map((note) => (
-                            <div
-                              key={note.id}
-                              className="rounded-[1.2rem] border border-white/10 bg-black/25 p-4"
+                          <div className="flex items-start gap-4">
+                            <span
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                                isActive
+                                  ? "border-[#D4AF37]/40 bg-[#D4AF37]/15 text-[#D4AF37]"
+                                  : isPassed
+                                  ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
+                                  : "border-white/10 bg-black/20 text-white/35"
+                              }`}
                             >
-                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-300">
-                                  {note.note}
-                                </p>
+                              {index + 1}
+                            </span>
 
-                                <button
-                                  type="button"
-                                  onClick={() => deleteNote(note.id)}
-                                  className="shrink-0 rounded-full border border-red-500/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-400 hover:bg-red-500/10"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-
-                              <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-gray-500">
-                                {note.created_at
-                                  ? new Date(note.created_at).toLocaleString()
-                                  : ""}
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-white">
+                                {stage.label || stage.title || stage.id}
+                              </p>
+                              <p className="mt-1 text-sm text-white/45">
+                                {stage.description || "Pipeline workflow stage"}
                               </p>
                             </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </Section>
+
+                            {isActive ? (
+                              <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]">
+                                Current
+                              </span>
+                            ) : null}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+              ) : null}
 
-                <div className="space-y-6 xl:sticky xl:top-0 xl:self-start">
-                  <Section title="Quick Actions">
-                    <div className="grid gap-3">
-                      <ActionButton label="Send Email" icon="✉️" />
-                      <ActionButton
-                        label={
-                          scheduleOpen
-                            ? "Hide Schedule Panel"
-                            : "Schedule Consultation"
-                        }
-                        icon="📅"
-                        onClick={openSchedulePanel}
-                      />
-                      <ActionButton label="Create Follow Up" icon="⏰" />
-                      <ActionButton
-                        label={
-                          priority === "vip"
-                            ? "VIP Lead Active"
-                            : "Upgrade to VIP Lead"
-                        }
-                        icon="👑"
-                        onClick={() => updatePriority("vip")}
-                      />
-                    </div>
-                  </Section>
+              {activePanel === "assignment" ? (
+                <LeadAssignmentPanel
+                  student={workingStudent}
+                  studentType={type}
+                  adminProfile={adminProfile}
+                  permissions={safePermissions}
+                />
+              ) : null}
 
-                  <Section title="Lead Timeline">
-                    <div className="space-y-4">
-                      <TimelineItem title="Lead Created" text="Student entered CRM system." />
-                      <TimelineItem
-                        title="Priority Assigned"
-                        text={`${priority.toUpperCase()} priority currently active.`}
-                      />
-                      <TimelineItem
-                        title="Scheduling Ready"
-                        text={
-                          type === "appointment"
-                            ? "This appointment can be confirmed or rescheduled."
-                            : "This inquiry can be converted into a confirmed appointment."
-                        }
-                      />
-                      <TimelineItem
-                        title="Notes Enabled"
-                        text={`${notes.length} internal note${
-                          notes.length === 1 ? "" : "s"
-                        } saved for this profile.`}
-                      />
-                    </div>
-                  </Section>
+              {activePanel === "timeline" ? (
+  <CrmTimelinePanel
+    studentId={workingStudent.id}
+    studentType={type}
+    adminProfile={adminProfile}
+  />
+) : null}
 
-                  <Section title="CRM Metadata">
-                    <div className="space-y-3">
-                      <MetaItem
-                        label="Created"
-                        value={
-                          student.created_at
-                            ? new Date(student.created_at).toLocaleString()
-                            : "-"
-                        }
-                      />
-                      <MetaItem label="Lead Type" value={type} />
-                      <MetaItem label="Priority" value={priority} />
-                      <MetaItem label="Status" value={status} />
-                      <MetaItem
-                        label="Assigned"
-                        value={student.assigned_admin_name || "Open Pool"}
-                      />
-                    </div>
-                  </Section>
-                </div>
-              </div>
-            </div>
+              {activePanel === "followups" ? (
+  <FollowUpReminderPanel
+    studentId={workingStudent.id}
+    studentType={type}
+    adminProfile={adminProfile}
+  />
+) : null}
+            </main>
           </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <div>
-      <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-[#D4AF37]">
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <label className="block">
-      <span className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-function InfoCard({ label, value }) {
-  return (
-    <div className="rounded-[1.3rem] border border-white/10 bg-white/[0.03] p-4">
-      <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
-        {label}
-      </p>
-      <p className="mt-2 break-words text-sm text-gray-200">{value || "-"}</p>
-    </div>
-  );
-}
-
-function ActionButton({ label, icon, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={
-        onClick ||
-        (() =>
-          alert(`${label} feature will be connected in the next CRM upgrade.`))
-      }
-      className="flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-white/[0.03] px-5 py-4 text-left transition duration-300 hover:border-[#D4AF37]/30 hover:bg-white/[0.05]"
-    >
-      <span className="text-sm font-medium text-white">{label}</span>
-      <span className="text-xl">{icon}</span>
-    </button>
-  );
-}
-
-function TimelineItem({ title, text }) {
-  return (
-    <div className="relative rounded-[1.3rem] border border-white/10 bg-white/[0.03] p-4">
-      <div className="absolute left-0 top-0 h-full w-[3px] rounded-full bg-[#D4AF37]"></div>
-      <h3 className="text-sm font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-xs leading-relaxed text-gray-400">{text}</p>
-    </div>
-  );
-}
-
-function MetaItem({ label, value }) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-[1rem] border border-white/10 bg-white/[0.03] px-4 py-3">
-      <span className="text-xs uppercase tracking-[0.18em] text-gray-500">
-        {label}
-      </span>
-      <span className="break-words text-right text-sm font-medium text-white">
-        {value}
-      </span>
-    </div>
   );
 }
 
