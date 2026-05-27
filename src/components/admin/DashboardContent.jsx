@@ -14,11 +14,12 @@ function DashboardContent({
   filteredAppointments = [],
   cardClass = "",
   toggleInquiryStatus = () => {},
-updateInquiryStatus = toggleInquiryStatus,
+  updateInquiryStatus = toggleInquiryStatus,
   updateInquiryPriority = () => {},
   updateAppointmentPriority = () => {},
   deleteInquiry = null,
   updateAppointmentStatus = () => {},
+  updateAppointmentStage = () => {},
   deleteAppointment = null,
   role = "staff",
   adminProfile = null,
@@ -36,6 +37,7 @@ updateInquiryStatus = toggleInquiryStatus,
     canUpdateStatus: true,
     canUpdatePriority: true,
     canConfirmAppointments: true,
+    canUpdateAppointmentPipeline: true,
     ...permissions,
   };
 
@@ -205,8 +207,10 @@ updateInquiryStatus = toggleInquiryStatus,
           },
         ];
 
-  const viewTitle = activeTab === "inquiries" ? "Inquiry Pipeline" : "Appointment Pipeline";
-  const totalLabel = activeTab === "inquiries" ? "Total inquiries" : "Total appointments";
+  const viewTitle =
+    activeTab === "inquiries" ? "Inquiry Pipeline" : "Appointment Pipeline";
+  const totalLabel =
+    activeTab === "inquiries" ? "Total inquiries" : "Total appointments";
 
   const EmptyState = ({ icon, title, text, gold = false }) => (
     <AnimatedSection key={`${activeTab}-${title}`}>
@@ -355,7 +359,10 @@ updateInquiryStatus = toggleInquiryStatus,
 
             <div className="grid grid-cols-4 gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-3">
               {priorityColumns.map((column) => (
-                <div key={column.value} className="rounded-2xl border border-white/10 bg-black/20 p-3 text-center">
+                <div
+                  key={column.value}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-3 text-center"
+                >
                   <p className="text-lg">{column.icon}</p>
                   <p className={`mt-1 text-lg font-black ${column.color}`}>
                     {priorityCounts[column.value] || 0}
@@ -394,8 +401,9 @@ updateInquiryStatus = toggleInquiryStatus,
               toggleInquiryStatus={updateInquiryStatus}
               updateInquiryPriority={updateInquiryPriority}
               updateAppointmentPriority={updateAppointmentPriority}
-              deleteInquiry={deleteInquiry}
               updateAppointmentStatus={updateAppointmentStatus}
+              updateAppointmentStage={updateAppointmentStage}
+              deleteInquiry={deleteInquiry}
               deleteAppointment={deleteAppointment}
               openInquiryModal={openInquiryModal}
               openAppointmentModal={openAppointmentModal}
@@ -410,8 +418,9 @@ updateInquiryStatus = toggleInquiryStatus,
               toggleInquiryStatus={updateInquiryStatus}
               updateInquiryPriority={updateInquiryPriority}
               updateAppointmentPriority={updateAppointmentPriority}
-              deleteInquiry={deleteInquiry}
               updateAppointmentStatus={updateAppointmentStatus}
+              updateAppointmentStage={updateAppointmentStage}
+              deleteInquiry={deleteInquiry}
               deleteAppointment={deleteAppointment}
               openInquiryModal={openInquiryModal}
               openAppointmentModal={openAppointmentModal}
@@ -482,8 +491,9 @@ function KanbanView({
   toggleInquiryStatus,
   updateInquiryPriority,
   updateAppointmentPriority,
-  deleteInquiry,
   updateAppointmentStatus,
+  updateAppointmentStage,
+  deleteInquiry,
   deleteAppointment,
   openInquiryModal,
   openAppointmentModal,
@@ -531,7 +541,10 @@ function KanbanView({
                     key={item.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.24, delay: Math.min(index * 0.02, 0.12) }}
+                    transition={{
+                      duration: 0.24,
+                      delay: Math.min(index * 0.02, 0.12),
+                    }}
                   >
                     {activeTab === "inquiries" ? (
                       <InquiryCard
@@ -550,8 +563,11 @@ function KanbanView({
                         appointment={item}
                         cardClass="p-0"
                         updateAppointmentStatus={updateAppointmentStatus}
+                        updateAppointmentStage={updateAppointmentStage}
                         updateAppointmentPriority={updateAppointmentPriority}
-                        deleteAppointment={safePermissions.canDelete ? deleteAppointment : null}
+                        deleteAppointment={
+                          safePermissions.canDelete ? deleteAppointment : null
+                        }
                         openModal={openAppointmentModal}
                         compact
                         role={role}
@@ -577,8 +593,9 @@ function ListView({
   toggleInquiryStatus,
   updateInquiryPriority,
   updateAppointmentPriority,
-  deleteInquiry,
   updateAppointmentStatus,
+  updateAppointmentStage,
+  deleteInquiry,
   deleteAppointment,
   openInquiryModal,
   openAppointmentModal,
@@ -609,6 +626,7 @@ function ListView({
               appointment={item}
               cardClass={cardClass}
               updateAppointmentStatus={updateAppointmentStatus}
+              updateAppointmentStage={updateAppointmentStage}
               updateAppointmentPriority={updateAppointmentPriority}
               deleteAppointment={safePermissions.canDelete ? deleteAppointment : null}
               openModal={openAppointmentModal}

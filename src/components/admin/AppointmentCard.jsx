@@ -1,10 +1,17 @@
 import { motion } from "framer-motion";
+import {
+  appointmentStages,
+  appointmentStageToStatus,
+  legacyAppointmentStatusToStage,
+  getPipelineStage,
+} from "../../data/crmPipelineConfig";
 
 function AppointmentCard({
   appointment,
   cardClass = "",
   updateAppointmentStatus = () => {},
   updateAppointmentPriority = () => {},
+  updateAppointmentStage = null,
   deleteAppointment = null,
   openModal = () => {},
   compact = false,
@@ -13,6 +20,23 @@ function AppointmentCard({
 }) {
   const status = appointment.status || "pending";
   const priority = appointment.priority || "low";
+  const appointmentStage =
+    appointment.appointment_stage ||
+    legacyAppointmentStatusToStage[status] ||
+    "new_booking";
+
+  const activeStage = getPipelineStage(
+    appointmentStages,
+    appointmentStage,
+    "new_booking"
+  );
+
+  const activeStageIndex = Math.max(
+    appointmentStages.findIndex((stage) => stage.key === appointmentStage),
+    0
+  );
+
+  const nextStage = appointmentStages[activeStageIndex + 1] || null;
 
   const assignedAdminName =
     appointment.assigned_admin_name ||
@@ -30,6 +54,7 @@ function AppointmentCard({
     canUpdateStatus: true,
     canUpdatePriority: true,
     canConfirmAppointments: true,
+    canUpdateAppointmentPipeline: permissions.canUpdateStatus ?? true,
     ...permissions,
   };
 
@@ -125,6 +150,28 @@ function AppointmentCard({
     updateAppointmentStatus(appointment.id, newStatus);
   };
 
+  const handleStageUpdate = (newStage) => {
+    if (!safePermissions.canUpdateAppointmentPipeline) {
+      alert("You do not have permission to update appointment pipeline.");
+      return;
+    }
+
+    if (newStage === "confirmed" && !safePermissions.canConfirmAppointments) {
+      alert("You do not have permission to confirm appointments.");
+      return;
+    }
+
+    if (updateAppointmentStage) {
+      updateAppointmentStage(appointment.id, newStage);
+      return;
+    }
+
+    updateAppointmentStatus(
+      appointment.id,
+      appointmentStageToStatus[newStage] || status
+    );
+  };
+
   const appointmentDate =
     appointment.appointment_date && appointment.appointment_time
       ? `${appointment.appointment_date} · ${appointment.appointment_time}`
@@ -151,7 +198,7 @@ function AppointmentCard({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
-              Appointment Lead
+              Appointment Pipeline
             </p>
 
             <h2 className="mt-1.5 break-words text-xl font-bold leading-tight text-white sm:mt-2 sm:text-2xl">
@@ -179,12 +226,16 @@ function AppointmentCard({
             {activePriority.icon} {priority}
           </span>
 
+          <span className="w-fit shrink-0 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]">
+            {activeStage.icon} {activeStage.label}
+          </span>
+
           <span
             className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
               statusStyles[status] || statusStyles.pending
             }`}
           >
-            {status}
+            Status: {status}
           </span>
 
           <AssignmentBadge
@@ -199,6 +250,92 @@ function AppointmentCard({
           )}
         </div>
       </div>
+
+      {!compact && (
+        <div
+          onClick={(event) => event.stopPropagation()}
+          className="relative mt-4 rounded-[1.2rem] border border-white/10 bg-black/20 p-4 sm:mt-5 sm:rounded-[1.4rem] sm:p-5"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
+                Consultancy Progress
+              </p>
+              <p className="mt-1 text-sm font-semibold text-white">
+                {activeStage.label}
+              </p>
+            </div>
+
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold text-gray-400">
+              {activeStageIndex + 1}/{appointmentStages.length}
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-7 gap-1.5">
+            {appointmentStages.map((stage, index) => {
+              const isActive = stage.key === appointmentStage;
+              const isCompleted = index < activeStageIndex;
+
+              return (
+                <button
+                  key={stage.key}
+                  type="button"
+                  title={stage.label}
+                  onClick={() => handleStageUpdate(stage.key)}
+                  disabled={!safePermissions.canUpdateAppointmentPipeline}
+                  className={`h-2.5 rounded-full transition duration-300 ${
+                    isActive
+                      ? "bg-[#D4AF37] shadow-[0_0_18px_rgba(212,175,55,0.45)]"
+                      : isCompleted
+                      ? "bg-[#D4AF37]/45"
+                      : "bg-white/10 hover:bg-white/20"
+                  } ${
+                    !safePermissions.canUpdateAppointmentPipeline
+                      ? "cursor-not-allowed opacity-60"
+                      : "cursor-pointer"
+                  }`}
+                ></button>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <select
+              value={appointmentStage}
+              onChange={(event) => handleStageUpdate(event.target.value)}
+              disabled={!safePermissions.canUpdateAppointmentPipeline}
+              className={`w-full rounded-full border border-white/10 bg-black/30 px-4 py-2.5 text-xs font-semibold text-white outline-none transition duration-300 sm:text-sm ${
+                !safePermissions.canUpdateAppointmentPipeline
+                  ? "cursor-not-allowed opacity-60"
+                  : ""
+              }`}
+            >
+              {appointmentStages.map((stage) => (
+                <option
+                  key={stage.key}
+                  value={stage.key}
+                  className="bg-[#111111] text-white"
+                >
+                  {stage.label}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => nextStage && handleStageUpdate(nextStage.key)}
+              disabled={!nextStage || !safePermissions.canUpdateAppointmentPipeline}
+              className={`rounded-full px-4 py-2.5 text-xs font-semibold transition duration-300 sm:text-sm ${
+                nextStage && safePermissions.canUpdateAppointmentPipeline
+                  ? "bg-[#D4AF37] text-black hover:-translate-y-0.5 hover:shadow-[0_14px_35px_rgba(212,175,55,0.18)]"
+                  : "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500"
+              }`}
+            >
+              {nextStage ? `Move to ${nextStage.label}` : "Pipeline Complete"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="relative mt-4 grid gap-2.5 sm:mt-5 sm:gap-3 lg:grid-cols-2">
         <InfoCard label="Email" value={appointment.email} />

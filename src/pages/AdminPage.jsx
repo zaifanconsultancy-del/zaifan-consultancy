@@ -16,7 +16,10 @@ import AdminManagement from "../components/admin/AdminManagement";
 import AdminActivityLogs from "../components/admin/AdminActivityLogs";
 import MyLeadsPanel from "../components/admin/MyLeadsPanel";
 
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 25000;
+const PROFILE_RETRY_LIMIT = 3;
+const PROFILE_RETRY_DELAY_MS = 650;
+
 
 function withTimeout(promise, label = "Request") {
   return Promise.race([
@@ -28,6 +31,10 @@ function withTimeout(promise, label = "Request") {
       )
     ),
   ]);
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function AdminPage() {
@@ -46,10 +53,13 @@ function AdminPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileRetryCount, setProfileRetryCount] = useState(0);
   const [loadError, setLoadError] = useState("");
 
   const mountedRef = useRef(true);
   const loadingRef = useRef(false);
+  const profileFetchIdRef = useRef(0);
 
   const cardClass =
     "group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055] sm:rounded-[2rem] sm:p-6";
@@ -74,6 +84,7 @@ function AdminPage() {
       canUpdateStatus: true,
       canUpdatePriority: true,
       canConfirmAppointments: true,
+      canUpdateAppointmentPipeline: true,
     },
     admin: {
       canDelete: true,
@@ -83,6 +94,7 @@ function AdminPage() {
       canUpdateStatus: true,
       canUpdatePriority: true,
       canConfirmAppointments: true,
+      canUpdateAppointmentPipeline: true,
     },
     super_admin: {
       canDelete: true,
@@ -92,6 +104,7 @@ function AdminPage() {
       canUpdateStatus: true,
       canUpdatePriority: true,
       canConfirmAppointments: true,
+      canUpdateAppointmentPipeline: true,
     },
   };
 
@@ -141,44 +154,103 @@ function AdminPage() {
     }
   };
 
-  const loadAdminProfile = async (userId) => {
+  const loadAdminProfile = async (userId, options = {}) => {
+    if (!userId) return null;
+
+    const { force = false } = options;
+    const fetchId = profileFetchIdRef.current + 1;
+    profileFetchIdRef.current = fetchId;
+
     safeSetState(() => {
-      if (!adminProfile) setProfileLoading(true);
+      setProfileLoading(true);
+      setProfileError("");
+      if (force) setAdminProfile(null);
     });
 
-    try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from("admin_profiles")
-          .select("*")
-          .eq("id", userId)
-          .maybeSingle(),
-        "Admin profile fetch"
-      );
-
-      if (error) {
-        console.error("Admin profile error:", error);
-        safeSetState(() => {
-          setAdminProfile(null);
-          setProfileLoading(false);
-        });
+    const cachedProfileKey = `zaifan-admin-profile-${userId}`;
+    const cachedProfile = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(cachedProfileKey) || "null");
+      } catch {
         return null;
       }
+    })();
 
-      safeSetState(() => {
-        setAdminProfile(data);
-        setProfileLoading(false);
-      });
+    for (let attempt = 1; attempt <= PROFILE_RETRY_LIMIT; attempt += 1) {
+      safeSetState(() => setProfileRetryCount(attempt));
 
-      return data;
-    } catch (error) {
-      console.error("Admin profile timeout/error:", error);
-      safeSetState(() => {
-        setAdminProfile(null);
-        setProfileLoading(false);
-      });
-      return null;
+      try {
+        const { data, error } = await withTimeout(
+          supabase
+            .from("admin_profiles")
+            .select("*")
+            .eq("id", userId)
+            .maybeSingle(),
+          `Admin profile fetch attempt ${attempt}`
+        );
+
+        if (profileFetchIdRef.current !== fetchId) return null;
+
+        if (error) {
+          console.error("Admin profile error:", error);
+          throw error;
+        }
+
+        if (data) {
+          try {
+            localStorage.setItem(cachedProfileKey, JSON.stringify(data));
+          } catch {
+            // Ignore localStorage issues.
+          }
+
+          safeSetState(() => {
+            setAdminProfile(data);
+            setProfileLoading(false);
+            setProfileError("");
+            setProfileRetryCount(0);
+          });
+
+          return data;
+        }
+
+        if (attempt < PROFILE_RETRY_LIMIT) {
+          await wait(PROFILE_RETRY_DELAY_MS * attempt);
+        }
+      } catch (error) {
+        console.error("Admin profile timeout/error:", error);
+
+        if (attempt < PROFILE_RETRY_LIMIT) {
+          await wait(PROFILE_RETRY_DELAY_MS * attempt);
+          continue;
+        }
+
+        if (cachedProfile?.id === userId) {
+          safeSetState(() => {
+            setAdminProfile(cachedProfile);
+            setProfileLoading(false);
+            setProfileError(
+              "Using cached admin profile because the live profile check timed out."
+            );
+            setProfileRetryCount(0);
+          });
+
+          return cachedProfile;
+        }
+      }
     }
+
+    if (profileFetchIdRef.current !== fetchId) return null;
+
+    safeSetState(() => {
+      setAdminProfile(null);
+      setProfileLoading(false);
+      setProfileError(
+        "Admin profile could not be verified after multiple attempts."
+      );
+      setProfileRetryCount(0);
+    });
+
+    return null;
   };
 
   const fetchInquiries = async () => {
@@ -750,11 +822,116 @@ function AdminPage() {
           return;
         }
 
+
+
         alert("Appointment confirmed and confirmation email sent.");
       }
     } catch (error) {
       console.error(error);
       alert("Appointment status update timed out or failed.");
+    }
+  };
+
+  const updateAppointmentStage = async (id, newStage) => {
+    if (!currentPermissions.canUpdateAppointmentPipeline) {
+      blockAction("You do not have permission to update appointment pipeline.");
+      return;
+    }
+
+    const selectedAppointment = appointments.find(
+      (appointment) => String(appointment.id) === String(id)
+    );
+
+    const oldStage = selectedAppointment?.appointment_stage || "new_booking";
+
+    const stageToStatus = {
+      new_booking: "pending",
+      confirmed: "confirmed",
+      consultation_done: "completed",
+      follow_up_needed: "pending",
+      converted_to_lead: "completed",
+      not_interested: "completed",
+      cancelled: "cancelled",
+    };
+
+    const nextStatus = stageToStatus[newStage] || "pending";
+
+    safeSetState(() =>
+      setAppointments((current) =>
+        current.map((appointment) =>
+          String(appointment.id) === String(id)
+            ? {
+                ...appointment,
+                appointment_stage: newStage,
+                status: nextStatus,
+              }
+            : appointment
+        )
+      )
+    );
+
+    try {
+      const { error } = await withTimeout(
+        supabase
+          .from("appointments")
+          .update({
+            appointment_stage: newStage,
+            status: nextStatus,
+          })
+          .eq("id", id),
+        "Update appointment pipeline"
+      );
+
+      if (error) {
+        console.error("Appointment pipeline update error:", error);
+
+        safeSetState(() =>
+          setAppointments((current) =>
+            current.map((appointment) =>
+              String(appointment.id) === String(id)
+                ? {
+                    ...appointment,
+                    appointment_stage: oldStage,
+                    status: selectedAppointment?.status || appointment.status,
+                  }
+                : appointment
+            )
+          )
+        );
+
+        alert(
+          error.message ||
+            "Failed to update appointment pipeline. Check Supabase column/RLS."
+        );
+        return;
+      }
+
+      await logActivity({
+        action: "Updated appointment pipeline",
+        targetType: "appointment",
+        targetId: id,
+        details: `Changed appointment pipeline from ${oldStage} to ${newStage}.`,
+      });
+    } catch (error) {
+      console.error("Appointment pipeline timeout/error:", error);
+
+      safeSetState(() =>
+        setAppointments((current) =>
+          current.map((appointment) =>
+            String(appointment.id) === String(id)
+              ? {
+                  ...appointment,
+                  appointment_stage: oldStage,
+                  status: selectedAppointment?.status || appointment.status,
+                }
+              : appointment
+          )
+        )
+      );
+
+      alert(
+        "Appointment pipeline update timed out. I increased the timeout to 25 seconds in this file. If it still happens, run the appointments SQL/RLS fix."
+      );
     }
   };
 
@@ -928,6 +1105,7 @@ function AdminPage() {
       "Appointment Time",
       "Message",
       "Status",
+      "Appointment Stage",
       "Priority",
       "Assigned Admin",
       "Created At",
@@ -943,6 +1121,7 @@ function AdminPage() {
       appointment.appointment_time,
       appointment.message,
       appointment.status || "pending",
+      appointment.appointment_stage || "new_booking",
       appointment.priority || "low",
       appointment.assigned_admin_name || "Unassigned",
       appointment.created_at,
@@ -951,10 +1130,18 @@ function AdminPage() {
     downloadCSV("zaifan-appointments.csv", headers, rows);
   };
 
+  const normalizeFilterValue = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replaceAll("-", "_")
+      .replaceAll(" ", "_");
+
   const filteredInquiries = inquiries.filter((inquiry) => {
     const searchText = search.toLowerCase();
     const status = inquiry.status || "new";
     const priority = inquiry.priority || "low";
+    const filterValue = normalizeFilterValue(statusFilter);
 
     const matchesSearch =
       inquiry.full_name?.toLowerCase().includes(searchText) ||
@@ -969,8 +1156,8 @@ function AdminPage() {
 
     const matchesStatus =
       statusFilter === "All" ||
-      status === statusFilter.toLowerCase() ||
-      priority === statusFilter.toLowerCase();
+      status === filterValue ||
+      priority === filterValue;
 
     return matchesSearch && matchesStatus;
   });
@@ -978,7 +1165,9 @@ function AdminPage() {
   const filteredAppointments = appointments.filter((appointment) => {
     const searchText = search.toLowerCase();
     const status = appointment.status || "pending";
+    const appointmentStage = appointment.appointment_stage || "new_booking";
     const priority = appointment.priority || "low";
+    const filterValue = normalizeFilterValue(statusFilter);
 
     const matchesSearch =
       appointment.full_name?.toLowerCase().includes(searchText) ||
@@ -988,13 +1177,15 @@ function AdminPage() {
       appointment.consultation_type?.toLowerCase().includes(searchText) ||
       appointment.appointment_date?.toLowerCase().includes(searchText) ||
       appointment.appointment_time?.toLowerCase().includes(searchText) ||
+      appointmentStage.toLowerCase().includes(searchText) ||
       priority.toLowerCase().includes(searchText) ||
       appointment.assigned_admin_name?.toLowerCase().includes(searchText);
 
     const matchesStatus =
       statusFilter === "All" ||
-      status === statusFilter.toLowerCase() ||
-      priority === statusFilter.toLowerCase();
+      status === filterValue ||
+      appointmentStage === filterValue ||
+      priority === filterValue;
 
     return matchesSearch && matchesStatus;
   });
@@ -1041,13 +1232,31 @@ function AdminPage() {
 
   const statusOptions =
     activeTab === "inquiries"
-      ? ["All", "New", "Contacted", "VIP", "High", "Medium", "Low"]
+      ? [
+          "All",
+          "New",
+          "Contacted",
+          "Documents Pending",
+          "Applied",
+          "Offer Letter",
+          "Visa Process",
+          "Approved",
+          "VIP",
+          "High",
+          "Medium",
+          "Low",
+        ]
       : [
           "All",
-          "Pending",
+          "New Booking",
           "Confirmed",
-          "Completed",
+          "Consultation Done",
+          "Follow Up Needed",
+          "Converted To Lead",
+          "Not Interested",
           "Cancelled",
+          "Pending",
+          "Completed",
           "VIP",
           "High",
           "Medium",
@@ -1063,6 +1272,11 @@ function AdminPage() {
           <p className="mt-3 text-sm text-gray-400">
             Please wait while Zaifan CRM verifies your permissions.
           </p>
+          {profileRetryCount > 0 && (
+            <p className="mt-3 text-xs text-[#D4AF37]">
+              Profile check attempt {profileRetryCount}/{PROFILE_RETRY_LIMIT}
+            </p>
+          )}
         </div>
       </section>
     );
@@ -1090,17 +1304,24 @@ function AdminPage() {
           </div>
 
           <p className="text-[11px] uppercase tracking-[0.35em] text-red-300">
-            Access Blocked
+            Access Check Paused
           </p>
 
           <h1 className="mt-3 text-3xl font-black text-white">
-            Admin Profile Missing
+            Admin Profile Not Verified Yet
           </h1>
 
           <p className="mt-4 text-sm leading-relaxed text-gray-400">
-            Your auth login exists, but this user ID is not added inside the
-            admin_profiles table.
+            Your login session is active, but Zaifan CRM could not verify your
+            admin profile after several attempts. This can happen during Vite hot
+            reload or temporary Supabase delay.
           </p>
+
+          {profileError && (
+            <div className="mt-5 rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4 text-left text-xs leading-relaxed text-orange-200">
+              {profileError}
+            </div>
+          )}
 
           <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4 text-left text-xs text-gray-300">
             <p className="text-gray-500">Your user ID:</p>
@@ -1109,12 +1330,28 @@ function AdminPage() {
             </p>
           </div>
 
-          <button
-            onClick={logout}
-            className="mt-6 rounded-full bg-[#D4AF37] px-7 py-3 text-sm font-black text-black transition hover:bg-[#f1cf65]"
-          >
-            Logout
-          </button>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => loadAdminProfile(adminUser?.id, { force: true })}
+              className="rounded-full bg-[#D4AF37] px-7 py-3 text-sm font-black text-black transition hover:bg-[#f1cf65]"
+            >
+              Retry Profile Check
+            </button>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-7 py-3 text-sm font-bold text-white transition hover:border-red-400/30 hover:bg-red-500/10"
+            >
+              Logout
+            </button>
+          </div>
+
+          <p className="mt-5 text-xs leading-relaxed text-gray-500">
+            If retry works after a browser refresh, the database row is fine.
+            This screen is now a safe fallback instead of a hard crash.
+          </p>
         </div>
       </section>
     );
@@ -1164,6 +1401,12 @@ function AdminPage() {
               </span>
             </div>
           </div>
+
+          {profileError && adminProfile && (
+            <div className="mb-5 rounded-[1.5rem] border border-orange-400/20 bg-orange-500/10 p-4 text-sm text-orange-200">
+              {profileError}
+            </div>
+          )}
 
           {loadError && (
             <div className="mb-5 rounded-[1.5rem] border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
@@ -1331,6 +1574,7 @@ function AdminPage() {
                     updateAppointmentPriority={updateAppointmentPriority}
                     deleteInquiry={deleteInquiry}
                     updateAppointmentStatus={updateAppointmentStatus}
+                    updateAppointmentStage={updateAppointmentStage}
                     deleteAppointment={deleteAppointment}
                     role={role}
                     adminProfile={adminProfile}
