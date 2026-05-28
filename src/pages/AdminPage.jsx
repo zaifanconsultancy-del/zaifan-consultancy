@@ -23,12 +23,21 @@ import LeadScoringAnalytics from "../components/admin/LeadScoringAnalytics";
 import ConversionAnalytics from "../components/admin/ConversionAnalytics";
 import OverdueEscalationPanel from "../components/admin/OverdueEscalationPanel";
 import AutoReminderGenerator from "../components/admin/AutoReminderGenerator";
-
+import LuxuryAnalyticsCharts from "../components/admin/LuxuryAnalyticsCharts";
+import AiLeadPrioritizationPanel from "../components/admin/AiLeadPrioritizationPanel";
+import StaffLeaderboard from "../components/admin/StaffLeaderboard";
+import AutoStageMovementPanel from "../components/admin/AutoStageMovementPanel";
+import ProductivityHeatmap from "../components/admin/ProductivityHeatmap";
+import useRealtimeCRM from "../hooks/useRealtimeCRM";
+import NotificationActionCenter from "../components/admin/NotificationActionCenter";
+import ReminderCompletionAnalytics from "../components/admin/ReminderCompletionAnalytics";
+import ConversionFunnelChart from "../components/admin/ConversionFunnelChart";
+import CrmCommandCenter from "../components/admin/CrmCommandCenter";
+import AiLeadIntelligenceFeed from "../components/admin/AiLeadIntelligenceFeed";
 
 const REQUEST_TIMEOUT_MS = 25000;
 const PROFILE_RETRY_LIMIT = 3;
 const PROFILE_RETRY_DELAY_MS = 650;
-
 
 function withTimeout(promise, label = "Request") {
   return Promise.race([
@@ -58,9 +67,29 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState("inquiries");
   const [inquiries, setInquiries] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [followUpReminders, setFollowUpReminders] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
+  useRealtimeCRM({
+  enabled: isLoggedIn,
+
+  onInquiryChange: () => {
+    fetchInquiries();
+  },
+
+  onAppointmentChange: () => {
+    fetchAppointments();
+  },
+
+  onReminderChange: () => {
+    fetchFollowUpReminders();
+  },
+
+  onAnyChange: () => {
+  fetchAllData({ silent: true });
+},
+});
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [profileRetryCount, setProfileRetryCount] = useState(0);
@@ -342,6 +371,31 @@ function AdminPage() {
     }
   };
 
+  const fetchFollowUpReminders = async () => {
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("follow_up_reminders")
+          .select("*")
+          .order("due_date", { ascending: true }),
+        "Follow-up reminders fetch"
+      );
+
+      if (error) {
+        console.error(error);
+        return [];
+      }
+
+      const reminderRows = data || [];
+      safeSetState(() => setFollowUpReminders(reminderRows));
+      return reminderRows;
+    } catch (error) {
+      console.error("Follow-up reminders fetch timeout/error:", error);
+      safeSetState(() => setFollowUpReminders([]));
+      return [];
+    }
+  };
+
   const fetchAllData = async ({ silent = false } = {}) => {
     if (loadingRef.current && !silent) return;
 
@@ -353,7 +407,11 @@ function AdminPage() {
     });
 
     try {
-      const results = await Promise.allSettled([fetchInquiries(), fetchAppointments()]);
+      const results = await Promise.allSettled([
+        fetchInquiries(),
+        fetchAppointments(),
+        fetchFollowUpReminders(),
+      ]);
       const failed = results.filter((result) => result.status === "rejected");
 
       if (failed.length > 0) {
@@ -479,6 +537,11 @@ function AdminPage() {
         { event: "*", schema: "public", table: "lead_assignments" },
         refreshCRM
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "follow_up_reminders" },
+        refreshCRM
+      )
       .subscribe();
 
     return () => {
@@ -530,6 +593,7 @@ function AdminPage() {
       setAdminProfile(null);
       setInquiries([]);
       setAppointments([]);
+      setFollowUpReminders([]);
       setLoading(false);
       setLoadError("");
     });
@@ -638,50 +702,45 @@ function AdminPage() {
   };
 
   const toggleInquiryStatus = async (id, newStatus) => {
-  if (!currentPermissions.canUpdateStatus) {
-    blockAction("You do not have permission to update inquiry status.");
-    return;
-  }
-
-  const selectedInquiry = inquiries.find(
-    (inquiry) => inquiry.id === id
-  );
-
-  const oldStatus = selectedInquiry?.status || "new";
-
-  try {
-    const { error } = await withTimeout(
-      supabase.from("inquiries").update({ status: newStatus }).eq("id", id),
-      "Update inquiry status"
-    );
-
-    if (error) {
-      console.error(error);
-      alert("Failed to update inquiry status.");
+    if (!currentPermissions.canUpdateStatus) {
+      blockAction("You do not have permission to update inquiry status.");
       return;
     }
 
-    safeSetState(() =>
-      setInquiries((current) =>
-        current.map((inquiry) =>
-          inquiry.id === id
-            ? { ...inquiry, status: newStatus }
-            : inquiry
-        )
-      )
-    );
+    const selectedInquiry = inquiries.find((inquiry) => inquiry.id === id);
+    const oldStatus = selectedInquiry?.status || "new";
 
-    await logActivity({
-      action: "Updated inquiry pipeline",
-      targetType: "inquiry",
-      targetId: id,
-      details: `Changed inquiry stage from ${oldStatus} to ${newStatus}.`,
-    });
-  } catch (error) {
-    console.error(error);
-    alert("Pipeline update timed out or failed.");
-  }
-};
+    try {
+      const { error } = await withTimeout(
+        supabase.from("inquiries").update({ status: newStatus }).eq("id", id),
+        "Update inquiry status"
+      );
+
+      if (error) {
+        console.error(error);
+        alert("Failed to update inquiry status.");
+        return;
+      }
+
+      safeSetState(() =>
+        setInquiries((current) =>
+          current.map((inquiry) =>
+            inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
+          )
+        )
+      );
+
+      await logActivity({
+        action: "Updated inquiry pipeline",
+        targetType: "inquiry",
+        targetId: id,
+        details: `Changed inquiry stage from ${oldStatus} to ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error(error);
+      alert("Pipeline update timed out or failed.");
+    }
+  };
 
   const updateInquiryPriority = async (id, newPriority) => {
     if (!currentPermissions.canUpdatePriority) {
@@ -829,8 +888,6 @@ function AdminPage() {
           alert("Status updated, but confirmation email failed.");
           return;
         }
-
-
 
         alert("Appointment confirmed and confirmation email sent.");
       }
@@ -1163,9 +1220,7 @@ function AdminPage() {
       inquiry.assigned_admin_name?.toLowerCase().includes(searchText);
 
     const matchesStatus =
-      statusFilter === "All" ||
-      status === filterValue ||
-      priority === filterValue;
+      statusFilter === "All" || status === filterValue || priority === filterValue;
 
     return matchesSearch && matchesStatus;
   });
@@ -1451,7 +1506,8 @@ function AdminPage() {
             activeTab !== "settings" &&
             activeTab !== "admin-management" &&
             activeTab !== "activity-logs" &&
-            activeTab !== "my-leads" && activeTab !== "followups" && (
+            activeTab !== "my-leads" &&
+            activeTab !== "followups" && (
               <>
                 <NotificationCenter
                   cardClass={cardClass}
@@ -1477,16 +1533,16 @@ function AdminPage() {
             )}
 
           {activeTab === "followups" ? (
-  <FollowUpDashboard cardClass={cardClass} />
-) : activeTab === "automation" ? (
-  <CrmAutomationPanel
-    cardClass={cardClass}
-    inquiries={inquiries}
-    appointments={appointments}
-  />
-) : activeTab === "my-leads" ? (
-  <MyLeadsPanel cardClass={cardClass} adminProfile={adminProfile} />
-) : activeTab === "activity-logs" ? (
+            <FollowUpDashboard cardClass={cardClass} />
+          ) : activeTab === "automation" ? (
+            <CrmAutomationPanel
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+            />
+          ) : activeTab === "my-leads" ? (
+            <MyLeadsPanel cardClass={cardClass} adminProfile={adminProfile} />
+          ) : activeTab === "activity-logs" ? (
             <AdminActivityLogs cardClass={cardClass} />
           ) : activeTab === "admin-management" ? (
             <AdminManagement
@@ -1504,38 +1560,99 @@ function AdminPage() {
               transition={{ duration: 0.22 }}
               className="space-y-6"
             >
-
               <CrmKpiAnalytics
-  cardClass={cardClass}
-  inquiries={inquiries}
-  appointments={appointments}
-/>
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+              />
 
-<StaffPerformanceAnalytics
-  cardClass={cardClass}
-  inquiries={inquiries}
-  appointments={appointments}
-/>
+              <CrmCommandCenter
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+                followUpReminders={followUpReminders}
+              />
 
-<LeadScoringAnalytics
-  cardClass={cardClass}
-  inquiries={inquiries}
-  appointments={appointments}
-/>
+              <StaffPerformanceAnalytics
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+              />
 
-<ConversionAnalytics
-  cardClass={cardClass}
-  inquiries={inquiries}
-  appointments={appointments}
-/>
+              <StaffLeaderboard
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+              />
 
-<OverdueEscalationPanel cardClass={cardClass} />
+              <LeadScoringAnalytics
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+              />
 
-<AutoReminderGenerator
-  cardClass={cardClass}
-  inquiries={inquiries}
-  appointments={appointments}
-/>
+              <AiLeadPrioritizationPanel
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+              />
+
+              <ConversionAnalytics
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+              />
+
+              <LuxuryAnalyticsCharts
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+                followUpReminders={followUpReminders}
+              />
+
+              <OverdueEscalationPanel cardClass={cardClass} />
+
+              <AutoReminderGenerator
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+              />
+
+              <AutoStageMovementPanel
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+              updateInquiryStatus={toggleInquiryStatus}
+              updateAppointmentStage={updateAppointmentStage}
+              updateAppointmentStatus={updateAppointmentStatus}
+              />
+
+              <ProductivityHeatmap
+                cardClass={cardClass}
+                inquiries={inquiries}
+                appointments={appointments}
+                followUpReminders={followUpReminders}
+              />
+
+              <NotificationActionCenter
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+              followUpReminders={followUpReminders}
+              updateInquiryStatus={toggleInquiryStatus}
+              updateAppointmentStatus={updateAppointmentStatus}
+              setActiveTab={setActiveTab}
+            />
+
+            <ReminderCompletionAnalytics
+              cardClass={cardClass}
+              followUpReminders={followUpReminders}
+            />
+
+            <ConversionFunnelChart
+              cardClass={cardClass}
+              inquiries={inquiries}
+            />
 
               <DashboardAnalytics
                 cardClass={cardClass}

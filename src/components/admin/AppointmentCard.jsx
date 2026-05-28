@@ -5,6 +5,7 @@ import {
   legacyAppointmentStatusToStage,
   getPipelineStage,
 } from "../../data/crmPipelineConfig";
+import { enrichLeadWithAi } from "../../services/aiLeadEngine";
 
 function AppointmentCard({
   appointment,
@@ -20,6 +21,7 @@ function AppointmentCard({
 }) {
   const status = appointment.status || "pending";
   const priority = appointment.priority || "low";
+  const aiLead = enrichLeadWithAi(appointment, "appointment");
   const appointmentStage =
     appointment.appointment_stage ||
     legacyAppointmentStatusToStage[status] ||
@@ -206,14 +208,22 @@ function AppointmentCard({
             </h2>
           </div>
 
-          {!compact && (
+          <div className="flex flex-wrap items-center gap-2">
             <div
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${currentRole.badge}`}
+              className={`inline-flex items-center gap-2 rounded-full border ${aiLead.ai_tier.border} ${aiLead.ai_tier.bg} px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${aiLead.ai_tier.color}`}
             >
-              <span>{currentRole.icon}</span>
-              {currentRole.label}
+              {aiLead.ai_tier.badge} · {aiLead.ai_score}/100
             </div>
-          )}
+
+            {!compact && (
+              <div
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${currentRole.badge}`}
+              >
+                <span>{currentRole.icon}</span>
+                {currentRole.label}
+              </div>
+            )}
+          </div>
         </div>
 
         <div
@@ -238,6 +248,14 @@ function AppointmentCard({
             Status: {status}
           </span>
 
+          <span className="w-fit shrink-0 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]">
+            AI: {aiLead.ai_conversion_probability}
+          </span>
+
+          <span className="w-fit shrink-0 rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-300">
+            Urgency: {aiLead.ai_urgency.label}
+          </span>
+
           <AssignmentBadge
             assignedAdminName={assignedAdminName}
             assignedAdminInitial={assignedAdminInitial}
@@ -250,6 +268,31 @@ function AppointmentCard({
           )}
         </div>
       </div>
+
+      {!compact && (
+        <div className="relative mt-4 rounded-[1.2rem] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.06] p-4 transition duration-300 group-hover:border-[#D4AF37]/25 sm:mt-5 sm:rounded-[1.4rem] sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] uppercase tracking-[0.24em] text-[#D4AF37] sm:text-[10px] sm:tracking-[0.32em]">
+                AI Recommended Action
+              </p>
+
+              <p className="mt-2 text-sm leading-relaxed text-gray-200">
+                {aiLead.ai_recommended_action}
+              </p>
+            </div>
+
+            <div className="shrink-0 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500">
+                Score
+              </p>
+              <p className="mt-1 text-2xl font-black text-[#D4AF37]">
+                {aiLead.ai_score}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!compact && (
         <div
