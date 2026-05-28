@@ -17,6 +17,12 @@ import AdminActivityLogs from "../components/admin/AdminActivityLogs";
 import MyLeadsPanel from "../components/admin/MyLeadsPanel";
 import FollowUpDashboard from "../components/admin/FollowUpDashboard";
 import CrmAutomationPanel from "../components/admin/CrmAutomationPanel";
+import CrmKpiAnalytics from "../components/admin/CrmKpiAnalytics";
+import StaffPerformanceAnalytics from "../components/admin/StaffPerformanceAnalytics";
+import LeadScoringAnalytics from "../components/admin/LeadScoringAnalytics";
+import ConversionAnalytics from "../components/admin/ConversionAnalytics";
+import OverdueEscalationPanel from "../components/admin/OverdueEscalationPanel";
+import AutoReminderGenerator from "../components/admin/AutoReminderGenerator";
 
 
 const REQUEST_TIMEOUT_MS = 25000;
@@ -1498,6 +1504,39 @@ function AdminPage() {
               transition={{ duration: 0.22 }}
               className="space-y-6"
             >
+
+              <CrmKpiAnalytics
+  cardClass={cardClass}
+  inquiries={inquiries}
+  appointments={appointments}
+/>
+
+<StaffPerformanceAnalytics
+  cardClass={cardClass}
+  inquiries={inquiries}
+  appointments={appointments}
+/>
+
+<LeadScoringAnalytics
+  cardClass={cardClass}
+  inquiries={inquiries}
+  appointments={appointments}
+/>
+
+<ConversionAnalytics
+  cardClass={cardClass}
+  inquiries={inquiries}
+  appointments={appointments}
+/>
+
+<OverdueEscalationPanel cardClass={cardClass} />
+
+<AutoReminderGenerator
+  cardClass={cardClass}
+  inquiries={inquiries}
+  appointments={appointments}
+/>
+
               <DashboardAnalytics
                 cardClass={cardClass}
                 inquiries={inquiries}
