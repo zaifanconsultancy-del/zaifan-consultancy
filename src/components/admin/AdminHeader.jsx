@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
 
 function AdminHeader({
   inquiries = [],
@@ -19,6 +20,7 @@ function AdminHeader({
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotifications, setReadNotifications] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [followUpAlerts, setFollowUpAlerts] = useState([]);
 
   const safePermissions = {
     canDelete: false,
@@ -67,6 +69,7 @@ function AdminHeader({
   ).length;
 
   const vipLeads = allLeads.filter((lead) => lead.priority === "vip").length;
+
   const highPriorityLeads = allLeads.filter(
     (lead) => lead.priority === "high"
   ).length;
@@ -74,8 +77,93 @@ function AdminHeader({
   const assignedLeads = allLeads.filter((lead) => lead.assigned_admin_id).length;
   const unassignedLeads = Math.max(allLeads.length - assignedLeads, 0);
 
+  const todayKey = new Date().toISOString().slice(0, 10);
+
+  const fetchFollowUpAlerts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("follow_up_reminders")
+        .select("*")
+        .neq("status", "completed")
+        .order("due_date", { ascending: true })
+        .limit(80);
+
+      if (error) {
+        console.error("Follow-up notification fetch failed:", error);
+        setFollowUpAlerts([]);
+        return;
+      }
+
+      setFollowUpAlerts(data || []);
+    } catch (error) {
+      console.error("Follow-up notification crash:", error);
+      setFollowUpAlerts([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchFollowUpAlerts();
+
+    const channel = supabase
+      .channel("admin-header-follow-up-alerts")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "follow_up_reminders" },
+        fetchFollowUpAlerts
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const reminderStats = useMemo(() => {
+    const activeReminders = followUpAlerts.filter(
+      (reminder) => reminder.status !== "completed"
+    );
+
+    const overdue = activeReminders.filter((reminder) => {
+      if (!reminder.due_date) return false;
+      return String(reminder.due_date).slice(0, 10) < todayKey;
+    });
+
+    const today = activeReminders.filter((reminder) => {
+      if (!reminder.due_date) return false;
+      return String(reminder.due_date).slice(0, 10) === todayKey;
+    });
+
+    return {
+      active: activeReminders.length,
+      overdue: overdue.length,
+      today: today.length,
+    };
+  }, [followUpAlerts, todayKey]);
+
   const notifications = useMemo(
     () => [
+      {
+        id: "overdue-followups",
+        icon: "🚨",
+        title: "Overdue Follow-ups",
+        text: `${reminderStats.overdue} reminders are overdue and need action`,
+        show: reminderStats.overdue > 0,
+        color: "text-red-300",
+        glow: "bg-red-500/10",
+        time: "Overdue",
+        priority: "urgent",
+      },
+      {
+        id: "today-followups",
+        icon: "⏰",
+        title: "Follow-ups Today",
+        text: `${reminderStats.today} reminders are due today`,
+        show: reminderStats.today > 0,
+        color: "text-orange-300",
+        glow: "bg-orange-500/10",
+        time: "Today",
+        priority: "high",
+      },
       {
         id: "new-inquiries",
         icon: "📨",
@@ -144,6 +232,8 @@ function AdminHeader({
       },
     ],
     [
+      reminderStats.overdue,
+      reminderStats.today,
       newInquiries,
       appointmentPendingCount,
       confirmedAppointments,
@@ -173,9 +263,9 @@ function AdminHeader({
       color: "text-green-400",
     },
     {
-      label: "VIP Leads",
-      value: vipLeads,
-      color: "text-purple-300",
+      label: "Follow-ups",
+      value: reminderStats.active,
+      color: "text-orange-300",
     },
     {
       label: "Open Pool",
@@ -197,7 +287,7 @@ function AdminHeader({
     setRefreshing(true);
 
     try {
-      await fetchAllData();
+      await Promise.all([fetchAllData(), fetchFollowUpAlerts()]);
     } finally {
       setTimeout(() => setRefreshing(false), 350);
     }
@@ -245,6 +335,7 @@ function AdminHeader({
 
   useEffect(() => {
     const visibleIds = visibleNotifications.map((item) => item.id);
+
     setReadNotifications((current) =>
       current.filter((id) => visibleIds.includes(id))
     );
@@ -333,7 +424,7 @@ function AdminHeader({
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
-                  setShowNotifications(!showNotifications);
+                  setShowNotifications((current) => !current);
                 }}
                 className="group relative flex h-14 w-14 items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/[0.04] text-2xl text-white transition duration-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10"
               >
@@ -357,7 +448,7 @@ function AdminHeader({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 14, scale: 0.96 }}
                     transition={{ duration: 0.22 }}
-                    className="absolute right-0 top-[72px] z-[999] w-[min(92vw,420px)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#070707]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl"
+                    className="absolute right-0 top-[72px] z-[999] w-[min(92vw,430px)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#070707]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl"
                   >
                     <div className="relative overflow-hidden border-b border-white/10 p-5">
                       <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
@@ -373,7 +464,8 @@ function AdminHeader({
                           </h3>
 
                           <p className="mt-2 text-xs leading-relaxed text-gray-400">
-                            Real-time operational signals from your CRM system.
+                            Real-time signals from leads, appointments, and
+                            follow-up reminders.
                           </p>
                         </div>
 
@@ -389,7 +481,7 @@ function AdminHeader({
                       </div>
                     </div>
 
-                    <div className="max-h-[460px] overflow-y-auto p-3 [scrollbar-width:thin] [scrollbar-color:#D4AF37_transparent]">
+                    <div className="max-h-[460px] overflow-y-auto p-3 [scrollbar-color:#D4AF37_transparent] [scrollbar-width:thin]">
                       {visibleNotifications.length === 0 ? (
                         <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-black/25 p-8 text-center">
                           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-3xl">
@@ -415,7 +507,10 @@ function AdminHeader({
                                 type="button"
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, delay: index * 0.03 }}
+                                transition={{
+                                  duration: 0.2,
+                                  delay: index * 0.03,
+                                }}
                                 onClick={() => markSingleAsRead(item.id)}
                                 className={`group relative w-full overflow-hidden rounded-[1.4rem] border p-4 text-left transition duration-300 ${
                                   isRead
@@ -437,7 +532,9 @@ function AdminHeader({
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
-                                        <p className={`text-sm font-black ${item.color}`}>
+                                        <p
+                                          className={`text-sm font-black ${item.color}`}
+                                        >
                                           {item.title}
                                         </p>
 
@@ -454,7 +551,9 @@ function AdminHeader({
                                     <div className="mt-3 flex items-center justify-between">
                                       <span
                                         className={`rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] ${
-                                          item.priority === "vip"
+                                          item.priority === "urgent"
+                                            ? "border border-red-400/30 bg-red-500/10 text-red-200"
+                                            : item.priority === "vip"
                                             ? "border border-purple-400/20 bg-purple-500/10 text-purple-300"
                                             : item.priority === "high"
                                             ? "border border-red-400/20 bg-red-500/10 text-red-300"
@@ -479,9 +578,21 @@ function AdminHeader({
 
                     <div className="border-t border-white/10 p-4">
                       <div className="grid grid-cols-3 gap-2">
-                        <MiniStat label="Unread" value={notificationCount} color="text-[#D4AF37]" />
-                        <MiniStat label="VIP" value={vipLeads} color="text-purple-300" />
-                        <MiniStat label="Open" value={unassignedLeads} color="text-cyan-300" />
+                        <MiniStat
+                          label="Unread"
+                          value={notificationCount}
+                          color="text-[#D4AF37]"
+                        />
+                        <MiniStat
+                          label="Overdue"
+                          value={reminderStats.overdue}
+                          color="text-red-300"
+                        />
+                        <MiniStat
+                          label="Today"
+                          value={reminderStats.today}
+                          color="text-orange-300"
+                        />
                       </div>
                     </div>
                   </motion.div>
@@ -513,7 +624,9 @@ function AdminHeader({
             onClick={handleClear}
             label={
               safePermissions.canClearAll
-                ? `Clear ${activeTab === "inquiries" ? "Inquiries" : "Appointments"}`
+                ? `Clear ${
+                    activeTab === "inquiries" ? "Inquiries" : "Appointments"
+                  }`
                 : "Clear Locked"
             }
             icon="🗑️"
@@ -526,14 +639,21 @@ function AdminHeader({
   );
 }
 
-function ActionButton({ onClick, label, icon, variant = "default", disabled = false }) {
+function ActionButton({
+  onClick,
+  label,
+  icon,
+  variant = "default",
+  disabled = false,
+}) {
   const variants = {
     default:
       "border border-white/10 bg-white/[0.04] text-gray-300 hover:border-[#D4AF37]/40 hover:text-[#D4AF37]",
     gold: "bg-[#D4AF37] text-black hover:bg-[#E7C768]",
     danger:
       "border border-red-400/20 bg-red-400/10 text-red-300 hover:border-red-400 hover:bg-red-400/15",
-    locked: "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500",
+    locked:
+      "cursor-not-allowed border border-white/10 bg-white/[0.03] text-gray-500",
   };
 
   return (

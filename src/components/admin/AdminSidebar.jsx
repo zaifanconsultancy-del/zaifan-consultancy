@@ -56,6 +56,12 @@ function AdminSidebar({
   { id: "appointments", label: "Appointments", icon: "📅", locked: false },
   { id: "my-leads", label: "My Leads", icon: "🎯", locked: false },
   { id: "followups", label: "Follow-ups", icon: "⏰", locked: false },
+  {
+  id: "automation",
+  label: "Automation",
+  icon: "🤖",
+  locked: false,
+},
 ],
     },
     {

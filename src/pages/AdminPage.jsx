@@ -16,6 +16,7 @@ import AdminManagement from "../components/admin/AdminManagement";
 import AdminActivityLogs from "../components/admin/AdminActivityLogs";
 import MyLeadsPanel from "../components/admin/MyLeadsPanel";
 import FollowUpDashboard from "../components/admin/FollowUpDashboard";
+import CrmAutomationPanel from "../components/admin/CrmAutomationPanel";
 
 
 const REQUEST_TIMEOUT_MS = 25000;
@@ -58,7 +59,6 @@ function AdminPage() {
   const [profileError, setProfileError] = useState("");
   const [profileRetryCount, setProfileRetryCount] = useState(0);
   const [loadError, setLoadError] = useState("");
-
   const mountedRef = useRef(true);
   const loadingRef = useRef(false);
   const profileFetchIdRef = useRef(0);
@@ -1472,6 +1472,12 @@ function AdminPage() {
 
           {activeTab === "followups" ? (
   <FollowUpDashboard cardClass={cardClass} />
+) : activeTab === "automation" ? (
+  <CrmAutomationPanel
+    cardClass={cardClass}
+    inquiries={inquiries}
+    appointments={appointments}
+  />
 ) : activeTab === "my-leads" ? (
   <MyLeadsPanel cardClass={cardClass} adminProfile={adminProfile} />
 ) : activeTab === "activity-logs" ? (
