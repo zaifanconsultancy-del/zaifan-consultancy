@@ -34,6 +34,8 @@ import ReminderCompletionAnalytics from "../components/admin/ReminderCompletionA
 import ConversionFunnelChart from "../components/admin/ConversionFunnelChart";
 import CrmCommandCenter from "../components/admin/CrmCommandCenter";
 import AiLeadIntelligenceFeed from "../components/admin/AiLeadIntelligenceFeed";
+import AnalyticsSectionWrapper from "../components/admin/AnalyticsSectionWrapper";
+import CommandPalette from "../components/admin/CommandPalette";
 
 const REQUEST_TIMEOUT_MS = 25000;
 const PROFILE_RETRY_LIMIT = 3;
@@ -71,29 +73,12 @@ function AdminPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
-  useRealtimeCRM({
-  enabled: isLoggedIn,
 
-  onInquiryChange: () => {
-    fetchInquiries();
-  },
-
-  onAppointmentChange: () => {
-    fetchAppointments();
-  },
-
-  onReminderChange: () => {
-    fetchFollowUpReminders();
-  },
-
-  onAnyChange: () => {
-  fetchAllData({ silent: true });
-},
-});
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [profileRetryCount, setProfileRetryCount] = useState(0);
   const [loadError, setLoadError] = useState("");
+
   const mountedRef = useRef(true);
   const loadingRef = useRef(false);
   const profileFetchIdRef = useRef(0);
@@ -237,7 +222,7 @@ function AdminPage() {
           try {
             localStorage.setItem(cachedProfileKey, JSON.stringify(data));
           } catch {
-            // Ignore localStorage issues.
+            // ignore localStorage issues
           }
 
           safeSetState(() => {
@@ -412,6 +397,7 @@ function AdminPage() {
         fetchAppointments(),
         fetchFollowUpReminders(),
       ]);
+
       const failed = results.filter((result) => result.status === "rejected");
 
       if (failed.length > 0) {
@@ -435,6 +421,26 @@ function AdminPage() {
     }
   };
 
+  useRealtimeCRM({
+    enabled: isLoggedIn && !!adminProfile,
+
+    onInquiryChange: () => {
+      fetchAllData({ silent: true });
+    },
+
+    onAppointmentChange: () => {
+      fetchAllData({ silent: true });
+    },
+
+    onReminderChange: () => {
+      fetchAllData({ silent: true });
+    },
+
+    onAnyChange: () => {
+      fetchAllData({ silent: true });
+    },
+  });
+
   useEffect(() => {
     mountedRef.current = true;
 
@@ -450,6 +456,7 @@ function AdminPage() {
             setIsLoggedIn(true);
             setAdminUser(data.session.user);
           });
+
           await loadAdminProfile(data.session.user.id);
         } else {
           safeSetState(() => {
@@ -504,50 +511,9 @@ function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && adminProfile) fetchAllData();
-  }, [isLoggedIn, adminProfile?.id]);
-
-  useEffect(() => {
-    if (!isLoggedIn || !adminProfile) return;
-
-    let refreshTimeout;
-
-    const refreshCRM = () => {
-      clearTimeout(refreshTimeout);
-
-      refreshTimeout = setTimeout(() => {
-        fetchAllData({ silent: true });
-      }, 500);
-    };
-
-    const channel = supabase
-      .channel(`zaifan-crm-realtime-${adminProfile.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "inquiries" },
-        refreshCRM
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "appointments" },
-        refreshCRM
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "lead_assignments" },
-        refreshCRM
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "follow_up_reminders" },
-        refreshCRM
-      )
-      .subscribe();
-
-    return () => {
-      clearTimeout(refreshTimeout);
-      supabase.removeChannel(channel);
-    };
+    if (isLoggedIn && adminProfile) {
+      fetchAllData();
+    }
   }, [isLoggedIn, adminProfile?.id]);
 
   const handleLogin = async (event) => {
@@ -995,7 +961,7 @@ function AdminPage() {
       );
 
       alert(
-        "Appointment pipeline update timed out. I increased the timeout to 25 seconds in this file. If it still happens, run the appointments SQL/RLS fix."
+        "Appointment pipeline update timed out. If it still happens, run the appointments SQL/RLS fix."
       );
     }
   };
@@ -1326,6 +1292,22 @@ function AdminPage() {
           "Low",
         ];
 
+  const analyticsNavItems = [
+    ["command", "Command"],
+    ["kpi", "KPI"],
+    ["intelligence", "AI Feed"],
+    ["staff", "Staff"],
+    ["scoring", "Scoring"],
+    ["conversion", "Conversion"],
+    ["charts", "Charts"],
+    ["automation", "Automation"],
+    ["actions", "Actions"],
+    ["funnel", "Funnel"],
+    ["overview", "Overview"],
+  ];
+
+  const AnalyticsSection = AnalyticsSectionWrapper;
+
   if (!sessionChecked || (profileLoading && !adminProfile)) {
     return (
       <section className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-white">
@@ -1410,11 +1392,6 @@ function AdminPage() {
               Logout
             </button>
           </div>
-
-          <p className="mt-5 text-xs leading-relaxed text-gray-500">
-            If retry works after a browser refresh, the database row is fine.
-            This screen is now a safe fallback instead of a hard crash.
-          </p>
         </div>
       </section>
     );
@@ -1432,6 +1409,15 @@ function AdminPage() {
           logout={logout}
           role={role}
           adminProfile={adminProfile}
+          permissions={currentPermissions}
+        />
+
+        <CommandPalette
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          inquiries={inquiries}
+          appointments={appointments}
+          followUpReminders={followUpReminders}
           permissions={currentPermissions}
         />
 
@@ -1560,119 +1546,217 @@ function AdminPage() {
               transition={{ duration: 0.22 }}
               className="space-y-6"
             >
-              <CrmKpiAnalytics
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-              />
+              <div className="sticky top-3 z-20 rounded-[1.5rem] border border-white/10 bg-black/70 p-3 shadow-2xl shadow-black/30 backdrop-blur-2xl">
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {analyticsNavItems.map(([id, label]) => (
+                    <a
+                      key={id}
+                      href={`#${id}`}
+                      className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-gray-300 transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10 hover:text-[#D4AF37]"
+                    >
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              </div>
 
-              <CrmCommandCenter
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-                followUpReminders={followUpReminders}
-              />
+              <AnalyticsSection
+                id="command"
+                eyebrow="Enterprise Control"
+                title="CRM Command Center"
+              >
+                <CrmCommandCenter
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                  followUpReminders={followUpReminders}
+                />
+              </AnalyticsSection>
 
-              <StaffPerformanceAnalytics
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-              />
+              <AnalyticsSection
+                id="kpi"
+                eyebrow="Performance Overview"
+                title="KPI Analytics"
+              >
+                <CrmKpiAnalytics
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                />
+              </AnalyticsSection>
 
-              <StaffLeaderboard
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-              />
+              <AnalyticsSection
+                id="intelligence"
+                eyebrow="AI Intelligence"
+                title="Lead Intelligence Feed"
+              >
+                <div className="grid gap-6 2xl:grid-cols-2">
+                  <AiLeadIntelligenceFeed
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                  />
 
-              <LeadScoringAnalytics
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-              />
+                  <AiLeadPrioritizationPanel
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                  />
+                </div>
+              </AnalyticsSection>
 
-              <AiLeadPrioritizationPanel
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-              />
+              <AnalyticsSection
+                id="staff"
+                eyebrow="Team Performance"
+                title="Staff Analytics"
+              >
+                <div className="grid gap-6 2xl:grid-cols-2">
+                  <StaffPerformanceAnalytics
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                  />
 
-              <ConversionAnalytics
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-              />
+                  <StaffLeaderboard
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                  />
+                </div>
+              </AnalyticsSection>
 
-              <LuxuryAnalyticsCharts
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-                followUpReminders={followUpReminders}
-              />
+              <AnalyticsSection
+                id="scoring"
+                eyebrow="Lead Quality"
+                title="Lead Scoring"
+              >
+                <LeadScoringAnalytics
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                />
+              </AnalyticsSection>
 
-              <OverdueEscalationPanel cardClass={cardClass} />
+              <AnalyticsSection
+                id="conversion"
+                eyebrow="Revenue Movement"
+                title="Conversion Analytics"
+              >
+                <ConversionAnalytics
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                />
+              </AnalyticsSection>
 
-              <AutoReminderGenerator
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-              />
+              <AnalyticsSection
+                id="charts"
+                eyebrow="Visual Intelligence"
+                title="Luxury Charts"
+              >
+                <LuxuryAnalyticsCharts
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                  followUpReminders={followUpReminders}
+                />
+              </AnalyticsSection>
 
-              <AutoStageMovementPanel
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-              updateInquiryStatus={toggleInquiryStatus}
-              updateAppointmentStage={updateAppointmentStage}
-              updateAppointmentStatus={updateAppointmentStatus}
-              />
+              <AnalyticsSection
+                id="automation"
+                eyebrow="Automation Layer"
+                title="Escalations, Reminders & Stage Movement"
+              >
+                <div className="grid gap-6 2xl:grid-cols-2">
+                  <OverdueEscalationPanel cardClass={cardClass} />
 
-              <ProductivityHeatmap
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-                followUpReminders={followUpReminders}
-              />
+                  <AutoReminderGenerator
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                  />
 
-              <NotificationActionCenter
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-              followUpReminders={followUpReminders}
-              updateInquiryStatus={toggleInquiryStatus}
-              updateAppointmentStatus={updateAppointmentStatus}
-              setActiveTab={setActiveTab}
-            />
+                  <AutoStageMovementPanel
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                    updateInquiryStatus={toggleInquiryStatus}
+                    updateAppointmentStage={updateAppointmentStage}
+                    updateAppointmentStatus={updateAppointmentStatus}
+                  />
 
-            <ReminderCompletionAnalytics
-              cardClass={cardClass}
-              followUpReminders={followUpReminders}
-            />
+                  <ProductivityHeatmap
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                    followUpReminders={followUpReminders}
+                  />
+                </div>
+              </AnalyticsSection>
 
-            <ConversionFunnelChart
-              cardClass={cardClass}
-              inquiries={inquiries}
-            />
+              <AnalyticsSection
+                id="actions"
+                eyebrow="Action Center"
+                title="Notification Actions & Reminder Analytics"
+              >
+                <div className="grid gap-6 2xl:grid-cols-2">
+                  <NotificationActionCenter
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                    followUpReminders={followUpReminders}
+                    updateInquiryStatus={toggleInquiryStatus}
+                    updateAppointmentStatus={updateAppointmentStatus}
+                    setActiveTab={setActiveTab}
+                  />
 
-              <DashboardAnalytics
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-              />
+                  <ReminderCompletionAnalytics
+                    cardClass={cardClass}
+                    followUpReminders={followUpReminders}
+                  />
+                </div>
+              </AnalyticsSection>
 
-              <DashboardOverview
-                cardClass={cardClass}
-                todayInquiriesCount={todayInquiriesCount}
-                todayAppointmentsCount={todayAppointmentsCount}
-                latestInquiry={latestInquiry}
-                latestAppointment={latestAppointment}
-              />
+              <AnalyticsSection
+                id="funnel"
+                eyebrow="Pipeline Health"
+                title="Conversion Funnel"
+              >
+                <ConversionFunnelChart
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                />
+              </AnalyticsSection>
 
-              <ActivityTimeline
-                cardClass={cardClass}
-                inquiries={inquiries}
-                appointments={appointments}
-              />
+              <AnalyticsSection
+                id="overview"
+                eyebrow="Classic Dashboard"
+                title="Overview, Analytics & Timeline"
+              >
+                <div className="grid gap-6 2xl:grid-cols-2">
+                  <DashboardAnalytics
+                    cardClass={cardClass}
+                    inquiries={inquiries}
+                    appointments={appointments}
+                  />
+
+                  <DashboardOverview
+                    cardClass={cardClass}
+                    todayInquiriesCount={todayInquiriesCount}
+                    todayAppointmentsCount={todayAppointmentsCount}
+                    latestInquiry={latestInquiry}
+                    latestAppointment={latestAppointment}
+                  />
+
+                  <div className="2xl:col-span-2">
+                    <ActivityTimeline
+                      cardClass={cardClass}
+                      inquiries={inquiries}
+                      appointments={appointments}
+                    />
+                  </div>
+                </div>
+              </AnalyticsSection>
             </motion.div>
           ) : activeTab === "settings" ? (
             <motion.div

@@ -1,10 +1,9 @@
-import { motion } from "framer-motion";
 import {
   Activity,
   CalendarDays,
   Flame,
   Grid3X3,
-  Pulse,
+  HeartPulse,
   Sparkles,
   Target,
   TrendingUp,
