@@ -2,9 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import {
-  AlertTriangle,
   Bot,
-  CheckCircle2,
   Clipboard,
   Copy,
   Crown,
@@ -16,6 +14,7 @@ import {
   Target,
   Clock,
   TrendingUp,
+  CheckCircle2,
 } from "lucide-react";
 
 function AICounselorAssistant({
@@ -25,7 +24,7 @@ function AICounselorAssistant({
 }) {
   const [activeDraft, setActiveDraft] = useState("summary");
   const [copied, setCopied] = useState("");
-const [creatingReminder, setCreatingReminder] = useState(false);
+  const [creatingReminder, setCreatingReminder] = useState(false);
 
   const aiData = useMemo(
     () =>
@@ -76,7 +75,7 @@ const [creatingReminder, setCreatingReminder] = useState(false);
 
   const copyText = async (label, text) => {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(text || "");
       setCopied(label);
 
       setTimeout(() => {
@@ -89,15 +88,18 @@ const [creatingReminder, setCreatingReminder] = useState(false);
   };
 
   const createReminderFromAI = async () => {
-  try {
-    setCreatingReminder(true);
+    if (!student?.id) {
+      alert("Student ID missing. Reminder cannot be created.");
+      return;
+    }
 
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 3);
+    try {
+      setCreatingReminder(true);
 
-    const { error } = await supabase
-      .from("follow_up_reminders")
-      .insert({
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 3);
+
+      const { error } = await supabase.from("follow_up_reminders").insert({
         student_id: student.id,
         student_type: studentType,
         status: "pending",
@@ -105,16 +107,16 @@ const [creatingReminder, setCreatingReminder] = useState(false);
         notes: aiData.reminder,
       });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    alert("AI reminder created successfully.");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to create reminder.");
-  } finally {
-    setCreatingReminder(false);
-  }
-};
+      alert("AI reminder created successfully.");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to create reminder.");
+    } finally {
+      setCreatingReminder(false);
+    }
+  };
 
   return (
     <motion.section
@@ -216,33 +218,61 @@ const [creatingReminder, setCreatingReminder] = useState(false);
           </div>
 
           <div className="flex flex-wrap gap-2">
-  <button
-    type="button"
-    onClick={createReminderFromAI}
-    disabled={creatingReminder}
-    className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/15 disabled:opacity-50"
-  >
-    {creatingReminder ? "Creating..." : "Create Reminder"}
-  </button>
+            <button
+              type="button"
+              onClick={() => copyText("Summary", aiData.summary)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white/70 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
+            >
+              <FileText className="h-4 w-4" />
+              {copied === "Summary" ? "Copied" : "Copy Summary"}
+            </button>
 
-  <button
-    type="button"
-    onClick={() => copyText(activeTab.label, activeTab.content)}
-    className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:bg-[#D4AF37]/15"
-  >
-    {copied === activeTab.label ? (
-      <>
-        <Clipboard className="h-4 w-4" />
-        Copied
-      </>
-    ) : (
-      <>
-        <Copy className="h-4 w-4" />
-        Copy
-      </>
-    )}
-  </button>
-</div>
+            <button
+              type="button"
+              onClick={() => copyText("WhatsApp", aiData.whatsapp)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/15"
+            >
+              <MessageCircle className="h-4 w-4" />
+              {copied === "WhatsApp" ? "Copied" : "Copy WhatsApp"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => copyText("Email", aiData.email)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-300 transition hover:bg-blue-500/15"
+            >
+              <Mail className="h-4 w-4" />
+              {copied === "Email" ? "Copied" : "Copy Email"}
+            </button>
+
+            <button
+              type="button"
+              onClick={createReminderFromAI}
+              disabled={creatingReminder}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:bg-[#D4AF37]/15 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Clock className="h-4 w-4" />
+              {creatingReminder ? "Creating..." : "Create Reminder"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => copyText(activeTab.label, activeTab.content)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37]/25 bg-black/30 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:bg-[#D4AF37]/10"
+            >
+              {copied === activeTab.label ? (
+                <>
+                  <Clipboard className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy Active
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.035] p-4">
@@ -253,8 +283,8 @@ const [creatingReminder, setCreatingReminder] = useState(false);
       </div>
 
       <div className="rounded-[1.5rem] border border-blue-400/15 bg-blue-500/10 p-4 text-sm leading-relaxed text-blue-100/80">
-        Template-based Copilot is active. Later we can connect real GPT for
-        live AI summaries, visa risk analysis, counselor coaching, and automatic
+        Template-based Copilot is active. Later we can connect real GPT for live
+        AI summaries, visa risk analysis, counselor coaching, and automatic
         follow-up generation.
       </div>
     </motion.section>
@@ -291,9 +321,13 @@ function InsightCard({ icon: Icon, label, value, text, tone = "gold" }) {
   }[tone];
 
   return (
-    <div className={`rounded-[1.5rem] border ${toneClass.border} ${toneClass.bg} p-4`}>
+    <div
+      className={`rounded-[1.5rem] border ${toneClass.border} ${toneClass.bg} p-4`}
+    >
       <div className="flex items-start gap-3">
-        <div className={`rounded-2xl border ${toneClass.border} bg-black/20 p-3`}>
+        <div
+          className={`rounded-2xl border ${toneClass.border} bg-black/20 p-3`}
+        >
           <Icon className={`h-5 w-5 ${toneClass.text}`} />
         </div>
 
@@ -301,9 +335,11 @@ function InsightCard({ icon: Icon, label, value, text, tone = "gold" }) {
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">
             {label}
           </p>
+
           <h4 className={`mt-2 text-lg font-black ${toneClass.text}`}>
             {value}
           </h4>
+
           <p className="mt-1 text-xs leading-relaxed text-white/50">{text}</p>
         </div>
       </div>
@@ -313,14 +349,22 @@ function InsightCard({ icon: Icon, label, value, text, tone = "gold" }) {
 
 function buildCounselorCopilot({ student, studentType, adminProfile }) {
   const normalized = normalizeStudent(student, studentType, adminProfile);
-  const stageAdvice = getStageAdvice(normalized.status, normalized.isAppointment);
+  const stageAdvice = getStageAdvice(
+    normalized.status,
+    normalized.isAppointment
+  );
   const risk = getRiskProfile(normalized);
   const opportunity = getOpportunityProfile(normalized);
   const bestMove = getBestMove(normalized, stageAdvice, risk);
 
   const whatsapp = buildWhatsAppDraft(normalized, stageAdvice);
   const email = buildEmailDraft(normalized, stageAdvice);
-  const nextAction = buildNextAction(normalized, stageAdvice, risk, opportunity);
+  const nextAction = buildNextAction(
+    normalized,
+    stageAdvice,
+    risk,
+    opportunity
+  );
   const reminder = buildReminder(normalized, stageAdvice);
   const summary = buildSummary(normalized, risk, opportunity, bestMove);
 
@@ -368,14 +412,14 @@ function normalizeStudent(student, studentType, adminProfile) {
   const priority = String(student?.priority || "medium").toLowerCase();
 
   const adminName =
-    adminProfile?.full_name ||
-    adminProfile?.name ||
-    "Zaifan Consultancy Team";
+    adminProfile?.full_name || adminProfile?.name || "Zaifan Consultancy Team";
 
   const createdAt = student?.created_at ? new Date(student.created_at) : null;
-  const ageDays = createdAt
-    ? Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 86400000))
-    : 0;
+
+  const ageDays =
+    createdAt && !Number.isNaN(createdAt.getTime())
+      ? Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 86400000))
+      : 0;
 
   return {
     raw: student,
@@ -391,7 +435,9 @@ function normalizeStudent(student, studentType, adminProfile) {
     ageDays,
     hasPhone: Boolean(student?.phone || student?.phone_number),
     hasEmail: Boolean(student?.email),
-    hasNotes: Boolean(student?.notes || student?.message || student?.consultation_notes),
+    hasNotes: Boolean(
+      student?.notes || student?.message || student?.consultation_notes
+    ),
   };
 }
 
@@ -432,7 +478,10 @@ function getRiskProfile(data) {
     reasons.push("email missing");
   }
 
-  if (data.ageDays >= 7 && ["new", "pending"].some((s) => data.status.includes(s))) {
+  if (
+    data.ageDays >= 7 &&
+    ["new", "pending"].some((status) => data.status.includes(status))
+  ) {
     score += 30;
     reasons.push("lead is old and still pending");
   }
@@ -451,7 +500,9 @@ function getRiskProfile(data) {
     return {
       level: "High",
       tone: "red",
-      reason: reasons.length ? capitalizeWords(reasons[0]) : "Needs urgent follow-up.",
+      reason: reasons.length
+        ? capitalizeWords(reasons[0])
+        : "Needs urgent follow-up.",
     };
   }
 
@@ -512,7 +563,9 @@ function getOpportunityProfile(data) {
 
   return {
     score,
-    reason: reasons[0] ? capitalizeWords(reasons[0]) : "Standard lead with growth potential.",
+    reason: reasons[0]
+      ? capitalizeWords(reasons[0])
+      : "Standard lead with growth potential.",
   };
 }
 
@@ -551,7 +604,9 @@ function buildWhatsAppDraft(data, stageAdvice) {
 
 This is ${data.adminName} from Zaifan Consultancy.
 
-I am following up ${contextLine}. Your current status is: ${capitalizeWords(data.status)}.
+I am following up ${contextLine}. Your current status is: ${capitalizeWords(
+    data.status
+  )}.
 
 ${stageAdvice.short}
 
@@ -606,7 +661,9 @@ Recommended counselor action:
 ${getPriorityAction(data.priority)}
 
 Suggested channel: ${
-    data.priority === "vip" || data.priority === "high" || risk.level === "High"
+    data.priority === "vip" ||
+    data.priority === "high" ||
+    risk.level === "High"
       ? "Call + WhatsApp follow-up"
       : "WhatsApp follow-up"
   }.`;

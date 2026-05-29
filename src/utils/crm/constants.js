@@ -1,0 +1,3 @@
+export const REQUEST_TIMEOUT_MS = 25000;
+export const PROFILE_RETRY_LIMIT = 3;
+export const PROFILE_RETRY_DELAY_MS = 650;

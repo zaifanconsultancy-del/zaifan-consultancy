@@ -1,46 +1,64 @@
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 import AdminLogin from "../components/admin/AdminLogin";
 import AdminHeader from "../components/admin/AdminHeader";
 import AdminStats from "../components/admin/AdminStats";
-import SearchToolbar from "../components/admin/SearchToolbar";
-import DashboardContent from "../components/admin/DashboardContent";
-import DashboardOverview from "../components/admin/DashboardOverview";
-import ActivityTimeline from "../components/admin/ActivityTimeline";
 import NotificationCenter from "../components/admin/NotificationCenter";
 import AdminSidebar from "../components/admin/AdminSidebar";
-import DashboardAnalytics from "../components/admin/DashboardAnalytics";
-import AdminManagement from "../components/admin/AdminManagement";
-import AdminActivityLogs from "../components/admin/AdminActivityLogs";
-import MyLeadsPanel from "../components/admin/MyLeadsPanel";
-import FollowUpDashboard from "../components/admin/FollowUpDashboard";
-import CrmAutomationPanel from "../components/admin/CrmAutomationPanel";
-import CrmKpiAnalytics from "../components/admin/CrmKpiAnalytics";
-import StaffPerformanceAnalytics from "../components/admin/StaffPerformanceAnalytics";
-import LeadScoringAnalytics from "../components/admin/LeadScoringAnalytics";
-import ConversionAnalytics from "../components/admin/ConversionAnalytics";
-import OverdueEscalationPanel from "../components/admin/OverdueEscalationPanel";
-import AutoReminderGenerator from "../components/admin/AutoReminderGenerator";
-import LuxuryAnalyticsCharts from "../components/admin/LuxuryAnalyticsCharts";
-import AiLeadPrioritizationPanel from "../components/admin/AiLeadPrioritizationPanel";
-import StaffLeaderboard from "../components/admin/StaffLeaderboard";
-import AutoStageMovementPanel from "../components/admin/AutoStageMovementPanel";
-import ProductivityHeatmap from "../components/admin/ProductivityHeatmap";
 import useRealtimeCRM from "../hooks/useRealtimeCRM";
-import NotificationActionCenter from "../components/admin/NotificationActionCenter";
-import FollowUpPerformancePanel from "../components/admin/FollowUpPerformancePanel";
-import ConversionFunnelChart from "../components/admin/ConversionFunnelChart";
-import CrmCommandCenter from "../components/admin/CrmCommandCenter";
-import AiLeadIntelligenceFeed from "../components/admin/AiLeadIntelligenceFeed";
-import AnalyticsSectionWrapper from "../components/admin/AnalyticsSectionWrapper";
 import CommandPalette from "../components/admin/CommandPalette";
-import LeadHealthPanel from "../components/admin/LeadHealthPanel";
+import AnalyticsPage from "../components/admin/pages/AnalyticsPage";
+import FollowUpsPage from "../components/admin/pages/FollowUpsPage";
+import AutomationPage from "../components/admin/pages/AutomationPage";
+import MyLeadsPage from "../components/admin/pages/MyLeadsPage";
+import ActivityLogsPage from "../components/admin/pages/ActivityLogsPage";
+import AdminManagementPage from "../components/admin/pages/AdminManagementPage";
+import SettingsPage from "../components/admin/pages/SettingsPage";
+import PipelinePage from "../components/admin/pages/PipelinePage";
 
-const REQUEST_TIMEOUT_MS = 25000;
-const PROFILE_RETRY_LIMIT = 3;
-const PROFILE_RETRY_DELAY_MS = 650;
+import {
+  fetchInquiryRows,
+  deleteInquiryRow,
+  updateInquiryStatusRow,
+  updateInquiryPriorityRow,
+} from "../services/crm/inquiryService";
+import {
+  fetchAppointmentRows,
+  deleteAppointmentRow,
+  updateAppointmentStatusRow,
+  updateAppointmentPriorityRow,
+  updateAppointmentStageRow,
+} from "../services/crm/appointmentService";
+import { fetchFollowUpReminderRows } from "../services/crm/reminderService";
+import { createActivityLogRow } from "../services/crm/activityLogService";
+import {
+  fetchAssignmentsForLeadTypeRows,
+  getUniqueAssignments,
+} from "../services/crm/assignmentService";
+import {
+  fetchAdminProfileRow,
+  getCachedAdminProfile,
+  setCachedAdminProfile,
+} from "../services/crm/adminProfileService";
+import { downloadCSVFile } from "../services/crm/csvExportService";
+
+import {
+  filterInquiries,
+  filterAppointments,
+  getCrmCounts,
+  getTodayCounts,
+  getPermissionsForRole,
+  getStatusOptions,
+  getStatusFromAppointmentStage,
+  roleLabels,
+} from "../utils/crm";
+import { shouldShowStats } from "../utils/crm/dashboardFilters";
+import {
+  REQUEST_TIMEOUT_MS,
+  PROFILE_RETRY_LIMIT,
+  PROFILE_RETRY_DELAY_MS,
+} from "../utils/crm/constants";
 
 function withTimeout(promise, label = "Request") {
   return Promise.race([
@@ -93,46 +111,8 @@ function AdminPage() {
 
   const role = adminProfile?.role || "staff";
 
-  const roleLabels = {
-    staff: "Staff",
-    admin: "Admin",
-    super_admin: "Super Admin",
-  };
+  const currentPermissions = getPermissionsForRole(role);
 
-  const permissions = {
-    staff: {
-      canDelete: false,
-      canClearAll: false,
-      canExport: false,
-      canManageAdmins: false,
-      canUpdateStatus: true,
-      canUpdatePriority: true,
-      canConfirmAppointments: true,
-      canUpdateAppointmentPipeline: true,
-    },
-    admin: {
-      canDelete: true,
-      canClearAll: false,
-      canExport: true,
-      canManageAdmins: false,
-      canUpdateStatus: true,
-      canUpdatePriority: true,
-      canConfirmAppointments: true,
-      canUpdateAppointmentPipeline: true,
-    },
-    super_admin: {
-      canDelete: true,
-      canClearAll: true,
-      canExport: true,
-      canManageAdmins: true,
-      canUpdateStatus: true,
-      canUpdatePriority: true,
-      canConfirmAppointments: true,
-      canUpdateAppointmentPipeline: true,
-    },
-  };
-
-  const currentPermissions = permissions[role] || permissions.staff;
 
   const safeSetState = (callback) => {
     if (mountedRef.current) callback();
@@ -143,14 +123,7 @@ function AdminPage() {
 
     try {
       const { data, error } = await withTimeout(
-        supabase
-          .from("lead_assignments")
-          .select("*")
-          .eq("lead_type", leadType)
-          .in(
-            "lead_id",
-            ids.map((id) => String(id))
-          ),
+        fetchAssignmentsForLeadTypeRows(leadType, ids),
         `${leadType} assignments fetch`
       );
 
@@ -159,19 +132,7 @@ function AdminPage() {
         return [];
       }
 
-      const uniqueAssignments = [];
-      const seen = new Set();
-
-      for (const assignment of data || []) {
-        const key = `${assignment.lead_type}-${assignment.lead_id}`;
-
-        if (!seen.has(key)) {
-          seen.add(key);
-          uniqueAssignments.push(assignment);
-        }
-      }
-
-      return uniqueAssignments;
+      return getUniqueAssignments(data || []);
     } catch (error) {
       console.error("Assignment timeout/error:", error);
       return [];
@@ -191,25 +152,14 @@ function AdminPage() {
       if (force) setAdminProfile(null);
     });
 
-    const cachedProfileKey = `zaifan-admin-profile-${userId}`;
-    const cachedProfile = (() => {
-      try {
-        return JSON.parse(localStorage.getItem(cachedProfileKey) || "null");
-      } catch {
-        return null;
-      }
-    })();
+    const cachedProfile = getCachedAdminProfile(userId);
 
     for (let attempt = 1; attempt <= PROFILE_RETRY_LIMIT; attempt += 1) {
       safeSetState(() => setProfileRetryCount(attempt));
 
       try {
         const { data, error } = await withTimeout(
-          supabase
-            .from("admin_profiles")
-            .select("*")
-            .eq("id", userId)
-            .maybeSingle(),
+          fetchAdminProfileRow(userId),
           `Admin profile fetch attempt ${attempt}`
         );
 
@@ -221,11 +171,7 @@ function AdminPage() {
         }
 
         if (data) {
-          try {
-            localStorage.setItem(cachedProfileKey, JSON.stringify(data));
-          } catch {
-            // ignore localStorage issues
-          }
+          setCachedAdminProfile(userId, data);
 
           safeSetState(() => {
             setAdminProfile(data);
@@ -280,10 +226,7 @@ function AdminPage() {
   const fetchInquiries = async () => {
     try {
       const { data, error } = await withTimeout(
-        supabase
-          .from("inquiries")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        fetchInquiryRows(),
         "Inquiries fetch"
       );
 
@@ -294,7 +237,10 @@ function AdminPage() {
 
       const inquiryRows = data || [];
       const inquiryIds = inquiryRows.map((item) => String(item.id));
-      const assignments = await fetchAssignmentsForLeadType("inquiry", inquiryIds);
+      const assignments = await fetchAssignmentsForLeadType(
+        "inquiry",
+        inquiryIds
+      );
 
       const mergedInquiries = inquiryRows.map((inquiry) => {
         const assignment = assignments.find(
@@ -319,10 +265,7 @@ function AdminPage() {
   const fetchAppointments = async () => {
     try {
       const { data, error } = await withTimeout(
-        supabase
-          .from("appointments")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        fetchAppointmentRows(),
         "Appointments fetch"
       );
 
@@ -361,10 +304,7 @@ function AdminPage() {
   const fetchFollowUpReminders = async () => {
     try {
       const { data, error } = await withTimeout(
-        supabase
-          .from("follow_up_reminders")
-          .select("*")
-          .order("due_date", { ascending: true }),
+        fetchFollowUpReminderRows(),
         "Follow-up reminders fetch"
       );
 
@@ -574,12 +514,12 @@ function AdminPage() {
   const logActivity = async ({ action, targetType, targetId, details }) => {
     try {
       const { error } = await withTimeout(
-        supabase.from("activity_logs").insert({
-          admin_id: adminUser?.id || null,
-          admin_name: adminProfile?.full_name || "Unknown Admin",
+        createActivityLogRow({
+          adminId: adminUser?.id || null,
+          adminName: adminProfile?.full_name || "Unknown Admin",
           action,
-          target_type: targetType,
-          target_id: String(targetId || ""),
+          targetType,
+          targetId,
           details,
         }),
         "Activity log insert"
@@ -604,7 +544,7 @@ function AdminPage() {
 
     try {
       const { error } = await withTimeout(
-        supabase.from("inquiries").delete().eq("id", id),
+        deleteInquiryRow(id),
         "Delete inquiry"
       );
 
@@ -615,7 +555,9 @@ function AdminPage() {
       }
 
       safeSetState(() =>
-        setInquiries((current) => current.filter((inquiry) => inquiry.id !== id))
+        setInquiries((current) =>
+          current.filter((inquiry) => inquiry.id !== id)
+        )
       );
 
       await logActivity({
@@ -641,7 +583,7 @@ function AdminPage() {
 
     try {
       const { error } = await withTimeout(
-        supabase.from("appointments").delete().eq("id", id),
+        deleteAppointmentRow(id),
         "Delete appointment"
       );
 
@@ -680,7 +622,7 @@ function AdminPage() {
 
     try {
       const { error } = await withTimeout(
-        supabase.from("inquiries").update({ status: newStatus }).eq("id", id),
+        updateInquiryStatusRow(id, newStatus),
         "Update inquiry status"
       );
 
@@ -718,7 +660,7 @@ function AdminPage() {
 
     try {
       const { error } = await withTimeout(
-        supabase.from("inquiries").update({ priority: newPriority }).eq("id", id),
+        updateInquiryPriorityRow(id, newPriority),
         "Update inquiry priority"
       );
 
@@ -756,10 +698,7 @@ function AdminPage() {
 
     try {
       const { error } = await withTimeout(
-        supabase
-          .from("appointments")
-          .update({ priority: newPriority })
-          .eq("id", id),
+        updateAppointmentPriorityRow(id, newPriority),
         "Update appointment priority"
       );
 
@@ -805,7 +744,7 @@ function AdminPage() {
 
     try {
       const { error } = await withTimeout(
-        supabase.from("appointments").update({ status: newStatus }).eq("id", id),
+        updateAppointmentStatusRow(id, newStatus),
         "Update appointment status"
       );
 
@@ -877,17 +816,7 @@ function AdminPage() {
 
     const oldStage = selectedAppointment?.appointment_stage || "new_booking";
 
-    const stageToStatus = {
-      new_booking: "pending",
-      confirmed: "confirmed",
-      consultation_done: "completed",
-      follow_up_needed: "pending",
-      converted_to_lead: "completed",
-      not_interested: "completed",
-      cancelled: "cancelled",
-    };
-
-    const nextStatus = stageToStatus[newStage] || "pending";
+    const nextStatus = getStatusFromAppointmentStage(newStage);
 
     safeSetState(() =>
       setAppointments((current) =>
@@ -905,13 +834,7 @@ function AdminPage() {
 
     try {
       const { error } = await withTimeout(
-        supabase
-          .from("appointments")
-          .update({
-            appointment_stage: newStage,
-            status: nextStatus,
-          })
-          .eq("id", id),
+        updateAppointmentStageRow(id, newStage, nextStatus),
         "Update appointment pipeline"
       );
 
@@ -1046,25 +969,7 @@ function AdminPage() {
       return;
     }
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) =>
-        row
-          .map((value) => `"${String(value || "").replaceAll('"', '""')}"`)
-          .join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadCSVFile(filename, headers, rows);
   };
 
   const exportInquiriesToCSV = () => {
@@ -1163,424 +1068,37 @@ function AdminPage() {
     downloadCSV("zaifan-appointments.csv", headers, rows);
   };
 
-  const normalizeFilterValue = (value) =>
-    String(value || "")
-      .trim()
-      .toLowerCase()
-      .replaceAll("-", "_")
-      .replaceAll(" ", "_");
-
-  const filteredInquiries = inquiries.filter((inquiry) => {
-    const searchText = search.toLowerCase();
-    const status = inquiry.status || "new";
-    const priority = inquiry.priority || "low";
-    const filterValue = normalizeFilterValue(statusFilter);
-
-    const matchesSearch =
-      inquiry.full_name?.toLowerCase().includes(searchText) ||
-      inquiry.email?.toLowerCase().includes(searchText) ||
-      inquiry.phone?.toLowerCase().includes(searchText) ||
-      priority.toLowerCase().includes(searchText) ||
-      inquiry.country?.toLowerCase().includes(searchText) ||
-      inquiry.city?.toLowerCase().includes(searchText) ||
-      inquiry.field_of_interest?.toLowerCase().includes(searchText) ||
-      inquiry.study_level?.toLowerCase().includes(searchText) ||
-      inquiry.assigned_admin_name?.toLowerCase().includes(searchText);
-
-    const matchesStatus =
-      statusFilter === "All" || status === filterValue || priority === filterValue;
-
-    return matchesSearch && matchesStatus;
+  const filteredInquiries = filterInquiries({
+    inquiries,
+    search,
+    statusFilter,
   });
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const searchText = search.toLowerCase();
-    const status = appointment.status || "pending";
-    const appointmentStage = appointment.appointment_stage || "new_booking";
-    const priority = appointment.priority || "low";
-    const filterValue = normalizeFilterValue(statusFilter);
-
-    const matchesSearch =
-      appointment.full_name?.toLowerCase().includes(searchText) ||
-      appointment.email?.toLowerCase().includes(searchText) ||
-      appointment.phone?.toLowerCase().includes(searchText) ||
-      appointment.country_interest?.toLowerCase().includes(searchText) ||
-      appointment.consultation_type?.toLowerCase().includes(searchText) ||
-      appointment.appointment_date?.toLowerCase().includes(searchText) ||
-      appointment.appointment_time?.toLowerCase().includes(searchText) ||
-      appointmentStage.toLowerCase().includes(searchText) ||
-      priority.toLowerCase().includes(searchText) ||
-      appointment.assigned_admin_name?.toLowerCase().includes(searchText);
-
-    const matchesStatus =
-      statusFilter === "All" ||
-      status === filterValue ||
-      appointmentStage === filterValue ||
-      priority === filterValue;
-
-    return matchesSearch && matchesStatus;
+  const filteredAppointments = filterAppointments({
+    appointments,
+    search,
+    statusFilter,
   });
 
-  const inquiryNewCount = inquiries.filter(
-    (inquiry) => (inquiry.status || "new") === "new"
-  ).length;
-
-  const inquiryContactedCount = inquiries.filter(
-    (inquiry) => inquiry.status === "contacted"
-  ).length;
-
-  const appointmentPendingCount = appointments.filter(
-    (appointment) => (appointment.status || "pending") === "pending"
-  ).length;
-
-  const appointmentConfirmedCount = appointments.filter(
-    (appointment) => appointment.status === "confirmed"
-  ).length;
-
-  const appointmentCompletedCount = appointments.filter(
-    (appointment) => appointment.status === "completed"
-  ).length;
-
-  const appointmentCancelledCount = appointments.filter(
-    (appointment) => appointment.status === "cancelled"
-  ).length;
+  const {
+    inquiryNewCount,
+    inquiryContactedCount,
+    appointmentPendingCount,
+    appointmentConfirmedCount,
+    appointmentCompletedCount,
+    appointmentCancelledCount,
+  } = getCrmCounts({ inquiries, appointments });
 
   const latestInquiry = inquiries[0];
   const latestAppointment = appointments[0];
-  const todayDate = new Date().toDateString();
 
-  const todayInquiriesCount = inquiries.filter((inquiry) =>
-    inquiry.created_at
-      ? new Date(inquiry.created_at).toDateString() === todayDate
-      : false
-  ).length;
+  const {
+    todayInquiriesCount,
+    todayAppointmentsCount,
+  } = getTodayCounts({ inquiries, appointments });
 
-  const todayAppointmentsCount = appointments.filter((appointment) =>
-    appointment.created_at
-      ? new Date(appointment.created_at).toDateString() === todayDate
-      : false
-  ).length;
+  const statusOptions = getStatusOptions(activeTab);
 
-  const statusOptions =
-    activeTab === "inquiries"
-      ? [
-          "All",
-          "New",
-          "Contacted",
-          "Documents Pending",
-          "Applied",
-          "Offer Letter",
-          "Visa Process",
-          "Approved",
-          "VIP",
-          "High",
-          "Medium",
-          "Low",
-        ]
-      : [
-          "All",
-          "New Booking",
-          "Confirmed",
-          "Consultation Done",
-          "Follow Up Needed",
-          "Converted To Lead",
-          "Not Interested",
-          "Cancelled",
-          "Pending",
-          "Completed",
-          "VIP",
-          "High",
-          "Medium",
-          "Low",
-        ];
-
-  const analyticsNavItems = [
-    ["command", "Command"],
-    ["kpi", "KPI"],
-    ["intelligence", "AI Feed"],
-    ["staff", "Staff"],
-    ["scoring", "Scoring"],
-    ["conversion", "Conversion"],
-    ["charts", "Charts"],
-    ["automation", "Automation"],
-    ["actions", "Actions"],
-    ["followup-performance", "Follow-Ups"],
-    ["lead-health", "Lead Health"],
-    ["funnel", "Funnel"],
-    ["overview", "Overview"],
-  ];
-
-  const AnalyticsSection = AnalyticsSectionWrapper;
-
-
-  const renderActiveAnalyticsSection = () => {
-    if (activeAnalyticsSection === "command") {
-      return (
-        <AnalyticsSection
-          id="command"
-          eyebrow="Enterprise Control"
-          title="CRM Command Center"
-        >
-          <CrmCommandCenter
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-            followUpReminders={followUpReminders}
-          />
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "kpi") {
-      return (
-        <AnalyticsSection
-          id="kpi"
-          eyebrow="Performance Overview"
-          title="KPI Analytics"
-        >
-          <CrmKpiAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "intelligence") {
-      return (
-        <AnalyticsSection
-          id="intelligence"
-          eyebrow="AI Intelligence"
-          title="Lead Intelligence Feed"
-        >
-          <div className="grid gap-6 2xl:grid-cols-2">
-            <AiLeadIntelligenceFeed
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-
-            <AiLeadPrioritizationPanel
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-          </div>
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "staff") {
-      return (
-        <AnalyticsSection
-          id="staff"
-          eyebrow="Team Performance"
-          title="Staff Analytics"
-        >
-          <div className="grid gap-6 2xl:grid-cols-2">
-            <StaffPerformanceAnalytics
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-
-            <StaffLeaderboard
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-          </div>
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "scoring") {
-      return (
-        <AnalyticsSection
-          id="scoring"
-          eyebrow="Lead Quality"
-          title="Lead Scoring"
-        >
-          <LeadScoringAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "conversion") {
-      return (
-        <AnalyticsSection
-          id="conversion"
-          eyebrow="Revenue Movement"
-          title="Conversion Analytics"
-        >
-          <ConversionAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "charts") {
-      return (
-        <AnalyticsSection
-          id="charts"
-          eyebrow="Visual Intelligence"
-          title="Luxury Charts"
-        >
-          <LuxuryAnalyticsCharts
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-            followUpReminders={followUpReminders}
-          />
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "automation") {
-      return (
-        <AnalyticsSection
-          id="automation"
-          eyebrow="Automation Layer"
-          title="Escalations, Reminders & Stage Movement"
-        >
-          <div className="grid gap-6 2xl:grid-cols-2">
-            <OverdueEscalationPanel cardClass={cardClass} />
-
-            <AutoReminderGenerator
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-
-            <AutoStageMovementPanel
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-              updateInquiryStatus={toggleInquiryStatus}
-              updateAppointmentStage={updateAppointmentStage}
-              updateAppointmentStatus={updateAppointmentStatus}
-            />
-
-            <ProductivityHeatmap
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-              followUpReminders={followUpReminders}
-            />
-          </div>
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "actions") {
-      return (
-        <AnalyticsSection
-          id="actions"
-          eyebrow="Action Center"
-          title="Notification Actions"
-        >
-          <NotificationActionCenter
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-            followUpReminders={followUpReminders}
-            updateInquiryStatus={toggleInquiryStatus}
-            updateAppointmentStatus={updateAppointmentStatus}
-            setActiveTab={setActiveTab}
-          />
-        </AnalyticsSection>
-      );
-    }
-
-    if (activeAnalyticsSection === "followup-performance") {
-      return (
-        <AnalyticsSection
-          id="followup-performance"
-          eyebrow="Follow-Up Health"
-          title="Follow-Up Performance Analytics"
-        >
-          <FollowUpPerformancePanel
-            cardClass={cardClass}
-            reminders={followUpReminders}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-        </AnalyticsSection>
-      );
-    }
- 
-    if (activeAnalyticsSection === "lead-health") {
-  return (
-    <AnalyticsSection
-      id="lead-health"
-      eyebrow="AI Lead Intelligence"
-      title="Lead Health Analytics"
-    >
-      <LeadHealthPanel
-        cardClass={cardClass}
-        inquiries={inquiries}
-        appointments={appointments}
-        reminders={followUpReminders}
-      />
-    </AnalyticsSection>
-  );
-}
- 
-    if (activeAnalyticsSection === "funnel") {
-      return (
-        <AnalyticsSection
-          id="funnel"
-          eyebrow="Pipeline Health"
-          title="Conversion Funnel"
-        >
-          <ConversionFunnelChart
-            cardClass={cardClass}
-            inquiries={inquiries}
-          />
-        </AnalyticsSection>
-      );
-    }
-
-    return (
-      <AnalyticsSection
-        id="overview"
-        eyebrow="Classic Dashboard"
-        title="Overview, Analytics & Timeline"
-      >
-        <div className="grid gap-6 2xl:grid-cols-2">
-          <DashboardAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-
-          <DashboardOverview
-            cardClass={cardClass}
-            todayInquiriesCount={todayInquiriesCount}
-            todayAppointmentsCount={todayAppointmentsCount}
-            latestInquiry={latestInquiry}
-            latestAppointment={latestAppointment}
-          />
-
-          <div className="2xl:col-span-2">
-            <ActivityTimeline
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-          </div>
-        </div>
-      </AnalyticsSection>
-    );
-  };
 
   if (!sessionChecked || (profileLoading && !adminProfile)) {
     return (
@@ -1762,12 +1280,7 @@ function AdminPage() {
             permissions={currentPermissions}
           />
 
-          {activeTab !== "analytics" &&
-            activeTab !== "settings" &&
-            activeTab !== "admin-management" &&
-            activeTab !== "activity-logs" &&
-            activeTab !== "my-leads" &&
-            activeTab !== "followups" && (
+          {shouldShowStats(activeTab) && (
               <>
                 <NotificationCenter
                   cardClass={cardClass}
@@ -1793,144 +1306,75 @@ function AdminPage() {
             )}
 
           {activeTab === "followups" ? (
-            <FollowUpDashboard cardClass={cardClass} />
-          ) : activeTab === "automation" ? (
-            <CrmAutomationPanel
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-          ) : activeTab === "my-leads" ? (
-            <MyLeadsPanel cardClass={cardClass} adminProfile={adminProfile} />
-          ) : activeTab === "activity-logs" ? (
-            <AdminActivityLogs cardClass={cardClass} />
-          ) : activeTab === "admin-management" ? (
-            <AdminManagement
-              cardClass={cardClass}
-              role={role}
-              adminProfile={adminProfile}
-              permissions={currentPermissions}
-            />
+  <FollowUpsPage cardClass={cardClass} />
+) : activeTab === "automation" ? (
+  <AutomationPage
+    cardClass={cardClass}
+    inquiries={inquiries}
+    appointments={appointments}
+  />
+) : activeTab === "my-leads" ? (
+  <MyLeadsPage
+    cardClass={cardClass}
+    adminProfile={adminProfile}
+  />
+) : activeTab === "activity-logs" ? (
+  <ActivityLogsPage cardClass={cardClass} />
+) : activeTab === "admin-management" ? (
+  <AdminManagementPage
+    cardClass={cardClass}
+    role={role}
+    adminProfile={adminProfile}
+    permissions={currentPermissions}
+  />
           ) : activeTab === "analytics" ? (
-            <motion.div
-              key="analytics"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.22 }}
-              className="space-y-6"
-            >
-              <div className="sticky top-3 z-20 rounded-[1.5rem] border border-white/10 bg-black/70 p-3 shadow-2xl shadow-black/30 backdrop-blur-2xl">
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {analyticsNavItems.map(([id, label]) => {
-                    const isActive = activeAnalyticsSection === id;
-
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => setActiveAnalyticsSection(id)}
-                        className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition ${
-                          isActive
-                            ? "border-[#D4AF37]/60 bg-[#D4AF37] text-black"
-                            : "border-white/10 bg-white/[0.04] text-gray-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10 hover:text-[#D4AF37]"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeAnalyticsSection}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {renderActiveAnalyticsSection()}
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
+  <AnalyticsPage
+    cardClass={cardClass}
+    inquiries={inquiries}
+    appointments={appointments}
+    followUpReminders={followUpReminders}
+    activeAnalyticsSection={activeAnalyticsSection}
+    setActiveAnalyticsSection={setActiveAnalyticsSection}
+    toggleInquiryStatus={toggleInquiryStatus}
+    updateAppointmentStage={updateAppointmentStage}
+    updateAppointmentStatus={updateAppointmentStatus}
+    setActiveTab={setActiveTab}
+    todayInquiriesCount={todayInquiriesCount}
+    todayAppointmentsCount={todayAppointmentsCount}
+    latestInquiry={latestInquiry}
+    latestAppointment={latestAppointment}
+  />
           ) : activeTab === "settings" ? (
-            <motion.div
-              key="settings"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.22 }}
-              className={`${cardClass} flex flex-col items-center justify-center px-6 py-16 text-center`}
-            >
-              <div className="rounded-[1.7rem] border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-6 text-5xl">
-                ⚙️
-              </div>
-
-              <p className="mt-6 text-[11px] uppercase tracking-[0.35em] text-[#D4AF37]">
-                Settings Panel
-              </p>
-
-              <h2 className="mt-3 text-4xl font-black text-white">
-                Coming Soon
-              </h2>
-
-              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gray-400">
-                Advanced CRM customization, admin preferences, notification
-                controls, integrations, analytics configuration, branding
-                settings, and automation tools will be added here.
-              </p>
-
-              {currentPermissions.canManageAdmins && (
-                <div className="mt-8 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-5 py-4 text-sm text-[#D4AF37]">
-                  Super Admin access detected. Use Admin Management for role
-                  controls.
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <>
-              <SearchToolbar
-                activeTab={activeTab}
-                search={search}
-                setSearch={setSearch}
-                statusOptions={statusOptions}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-              />
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.22 }}
-                >
-                  <DashboardContent
-                    loading={loading}
-                    activeTab={activeTab}
-                    inquiries={inquiries}
-                    filteredInquiries={filteredInquiries}
-                    appointments={appointments}
-                    filteredAppointments={filteredAppointments}
-                    cardClass={cardClass}
-                    updateInquiryStatus={toggleInquiryStatus}
-                    updateInquiryPriority={updateInquiryPriority}
-                    updateAppointmentPriority={updateAppointmentPriority}
-                    deleteInquiry={deleteInquiry}
-                    updateAppointmentStatus={updateAppointmentStatus}
-                    updateAppointmentStage={updateAppointmentStage}
-                    deleteAppointment={deleteAppointment}
-                    role={role}
-                    adminProfile={adminProfile}
-                    permissions={currentPermissions}
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </>
-          )}
+  <SettingsPage
+    cardClass={cardClass}
+    currentPermissions={currentPermissions}
+  />
+) : (
+  <PipelinePage
+    activeTab={activeTab}
+    search={search}
+    setSearch={setSearch}
+    statusOptions={statusOptions}
+    statusFilter={statusFilter}
+    setStatusFilter={setStatusFilter}
+    loading={loading}
+    inquiries={inquiries}
+    filteredInquiries={filteredInquiries}
+    appointments={appointments}
+    filteredAppointments={filteredAppointments}
+    cardClass={cardClass}
+    toggleInquiryStatus={toggleInquiryStatus}
+    updateInquiryPriority={updateInquiryPriority}
+    updateAppointmentPriority={updateAppointmentPriority}
+    deleteInquiry={deleteInquiry}
+    updateAppointmentStatus={updateAppointmentStatus}
+    updateAppointmentStage={updateAppointmentStage}
+    deleteAppointment={deleteAppointment}
+    role={role}
+    adminProfile={adminProfile}
+    permissions={currentPermissions}
+  />
+)}
         </main>
       </div>
     </section>
