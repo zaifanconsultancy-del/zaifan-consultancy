@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LeadAssignmentPanel from "./LeadAssignmentPanel";
 import CrmTimelinePanel from "./CrmTimelinePanel";
+import FollowUpReminderPanel from "./FollowUpReminderPanel";
+import AICounselorAssistant from "./AICounselorAssistant";
 import { addTimelineEvent } from "../../lib/crmTimeline";
 import {
   getPipelineStages,
   getPipelineStageById,
   getPipelineProgress,
 } from "../../data/crmPipelineConfig";
-import FollowUpReminderPanel from "./FollowUpReminderPanel";
 
 function StudentDetailModal({
   student = null,
@@ -61,31 +62,57 @@ function StudentDetailModal({
     (isAppointment ? workingStudent?.appointment_stage : null) ||
     stages?.[0]?.id;
 
-  const currentStage = getPipelineStageById(pipelineType, currentStageId) || stages?.[0];
+  const currentStage =
+    getPipelineStageById(pipelineType, currentStageId) || stages?.[0];
+
   const pipelineProgress = getPipelineProgress(pipelineType, currentStageId);
 
   if (!workingStudent) return null;
 
-  const fullName = workingStudent.full_name || workingStudent.name || "Unknown Student";
+  const fullName =
+    workingStudent.full_name || workingStudent.name || "Unknown Student";
+
   const email = workingStudent.email || "No email added";
-  const phone = workingStudent.phone || workingStudent.phone_number || "No phone added";
-  const country = workingStudent.country || workingStudent.preferred_country || "Not selected";
+
+  const phone =
+    workingStudent.phone || workingStudent.phone_number || "No phone added";
+
+  const country =
+    workingStudent.country ||
+    workingStudent.country_interest ||
+    workingStudent.preferred_country ||
+    "Not selected";
+
   const field =
     workingStudent.field_of_interest ||
     workingStudent.course ||
     workingStudent.program ||
     workingStudent.study_field ||
+    workingStudent.consultation_type ||
     "Not selected";
-  const priority = workingStudent.priority || "medium";
-  const status = workingStudent.status || (workingStudent.completed ? "completed" : "pending");
-  const notes = workingStudent.notes || workingStudent.message || workingStudent.consultation_notes || "No notes yet.";
 
-  const appointmentDate = workingStudent.appointment_date || workingStudent.date || "Not selected";
-  const appointmentTime = workingStudent.appointment_time || workingStudent.time || "Not selected";
-  const consultationType = workingStudent.consultation_type || workingStudent.type || "Consultation";
+  const priority = workingStudent.priority || "medium";
+
+  const status =
+    workingStudent.status || (workingStudent.completed ? "completed" : "pending");
+
+  const notes =
+    workingStudent.notes ||
+    workingStudent.message ||
+    workingStudent.consultation_notes ||
+    "No notes yet.";
+
+  const appointmentDate =
+    workingStudent.appointment_date || workingStudent.date || "Not selected";
+
+  const appointmentTime =
+    workingStudent.appointment_time || workingStudent.time || "Not selected";
+
+  const consultationType =
+    workingStudent.consultation_type || workingStudent.type || "Consultation";
 
   const createdAt = workingStudent.created_at
-    ? new Date(student.created_at).toLocaleString("en-GB", {
+    ? new Date(workingStudent.created_at).toLocaleString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -99,6 +126,15 @@ function StudentDetailModal({
   const statusOptions = isAppointment
     ? ["pending", "confirmed", "completed", "cancelled"]
     : ["pending", "contacted", "completed"];
+
+  const sidebarItems = [
+  ["overview", "Overview", "Student details and controls"],
+  ["pipeline", "Pipeline", "Workflow stage tracking"],
+  ["assignment", "Assignment", "Owner and staff handling"],
+  ["timeline", "Timeline", "CRM history and changes"],
+  ["followups", "Follow-ups", "Reminder and next actions"],
+  ["ai", "AI Actions", "Copilot and follow-up generation"],
+];
 
   const getPriorityStyle = (value) => {
     const styles = {
@@ -127,16 +163,21 @@ function StudentDetailModal({
     if (!safePermissions.canUpdatePriority || newPriority === priority) return;
 
     const oldPriority = priority;
-    setLocalStudent((prev) => ({ ...(prev || workingStudent), priority: newPriority }));
+
+    setLocalStudent((prev) => ({
+      ...(prev || workingStudent),
+      priority: newPriority,
+    }));
+
     setSavingPriority(true);
 
     try {
       if (isAppointment && updateAppointmentPriority) {
-        await updateAppointmentPriority(student.id, newPriority);
+        await updateAppointmentPriority(workingStudent.id, newPriority);
       }
 
       if (isInquiry && updateInquiryPriority) {
-        await updateInquiryPriority(student.id, newPriority);
+        await updateInquiryPriority(workingStudent.id, newPriority);
       }
 
       await addTimelineEvent({
@@ -158,20 +199,22 @@ function StudentDetailModal({
     if (!safePermissions.canUpdateStatus || newStatus === status) return;
 
     const oldStatus = status;
+
     setLocalStudent((prev) => ({
       ...(prev || workingStudent),
       status: newStatus,
       completed: newStatus === "completed",
     }));
+
     setSavingStatus(true);
 
     try {
       if (isAppointment && updateAppointmentStatus) {
-        await updateAppointmentStatus(student.id, newStatus);
+        await updateAppointmentStatus(workingStudent.id, newStatus);
       }
 
       if (isInquiry && toggleInquiryStatus) {
-        await toggleInquiryStatus(student.id, newStatus);
+        await toggleInquiryStatus(workingStudent.id, newStatus);
       }
 
       await addTimelineEvent({
@@ -193,12 +236,14 @@ function StudentDetailModal({
     if (!stageId || stageId === currentStageId) return;
 
     const nextStage = getPipelineStageById(pipelineType, stageId);
+
     setLocalStudent((prev) => ({
       ...(prev || workingStudent),
       pipeline_stage: stageId,
       stage: stageId,
       appointment_stage: isAppointment ? stageId : prev?.appointment_stage,
     }));
+
     setSavingStage(true);
 
     try {
@@ -228,7 +273,10 @@ function StudentDetailModal({
   const handleDelete = async () => {
     if (!safePermissions.canDelete) return;
 
-    const confirmed = window.confirm(`Delete ${fullName}? This action cannot be undone.`);
+    const confirmed = window.confirm(
+      `Delete ${fullName}? This action cannot be undone.`
+    );
+
     if (!confirmed) return;
 
     if (isAppointment && deleteAppointment) {
@@ -282,10 +330,20 @@ function StudentDetailModal({
                   <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
                     {isAppointment ? "Appointment" : "Inquiry"}
                   </span>
-                  <span className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getPriorityStyle(priority)}`}>
+
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getPriorityStyle(
+                      priority
+                    )}`}
+                  >
                     {priority} priority
                   </span>
-                  <span className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(status)}`}>
+
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
+                      status
+                    )}`}
+                  >
                     {status}
                   </span>
                 </div>
@@ -293,6 +351,7 @@ function StudentDetailModal({
                 <h2 className="truncate text-2xl font-bold text-white sm:text-3xl">
                   {fullName}
                 </h2>
+
                 <p className="mt-2 max-w-2xl text-sm text-white/50">
                   {country} • {field}
                 </p>
@@ -301,6 +360,7 @@ function StudentDetailModal({
               <div className="flex flex-wrap items-center gap-3">
                 {safePermissions.canDelete ? (
                   <button
+                    type="button"
                     onClick={handleDelete}
                     className="rounded-full border border-red-400/25 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition hover:border-red-400/50 hover:bg-red-500/15"
                   >
@@ -309,6 +369,7 @@ function StudentDetailModal({
                 ) : null}
 
                 <button
+                  type="button"
                   onClick={onClose}
                   className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
                 >
@@ -321,15 +382,10 @@ function StudentDetailModal({
           <div className="grid max-h-[calc(92vh-132px)] overflow-y-auto lg:grid-cols-[280px_1fr]">
             <aside className="border-b border-white/10 bg-black/20 p-4 lg:border-b-0 lg:border-r">
               <div className="space-y-2">
-                {[
-  ["overview", "Overview", "Student details and controls"],
-  ["pipeline", "Pipeline", "Workflow stage tracking"],
-  ["assignment", "Assignment", "Owner and staff handling"],
-  ["timeline", "Timeline", "CRM history and changes"],
-  ["followups", "Follow-ups", "Reminder and next actions"],
-].map(([id, label, description]) => (
+                {sidebarItems.map(([id, label, description]) => (
                   <button
                     key={id}
+                    type="button"
                     onClick={() => setActivePanel(id)}
                     className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                       activePanel === id
@@ -338,7 +394,9 @@ function StudentDetailModal({
                     }`}
                   >
                     <span className="block text-sm font-semibold">{label}</span>
-                    <span className="mt-1 block text-xs opacity-60">{description}</span>
+                    <span className="mt-1 block text-xs opacity-60">
+                      {description}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -347,12 +405,14 @@ function StudentDetailModal({
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">
                   Pipeline Progress
                 </p>
+
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full bg-[#D4AF37] transition-all duration-500"
                     style={{ width: `${pipelineProgress || 0}%` }}
                   />
                 </div>
+
                 <p className="mt-2 text-sm text-white/55">
                   {pipelineProgress || 0}% • {currentStage?.label || "Stage"}
                 </p>
@@ -371,6 +431,7 @@ function StudentDetailModal({
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
                           {label}
                         </p>
+
                         <p className="mt-2 break-words text-sm font-medium text-white/75">
                           {value}
                         </p>
@@ -388,6 +449,7 @@ function StudentDetailModal({
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D4AF37]/70">
                             {label}
                           </p>
+
                           <p className="mt-2 break-words text-sm font-medium text-white/80">
                             {value}
                           </p>
@@ -397,7 +459,10 @@ function StudentDetailModal({
                   ) : null}
 
                   <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
-                    <h3 className="text-lg font-semibold text-white">Notes / Message</h3>
+                    <h3 className="text-lg font-semibold text-white">
+                      Notes / Message
+                    </h3>
+
                     <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/55">
                       {notes}
                     </p>
@@ -406,9 +471,14 @@ function StudentDetailModal({
                   <div className="grid gap-5 lg:grid-cols-2">
                     <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
                       <div className="mb-4 flex items-center justify-between gap-3">
-                        <h3 className="text-lg font-semibold text-white">Priority</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          Priority
+                        </h3>
+
                         {savingPriority ? (
-                          <span className="text-xs text-white/35">Saving...</span>
+                          <span className="text-xs text-white/35">
+                            Saving...
+                          </span>
                         ) : null}
                       </div>
 
@@ -416,7 +486,11 @@ function StudentDetailModal({
                         {priorityOptions.map((item) => (
                           <button
                             key={item}
-                            disabled={!safePermissions.canUpdatePriority || savingPriority}
+                            type="button"
+                            disabled={
+                              !safePermissions.canUpdatePriority ||
+                              savingPriority
+                            }
                             onClick={() => handlePriorityChange(item)}
                             className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
                               priority === item
@@ -432,9 +506,14 @@ function StudentDetailModal({
 
                     <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
                       <div className="mb-4 flex items-center justify-between gap-3">
-                        <h3 className="text-lg font-semibold text-white">Status</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          Status
+                        </h3>
+
                         {savingStatus ? (
-                          <span className="text-xs text-white/35">Saving...</span>
+                          <span className="text-xs text-white/35">
+                            Saving...
+                          </span>
                         ) : null}
                       </div>
 
@@ -442,7 +521,10 @@ function StudentDetailModal({
                         {statusOptions.map((item) => (
                           <button
                             key={item}
-                            disabled={!safePermissions.canUpdateStatus || savingStatus}
+                            type="button"
+                            disabled={
+                              !safePermissions.canUpdateStatus || savingStatus
+                            }
                             onClick={() => handleStatusChange(item)}
                             className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
                               status === item
@@ -459,11 +541,22 @@ function StudentDetailModal({
                 </div>
               ) : null}
 
+              {activePanel === "ai" ? (
+                <AICounselorAssistant
+                  student={workingStudent}
+                  studentType={type}
+                  adminProfile={adminProfile}
+                />
+              ) : null}
+
               {activePanel === "pipeline" ? (
                 <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
                   <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-white">CRM Pipeline</h3>
+                      <h3 className="text-lg font-semibold text-white">
+                        CRM Pipeline
+                      </h3>
+
                       <p className="text-sm text-white/45">
                         Track this student through the consultancy workflow.
                       </p>
@@ -479,11 +572,15 @@ function StudentDetailModal({
                   <div className="space-y-3">
                     {stages.map((stage, index) => {
                       const isActive = stage.id === currentStageId;
-                      const isPassed = index < (stages.findIndex((item) => item.id === currentStageId) || 0);
+                      const currentIndex = stages.findIndex(
+                        (item) => item.id === currentStageId
+                      );
+                      const isPassed = index < Math.max(currentIndex, 0);
 
                       return (
                         <button
                           key={stage.id}
+                          type="button"
                           onClick={() => handleStageChange(stage.id)}
                           disabled={savingStage}
                           className={`group w-full rounded-2xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
@@ -511,8 +608,10 @@ function StudentDetailModal({
                               <p className="font-semibold text-white">
                                 {stage.label || stage.title || stage.id}
                               </p>
+
                               <p className="mt-1 text-sm text-white/45">
-                                {stage.description || "Pipeline workflow stage"}
+                                {stage.description ||
+                                  "Pipeline workflow stage"}
                               </p>
                             </div>
 
@@ -539,16 +638,24 @@ function StudentDetailModal({
               ) : null}
 
               {activePanel === "timeline" ? (
-  <CrmTimelinePanel
-    studentId={workingStudent.id}
-    studentType={type}
-    adminProfile={adminProfile}
-  />
-) : null}
+                <CrmTimelinePanel
+                  studentId={workingStudent.id}
+                  studentType={type}
+                  adminProfile={adminProfile}
+                />
+              ) : null}
 
               {activePanel === "followups" ? (
-  <FollowUpReminderPanel
-    studentId={workingStudent.id}
+                <FollowUpReminderPanel
+                  studentId={workingStudent.id}
+                  studentType={type}
+                  adminProfile={adminProfile}
+                />
+              ) : null}
+
+              {activePanel === "ai" ? (
+  <AICounselorAssistant
+    student={workingStudent}
     studentType={type}
     adminProfile={adminProfile}
   />

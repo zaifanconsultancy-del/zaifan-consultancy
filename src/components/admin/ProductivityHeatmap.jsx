@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import {
   Activity,
   CalendarDays,
@@ -228,7 +229,7 @@ function ProductivityHeatmap({
           <div className={`${cardClass} rounded-[2rem] p-5 sm:p-6`}>
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-400/10">
-                <Pulse className="h-5 w-5 text-blue-300" />
+                <HeartPulse className="h-5 w-5 text-blue-300" />
               </div>
 
               <div>

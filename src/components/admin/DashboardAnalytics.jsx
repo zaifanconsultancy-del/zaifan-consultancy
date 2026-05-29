@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 
-function DashboardAnalytics({ cardClass, inquiries, appointments }) {
+function DashboardAnalytics({ cardClass = "", inquiries = [], appointments = [] }) {
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const allLeads = [...inquiries, ...appointments];
@@ -176,7 +176,7 @@ function DashboardAnalytics({ cardClass, inquiries, appointments }) {
           title="Inquiry & Appointment Growth"
           description="Real activity trend based on the last 7 days of CRM records."
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={240}>
             <AreaChart
               data={weeklyData}
               margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
@@ -232,7 +232,7 @@ function DashboardAnalytics({ cardClass, inquiries, appointments }) {
           title="Assigned vs Open Leads"
           description="Shows how many leads are owned by staff versus still open."
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie
                 data={ownershipData}
@@ -267,7 +267,7 @@ function DashboardAnalytics({ cardClass, inquiries, appointments }) {
           title="Priority Distribution"
           description="Combined priority split across inquiries and appointments."
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie
                 data={priorityData}
@@ -295,7 +295,7 @@ function DashboardAnalytics({ cardClass, inquiries, appointments }) {
           title="Status Breakdown"
           description="Pipeline health for consultation bookings."
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart
               data={appointmentStatusData}
               margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
@@ -339,7 +339,7 @@ function DashboardAnalytics({ cardClass, inquiries, appointments }) {
           title="Inquiry Follow-up"
           description="How many inquiries still need first contact."
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart
               data={inquiryStatusData}
               margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
@@ -442,7 +442,7 @@ function ChartPanel({ cardClass, eyebrow, title, description, children }) {
         </p>
       </div>
 
-      <div className="h-[280px] overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/20 p-3">
+      <div className="min-h-[280px] overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/20 p-3">
         {children}
       </div>
     </div>

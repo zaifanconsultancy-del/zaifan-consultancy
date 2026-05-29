@@ -30,12 +30,13 @@ import AutoStageMovementPanel from "../components/admin/AutoStageMovementPanel";
 import ProductivityHeatmap from "../components/admin/ProductivityHeatmap";
 import useRealtimeCRM from "../hooks/useRealtimeCRM";
 import NotificationActionCenter from "../components/admin/NotificationActionCenter";
-import ReminderCompletionAnalytics from "../components/admin/ReminderCompletionAnalytics";
+import FollowUpPerformancePanel from "../components/admin/FollowUpPerformancePanel";
 import ConversionFunnelChart from "../components/admin/ConversionFunnelChart";
 import CrmCommandCenter from "../components/admin/CrmCommandCenter";
 import AiLeadIntelligenceFeed from "../components/admin/AiLeadIntelligenceFeed";
 import AnalyticsSectionWrapper from "../components/admin/AnalyticsSectionWrapper";
 import CommandPalette from "../components/admin/CommandPalette";
+import LeadHealthPanel from "../components/admin/LeadHealthPanel";
 
 const REQUEST_TIMEOUT_MS = 25000;
 const PROFILE_RETRY_LIMIT = 3;
@@ -78,6 +79,7 @@ function AdminPage() {
   const [profileError, setProfileError] = useState("");
   const [profileRetryCount, setProfileRetryCount] = useState(0);
   const [loadError, setLoadError] = useState("");
+  const [activeAnalyticsSection, setActiveAnalyticsSection] = useState("command");
 
   const mountedRef = useRef(true);
   const loadingRef = useRef(false);
@@ -1302,11 +1304,283 @@ function AdminPage() {
     ["charts", "Charts"],
     ["automation", "Automation"],
     ["actions", "Actions"],
+    ["followup-performance", "Follow-Ups"],
+    ["lead-health", "Lead Health"],
     ["funnel", "Funnel"],
     ["overview", "Overview"],
   ];
 
   const AnalyticsSection = AnalyticsSectionWrapper;
+
+
+  const renderActiveAnalyticsSection = () => {
+    if (activeAnalyticsSection === "command") {
+      return (
+        <AnalyticsSection
+          id="command"
+          eyebrow="Enterprise Control"
+          title="CRM Command Center"
+        >
+          <CrmCommandCenter
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+            followUpReminders={followUpReminders}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "kpi") {
+      return (
+        <AnalyticsSection
+          id="kpi"
+          eyebrow="Performance Overview"
+          title="KPI Analytics"
+        >
+          <CrmKpiAnalytics
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "intelligence") {
+      return (
+        <AnalyticsSection
+          id="intelligence"
+          eyebrow="AI Intelligence"
+          title="Lead Intelligence Feed"
+        >
+          <div className="grid gap-6 2xl:grid-cols-2">
+            <AiLeadIntelligenceFeed
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+            />
+
+            <AiLeadPrioritizationPanel
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+            />
+          </div>
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "staff") {
+      return (
+        <AnalyticsSection
+          id="staff"
+          eyebrow="Team Performance"
+          title="Staff Analytics"
+        >
+          <div className="grid gap-6 2xl:grid-cols-2">
+            <StaffPerformanceAnalytics
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+            />
+
+            <StaffLeaderboard
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+            />
+          </div>
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "scoring") {
+      return (
+        <AnalyticsSection
+          id="scoring"
+          eyebrow="Lead Quality"
+          title="Lead Scoring"
+        >
+          <LeadScoringAnalytics
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "conversion") {
+      return (
+        <AnalyticsSection
+          id="conversion"
+          eyebrow="Revenue Movement"
+          title="Conversion Analytics"
+        >
+          <ConversionAnalytics
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "charts") {
+      return (
+        <AnalyticsSection
+          id="charts"
+          eyebrow="Visual Intelligence"
+          title="Luxury Charts"
+        >
+          <LuxuryAnalyticsCharts
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+            followUpReminders={followUpReminders}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "automation") {
+      return (
+        <AnalyticsSection
+          id="automation"
+          eyebrow="Automation Layer"
+          title="Escalations, Reminders & Stage Movement"
+        >
+          <div className="grid gap-6 2xl:grid-cols-2">
+            <OverdueEscalationPanel cardClass={cardClass} />
+
+            <AutoReminderGenerator
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+            />
+
+            <AutoStageMovementPanel
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+              updateInquiryStatus={toggleInquiryStatus}
+              updateAppointmentStage={updateAppointmentStage}
+              updateAppointmentStatus={updateAppointmentStatus}
+            />
+
+            <ProductivityHeatmap
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+              followUpReminders={followUpReminders}
+            />
+          </div>
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "actions") {
+      return (
+        <AnalyticsSection
+          id="actions"
+          eyebrow="Action Center"
+          title="Notification Actions"
+        >
+          <NotificationActionCenter
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+            followUpReminders={followUpReminders}
+            updateInquiryStatus={toggleInquiryStatus}
+            updateAppointmentStatus={updateAppointmentStatus}
+            setActiveTab={setActiveTab}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "followup-performance") {
+      return (
+        <AnalyticsSection
+          id="followup-performance"
+          eyebrow="Follow-Up Health"
+          title="Follow-Up Performance Analytics"
+        >
+          <FollowUpPerformancePanel
+            cardClass={cardClass}
+            reminders={followUpReminders}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
+        </AnalyticsSection>
+      );
+    }
+ 
+    if (activeAnalyticsSection === "lead-health") {
+  return (
+    <AnalyticsSection
+      id="lead-health"
+      eyebrow="AI Lead Intelligence"
+      title="Lead Health Analytics"
+    >
+      <LeadHealthPanel
+        cardClass={cardClass}
+        inquiries={inquiries}
+        appointments={appointments}
+        reminders={followUpReminders}
+      />
+    </AnalyticsSection>
+  );
+}
+ 
+    if (activeAnalyticsSection === "funnel") {
+      return (
+        <AnalyticsSection
+          id="funnel"
+          eyebrow="Pipeline Health"
+          title="Conversion Funnel"
+        >
+          <ConversionFunnelChart
+            cardClass={cardClass}
+            inquiries={inquiries}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    return (
+      <AnalyticsSection
+        id="overview"
+        eyebrow="Classic Dashboard"
+        title="Overview, Analytics & Timeline"
+      >
+        <div className="grid gap-6 2xl:grid-cols-2">
+          <DashboardAnalytics
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
+
+          <DashboardOverview
+            cardClass={cardClass}
+            todayInquiriesCount={todayInquiriesCount}
+            todayAppointmentsCount={todayAppointmentsCount}
+            latestInquiry={latestInquiry}
+            latestAppointment={latestAppointment}
+          />
+
+          <div className="2xl:col-span-2">
+            <ActivityTimeline
+              cardClass={cardClass}
+              inquiries={inquiries}
+              appointments={appointments}
+            />
+          </div>
+        </div>
+      </AnalyticsSection>
+    );
+  };
 
   if (!sessionChecked || (profileLoading && !adminProfile)) {
     return (
@@ -1548,215 +1822,38 @@ function AdminPage() {
             >
               <div className="sticky top-3 z-20 rounded-[1.5rem] border border-white/10 bg-black/70 p-3 shadow-2xl shadow-black/30 backdrop-blur-2xl">
                 <div className="flex gap-2 overflow-x-auto pb-1">
-                  {analyticsNavItems.map(([id, label]) => (
-                    <a
-                      key={id}
-                      href={`#${id}`}
-                      className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-gray-300 transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10 hover:text-[#D4AF37]"
-                    >
-                      {label}
-                    </a>
-                  ))}
+                  {analyticsNavItems.map(([id, label]) => {
+                    const isActive = activeAnalyticsSection === id;
+
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setActiveAnalyticsSection(id)}
+                        className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition ${
+                          isActive
+                            ? "border-[#D4AF37]/60 bg-[#D4AF37] text-black"
+                            : "border-white/10 bg-white/[0.04] text-gray-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10 hover:text-[#D4AF37]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <AnalyticsSection
-                id="command"
-                eyebrow="Enterprise Control"
-                title="CRM Command Center"
-              >
-                <CrmCommandCenter
-                  cardClass={cardClass}
-                  inquiries={inquiries}
-                  appointments={appointments}
-                  followUpReminders={followUpReminders}
-                />
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="kpi"
-                eyebrow="Performance Overview"
-                title="KPI Analytics"
-              >
-                <CrmKpiAnalytics
-                  cardClass={cardClass}
-                  inquiries={inquiries}
-                  appointments={appointments}
-                />
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="intelligence"
-                eyebrow="AI Intelligence"
-                title="Lead Intelligence Feed"
-              >
-                <div className="grid gap-6 2xl:grid-cols-2">
-                  <AiLeadIntelligenceFeed
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                  />
-
-                  <AiLeadPrioritizationPanel
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                  />
-                </div>
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="staff"
-                eyebrow="Team Performance"
-                title="Staff Analytics"
-              >
-                <div className="grid gap-6 2xl:grid-cols-2">
-                  <StaffPerformanceAnalytics
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                  />
-
-                  <StaffLeaderboard
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                  />
-                </div>
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="scoring"
-                eyebrow="Lead Quality"
-                title="Lead Scoring"
-              >
-                <LeadScoringAnalytics
-                  cardClass={cardClass}
-                  inquiries={inquiries}
-                  appointments={appointments}
-                />
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="conversion"
-                eyebrow="Revenue Movement"
-                title="Conversion Analytics"
-              >
-                <ConversionAnalytics
-                  cardClass={cardClass}
-                  inquiries={inquiries}
-                  appointments={appointments}
-                />
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="charts"
-                eyebrow="Visual Intelligence"
-                title="Luxury Charts"
-              >
-                <LuxuryAnalyticsCharts
-                  cardClass={cardClass}
-                  inquiries={inquiries}
-                  appointments={appointments}
-                  followUpReminders={followUpReminders}
-                />
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="automation"
-                eyebrow="Automation Layer"
-                title="Escalations, Reminders & Stage Movement"
-              >
-                <div className="grid gap-6 2xl:grid-cols-2">
-                  <OverdueEscalationPanel cardClass={cardClass} />
-
-                  <AutoReminderGenerator
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                  />
-
-                  <AutoStageMovementPanel
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                    updateInquiryStatus={toggleInquiryStatus}
-                    updateAppointmentStage={updateAppointmentStage}
-                    updateAppointmentStatus={updateAppointmentStatus}
-                  />
-
-                  <ProductivityHeatmap
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                    followUpReminders={followUpReminders}
-                  />
-                </div>
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="actions"
-                eyebrow="Action Center"
-                title="Notification Actions & Reminder Analytics"
-              >
-                <div className="grid gap-6 2xl:grid-cols-2">
-                  <NotificationActionCenter
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                    followUpReminders={followUpReminders}
-                    updateInquiryStatus={toggleInquiryStatus}
-                    updateAppointmentStatus={updateAppointmentStatus}
-                    setActiveTab={setActiveTab}
-                  />
-
-                  <ReminderCompletionAnalytics
-                    cardClass={cardClass}
-                    followUpReminders={followUpReminders}
-                  />
-                </div>
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="funnel"
-                eyebrow="Pipeline Health"
-                title="Conversion Funnel"
-              >
-                <ConversionFunnelChart
-                  cardClass={cardClass}
-                  inquiries={inquiries}
-                />
-              </AnalyticsSection>
-
-              <AnalyticsSection
-                id="overview"
-                eyebrow="Classic Dashboard"
-                title="Overview, Analytics & Timeline"
-              >
-                <div className="grid gap-6 2xl:grid-cols-2">
-                  <DashboardAnalytics
-                    cardClass={cardClass}
-                    inquiries={inquiries}
-                    appointments={appointments}
-                  />
-
-                  <DashboardOverview
-                    cardClass={cardClass}
-                    todayInquiriesCount={todayInquiriesCount}
-                    todayAppointmentsCount={todayAppointmentsCount}
-                    latestInquiry={latestInquiry}
-                    latestAppointment={latestAppointment}
-                  />
-
-                  <div className="2xl:col-span-2">
-                    <ActivityTimeline
-                      cardClass={cardClass}
-                      inquiries={inquiries}
-                      appointments={appointments}
-                    />
-                  </div>
-                </div>
-              </AnalyticsSection>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeAnalyticsSection}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {renderActiveAnalyticsSection()}
+                </motion.div>
+              </AnimatePresence>
             </motion.div>
           ) : activeTab === "settings" ? (
             <motion.div
