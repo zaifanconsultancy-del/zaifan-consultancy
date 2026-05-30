@@ -11,6 +11,7 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  Users,
   Zap,
 } from "lucide-react";
 import { buildAiLeadInsights } from "../../services/aiLeadEngine";
@@ -28,6 +29,9 @@ function CrmCommandCenter({
     ? followUpReminders
     : [];
 
+  const allLeads = [...safeInquiries, ...safeAppointments];
+  const now = new Date();
+
   const aiInsights = buildAiLeadInsights({
     inquiries: safeInquiries,
     appointments: safeAppointments,
@@ -38,23 +42,78 @@ function CrmCommandCenter({
     appointments: safeAppointments,
   });
 
-  const now = new Date();
   const pendingReminders = safeReminders.filter(
     (item) => String(item.status || "pending").toLowerCase() !== "completed"
   );
+
   const overdueReminders = pendingReminders.filter((item) => {
     if (!item.due_date) return false;
     const dueDate = new Date(item.due_date);
     return !Number.isNaN(dueDate.getTime()) && dueDate < now;
   });
 
+  const enrichedLeads = allLeads.map((lead) => {
+    const status = String(
+      lead.status || lead.appointment_stage || lead.pipeline_stage || "pending"
+    )
+      .replaceAll("_", " ")
+      .toLowerCase();
+
+    const priority = String(lead.priority || "medium").toLowerCase();
+
+    const createdAt = lead.created_at
+      ? new Date(lead.created_at)
+      : lead.appointment_date
+      ? new Date(lead.appointment_date)
+      : now;
+
+    const ageDays = Number.isNaN(createdAt.getTime())
+      ? 0
+      : Math.max(0, Math.floor((now - createdAt) / 86400000));
+
+    const hasReminder = safeReminders.some(
+      (reminder) =>
+        String(reminder.student_id || reminder.lead_id || "") ===
+        String(lead.id || "")
+    );
+
+    const isUnassigned = !lead.assigned_admin_id;
+
+    const isVip = priority === "vip" || priority === "high";
+
+    const isStale =
+      ageDays >= 7 && (status.includes("new") || status.includes("pending"));
+
+    return {
+      ...lead,
+      status,
+      priority,
+      ageDays,
+      hasReminder,
+      isUnassigned,
+      isVip,
+      isStale,
+      isAppointment: Boolean(lead.appointment_date || lead.appointment_time),
+    };
+  });
+
+  const unassignedLeads = enrichedLeads.filter((lead) => lead.isUnassigned);
+  const staleLeads = enrichedLeads.filter((lead) => lead.isStale);
+  const noReminderLeads = enrichedLeads.filter((lead) => !lead.hasReminder);
+  const vipRiskLeads = enrichedLeads.filter(
+    (lead) => lead.isVip && (lead.isStale || !lead.hasReminder)
+  );
+
   const totalLeads = safeInquiries.length + safeAppointments.length;
+
   const contactedCount = safeInquiries.filter(
     (item) => String(item.status || "new").toLowerCase() !== "new"
   ).length;
+
   const approvedCount = safeInquiries.filter(
     (item) => String(item.status || "").toLowerCase() === "approved"
   ).length;
+
   const confirmedAppointments = safeAppointments.filter(
     (item) => String(item.status || "pending").toLowerCase() === "confirmed"
   ).length;
@@ -75,7 +134,10 @@ function CrmCommandCenter({
     aiInsights.hotLeads.length * 8 +
     aiInsights.immediateLeads.length * 10 +
     overdueReminders.length * 10 +
-    stageSuggestions.highUrgency.length * 7;
+    stageSuggestions.highUrgency.length * 7 +
+    unassignedLeads.length * 4 +
+    staleLeads.length * 6 +
+    vipRiskLeads.length * 9;
 
   const positiveScore =
     engagementRate * 0.25 +
@@ -85,10 +147,11 @@ function CrmCommandCenter({
 
   const crmHealthScore = Math.max(
     0,
-    Math.min(100, Math.round(positiveScore + 45 - alertScore * 0.35))
+    Math.min(100, Math.round(positiveScore + 45 - alertScore * 0.32))
   );
 
   const health = getHealthConfig(crmHealthScore);
+
   const priorityAction = getPriorityAction({
     hotLeads: aiInsights.hotLeads.length,
     immediateLeads: aiInsights.immediateLeads.length,
@@ -96,6 +159,9 @@ function CrmCommandCenter({
     stageSuggestions: stageSuggestions.highUrgency.length,
     pendingReminders: pendingReminders.length,
     engagementRate,
+    unassignedLeads: unassignedLeads.length,
+    staleLeads: staleLeads.length,
+    vipRiskLeads: vipRiskLeads.length,
   });
 
   const metricCards = [
@@ -131,6 +197,38 @@ function CrmCommandCenter({
       border: "border-orange-400/20",
       bg: "bg-orange-400/10",
     },
+    {
+      label: "Unassigned",
+      value: unassignedLeads.length,
+      icon: Users,
+      color: "text-blue-300",
+      border: "border-blue-400/20",
+      bg: "bg-blue-500/10",
+    },
+    {
+      label: "Stale Leads",
+      value: staleLeads.length,
+      icon: Radar,
+      color: "text-yellow-300",
+      border: "border-yellow-400/20",
+      bg: "bg-yellow-500/10",
+    },
+    {
+      label: "No Reminder",
+      value: noReminderLeads.length,
+      icon: ShieldCheck,
+      color: "text-purple-300",
+      border: "border-purple-400/20",
+      bg: "bg-purple-500/10",
+    },
+    {
+      label: "VIP Risk",
+      value: vipRiskLeads.length,
+      icon: Crown,
+      color: "text-[#D4AF37]",
+      border: "border-[#D4AF37]/20",
+      bg: "bg-[#D4AF37]/10",
+    },
   ];
 
   const intelligenceRows = [
@@ -164,6 +262,16 @@ function CrmCommandCenter({
       icon: ShieldCheck,
       accent: overdueReminders.length > 0 ? "text-red-300" : "text-green-300",
     },
+    {
+      title: "Assignment coverage",
+      value: `${unassignedLeads.length} unassigned`,
+      text:
+        unassignedLeads.length > 0
+          ? "Some leads need ownership assignment to prevent leakage."
+          : "All tracked leads currently have assignment coverage.",
+      icon: Users,
+      accent: unassignedLeads.length > 0 ? "text-orange-300" : "text-green-300",
+    },
   ];
 
   return (
@@ -188,8 +296,8 @@ function CrmCommandCenter({
 
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400 sm:text-base">
               A top-level control panel showing CRM health, urgent work,
-              automation pressure, lead quality, and the first action staff
-              should take today.
+              automation pressure, lead quality, ownership gaps, and the first
+              action staff should take today.
             </p>
           </div>
 
@@ -205,7 +313,9 @@ function CrmCommandCenter({
                 </h2>
               </div>
 
-              <div className={`flex h-16 w-16 items-center justify-center rounded-2xl border ${health.border} ${health.bg}`}>
+              <div
+                className={`flex h-16 w-16 items-center justify-center rounded-2xl border ${health.border} ${health.bg}`}
+              >
                 <health.icon className={`h-8 w-8 ${health.color}`} />
               </div>
             </div>
@@ -233,7 +343,7 @@ function CrmCommandCenter({
               key={metric.label}
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: index * 0.05 }}
+              transition={{ duration: 0.35, delay: index * 0.04 }}
               className={`rounded-[1.7rem] border ${metric.border} ${metric.bg} p-5 backdrop-blur-xl`}
             >
               <div className="flex items-center justify-between gap-4">
@@ -351,7 +461,7 @@ function getHealthConfig(score) {
       bg: "bg-[#D4AF37]/10",
       icon: TrendingUp,
       message:
-        "CRM health is good, but there are still improvement opportunities in reminders, stage movement, or lead response.",
+        "CRM health is good, but there are still improvement opportunities in reminders, stage movement, assignment coverage, or lead response.",
     };
   }
 
@@ -363,7 +473,7 @@ function getHealthConfig(score) {
       bg: "bg-orange-500/10",
       icon: AlertTriangle,
       message:
-        "CRM health needs attention. Prioritize overdue reminders, hot leads, and stale pipeline stages.",
+        "CRM health needs attention. Prioritize overdue reminders, hot leads, unassigned leads, and stale pipeline stages.",
     };
   }
 
@@ -374,7 +484,7 @@ function getHealthConfig(score) {
     bg: "bg-red-500/10",
     icon: Flame,
     message:
-      "CRM health is under pressure. Clear urgent follow-ups and handle hot leads before adding more workload.",
+      "CRM health is under pressure. Clear urgent follow-ups, assign loose leads, and handle hot leads before adding more workload.",
   };
 }
 
@@ -385,7 +495,17 @@ function getPriorityAction({
   stageSuggestions,
   pendingReminders,
   engagementRate,
+  unassignedLeads,
+  staleLeads,
+  vipRiskLeads,
 }) {
+  if (vipRiskLeads > 0) {
+    return {
+      title: "Handle VIP risk leads first",
+      message: `${vipRiskLeads} VIP/high-priority lead(s) are at risk due to missing reminders, age, or slow movement.`,
+    };
+  }
+
   if (immediateLeads > 0) {
     return {
       title: "Call immediate hot leads first",
@@ -397,6 +517,20 @@ function getPriorityAction({
     return {
       title: "Clear overdue follow-ups",
       message: `${overdueReminders} overdue follow-up reminder(s) are creating CRM pressure. Complete or reschedule them first.`,
+    };
+  }
+
+  if (unassignedLeads > 0) {
+    return {
+      title: "Assign lead ownership",
+      message: `${unassignedLeads} lead(s) are unassigned. Assign ownership before they leak from the pipeline.`,
+    };
+  }
+
+  if (staleLeads > 0) {
+    return {
+      title: "Revive stale leads",
+      message: `${staleLeads} lead(s) are stale or pending too long. Send follow-ups or move them to the correct stage.`,
     };
   }
 
@@ -424,13 +558,15 @@ function getPriorityAction({
   if (engagementRate < 50) {
     return {
       title: "Improve first response rate",
-      message: "Many inquiries may still be new. Contact them and move them into the pipeline.",
+      message:
+        "Many inquiries may still be new. Contact them and move them into the pipeline.",
     };
   }
 
   return {
     title: "CRM is stable",
-    message: "No critical action detected. Continue nurturing leads and improving conversion movement.",
+    message:
+      "No critical action detected. Continue nurturing leads and improving conversion movement.",
   };
 }
 

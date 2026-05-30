@@ -21,6 +21,11 @@ import CrmCommandCenter from "../CrmCommandCenter";
 import AiLeadIntelligenceFeed from "../AiLeadIntelligenceFeed";
 import AnalyticsSectionWrapper from "../AnalyticsSectionWrapper";
 import LeadHealthPanel from "../LeadHealthPanel";
+import CounselorCommandCenter from "../CounselorCommandCenter";
+
+import VisaRiskAnalyzer from "../VisaRiskAnalyzer";
+import CounselorPerformanceAI from "../CounselorPerformanceAI";
+import WorkloadBalancerAI from "../WorkloadBalancerAI";
 
 function AnalyticsPage({
   cardClass,
@@ -40,6 +45,10 @@ function AnalyticsPage({
 }) {
   const analyticsNavItems = [
     ["command", "Command"],
+    ["operations", "Ops Center"],
+    ["visa-risk", "Visa Risk"],
+    ["counselor-ai", "Counselor AI"],
+    ["workload-ai", "Workload AI"],
     ["kpi", "KPI"],
     ["intelligence", "AI Feed"],
     ["staff", "Staff"],
@@ -65,6 +74,57 @@ function AnalyticsPage({
             inquiries={inquiries}
             appointments={appointments}
             followUpReminders={followUpReminders}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "operations") {
+      return (
+        <AnalyticsSection
+          eyebrow="AI Operations"
+          title="Counselor Command Center"
+        >
+          <CounselorCommandCenter
+            inquiries={inquiries}
+            appointments={appointments}
+            reminders={followUpReminders}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "visa-risk") {
+      return (
+        <AnalyticsSection eyebrow="Visa Intelligence" title="Visa Risk Analyzer">
+          <VisaRiskAnalyzer inquiries={inquiries} appointments={appointments} />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "counselor-ai") {
+      return (
+        <AnalyticsSection
+          eyebrow="Team Intelligence"
+          title="Counselor Performance AI"
+        >
+          <CounselorPerformanceAI
+            inquiries={inquiries}
+            appointments={appointments}
+          />
+        </AnalyticsSection>
+      );
+    }
+
+    if (activeAnalyticsSection === "workload-ai") {
+      return (
+        <AnalyticsSection
+          eyebrow="Operations Intelligence"
+          title="Workload Balancer AI"
+        >
+          <WorkloadBalancerAI
+            inquiries={inquiries}
+            appointments={appointments}
           />
         </AnalyticsSection>
       );
@@ -165,11 +225,13 @@ function AnalyticsPage({
         >
           <div className="grid gap-6 2xl:grid-cols-2">
             <OverdueEscalationPanel cardClass={cardClass} />
+
             <AutoReminderGenerator
               cardClass={cardClass}
               inquiries={inquiries}
               appointments={appointments}
             />
+
             <AutoStageMovementPanel
               cardClass={cardClass}
               inquiries={inquiries}
@@ -178,6 +240,7 @@ function AnalyticsPage({
               updateAppointmentStage={updateAppointmentStage}
               updateAppointmentStatus={updateAppointmentStatus}
             />
+
             <ProductivityHeatmap
               cardClass={cardClass}
               inquiries={inquiries}
@@ -223,7 +286,10 @@ function AnalyticsPage({
 
     if (activeAnalyticsSection === "lead-health") {
       return (
-        <AnalyticsSection eyebrow="AI Lead Intelligence" title="Lead Health Analytics">
+        <AnalyticsSection
+          eyebrow="AI Lead Intelligence"
+          title="Lead Health Analytics"
+        >
           <LeadHealthPanel
             cardClass={cardClass}
             inquiries={inquiries}
@@ -243,7 +309,10 @@ function AnalyticsPage({
     }
 
     return (
-      <AnalyticsSection eyebrow="Classic Dashboard" title="Overview, Analytics & Timeline">
+      <AnalyticsSection
+        eyebrow="Classic Dashboard"
+        title="Overview, Analytics & Timeline"
+      >
         <div className="grid gap-6 2xl:grid-cols-2">
           <DashboardAnalytics
             cardClass={cardClass}

@@ -5,6 +5,7 @@ import CrmTimelinePanel from "./CrmTimelinePanel";
 import FollowUpReminderPanel from "./FollowUpReminderPanel";
 import AICounselorAssistant from "./AICounselorAssistant";
 import { addTimelineEvent } from "../../lib/crmTimeline";
+import AIWorkspacePanel from "./AIWorkspacePanel";
 import {
   getPipelineStages,
   getPipelineStageById,
@@ -127,13 +128,14 @@ function StudentDetailModal({
     ? ["pending", "confirmed", "completed", "cancelled"]
     : ["pending", "contacted", "completed"];
 
-  const sidebarItems = [
+ const sidebarItems = [
   ["overview", "Overview", "Student details and controls"],
   ["pipeline", "Pipeline", "Workflow stage tracking"],
   ["assignment", "Assignment", "Owner and staff handling"],
   ["timeline", "Timeline", "CRM history and changes"],
   ["followups", "Follow-ups", "Reminder and next actions"],
   ["ai", "AI Actions", "Copilot and follow-up generation"],
+  ["ai-workspace", "AI Workspace", "Full counselor operating desk"],
 ];
 
   const getPriorityStyle = (value) => {
@@ -548,6 +550,14 @@ function StudentDetailModal({
                   adminProfile={adminProfile}
                 />
               ) : null}
+
+              {activePanel === "ai-workspace" ? (
+  <AIWorkspacePanel
+    student={workingStudent}
+    studentType={type}
+    adminProfile={adminProfile}
+  />
+) : null}
 
               {activePanel === "pipeline" ? (
                 <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
