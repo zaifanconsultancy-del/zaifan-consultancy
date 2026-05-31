@@ -55,9 +55,13 @@ function SmartActionsPanel({ student = {} }) {
       return;
     }
 
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent(
-      "Zaifan Consultancy Update"
-    )}&body=${encodeURIComponent(message)}`;
+    const subject = "Zaifan Consultancy Update";
+
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      email
+    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+
+    window.open(gmailUrl, "_blank", "noopener,noreferrer");
   };
 
   return (

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "../../lib/supabaseClient";
 
 import LeadAssignmentPanel from "./LeadAssignmentPanel";
 import CrmTimelinePanel from "./CrmTimelinePanel";
@@ -57,10 +56,20 @@ function StudentDetailModal({
   const [studentUniversities, setStudentUniversities] = useState([]);
   const [studentTasks, setStudentTasks] = useState([]);
   const [studentCommunications, setStudentCommunications] = useState([]);
+  const [panelRefreshKey, setPanelRefreshKey] = useState(0);
 
   useEffect(() => {
     setLocalStudent(student);
     setActivePanel(student?.__preferredPanel || "ai-workspace");
+
+    setOsLoading(false);
+    setOsError("");
+    setStudentDocuments([]);
+    setStudentApplication(null);
+    setStudentUniversities([]);
+    setStudentTasks([]);
+    setStudentCommunications([]);
+    setPanelRefreshKey((prev) => prev + 1);
   }, [student]);
 
   const safePermissions = {
@@ -80,87 +89,15 @@ function StudentDetailModal({
   const studentType =
     workingStudent?.student_type || workingStudent?.type || type || "inquiry";
 
-  const loadStudentOsData = async () => {
-    if (!studentId) return;
-
-    setOsLoading(true);
+  const refreshCurrentPanel = () => {
+    setOsLoading(false);
     setOsError("");
-
-    try {
-      const [
-        documentsResult,
-        applicationResult,
-        universitiesResult,
-        tasksResult,
-        communicationsResult,
-      ] = await Promise.allSettled([
-        supabase
-          .from("student_documents")
-          .select("*")
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: true }),
-
-        supabase
-          .from("student_applications")
-          .select("*")
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: false })
-          .limit(1),
-
-        supabase
-          .from("student_universities")
-          .select("*")
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: false }),
-
-        supabase
-          .from("student_tasks")
-          .select("*")
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: false }),
-
-        supabase
-          .from("student_communications")
-          .select("*")
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: false }),
-      ]);
-
-      const readResult = (result) => {
-        if (result.status !== "fulfilled") return { data: [], error: result.reason };
-        return result.value || { data: [], error: null };
-      };
-
-      const docs = readResult(documentsResult);
-      const apps = readResult(applicationResult);
-      const universities = readResult(universitiesResult);
-      const tasks = readResult(tasksResult);
-      const communications = readResult(communicationsResult);
-
-      const errors = [docs, apps, universities, tasks, communications]
-        .map((item) => item?.error?.message)
-        .filter(Boolean);
-
-      setStudentDocuments(docs.data || []);
-      setStudentApplication(apps.data?.[0] || null);
-      setStudentUniversities(universities.data || []);
-      setStudentTasks(tasks.data || []);
-      setStudentCommunications(communications.data || []);
-
-      if (errors.length) {
-        setOsError(errors[0]);
-      }
-    } catch (error) {
-      setOsError(error.message || "Student OS data failed to load.");
-    } finally {
-      setOsLoading(false);
-    }
+    setPanelRefreshKey((prev) => prev + 1);
   };
 
-  useEffect(() => {
-  setOsLoading(false);
-  setOsError("");
-}, [studentId]);
+  const loadStudentOsData = () => {
+    refreshCurrentPanel();
+  };
 
   const executiveStudents =
     allLeads.length > 0
@@ -522,7 +459,7 @@ function StudentDetailModal({
 
                   {osLoading ? (
                     <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-[10px] font-semibold text-cyan-300">
-                      Syncing OS Data...
+                      Refreshing Panel...
                     </span>
                   ) : null}
                 </div>
@@ -552,15 +489,12 @@ function StudentDetailModal({
                 </button>
 
                 <button
-  type="button"
-  onClick={() => {
-    setOsLoading(false);
-    setOsError("");
-  }}
+                  type="button"
+                  onClick={refreshCurrentPanel}
                   disabled={osLoading}
                   className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/45 disabled:opacity-50"
                 >
-                  {osLoading ? "Refreshing..." : "Refresh OS Data"}
+                  Refresh Current Panel
                 </button>
 
                 {safePermissions.canDelete ? (
@@ -656,6 +590,11 @@ function StudentDetailModal({
                 <MiniOsStat label="Universities" value={studentUniversities.length} />
                 <MiniOsStat label="Tasks" value={studentTasks.length} />
                 <MiniOsStat label="Messages" value={studentCommunications.length} />
+
+                <p className="pt-2 text-[11px] leading-5 text-white/35">
+                  Snapshot sync is paused during stabilization. Each panel now
+                  loads independently to prevent freezes.
+                </p>
               </div>
             </aside>
 
@@ -825,6 +764,7 @@ function StudentDetailModal({
 
               {activePanel === "documents" ? (
                 <StudentDocumentsPanel
+                  key={`documents-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     documents: studentDocuments,
@@ -836,6 +776,7 @@ function StudentDetailModal({
 
               {activePanel === "applications" ? (
                 <StudentApplicationPanel
+                  key={`applications-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     application: studentApplication,
@@ -847,6 +788,7 @@ function StudentDetailModal({
 
               {activePanel === "visa" ? (
                 <VisaTrackerPanel
+                  key={`visa-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     application: studentApplication,
@@ -860,6 +802,7 @@ function StudentDetailModal({
 
               {activePanel === "universities" ? (
                 <UniversityManagementPanel
+                  key={`universities-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     universities: studentUniversities,
@@ -871,6 +814,7 @@ function StudentDetailModal({
 
               {activePanel === "communication" ? (
                 <CommunicationCenterPanel
+                  key={`communication-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     communications: studentCommunications,
@@ -887,6 +831,7 @@ function StudentDetailModal({
               {activePanel === "operations" ? (
                 <div className="space-y-5">
                   <TaskCenterPanel
+                    key={`tasks-${studentId}-${panelRefreshKey}`}
                     student={{
                       ...workingStudent,
                       documents: studentDocuments,

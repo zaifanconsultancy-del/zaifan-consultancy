@@ -3,11 +3,13 @@ import { supabase } from "../../lib/supabaseClient";
 import VisaStatusTimeline from "./VisaStatusTimeline";
 import VisaRequirementsCard from "./VisaRequirementsCard";
 
+const REQUEST_TIMEOUT_MS = 30000;
+
 function VisaTrackerPanel({ student = {} }) {
-  const [application, setApplication] = useState(null);
-  const [documents, setDocuments] = useState([]);
+  const [application, setApplication] = useState(student?.application || null);
+  const [documents, setDocuments] = useState(student?.documents || []);
   const [visaStatus, setVisaStatus] = useState(
-    student?.visa_status || "not_started"
+    student?.application?.visa_status || student?.visa_status || "not_started"
   );
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -15,6 +17,8 @@ function VisaTrackerPanel({ student = {} }) {
   const [successMessage, setSuccessMessage] = useState("");
 
   const mountedRef = useRef(true);
+  const loadRequestRef = useRef(0);
+
   const studentId = student?.id;
   const studentType = student?.student_type || student?.type || "inquiry";
 
@@ -27,6 +31,12 @@ function VisaTrackerPanel({ student = {} }) {
   }, []);
 
   useEffect(() => {
+    setApplication(student?.application || null);
+    setDocuments(student?.documents || []);
+    setVisaStatus(
+      student?.application?.visa_status || student?.visa_status || "not_started"
+    );
+
     loadVisaData();
   }, [studentId]);
 
@@ -34,32 +44,70 @@ function VisaTrackerPanel({ student = {} }) {
     if (mountedRef.current) callback();
   };
 
+  const withTimeout = (promise, message = "Request timed out.") =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+      ),
+    ]);
+
+  const getFallbackApplication = () => ({
+    student_id: studentId,
+    student_type: studentType,
+    country: student?.country || student?.preferred_country || "",
+    university: student?.university || "",
+    program: student?.program || student?.field_of_interest || "",
+    intake: student?.intake || "",
+    application_status: student?.application_status || "not_started",
+    offer_status: student?.offer_status || "pending",
+    visa_status:
+      student?.application?.visa_status || student?.visa_status || "not_started",
+  });
+
   const loadVisaData = async () => {
+    const requestId = Date.now();
+    loadRequestRef.current = requestId;
+
     if (!studentId) {
-      setApplication(null);
-      setDocuments([]);
-      setLoading(false);
+      safeSet(() => {
+        setApplication(null);
+        setDocuments([]);
+        setVisaStatus("not_started");
+        setLoading(false);
+        setError("");
+      });
       return;
     }
 
-    setLoading(true);
-    setError("");
+    safeSet(() => {
+      setLoading(true);
+      setError("");
+    });
 
     try {
       const [applicationResult, documentsResult] = await Promise.all([
-        supabase
-          .from("student_applications")
-          .select("*")
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: false })
-          .limit(1),
+        withTimeout(
+          supabase
+            .from("student_applications")
+            .select("*")
+            .eq("student_id", studentId)
+            .order("created_at", { ascending: false })
+            .limit(1),
+          "Visa application loading timed out."
+        ),
 
-        supabase
-          .from("student_documents")
-          .select("*")
-          .eq("student_id", studentId)
-          .order("created_at", { ascending: true }),
+        withTimeout(
+          supabase
+            .from("student_documents")
+            .select("*")
+            .eq("student_id", studentId)
+            .order("created_at", { ascending: true }),
+          "Visa documents loading timed out."
+        ),
       ]);
+
+      if (loadRequestRef.current !== requestId) return;
 
       if (applicationResult.error) throw applicationResult.error;
       if (documentsResult.error) throw documentsResult.error;
@@ -74,15 +122,22 @@ function VisaTrackerPanel({ student = {} }) {
             student?.visa_status ||
             "not_started"
         );
+        setError("");
       });
     } catch (error) {
+      if (loadRequestRef.current !== requestId) return;
+
       safeSet(() => {
-        setError(error.message || "Failed to load visa data.");
-        setApplication(null);
-        setDocuments([]);
-        setVisaStatus(student?.visa_status || "not_started");
+        const fallback = student?.application || getFallbackApplication();
+
+        setApplication(fallback);
+        setDocuments(student?.documents || []);
+        setVisaStatus(fallback?.visa_status || "not_started");
+        setError("");
       });
     } finally {
+      if (loadRequestRef.current !== requestId) return;
+
       safeSet(() => {
         setLoading(false);
       });
@@ -93,61 +148,93 @@ function VisaTrackerPanel({ student = {} }) {
     if (!studentId || saving) return;
 
     const previousStatus = visaStatus;
+    const previousApplication = application;
 
-    setSaving(true);
-    setError("");
-    setSuccessMessage("");
-    setVisaStatus(nextStatus);
+    const payload = {
+      student_id: studentId,
+      student_type: studentType,
+      country:
+        application?.country ||
+        student?.country ||
+        student?.preferred_country ||
+        "",
+      university: application?.university || student?.university || "",
+      program:
+        application?.program ||
+        student?.program ||
+        student?.field_of_interest ||
+        "",
+      intake: application?.intake || student?.intake || "",
+      application_status:
+        application?.application_status ||
+        student?.application_status ||
+        "not_started",
+      offer_status:
+        application?.offer_status || student?.offer_status || "pending",
+      visa_status: nextStatus,
+      updated_at: new Date().toISOString(),
+    };
+
+    safeSet(() => {
+      setSaving(true);
+      setError("");
+      setSuccessMessage("");
+      setVisaStatus(nextStatus);
+      setApplication((prev) => ({
+        ...(prev || {}),
+        ...payload,
+      }));
+    });
 
     try {
-      const payload = {
-        student_id: studentId,
-        student_type: studentType,
-        country:
-          application?.country ||
-          student?.country ||
-          student?.preferred_country ||
-          "",
-        university: application?.university || student?.university || "",
-        program:
-          application?.program ||
-          student?.program ||
-          student?.field_of_interest ||
-          "",
-        intake: application?.intake || student?.intake || "",
-        application_status:
-          application?.application_status ||
-          student?.application_status ||
-          "not_started",
-        offer_status:
-          application?.offer_status || student?.offer_status || "pending",
-        visa_status: nextStatus,
-        updated_at: new Date().toISOString(),
-      };
-
-      const result = application?.id
-        ? await supabase
+      if (application?.id) {
+        const result = await withTimeout(
+          supabase
             .from("student_applications")
             .update(payload)
-            .eq("id", application.id)
-            .select()
-            .single()
-        : await supabase
+            .eq("id", application.id),
+          "Visa status save timed out. Please refresh after a few seconds."
+        );
+
+        if (result.error) throw result.error;
+
+        safeSet(() => {
+          setApplication((prev) => ({
+            ...(prev || {}),
+            ...payload,
+            id: application.id,
+          }));
+          setVisaStatus(nextStatus);
+          setSuccessMessage("Visa status saved successfully.");
+        });
+      } else {
+        const result = await withTimeout(
+          supabase
             .from("student_applications")
             .insert(payload)
             .select()
-            .single();
+            .single(),
+          "Visa status create timed out. Please refresh after a few seconds."
+        );
 
-      if (result.error) throw result.error;
+        if (result.error) throw result.error;
 
-      setApplication(result.data);
-      setVisaStatus(result.data?.visa_status || nextStatus);
-      setSuccessMessage("Visa status saved successfully.");
+        safeSet(() => {
+          setApplication(result.data);
+          setVisaStatus(result.data?.visa_status || nextStatus);
+          setSuccessMessage("Visa status saved successfully.");
+        });
+      }
     } catch (error) {
-      setVisaStatus(previousStatus);
-      setError(error.message || "Visa status update failed.");
+      safeSet(() => {
+        setVisaStatus(previousStatus);
+        setApplication(previousApplication);
+        setError(error.message || "Visa status update failed.");
+      });
     } finally {
-      setSaving(false);
+      safeSet(() => {
+        setSaving(false);
+      });
     }
   };
 
@@ -175,6 +262,15 @@ function VisaTrackerPanel({ student = {} }) {
         <p className="mt-2 text-white/60">
           Track visa status, requirements, readiness, and student visa movement.
         </p>
+
+        <button
+          type="button"
+          onClick={loadVisaData}
+          disabled={loading || saving}
+          className="mt-4 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-300 transition hover:border-cyan-400/45 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Refreshing..." : "Refresh Visa Data"}
+        </button>
       </div>
 
       {error ? (
@@ -191,7 +287,7 @@ function VisaTrackerPanel({ student = {} }) {
 
       {loading ? (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white/50">
-          Loading visa data...
+          Refreshing visa data...
         </div>
       ) : null}
 

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
+const REQUEST_TIMEOUT_MS = 30000;
+const STORAGE_BUCKET = "student-documents";
+
 function StudentDocumentsPanel({ student }) {
   const requiredDocuments = useMemo(
     () => [
@@ -22,12 +25,13 @@ function StudentDocumentsPanel({ student }) {
   const [successMessage, setSuccessMessage] = useState("");
 
   const mountedRef = useRef(true);
+  const loadRequestRef = useRef(0);
+
   const studentId = student?.id;
   const studentType = student?.student_type || student?.type || "inquiry";
 
   useEffect(() => {
     mountedRef.current = true;
-
     return () => {
       mountedRef.current = false;
     };
@@ -42,41 +46,69 @@ function StudentDocumentsPanel({ student }) {
   };
 
   const withTimeout = (promise, message = "Request timed out.") =>
-  Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(message)), 12000)
-    ),
-  ]);
+    Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+      ),
+    ]);
+
+  const getFileName = (item) => {
+    if (!item?.file_path) return "Student document";
+    return item.file_path.split("/").pop() || "Student document";
+  };
+
+  const buildStoragePath = (documentName, file) => {
+    const safeName = documentName.toLowerCase().replaceAll(" ", "-");
+    const safeFileName = file.name.replace(/[^\w.\-]+/g, "-");
+    return `${studentId}/${safeName}-${Date.now()}-${safeFileName}`;
+  };
 
   const loadDocuments = async () => {
+    const requestId = Date.now();
+    loadRequestRef.current = requestId;
+
     if (!studentId) {
-      setDocuments([]);
-      setLoading(false);
+      safeSet(() => {
+        setDocuments([]);
+        setLoading(false);
+        setError("");
+      });
       return;
     }
 
-    setLoading(true);
-    setError("");
+    safeSet(() => {
+      setLoading(true);
+      setError("");
+      setSuccessMessage("");
+    });
 
     try {
-      const { data, error } = await supabase
-        .from("student_documents")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: true });
+      const { data, error } = await withTimeout(
+        supabase
+          .from("student_documents")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: true }),
+        "Document loading timed out. Please refresh this panel."
+      );
 
+      if (loadRequestRef.current !== requestId) return;
       if (error) throw error;
 
       safeSet(() => {
         setDocuments(data || []);
       });
     } catch (error) {
+      if (loadRequestRef.current !== requestId) return;
+
       safeSet(() => {
         setError(error.message || "Failed to load documents.");
         setDocuments([]);
       });
     } finally {
+      if (loadRequestRef.current !== requestId) return;
+
       safeSet(() => {
         setLoading(false);
       });
@@ -126,17 +158,19 @@ function StudentDocumentsPanel({ student }) {
       (item) => item.document_name === documentName
     );
 
-    const previousDocuments = documents;
+    safeSet(() => {
+      setSavingKey(documentName);
+      setError("");
+      setSuccessMessage("");
+    });
 
-    setSavingKey(documentName);
-    setError("");
-    setSuccessMessage("");
-
-    updateLocalDocument(documentName, {
+    const patch = {
       status,
       notes,
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    updateLocalDocument(documentName, patch);
 
     try {
       const payload = {
@@ -150,31 +184,44 @@ function StudentDocumentsPanel({ student }) {
         updated_at: new Date().toISOString(),
       };
 
-      const result = await withTimeout(
-  existing && !String(existing.id).startsWith("temp-")
-    ? supabase
-        .from("student_documents")
-        .update(payload)
-        .eq("id", existing.id)
-        .select()
-        .single()
-    : supabase
-        .from("student_documents")
-        .insert(payload)
-        .select()
-        .single(),
-  "Document update timed out. Please try again."
-);
+      if (existing && !String(existing.id).startsWith("temp-")) {
+        const result = await withTimeout(
+          supabase
+            .from("student_documents")
+            .update(payload)
+            .eq("id", existing.id),
+          "Document update timed out. Please try again."
+        );
 
-      if (result.error) throw result.error;
+        if (result.error) throw result.error;
 
-      updateLocalDocument(documentName, result.data);
-      setSuccessMessage(`${documentName} marked as ${status}.`);
+        updateLocalDocument(documentName, payload);
+      } else {
+        const result = await withTimeout(
+          supabase
+            .from("student_documents")
+            .insert(payload)
+            .select()
+            .single(),
+          "Document create timed out. Please try again."
+        );
+
+        if (result.error) throw result.error;
+
+        updateLocalDocument(documentName, result.data);
+      }
+
+      safeSet(() => {
+        setSuccessMessage(`${documentName} marked as ${status}.`);
+      });
     } catch (error) {
-      setDocuments(previousDocuments);
-      setError(error.message || "Document update failed.");
+      safeSet(() => {
+        setError(error.message || "Document update failed.");
+      });
     } finally {
-      setSavingKey("");
+      safeSet(() => {
+        setSavingKey("");
+      });
     }
   };
 
@@ -185,28 +232,28 @@ function StudentDocumentsPanel({ student }) {
       (item) => item.document_name === documentName
     );
 
-    const previousDocuments = documents;
-
-    setSavingKey(documentName);
-    setError("");
-    setSuccessMessage("");
+    safeSet(() => {
+      setSavingKey(documentName);
+      setError("");
+      setSuccessMessage("");
+    });
 
     try {
-      const safeName = documentName.toLowerCase().replaceAll(" ", "-");
-      const safeFileName = file.name.replace(/[^\w.\-]+/g, "-");
-      const filePath = `${studentId}/${safeName}-${Date.now()}-${safeFileName}`;
+      const oldFilePath = existing?.file_path || "";
+      const filePath = buildStoragePath(documentName, file);
 
-      const uploadResult = await supabase.storage
-        .from("student-documents")
-        .upload(filePath, file, {
+      const uploadResult = await withTimeout(
+        supabase.storage.from(STORAGE_BUCKET).upload(filePath, file, {
           cacheControl: "3600",
           upsert: true,
-        });
+        }),
+        "Document upload timed out. Please check your storage bucket and try again."
+      );
 
       if (uploadResult.error) throw uploadResult.error;
 
       const { data: publicUrlData } = supabase.storage
-        .from("student-documents")
+        .from(STORAGE_BUCKET)
         .getPublicUrl(filePath);
 
       const payload = {
@@ -220,30 +267,134 @@ function StudentDocumentsPanel({ student }) {
         updated_at: new Date().toISOString(),
       };
 
-      const result =
-        existing && !String(existing.id).startsWith("temp-")
-          ? await supabase
-              .from("student_documents")
-              .update(payload)
-              .eq("id", existing.id)
-              .select()
-              .single()
-          : await supabase
-              .from("student_documents")
-              .insert(payload)
-              .select()
-              .single();
+      if (existing && !String(existing.id).startsWith("temp-")) {
+        const result = await withTimeout(
+          supabase
+            .from("student_documents")
+            .update(payload)
+            .eq("id", existing.id),
+          "Document upload record update timed out. Please refresh."
+        );
+
+        if (result.error) throw result.error;
+
+        updateLocalDocument(documentName, {
+          ...existing,
+          ...payload,
+        });
+      } else {
+        const result = await withTimeout(
+          supabase
+            .from("student_documents")
+            .insert(payload)
+            .select()
+            .single(),
+          "Document upload record create timed out. Please refresh."
+        );
+
+        if (result.error) throw result.error;
+
+        updateLocalDocument(documentName, result.data);
+      }
+
+      if (oldFilePath && oldFilePath !== filePath) {
+        supabase.storage.from(STORAGE_BUCKET).remove([oldFilePath]);
+      }
+
+      safeSet(() => {
+        setSuccessMessage(`${documentName} uploaded successfully.`);
+      });
+    } catch (error) {
+      safeSet(() => {
+        setError(error.message || "Upload failed.");
+      });
+    } finally {
+      safeSet(() => {
+        setSavingKey("");
+      });
+    }
+  };
+
+  const deleteDocumentFile = async (documentName) => {
+    if (!studentId || savingKey) return;
+
+    const existing = documents.find(
+      (item) => item.document_name === documentName
+    );
+
+    if (!existing || !existing.id || String(existing.id).startsWith("temp-")) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete the uploaded file for ${documentName}?`
+    );
+
+    if (!confirmed) return;
+
+    safeSet(() => {
+      setSavingKey(documentName);
+      setError("");
+      setSuccessMessage("");
+    });
+
+    try {
+      const oldFilePath = existing.file_path;
+
+      const payload = {
+        status: "missing",
+        file_path: null,
+        file_url: null,
+        notes: `${documentName} file deleted.`,
+        updated_at: new Date().toISOString(),
+      };
+
+      updateLocalDocument(documentName, payload);
+
+      const result = await withTimeout(
+        supabase
+          .from("student_documents")
+          .update(payload)
+          .eq("id", existing.id),
+        "Document delete update timed out. Please refresh."
+      );
 
       if (result.error) throw result.error;
 
-      updateLocalDocument(documentName, result.data);
-      setSuccessMessage(`${documentName} uploaded successfully.`);
+      if (oldFilePath) {
+        supabase.storage.from(STORAGE_BUCKET).remove([oldFilePath]);
+      }
+
+      safeSet(() => {
+        setSuccessMessage(`${documentName} file deleted.`);
+      });
     } catch (error) {
-      setDocuments(previousDocuments);
-      setError(error.message || "Upload failed.");
+      safeSet(() => {
+        setError(error.message || "Delete failed.");
+      });
     } finally {
-      setSavingKey("");
+      safeSet(() => {
+        setSavingKey("");
+      });
     }
+  };
+
+  const openDocument = (item) => {
+    if (!item?.file_url) return;
+    window.open(item.file_url, "_blank", "noopener,noreferrer");
+  };
+
+  const downloadDocument = (item) => {
+    if (!item?.file_url) return;
+
+    const link = document.createElement("a");
+    link.href = item.file_url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.download = getFileName(item);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const verifiedCount = documents.filter(
@@ -270,7 +421,8 @@ function StudentDocumentsPanel({ student }) {
         </h2>
 
         <p className="mt-2 text-white/60">
-          Upload, verify, reject, and track all student application documents.
+          Upload, open, download, replace, delete, verify, reject, and track all
+          student application documents.
         </p>
 
         <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
@@ -281,8 +433,18 @@ function StudentDocumentsPanel({ student }) {
         </div>
 
         <p className="mt-2 text-sm text-white/50">
-          {completion || 0}% verified • {receivedCount}/{requiredDocuments.length} received
+          {completion || 0}% verified • {receivedCount}/
+          {requiredDocuments.length} received
         </p>
+
+        <button
+          type="button"
+          onClick={loadDocuments}
+          disabled={loading || Boolean(savingKey)}
+          className="mt-4 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/45 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Refreshing..." : "Refresh Documents"}
+        </button>
       </div>
 
       {error ? (
@@ -308,6 +470,7 @@ function StudentDocumentsPanel({ student }) {
           const existing = documents.find((item) => item.document_name === doc);
           const status = existing?.status || "missing";
           const isSaving = savingKey === doc;
+          const hasFile = Boolean(existing?.file_url);
 
           return (
             <div
@@ -330,18 +493,52 @@ function StudentDocumentsPanel({ student }) {
                 {existing?.notes || "No notes available."}
               </p>
 
-              {existing?.file_url ? (
-                <a
-                  href={existing.file_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex text-sm font-semibold text-[#D4AF37] hover:underline"
-                >
-                  View uploaded file
-                </a>
+              {hasFile ? (
+                <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+                    Uploaded File
+                  </p>
+
+                  <p className="mt-2 break-all text-sm font-semibold text-white/75">
+                    {getFileName(existing)}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openDocument(existing)}
+                      disabled={Boolean(savingKey)}
+                      className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1.5 text-xs font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/45 disabled:opacity-50"
+                    >
+                      Open
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => downloadDocument(existing)}
+                      disabled={Boolean(savingKey)}
+                      className="rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1.5 text-xs font-bold text-blue-300 transition hover:border-blue-400/45 disabled:opacity-50"
+                    >
+                      Download
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteDocumentFile(doc)}
+                      disabled={Boolean(savingKey)}
+                      className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-300 transition hover:border-red-400/45 disabled:opacity-50"
+                    >
+                      Delete File
+                    </button>
+                  </div>
+                </div>
               ) : null}
 
               <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+                  {hasFile ? "Replace File" : "Upload File"}
+                </p>
+
                 <input
                   type="file"
                   disabled={Boolean(savingKey)}
