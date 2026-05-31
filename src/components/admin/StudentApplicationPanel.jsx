@@ -61,7 +61,7 @@ function StudentApplicationPanel({ student }) {
     setSuccessMessage("");
 
     loadApplication();
-    loadTimeline();
+// Timeline loads only when user clicks Refresh Timeline to avoid freezing panel.
   }, [studentId]);
 
   const safeSet = (callback) => {
@@ -478,7 +478,7 @@ function StudentApplicationPanel({ student }) {
         }
       }
 
-      await loadTimeline();
+      
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Application save failed.");
@@ -566,10 +566,7 @@ function StudentApplicationPanel({ student }) {
         <div className="mt-4 flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => {
-              loadApplication();
-              loadTimeline();
-            }}
+            onClick={loadApplication}
             disabled={loading || saving}
             className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/45 disabled:cursor-not-allowed disabled:opacity-50"
           >

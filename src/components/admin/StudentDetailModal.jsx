@@ -17,6 +17,7 @@ import ExecutiveAIDashboard from "./ExecutiveAIDashboard";
 import TaskCenterPanel from "./TaskCenterPanel";
 import CounselorQueuePanel from "./CounselorQueuePanel";
 import SmartActionsPanel from "./SmartActionsPanel";
+import StudentAnalyticsPanel from "./StudentAnalyticsPanel";
 
 import {
   getPipelineStages,
@@ -90,10 +91,17 @@ function StudentDetailModal({
     workingStudent?.student_type || workingStudent?.type || type || "inquiry";
 
   const refreshCurrentPanel = () => {
+  setOsLoading(true);
+  setOsError("");
+
+  setPanelRefreshKey((prev) => prev + 1);
+
+  window.setTimeout(() => {
     setOsLoading(false);
-    setOsError("");
-    setPanelRefreshKey((prev) => prev + 1);
-  };
+  }, 700);
+};
+
+
 
   const loadStudentOsData = () => {
     refreshCurrentPanel();
@@ -197,6 +205,7 @@ function StudentDetailModal({
       title: "Student Hub",
       items: [
         ["overview", "Overview", "Student details and controls", "📋"],
+        ["analytics", "Analytics", "Student journey intelligence", "📈"],
         ["documents", "Documents", "Student file management", "📁"],
         ["applications", "Applications", "University workflow", "🎓"],
         ["visa", "Visa Processing", "Visa workflow tracking", "🌍"],
@@ -738,6 +747,20 @@ function StudentDetailModal({
                   </div>
                 </div>
               ) : null}
+
+              {activePanel === "analytics" ? (
+  <StudentAnalyticsPanel
+    student={{
+      ...workingStudent,
+      application: studentApplication || workingStudent?.application,
+      documents: studentDocuments,
+      universities: studentUniversities,
+      tasks: studentTasks,
+      communications: studentCommunications,
+    }}
+    allLeads={allLeads}
+  />
+) : null}
 
               {activePanel === "ai-workspace" ? (
                 <AIWorkspacePanel

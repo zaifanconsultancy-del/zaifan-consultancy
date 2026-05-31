@@ -278,7 +278,10 @@ function TaskCenterPanel({ student = {}, adminProfile = null }) {
   };
 
   try {
-    const result = await supabase.from("student_tasks").insert(payload);
+    const result = await withTimeout(
+  supabase.from("student_tasks").insert(payload),
+  "Task save timed out. Please try again."
+);
 
     if (result.error) {
       throw result.error;
