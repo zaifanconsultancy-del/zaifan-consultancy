@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import InquiryCard from "./InquiryCard";
 import AppointmentCard from "./AppointmentCard";
 import { AnimatePresence, motion } from "framer-motion";
 import AnimatedSection from "./AnimatedSection";
 import StudentDetailModal from "./StudentDetailModal";
+import { enrichLeadWithAi } from "../../services/aiLeadEngine";
 
 function DashboardContent({
   loading = false,
@@ -12,7 +13,8 @@ function DashboardContent({
   filteredInquiries = [],
   appointments = [],
   filteredAppointments = [],
-  cardClass = "",
+allLeads = [],
+cardClass = "",
   toggleInquiryStatus = () => {},
   updateInquiryStatus = toggleInquiryStatus,
   updateInquiryPriority = () => {},
@@ -24,6 +26,14 @@ function DashboardContent({
   role = "staff",
   adminProfile = null,
   permissions = {},
+  reanalyzeLeadWithGpt = null,
+  aiReanalysisState = {
+    loading: false,
+    leadId: null,
+    leadType: null,
+    message: "",
+    error: "",
+  },
 }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [modalType, setModalType] = useState("inquiry");
@@ -137,6 +147,43 @@ function DashboardContent({
   const activeSourceItems = activeTab === "inquiries" ? inquiries : appointments;
   const activeItems =
     activeTab === "inquiries" ? filteredInquiries : filteredAppointments;
+  const activeLeadType = activeTab === "appointments" ? "appointment" : "inquiry";
+  const executiveLeads = useMemo(() => {
+  if (allLeads.length > 0) return allLeads;
+
+  return [
+    ...inquiries.map((lead) => ({ ...lead, __leadType: "inquiry" })),
+    ...appointments.map((lead) => ({ ...lead, __leadType: "appointment" })),
+  ];
+}, [allLeads, inquiries, appointments]);
+
+  const enrichedActiveItems = useMemo(
+    () => activeItems.map((item) => enrichLeadWithAi(item, activeLeadType)),
+    [activeItems, activeLeadType]
+  );
+
+  const activeAiStats = useMemo(() => {
+    const total = enrichedActiveItems.length;
+    const storedGpt = enrichedActiveItems.filter((item) => item.ai_has_stored_gpt).length;
+    const hot = enrichedActiveItems.filter((item) => item.ai_tier?.level === "hot").length;
+    const highRisk = enrichedActiveItems.filter(
+      (item) => item.ai_risk_level?.level === "high" || item.ai_risk_score >= 75
+    ).length;
+    const averageScore = total
+      ? Math.round(
+          enrichedActiveItems.reduce((sum, item) => sum + (item.ai_score || 0), 0) / total
+        )
+      : 0;
+
+    return {
+      total,
+      storedGpt,
+      hot,
+      highRisk,
+      averageScore,
+      coverage: total ? Math.round((storedGpt / total) * 100) : 0,
+    };
+  }, [enrichedActiveItems]);
 
   const assignedCount = activeSourceItems.filter(
     (item) => item.assigned_admin_id
@@ -270,8 +317,7 @@ function DashboardContent({
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
-                Manage lead ownership, priorities, statuses, and protected CRM
-                actions from one polished operational workspace.
+                Manage lead ownership, priorities, statuses, protected CRM actions, and manual GPT intelligence upgrades from one operational workspace.
               </p>
             </div>
 
@@ -291,6 +337,10 @@ function DashboardContent({
                 {activeItems.length}/{activeSourceItems.length} Showing
               </div>
 
+              <div className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">
+                GPT Coverage {activeAiStats.coverage}%
+              </div>
+
               {!safePermissions.canDelete && (
                 <div className="rounded-full border border-red-400/20 bg-red-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-red-300">
                   Delete Locked
@@ -298,6 +348,11 @@ function DashboardContent({
               )}
             </div>
           </div>
+
+          <PipelineAiControlStrip
+            stats={activeAiStats}
+            reanalysisState={aiReanalysisState}
+          />
 
           <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {pipelineStages.map((stage, index) => (
@@ -408,6 +463,8 @@ function DashboardContent({
               openInquiryModal={openInquiryModal}
               openAppointmentModal={openAppointmentModal}
               role={role}
+              reanalyzeLeadWithGpt={reanalyzeLeadWithGpt}
+              aiReanalysisState={aiReanalysisState}
             />
           ) : (
             <ListView
@@ -425,6 +482,8 @@ function DashboardContent({
               openInquiryModal={openInquiryModal}
               openAppointmentModal={openAppointmentModal}
               role={role}
+              reanalyzeLeadWithGpt={reanalyzeLeadWithGpt}
+              aiReanalysisState={aiReanalysisState}
             />
           )}
         </AnimatedSection>
@@ -435,8 +494,52 @@ function DashboardContent({
         onClose={closeModal}
         student={selectedStudent}
         type={modalType}
+        adminProfile={adminProfile}
+        permissions={safePermissions}
+        updateInquiryPriority={updateInquiryPriority}
+        updateAppointmentPriority={updateAppointmentPriority}
+        updateAppointmentStatus={updateAppointmentStatus}
+        updateAppointmentStage={updateAppointmentStage}
+        toggleInquiryStatus={updateInquiryStatus}
+        deleteInquiry={deleteInquiry}
+        deleteAppointment={deleteAppointment}
+        allLeads={executiveLeads}
       />
     </>
+  );
+}
+
+function PipelineAiControlStrip({ stats, reanalysisState }) {
+  return (
+    <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <AiMiniStat label="Average AI Score" value={stats.averageScore} suffix="/100" icon="🧠" />
+      <AiMiniStat label="Hot Leads" value={stats.hot} suffix="" icon="🔥" />
+      <AiMiniStat label="High Risk" value={stats.highRisk} suffix="" icon="🚨" />
+      <AiMiniStat label="GPT Coverage" value={stats.coverage} suffix="%" icon="🤖" />
+
+      {reanalysisState.loading ? (
+        <div className="sm:col-span-2 xl:col-span-4 rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">
+          GPT is analyzing and saving intelligence for this lead...
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function AiMiniStat({ label, value, suffix, icon }) {
+  return (
+    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+          {label}
+        </p>
+        <span className="text-xl">{icon}</span>
+      </div>
+      <p className="mt-3 text-3xl font-black text-[#D4AF37]">
+        {value}
+        <span className="text-base text-white/30">{suffix}</span>
+      </p>
+    </div>
   );
 }
 
@@ -498,6 +601,8 @@ function KanbanView({
   openInquiryModal,
   openAppointmentModal,
   role,
+  reanalyzeLeadWithGpt,
+  aiReanalysisState,
 }) {
   return (
     <div className="grid gap-4 xl:grid-cols-4">
@@ -545,7 +650,15 @@ function KanbanView({
                       duration: 0.24,
                       delay: Math.min(index * 0.02, 0.12),
                     }}
+                    className="space-y-2"
                   >
+                    <GptReanalysisButton
+                      lead={item}
+                      leadType={activeTab === "appointments" ? "appointment" : "inquiry"}
+                      reanalyzeLeadWithGpt={reanalyzeLeadWithGpt}
+                      aiReanalysisState={aiReanalysisState}
+                    />
+
                     {activeTab === "inquiries" ? (
                       <InquiryCard
                         inquiry={item}
@@ -600,6 +713,8 @@ function ListView({
   openInquiryModal,
   openAppointmentModal,
   role,
+  reanalyzeLeadWithGpt,
+  aiReanalysisState,
 }) {
   return (
     <div className="grid gap-3 sm:gap-4 2xl:grid-cols-2">
@@ -609,7 +724,15 @@ function ListView({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, delay: Math.min(index * 0.025, 0.18) }}
+          className="space-y-2"
         >
+          <GptReanalysisButton
+            lead={item}
+            leadType={activeTab === "appointments" ? "appointment" : "inquiry"}
+            reanalyzeLeadWithGpt={reanalyzeLeadWithGpt}
+            aiReanalysisState={aiReanalysisState}
+          />
+
           {activeTab === "inquiries" ? (
             <InquiryCard
               inquiry={item}
@@ -636,6 +759,52 @@ function ListView({
           )}
         </motion.div>
       ))}
+    </div>
+  );
+}
+
+function GptReanalysisButton({
+  lead,
+  leadType,
+  reanalyzeLeadWithGpt,
+  aiReanalysisState,
+}) {
+  const enriched = enrichLeadWithAi(lead, leadType);
+  const isCurrent = aiReanalysisState?.leadId === lead?.id;
+  const isLoading = aiReanalysisState?.loading && isCurrent;
+  const hasStoredGpt = enriched.ai_has_stored_gpt;
+
+  if (!reanalyzeLeadWithGpt) return null;
+
+  return (
+    <div className="flex flex-col gap-2 rounded-[1.25rem] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.055] p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37]">
+          Real GPT Intelligence
+        </p>
+        <p className="mt-1 truncate text-xs text-white/45">
+          {hasStoredGpt
+            ? `Stored GPT analysis available${enriched.ai_gpt_generated_at ? ` · ${new Date(enriched.ai_gpt_generated_at).toLocaleDateString()}` : ""}`
+            : "Not analyzed by GPT yet. Local AI fallback is active."}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => reanalyzeLeadWithGpt(lead, leadType)}
+        disabled={aiReanalysisState?.loading}
+        className={`shrink-0 rounded-full px-4 py-2 text-xs font-black transition ${
+          hasStoredGpt
+            ? "border border-[#D4AF37]/25 bg-black/25 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+            : "bg-[#D4AF37] text-black hover:bg-[#E7C768]"
+        } disabled:cursor-not-allowed disabled:opacity-50`}
+      >
+        {isLoading
+          ? "Analyzing..."
+          : hasStoredGpt
+          ? "Reanalyze GPT"
+          : "Analyze with GPT"}
+      </button>
     </div>
   );
 }

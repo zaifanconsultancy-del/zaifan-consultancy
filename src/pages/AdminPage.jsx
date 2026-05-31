@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import AdminLogin from "../components/admin/AdminLogin";
 import AdminHeader from "../components/admin/AdminHeader";
@@ -32,15 +32,24 @@ import {
 } from "../utils/crm";
 
 import { shouldShowStats } from "../utils/crm/dashboardFilters";
-
 import { PROFILE_RETRY_LIMIT } from "../utils/crm/constants";
+import { supabase } from "../lib/supabaseClient";
+import { generateGptCopilotText } from "../services/gptCopilotService";
+import { enrichLeadWithAi } from "../services/aiLeadEngine";
 
 function AdminPage() {
   const [activeTab, setActiveTab] = useState("inquiries");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [activeAnalyticsSection, setActiveAnalyticsSection] =
-    useState("command");
+    useState("ai-executive");
+  const [aiReanalysisState, setAiReanalysisState] = useState({
+    loading: false,
+    leadId: null,
+    leadType: null,
+    message: "",
+    error: "",
+  });
 
   const cardClass =
     "group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055] sm:rounded-[2rem] sm:p-6";
@@ -117,9 +126,284 @@ function AdminPage() {
     logActivity,
   });
 
+  const allLeads = useMemo(
+    () => [
+      ...inquiries.map((lead) => ({ ...lead, __leadType: "inquiry" })),
+      ...appointments.map((lead) => ({ ...lead, __leadType: "appointment" })),
+    ],
+    [inquiries, appointments]
+  );
+
+  const aiCoverageStats = useMemo(() => {
+    const total = allLeads.length;
+    const storedGpt = allLeads.filter((lead) => {
+      const enriched = enrichLeadWithAi(
+        lead,
+        lead.__leadType === "appointment" ? "appointment" : "inquiry"
+      );
+
+      return enriched.ai_has_stored_gpt;
+    }).length;
+
+    return {
+      total,
+      storedGpt,
+      percent: total ? Math.round((storedGpt / total) * 100) : 0,
+    };
+  }, [allLeads]);
+
   const handleLogout = async () => {
     await logout();
     clearLocalData();
+  };
+
+  const updateLocalLeadAfterGpt = ({ leadId, leadType, patch }) => {
+    if (leadType === "appointment") {
+      setAppointments((prev) =>
+        prev.map((appointment) =>
+          appointment.id === leadId ? { ...appointment, ...patch } : appointment
+        )
+      );
+      return;
+    }
+
+    setInquiries((prev) =>
+      prev.map((inquiry) =>
+        inquiry.id === leadId ? { ...inquiry, ...patch } : inquiry
+      )
+    );
+  };
+
+  const parseFastGptJson = (text) => {
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      const jsonMatch = String(text).match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return null;
+
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch {
+        return null;
+      }
+    }
+  };
+
+  const normalizeFastAnalysis = ({ lead, leadType, gptText }) => {
+    const localAi = enrichLeadWithAi(lead, leadType);
+    const parsed = parseFastGptJson(gptText);
+
+    if (!parsed) {
+      return buildStoredGptAnalysis({
+        lead,
+        leadType,
+        gptText,
+      });
+    }
+
+    return {
+      version: "stored_gpt_fast_v2",
+      generated_at: new Date().toISOString(),
+      generated_by:
+        adminProfile?.full_name || adminProfile?.name || "Zaifan Consultancy Team",
+      source: "manual_fast_reanalysis",
+      model_mode: "lead_reanalysis",
+      score: Number.isFinite(Number(parsed.score))
+        ? Math.max(0, Math.min(100, Math.round(Number(parsed.score))))
+        : localAi.ai_score,
+      intent_level: parsed.intent_level || localAi.ai_intent_level?.label || "Unknown",
+      risk_level: parsed.risk_level || localAi.ai_risk_level?.label || "Unknown",
+      conversion_probability:
+        parsed.conversion_probability ||
+        localAi.ai_conversion_range ||
+        localAi.ai_conversion_probability,
+      priority: parsed.priority || localAi.ai_tier?.label || "Unknown",
+      next_action: parsed.next_action || localAi.ai_recommended_action,
+      summary: parsed.summary || gptText,
+      counselor_strategy: parsed.counselor_strategy || parsed.summary || gptText,
+      confidence: parsed.confidence || "medium",
+      missing_data: Array.isArray(parsed.missing_data) ? parsed.missing_data : [],
+      risk_signals: Array.isArray(parsed.risk_signals) ? parsed.risk_signals : [],
+      opportunity_signals: Array.isArray(parsed.opportunity_signals)
+        ? parsed.opportunity_signals
+        : [],
+      raw_text: gptText,
+      local_engine_snapshot: {
+        ai_score: localAi.ai_score,
+        ai_tier: localAi.ai_tier?.label,
+        ai_urgency: localAi.ai_urgency?.label,
+        ai_intent_score: localAi.ai_intent_score,
+        ai_risk_score: localAi.ai_risk_score,
+        ai_data_completeness_score: localAi.ai_data_completeness_score,
+        ai_visa_readiness_score: localAi.ai_visa_readiness_score,
+        ai_recommended_action: localAi.ai_recommended_action,
+      },
+    };
+  };
+
+  const saveGptIntelligenceToSupabase = async ({ lead, leadType, analysis }) => {
+    const table = leadType === "appointment" ? "appointments" : "inquiries";
+
+    const patch = {
+      gpt_intelligence: analysis,
+      gpt_ai_score: analysis.score,
+      gpt_intent_level: analysis.intent_level,
+      gpt_risk_level: analysis.risk_level,
+      gpt_conversion_probability: analysis.conversion_probability,
+      gpt_next_action: analysis.next_action,
+      gpt_summary: analysis.summary,
+      gpt_counselor_strategy: analysis.counselor_strategy,
+      gpt_confidence: analysis.confidence,
+      gpt_analyzed_at: analysis.generated_at,
+    };
+
+    const { error } = await supabase
+      .from(table)
+      .update(patch)
+      .eq("id", lead.id);
+
+    if (error) throw error;
+
+    updateLocalLeadAfterGpt({
+      leadId: lead.id,
+      leadType,
+      patch,
+    });
+
+    await logActivity?.({
+      actionType: "gpt_reanalysis_completed",
+      title: "GPT Lead Intelligence Updated",
+      description: `GPT intelligence was saved for ${
+        lead.full_name || lead.name || "student"
+      }.` ,
+      studentId: lead.id,
+      studentType: leadType,
+      metadata: {
+        score: analysis.score,
+        intent_level: analysis.intent_level,
+        risk_level: analysis.risk_level,
+        conversion_probability: analysis.conversion_probability,
+      },
+    });
+
+    return patch;
+  };
+
+  const buildStoredGptAnalysis = ({ lead, leadType, gptText }) => {
+    const localAi = enrichLeadWithAi(lead, leadType);
+
+    return {
+      version: "stored_gpt_v1",
+      generated_at: new Date().toISOString(),
+      generated_by:
+        adminProfile?.full_name || adminProfile?.name || "Zaifan Consultancy Team",
+      source: "manual_reanalysis",
+      model_mode: "counselor_strategy_fallback",
+      score: localAi.ai_score,
+      intent_level: localAi.ai_intent_level?.label || "Unknown",
+      risk_level: localAi.ai_risk_level?.label || "Unknown",
+      conversion_probability:
+        localAi.ai_conversion_range || localAi.ai_conversion_probability,
+      priority: localAi.ai_tier?.label || "Unknown",
+      next_action: localAi.ai_recommended_action,
+      summary: gptText,
+      counselor_strategy: gptText,
+      confidence: "medium",
+      raw_text: gptText,
+      local_engine_snapshot: {
+        ai_score: localAi.ai_score,
+        ai_tier: localAi.ai_tier?.label,
+        ai_urgency: localAi.ai_urgency?.label,
+        ai_intent_score: localAi.ai_intent_score,
+        ai_risk_score: localAi.ai_risk_score,
+        ai_data_completeness_score: localAi.ai_data_completeness_score,
+        ai_visa_readiness_score: localAi.ai_visa_readiness_score,
+        ai_recommended_action: localAi.ai_recommended_action,
+      },
+    };
+  };
+
+  const reanalyzeLeadWithGpt = async (lead, leadType = "inquiry") => {
+    if (!lead?.id) return;
+
+    const confirmed = window.confirm(
+      "This will use a small OpenAI API call to quickly reanalyze this lead and save GPT intelligence to Supabase. Continue?"
+    );
+
+    if (!confirmed) return;
+
+    setAiReanalysisState({
+      loading: true,
+      leadId: lead.id,
+      leadType,
+      message: "GPT is quickly analyzing this lead...",
+      error: "",
+    });
+
+    try {
+      const localAi = enrichLeadWithAi(lead, leadType);
+
+      const gptText = await generateGptCopilotText({
+        mode: "lead_reanalysis",
+        student: lead,
+        studentType: leadType,
+        adminName:
+          adminProfile?.full_name ||
+          adminProfile?.name ||
+          "Zaifan Consultancy Team",
+        leadScore: localAi.ai_score,
+        leadHealth: localAi.ai_tier?.label,
+        overdueStatus: localAi.ai_urgency?.label,
+        extraContext: {
+          ai_score: localAi.ai_score,
+          ai_tier: localAi.ai_tier?.label,
+          ai_urgency: localAi.ai_urgency?.label,
+          ai_conversion_probability: localAi.ai_conversion_probability,
+          ai_recommended_action: localAi.ai_recommended_action,
+          ai_intent_score: localAi.ai_intent_score,
+          ai_intent_level: localAi.ai_intent_level?.label,
+          ai_risk_score: localAi.ai_risk_score,
+          ai_risk_level: localAi.ai_risk_level?.label,
+          ai_data_completeness_score: localAi.ai_data_completeness_score,
+          ai_visa_readiness_score: localAi.ai_visa_readiness_score,
+          missing_items: localAi.ai_missing_items,
+          risk_signals: localAi.ai_risk_signals,
+          opportunity_signals: localAi.ai_opportunity_signals,
+        },
+      });
+
+      const analysis = normalizeFastAnalysis({
+        lead,
+        leadType,
+        gptText,
+      });
+
+      await saveGptIntelligenceToSupabase({
+        lead,
+        leadType,
+        analysis,
+      });
+
+      setAiReanalysisState({
+        loading: false,
+        leadId: lead.id,
+        leadType,
+        message: "Fast GPT intelligence saved successfully.",
+        error: "",
+      });
+    } catch (error) {
+      console.error(error);
+
+      setAiReanalysisState({
+        loading: false,
+        leadId: lead.id,
+        leadType,
+        message: "",
+        error: error.message || "GPT reanalysis failed.",
+      });
+    }
   };
 
   const filteredInquiries = filterInquiries({
@@ -302,8 +586,24 @@ function AdminPage() {
               <span className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs text-gray-300">
                 Clear All: {currentPermissions.canClearAll ? "Yes" : "No"}
               </span>
+
+              <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37]">
+                GPT Coverage: {aiCoverageStats.percent}%
+              </span>
             </div>
           </div>
+
+          {aiReanalysisState.message && (
+            <div className="mb-5 rounded-[1.5rem] border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+              {aiReanalysisState.message}
+            </div>
+          )}
+
+          {aiReanalysisState.error && (
+            <div className="mb-5 rounded-[1.5rem] border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
+              {aiReanalysisState.error}
+            </div>
+          )}
 
           {profileError && adminProfile && (
             <div className="mb-5 rounded-[1.5rem] border border-orange-400/20 bg-orange-500/10 p-4 text-sm text-orange-200">
@@ -433,6 +733,9 @@ function AdminPage() {
               role={role}
               adminProfile={adminProfile}
               permissions={currentPermissions}
+              reanalyzeLeadWithGpt={reanalyzeLeadWithGpt}
+              aiReanalysisState={aiReanalysisState}
+              allLeads={allLeads}
             />
           )}
         </main>

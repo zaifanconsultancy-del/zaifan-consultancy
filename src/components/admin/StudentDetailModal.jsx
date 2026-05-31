@@ -1,11 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "../../lib/supabaseClient";
+
 import LeadAssignmentPanel from "./LeadAssignmentPanel";
 import CrmTimelinePanel from "./CrmTimelinePanel";
 import FollowUpReminderPanel from "./FollowUpReminderPanel";
 import AICounselorAssistant from "./AICounselorAssistant";
-import { addTimelineEvent } from "../../lib/crmTimeline";
 import AIWorkspacePanel from "./AIWorkspacePanel";
+import { addTimelineEvent } from "../../lib/crmTimeline";
+import GPTIntelligencePanel from "./GPTIntelligencePanel";
+import StudentDocumentsPanel from "./StudentDocumentsPanel";
+import StudentApplicationPanel from "./StudentApplicationPanel";
+import VisaTrackerPanel from "./VisaTrackerPanel";
+import UniversityManagementPanel from "./UniversityManagementPanel";
+import CommunicationCenterPanel from "./CommunicationCenterPanel";
+import ExecutiveAIDashboard from "./ExecutiveAIDashboard";
+import TaskCenterPanel from "./TaskCenterPanel";
+import CounselorQueuePanel from "./CounselorQueuePanel";
+import SmartActionsPanel from "./SmartActionsPanel";
+
 import {
   getPipelineStages,
   getPipelineStageById,
@@ -15,6 +28,7 @@ import {
 function StudentDetailModal({
   student = null,
   type = "inquiry",
+  allLeads = [],
   onClose = () => {},
   cardClass = "",
   adminProfile = null,
@@ -27,14 +41,26 @@ function StudentDetailModal({
   deleteInquiry = null,
   deleteAppointment = null,
 }) {
-  const [activePanel, setActivePanel] = useState("overview");
+  const [activePanel, setActivePanel] = useState(
+    student?.__preferredPanel || "ai-workspace"
+  );
+
   const [savingStage, setSavingStage] = useState(false);
   const [savingPriority, setSavingPriority] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [localStudent, setLocalStudent] = useState(student);
 
+  const [osLoading, setOsLoading] = useState(false);
+  const [osError, setOsError] = useState("");
+  const [studentDocuments, setStudentDocuments] = useState([]);
+  const [studentApplication, setStudentApplication] = useState(null);
+  const [studentUniversities, setStudentUniversities] = useState([]);
+  const [studentTasks, setStudentTasks] = useState([]);
+  const [studentCommunications, setStudentCommunications] = useState([]);
+
   useEffect(() => {
     setLocalStudent(student);
+    setActivePanel(student?.__preferredPanel || "ai-workspace");
   }, [student]);
 
   const safePermissions = {
@@ -50,10 +76,103 @@ function StudentDetailModal({
 
   const workingStudent = localStudent || student;
 
+  const studentId = workingStudent?.id;
+  const studentType =
+    workingStudent?.student_type || workingStudent?.type || type || "inquiry";
+
+  const loadStudentOsData = async () => {
+    if (!studentId) return;
+
+    setOsLoading(true);
+    setOsError("");
+
+    try {
+      const [
+        documentsResult,
+        applicationResult,
+        universitiesResult,
+        tasksResult,
+        communicationsResult,
+      ] = await Promise.allSettled([
+        supabase
+          .from("student_documents")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: true }),
+
+        supabase
+          .from("student_applications")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false })
+          .limit(1),
+
+        supabase
+          .from("student_universities")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false }),
+
+        supabase
+          .from("student_tasks")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false }),
+
+        supabase
+          .from("student_communications")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const readResult = (result) => {
+        if (result.status !== "fulfilled") return { data: [], error: result.reason };
+        return result.value || { data: [], error: null };
+      };
+
+      const docs = readResult(documentsResult);
+      const apps = readResult(applicationResult);
+      const universities = readResult(universitiesResult);
+      const tasks = readResult(tasksResult);
+      const communications = readResult(communicationsResult);
+
+      const errors = [docs, apps, universities, tasks, communications]
+        .map((item) => item?.error?.message)
+        .filter(Boolean);
+
+      setStudentDocuments(docs.data || []);
+      setStudentApplication(apps.data?.[0] || null);
+      setStudentUniversities(universities.data || []);
+      setStudentTasks(tasks.data || []);
+      setStudentCommunications(communications.data || []);
+
+      if (errors.length) {
+        setOsError(errors[0]);
+      }
+    } catch (error) {
+      setOsError(error.message || "Student OS data failed to load.");
+    } finally {
+      setOsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+  setOsLoading(false);
+  setOsError("");
+}, [studentId]);
+
+  const executiveStudents =
+    allLeads.length > 0
+      ? allLeads
+      : workingStudent
+      ? [{ ...workingStudent, __leadType: type }]
+      : [];
+
   const isAppointment = type === "appointment";
   const isInquiry = type === "inquiry";
-
   const pipelineType = isAppointment ? "appointment" : "inquiry";
+
   const stages = useMemo(() => getPipelineStages(pipelineType), [pipelineType]);
 
   const currentStageId =
@@ -128,15 +247,45 @@ function StudentDetailModal({
     ? ["pending", "confirmed", "completed", "cancelled"]
     : ["pending", "contacted", "completed"];
 
- const sidebarItems = [
-  ["overview", "Overview", "Student details and controls"],
-  ["pipeline", "Pipeline", "Workflow stage tracking"],
-  ["assignment", "Assignment", "Owner and staff handling"],
-  ["timeline", "Timeline", "CRM history and changes"],
-  ["followups", "Follow-ups", "Reminder and next actions"],
-  ["ai", "AI Actions", "Copilot and follow-up generation"],
-  ["ai-workspace", "AI Workspace", "Full counselor operating desk"],
-];
+  const sidebarGroups = [
+    {
+      title: "AI Center",
+      items: [
+        ["ai-workspace", "Real GPT Workspace", "OpenAI counselor copilot", "🤖"],
+        ["gpt-intelligence", "GPT Intelligence", "Stored counselor analysis", "🧠"],
+        ["ai", "Quick GPT Actions", "Counselor generation tools", "✨"],
+      ],
+    },
+    {
+      title: "Student Hub",
+      items: [
+        ["overview", "Overview", "Student details and controls", "📋"],
+        ["documents", "Documents", "Student file management", "📁"],
+        ["applications", "Applications", "University workflow", "🎓"],
+        ["visa", "Visa Processing", "Visa workflow tracking", "🌍"],
+        ["universities", "Universities", "Destination planning", "🏫"],
+      ],
+    },
+    {
+      title: "Operating System",
+      items: [
+        ["communication", "Communication", "Student outreach hub", "💬"],
+        ["executive-ai", "Executive AI", "AI command dashboard", "📊"],
+        ["operations", "Operations", "Task and action center", "⚡"],
+      ],
+    },
+    {
+      title: "CRM Core",
+      items: [
+        ["pipeline", "Pipeline", "Workflow stage tracking", "🧭"],
+        ["assignment", "Assignment", "Owner and staff handling", "👥"],
+        ["timeline", "Timeline", "CRM history and changes", "🕒"],
+        ["followups", "Follow-ups", "Reminder and next actions", "🔔"],
+      ],
+    },
+  ];
+
+  const sidebarItems = sidebarGroups.flatMap((group) => group.items);
 
   const getPriorityStyle = (value) => {
     const styles = {
@@ -192,6 +341,12 @@ function StudentDetailModal({
         newValue: newPriority,
         adminProfile,
       });
+    } catch (error) {
+      setLocalStudent((prev) => ({
+        ...(prev || workingStudent),
+        priority: oldPriority,
+      }));
+      alert(error.message || "Priority update failed.");
     } finally {
       setSavingPriority(false);
     }
@@ -229,6 +384,13 @@ function StudentDetailModal({
         newValue: newStatus,
         adminProfile,
       });
+    } catch (error) {
+      setLocalStudent((prev) => ({
+        ...(prev || workingStudent),
+        status: oldStatus,
+        completed: oldStatus === "completed",
+      }));
+      alert(error.message || "Status update failed.");
     } finally {
       setSavingStatus(false);
     }
@@ -238,6 +400,7 @@ function StudentDetailModal({
     if (!stageId || stageId === currentStageId) return;
 
     const nextStage = getPipelineStageById(pipelineType, stageId);
+    const oldStageId = currentStageId;
 
     setLocalStudent((prev) => ({
       ...(prev || workingStudent),
@@ -267,6 +430,14 @@ function StudentDetailModal({
           new_stage_id: stageId,
         },
       });
+    } catch (error) {
+      setLocalStudent((prev) => ({
+        ...(prev || workingStudent),
+        pipeline_stage: oldStageId,
+        stage: oldStageId,
+        appointment_stage: isAppointment ? oldStageId : prev?.appointment_stage,
+      }));
+      alert(error.message || "Pipeline stage update failed.");
     } finally {
       setSavingStage(false);
     }
@@ -311,7 +482,7 @@ function StudentDetailModal({
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-xl"
+        className="fixed inset-0 z-[999] flex items-center justify-center bg-black/75 px-3 py-4 backdrop-blur-xl sm:px-4 sm:py-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -321,20 +492,20 @@ function StudentDetailModal({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.97 }}
           transition={{ duration: 0.25 }}
-          className={`max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808] text-white shadow-[0_25px_100px_rgba(0,0,0,0.65)] ${cardClass}`}
+          className={`max-h-[94vh] w-full max-w-6xl overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#080808] text-white shadow-[0_25px_100px_rgba(0,0,0,0.65)] sm:rounded-[2rem] ${cardClass}`}
         >
-          <div className="relative border-b border-white/10 bg-white/[0.035] p-5 sm:p-6">
+          <div className="relative border-b border-white/10 bg-white/[0.035] p-4 sm:p-6">
             <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60" />
 
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+                  <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37] sm:text-xs sm:tracking-[0.22em]">
                     {isAppointment ? "Appointment" : "Inquiry"}
                   </span>
 
                   <span
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getPriorityStyle(
+                    className={`rounded-full border px-3 py-1 text-[10px] font-semibold capitalize sm:text-xs ${getPriorityStyle(
                       priority
                     )}`}
                   >
@@ -342,24 +513,56 @@ function StudentDetailModal({
                   </span>
 
                   <span
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
+                    className={`rounded-full border px-3 py-1 text-[10px] font-semibold capitalize sm:text-xs ${getStatusStyle(
                       status
                     )}`}
                   >
                     {status}
                   </span>
+
+                  {osLoading ? (
+                    <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-[10px] font-semibold text-cyan-300">
+                      Syncing OS Data...
+                    </span>
+                  ) : null}
                 </div>
 
-                <h2 className="truncate text-2xl font-bold text-white sm:text-3xl">
+                <h2 className="break-words text-2xl font-bold text-white sm:text-3xl">
                   {fullName}
                 </h2>
 
-                <p className="mt-2 max-w-2xl text-sm text-white/50">
-                  {country} • {field}
-                </p>
+                <div className="mt-2 max-w-2xl">
+                  <p className="break-words text-sm text-white/50">
+                    {country} • {field}
+                  </p>
+
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#D4AF37]">
+                    AI Counselor Workspace Ready
+                  </p>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActivePanel("ai-workspace")}
+                  className="rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768]"
+                >
+                  Open Real GPT
+                </button>
+
+                <button
+  type="button"
+  onClick={() => {
+    setOsLoading(false);
+    setOsError("");
+  }}
+                  disabled={osLoading}
+                  className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/45 disabled:opacity-50"
+                >
+                  {osLoading ? "Refreshing..." : "Refresh OS Data"}
+                </button>
+
                 {safePermissions.canDelete ? (
                   <button
                     type="button"
@@ -379,27 +582,50 @@ function StudentDetailModal({
                 </button>
               </div>
             </div>
+
+            {osError ? (
+              <div className="mt-4 rounded-2xl border border-orange-400/20 bg-orange-500/10 p-3 text-sm text-orange-200">
+                OS data warning: {osError}
+              </div>
+            ) : null}
           </div>
 
-          <div className="grid max-h-[calc(92vh-132px)] overflow-y-auto lg:grid-cols-[280px_1fr]">
-            <aside className="border-b border-white/10 bg-black/20 p-4 lg:border-b-0 lg:border-r">
-              <div className="space-y-2">
-                {sidebarItems.map(([id, label, description]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setActivePanel(id)}
-                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                      activePanel === id
-                        ? "border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37]"
-                        : "border-white/10 bg-white/[0.025] text-white/60 hover:border-white/20 hover:bg-white/[0.04] hover:text-white"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold">{label}</span>
-                    <span className="mt-1 block text-xs opacity-60">
-                      {description}
-                    </span>
-                  </button>
+          <div className="grid max-h-[calc(94vh-132px)] overflow-y-auto lg:grid-cols-[300px_1fr]">
+            <aside className="border-b border-white/10 bg-black/20 p-4 lg:border-b-0 lg:border-r lg:border-white/10">
+              <div className="space-y-4">
+                {sidebarGroups.map((group) => (
+                  <div key={group.title}>
+                    <div className="mb-2 flex items-center gap-3 px-1">
+                      <div className="h-px flex-1 bg-white/10" />
+                      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/30">
+                        {group.title}
+                      </p>
+                      <div className="h-px flex-1 bg-white/10" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                      {group.items.map(([id, label, description, icon]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setActivePanel(id)}
+                          className={`w-full rounded-2xl border px-3 py-3 text-left transition sm:px-4 ${
+                            activePanel === id
+                              ? "border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37]"
+                              : "border-white/10 bg-white/[0.025] text-white/60 hover:border-white/20 hover:bg-white/[0.04] hover:text-white"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 text-xs font-semibold sm:text-sm">
+                            <span>{icon}</span>
+                            <span>{label}</span>
+                          </span>
+                          <span className="mt-1 hidden text-xs opacity-60 sm:block">
+                            {description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
 
@@ -419,11 +645,49 @@ function StudentDetailModal({
                   {pipelineProgress || 0}% • {currentStage?.label || "Stage"}
                 </p>
               </div>
+
+              <div className="mt-4 grid gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">
+                  OS Snapshot
+                </p>
+
+                <MiniOsStat label="Docs" value={studentDocuments.length} />
+                <MiniOsStat label="Applications" value={studentApplication ? 1 : 0} />
+                <MiniOsStat label="Universities" value={studentUniversities.length} />
+                <MiniOsStat label="Tasks" value={studentTasks.length} />
+                <MiniOsStat label="Messages" value={studentCommunications.length} />
+              </div>
             </aside>
 
             <main className="space-y-5 p-4 sm:p-6">
               {activePanel === "overview" ? (
                 <div className="space-y-5">
+                  <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+                          Real GPT Counselor Desk
+                        </p>
+                        <h3 className="mt-2 text-xl font-black text-white">
+                          Use OpenAI only when you need generated counselor output.
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-white/55">
+                          Local CRM intelligence handles scores and pipeline signals.
+                          Real GPT is available here for summaries, WhatsApp, email,
+                          call scripts, visa risk, and follow-up plans.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setActivePanel("ai-workspace")}
+                        className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768]"
+                      >
+                        Launch Real GPT Workspace
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="grid gap-4 md:grid-cols-2">
                     {infoRows.map(([label, value]) => (
                       <div
@@ -478,9 +742,7 @@ function StudentDetailModal({
                         </h3>
 
                         {savingPriority ? (
-                          <span className="text-xs text-white/35">
-                            Saving...
-                          </span>
+                          <span className="text-xs text-white/35">Saving...</span>
                         ) : null}
                       </div>
 
@@ -490,8 +752,7 @@ function StudentDetailModal({
                             key={item}
                             type="button"
                             disabled={
-                              !safePermissions.canUpdatePriority ||
-                              savingPriority
+                              !safePermissions.canUpdatePriority || savingPriority
                             }
                             onClick={() => handlePriorityChange(item)}
                             className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
@@ -513,9 +774,7 @@ function StudentDetailModal({
                         </h3>
 
                         {savingStatus ? (
-                          <span className="text-xs text-white/35">
-                            Saving...
-                          </span>
+                          <span className="text-xs text-white/35">Saving...</span>
                         ) : null}
                       </div>
 
@@ -524,9 +783,7 @@ function StudentDetailModal({
                           <button
                             key={item}
                             type="button"
-                            disabled={
-                              !safePermissions.canUpdateStatus || savingStatus
-                            }
+                            disabled={!safePermissions.canUpdateStatus || savingStatus}
                             onClick={() => handleStatusChange(item)}
                             className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
                               status === item
@@ -543,6 +800,21 @@ function StudentDetailModal({
                 </div>
               ) : null}
 
+              {activePanel === "ai-workspace" ? (
+                <AIWorkspacePanel
+                  student={workingStudent}
+                  studentType={type}
+                  adminProfile={adminProfile}
+                />
+              ) : null}
+
+              {activePanel === "gpt-intelligence" ? (
+                <GPTIntelligencePanel
+                  student={workingStudent}
+                  onOpenWorkspace={() => setActivePanel("ai-workspace")}
+                />
+              ) : null}
+
               {activePanel === "ai" ? (
                 <AICounselorAssistant
                   student={workingStudent}
@@ -551,13 +823,101 @@ function StudentDetailModal({
                 />
               ) : null}
 
-              {activePanel === "ai-workspace" ? (
-  <AIWorkspacePanel
-    student={workingStudent}
-    studentType={type}
-    adminProfile={adminProfile}
-  />
-) : null}
+              {activePanel === "documents" ? (
+                <StudentDocumentsPanel
+                  student={{
+                    ...workingStudent,
+                    documents: studentDocuments,
+                  }}
+                  sharedDocuments={studentDocuments}
+                  onSharedDataChange={loadStudentOsData}
+                />
+              ) : null}
+
+              {activePanel === "applications" ? (
+                <StudentApplicationPanel
+                  student={{
+                    ...workingStudent,
+                    application: studentApplication,
+                  }}
+                  sharedApplication={studentApplication}
+                  onSharedDataChange={loadStudentOsData}
+                />
+              ) : null}
+
+              {activePanel === "visa" ? (
+                <VisaTrackerPanel
+                  student={{
+                    ...workingStudent,
+                    application: studentApplication,
+                    documents: studentDocuments,
+                  }}
+                  sharedApplication={studentApplication}
+                  sharedDocuments={studentDocuments}
+                  onSharedDataChange={loadStudentOsData}
+                />
+              ) : null}
+
+              {activePanel === "universities" ? (
+                <UniversityManagementPanel
+                  student={{
+                    ...workingStudent,
+                    universities: studentUniversities,
+                  }}
+                  sharedUniversities={studentUniversities}
+                  onSharedDataChange={loadStudentOsData}
+                />
+              ) : null}
+
+              {activePanel === "communication" ? (
+                <CommunicationCenterPanel
+                  student={{
+                    ...workingStudent,
+                    communications: studentCommunications,
+                  }}
+                  sharedCommunications={studentCommunications}
+                  onSharedDataChange={loadStudentOsData}
+                />
+              ) : null}
+
+              {activePanel === "executive-ai" ? (
+                <ExecutiveAIDashboard students={executiveStudents} />
+              ) : null}
+
+              {activePanel === "operations" ? (
+                <div className="space-y-5">
+                  <TaskCenterPanel
+                    student={{
+                      ...workingStudent,
+                      documents: studentDocuments,
+                      application: studentApplication,
+                      tasks: studentTasks,
+                    }}
+                    sharedDocuments={studentDocuments}
+                    sharedApplication={studentApplication}
+                    sharedTasks={studentTasks}
+                    onSharedDataChange={loadStudentOsData}
+                  />
+
+                  <CounselorQueuePanel
+                    student={{
+                      ...workingStudent,
+                      documents: studentDocuments,
+                      application: studentApplication,
+                      tasks: studentTasks,
+                    }}
+                  />
+
+                  <SmartActionsPanel
+                    student={{
+                      ...workingStudent,
+                      documents: studentDocuments,
+                      application: studentApplication,
+                      tasks: studentTasks,
+                    }}
+                  />
+                </div>
+              ) : null}
 
               {activePanel === "pipeline" ? (
                 <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
@@ -620,8 +980,7 @@ function StudentDetailModal({
                               </p>
 
                               <p className="mt-1 text-sm text-white/45">
-                                {stage.description ||
-                                  "Pipeline workflow stage"}
+                                {stage.description || "Pipeline workflow stage"}
                               </p>
                             </div>
 
@@ -662,19 +1021,20 @@ function StudentDetailModal({
                   adminProfile={adminProfile}
                 />
               ) : null}
-
-              {activePanel === "ai" ? (
-  <AICounselorAssistant
-    student={workingStudent}
-    studentType={type}
-    adminProfile={adminProfile}
-  />
-) : null}
             </main>
           </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
+  );
+}
+
+function MiniOsStat({ label, value }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+      <span className="text-xs text-white/45">{label}</span>
+      <span className="text-xs font-black text-[#D4AF37]">{value}</span>
+    </div>
   );
 }
 

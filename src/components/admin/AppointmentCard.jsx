@@ -174,6 +174,13 @@ function AppointmentCard({
     );
   };
 
+  const openRealGptWorkspace = () => {
+    openModal({
+      ...appointment,
+      __preferredPanel: "ai-workspace",
+    });
+  };
+
   const appointmentDate =
     appointment.appointment_date && appointment.appointment_time
       ? `${appointment.appointment_date} · ${appointment.appointment_time}`
@@ -274,11 +281,15 @@ function AppointmentCard({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-[9px] uppercase tracking-[0.24em] text-[#D4AF37] sm:text-[10px] sm:tracking-[0.32em]">
-                AI Recommended Action
+                AI Signal
               </p>
 
               <p className="mt-2 text-sm leading-relaxed text-gray-200">
                 {aiLead.ai_recommended_action}
+              </p>
+
+              <p className="mt-2 text-xs leading-relaxed text-gray-500">
+                Real GPT writing opens only when you click the workspace button.
               </p>
             </div>
 
@@ -444,6 +455,14 @@ function AppointmentCard({
         onClick={(event) => event.stopPropagation()}
         className="relative mt-4 flex flex-col gap-2.5 border-t border-white/10 pt-4 sm:mt-5 sm:gap-3 sm:pt-5"
       >
+        <button
+          type="button"
+          onClick={openRealGptWorkspace}
+          className="w-full rounded-full bg-[#D4AF37] px-4 py-2.5 text-xs font-black text-black transition duration-300 hover:-translate-y-0.5 hover:bg-[#E7C768] sm:px-6 sm:py-3 sm:text-sm"
+        >
+          Open Real GPT Workspace
+        </button>
+
         <button
           type="button"
           onClick={() => openModal(appointment)}
