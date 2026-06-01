@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import AIActionPanel from "./AIActionPanel";
 import { motion } from "framer-motion";
 import {
   AI_ANALYSIS_TYPES,
@@ -52,7 +53,11 @@ const AI_MODULES = [
   },
 ];
 
-function GPTIntelligencePanel({ student = {}, onOpenWorkspace = () => {} }) {
+function GPTIntelligencePanel({
+  student = {},
+  onOpenWorkspace = () => {},
+  adminProfile = null,
+}) {
   const [activeModule, setActiveModule] = useState(
     AI_ANALYSIS_TYPES.STUDENT_ANALYSIS
   );
@@ -306,6 +311,15 @@ function GPTIntelligencePanel({ student = {}, onOpenWorkspace = () => {} }) {
           <span className="font-semibold text-[#D4AF37]">{activeModule}</span>
         </p>
       </div>
+
+      {hasGPT ? (
+  <AIActionPanel
+    student={student}
+    parsed={parsed}
+    activeModule={activeModule}
+    adminProfile={adminProfile}
+  />
+) : null}
 
       {activeModule === AI_ANALYSIS_TYPES.RISK_ANALYSIS ? (
         <RiskAnalysisView parsed={parsed} />

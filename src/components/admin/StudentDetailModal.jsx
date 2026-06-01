@@ -90,7 +90,10 @@ function StudentDetailModal({
   const studentType =
     workingStudent?.student_type || workingStudent?.type || type || "inquiry";
 
-  const refreshCurrentPanel = () => {
+  
+const refreshCurrentPanel = () => {
+  if (osLoading) return;
+
   setOsLoading(true);
   setOsError("");
 
@@ -98,14 +101,18 @@ function StudentDetailModal({
 
   window.setTimeout(() => {
     setOsLoading(false);
-  }, 700);
+  }, 1200);
+
+  window.setTimeout(() => {
+    setOsLoading(false);
+  }, 5000);
 };
 
 
 
   const loadStudentOsData = () => {
-    refreshCurrentPanel();
-  };
+  refreshCurrentPanel();
+};
 
   const executiveStudents =
     allLeads.length > 0
@@ -765,22 +772,23 @@ function StudentDetailModal({
               {activePanel === "ai-workspace" ? (
                 <AIWorkspacePanel
                   student={workingStudent}
-                  studentType={type}
+                  studentType={studentType}
                   adminProfile={adminProfile}
                 />
               ) : null}
 
               {activePanel === "gpt-intelligence" ? (
                 <GPTIntelligencePanel
-                  student={workingStudent}
-                  onOpenWorkspace={() => setActivePanel("ai-workspace")}
-                />
+  student={workingStudent}
+  adminProfile={adminProfile}
+  onOpenWorkspace={() => setActivePanel("ai-workspace")}
+/>
               ) : null}
 
               {activePanel === "ai" ? (
                 <AICounselorAssistant
                   student={workingStudent}
-                  studentType={type}
+                  studentType={studentType}
                   adminProfile={adminProfile}
                 />
               ) : null}
@@ -976,18 +984,20 @@ function StudentDetailModal({
 
               {activePanel === "timeline" ? (
                 <CrmTimelinePanel
-                  studentId={workingStudent.id}
-                  studentType={type}
-                  adminProfile={adminProfile}
-                />
+  key={`timeline-${studentId}-${studentType}-${panelRefreshKey}`}
+  studentId={workingStudent.id}
+  studentType={studentType}
+  adminProfile={adminProfile}
+/>
               ) : null}
 
               {activePanel === "followups" ? (
                 <FollowUpReminderPanel
-                  studentId={workingStudent.id}
-                  studentType={type}
-                  adminProfile={adminProfile}
-                />
+  key={`followups-${studentId}-${studentType}-${panelRefreshKey}`}
+  studentId={workingStudent.id}
+  studentType={studentType}
+  adminProfile={adminProfile}
+/>
               ) : null}
             </main>
           </div>

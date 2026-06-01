@@ -1,5 +1,16 @@
 import { supabase } from "./supabaseClient";
 
+const REQUEST_TIMEOUT_MS = 12000;
+
+async function withTimeout(promise, message = "Request timed out.") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+    ),
+  ]);
+}
+
 export async function addTimelineEvent({
   studentId,
   studentType,
@@ -33,17 +44,21 @@ export async function addTimelineEvent({
     metadata,
   };
 
-  const { data, error } = await supabase
-    .from("crm_timeline")
-    .insert(payload)
-    .select()
-    .single();
+  try {
+    const { data, error } = await withTimeout(
+      supabase.from("crm_timeline").insert(payload).select().single(),
+      "Timeline save timed out."
+    );
 
-  if (error) {
-    console.error("Failed to add timeline event:", error);
+    if (error) {
+      console.error("Failed to add timeline event:", error);
+    }
+
+    return { data, error };
+  } catch (error) {
+    console.error("Timeline save crashed:", error);
+    return { data: null, error };
   }
-
-  return { data, error };
 }
 
 export async function fetchTimelineEvents(studentId, studentType) {
@@ -51,16 +66,24 @@ export async function fetchTimelineEvents(studentId, studentType) {
     return { data: [], error: null };
   }
 
-  const { data, error } = await supabase
-    .from("crm_timeline")
-    .select("*")
-    .eq("student_id", String(studentId))
-.eq("student_type", studentType)
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from("crm_timeline")
+        .select("*")
+        .eq("student_id", String(studentId))
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false }),
+      "CRM timeline loading timed out."
+    );
 
-  if (error) {
-    console.error("Failed to fetch timeline events:", error);
+    if (error) {
+      console.error("Failed to fetch timeline events:", error);
+    }
+
+    return { data: data || [], error };
+  } catch (error) {
+    console.error("Timeline load crashed:", error);
+    return { data: [], error };
   }
-
-  return { data: data || [], error };
 }

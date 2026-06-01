@@ -3,9 +3,26 @@ import { supabase } from "../../lib/supabaseClient";
 import WhatsAppWorkspace from "./WhatsAppWorkspace";
 import EmailWorkspace from "./EmailWorkspace";
 
-function CommunicationCenterPanel({ student = {} }) {
-  const [communications, setCommunications] = useState([]);
+const REQUEST_TIMEOUT_MS = 12000;
+
+async function withTimeout(promise, message = "Request timed out.") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+    ),
+  ]);
+}
+
+function CommunicationCenterPanel({
+  student = {},
+  sharedCommunications = [],
+  onSharedDataChange = () => {},
+}) {
+  const [communications, setCommunications] = useState(sharedCommunications || []);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [savingType, setSavingType] = useState("");
 
   const fullName = student?.full_name || student?.name || "Student";
   const phone = student?.phone || student?.phone_number || "";
@@ -14,40 +31,88 @@ function CommunicationCenterPanel({ student = {} }) {
   const studentType = student?.student_type || student?.type || "inquiry";
 
   useEffect(() => {
+    setCommunications(sharedCommunications || []);
+  }, [sharedCommunications]);
+
+  useEffect(() => {
     loadCommunications();
-  }, [studentId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId, studentType]);
 
   const loadCommunications = async () => {
-    if (!studentId) return;
+    if (!studentId) {
+      setCommunications([]);
+      return;
+    }
 
-    const { data, error } = await supabase
-      .from("student_communications")
-      .select("*")
-      .eq("student_id", studentId)
-      .order("created_at", { ascending: false });
+    setLoading(true);
+    setError("");
 
-    if (error) setError(error.message);
-    else setCommunications(data || []);
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("student_communications")
+          .select("*")
+          .eq("student_id", String(studentId))
+          .eq("student_type", studentType)
+          .order("created_at", { ascending: false }),
+        "Communication history loading timed out."
+      );
+
+      if (error) {
+        setError(error.message || "Failed to load communications.");
+        setCommunications([]);
+        return;
+      }
+
+      setCommunications(data || []);
+    } catch (error) {
+      console.error("Communication load crashed:", error);
+      setError(error.message || "Communication history failed to load.");
+      setCommunications([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveCommunication = async ({ channel, subject = "", message }) => {
-    if (!studentId || !message) return;
+    if (!studentId || !message || savingType) return;
 
-    const { error } = await supabase.from("student_communications").insert({
-      student_id: studentId,
-      student_type: studentType,
-      channel,
-      subject,
-      message,
-      status: "draft",
-    });
+    setSavingType(channel);
+    setError("");
 
-    if (error) setError(error.message);
-    else await loadCommunications();
+    try {
+      const payload = {
+        student_id: String(studentId),
+        student_type: studentType,
+        channel,
+        subject,
+        message,
+        status: "draft",
+      };
+
+      const { error } = await withTimeout(
+        supabase.from("student_communications").insert(payload).select().single(),
+        "Communication save timed out."
+      );
+
+      if (error) {
+        setError(error.message || "Failed to save communication.");
+        return;
+      }
+
+      await loadCommunications();
+      onSharedDataChange();
+    } catch (error) {
+      console.error("Communication save crashed:", error);
+      setError(error.message || "Communication save failed.");
+    } finally {
+      setSavingType("");
+    }
   };
 
   const whatsappUrl = useMemo(() => {
-    const cleanPhone = phone.replace(/[^\d]/g, "");
+    const cleanPhone = String(phone || "").replace(/[^\d]/g, "");
     const message = encodeURIComponent(
       `Hi ${fullName}, this is Zaifan Consultancy. I wanted to follow up regarding your study abroad process.`
     );
@@ -76,7 +141,8 @@ function CommunicationCenterPanel({ student = {} }) {
         </h2>
 
         <p className="mt-2 text-white/60">
-          Manage WhatsApp, email, counselor outreach, and saved communication history.
+          Manage WhatsApp, email, counselor outreach, and saved communication
+          history.
         </p>
       </div>
 
@@ -108,28 +174,43 @@ function CommunicationCenterPanel({ student = {} }) {
       <EmailWorkspace student={student} />
 
       <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
-        <h3 className="font-bold text-white">Communication History</h3>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-bold text-white">Communication History</h3>
 
-        <p className="mt-2 text-sm text-white/45">
-          Save manual communication records for counselor tracking.
-        </p>
+            <p className="mt-2 text-sm text-white/45">
+              Save manual communication records for counselor tracking.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadCommunications}
+            disabled={loading}
+            className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-white/60 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37] disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Refresh"}
+          </button>
+        </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
+            disabled={Boolean(savingType)}
             onClick={() =>
               saveCommunication({
                 channel: "whatsapp",
                 message: `Follow-up sent to ${fullName} on WhatsApp.`,
               })
             }
-            className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300"
+            className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300 disabled:opacity-50"
           >
-            Log WhatsApp Follow-up
+            {savingType === "whatsapp" ? "Saving..." : "Log WhatsApp Follow-up"}
           </button>
 
           <button
             type="button"
+            disabled={Boolean(savingType)}
             onClick={() =>
               saveCommunication({
                 channel: "email",
@@ -137,14 +218,18 @@ function CommunicationCenterPanel({ student = {} }) {
                 message: `Follow-up email prepared for ${fullName}.`,
               })
             }
-            className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37]"
+            className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] disabled:opacity-50"
           >
-            Log Email Follow-up
+            {savingType === "email" ? "Saving..." : "Log Email Follow-up"}
           </button>
         </div>
 
         <div className="mt-5 space-y-3">
-          {communications.length ? (
+          {loading ? (
+            <p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/40">
+              Loading communication history...
+            </p>
+          ) : communications.length ? (
             communications.map((item) => (
               <div
                 key={item.id}
@@ -152,11 +237,13 @@ function CommunicationCenterPanel({ student = {} }) {
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-semibold capitalize text-white">
-                    {item.channel}
+                    {item.channel || "communication"}
                   </p>
 
                   <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/45">
-                    {new Date(item.created_at).toLocaleString()}
+                    {item.created_at
+                      ? new Date(item.created_at).toLocaleString()
+                      : "Unknown date"}
                   </span>
                 </div>
 
@@ -166,7 +253,9 @@ function CommunicationCenterPanel({ student = {} }) {
                   </p>
                 ) : null}
 
-                <p className="mt-2 text-sm text-white/55">{item.message}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-white/55">
+                  {item.message || "No message saved."}
+                </p>
               </div>
             ))
           ) : (
