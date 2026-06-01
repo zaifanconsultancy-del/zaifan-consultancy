@@ -26,6 +26,7 @@ import VisaRiskAnalyzer from "../VisaRiskAnalyzer";
 import CounselorPerformanceAI from "../CounselorPerformanceAI";
 import WorkloadBalancerAI from "../WorkloadBalancerAI";
 import { buildAiLeadInsights } from "../../../services/aiLeadEngine";
+import ExecutiveCommandSystem from "../ExecutiveCommandSystem";
 
 function AnalyticsPage({
   cardClass,
@@ -68,21 +69,25 @@ function AnalyticsPage({
 
   const renderActiveAnalyticsSection = () => {
     if (activeAnalyticsSection === "ai-executive") {
-      return (
-        <AnalyticsSection
-          eyebrow="Real CRM Intelligence"
-          title="AI Executive Intelligence Center"
-        >
-          <AIExecutiveIntelligenceCenter
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-            followUpReminders={followUpReminders}
-            setActiveTab={setActiveTab}
-          />
-        </AnalyticsSection>
-      );
-    }
+  return (
+    <AnalyticsSection
+      eyebrow="Real CRM Intelligence"
+      title="AI Executive Intelligence Center"
+    >
+      <div className="space-y-6">
+        <AIExecutiveIntelligenceCenter
+          cardClass={cardClass}
+          inquiries={inquiries}
+          appointments={appointments}
+          followUpReminders={followUpReminders}
+          setActiveTab={setActiveTab}
+        />
+
+        <ExecutiveCommandSystem />
+      </div>
+    </AnalyticsSection>
+  );
+}
 
     if (activeAnalyticsSection === "command") {
       return (

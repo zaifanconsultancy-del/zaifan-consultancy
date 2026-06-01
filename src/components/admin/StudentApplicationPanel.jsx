@@ -471,8 +471,8 @@ function StudentApplicationPanel({
       });
 
       if (typeof onSharedDataChange === "function") {
-        onSharedDataChange(savedApplication);
-      }
+  await onSharedDataChange(savedApplication);
+}
 
       const applicationId = savedApplication?.id || application?.id || null;
 

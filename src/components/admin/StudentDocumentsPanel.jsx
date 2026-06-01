@@ -52,7 +52,25 @@ function StudentDocumentsPanel({ student }) {
         setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
       ),
     ]);
-
+const createTimelineEvent = async ({
+  eventType,
+  title,
+  description,
+  newValue = "",
+}) => {
+  try {
+    await supabase.from("student_application_timeline").insert({
+      student_id: Number(studentId),
+      student_type: studentType,
+      event_type: eventType,
+      title,
+      description,
+      new_value: newValue,
+    });
+  } catch {
+    // Timeline should never break documents
+  }
+}; 
   const getFileName = (item) => {
     if (!item?.file_path) return "Student document";
     return item.file_path.split("/").pop() || "Student document";
@@ -211,9 +229,16 @@ function StudentDocumentsPanel({ student }) {
         updateLocalDocument(documentName, result.data);
       }
 
-      safeSet(() => {
-        setSuccessMessage(`${documentName} marked as ${status}.`);
-      });
+      await createTimelineEvent({
+  eventType: `document_${status}`,
+  title: `Document ${status}`,
+  description: `${documentName} marked as ${status}.`,
+  newValue: documentName,
+});
+
+safeSet(() => {
+  setSuccessMessage(`${documentName} marked as ${status}.`);
+});
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Document update failed.");
@@ -301,9 +326,16 @@ function StudentDocumentsPanel({ student }) {
         supabase.storage.from(STORAGE_BUCKET).remove([oldFilePath]);
       }
 
-      safeSet(() => {
-        setSuccessMessage(`${documentName} uploaded successfully.`);
-      });
+      await createTimelineEvent({
+  eventType: "document_uploaded",
+  title: "Document Uploaded",
+  description: `${documentName} uploaded.`,
+  newValue: documentName,
+});
+
+safeSet(() => {
+  setSuccessMessage(`${documentName} uploaded successfully.`);
+});
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Upload failed.");
@@ -365,9 +397,16 @@ function StudentDocumentsPanel({ student }) {
         supabase.storage.from(STORAGE_BUCKET).remove([oldFilePath]);
       }
 
-      safeSet(() => {
-        setSuccessMessage(`${documentName} file deleted.`);
-      });
+      await createTimelineEvent({
+  eventType: "document_deleted",
+  title: "Document Deleted",
+  description: `${documentName} file deleted.`,
+  newValue: documentName,
+});
+
+safeSet(() => {
+  setSuccessMessage(`${documentName} file deleted.`);
+});
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Delete failed.");

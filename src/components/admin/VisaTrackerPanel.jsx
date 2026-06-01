@@ -5,7 +5,10 @@ import VisaRequirementsCard from "./VisaRequirementsCard";
 
 const REQUEST_TIMEOUT_MS = 30000;
 
-function VisaTrackerPanel({ student = {} }) {
+function VisaTrackerPanel({
+  student = {},
+  onSharedDataChange = null,
+}) {
   const [application, setApplication] = useState(student?.application || null);
   const [documents, setDocuments] = useState(student?.documents || []);
   const [visaStatus, setVisaStatus] = useState(
@@ -296,6 +299,9 @@ function VisaTrackerPanel({ student = {} }) {
           setVisaStatus(nextStatus);
           setSuccessMessage("Visa status saved successfully.");
         });
+        if (typeof onSharedDataChange === "function") {
+  await onSharedDataChange(savedApplication);
+}
       } else {
         const result = await withTimeout(
           supabase
@@ -319,6 +325,9 @@ function VisaTrackerPanel({ student = {} }) {
           setVisaStatus(result.data?.visa_status || nextStatus);
           setSuccessMessage("Visa status saved successfully.");
         });
+        if (typeof onSharedDataChange === "function") {
+  await onSharedDataChange(result.data);
+}
       }
     } catch (error) {
       safeSet(() => {

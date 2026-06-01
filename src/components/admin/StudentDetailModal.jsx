@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { supabase } from "../../lib/supabaseClient";
 import LeadAssignmentPanel from "./LeadAssignmentPanel";
 import CrmTimelinePanel from "./CrmTimelinePanel";
 import FollowUpReminderPanel from "./FollowUpReminderPanel";
@@ -60,18 +60,20 @@ function StudentDetailModal({
   const [panelRefreshKey, setPanelRefreshKey] = useState(0);
 
   useEffect(() => {
-    setLocalStudent(student);
-    setActivePanel(student?.__preferredPanel || "ai-workspace");
+  setLocalStudent(student);
+  setActivePanel(student?.__preferredPanel || "ai-workspace");
 
-    setOsLoading(false);
-    setOsError("");
-    setStudentDocuments([]);
-    setStudentApplication(null);
-    setStudentUniversities([]);
-    setStudentTasks([]);
-    setStudentCommunications([]);
-    setPanelRefreshKey((prev) => prev + 1);
-  }, [student]);
+  setOsLoading(false);
+  setOsError("");
+  setStudentDocuments([]);
+  setStudentApplication(null);
+  setStudentUniversities([]);
+  setStudentTasks([]);
+  setStudentCommunications([]);
+  setPanelRefreshKey((prev) => prev + 1);
+}, [student]);
+
+
 
   const safePermissions = {
     canDelete: false,
@@ -89,6 +91,10 @@ function StudentDetailModal({
   const studentId = workingStudent?.id;
   const studentType =
     workingStudent?.student_type || workingStudent?.type || type || "inquiry";
+
+    useEffect(() => {
+  loadStudentOsData();
+}, [studentId, studentType]);
 
   
 const refreshCurrentPanel = () => {
@@ -110,9 +116,75 @@ const refreshCurrentPanel = () => {
 
 
 
-  const loadStudentOsData = () => {
-  refreshCurrentPanel();
+ const loadStudentOsData = async () => {
+  if (!studentId) return;
+
+  setOsLoading(true);
+  setOsError("");
+
+  try {
+    const numericStudentId = Number(studentId);
+
+    const [
+      documentsResult,
+      applicationResult,
+      universitiesResult,
+      tasksResult,
+      communicationsResult,
+    ] = await Promise.all([
+      supabase
+        .from("student_documents")
+        .select("*")
+        .eq("student_id", studentId),
+
+      Number.isFinite(numericStudentId)
+        ? supabase
+            .from("student_applications")
+            .select("*")
+            .eq("student_id", numericStudentId)
+            .eq("student_type", studentType)
+            .order("created_at", { ascending: false })
+            .limit(1)
+        : Promise.resolve({ data: [], error: null }),
+
+      supabase
+        .from("student_universities")
+        .select("*")
+        .eq("student_id", studentId),
+
+      Number.isFinite(numericStudentId)
+        ? supabase
+            .from("student_tasks")
+            .select("*")
+            .eq("student_id", numericStudentId)
+        : Promise.resolve({ data: [], error: null }),
+
+      supabase
+        .from("student_communications")
+        .select("*")
+        .eq("student_id", String(studentId))
+        .eq("student_type", studentType),
+    ]);
+
+    
+
+    setStudentDocuments(documentsResult.data || []);
+    setStudentApplication(applicationResult.data?.[0] || null);
+    setStudentUniversities(universitiesResult.data || []);
+    setStudentTasks(tasksResult.data || []);
+    setStudentCommunications(communicationsResult.data || []);
+
+    setPanelRefreshKey((prev) => prev + 1);
+  } catch (error) {
+    setOsError(error.message || "Student OS data failed to load.");
+  } finally {
+    setOsLoading(false);
+  }
 };
+
+useEffect(() => {
+  loadStudentOsData();
+}, [studentId, studentType]);
 
   const executiveStudents =
     allLeads.length > 0
@@ -601,15 +673,17 @@ const refreshCurrentPanel = () => {
                   OS Snapshot
                 </p>
 
-                <MiniOsStat label="Docs" value={studentDocuments.length} />
-                <MiniOsStat label="Applications" value={studentApplication ? 1 : 0} />
-                <MiniOsStat label="Universities" value={studentUniversities.length} />
-                <MiniOsStat label="Tasks" value={studentTasks.length} />
-                <MiniOsStat label="Messages" value={studentCommunications.length} />
+               <MiniOsStat label="Docs" value={studentDocuments.length} />
+<MiniOsStat label="Applications" value={studentApplication ? 1 : 0} />
+<MiniOsStat label="Universities" value={studentUniversities.length} />
+<MiniOsStat label="Tasks" value={studentTasks.length} />
+<MiniOsStat label="Messages" value={studentCommunications.length} />
 
                 <p className="pt-2 text-[11px] leading-5 text-white/35">
-                  Snapshot sync is paused during stabilization. Each panel now
-                  loads independently to prevent freezes.
+                  <div className="pt-2 text-[11px] leading-5 text-white/35">
+  Live Student OS snapshot loaded from documents, applications,
+  universities, tasks, and communications.
+</div>
                 </p>
               </div>
             </aside>

@@ -178,8 +178,15 @@ function UniversityManagementPanel({ student = {}, onSharedDataChange = null }) 
       }
 
       resetForm();
-      await loadUniversities();
-      await notifyParent();
+      await addApplicationTimelineEvent({
+  eventType: "university_added",
+  title: "University Added",
+  description: `${form.university} added to university planning.`,
+  newValue: form.category,
+});
+
+await loadUniversities();
+await notifyParent();
     } catch (error) {
       setError(error.message || "University save failed.");
     } finally {
@@ -387,6 +394,22 @@ function UniversityManagementPanel({ student = {}, onSharedDataChange = null }) 
 
     return savedApplication;
   };
+const moveUniversityCategory = async (
+  university,
+  nextCategory
+) => {
+  await updateUniversity(university.id, {
+    category: nextCategory,
+  });
+
+  await addApplicationTimelineEvent({
+    eventType: "university_category_changed",
+    title: "University Category Updated",
+    description: `${university.university} moved to ${nextCategory}.`,
+    oldValue: university.category,
+    newValue: nextCategory,
+  });
+};
 
   const handleUniversityStatusChange = async (university, nextStatus) => {
     if (!university?.id || !nextStatus) return;
@@ -595,9 +618,9 @@ function UniversityManagementPanel({ student = {}, onSharedDataChange = null }) 
             startingApplicationId={startingApplicationId}
             syncingStatusId={syncingStatusId}
             onStatusChange={handleUniversityStatusChange}
-            onCategoryChange={(id, nextCategory) =>
-              updateUniversity(id, { category: nextCategory })
-            }
+            onCategoryChange={(university, nextCategory) =>
+  moveUniversityCategory(university, nextCategory)
+}
             onDelete={deleteUniversity}
             onStartApplication={startApplication}
           />
@@ -739,7 +762,7 @@ function UniversityCard({
           value={item.category || "target"}
           disabled={isSyncingStatus || isStartingApplication}
           options={CATEGORY_OPTIONS.map((category) => category.id)}
-          onChange={(value) => onCategoryChange(item.id, value)}
+          onChange={(value) => onCategoryChange(item, value)}
         />
 
         <button

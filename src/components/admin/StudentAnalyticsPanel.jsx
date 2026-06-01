@@ -58,8 +58,9 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
     setError("");
 
     loadApplicationOnly();
-    loadDocumentsOnly();
-    loadTasksOnly();
+loadDocumentsOnly();
+loadTasksOnly();
+loadUniversitiesOnly();
     
   }, [studentId]);
 
@@ -209,9 +210,10 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
   setRefreshing(true);
   setError("");
 
-  loadApplicationOnly();
+   loadApplicationOnly();
   loadDocumentsOnly();
   loadTasksOnly();
+  loadUniversitiesOnly();
 
   window.setTimeout(() => {
     setRefreshing(false);
@@ -274,17 +276,18 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
       (priority === "high" || priority === "vip" ? 10 : 0);
 
     const healthScore = Math.max(
-      0,
-      Math.min(
-        100,
-        Math.round(
-          documentReadiness * 0.3 +
-            applicationReadiness * 0.35 +
-            taskCompletion * 0.2 +
-            (visaStatus !== "not_started" ? 15 : 5)
-        )
-      )
-    );
+  0,
+  Math.min(
+    100,
+    Math.round(
+      documentReadiness * 0.3 +
+      applicationReadiness * 0.35 +
+      taskCompletion * 0.2 +
+      (universities.length > 0 ? 10 : 0) +
+      (visaStatus !== "not_started" ? 15 : 5)
+    )
+  )
+);
 
     const riskLevel =
       riskScore >= 45 ? "High Risk" : riskScore >= 25 ? "Medium Risk" : "Stable";
@@ -368,6 +371,12 @@ primaryRiskAction,
     };
   }, [student, allLeads, application, documents, tasks, universities]);
 
+  const isLoading =
+  applicationLoading ||
+  documentsLoading ||
+  tasksLoading ||
+  universitiesLoading;
+
   return (
     <div className="space-y-5">
       <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6">
@@ -404,7 +413,7 @@ primaryRiskAction,
         </div>
       ) : null}
 
-      {refreshing ? (
+      {isLoading || refreshing ? (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/45">
           Loading analytics safely...
         </div>

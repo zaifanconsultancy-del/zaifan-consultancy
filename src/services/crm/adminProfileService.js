@@ -1,11 +1,17 @@
 import { supabase } from "../../lib/supabaseClient";
 
 export async function fetchAdminProfileRow(userId) {
-  return supabase
+  console.log("Loading admin profile for:", userId);
+
+  const result = await supabase
     .from("admin_profiles")
     .select("*")
     .eq("id", userId)
     .maybeSingle();
+
+  console.log("Admin profile result:", result);
+
+  return result;
 }
 
 export function getCachedAdminProfile(userId) {

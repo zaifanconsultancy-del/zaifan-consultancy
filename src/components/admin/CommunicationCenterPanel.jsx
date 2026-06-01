@@ -6,6 +6,27 @@ import EmailWorkspace from "./EmailWorkspace";
 const REQUEST_TIMEOUT_MS = 12000;
 
 async function withTimeout(promise, message = "Request timed out.") {
+  async function createTimelineEvent({
+  studentId,
+  studentType,
+  eventType,
+  title,
+  description,
+  newValue = "",
+}) {
+  try {
+    await supabase.from("student_application_timeline").insert({
+      student_id: Number(studentId),
+      student_type: studentType,
+      event_type: eventType,
+      title,
+      description,
+      new_value: newValue,
+    });
+  } catch {
+    // Timeline should never break communications
+  }
+}
   return Promise.race([
     promise,
     new Promise((_, reject) =>
@@ -102,7 +123,20 @@ function CommunicationCenterPanel({
       }
 
       await loadCommunications();
-      onSharedDataChange();
+
+await createTimelineEvent({
+  studentId,
+  studentType,
+  eventType: "communication_logged",
+  title:
+    channel === "whatsapp"
+      ? "WhatsApp Follow-up Logged"
+      : "Email Follow-up Logged",
+  description: message,
+  newValue: channel,
+});
+
+onSharedDataChange();
     } catch (error) {
       console.error("Communication save crashed:", error);
       setError(error.message || "Communication save failed.");

@@ -159,35 +159,91 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
   };
 
   const getEventIcon = (type = "") => {
-    const clean = String(type);
+  const clean = String(type).toLowerCase();
 
-    if (clean.includes("visa")) return "🌍";
-    if (clean.includes("offer")) return "🏆";
-    if (clean.includes("university")) return "🏫";
-    if (clean.includes("application")) return "🎓";
-    if (clean.includes("status")) return "⚡";
-    if (clean.includes("note")) return "📝";
-    if (clean.includes("assignment")) return "👥";
-    if (clean.includes("pipeline")) return "🧭";
+  if (clean.includes("document")) return "📁";
 
-    return "•";
-  };
+  if (clean.includes("task_created")) return "📋";
+  if (clean.includes("task_completed")) return "✅";
 
-  const getEventStyle = (source) => {
-    if (source === "application") {
-      return {
-        dot: "bg-cyan-300",
-        badge:
-          "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
-      };
-    }
+  if (clean.includes("communication")) return "💬";
 
+  if (clean.includes("university")) return "🏫";
+
+  if (clean.includes("visa")) return "🌍";
+
+  if (clean.includes("offer")) return "🏆";
+
+  if (clean.includes("application")) return "🎓";
+
+  if (clean.includes("status")) return "⚡";
+
+  if (clean.includes("note")) return "📝";
+
+  if (clean.includes("assignment")) return "👥";
+
+  if (clean.includes("pipeline")) return "🧭";
+
+  return "•";
+};
+
+  const getEventStyle = (source, type = "") => {
+  const clean = String(type).toLowerCase();
+
+  if (clean.includes("document")) {
     return {
-      dot: "bg-[#D4AF37]",
+      dot: "bg-blue-300",
       badge:
-        "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
+        "border-blue-400/20 bg-blue-500/10 text-blue-300",
     };
+  }
+
+  if (clean.includes("task")) {
+    return {
+      dot: "bg-orange-300",
+      badge:
+        "border-orange-400/20 bg-orange-500/10 text-orange-300",
+    };
+  }
+
+  if (clean.includes("communication")) {
+    return {
+      dot: "bg-emerald-300",
+      badge:
+        "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
+    };
+  }
+
+  if (clean.includes("university")) {
+    return {
+      dot: "bg-purple-300",
+      badge:
+        "border-purple-400/20 bg-purple-500/10 text-purple-300",
+    };
+  }
+
+  if (clean.includes("visa")) {
+    return {
+      dot: "bg-cyan-300",
+      badge:
+        "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
+    };
+  }
+
+  if (source === "application") {
+    return {
+      dot: "bg-cyan-300",
+      badge:
+        "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
+    };
+  }
+
+  return {
+    dot: "bg-[#D4AF37]",
+    badge:
+      "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
   };
+};
 
   return (
     <div className="space-y-5">
@@ -261,7 +317,10 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
         ) : (
           <div className="space-y-4">
             {combinedEvents.map((event) => {
-              const style = getEventStyle(event.source);
+              const style = getEventStyle(
+  event.source,
+  event.type
+);
 
               return (
                 <div key={event.id} className="relative pl-8">
