@@ -49,6 +49,7 @@ function VisaTrackerPanel({ student = {} }) {
 
     loadApplicationOnly();
     loadDocumentsOnly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId]);
 
   const safeSet = (callback) => {
@@ -70,6 +71,8 @@ function VisaTrackerPanel({ student = {} }) {
     university: student?.university || "",
     program: student?.program || student?.field_of_interest || "",
     intake: student?.intake || "",
+    source_university_id: student?.source_university_id || "",
+    source_university_name: student?.source_university_name || "",
     application_status: student?.application_status || "not_started",
     offer_status: student?.offer_status || "pending",
     visa_status:
@@ -101,6 +104,7 @@ function VisaTrackerPanel({ student = {} }) {
           .from("student_applications")
           .select("*")
           .eq("student_id", numericStudentId)
+          .eq("student_type", studentType)
           .order("created_at", { ascending: false })
           .limit(1),
         "Visa application loading timed out."
@@ -189,6 +193,34 @@ function VisaTrackerPanel({ student = {} }) {
     loadDocumentsOnly();
   };
 
+  const createVisaTimelineEvent = async ({
+    applicationId = null,
+    previousStatus = "",
+    nextStatus = "",
+  }) => {
+    if (!hasValidStudentId || !nextStatus) return;
+
+    try {
+      await withTimeout(
+        supabase.from("student_application_timeline").insert({
+          student_id: numericStudentId,
+          student_type: studentType,
+          application_id: applicationId ? String(applicationId) : null,
+          event_type: "visa_status_changed",
+          title: "Visa Status Updated",
+          description: `Visa status changed from ${
+            previousStatus || "empty"
+          } to ${nextStatus}.`,
+          old_value: previousStatus || null,
+          new_value: nextStatus || null,
+        }),
+        "Visa timeline event timed out."
+      );
+    } catch {
+      // Do not block visa save because timeline failed.
+    }
+  };
+
   const updateVisaStatus = async (nextStatus) => {
     if (!hasValidStudentId || saving) return;
 
@@ -210,6 +242,8 @@ function VisaTrackerPanel({ student = {} }) {
         student?.field_of_interest ||
         "",
       intake: application?.intake || student?.intake || "",
+      source_university_id: application?.source_university_id || null,
+      source_university_name: application?.source_university_name || "",
       application_status:
         application?.application_status ||
         student?.application_status ||
@@ -237,18 +271,28 @@ function VisaTrackerPanel({ student = {} }) {
           supabase
             .from("student_applications")
             .update(payload)
-            .eq("id", application.id),
+            .eq("id", application.id)
+            .select()
+            .single(),
           "Visa status save timed out. Please refresh after a few seconds."
         );
 
         if (result.error) throw result.error;
 
+        const savedApplication = result.data || {
+          ...(application || {}),
+          ...payload,
+          id: application.id,
+        };
+
+        await createVisaTimelineEvent({
+          applicationId: savedApplication?.id,
+          previousStatus,
+          nextStatus,
+        });
+
         safeSet(() => {
-          setApplication((prev) => ({
-            ...(prev || {}),
-            ...payload,
-            id: application.id,
-          }));
+          setApplication(savedApplication);
           setVisaStatus(nextStatus);
           setSuccessMessage("Visa status saved successfully.");
         });
@@ -263,6 +307,12 @@ function VisaTrackerPanel({ student = {} }) {
         );
 
         if (result.error) throw result.error;
+
+        await createVisaTimelineEvent({
+          applicationId: result.data?.id,
+          previousStatus,
+          nextStatus,
+        });
 
         safeSet(() => {
           setApplication(result.data);
@@ -317,6 +367,8 @@ function VisaTrackerPanel({ student = {} }) {
           {loading ? "Refreshing..." : "Refresh Visa Data"}
         </button>
       </div>
+
+      <VisaSourceCard application={application} visaStatus={visaStatus} />
 
       {error ? (
         <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-300">
@@ -385,6 +437,91 @@ function VisaTrackerPanel({ student = {} }) {
           documents,
         }}
       />
+    </div>
+  );
+}
+
+function VisaSourceCard({ application = null, visaStatus = "not_started" }) {
+  const sourceUniversityName =
+    application?.source_university_name || application?.university || "";
+  const sourceUniversityId = application?.source_university_id || "";
+
+  if (!application) {
+    return (
+      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/35">
+          Visa Source
+        </p>
+
+        <h3 className="mt-2 text-lg font-black text-white">
+          No Application Linked Yet
+        </h3>
+
+        <p className="mt-2 text-sm leading-6 text-white/45">
+          Start or sync an application first. Visa will then read from the linked
+          application record.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[1.75rem] border border-cyan-400/25 bg-cyan-500/10 p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
+            Visa Source
+          </p>
+
+          <h3 className="mt-2 text-xl font-black text-white">
+            🔗 Linked Application & University
+          </h3>
+
+          <p className="mt-2 text-lg font-bold text-cyan-200">
+            {sourceUniversityName || "Linked application"}
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-white/55">
+            This visa workflow is powered by the same application record used by
+            the University and Application systems.
+          </p>
+
+          {sourceUniversityId ? (
+            <p className="mt-3 break-all text-xs text-white/30">
+              Source University ID: {sourceUniversityId}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-2 sm:min-w-[260px]">
+          <VisaSourceLine label="Country" value={application?.country} />
+          <VisaSourceLine label="Program" value={application?.program} />
+          <VisaSourceLine label="Intake" value={application?.intake} />
+          <VisaSourceLine
+            label="Application"
+            value={application?.application_status || "not_started"}
+          />
+          <VisaSourceLine
+            label="Offer"
+            value={application?.offer_status || "pending"}
+          />
+          <VisaSourceLine label="Visa" value={visaStatus || "not_started"} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VisaSourceLine({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">
+        {label}
+      </span>
+
+      <span className="max-w-[150px] truncate text-right text-xs font-bold capitalize text-cyan-200">
+        {String(value || "Not selected").replaceAll("_", " ")}
+      </span>
     </div>
   );
 }

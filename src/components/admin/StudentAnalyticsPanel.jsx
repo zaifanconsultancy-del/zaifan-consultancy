@@ -311,13 +311,51 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
         String(leadCountry).toLowerCase() === String(studentCountry).toLowerCase()
       );
     }).length;
+const riskFactors = [];
 
+if (documentReadiness < 50) {
+  riskFactors.push({
+    title: "Low document readiness",
+    severity: "high",
+    action: "Collect missing documents.",
+  });
+}
+
+if (applicationReadiness < 60) {
+  riskFactors.push({
+    title: "Incomplete application",
+    severity: "medium",
+    action: "Complete application profile.",
+  });
+}
+
+if (overdueTasks > 0) {
+  riskFactors.push({
+    title: "Overdue tasks",
+    severity: "high",
+    action: "Resolve overdue counselor tasks.",
+  });
+}
+
+if (universities.length === 0) {
+  riskFactors.push({
+    title: "No universities saved",
+    severity: "medium",
+    action: "Create a university shortlist.",
+  });
+}
+
+const primaryRiskAction =
+  riskFactors[0]?.action ||
+  "No major risk detected.";
     return {
       documentReadiness,
       applicationReadiness,
       taskCompletion,
       healthScore,
       riskLevel,
+      riskFactors,
+primaryRiskAction,
       journeyStage,
       verifiedDocs,
       receivedDocs,
@@ -384,6 +422,139 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
         <MetricCard label="Country Leads" value={analytics.similarCountryLeads} />
       </div>
 
+      <div className="rounded-[1.75rem] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
+  <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
+    Student Journey Tracker
+  </p>
+
+  <div className="mt-6 grid gap-3 md:grid-cols-7">
+    {[
+      "Inquiry",
+      "Counseling",
+      "Documents",
+      "Application",
+      "Offer",
+      "Visa",
+      "Enrollment",
+    ].map((stage, index) => {
+      const currentStage =
+        analytics.journeyStage === "Visa Approved"
+          ? 6
+          : analytics.journeyStage === "Visa Processing"
+          ? 5
+          : analytics.journeyStage === "Offer Stage"
+          ? 4
+          : analytics.journeyStage === "Application Stage"
+          ? 3
+          : 1;
+
+      const completed = index <= currentStage;
+
+      return (
+        <div
+          key={stage}
+          className={`rounded-2xl border p-4 text-center transition ${
+            completed
+              ? "border-[#D4AF37]/35 bg-[#D4AF37]/10"
+              : "border-white/10 bg-white/[0.03]"
+          }`}
+        >
+          <div
+            className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full border text-sm font-black ${
+              completed
+                ? "border-[#D4AF37]/35 text-[#D4AF37]"
+                : "border-white/10 text-white/35"
+            }`}
+          >
+            {index + 1}
+          </div>
+
+          <p
+            className={`mt-3 text-xs font-semibold uppercase tracking-[0.14em] ${
+              completed ? "text-[#D4AF37]" : "text-white/35"
+            }`}
+          >
+            {stage}
+          </p>
+        </div>
+      );
+    })}
+  </div>
+</div>
+<div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div>
+      <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
+        Student Risk Engine
+      </p>
+
+      <h3 className="mt-2 text-xl font-black text-white">
+        {analytics.riskFactors.length > 0
+          ? `${analytics.riskFactors.length} Risk Signal${
+              analytics.riskFactors.length > 1 ? "s" : ""
+            } Detected`
+          : "No Major Risk Detected"}
+      </h3>
+
+      <p className="mt-2 text-sm leading-6 text-white/50">
+        {analytics.primaryRiskAction}
+      </p>
+    </div>
+
+    <div
+      className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.16em] ${
+        analytics.riskFactors.some(
+          (risk) => risk.severity === "high"
+        )
+          ? "border-red-400/25 bg-red-500/10 text-red-300"
+          : analytics.riskFactors.length > 0
+          ? "border-yellow-400/25 bg-yellow-500/10 text-yellow-300"
+          : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
+      }`}
+    >
+      {analytics.riskFactors.some(
+        (risk) => risk.severity === "high"
+      )
+        ? "High Attention"
+        : analytics.riskFactors.length > 0
+        ? "Monitor"
+        : "Stable"}
+    </div>
+  </div>
+
+  <div className="mt-5 grid gap-3 md:grid-cols-2">
+    {analytics.riskFactors.length === 0 ? (
+      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+        Student has no major operational risk signals.
+      </div>
+    ) : (
+      analytics.riskFactors.map((risk) => (
+        <div
+          key={risk.title}
+          className={`rounded-2xl border p-4 ${
+            risk.severity === "high"
+              ? "border-red-400/25 bg-red-500/10"
+              : "border-yellow-400/25 bg-yellow-500/10"
+          }`}
+        >
+          <p
+            className={`font-black ${
+              risk.severity === "high"
+                ? "text-red-300"
+                : "text-yellow-300"
+            }`}
+          >
+            {risk.title}
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-white/50">
+            {risk.action}
+          </p>
+        </div>
+      ))
+    )}
+  </div>
+</div>
       <div className="grid gap-4 lg:grid-cols-3">
         <ProgressCard
           title="Document Readiness"

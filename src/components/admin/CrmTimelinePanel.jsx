@@ -1,12 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
 import { addTimelineEvent, fetchTimelineEvents } from "../../lib/crmTimeline";
 
+const REQUEST_TIMEOUT_MS = 30000;
+
 function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
-  const [events, setEvents] = useState([]);
+  const [crmEvents, setCrmEvents] = useState([]);
+  const [applicationEvents, setApplicationEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const numericStudentId = Number(studentId);
+  const hasValidStudentId = Number.isFinite(numericStudentId);
+
+  const withTimeout = (promise, message = "Request timed out.") =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+      ),
+    ]);
 
   const loadTimeline = async () => {
     if (!studentId || !studentType) return;
@@ -15,19 +30,38 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
     setErrorMessage("");
 
     try {
-      const { data, error } = await fetchTimelineEvents(studentId, studentType);
+      const [{ data: crmData, error: crmError }, appResult] = await Promise.all([
+        fetchTimelineEvents(studentId, studentType),
+        hasValidStudentId
+          ? withTimeout(
+              supabase
+                .from("student_application_timeline")
+                .select("*")
+                .eq("student_id", numericStudentId)
+                .order("created_at", { ascending: false })
+                .limit(100),
+              "Application timeline loading timed out."
+            )
+          : Promise.resolve({ data: [], error: null }),
+      ]);
 
-      if (error) {
-        setErrorMessage("Timeline could not load. Check crm_timeline table/RLS.");
-        setEvents([]);
-        return;
+      if (crmError) {
+        setErrorMessage("CRM timeline could not load. Check crm_timeline table/RLS.");
       }
 
-      setEvents(data || []);
+      if (appResult?.error) {
+        setErrorMessage(
+          "Application timeline could not load. Check student_application_timeline table/RLS."
+        );
+      }
+
+      setCrmEvents(crmData || []);
+      setApplicationEvents(appResult?.data || []);
     } catch (error) {
       console.error("Timeline load crashed:", error);
-      setErrorMessage("Timeline crashed while loading.");
-      setEvents([]);
+      setErrorMessage(error.message || "Timeline crashed while loading.");
+      setCrmEvents([]);
+      setApplicationEvents([]);
     } finally {
       setLoading(false);
     }
@@ -69,6 +103,49 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
     }
   };
 
+  const combinedEvents = useMemo(() => {
+    const normalizedCrm = (crmEvents || []).map((event) => ({
+      id: `crm-${event.id}`,
+      source: "crm",
+      title: event.title || "CRM Event",
+      description: event.description || "",
+      type: event.action_type || "crm_event",
+      oldValue: event.old_value || "",
+      newValue: event.new_value || "",
+      createdBy: event.created_by_name || "Admin",
+      createdAt: event.created_at,
+    }));
+
+    const normalizedApp = (applicationEvents || []).map((event) => ({
+      id: `app-${event.id}`,
+      source: "application",
+      title: event.title || "Application Event",
+      description: event.description || "",
+      type: event.event_type || "application_event",
+      oldValue: event.old_value || "",
+      newValue: event.new_value || "",
+      createdBy: "System",
+      createdAt: event.created_at,
+    }));
+
+    return [...normalizedCrm, ...normalizedApp].sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [crmEvents, applicationEvents]);
+
+  const timelineStats = useMemo(() => {
+    return {
+      total: combinedEvents.length,
+      crm: crmEvents.length,
+      application: applicationEvents.length,
+      visa: applicationEvents.filter((event) =>
+        String(event.event_type || "").includes("visa")
+      ).length,
+    };
+  }, [combinedEvents, crmEvents, applicationEvents]);
+
   const formatDate = (date) => {
     if (!date) return "Unknown time";
 
@@ -79,6 +156,37 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getEventIcon = (type = "") => {
+    const clean = String(type);
+
+    if (clean.includes("visa")) return "🌍";
+    if (clean.includes("offer")) return "🏆";
+    if (clean.includes("university")) return "🏫";
+    if (clean.includes("application")) return "🎓";
+    if (clean.includes("status")) return "⚡";
+    if (clean.includes("note")) return "📝";
+    if (clean.includes("assignment")) return "👥";
+    if (clean.includes("pipeline")) return "🧭";
+
+    return "•";
+  };
+
+  const getEventStyle = (source) => {
+    if (source === "application") {
+      return {
+        dot: "bg-cyan-300",
+        badge:
+          "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
+      };
+    }
+
+    return {
+      dot: "bg-[#D4AF37]",
+      badge:
+        "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
+    };
   };
 
   return (
@@ -109,12 +217,22 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
         </div>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-4">
+        <MiniStat label="Total Events" value={timelineStats.total} />
+        <MiniStat label="CRM Events" value={timelineStats.crm} />
+        <MiniStat label="Application Events" value={timelineStats.application} />
+        <MiniStat label="Visa Events" value={timelineStats.visa} />
+      </div>
+
       <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-white">CRM Timeline</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Unified Student Journey Timeline
+            </h3>
             <p className="text-sm text-white/45">
-              Complete history of actions for this student.
+              CRM notes, application movement, university sync, offer history,
+              and visa changes in one timeline.
             </p>
           </div>
 
@@ -134,59 +252,85 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
 
         {loading ? (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/50">
-            Loading timeline...
+            Loading unified timeline...
           </div>
-        ) : events.length === 0 ? (
+        ) : combinedEvents.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-white/45">
             No timeline history yet.
           </div>
         ) : (
           <div className="space-y-4">
-            {events.map((event) => (
-              <div key={event.id} className="relative pl-6">
-                <span className="absolute left-0 top-2 h-3 w-3 rounded-full bg-[#D4AF37]" />
+            {combinedEvents.map((event) => {
+              const style = getEventStyle(event.source);
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        {event.title}
-                      </p>
+              return (
+                <div key={event.id} className="relative pl-8">
+                  <span
+                    className={`absolute left-0 top-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${style.dot}`}
+                  >
+                    {getEventIcon(event.type)}
+                  </span>
 
-                      {event.description ? (
-                        <p className="mt-1 whitespace-pre-wrap text-sm text-white/50">
-                          {event.description}
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          {event.title}
                         </p>
-                      ) : null}
+
+                        {event.description ? (
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-white/50">
+                            {event.description}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[11px] font-semibold capitalize ${style.badge}`}
+                      >
+                        {String(event.type).replaceAll("_", " ")}
+                      </span>
                     </div>
 
-                    <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[11px] font-semibold text-[#D4AF37]">
-                      {event.action_type}
-                    </span>
-                  </div>
+                    {(event.oldValue || event.newValue) && (
+                      <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/45">
+                        {event.oldValue ? <span>{event.oldValue}</span> : null}
+                        {event.oldValue && event.newValue ? (
+                          <span className="mx-2 text-[#D4AF37]">→</span>
+                        ) : null}
+                        {event.newValue ? (
+                          <span className="text-white/70">{event.newValue}</span>
+                        ) : null}
+                      </div>
+                    )}
 
-                  {(event.old_value || event.new_value) && (
-                    <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/45">
-                      {event.old_value ? <span>{event.old_value}</span> : null}
-                      {event.old_value && event.new_value ? (
-                        <span className="mx-2 text-[#D4AF37]">→</span>
-                      ) : null}
-                      {event.new_value ? (
-                        <span className="text-white/70">{event.new_value}</span>
-                      ) : null}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/35">
+                      <span>
+                        {event.source === "application"
+                          ? "Application System"
+                          : `By ${event.createdBy || "Admin"}`}
+                      </span>
+                      <span>{formatDate(event.createdAt)}</span>
                     </div>
-                  )}
-
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/35">
-                    <span>By {event.created_by_name || "Admin"}</span>
-                    <span>{formatDate(event.created_at)}</span>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+        {label}
+      </p>
+
+      <p className="mt-2 text-2xl font-black text-[#D4AF37]">{value}</p>
     </div>
   );
 }

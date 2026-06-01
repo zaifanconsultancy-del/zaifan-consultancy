@@ -8,6 +8,8 @@ const emptyApplicationForm = {
   university: "",
   program: "",
   intake: "",
+  source_university_id: "",
+  source_university_name: "",
   application_status: "not_started",
   offer_status: "pending",
   visa_status: "not_started",
@@ -17,8 +19,15 @@ const emptyApplicationForm = {
   internal_notes: "",
 };
 
-function StudentApplicationPanel({ student }) {
-  const [application, setApplication] = useState(null);
+function StudentApplicationPanel({
+  student,
+  sharedApplication = null,
+  onSharedDataChange = null,
+}) {
+  const [application, setApplication] = useState(
+    sharedApplication || student?.application || null
+  );
+
   const [form, setForm] = useState(emptyApplicationForm);
   const [timeline, setTimeline] = useState([]);
 
@@ -36,33 +45,10 @@ function StudentApplicationPanel({ student }) {
   const studentId = student?.id;
   const numericStudentId = Number(studentId);
   const studentType = student?.student_type || student?.type || "inquiry";
-
   const hasValidStudentId = Number.isFinite(numericStudentId);
 
   const studentName =
     student?.full_name || student?.name || student?.student_name || "Student";
-
-  useEffect(() => {
-    mountedRef.current = true;
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const fallback = normalizeApplication(null);
-
-    setApplication(student?.application || null);
-    setForm(normalizeApplication(student?.application || fallback));
-    setTimeline([]);
-    setError("");
-    setTimelineError("");
-    setSuccessMessage("");
-
-    loadApplication();
-// Timeline loads only when user clicks Refresh Timeline to avoid freezing panel.
-  }, [studentId]);
 
   const safeSet = (callback) => {
     if (mountedRef.current) callback();
@@ -72,7 +58,7 @@ function StudentApplicationPanel({ student }) {
     Promise.race([
       promise,
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+        window.setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
       ),
     ]);
 
@@ -81,6 +67,8 @@ function StudentApplicationPanel({ student }) {
     university: student?.university || "",
     program: student?.program || student?.field_of_interest || "",
     intake: student?.intake || "",
+    source_university_id: "",
+    source_university_name: "",
     application_status: student?.application_status || "not_started",
     offer_status: student?.offer_status || "pending",
     visa_status: student?.visa_status || "not_started",
@@ -96,8 +84,45 @@ function StudentApplicationPanel({ student }) {
     ...(record || {}),
   });
 
-  const formatStatus = (value) =>
-    String(value || "not_started").replaceAll("_", " ");
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const incomingApplication = sharedApplication || student?.application || null;
+
+    setApplication(incomingApplication);
+    setForm(normalizeApplication(incomingApplication));
+    setTimeline([]);
+    setError("");
+    setTimelineError("");
+    setSuccessMessage("");
+
+    loadApplication();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId]);
+
+  useEffect(() => {
+    if (!sharedApplication) return;
+
+    setApplication(sharedApplication);
+    setForm(normalizeApplication(sharedApplication));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedApplication?.id, sharedApplication?.updated_at]);
+
+  const sourceUniversityName =
+    application?.source_university_name ||
+    form.source_university_name ||
+    "";
+
+  const sourceUniversityId =
+    application?.source_university_id || form.source_university_id || "";
+
+  const hasApplicationSource = Boolean(sourceUniversityId || sourceUniversityName);
 
   const timelineStats = useMemo(() => {
     const statusEvents = timeline.filter((item) =>
@@ -109,9 +134,13 @@ function StudentApplicationPanel({ student }) {
     ).length;
 
     const universityEvents = timeline.filter((item) =>
-      ["university_changed", "program_changed", "country_changed", "intake_changed"].includes(
-        item.event_type
-      )
+      [
+        "university_changed",
+        "program_changed",
+        "country_changed",
+        "intake_changed",
+        "application_started_from_university",
+      ].includes(item.event_type)
     ).length;
 
     return {
@@ -147,6 +176,7 @@ function StudentApplicationPanel({ student }) {
           .from("student_applications")
           .select("*")
           .eq("student_id", numericStudentId)
+          .eq("student_type", studentType)
           .order("created_at", { ascending: false })
           .limit(1),
         "Application loading timed out. Showing fallback profile data."
@@ -162,20 +192,18 @@ function StudentApplicationPanel({ student }) {
         setForm(normalizeApplication(record));
         setError("");
       });
-    } catch (error) {
+    } catch {
       if (loadRequestRef.current !== requestId) return;
 
       safeSet(() => {
-        setApplication(student?.application || null);
-        setForm(normalizeApplication(student?.application || null));
+        const fallback = sharedApplication || student?.application || null;
+        setApplication(fallback);
+        setForm(normalizeApplication(fallback));
         setError("");
       });
     } finally {
       if (loadRequestRef.current !== requestId) return;
-
-      safeSet(() => {
-        setLoading(false);
-      });
+      safeSet(() => setLoading(false));
     }
   };
 
@@ -217,9 +245,7 @@ function StudentApplicationPanel({ student }) {
         setTimelineError(error.message || "Timeline failed to load.");
       });
     } finally {
-      safeSet(() => {
-        setTimelineLoading(false);
-      });
+      safeSet(() => setTimelineLoading(false));
     }
   };
 
@@ -231,12 +257,7 @@ function StudentApplicationPanel({ student }) {
     oldValue = "",
     newValue = "",
   }) => {
-    if (!hasValidStudentId || !eventType || !title) {
-      safeSet(() => {
-        setTimelineError("Timeline event skipped because student id or event data is invalid.");
-      });
-      return false;
-    }
+    if (!hasValidStudentId || !eventType || !title) return false;
 
     const payload = {
       student_id: numericStudentId,
@@ -271,7 +292,6 @@ function StudentApplicationPanel({ student }) {
       safeSet(() => {
         setTimelineError(error.message || "Timeline event failed to save.");
       });
-
       return false;
     }
   };
@@ -346,6 +366,13 @@ function StudentApplicationPanel({ student }) {
       descriptionPrefix: "Intake",
     });
 
+    compare({
+      field: "source_university_name",
+      eventType: "application_source_changed",
+      title: "Application Source Updated",
+      descriptionPrefix: "Application source university",
+    });
+
     const noteFields = [
       "counselor_notes",
       "university_notes",
@@ -382,6 +409,8 @@ function StudentApplicationPanel({ student }) {
       setSuccessMessage("");
     });
 
+    const previousApplication = application;
+
     const payload = {
       student_id: numericStudentId,
       student_type: studentType,
@@ -389,6 +418,9 @@ function StudentApplicationPanel({ student }) {
       university: form.university || "",
       program: form.program || "",
       intake: form.intake || "",
+      source_university_id: form.source_university_id || application?.source_university_id || null,
+      source_university_name:
+        form.source_university_name || application?.source_university_name || "",
       application_status: form.application_status || "not_started",
       offer_status: form.offer_status || "pending",
       visa_status: form.visa_status || "not_started",
@@ -408,22 +440,14 @@ function StudentApplicationPanel({ student }) {
           supabase
             .from("student_applications")
             .update(payload)
-            .eq("id", application.id),
+            .eq("id", application.id)
+            .select()
+            .single(),
           "Application save timed out. Please refresh after a few seconds."
         );
 
         if (result.error) throw result.error;
-
-        savedApplication = {
-          ...application,
-          ...payload,
-        };
-
-        safeSet(() => {
-          setApplication(savedApplication);
-          setForm(normalizeApplication(savedApplication));
-          setSuccessMessage("Application saved successfully.");
-        });
+        savedApplication = result.data || { ...application, ...payload };
       } else {
         wasCreated = true;
 
@@ -437,14 +461,17 @@ function StudentApplicationPanel({ student }) {
         );
 
         if (result.error) throw result.error;
-
         savedApplication = result.data;
+      }
 
-        safeSet(() => {
-          setApplication(result.data);
-          setForm(normalizeApplication(result.data));
-          setSuccessMessage("Application saved successfully.");
-        });
+      safeSet(() => {
+        setApplication(savedApplication);
+        setForm(normalizeApplication(savedApplication));
+        setSuccessMessage("Application saved successfully.");
+      });
+
+      if (typeof onSharedDataChange === "function") {
+        onSharedDataChange(savedApplication);
       }
 
       const applicationId = savedApplication?.id || application?.id || null;
@@ -459,7 +486,11 @@ function StudentApplicationPanel({ student }) {
           newValue: savedApplication?.application_status || "not_started",
         });
       } else {
-        const changeEvents = buildChangeEvents(application, savedApplication, applicationId);
+        const changeEvents = buildChangeEvents(
+          previousApplication,
+          savedApplication,
+          applicationId
+        );
 
         if (changeEvents.length === 0) {
           await createTimelineEvent({
@@ -477,16 +508,12 @@ function StudentApplicationPanel({ student }) {
           }
         }
       }
-
-      
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Application save failed.");
       });
     } finally {
-      safeSet(() => {
-        setSaving(false);
-      });
+      safeSet(() => setSaving(false));
     }
   };
 
@@ -584,11 +611,22 @@ function StudentApplicationPanel({ student }) {
         </div>
       </div>
 
+      <ApplicationSourceCard
+        hasSource={hasApplicationSource}
+        sourceUniversityName={sourceUniversityName}
+        sourceUniversityId={sourceUniversityId}
+        application={application}
+        statusStyle={statusStyle}
+      />
+
       <div className="grid gap-4 md:grid-cols-4">
         <MiniStat label="Timeline Events" value={timelineStats.total} />
         <MiniStat label="Status Updates" value={timelineStats.statusEvents} />
         <MiniStat label="Note Updates" value={timelineStats.noteEvents} />
-        <MiniStat label="University Changes" value={timelineStats.universityEvents} />
+        <MiniStat
+          label="University Changes"
+          value={timelineStats.universityEvents}
+        />
       </div>
 
       {error ? (
@@ -620,9 +658,7 @@ function StudentApplicationPanel({ student }) {
           label="Country"
           value={form.country}
           disabled={saving}
-          onChange={(value) =>
-            setForm((prev) => ({ ...prev, country: value }))
-          }
+          onChange={(value) => setForm((prev) => ({ ...prev, country: value }))}
         />
 
         <InputCard
@@ -638,18 +674,14 @@ function StudentApplicationPanel({ student }) {
           label="Program"
           value={form.program}
           disabled={saving}
-          onChange={(value) =>
-            setForm((prev) => ({ ...prev, program: value }))
-          }
+          onChange={(value) => setForm((prev) => ({ ...prev, program: value }))}
         />
 
         <InputCard
           label="Intake"
           value={form.intake}
           disabled={saving}
-          onChange={(value) =>
-            setForm((prev) => ({ ...prev, intake: value }))
-          }
+          onChange={(value) => setForm((prev) => ({ ...prev, intake: value }))}
         />
       </div>
 
@@ -667,6 +699,7 @@ function StudentApplicationPanel({ student }) {
             "offer_received",
             "offer_accepted",
             "rejected",
+            "enrolled",
           ]}
           className={statusStyle(form.application_status)}
           onChange={(value) =>
@@ -712,18 +745,16 @@ function StudentApplicationPanel({ student }) {
       </div>
 
       <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-        <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
-            Application Notes
-          </p>
-          <h3 className="mt-2 text-xl font-black text-white">
-            Counselor Application Intelligence
-          </h3>
-          <p className="mt-2 text-sm leading-6 text-white/50">
-            Store internal context for counseling, university processing, offer
-            handling, and operational decision-making.
-          </p>
-        </div>
+        <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
+          Application Notes
+        </p>
+        <h3 className="mt-2 text-xl font-black text-white">
+          Counselor Application Intelligence
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-white/50">
+          Store internal context for counseling, university processing, offer
+          handling, and operational decision-making.
+        </p>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
           <TextAreaCard
@@ -782,6 +813,95 @@ function StudentApplicationPanel({ student }) {
         loading={timelineLoading}
         onRefresh={loadTimeline}
       />
+    </div>
+  );
+}
+
+function ApplicationSourceCard({
+  hasSource,
+  sourceUniversityName,
+  sourceUniversityId,
+  application,
+  statusStyle,
+}) {
+  if (!hasSource) {
+    return (
+      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/35">
+          Application Source
+        </p>
+        <h3 className="mt-2 text-lg font-black text-white">
+          No Linked University Yet
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-white/45">
+          Start an application from a university card to create a visible link
+          between University OS and Application OS.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[1.75rem] border border-emerald-400/25 bg-emerald-500/10 p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-emerald-300">
+            Application Source
+          </p>
+
+          <h3 className="mt-2 text-xl font-black text-white">
+            🔗 Synced From University
+          </h3>
+
+          <p className="mt-2 text-lg font-bold text-emerald-200">
+            {sourceUniversityName || "Linked university"}
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-white/55">
+            This application record was created or last synced from the linked
+            university workflow.
+          </p>
+
+          {sourceUniversityId ? (
+            <p className="mt-3 break-all text-xs text-white/30">
+              Source ID: {sourceUniversityId}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-2 sm:min-w-[240px]">
+          <SourceStatus
+            label="Application"
+            value={application?.application_status || "not_started"}
+            className={statusStyle(application?.application_status)}
+          />
+          <SourceStatus
+            label="Offer"
+            value={application?.offer_status || "pending"}
+            className={statusStyle(application?.offer_status)}
+          />
+          <SourceStatus
+            label="Visa"
+            value={application?.visa_status || "not_started"}
+            className={statusStyle(application?.visa_status)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SourceStatus({ label, value, className }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">
+        {label}
+      </span>
+      <span
+        className={`rounded-full border px-3 py-1 text-xs font-bold capitalize ${className}`}
+      >
+        {String(value || "").replaceAll("_", " ")}
+      </span>
     </div>
   );
 }
