@@ -39,21 +39,21 @@ function AdminHeader({
       icon: "🧑‍💼",
       badge: "border-blue-400/20 bg-blue-500/10 text-blue-300",
       glow: "bg-blue-500/10",
-      helper: "Lead follow-up workspace",
+      helper: "Student follow-up workspace",
     },
     admin: {
       label: "Admin",
       icon: "🛡️",
       badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
       glow: "bg-[#D4AF37]/10",
-      helper: "Operations and export access",
+      helper: "Student operations and export access",
     },
     super_admin: {
       label: "Super Admin",
       icon: "👑",
       badge: "border-purple-400/25 bg-purple-500/10 text-purple-300",
       glow: "bg-purple-500/10",
-      helper: "Full CRM control enabled",
+      helper: "Full Student OS control enabled",
     },
   };
 
@@ -200,7 +200,7 @@ function AdminHeader({
       {
         id: "vip-leads",
         icon: "👑",
-        title: "VIP Leads Active",
+        title: "VIP Students Active",
         text: `${vipLeads} premium leads require priority attention`,
         show: vipLeads > 0,
         color: "text-purple-300",
@@ -211,7 +211,7 @@ function AdminHeader({
       {
         id: "high-priority",
         icon: "🔥",
-        title: "High Priority Leads",
+        title: "High Priority Students",
         text: `${highPriorityLeads} leads marked as high priority`,
         show: highPriorityLeads > 0,
         color: "text-red-300",
@@ -222,8 +222,8 @@ function AdminHeader({
       {
         id: "open-leads",
         icon: "🧭",
-        title: "Open Lead Pool",
-        text: `${unassignedLeads} leads are not assigned yet`,
+        title: "Open Student Pool",
+        text: `${unassignedLeads} students are not assigned yet`,
         show: unassignedLeads > 0,
         color: "text-cyan-300",
         glow: "bg-cyan-500/10",
@@ -287,7 +287,13 @@ function AdminHeader({
     setRefreshing(true);
 
     try {
-      await Promise.all([fetchAllData(), fetchFollowUpAlerts()]);
+      await Promise.all([
+        fetchAllData({ force: true, source: "admin_header_manual_refresh" }),
+        fetchFollowUpAlerts(),
+      ]);
+    } catch (error) {
+      console.error("Admin header refresh failed:", error);
+      alert(error.message || "Refresh failed. Please try again.");
     } finally {
       setTimeout(() => setRefreshing(false), 350);
     }
@@ -356,7 +362,7 @@ function AdminHeader({
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
                 <span className="h-2 w-2 rounded-full bg-[#D4AF37] shadow-[0_0_16px_rgba(212,175,55,0.75)]"></span>
-                Enterprise CRM Dashboard
+                Student OS Admin Command
               </div>
 
               <div
@@ -368,13 +374,13 @@ function AdminHeader({
             </div>
 
             <h1 className="mt-4 text-3xl font-black leading-tight text-white sm:text-5xl">
-              Zaifan CRM
+              Zaifan Student OS
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400">
-              Premium student management system with real-time analytics,
-              consultation scheduling, lead ownership, role permissions, and
-              enterprise CRM automation.
+              Student operating system with real-time admin data, consultation scheduling,
+              lead ownership, Student OS visibility, role permissions, and
+              executive intelligence.
             </p>
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

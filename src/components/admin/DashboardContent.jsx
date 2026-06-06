@@ -255,7 +255,7 @@ cardClass = "",
         ];
 
   const viewTitle =
-    activeTab === "inquiries" ? "Inquiry Pipeline" : "Appointment Pipeline";
+    activeTab === "inquiries" ? "Student Inquiry Pipeline" : "Student Appointment Pipeline";
   const totalLabel =
     activeTab === "inquiries" ? "Total inquiries" : "Total appointments";
 
@@ -291,7 +291,7 @@ cardClass = "",
           </div>
 
           <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-gray-400">
-            Enterprise CRM Active
+            Student OS Active
           </div>
         </div>
       </div>
@@ -309,7 +309,7 @@ cardClass = "",
           <div className="mb-4 flex flex-col gap-4 rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl xl:flex-row xl:items-center xl:justify-between">
             <div>
               <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
-                CRM Access Layer
+                Admin OS Access Layer
               </p>
 
               <h2 className="mt-2 text-2xl font-black text-white">
@@ -317,7 +317,7 @@ cardClass = "",
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
-                Manage lead ownership, priorities, statuses, protected CRM actions, and manual GPT intelligence upgrades from one operational workspace.
+                Manage student ownership, priorities, journey status, protected admin actions, and manual GPT intelligence upgrades from one operational workspace.
               </p>
             </div>
 
@@ -375,8 +375,8 @@ cardClass = "",
 
                   <h3 className="mt-1 text-lg font-bold text-white">
                     {viewMode === "kanban"
-                      ? "Kanban Priority Pipeline"
-                      : "Enterprise Card View"}
+                      ? "Student Priority Pipeline"
+                      : "Student Card View"}
                   </h3>
 
                   <p className="mt-1 text-xs text-gray-500">

@@ -40,10 +40,12 @@ export async function createFollowUpReminder({
   };
 
   try {
-    return await withTimeout(
-      supabase.from("follow_up_reminders").insert(payload).select().single(),
-      "Create reminder timed out."
-    );
+    const { error } = await withTimeout(
+  supabase.from("follow_up_reminders").insert(payload),
+  "Create reminder timed out."
+);
+
+return { data: payload, error };
   } catch (error) {
     return { data: null, error };
   }

@@ -252,7 +252,7 @@ function AIExecutiveBriefing({ cardClass, aiInsights }) {
         <div>
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#D4AF37]">
-              Real CRM Intelligence
+              Real Student OS Intelligence
             </span>
             <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
               No Auto GPT Cost
@@ -264,7 +264,7 @@ function AIExecutiveBriefing({ cardClass, aiInsights }) {
           </h2>
 
           <p className="mt-2 max-w-3xl text-sm leading-6 text-white/50">
-            This briefing uses your CRM data and local AI scoring engine. Real GPT remains available inside the student workspace when a counselor needs generated messages, summaries, scripts, or strategy.
+            This briefing uses your Student OS data and local AI scoring engine. Real GPT remains available inside the student workspace when a counselor needs generated messages, summaries, scripts, or strategy.
           </p>
 
           <div className="mt-5 space-y-2.5">

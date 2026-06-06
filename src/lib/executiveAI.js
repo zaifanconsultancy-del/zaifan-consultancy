@@ -4,8 +4,19 @@ function clampScore(value) {
   return Math.max(0, Math.min(100, Math.round(Number(value || 0))));
 }
 
+function number(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function normalizeText(value = "") {
-  return String(value || "").toLowerCase();
+  return String(value || "").toLowerCase().trim();
+}
+
+function normalizeStatus(value = "") {
+  return normalizeText(value)
+    .replace(/\s+/g, "_")
+    .replace(/-/g, "_");
 }
 
 function getStudentName(student = {}) {
@@ -13,6 +24,7 @@ function getStudentName(student = {}) {
     student.full_name ||
     student.name ||
     student.student_name ||
+    student.studentName ||
     "Unknown Student"
   );
 }
@@ -21,144 +33,573 @@ function getStudentType(student = {}) {
   return student.student_type || student.__leadType || student.type || "inquiry";
 }
 
+function getDaysSince(dateValue) {
+  if (!dateValue) return null;
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getDocumentReadiness(student = {}) {
+  const documents = Array.isArray(student.documents) ? student.documents : [];
+
+  if (!documents.length) {
+    return {
+      percent: 0,
+      completed: 0,
+      total: 0,
+      status: "documents_pending",
+      health: "missing",
+    };
+  }
+
+  const completed = documents.filter((doc) => {
+    const status = normalizeStatus(doc.status || doc.document_status);
+    return ["completed", "approved", "uploaded", "verified", "received"].includes(status);
+  }).length;
+
+  const percent = Math.round((completed / documents.length) * 100);
+
+  return {
+    percent,
+    completed,
+    total: documents.length,
+    status:
+      percent >= 90
+        ? "documents_completed"
+        : percent > 0
+        ? "documents_partial"
+        : "documents_pending",
+    health:
+      percent >= 90
+        ? "strong"
+        : percent >= 60
+        ? "good"
+        : percent >= 30
+        ? "weak"
+        : "critical",
+  };
+}
+
+function getTaskHealth(student = {}) {
+  const tasks = Array.isArray(student.tasks) ? student.tasks : [];
+  const pendingTasks = number(student.pending_tasks_count);
+  const overdueTasks = number(student.overdue_tasks_count);
+
+  if (!tasks.length) {
+    return {
+      total: number(student.task_count),
+      pending: pendingTasks,
+      overdue: overdueTasks,
+      completed: 0,
+      completionPercent: 0,
+      health: overdueTasks > 0 ? "critical" : pendingTasks > 0 ? "weak" : "empty",
+    };
+  }
+
+  const completed = tasks.filter((task) => {
+    const status = normalizeStatus(task.status);
+    return ["completed", "done", "closed"].includes(status);
+  }).length;
+
+  const completionPercent = Math.round((completed / tasks.length) * 100);
+
+  return {
+    total: tasks.length,
+    pending: pendingTasks,
+    overdue: overdueTasks,
+    completed,
+    completionPercent,
+    health:
+      overdueTasks > 0
+        ? "critical"
+        : pendingTasks > 5
+        ? "weak"
+        : completionPercent >= 75
+        ? "strong"
+        : completionPercent >= 40
+        ? "good"
+        : "weak",
+  };
+}
+
+function getUniversityHealth(student = {}) {
+  const dream = number(student.dream_university_count ?? student.dream_universities_count);
+  const target = number(student.target_university_count ?? student.target_universities_count);
+  const safe = number(student.safe_university_count ?? student.safe_universities_count);
+  const total = number(student.university_plan_count || dream + target + safe);
+
+  const hasPlan = student.has_university_plan === true || total > 0;
+  const balanced = dream > 0 && target > 0 && safe > 0;
+
+  return {
+    dream,
+    target,
+    safe,
+    total,
+    hasPlan,
+    balanced,
+    health: !hasPlan ? "missing" : balanced ? "strong" : safe === 0 ? "risky" : "partial",
+  };
+}
+
+function getApplicationHealth({ applicationStatus, offerStatus, applicationCount }) {
+  const startedStatuses = [
+    "started",
+    "in_progress",
+    "draft",
+    "documents_pending",
+    "docs_pending",
+    "applied",
+    "submitted",
+    "under_review",
+    "review",
+    "processing",
+    "offer_received",
+    "offer",
+    "conditional_offer",
+    "unconditional_offer",
+    "offer_accepted",
+    "accepted",
+    "confirmed",
+    "cas_pending",
+    "cas_issued",
+    "enrolled",
+  ];
+
+  const submittedStatuses = ["applied", "submitted", "under_review", "review", "processing"];
+  const offerReceivedStatuses = [
+    "offer_received",
+    "offer",
+    "received",
+    "conditional_offer",
+    "unconditional_offer",
+  ];
+  const offerAcceptedStatuses = ["offer_accepted", "accepted", "confirmed"];
+
+  const started = startedStatuses.includes(applicationStatus) || applicationCount > 0;
+  const submitted = submittedStatuses.includes(applicationStatus);
+  const offerReceived =
+    offerReceivedStatuses.includes(applicationStatus) ||
+    offerReceivedStatuses.includes(offerStatus);
+  const offerAccepted =
+    offerAcceptedStatuses.includes(applicationStatus) ||
+    offerAcceptedStatuses.includes(offerStatus);
+
+  const casPending = applicationStatus === "cas_pending";
+  const casIssued = applicationStatus === "cas_issued";
+  const enrolled = applicationStatus === "enrolled";
+
+  return {
+    hasApplication: applicationCount > 0 || started,
+    started,
+    submitted,
+    offerReceived,
+    offerAccepted,
+    casPending,
+    casIssued,
+    enrolled,
+    health: enrolled
+      ? "success"
+      : !started
+      ? "not_started"
+      : offerAccepted || casIssued
+      ? "conversion_ready"
+      : offerReceived
+      ? "strong"
+      : submitted
+      ? "active"
+      : "started",
+  };
+}
+
+function getVisaHealth({ visaStatus, applicationHealth }) {
+  const pending = ["pending", "visa_pending", "submitted", "under_review", "review", "processing"].includes(
+    visaStatus
+  );
+  const approved = ["visa_approved", "approved"].includes(visaStatus);
+  const rejected = ["rejected", "visa_rejected", "refused", "visa_refused"].includes(visaStatus);
+
+  const needed =
+    applicationHealth.offerAccepted ||
+    applicationHealth.casPending ||
+    applicationHealth.casIssued ||
+    pending ||
+    approved ||
+    rejected;
+
+  return {
+    needed,
+    pending,
+    approved,
+    rejected,
+    health: approved
+      ? "approved"
+      : rejected
+      ? "rejected"
+      : pending
+      ? "pending"
+      : needed
+      ? "not_started"
+      : "not_required_yet",
+  };
+}
+
+function getJourneyStage({ applicationStatus, offerStatus, visaStatus, applicationHealth, visaHealth }) {
+  if (applicationHealth.enrolled || applicationStatus === "enrolled") return "enrolled";
+
+  if (visaHealth.approved) return "visa_approved";
+  if (visaHealth.rejected) return "visa_rejected";
+  if (visaHealth.pending) return "visa_pending";
+
+  if (applicationHealth.casIssued) return "cas_issued";
+  if (applicationHealth.casPending) return "cas_pending";
+
+  if (applicationHealth.offerAccepted) return "offer_accepted";
+  if (applicationHealth.offerReceived) return "offer_received";
+
+  if (offerStatus === "rejected") return "offer_rejected";
+
+  if (["under_review", "review", "processing"].includes(applicationStatus)) {
+    return "application_under_review";
+  }
+
+  if (applicationHealth.submitted) return "application_submitted";
+  if (applicationHealth.started) return "application_started";
+
+  return "not_started";
+}
+
+function getExecutiveCategory({
+  finalRiskScore,
+  finalOpportunityScore,
+  applicationStatus,
+  offerStatus,
+  visaStatus,
+  journeyStage,
+  documentReadiness,
+  taskHealth,
+  universityHealth,
+}) {
+  if (journeyStage === "visa_rejected") return "Critical Risk";
+  if (visaStatus === "rejected" || visaStatus === "visa_rejected") return "Critical Risk";
+  if (offerStatus === "rejected") return "Needs Attention";
+  if (finalRiskScore >= 85) return "Critical Risk";
+
+  if (journeyStage === "visa_approved" || journeyStage === "enrolled") return "Success Story";
+  if (applicationStatus === "enrolled") return "Success Story";
+
+  if (
+    journeyStage === "offer_accepted" ||
+    journeyStage === "cas_pending" ||
+    journeyStage === "cas_issued" ||
+    journeyStage === "visa_pending"
+  ) {
+    return "Conversion Ready";
+  }
+
+  if (
+    ["not_started", "application_started"].includes(journeyStage) &&
+    documentReadiness?.percent >= 80 &&
+    taskHealth?.completionPercent >= 60 &&
+    universityHealth?.total >= 3 &&
+    finalRiskScore < 65
+  ) {
+    return "Application Ready";
+  }
+
+  if (finalOpportunityScore >= 80) return "High Opportunity";
+  if (finalRiskScore >= 65) return "High Risk";
+  if (finalRiskScore >= 35) return "Needs Attention";
+
+  return "Standard";
+}
+
 export function calculateExecutiveRisk(student = {}) {
   let riskScore = 0;
   let opportunityScore = 0;
+
   const riskReasons = [];
   const opportunityReasons = [];
 
-  const priority = normalizeText(student.priority);
-  const status = normalizeText(student.status);
-  const applicationStatus = normalizeText(student.application_status);
-  const visaStatus = normalizeText(student.visa_status);
-  const documentStatus = normalizeText(student.document_status);
-  const gptRisk = normalizeText(student.gpt_risk || student.gpt_risk_level);
-  const gptSummary = normalizeText(student.gpt_summary);
+  const applicationStatus = normalizeStatus(student.application_status);
+  const offerStatus = normalizeStatus(student.offer_status);
+  const visaStatus = normalizeStatus(student.visa_status);
 
-  if (priority === "vip") {
-    opportunityScore += 30;
-    opportunityReasons.push("VIP lead");
+  const applicationCount = number(student.application_count);
+
+  const documentReadiness = getDocumentReadiness(student);
+  const taskHealth = getTaskHealth(student);
+  const universityHealth = getUniversityHealth(student);
+  const applicationHealth = getApplicationHealth({
+    applicationStatus,
+    offerStatus,
+    applicationCount,
+  });
+  const visaHealth = getVisaHealth({ visaStatus, applicationHealth });
+
+  const journeyStage = getJourneyStage({
+    applicationStatus,
+    offerStatus,
+    visaStatus,
+    applicationHealth,
+    visaHealth,
+  });
+
+  const daysSinceCreated = getDaysSince(student.created_at);
+  const daysSinceUpdated = getDaysSince(
+    student.updated_at ||
+      student.last_updated_at ||
+      student.gpt_analyzed_at ||
+      student.created_at
+  );
+
+  if (!applicationHealth.started) {
+    riskScore += 15;
+    riskReasons.push("No application started");
   }
 
-  if (priority === "high") {
-    riskScore += 10;
-    opportunityScore += 20;
-    riskReasons.push("High priority student needs fast follow-up");
-    opportunityReasons.push("High priority opportunity");
-  }
-
-  if (status.includes("pending")) {
+  if (applicationHealth.started && !applicationHealth.submitted && daysSinceCreated >= 14) {
     riskScore += 8;
-    riskReasons.push("Lead is still pending");
+    riskReasons.push("Application started but not submitted");
   }
 
-  if (status.includes("contacted")) {
-    opportunityScore += 8;
-    opportunityReasons.push("Student has already been contacted");
-  }
-
-  if (applicationStatus.includes("pending")) {
-    riskScore += 12;
-    riskReasons.push("Application is pending");
-  }
-
-  if (applicationStatus.includes("submitted")) {
-    opportunityScore += 18;
+  if (applicationHealth.submitted) {
+    opportunityScore += 25;
     opportunityReasons.push("Application submitted");
   }
 
-  if (applicationStatus.includes("offer")) {
-    opportunityScore += 25;
-    opportunityReasons.push("Offer stage opportunity");
+  if (journeyStage === "application_under_review") {
+    opportunityScore += 35;
+    opportunityReasons.push("Application under review");
   }
 
-  if (visaStatus.includes("rejected")) {
+  if (applicationHealth.offerReceived) {
+    opportunityScore += 55;
+    opportunityReasons.push("Offer received");
+  }
+
+  if (applicationHealth.offerAccepted) {
+    opportunityScore += 75;
+    opportunityReasons.push("Offer accepted");
+  }
+
+  if (applicationHealth.casPending) {
+    riskScore += 8;
+    opportunityScore += 55;
+    riskReasons.push("CAS pending");
+    opportunityReasons.push("Student is close to visa stage");
+  }
+
+  if (applicationHealth.casIssued) {
+    opportunityScore += 70;
+    opportunityReasons.push("CAS issued");
+  }
+
+  if (applicationHealth.enrolled || journeyStage === "enrolled") {
+    opportunityScore += 100;
+    opportunityReasons.push("Student enrolled");
+  }
+
+  if (offerStatus === "rejected") {
     riskScore += 35;
-    riskReasons.push("Visa rejection risk");
+    riskReasons.push("Offer rejected");
   }
 
-  if (visaStatus.includes("pending")) {
-    riskScore += 15;
-    riskReasons.push("Visa pending");
-  }
-
-  if (visaStatus.includes("approved")) {
-    opportunityScore += 30;
+  if (visaHealth.approved) {
+    opportunityScore += 95;
     opportunityReasons.push("Visa approved");
   }
 
-  if (documentStatus.includes("rejected")) {
-    riskScore += 25;
-    riskReasons.push("Rejected document");
+  if (visaHealth.pending) {
+    riskScore += 8;
+    opportunityScore += 35;
+    riskReasons.push("Visa pending");
+    opportunityReasons.push("Visa case in progress");
   }
 
-  if (documentStatus.includes("missing")) {
-    riskScore += 18;
-    riskReasons.push("Missing document");
+  if (visaHealth.rejected) {
+    riskScore += 55;
+    riskReasons.push("Visa rejected");
   }
 
-  if (gptRisk.includes("critical")) {
-    riskScore += 35;
-    riskReasons.push("GPT marked critical risk");
-  } else if (gptRisk.includes("high")) {
-    riskScore += 25;
-    riskReasons.push("GPT marked high risk");
-  } else if (gptRisk.includes("medium")) {
-    riskScore += 12;
-    riskReasons.push("GPT marked medium risk");
+  if (applicationHealth.offerAccepted && !visaHealth.approved && !visaHealth.pending) {
+    riskScore += 10;
+    opportunityScore += 20;
+    riskReasons.push("Visa not started after accepted offer");
+    opportunityReasons.push("Conversion-ready visa case");
   }
 
-  if (gptSummary.includes("missing ielts")) {
-    riskScore += 20;
-    riskReasons.push("Missing IELTS detected");
-  }
-
-  if (gptSummary.includes("rejected transcript")) {
-    riskScore += 25;
-    riskReasons.push("Rejected transcript detected");
-  }
-
-  const leadScore = Number(student.gpt_ai_score || student.gpt_score || student.lead_score || 0);
-
-  if (leadScore >= 80) {
-    opportunityScore += 25;
-    opportunityReasons.push("Strong lead score");
-  } else if (leadScore >= 60) {
+  if (documentReadiness.total === 0) {
+    riskScore += 10;
+    riskReasons.push("No documents uploaded");
+  } else if (documentReadiness.percent < 40) {
+    riskScore += 14;
+    riskReasons.push(`Low document readiness (${documentReadiness.percent}%)`);
+  } else if (documentReadiness.percent < 80) {
+    riskScore += 8;
+    riskReasons.push(`Partial document readiness (${documentReadiness.percent}%)`);
+  } else {
     opportunityScore += 15;
-    opportunityReasons.push("Moderate lead score");
+    opportunityReasons.push(`Strong document readiness (${documentReadiness.percent}%)`);
+  }
+
+  if (!universityHealth.hasPlan) {
+    riskScore += 10;
+    riskReasons.push("No university plan");
+  } else if (!universityHealth.balanced) {
+    riskScore += 6;
+    riskReasons.push("University plan is not balanced");
+  } else {
+    opportunityScore += 18;
+    opportunityReasons.push("Balanced university strategy");
+  }
+
+  if (universityHealth.hasPlan && universityHealth.safe === 0) {
+    riskScore += 8;
+    riskReasons.push("No safe university option");
+  }
+
+  if (universityHealth.total >= 3) {
+    opportunityScore += 8;
+    opportunityReasons.push(`${universityHealth.total} universities planned`);
+  }
+
+  if (taskHealth.overdue > 0) {
+    riskScore += Math.min(30, taskHealth.overdue * 8);
+    riskReasons.push(`${taskHealth.overdue} overdue task(s)`);
+  }
+
+  if (taskHealth.pending > 5) {
+    riskScore += 12;
+    riskReasons.push(`${taskHealth.pending} pending task(s)`);
+  } else if (taskHealth.pending > 2) {
+    riskScore += 6;
+    riskReasons.push(`${taskHealth.pending} pending task(s)`);
+  }
+
+  if (taskHealth.total > 0 && taskHealth.completionPercent >= 75) {
+    opportunityScore += 10;
+    opportunityReasons.push(`Strong task completion (${taskHealth.completionPercent}%)`);
+  }
+
+  if (
+    ["not_started", "application_started"].includes(journeyStage) &&
+    documentReadiness.percent >= 80 &&
+    taskHealth.completionPercent >= 60 &&
+    universityHealth.total >= 3
+  ) {
+    opportunityScore += 20;
+    opportunityReasons.push("Application-ready profile");
+  }
+
+  if (daysSinceUpdated !== null && daysSinceUpdated >= 21) {
+    riskScore += 16;
+    riskReasons.push(`No recent activity for ${daysSinceUpdated} days`);
+  } else if (daysSinceUpdated !== null && daysSinceUpdated >= 10) {
+    riskScore += 8;
+    riskReasons.push(`Low recent activity (${daysSinceUpdated} days)`);
+  }
+
+  if (daysSinceCreated !== null && daysSinceCreated <= 7 && opportunityScore > riskScore) {
+    opportunityScore += 6;
+    opportunityReasons.push("Fresh active student profile");
   }
 
   const finalRiskScore = clampScore(riskScore);
   const finalOpportunityScore = clampScore(opportunityScore);
 
   let riskLevel = "Low";
-  if (finalRiskScore >= 80) riskLevel = "Critical";
-  else if (finalRiskScore >= 60) riskLevel = "High";
-  else if (finalRiskScore >= 30) riskLevel = "Medium";
+  if (finalRiskScore >= 85) riskLevel = "Critical";
+  else if (finalRiskScore >= 65) riskLevel = "High";
+  else if (finalRiskScore >= 35) riskLevel = "Medium";
 
   let priorityLevel = "Standard";
-  if (finalRiskScore >= 80 || finalOpportunityScore >= 80) {
+  if (finalRiskScore >= 85 || finalOpportunityScore >= 85) {
     priorityLevel = "Executive";
-  } else if (finalRiskScore >= 60 || finalOpportunityScore >= 60) {
+  } else if (finalRiskScore >= 65 || finalOpportunityScore >= 65) {
     priorityLevel = "High";
-  } else if (finalRiskScore >= 30 || finalOpportunityScore >= 40) {
+  } else if (finalRiskScore >= 35 || finalOpportunityScore >= 45) {
     priorityLevel = "Medium";
   }
+
+  const executiveCategory = getExecutiveCategory({
+    finalRiskScore,
+    finalOpportunityScore,
+    applicationStatus,
+    offerStatus,
+    visaStatus,
+    journeyStage,
+    documentReadiness,
+    taskHealth,
+    universityHealth,
+  });
 
   return {
     student_id: String(student.id),
     student_type: getStudentType(student),
     student_name: getStudentName(student),
+
     risk_score: finalRiskScore,
     risk_level: riskLevel,
     opportunity_score: finalOpportunityScore,
     priority_level: priorityLevel,
+    executive_category: executiveCategory,
+
+    journey_stage: journeyStage,
+
+    application_status: applicationStatus || "not_started",
+    offer_status: offerStatus || "",
+    visa_status: visaStatus || "",
+    document_status: documentReadiness.status,
+
     summary:
       riskReasons.length || opportunityReasons.length
         ? [...riskReasons, ...opportunityReasons].join(", ")
-        : "No executive risk or opportunity signals detected.",
+        : "Student currently has no major executive risk or opportunity signal.",
+
     risk_reasons: riskReasons,
     opportunity_reasons: opportunityReasons,
+
+    diagnostics: {
+      journey_stage: journeyStage,
+
+      application_health: applicationHealth.health,
+      application_started: applicationHealth.started,
+      application_submitted: applicationHealth.submitted,
+      offer_received: applicationHealth.offerReceived,
+      offer_accepted: applicationHealth.offerAccepted,
+      cas_pending: applicationHealth.casPending,
+      cas_issued: applicationHealth.casIssued,
+
+      visa_health: visaHealth.health,
+      visa_needed: visaHealth.needed,
+      visa_pending: visaHealth.pending,
+      visa_approved: visaHealth.approved,
+      visa_rejected: visaHealth.rejected,
+
+      document_health: documentReadiness.health,
+      document_readiness_percent: documentReadiness.percent,
+      document_completed_count: documentReadiness.completed,
+      document_total_count: documentReadiness.total,
+
+      task_health: taskHealth.health,
+      task_completion_percent: taskHealth.completionPercent,
+      pending_tasks_count: taskHealth.pending,
+      overdue_tasks_count: taskHealth.overdue,
+
+      university_health: universityHealth.health,
+      university_plan_count: universityHealth.total,
+      has_balanced_university_plan: universityHealth.balanced,
+      safe_university_count: universityHealth.safe,
+      target_university_count: universityHealth.target,
+      dream_university_count: universityHealth.dream,
+
+      days_since_updated: daysSinceUpdated,
+    },
+
     generated_at: new Date().toISOString(),
   };
 }
@@ -170,34 +611,81 @@ export function calculatePortfolioHealth(students = []) {
   }));
 
   const total = scored.length;
+  const countBy = (fn) => scored.filter(fn).length;
 
-  const critical = scored.filter(
-    (item) => item.executive.risk_level === "Critical"
-  ).length;
+  const critical = countBy((item) => item.executive.risk_level === "Critical");
+  const high = countBy((item) => item.executive.risk_level === "High");
+  const medium = countBy((item) => item.executive.risk_level === "Medium");
 
-  const high = scored.filter((item) => item.executive.risk_level === "High")
-    .length;
-
-  const medium = scored.filter((item) => item.executive.risk_level === "Medium")
-    .length;
-
-  const executivePriority = scored.filter(
+  const executivePriority = countBy(
     (item) => item.executive.priority_level === "Executive"
-  ).length;
+  );
+
+  const conversionReady = countBy(
+    (item) => item.executive.executive_category === "Conversion Ready"
+  );
+
+  const successStories = countBy(
+    (item) => item.executive.executive_category === "Success Story"
+  );
+
+  const highOpportunity = countBy(
+    (item) => item.executive.executive_category === "High Opportunity"
+  );
+
+  const applicationReady = countBy(
+    (item) => item.executive.executive_category === "Application Ready"
+  );
+
+  const applicationHealth = {
+    notStarted: countBy((item) => item.executive.diagnostics.application_health === "not_started"),
+    started: countBy((item) => item.executive.diagnostics.application_started),
+    submitted: countBy((item) => item.executive.diagnostics.application_submitted),
+    offerReceived: countBy((item) => item.executive.diagnostics.offer_received),
+    offerAccepted: countBy((item) => item.executive.diagnostics.offer_accepted),
+    casPending: countBy((item) => item.executive.diagnostics.cas_pending),
+    casIssued: countBy((item) => item.executive.diagnostics.cas_issued),
+  };
+
+  const visaHealth = {
+    needed: countBy((item) => item.executive.diagnostics.visa_needed),
+    pending: countBy((item) => item.executive.diagnostics.visa_pending),
+    approved: countBy((item) => item.executive.diagnostics.visa_approved),
+    rejected: countBy((item) => item.executive.diagnostics.visa_rejected),
+  };
+
+  const documentHealth = {
+    strong: countBy((item) => item.executive.diagnostics.document_health === "strong"),
+    good: countBy((item) => item.executive.diagnostics.document_health === "good"),
+    weak: countBy((item) => item.executive.diagnostics.document_health === "weak"),
+    critical: countBy((item) => item.executive.diagnostics.document_health === "critical"),
+    missing: countBy((item) => item.executive.diagnostics.document_health === "missing"),
+  };
+
+  const universityHealth = {
+    strong: countBy((item) => item.executive.diagnostics.university_health === "strong"),
+    partial: countBy((item) => item.executive.diagnostics.university_health === "partial"),
+    risky: countBy((item) => item.executive.diagnostics.university_health === "risky"),
+    missing: countBy((item) => item.executive.diagnostics.university_health === "missing"),
+  };
+
+  const taskHealth = {
+    strong: countBy((item) => item.executive.diagnostics.task_health === "strong"),
+    good: countBy((item) => item.executive.diagnostics.task_health === "good"),
+    weak: countBy((item) => item.executive.diagnostics.task_health === "weak"),
+    critical: countBy((item) => item.executive.diagnostics.task_health === "critical"),
+    empty: countBy((item) => item.executive.diagnostics.task_health === "empty"),
+  };
 
   const averageRisk = total
     ? Math.round(
-        scored.reduce((sum, item) => sum + item.executive.risk_score, 0) /
-          total
+        scored.reduce((sum, item) => sum + item.executive.risk_score, 0) / total
       )
     : 0;
 
   const averageOpportunity = total
     ? Math.round(
-        scored.reduce(
-          (sum, item) => sum + item.executive.opportunity_score,
-          0
-        ) / total
+        scored.reduce((sum, item) => sum + item.executive.opportunity_score, 0) / total
       )
     : 0;
 
@@ -207,16 +695,140 @@ export function calculatePortfolioHealth(students = []) {
     high,
     medium,
     executivePriority,
+    conversionReady,
+    successStories,
+    highOpportunity,
+    applicationReady,
     averageRisk,
     averageOpportunity,
+
+    applicationHealth,
+    visaHealth,
+    documentHealth,
+    universityHealth,
+    taskHealth,
+
     rankedByRisk: [...scored].sort(
       (a, b) => b.executive.risk_score - a.executive.risk_score
     ),
+
     rankedByOpportunity: [...scored].sort(
+      (a, b) => b.executive.opportunity_score - a.executive.opportunity_score
+    ),
+
+    rankedByApplicationHealth: [...scored].sort(
       (a, b) =>
-        b.executive.opportunity_score - a.executive.opportunity_score
+        b.executive.diagnostics.document_readiness_percent +
+        b.executive.diagnostics.task_completion_percent +
+        b.executive.diagnostics.university_plan_count -
+        (a.executive.diagnostics.document_readiness_percent +
+          a.executive.diagnostics.task_completion_percent +
+          a.executive.diagnostics.university_plan_count)
+    ),
+
+    rankedByVisaHealth: [...scored].sort(
+      (a, b) => {
+        const rank = {
+          visa_rejected: 5,
+          visa_pending: 4,
+          cas_issued: 3,
+          cas_pending: 2,
+          offer_accepted: 1,
+        };
+
+        return (
+          (rank[b.executive.journey_stage] || 0) -
+          (rank[a.executive.journey_stage] || 0)
+        );
+      }
     ),
   };
+}
+
+function buildExecutiveRiskPayload(executive = {}, includeRichDiagnostics = true) {
+  const payload = {
+    student_id: executive.student_id,
+    student_type: executive.student_type,
+    student_name: executive.student_name,
+
+    risk_score: executive.risk_score,
+    risk_level: executive.risk_level,
+    opportunity_score: executive.opportunity_score,
+    priority_level: executive.priority_level,
+    executive_category: executive.executive_category,
+
+    application_status: executive.application_status,
+    offer_status: executive.offer_status,
+    visa_status: executive.visa_status,
+    document_status: executive.document_status,
+
+    summary: executive.summary,
+    generated_at: executive.generated_at,
+
+    document_readiness_percent:
+      executive.diagnostics?.document_readiness_percent || 0,
+
+    task_completion_percent:
+      executive.diagnostics?.task_completion_percent || 0,
+
+    pending_tasks_count:
+      executive.diagnostics?.pending_tasks_count || 0,
+
+    overdue_tasks_count:
+      executive.diagnostics?.overdue_tasks_count || 0,
+
+    university_plan_count:
+      executive.diagnostics?.university_plan_count || 0,
+
+    has_balanced_university_plan:
+      executive.diagnostics?.has_balanced_university_plan || false,
+
+    days_since_updated:
+      executive.diagnostics?.days_since_updated ?? null,
+  };
+
+  if (!includeRichDiagnostics) return payload;
+
+  return {
+    ...payload,
+
+    journey_stage:
+      executive.diagnostics?.journey_stage || executive.journey_stage || "not_started",
+
+    application_health:
+      executive.diagnostics?.application_health || "",
+
+    visa_health:
+      executive.diagnostics?.visa_health || "",
+
+    document_health:
+      executive.diagnostics?.document_health || "",
+
+    task_health:
+      executive.diagnostics?.task_health || "",
+
+    university_health:
+      executive.diagnostics?.university_health || "",
+
+    safe_university_count:
+      executive.diagnostics?.safe_university_count || 0,
+
+    target_university_count:
+      executive.diagnostics?.target_university_count || 0,
+
+    dream_university_count:
+      executive.diagnostics?.dream_university_count || 0,
+  };
+}
+
+async function upsertExecutiveRiskPayload(payload) {
+  return await supabase
+    .from("ai_student_risk_scores")
+    .upsert(payload, {
+      onConflict: "student_id,student_type",
+    })
+    .select()
+    .single();
 }
 
 export async function saveExecutiveRiskScore(student = {}) {
@@ -226,23 +838,20 @@ export async function saveExecutiveRiskScore(student = {}) {
 
   const executive = calculateExecutiveRisk(student);
 
-  const payload = {
-  student_id: executive.student_id,
-  student_type: executive.student_type,
-  risk_score: executive.risk_score,
-  risk_level: executive.risk_level,
-  opportunity_score: executive.opportunity_score,
-  priority_level: executive.priority_level,
-  summary: executive.summary,
-  generated_at: executive.generated_at,
-};
-  const { data, error } = await supabase
-    .from("ai_student_risk_scores")
-    .upsert(payload, {
-      onConflict: "student_id,student_type",
-    })
-    .select()
-    .single();
+  let payload = buildExecutiveRiskPayload(executive, true);
+  let { data, error } = await upsertExecutiveRiskPayload(payload);
+
+  if (error) {
+    console.warn(
+      "Executive rich diagnostics save failed. Retrying with safe base payload:",
+      error
+    );
+
+    payload = buildExecutiveRiskPayload(executive, false);
+    const retry = await upsertExecutiveRiskPayload(payload);
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     console.error("Executive risk score save failed:", error);
@@ -254,8 +863,8 @@ export async function saveExecutiveRiskScore(student = {}) {
 export async function generateExecutivePortfolio(students = []) {
   const portfolio = calculatePortfolioHealth(students);
 
-  for (const item of portfolio.rankedByRisk) {
-    await saveExecutiveRiskScore(item.student);
+  for (const student of students) {
+    await saveExecutiveRiskScore(student);
   }
 
   return portfolio;

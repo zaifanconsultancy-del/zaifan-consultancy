@@ -207,7 +207,7 @@ function AppointmentCard({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
-              Appointment Pipeline
+              Student Appointment
             </p>
 
             <h2 className="mt-1.5 break-words text-xl font-bold leading-tight text-white sm:mt-2 sm:text-2xl">
@@ -289,7 +289,7 @@ function AppointmentCard({
               </p>
 
               <p className="mt-2 text-xs leading-relaxed text-gray-500">
-                Real GPT writing opens only when you click the workspace button.
+                Real GPT writing opens only when a counselor clicks the workspace button.
               </p>
             </div>
 
@@ -313,7 +313,7 @@ function AppointmentCard({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
-                Consultancy Progress
+                Student Journey Progress
               </p>
               <p className="mt-1 text-sm font-semibold text-white">
                 {activeStage.label}

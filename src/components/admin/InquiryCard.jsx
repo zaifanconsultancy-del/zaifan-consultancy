@@ -88,7 +88,7 @@ function InquiryCard({
   const pipelineStages = [
     {
       value: "new",
-      label: "New Lead",
+      label: "New Student",
       shortLabel: "New",
       icon: "✨",
       badge: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
@@ -210,7 +210,7 @@ function InquiryCard({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[9px] uppercase tracking-[0.24em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
-              Inquiry Lead
+              Student Inquiry
             </p>
 
             <h2 className="mt-1.5 break-words text-xl font-bold leading-tight text-white sm:mt-2 sm:text-2xl">
@@ -286,7 +286,7 @@ function InquiryCard({
               </p>
 
               <p className="mt-2 text-xs leading-relaxed text-gray-500">
-                Real GPT writing opens only when you click the workspace button.
+                Real GPT writing opens only when a counselor clicks the workspace button.
               </p>
             </div>
 

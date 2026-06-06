@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import AdminLogin from "../components/admin/AdminLogin";
 import AdminHeader from "../components/admin/AdminHeader";
@@ -37,12 +37,25 @@ import { supabase } from "../lib/supabaseClient";
 import { generateGptCopilotText } from "../services/gptCopilotService";
 import { enrichLeadWithAi } from "../services/aiLeadEngine";
 
+const ADMIN_ACTIVE_TAB_KEY = "zaifan_admin_active_tab";
+const ADMIN_ANALYTICS_SECTION_KEY = "zaifan_admin_analytics_section";
+const ADMIN_SCROLL_KEY = "zaifan_admin_scroll_y";
+
+function getStoredValue(key, fallback) {
+  if (typeof window === "undefined") return fallback;
+
+  return sessionStorage.getItem(key) || fallback;
+}
+
 function AdminPage() {
-  const [activeTab, setActiveTab] = useState("inquiries");
+  const [activeTab, setActiveTab] = useState(() =>
+    getStoredValue(ADMIN_ACTIVE_TAB_KEY, "inquiries")
+  );
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [activeAnalyticsSection, setActiveAnalyticsSection] =
-    useState("ai-executive");
+  const [activeAnalyticsSection, setActiveAnalyticsSection] = useState(() =>
+    getStoredValue(ADMIN_ANALYTICS_SECTION_KEY, "ai-executive")
+  );
   const [aiReanalysisState, setAiReanalysisState] = useState({
     loading: false,
     leadId: null,
@@ -50,6 +63,38 @@ function AdminPage() {
     message: "",
     error: "",
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    sessionStorage.setItem(ADMIN_ACTIVE_TAB_KEY, activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    sessionStorage.setItem(
+      ADMIN_ANALYTICS_SECTION_KEY,
+      activeAnalyticsSection
+    );
+  }, [activeAnalyticsSection]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const saveScroll = () => {
+      sessionStorage.setItem(ADMIN_SCROLL_KEY, String(window.scrollY || 0));
+    };
+
+    window.addEventListener("scroll", saveScroll, { passive: true });
+    window.addEventListener("beforeunload", saveScroll);
+
+    return () => {
+      saveScroll();
+      window.removeEventListener("scroll", saveScroll);
+      window.removeEventListener("beforeunload", saveScroll);
+    };
+  }, []);
 
   const cardClass =
     "group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055] sm:rounded-[2rem] sm:p-6";
@@ -85,6 +130,13 @@ function AdminPage() {
     appointments,
     setAppointments,
     followUpReminders,
+
+    studentApplications,
+    studentDocuments,
+    studentTasks,
+    studentUniversities,
+    studentRiskScores,
+
     loading,
     loadError,
     fetchAllData,
@@ -93,6 +145,30 @@ function AdminPage() {
     isLoggedIn,
     adminProfile,
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isLoggedIn || !adminProfile) return;
+
+    const restoreScroll = () => {
+      const savedScrollY = Number(sessionStorage.getItem(ADMIN_SCROLL_KEY) || 0);
+
+      if (savedScrollY > 0) {
+        window.scrollTo({
+          top: savedScrollY,
+          behavior: "auto",
+        });
+      }
+    };
+
+    const timers = [300, 800, 1500, 2500, 4000].map((delay) =>
+      window.setTimeout(restoreScroll, delay)
+    );
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [isLoggedIn, adminProfile, activeTab, activeAnalyticsSection, loading]);
 
   const role = adminProfile?.role || "staff";
   const currentPermissions = getPermissionsForRole(role);
@@ -155,6 +231,12 @@ function AdminPage() {
   const handleLogout = async () => {
     await logout();
     clearLocalData();
+
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(ADMIN_SCROLL_KEY);
+      sessionStorage.removeItem(ADMIN_ACTIVE_TAB_KEY);
+      sessionStorage.removeItem(ADMIN_ANALYTICS_SECTION_KEY);
+    }
   };
 
   const updateLocalLeadAfterGpt = ({ leadId, leadType, patch }) => {
@@ -189,6 +271,40 @@ function AdminPage() {
         return null;
       }
     }
+  };
+
+  const buildStoredGptAnalysis = ({ lead, leadType, gptText }) => {
+    const localAi = enrichLeadWithAi(lead, leadType);
+
+    return {
+      version: "stored_gpt_v1",
+      generated_at: new Date().toISOString(),
+      generated_by:
+        adminProfile?.full_name || adminProfile?.name || "Zaifan Consultancy Team",
+      source: "manual_reanalysis",
+      model_mode: "counselor_strategy_fallback",
+      score: localAi.ai_score,
+      intent_level: localAi.ai_intent_level?.label || "Unknown",
+      risk_level: localAi.ai_risk_level?.label || "Unknown",
+      conversion_probability:
+        localAi.ai_conversion_range || localAi.ai_conversion_probability,
+      priority: localAi.ai_tier?.label || "Unknown",
+      next_action: localAi.ai_recommended_action,
+      summary: gptText,
+      counselor_strategy: gptText,
+      confidence: "medium",
+      raw_text: gptText,
+      local_engine_snapshot: {
+        ai_score: localAi.ai_score,
+        ai_tier: localAi.ai_tier?.label,
+        ai_urgency: localAi.ai_urgency?.label,
+        ai_intent_score: localAi.ai_intent_score,
+        ai_risk_score: localAi.ai_risk_score,
+        ai_data_completeness_score: localAi.ai_data_completeness_score,
+        ai_visa_readiness_score: localAi.ai_visa_readiness_score,
+        ai_recommended_action: localAi.ai_recommended_action,
+      },
+    };
   };
 
   const normalizeFastAnalysis = ({ lead, leadType, gptText }) => {
@@ -277,7 +393,7 @@ function AdminPage() {
       title: "GPT Lead Intelligence Updated",
       description: `GPT intelligence was saved for ${
         lead.full_name || lead.name || "student"
-      }.` ,
+      }.`,
       studentId: lead.id,
       studentType: leadType,
       metadata: {
@@ -289,40 +405,6 @@ function AdminPage() {
     });
 
     return patch;
-  };
-
-  const buildStoredGptAnalysis = ({ lead, leadType, gptText }) => {
-    const localAi = enrichLeadWithAi(lead, leadType);
-
-    return {
-      version: "stored_gpt_v1",
-      generated_at: new Date().toISOString(),
-      generated_by:
-        adminProfile?.full_name || adminProfile?.name || "Zaifan Consultancy Team",
-      source: "manual_reanalysis",
-      model_mode: "counselor_strategy_fallback",
-      score: localAi.ai_score,
-      intent_level: localAi.ai_intent_level?.label || "Unknown",
-      risk_level: localAi.ai_risk_level?.label || "Unknown",
-      conversion_probability:
-        localAi.ai_conversion_range || localAi.ai_conversion_probability,
-      priority: localAi.ai_tier?.label || "Unknown",
-      next_action: localAi.ai_recommended_action,
-      summary: gptText,
-      counselor_strategy: gptText,
-      confidence: "medium",
-      raw_text: gptText,
-      local_engine_snapshot: {
-        ai_score: localAi.ai_score,
-        ai_tier: localAi.ai_tier?.label,
-        ai_urgency: localAi.ai_urgency?.label,
-        ai_intent_score: localAi.ai_intent_score,
-        ai_risk_score: localAi.ai_risk_score,
-        ai_data_completeness_score: localAi.ai_data_completeness_score,
-        ai_visa_readiness_score: localAi.ai_visa_readiness_score,
-        ai_recommended_action: localAi.ai_recommended_action,
-      },
-    };
   };
 
   const reanalyzeLeadWithGpt = async (lead, leadType = "inquiry") => {
@@ -693,6 +775,11 @@ function AdminPage() {
               inquiries={inquiries}
               appointments={appointments}
               followUpReminders={followUpReminders}
+              studentApplications={studentApplications}
+              studentDocuments={studentDocuments}
+              studentTasks={studentTasks}
+              studentUniversities={studentUniversities}
+              studentRiskScores={studentRiskScores}
               activeAnalyticsSection={activeAnalyticsSection}
               setActiveAnalyticsSection={setActiveAnalyticsSection}
               toggleInquiryStatus={toggleInquiryStatus}

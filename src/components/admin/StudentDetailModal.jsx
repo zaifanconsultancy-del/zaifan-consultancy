@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import LeadAssignmentPanel from "./LeadAssignmentPanel";
@@ -59,132 +59,187 @@ function StudentDetailModal({
   const [studentCommunications, setStudentCommunications] = useState([]);
   const [panelRefreshKey, setPanelRefreshKey] = useState(0);
 
-  useEffect(() => {
-  setLocalStudent(student);
-  setActivePanel(student?.__preferredPanel || "ai-workspace");
+  const getStudentIdVariants = useCallback(() => {
+    if (!studentId) return [];
 
-  setOsLoading(false);
-  setOsError("");
-  setStudentDocuments([]);
-  setStudentApplication(null);
-  setStudentUniversities([]);
-  setStudentTasks([]);
-  setStudentCommunications([]);
-  setPanelRefreshKey((prev) => prev + 1);
-}, [student]);
-
-
-
-  const safePermissions = {
-    canDelete: false,
-    canClearAll: false,
-    canExport: false,
-    canManageAdmins: false,
-    canUpdateStatus: true,
-    canUpdatePriority: true,
-    canConfirmAppointments: true,
-    ...permissions,
-  };
-
-  const workingStudent = localStudent || student;
-
-  const studentId = workingStudent?.id;
-  const studentType =
-    workingStudent?.student_type || workingStudent?.type || type || "inquiry";
-
-    useEffect(() => {
-  loadStudentOsData();
-}, [studentId, studentType]);
-
-  
-const refreshCurrentPanel = () => {
-  if (osLoading) return;
-
-  setOsLoading(true);
-  setOsError("");
-
-  setPanelRefreshKey((prev) => prev + 1);
-
-  window.setTimeout(() => {
-    setOsLoading(false);
-  }, 1200);
-
-  window.setTimeout(() => {
-    setOsLoading(false);
-  }, 5000);
-};
-
-
-
- const loadStudentOsData = async () => {
-  if (!studentId) return;
-
-  setOsLoading(true);
-  setOsError("");
-
-  try {
+    const variants = [studentId, String(studentId)];
     const numericStudentId = Number(studentId);
 
-    const [
-      documentsResult,
-      applicationResult,
-      universitiesResult,
-      tasksResult,
-      communicationsResult,
-    ] = await Promise.all([
-      supabase
-        .from("student_documents")
-        .select("*")
-        .eq("student_id", studentId),
+    if (Number.isFinite(numericStudentId)) {
+      variants.push(numericStudentId);
+    }
 
-      Number.isFinite(numericStudentId)
-        ? supabase
-            .from("student_applications")
-            .select("*")
-            .eq("student_id", numericStudentId)
-            .eq("student_type", studentType)
-            .order("created_at", { ascending: false })
-            .limit(1)
-        : Promise.resolve({ data: [], error: null }),
+    return [
+      ...new Set(
+        variants.filter(
+          (value) => value !== null && value !== undefined && value !== ""
+        )
+      ),
+    ];
+  }, [studentId]);
 
-      supabase
-        .from("student_universities")
-        .select("*")
-        .eq("student_id", studentId),
+  const getStudentTypeVariants = useCallback(() => {
+    return [
+      studentType,
+      type,
+      workingStudent?.student_type,
+      workingStudent?.type,
+      workingStudent?.__leadType,
+      "inquiry",
+      "appointment",
+    ].filter(Boolean);
+  }, [
+    studentType,
+    type,
+    workingStudent?.student_type,
+    workingStudent?.type,
+    workingStudent?.__leadType,
+  ]);
 
-      Number.isFinite(numericStudentId)
-        ? supabase
-            .from("student_tasks")
-            .select("*")
-            .eq("student_id", numericStudentId)
-        : Promise.resolve({ data: [], error: null }),
+  const loadStudentOsData = useCallback(async () => {
+    if (!studentId) return;
 
-      supabase
-        .from("student_communications")
-        .select("*")
-        .eq("student_id", String(studentId))
-        .eq("student_type", studentType),
-    ]);
+    setOsLoading(true);
+    setOsError("");
 
-    
+    try {
+      const idVariants = getStudentIdVariants();
+      const typeVariants = [...new Set(getStudentTypeVariants())];
 
-    setStudentDocuments(documentsResult.data || []);
-    setStudentApplication(applicationResult.data?.[0] || null);
-    setStudentUniversities(universitiesResult.data || []);
-    setStudentTasks(tasksResult.data || []);
-    setStudentCommunications(communicationsResult.data || []);
+      const fetchByStudentId = async (table, options = {}) => {
+        const {
+          select = "*",
+          orderBy = "created_at",
+          ascending = false,
+          limit = null,
+          matchStudentType = false,
+        } = options;
 
-    setPanelRefreshKey((prev) => prev + 1);
-  } catch (error) {
-    setOsError(error.message || "Student OS data failed to load.");
-  } finally {
+        const attempts = idVariants.map((idValue) => {
+          let query = supabase.from(table).select(select).eq("student_id", idValue);
+
+          if (matchStudentType && typeVariants.length > 0) {
+            query = query.in("student_type", typeVariants);
+          }
+
+          if (orderBy) {
+            query = query.order(orderBy, { ascending });
+          }
+
+          if (limit) {
+            query = query.limit(limit);
+          }
+
+          return query;
+        });
+
+        const results = await Promise.all(attempts);
+        const firstError = results.find((result) => result.error)?.error;
+        const mergedData = results.flatMap((result) => result.data || []);
+
+        if (firstError && mergedData.length === 0) {
+          throw firstError;
+        }
+
+        return Array.from(
+          new Map(
+            mergedData.map((item) => [item.id || JSON.stringify(item), item])
+          ).values()
+        );
+      };
+
+      const [
+        documentsData,
+        applicationsData,
+        universitiesData,
+        tasksData,
+        communicationsData,
+      ] = await Promise.all([
+        fetchByStudentId("student_documents", {
+          orderBy: "created_at",
+          ascending: false,
+        }),
+
+        fetchByStudentId("student_applications", {
+          orderBy: "created_at",
+          ascending: false,
+          limit: 3,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+
+          return fetchByStudentId("student_applications", {
+            orderBy: "created_at",
+            ascending: false,
+            limit: 3,
+            matchStudentType: false,
+          });
+        }),
+
+        fetchByStudentId("student_universities", {
+          orderBy: "created_at",
+          ascending: false,
+        }),
+
+        fetchByStudentId("student_tasks", {
+          orderBy: "created_at",
+          ascending: false,
+        }),
+
+        fetchByStudentId("student_communications", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+
+          return fetchByStudentId("student_communications", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
+      ]);
+
+      setStudentDocuments(documentsData || []);
+      setStudentApplication(applicationsData?.[0] || null);
+      setStudentUniversities(universitiesData || []);
+      setStudentTasks(tasksData || []);
+      setStudentCommunications(communicationsData || []);
+
+      setPanelRefreshKey((prev) => prev + 1);
+    } catch (error) {
+      console.error("Student OS data failed to load:", error);
+      setOsError(error.message || "Student OS data failed to load.");
+    } finally {
+      setOsLoading(false);
+    }
+  }, [getStudentIdVariants, getStudentTypeVariants, studentId]);
+
+  useEffect(() => {
+    setLocalStudent(student);
+    setActivePanel(student?.__preferredPanel || "ai-workspace");
+
     setOsLoading(false);
-  }
-};
+    setOsError("");
+    setStudentDocuments([]);
+    setStudentApplication(null);
+    setStudentUniversities([]);
+    setStudentTasks([]);
+    setStudentCommunications([]);
+    setPanelRefreshKey((prev) => prev + 1);
+  }, [student]);
 
-useEffect(() => {
-  loadStudentOsData();
-}, [studentId, studentType]);
+  useEffect(() => {
+    loadStudentOsData();
+  }, [loadStudentOsData]);
+
+  const refreshCurrentPanel = async () => {
+    if (osLoading) return;
+
+    await loadStudentOsData();
+  };
+
 
   const executiveStudents =
     allLeads.length > 0
@@ -680,10 +735,8 @@ useEffect(() => {
 <MiniOsStat label="Messages" value={studentCommunications.length} />
 
                 <p className="pt-2 text-[11px] leading-5 text-white/35">
-                  <div className="pt-2 text-[11px] leading-5 text-white/35">
-  Live Student OS snapshot loaded from documents, applications,
-  universities, tasks, and communications.
-</div>
+                  Live Student OS snapshot loaded from documents, applications,
+                  universities, tasks, and communications.
                 </p>
               </div>
             </aside>

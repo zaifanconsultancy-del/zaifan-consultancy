@@ -45,15 +45,22 @@ function PipelinePage({
     activeTab === "appointments" ? appointments.length : inquiries.length;
 
   const sectionLabel =
-    activeTab === "appointments" ? "Appointment Pipeline" : "Inquiry Pipeline";
+    activeTab === "appointments"
+      ? "Student Appointment Pipeline"
+      : "Student Inquiry Pipeline";
 
   const completeAllLeads =
     allLeads.length > 0
       ? allLeads
       : [
-          ...inquiries.map((lead) => ({ ...lead, __leadType: "inquiry" })),
+          ...inquiries.map((lead) => ({
+            ...lead,
+            student_type: lead.student_type || "inquiry",
+            __leadType: "inquiry",
+          })),
           ...appointments.map((lead) => ({
             ...lead,
+            student_type: lead.student_type || "appointment",
             __leadType: "appointment",
           })),
         ];
@@ -64,7 +71,7 @@ function PipelinePage({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#D4AF37]">
-              Real AI Pipeline Layer
+              Student OS Pipeline Layer
             </p>
 
             <h2 className="mt-2 text-2xl font-black text-white">
@@ -72,8 +79,9 @@ function PipelinePage({
             </h2>
 
             <p className="mt-1 text-sm text-white/45">
-              Showing {visibleCount} of {totalCount} records. Executive AI now
-              has access to {completeAllLeads.length} CRM lead(s).
+              Showing {visibleCount} of {totalCount} records. Executive AI has
+              access to {completeAllLeads.length} student record(s) across the
+              operating system.
             </p>
           </div>
 

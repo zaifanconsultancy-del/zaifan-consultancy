@@ -33,6 +33,12 @@ function AnalyticsPage({
   inquiries = [],
   appointments = [],
   followUpReminders = [],
+
+  studentApplications = [],
+  studentDocuments = [],
+  studentTasks = [],
+  studentUniversities = [],
+  studentRiskScores = [],
   activeAnalyticsSection,
   setActiveAnalyticsSection,
   toggleInquiryStatus,
@@ -75,16 +81,8 @@ function AnalyticsPage({
       title="AI Executive Intelligence Center"
     >
       <div className="space-y-6">
-        <AIExecutiveIntelligenceCenter
-          cardClass={cardClass}
-          inquiries={inquiries}
-          appointments={appointments}
-          followUpReminders={followUpReminders}
-          setActiveTab={setActiveTab}
-        />
-
-        <ExecutiveCommandSystem />
-      </div>
+  <ExecutiveCommandSystem />
+</div>
     </AnalyticsSection>
   );
 }
@@ -309,16 +307,22 @@ function AnalyticsPage({
 
     if (activeAnalyticsSection === "lead-health") {
       return (
-        <AnalyticsSection
-          eyebrow="AI Lead Intelligence"
-          title="Lead Health Analytics"
-        >
+       <AnalyticsSection
+  eyebrow="Student OS Intelligence"
+  title="Student Success Health"
+>
           <LeadHealthPanel
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-            reminders={followUpReminders}
-          />
+  cardClass={cardClass}
+  inquiries={inquiries}
+  appointments={appointments}
+  reminders={followUpReminders}
+
+  studentApplications={studentApplications}
+  studentDocuments={studentDocuments}
+  studentTasks={studentTasks}
+  studentUniversities={studentUniversities}
+  studentRiskScores={studentRiskScores}
+/>
         </AnalyticsSection>
       );
     }
