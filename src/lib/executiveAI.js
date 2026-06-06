@@ -216,9 +216,15 @@ function getApplicationHealth({ applicationStatus, offerStatus, applicationCount
 }
 
 function getVisaHealth({ visaStatus, applicationHealth }) {
-  const pending = ["pending", "visa_pending", "submitted", "under_review", "review", "processing"].includes(
-    visaStatus
-  );
+  const pending = [
+    "pending",
+    "visa_pending",
+    "submitted",
+    "under_review",
+    "review",
+    "processing",
+  ].includes(visaStatus);
+
   const approved = ["visa_approved", "approved"].includes(visaStatus);
   const rejected = ["rejected", "visa_rejected", "refused", "visa_refused"].includes(visaStatus);
 
@@ -247,7 +253,13 @@ function getVisaHealth({ visaStatus, applicationHealth }) {
   };
 }
 
-function getJourneyStage({ applicationStatus, offerStatus, visaStatus, applicationHealth, visaHealth }) {
+function getJourneyStage({
+  applicationStatus,
+  offerStatus,
+  visaStatus,
+  applicationHealth,
+  visaHealth,
+}) {
   if (applicationHealth.enrolled || applicationStatus === "enrolled") return "enrolled";
 
   if (visaHealth.approved) return "visa_approved";
@@ -315,6 +327,76 @@ function getExecutiveCategory({
   if (finalRiskScore >= 35) return "Needs Attention";
 
   return "Standard";
+}
+
+function getAutomationSignals({
+  journeyStage,
+  documentReadiness,
+  taskHealth,
+  universityHealth,
+  finalRiskScore,
+  finalOpportunityScore,
+  daysSinceUpdated,
+}) {
+  const automationActions = [];
+
+  if (finalRiskScore >= 85 || journeyStage === "visa_rejected") {
+    automationActions.push("critical_case_review");
+  }
+
+  if (journeyStage === "not_started") {
+    automationActions.push("application_not_started");
+  }
+
+  if (documentReadiness.percent < 60) {
+    automationActions.push("document_readiness_gap");
+  }
+
+  if (taskHealth.overdue > 0 || taskHealth.pending > 5) {
+    automationActions.push("task_recovery");
+  }
+
+  if (!universityHealth.hasPlan) {
+    automationActions.push("missing_university_plan");
+  } else if (universityHealth.safe === 0) {
+    automationActions.push("missing_safe_university");
+  }
+
+  if (["offer_received", "offer_accepted", "cas_pending", "cas_issued"].includes(journeyStage)) {
+    automationActions.push("conversion_follow_up");
+  }
+
+  if (["cas_issued", "visa_pending", "visa_rejected"].includes(journeyStage)) {
+    automationActions.push("visa_workflow");
+  }
+
+  if (finalOpportunityScore >= 80 && finalRiskScore < 50) {
+    automationActions.push("fast_track");
+  }
+
+  if (daysSinceUpdated !== null && daysSinceUpdated >= 10) {
+    automationActions.push("stale_student_follow_up");
+  }
+
+  return {
+    automation_candidate: automationActions.length > 0,
+    automation_actions: automationActions,
+    automation_action_count: automationActions.length,
+    automation_pressure:
+      automationActions.length >= 5
+        ? "heavy"
+        : automationActions.length >= 3
+        ? "medium"
+        : automationActions.length > 0
+        ? "light"
+        : "none",
+    approval_likely:
+      finalRiskScore >= 65 ||
+      finalOpportunityScore >= 80 ||
+      ["offer_accepted", "cas_pending", "cas_issued", "visa_pending", "visa_rejected"].includes(
+        journeyStage
+      ),
+  };
 }
 
 export function calculateExecutiveRisk(student = {}) {
@@ -537,6 +619,16 @@ export function calculateExecutiveRisk(student = {}) {
     universityHealth,
   });
 
+  const automation = getAutomationSignals({
+    journeyStage,
+    documentReadiness,
+    taskHealth,
+    universityHealth,
+    finalRiskScore,
+    finalOpportunityScore,
+    daysSinceUpdated,
+  });
+
   return {
     student_id: String(student.id),
     student_type: getStudentType(student),
@@ -598,7 +690,15 @@ export function calculateExecutiveRisk(student = {}) {
       dream_university_count: universityHealth.dream,
 
       days_since_updated: daysSinceUpdated,
+
+      ...automation,
     },
+
+    automation_candidate: automation.automation_candidate,
+    automation_actions: automation.automation_actions,
+    automation_action_count: automation.automation_action_count,
+    automation_pressure: automation.automation_pressure,
+    approval_likely: automation.approval_likely,
 
     generated_at: new Date().toISOString(),
   };
@@ -617,25 +717,16 @@ export function calculatePortfolioHealth(students = []) {
   const high = countBy((item) => item.executive.risk_level === "High");
   const medium = countBy((item) => item.executive.risk_level === "Medium");
 
-  const executivePriority = countBy(
-    (item) => item.executive.priority_level === "Executive"
-  );
+  const executivePriority = countBy((item) => item.executive.priority_level === "Executive");
+  const conversionReady = countBy((item) => item.executive.executive_category === "Conversion Ready");
+  const successStories = countBy((item) => item.executive.executive_category === "Success Story");
+  const highOpportunity = countBy((item) => item.executive.executive_category === "High Opportunity");
+  const applicationReady = countBy((item) => item.executive.executive_category === "Application Ready");
 
-  const conversionReady = countBy(
-    (item) => item.executive.executive_category === "Conversion Ready"
-  );
-
-  const successStories = countBy(
-    (item) => item.executive.executive_category === "Success Story"
-  );
-
-  const highOpportunity = countBy(
-    (item) => item.executive.executive_category === "High Opportunity"
-  );
-
-  const applicationReady = countBy(
-    (item) => item.executive.executive_category === "Application Ready"
-  );
+  const automationCandidates = countBy((item) => item.executive.automation_candidate);
+  const approvalLikely = countBy((item) => item.executive.approval_likely);
+  const heavyAutomation = countBy((item) => item.executive.automation_pressure === "heavy");
+  const mediumAutomation = countBy((item) => item.executive.automation_pressure === "medium");
 
   const applicationHealth = {
     notStarted: countBy((item) => item.executive.diagnostics.application_health === "not_started"),
@@ -678,15 +769,11 @@ export function calculatePortfolioHealth(students = []) {
   };
 
   const averageRisk = total
-    ? Math.round(
-        scored.reduce((sum, item) => sum + item.executive.risk_score, 0) / total
-      )
+    ? Math.round(scored.reduce((sum, item) => sum + item.executive.risk_score, 0) / total)
     : 0;
 
   const averageOpportunity = total
-    ? Math.round(
-        scored.reduce((sum, item) => sum + item.executive.opportunity_score, 0) / total
-      )
+    ? Math.round(scored.reduce((sum, item) => sum + item.executive.opportunity_score, 0) / total)
     : 0;
 
   return {
@@ -702,20 +789,24 @@ export function calculatePortfolioHealth(students = []) {
     averageRisk,
     averageOpportunity,
 
+    automationCandidates,
+    approvalLikely,
+    heavyAutomation,
+    mediumAutomation,
+
     applicationHealth,
     visaHealth,
     documentHealth,
     universityHealth,
     taskHealth,
 
-    rankedByRisk: [...scored].sort(
-      (a, b) => b.executive.risk_score - a.executive.risk_score
-    ),
-
+    rankedByRisk: [...scored].sort((a, b) => b.executive.risk_score - a.executive.risk_score),
     rankedByOpportunity: [...scored].sort(
       (a, b) => b.executive.opportunity_score - a.executive.opportunity_score
     ),
-
+    rankedByAutomationPressure: [...scored].sort(
+      (a, b) => b.executive.automation_action_count - a.executive.automation_action_count
+    ),
     rankedByApplicationHealth: [...scored].sort(
       (a, b) =>
         b.executive.diagnostics.document_readiness_percent +
@@ -725,23 +816,17 @@ export function calculatePortfolioHealth(students = []) {
           a.executive.diagnostics.task_completion_percent +
           a.executive.diagnostics.university_plan_count)
     ),
+    rankedByVisaHealth: [...scored].sort((a, b) => {
+      const rank = {
+        visa_rejected: 5,
+        visa_pending: 4,
+        cas_issued: 3,
+        cas_pending: 2,
+        offer_accepted: 1,
+      };
 
-    rankedByVisaHealth: [...scored].sort(
-      (a, b) => {
-        const rank = {
-          visa_rejected: 5,
-          visa_pending: 4,
-          cas_issued: 3,
-          cas_pending: 2,
-          offer_accepted: 1,
-        };
-
-        return (
-          (rank[b.executive.journey_stage] || 0) -
-          (rank[a.executive.journey_stage] || 0)
-        );
-      }
-    ),
+      return (rank[b.executive.journey_stage] || 0) - (rank[a.executive.journey_stage] || 0);
+    }),
   };
 }
 
@@ -765,26 +850,14 @@ function buildExecutiveRiskPayload(executive = {}, includeRichDiagnostics = true
     summary: executive.summary,
     generated_at: executive.generated_at,
 
-    document_readiness_percent:
-      executive.diagnostics?.document_readiness_percent || 0,
-
-    task_completion_percent:
-      executive.diagnostics?.task_completion_percent || 0,
-
-    pending_tasks_count:
-      executive.diagnostics?.pending_tasks_count || 0,
-
-    overdue_tasks_count:
-      executive.diagnostics?.overdue_tasks_count || 0,
-
-    university_plan_count:
-      executive.diagnostics?.university_plan_count || 0,
-
+    document_readiness_percent: executive.diagnostics?.document_readiness_percent || 0,
+    task_completion_percent: executive.diagnostics?.task_completion_percent || 0,
+    pending_tasks_count: executive.diagnostics?.pending_tasks_count || 0,
+    overdue_tasks_count: executive.diagnostics?.overdue_tasks_count || 0,
+    university_plan_count: executive.diagnostics?.university_plan_count || 0,
     has_balanced_university_plan:
       executive.diagnostics?.has_balanced_university_plan || false,
-
-    days_since_updated:
-      executive.diagnostics?.days_since_updated ?? null,
+    days_since_updated: executive.diagnostics?.days_since_updated ?? null,
   };
 
   if (!includeRichDiagnostics) return payload;
@@ -792,32 +865,21 @@ function buildExecutiveRiskPayload(executive = {}, includeRichDiagnostics = true
   return {
     ...payload,
 
-    journey_stage:
-      executive.diagnostics?.journey_stage || executive.journey_stage || "not_started",
+    journey_stage: executive.diagnostics?.journey_stage || executive.journey_stage || "not_started",
+    application_health: executive.diagnostics?.application_health || "",
+    visa_health: executive.diagnostics?.visa_health || "",
+    document_health: executive.diagnostics?.document_health || "",
+    task_health: executive.diagnostics?.task_health || "",
+    university_health: executive.diagnostics?.university_health || "",
 
-    application_health:
-      executive.diagnostics?.application_health || "",
+    safe_university_count: executive.diagnostics?.safe_university_count || 0,
+    target_university_count: executive.diagnostics?.target_university_count || 0,
+    dream_university_count: executive.diagnostics?.dream_university_count || 0,
 
-    visa_health:
-      executive.diagnostics?.visa_health || "",
-
-    document_health:
-      executive.diagnostics?.document_health || "",
-
-    task_health:
-      executive.diagnostics?.task_health || "",
-
-    university_health:
-      executive.diagnostics?.university_health || "",
-
-    safe_university_count:
-      executive.diagnostics?.safe_university_count || 0,
-
-    target_university_count:
-      executive.diagnostics?.target_university_count || 0,
-
-    dream_university_count:
-      executive.diagnostics?.dream_university_count || 0,
+    automation_candidate: executive.automation_candidate || false,
+    automation_action_count: executive.automation_action_count || 0,
+    automation_pressure: executive.automation_pressure || "none",
+    approval_likely: executive.approval_likely || false,
   };
 }
 
@@ -881,4 +943,20 @@ export async function fetchExecutiveRiskScores() {
   }
 
   return { data: data || [], error };
+}
+
+export function buildExecutiveAutomationPortfolio(students = []) {
+  const portfolio = calculatePortfolioHealth(students);
+
+  return {
+    total: portfolio.total,
+    automationCandidates: portfolio.automationCandidates,
+    approvalLikely: portfolio.approvalLikely,
+    heavyAutomation: portfolio.heavyAutomation,
+    mediumAutomation: portfolio.mediumAutomation,
+    automationCoverage: portfolio.total
+      ? Math.round((portfolio.automationCandidates / portfolio.total) * 100)
+      : 0,
+    rankedByAutomationPressure: portfolio.rankedByAutomationPressure,
+  };
 }

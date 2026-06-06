@@ -6,7 +6,15 @@ import EmailWorkspace from "./EmailWorkspace";
 const REQUEST_TIMEOUT_MS = 12000;
 
 async function withTimeout(promise, message = "Request timed out.") {
-  async function createTimelineEvent({
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+    ),
+  ]);
+}
+
+async function createTimelineEvent({
   studentId,
   studentType,
   eventType,
@@ -14,25 +22,23 @@ async function withTimeout(promise, message = "Request timed out.") {
   description,
   newValue = "",
 }) {
+  if (!studentId || !eventType || !title) return;
+
   try {
-    await supabase.from("student_application_timeline").insert({
-      student_id: Number(studentId),
-      student_type: studentType,
-      event_type: eventType,
-      title,
-      description,
-      new_value: newValue,
-    });
+    await withTimeout(
+      supabase.from("student_application_timeline").insert({
+        student_id: Number(studentId),
+        student_type: studentType,
+        event_type: eventType,
+        title,
+        description,
+        new_value: newValue,
+      }),
+      "Communication timeline event timed out."
+    );
   } catch {
-    // Timeline should never break communications
+    // Timeline should never break communications.
   }
-}
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
-    ),
-  ]);
 }
 
 function CommunicationCenterPanel({
@@ -42,6 +48,7 @@ function CommunicationCenterPanel({
 }) {
   const [communications, setCommunications] = useState(sharedCommunications || []);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [savingType, setSavingType] = useState("");
 
@@ -49,7 +56,8 @@ function CommunicationCenterPanel({
   const phone = student?.phone || student?.phone_number || "";
   const email = student?.email || "";
   const studentId = student?.id;
-  const studentType = student?.student_type || student?.type || "inquiry";
+  const studentType =
+    student?.student_type || student?.__leadType || student?.type || "inquiry";
 
   useEffect(() => {
     setCommunications(sharedCommunications || []);
@@ -59,6 +67,22 @@ function CommunicationCenterPanel({
     loadCommunications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, studentType]);
+
+  const notifyParent = async () => {
+    if (typeof onSharedDataChange !== "function") return;
+
+    try {
+      await withTimeout(
+        Promise.resolve(onSharedDataChange({ source: "communication_center" })),
+        "Student OS refresh after communication save timed out."
+      );
+    } catch (refreshError) {
+      console.warn(
+        "Communication saved, but parent Student OS refresh failed:",
+        refreshError
+      );
+    }
+  };
 
   const loadCommunications = async () => {
     if (!studentId) {
@@ -96,11 +120,18 @@ function CommunicationCenterPanel({
     }
   };
 
-  const saveCommunication = async ({ channel, subject = "", message }) => {
-    if (!studentId || !message || savingType) return;
+  const saveCommunication = async ({
+    channel,
+    subject = "",
+    message,
+    status = "draft",
+    source = "manual",
+  }) => {
+    if (!studentId || !message || savingType) return false;
 
     setSavingType(channel);
     setError("");
+    setSuccessMessage("");
 
     try {
       const payload = {
@@ -109,37 +140,50 @@ function CommunicationCenterPanel({
         channel,
         subject,
         message,
-        status: "draft",
+        status,
+        source,
       };
 
-      const { error } = await withTimeout(
+      const { data, error } = await withTimeout(
         supabase.from("student_communications").insert(payload).select().single(),
         "Communication save timed out."
       );
 
       if (error) {
         setError(error.message || "Failed to save communication.");
-        return;
+        return false;
       }
 
-      await loadCommunications();
+      setCommunications((prev) => [data, ...(prev || [])]);
 
-await createTimelineEvent({
-  studentId,
-  studentType,
-  eventType: "communication_logged",
-  title:
-    channel === "whatsapp"
-      ? "WhatsApp Follow-up Logged"
-      : "Email Follow-up Logged",
-  description: message,
-  newValue: channel,
-});
+      await createTimelineEvent({
+        studentId,
+        studentType,
+        eventType: "communication_logged",
+        title:
+          channel === "whatsapp"
+            ? "WhatsApp Draft Saved"
+            : channel === "email"
+            ? "Email Draft Saved"
+            : "Communication Logged",
+        description: subject ? `${subject}\n\n${message}` : message,
+        newValue: channel,
+      });
 
-onSharedDataChange();
+      setSuccessMessage(
+        channel === "whatsapp"
+          ? "WhatsApp draft saved to communication history."
+          : channel === "email"
+          ? "Email draft saved to communication history."
+          : "Communication saved."
+      );
+
+      await notifyParent();
+      return true;
     } catch (error) {
       console.error("Communication save crashed:", error);
       setError(error.message || "Communication save failed.");
+      return false;
     } finally {
       setSavingType("");
     }
@@ -175,14 +219,20 @@ onSharedDataChange();
         </h2>
 
         <p className="mt-2 text-white/60">
-          Manage WhatsApp, email, counselor outreach, and saved communication
-          history.
+          Manage WhatsApp, email, counselor outreach, saved drafts, and full
+          communication history.
         </p>
       </div>
 
       {error ? (
         <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-300">
           {error}
+        </div>
+      ) : null}
+
+      {successMessage ? (
+        <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-300">
+          {successMessage}
         </div>
       ) : null}
 
@@ -204,8 +254,30 @@ onSharedDataChange();
         />
       </div>
 
-      <WhatsAppWorkspace student={student} />
-      <EmailWorkspace student={student} />
+      <WhatsAppWorkspace
+        student={student}
+        saving={savingType === "whatsapp"}
+        onSaveDraft={(message) =>
+          saveCommunication({
+            channel: "whatsapp",
+            message,
+            source: "whatsapp_workspace",
+          })
+        }
+      />
+
+      <EmailWorkspace
+        student={student}
+        saving={savingType === "email"}
+        onSaveDraft={({ subject, body }) =>
+          saveCommunication({
+            channel: "email",
+            subject,
+            message: body,
+            source: "email_workspace",
+          })
+        }
+      />
 
       <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -235,6 +307,7 @@ onSharedDataChange();
               saveCommunication({
                 channel: "whatsapp",
                 message: `Follow-up sent to ${fullName} on WhatsApp.`,
+                source: "manual_log_button",
               })
             }
             className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300 disabled:opacity-50"
@@ -250,6 +323,7 @@ onSharedDataChange();
                 channel: "email",
                 subject: "Zaifan Consultancy Follow-up",
                 message: `Follow-up email prepared for ${fullName}.`,
+                source: "manual_log_button",
               })
             }
             className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] disabled:opacity-50"

@@ -22,6 +22,12 @@ function addOnce(list, item) {
   }
 }
 
+function getDateAfterDays(days = 1) {
+  return new Date(Date.now() + Number(days || 1) * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+}
+
 function isBlankStatus(value) {
   const clean = normalize(value);
   return (
@@ -91,6 +97,7 @@ function getJourneyStage(score = {}) {
   const offerStatus = normalize(score.offer_status);
   const visaStatus = normalize(score.visa_status);
 
+  if (applicationStatus === "enrolled") return "enrolled";
   if (isVisaApproved(visaStatus)) return "visa_approved";
   if (isVisaRejected(visaStatus)) return "visa_rejected";
   if (isVisaActive(visaStatus)) return "visa_pending";
@@ -125,14 +132,67 @@ function getScoreValue(score = {}, key, fallback = 0) {
   return score?.[key] ?? score?.diagnostics?.[key] ?? fallback;
 }
 
+function getStudentName(score = {}) {
+  return score.student_name || score.full_name || score.name || "Student";
+}
+
+function getDefaultDueDate(type = "", priority = "") {
+  const cleanType = normalize(type);
+  const cleanPriority = normalize(priority);
+
+  if (cleanPriority === "critical") return getDateAfterDays(1);
+
+  if (
+    [
+      "critical_case_review",
+      "visa_rejection_review",
+      "cas_issued_start_visa",
+      "offer_accepted_next_steps",
+      "fast_track_student",
+      "application_ready",
+      "visa_delay",
+    ].includes(cleanType)
+  ) {
+    return getDateAfterDays(1);
+  }
+
+  if (
+    [
+      "cas_pending_follow_up",
+      "visa_monitoring",
+      "offer_follow_up",
+      "conversion_opportunity",
+      "application_stalled",
+    ].includes(cleanType)
+  ) {
+    return getDateAfterDays(2);
+  }
+
+  return getDateAfterDays(3);
+}
+
+function getApprovalReason(config = {}) {
+  const priority = normalize(config.priority);
+  const action = normalize(config.action);
+
+  if (priority === "critical") return "Critical student risk requires human approval.";
+  if (priority === "executive") return "Executive-priority student action requires counselor approval.";
+  if (["send_email", "send_whatsapp"].includes(action)) {
+    return "Student communication drafts should be reviewed before sending.";
+  }
+
+  return "";
+}
+
 function buildPayload(score = {}, overrides = {}) {
   return {
-    student_id: score.student_id || score.id,
+    student_id: String(score.student_id || score.id || ""),
     student_type: score.student_type || score.__leadType || score.type || "inquiry",
-    student_name: score.student_name || score.full_name || score.name || "Student",
+    student_name: getStudentName(score),
 
     executive_category: score.executive_category || "",
     priority_level: score.priority_level || "",
+    risk_level: score.risk_level || "",
     risk_score: number(score.risk_score),
     opportunity_score: number(score.opportunity_score),
 
@@ -151,16 +211,38 @@ function buildPayload(score = {}, overrides = {}) {
     dream_university_count: number(getScoreValue(score, "dream_university_count")),
     days_since_updated: getScoreValue(score, "days_since_updated", null),
 
+    source: "executive_ai_v2",
+    generated_by: "executive_ai",
+    generated_at: new Date().toISOString(),
+
     ...overrides,
   };
 }
 
 function makeRecommendation(score, config) {
-  const studentName = score.student_name || score.full_name || score.name || "this student";
+  const studentName = getStudentName(score);
   const description =
     typeof config.description === "function"
       ? config.description(studentName)
       : config.description;
+
+  const message =
+    typeof config.message === "function"
+      ? config.message(studentName)
+      : config.message || "";
+
+  const subject =
+    typeof config.subject === "function"
+      ? config.subject(studentName)
+      : config.subject || "";
+
+  const notes =
+    typeof config.notes === "function"
+      ? config.notes(studentName)
+      : config.notes || description;
+
+  const dueDate = config.due_date || getDefaultDueDate(config.type, config.priority);
+  const approvalReason = getApprovalReason(config);
 
   return {
     type: config.type,
@@ -168,27 +250,45 @@ function makeRecommendation(score, config) {
     action: config.action || "create_task",
     title: config.title,
     description,
+    approval_required: Boolean(approvalReason),
+    approval_reason: approvalReason,
     payload: buildPayload(score, {
       title: config.title,
       description,
-      notes:
-        typeof config.notes === "function"
-          ? config.notes(studentName)
-          : config.notes || description,
-      due_date: config.due_date || null,
+      notes,
+      due_date: dueDate,
       due_time: config.due_time || null,
       priority: config.taskPriority || config.priority || "medium",
       channel: config.channel || null,
-      subject:
-        typeof config.subject === "function"
-          ? config.subject(studentName)
-          : config.subject || "",
-      message:
-        typeof config.message === "function"
-          ? config.message(studentName)
-          : config.message || "",
+      subject,
+      message,
+      recommendation_type: config.type,
+      recommendation_priority: config.priority || "medium",
+      approval_required: Boolean(approvalReason),
+      approval_reason: approvalReason,
+      automation_group: config.automationGroup || "student_journey",
+      duplicate_protection_key: `${score.student_id || score.id || studentName}::${
+        score.student_type || score.__leadType || score.type || "student"
+      }::${config.type}::${config.action || "create_task"}`,
     }),
   };
+}
+
+function getRecommendationRank(recommendation = {}) {
+  const priorityOrder = { critical: 6, executive: 5, high: 4, medium: 3, low: 2 };
+  const actionOrder = {
+    create_task: 5,
+    schedule_call: 4,
+    create_reminder: 3,
+    send_email: 2,
+    send_whatsapp: 2,
+    none: 1,
+  };
+
+  return (
+    (priorityOrder[normalize(recommendation.priority)] || 0) * 10 +
+    (actionOrder[normalize(recommendation.action)] || 0)
+  );
 }
 
 export function buildExecutiveRecommendations(score = {}) {
@@ -310,6 +410,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has a serious risk signal. Review the case, identify the blocker, and create a recovery plan.`,
         taskPriority: "critical",
+        automationGroup: "risk_recovery",
       })
     );
   }
@@ -325,6 +426,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has no active application. Assign a counselor task to begin the application journey.`,
         taskPriority: "high",
+        automationGroup: "application",
       })
     );
   }
@@ -340,6 +442,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} appears ready for application submission. Review shortlist, documents, and submit the next application.`,
         taskPriority: "high",
+        automationGroup: "application",
       })
     );
   }
@@ -355,6 +458,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has started an application but has not submitted it yet. Follow up and remove the blocker.`,
         taskPriority: "medium",
+        automationGroup: "application",
       })
     );
   }
@@ -370,6 +474,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has an active application with no recent progress. Follow up with the university or counselor.`,
         taskPriority: "high",
+        automationGroup: "application",
       })
     );
   }
@@ -385,6 +490,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has an offer-stage signal. Contact the student and push toward offer acceptance.`,
         taskPriority: "high",
+        automationGroup: "offer",
       })
     );
   }
@@ -400,6 +506,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} accepted an offer. Start CAS, deposit, and visa preparation workflow.`,
         taskPriority: "high",
+        automationGroup: "offer",
       })
     );
   }
@@ -415,6 +522,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} is waiting on CAS. Follow up on CAS requirements, payment, documents, and university timeline.`,
         taskPriority: "high",
+        automationGroup: "cas",
       })
     );
   }
@@ -430,6 +538,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has CAS issued. Start visa checklist, financial documents, and appointment preparation.`,
         taskPriority: "high",
+        automationGroup: "visa",
       })
     );
   }
@@ -445,6 +554,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} accepted an offer but visa progress is not moving. Start visa preparation immediately.`,
         taskPriority: "high",
+        automationGroup: "visa",
       })
     );
   }
@@ -460,6 +570,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} is in visa stage. Create a follow-up reminder for visa updates.`,
         taskPriority: "high",
+        automationGroup: "visa",
       })
     );
   }
@@ -475,6 +586,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has weak task health. Clear overdue tasks and rebuild counselor execution rhythm.`,
         taskPriority: overdueTasks >= 3 ? "critical" : "high",
+        automationGroup: "task_health",
       })
     );
   }
@@ -490,6 +602,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has low document readiness. Follow up for missing or incomplete documents.`,
         taskPriority: "high",
+        automationGroup: "documents",
       })
     );
   }
@@ -507,6 +620,7 @@ export function buildExecutiveRecommendations(score = {}) {
         channel: "whatsapp",
         message: (studentName) =>
           `Hi ${studentName}, just checking in from Zaifan Consultancy. We wanted to follow up on your study abroad journey and help you move to the next step.`,
+        automationGroup: "communication",
       })
     );
   }
@@ -522,6 +636,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has no complete university plan. Build Dream, Target, and Safe options.`,
         taskPriority: "high",
+        automationGroup: "university",
       })
     );
   }
@@ -537,6 +652,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has no Dream universities. Add ambitious options to strengthen the plan.`,
         taskPriority: "medium",
+        automationGroup: "university",
       })
     );
   }
@@ -552,6 +668,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has no Target universities. Add realistic best-fit options.`,
         taskPriority: "medium",
+        automationGroup: "university",
       })
     );
   }
@@ -567,6 +684,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has no Safe universities. Add backup options to reduce admission risk.`,
         taskPriority: "high",
+        automationGroup: "university",
       })
     );
   }
@@ -582,6 +700,7 @@ export function buildExecutiveRecommendations(score = {}) {
         description: (studentName) =>
           `${studentName} has strong opportunity, good readiness, and low risk. Fast-track the next milestone.`,
         taskPriority: "high",
+        automationGroup: "conversion",
       })
     );
   }
@@ -599,7 +718,13 @@ export function buildExecutiveRecommendations(score = {}) {
         channel: "email",
         subject: "Next steps for your study abroad journey",
         message: (studentName) =>
-          `Hi ${studentName}, we reviewed your profile and your case is ready to move forward. Let's complete the next step in your application journey.`,
+          `Hi ${studentName},
+
+We reviewed your profile and your case is ready to move forward. Let's complete the next step in your application journey.
+
+Best regards,
+Zaifan Consultancy Team`,
+        automationGroup: "conversion",
       })
     );
   }
@@ -617,6 +742,7 @@ export function buildExecutiveRecommendations(score = {}) {
         channel: "whatsapp",
         message: (studentName) =>
           `Congratulations ${studentName}! Your visa success is a major milestone. Zaifan Consultancy is proud to be part of your journey.`,
+        automationGroup: "success",
       })
     );
   }
@@ -630,14 +756,48 @@ export function buildExecutiveRecommendations(score = {}) {
         title: "Monitor student",
         description: (studentName) =>
           `${studentName} has no urgent executive action right now. Continue normal monitoring.`,
+        automationGroup: "monitoring",
       })
     );
   }
 
   return recommendations
-    .sort((a, b) => {
-      const order = { critical: 5, executive: 4, high: 3, medium: 2, low: 1 };
-      return (order[normalize(b.priority)] || 0) - (order[normalize(a.priority)] || 0);
-    })
-    .slice(0, 6);
+    .sort((a, b) => getRecommendationRank(b) - getRecommendationRank(a))
+    .slice(0, 8);
+}
+
+export function buildExecutiveRecommendationSummary(score = {}) {
+  const recommendations = buildExecutiveRecommendations(score);
+  const active = recommendations.filter((item) => normalize(item.action) !== "none");
+
+  return {
+    student_id: score.student_id || score.id,
+    student_type: score.student_type || score.__leadType || score.type || "student",
+    student_name: getStudentName(score),
+    total: recommendations.length,
+    active: active.length,
+    approval_required: active.filter((item) => item.approval_required).length,
+    critical: active.filter((item) => normalize(item.priority) === "critical").length,
+    executive: active.filter((item) => normalize(item.priority) === "executive").length,
+    high: active.filter((item) => normalize(item.priority) === "high").length,
+    top_action: active[0]?.action || "none",
+    top_type: active[0]?.type || "healthy_monitoring",
+    recommendations,
+  };
+}
+
+export function buildExecutiveRecommendationPortfolio(scores = []) {
+  const rows = Array.isArray(scores) ? scores : [];
+  const summaries = rows.map((score) => buildExecutiveRecommendationSummary(score));
+
+  return {
+    total_students: rows.length,
+    students_with_actions: summaries.filter((item) => item.active > 0).length,
+    total_actions: summaries.reduce((sum, item) => sum + item.active, 0),
+    approval_required: summaries.reduce((sum, item) => sum + item.approval_required, 0),
+    critical_actions: summaries.reduce((sum, item) => sum + item.critical, 0),
+    executive_actions: summaries.reduce((sum, item) => sum + item.executive, 0),
+    high_actions: summaries.reduce((sum, item) => sum + item.high, 0),
+    summaries,
+  };
 }

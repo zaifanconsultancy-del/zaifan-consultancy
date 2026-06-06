@@ -29,7 +29,8 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
   const [loadError, setLoadError] = useState("");
 
   const mountedRef = useRef(true);
-  const loadingRef = useRef(false);
+const loadingRef = useRef(false);
+const realtimeTimeoutRef = useRef(null);
 
   const safeSetState = (callback) => {
     if (mountedRef.current) callback();
@@ -152,7 +153,7 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
       supabase
         .from("student_applications")
         .select("*")
-        .order("created_at", { ascending: false }),
+        .order("generated_at", { ascending: false }),
       "Student applications fetch"
     );
 
@@ -227,8 +228,8 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
     const { data, error } = await withTimeout(
       supabase
         .from("ai_student_risk_scores")
-        .select("*")
-        .order("created_at", { ascending: false }),
+.select("*")
+.order("generated_at", { ascending: false }),
       "Student risk scores fetch"
     );
 
@@ -289,21 +290,33 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
     }
   };
 
-  useRealtimeCRM({
-    enabled: isLoggedIn && !!adminProfile,
+  const queueRealtimeRefresh = () => {
+  clearTimeout(realtimeTimeoutRef.current);
 
-    onInquiryChange: () => fetchAllData({ silent: true }),
-    onAppointmentChange: () => fetchAllData({ silent: true }),
-    onReminderChange: () => fetchAllData({ silent: true }),
-    onAnyChange: () => fetchAllData({ silent: true }),
-  });
+  realtimeTimeoutRef.current = setTimeout(() => {
+    fetchAllData({ silent: true });
+  }, 800);
+};
+
+useRealtimeCRM({
+  enabled: isLoggedIn && !!adminProfile,
+
+  onInquiryChange: queueRealtimeRefresh,
+  onAppointmentChange: queueRealtimeRefresh,
+  onReminderChange: queueRealtimeRefresh,
+  onAnyChange: queueRealtimeRefresh,
+});
 
   useEffect(() => {
     if (isLoggedIn && adminProfile) {
       fetchAllData();
     }
   }, [isLoggedIn, adminProfile?.id]);
-
+useEffect(() => {
+  return () => {
+    clearTimeout(realtimeTimeoutRef.current);
+  };
+}, []);
   const clearLocalData = () => {
     safeSetState(() => {
       setInquiries([]);

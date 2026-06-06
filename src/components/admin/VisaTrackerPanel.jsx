@@ -7,12 +7,14 @@ const REQUEST_TIMEOUT_MS = 30000;
 
 function VisaTrackerPanel({
   student = {},
+  sharedApplication = null,
+  sharedDocuments = null,
   onSharedDataChange = null,
 }) {
-  const [application, setApplication] = useState(student?.application || null);
-  const [documents, setDocuments] = useState(student?.documents || []);
+  const [application, setApplication] = useState(sharedApplication || student?.application || null);
+  const [documents, setDocuments] = useState(Array.isArray(sharedDocuments) ? sharedDocuments : student?.documents || []);
   const [visaStatus, setVisaStatus] = useState(
-    student?.application?.visa_status || student?.visa_status || "not_started"
+    sharedApplication?.visa_status || student?.application?.visa_status || student?.visa_status || "not_started"
   );
 
   const [applicationLoading, setApplicationLoading] = useState(false);
@@ -28,7 +30,7 @@ function VisaTrackerPanel({
 
   const studentId = student?.id;
   const numericStudentId = Number(studentId);
-  const studentType = student?.student_type || student?.type || "inquiry";
+  const studentType = student?.student_type || student?.__leadType || student?.type || "inquiry";
   const hasValidStudentId = Number.isFinite(numericStudentId);
 
   const loading = applicationLoading || documentsLoading;
@@ -42,10 +44,17 @@ function VisaTrackerPanel({
   }, []);
 
   useEffect(() => {
-    setApplication(student?.application || null);
-    setDocuments(Array.isArray(student?.documents) ? student.documents : []);
+    const incomingApplication = sharedApplication || student?.application || null;
+    const incomingDocuments = Array.isArray(sharedDocuments)
+      ? sharedDocuments
+      : Array.isArray(student?.documents)
+      ? student.documents
+      : [];
+
+    setApplication(incomingApplication);
+    setDocuments(incomingDocuments);
     setVisaStatus(
-      student?.application?.visa_status || student?.visa_status || "not_started"
+      incomingApplication?.visa_status || student?.visa_status || "not_started"
     );
     setError("");
     setSuccessMessage("");
@@ -53,7 +62,7 @@ function VisaTrackerPanel({
     loadApplicationOnly();
     loadDocumentsOnly();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentId]);
+  }, [studentId, studentType, sharedApplication?.id, sharedApplication?.updated_at, sharedDocuments?.length]);
 
   const safeSet = (callback) => {
     if (mountedRef.current) callback();
@@ -66,6 +75,21 @@ function VisaTrackerPanel({
         setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
       ),
     ]);
+
+  const notifyParent = async (payload = {}) => {
+    if (typeof onSharedDataChange !== "function") return;
+
+    try {
+      await Promise.race([
+        Promise.resolve(onSharedDataChange(payload)),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Parent Student OS refresh timed out.")), 12000)
+        ),
+      ]);
+    } catch (error) {
+      console.warn("Visa saved, but parent refresh did not finish:", error);
+    }
+  };
 
   const getFallbackApplication = () => ({
     student_id: numericStudentId || studentId,
@@ -299,9 +323,7 @@ function VisaTrackerPanel({
           setVisaStatus(nextStatus);
           setSuccessMessage("Visa status saved successfully.");
         });
-        if (typeof onSharedDataChange === "function") {
-  await onSharedDataChange(savedApplication);
-}
+        await notifyParent({ source: "visa_status_update", application: savedApplication });
       } else {
         const result = await withTimeout(
           supabase
@@ -325,9 +347,7 @@ function VisaTrackerPanel({
           setVisaStatus(result.data?.visa_status || nextStatus);
           setSuccessMessage("Visa status saved successfully.");
         });
-        if (typeof onSharedDataChange === "function") {
-  await onSharedDataChange(result.data);
-}
+        await notifyParent({ source: "visa_status_create", application: result.data });
       }
     } catch (error) {
       safeSet(() => {

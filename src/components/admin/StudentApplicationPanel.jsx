@@ -44,8 +44,47 @@ function StudentApplicationPanel({
 
   const studentId = student?.id;
   const numericStudentId = Number(studentId);
-  const studentType = student?.student_type || student?.type || "inquiry";
-  const hasValidStudentId = Number.isFinite(numericStudentId);
+  const studentType =
+    student?.student_type || student?.__leadType || student?.type || "inquiry";
+  const hasValidStudentId =
+    studentId !== null &&
+    studentId !== undefined &&
+    String(studentId).trim() !== "";
+
+  const getStudentIdVariants = () => {
+    if (!hasValidStudentId) return [];
+
+    const variants = [studentId, String(studentId)];
+
+    if (Number.isFinite(numericStudentId)) {
+      variants.push(numericStudentId);
+    }
+
+    return [
+      ...new Set(
+        variants.filter(
+          (value) => value !== null && value !== undefined && value !== ""
+        )
+      ),
+    ];
+  };
+
+  const getStudentTypeVariants = () => [
+    ...new Set(
+      [
+        studentType,
+        student?.student_type,
+        student?.__leadType,
+        student?.type,
+        "inquiry",
+        "appointment",
+      ].filter(Boolean)
+    ),
+  ];
+
+  const dbStudentId = Number.isFinite(numericStudentId)
+    ? numericStudentId
+    : studentId;
 
   const studentName =
     student?.full_name || student?.name || student?.student_name || "Student";
@@ -151,6 +190,40 @@ function StudentApplicationPanel({
     };
   }, [timeline]);
 
+  const loadApplicationRows = async ({ matchStudentType = true } = {}) => {
+    const idVariants = getStudentIdVariants();
+    const typeVariants = getStudentTypeVariants();
+
+    if (!idVariants.length) return [];
+
+    const attempts = idVariants.map((idValue) => {
+      let query = supabase
+        .from("student_applications")
+        .select("*")
+        .eq("student_id", idValue);
+
+      if (matchStudentType && typeVariants.length > 0) {
+        query = query.in("student_type", typeVariants);
+      }
+
+      return query.order("created_at", { ascending: false }).limit(3);
+    });
+
+    const results = await withTimeout(
+      Promise.all(attempts),
+      "Application loading timed out. Showing fallback profile data."
+    );
+
+    const firstError = results.find((result) => result.error)?.error;
+    const merged = results.flatMap((result) => result.data || []);
+
+    if (firstError && merged.length === 0) throw firstError;
+
+    return Array.from(
+      new Map(merged.map((item) => [item.id || JSON.stringify(item), item])).values()
+    ).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  };
+
   const loadApplication = async () => {
     const requestId = Date.now();
     loadRequestRef.current = requestId;
@@ -171,21 +244,15 @@ function StudentApplicationPanel({
     });
 
     try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from("student_applications")
-          .select("*")
-          .eq("student_id", numericStudentId)
-          .eq("student_type", studentType)
-          .order("created_at", { ascending: false })
-          .limit(1),
-        "Application loading timed out. Showing fallback profile data."
-      );
+      let records = await loadApplicationRows({ matchStudentType: true });
+
+      if (!records.length) {
+        records = await loadApplicationRows({ matchStudentType: false });
+      }
 
       if (loadRequestRef.current !== requestId) return;
-      if (error) throw error;
 
-      const record = data?.[0] || null;
+      const record = records?.[0] || null;
 
       safeSet(() => {
         setApplication(record);
@@ -260,7 +327,7 @@ function StudentApplicationPanel({
     if (!hasValidStudentId || !eventType || !title) return false;
 
     const payload = {
-      student_id: numericStudentId,
+      student_id: dbStudentId,
       student_type: studentType,
       application_id: applicationId ? String(applicationId) : null,
       event_type: eventType,
@@ -412,7 +479,7 @@ function StudentApplicationPanel({
     const previousApplication = application;
 
     const payload = {
-      student_id: numericStudentId,
+      student_id: dbStudentId,
       student_type: studentType,
       country: form.country || "",
       university: form.university || "",
@@ -471,8 +538,15 @@ function StudentApplicationPanel({
       });
 
       if (typeof onSharedDataChange === "function") {
-  await onSharedDataChange(savedApplication);
-}
+        try {
+          await withTimeout(
+            Promise.resolve(onSharedDataChange(savedApplication)),
+            "Student OS refresh after application save timed out. Local application was still saved."
+          );
+        } catch (refreshError) {
+          console.warn("Application saved, but Student OS refresh failed:", refreshError);
+        }
+      }
 
       const applicationId = savedApplication?.id || application?.id || null;
 

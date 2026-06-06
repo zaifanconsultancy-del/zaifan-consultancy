@@ -30,9 +30,14 @@ const withTimeout = (promise, ms = 30000) =>
     ),
   ]);
 
-function UniversityManagementPanel({ student = {}, onSharedDataChange = null }) {
-  const [universities, setUniversities] = useState([]);
-  const [activeApplication, setActiveApplication] = useState(null);
+function UniversityManagementPanel({
+  student = {},
+  sharedUniversities = null,
+  sharedApplication = null,
+  onSharedDataChange = null,
+}) {
+  const [universities, setUniversities] = useState(Array.isArray(sharedUniversities) ? sharedUniversities : []);
+  const [activeApplication, setActiveApplication] = useState(sharedApplication || student?.application || null);
   const [form, setForm] = useState({
     university: "",
     country: "",
@@ -55,7 +60,7 @@ function UniversityManagementPanel({ student = {}, onSharedDataChange = null }) 
   const studentId = student?.id;
   const numericStudentId = Number(studentId);
   const hasValidStudentId = Number.isFinite(numericStudentId);
-  const studentType = student?.student_type || student?.type || "inquiry";
+  const studentType = student?.student_type || student?.__leadType || student?.type || "inquiry";
 
   const country =
     student?.country ||
@@ -71,14 +76,33 @@ function UniversityManagementPanel({ student = {}, onSharedDataChange = null }) 
     "Not selected";
 
   useEffect(() => {
+    if (Array.isArray(sharedUniversities)) {
+      setUniversities(sharedUniversities);
+    }
+  }, [sharedUniversities]);
+
+  useEffect(() => {
+    if (sharedApplication) {
+      setActiveApplication(sharedApplication);
+    }
+  }, [sharedApplication?.id, sharedApplication?.updated_at]);
+
+  useEffect(() => {
     loadUniversities();
     loadActiveApplication();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentId]);
+  }, [studentId, studentType]);
 
-  const notifyParent = async () => {
-    if (typeof onSharedDataChange === "function") {
-      await onSharedDataChange();
+  const notifyParent = async (payload = {}) => {
+    if (typeof onSharedDataChange !== "function") return;
+
+    try {
+      await withTimeout(
+        Promise.resolve(onSharedDataChange(payload)),
+        12000
+      );
+    } catch (error) {
+      console.warn("Student OS parent refresh did not complete in time:", error);
     }
   };
 
@@ -122,11 +146,12 @@ function UniversityManagementPanel({ student = {}, onSharedDataChange = null }) 
           .select("*")
           .eq("student_id", numericStudentId)
           .eq("student_type", studentType)
-          .maybeSingle()
+          .order("created_at", { ascending: false })
+          .limit(1)
       );
 
       if (error) throw error;
-      setActiveApplication(data || null);
+      setActiveApplication(data?.[0] || sharedApplication || student?.application || null);
     } catch {
       setActiveApplication(null);
     }
@@ -241,16 +266,21 @@ await notifyParent();
       ...overrides,
     };
 
-    const { data: existingApplication, error: lookupError } = await withTimeout(
+    const { data: existingApplications, error: lookupError } = await withTimeout(
       supabase
         .from("student_applications")
         .select("*")
         .eq("student_id", numericStudentId)
         .eq("student_type", studentType)
-        .maybeSingle()
+        .order("created_at", { ascending: false })
+        .limit(10)
     );
 
     if (lookupError) throw lookupError;
+
+    const existingApplication = (existingApplications || []).find(
+      (item) => String(item.source_university_id || "") === String(university.id || "")
+    ) || (existingApplications || [])[0] || null;
 
     if (existingApplication?.id) {
       const { data, error } = await withTimeout(
@@ -328,6 +358,7 @@ await notifyParent();
       });
 
       await loadActiveApplication();
+      await notifyParent({ source: "university_start_application", application: savedApplication });
 
       alert("Application workflow started successfully.");
     } catch (error) {
@@ -427,6 +458,7 @@ const moveUniversityCategory = async (
       if (!updated) return;
 
       await loadActiveApplication();
+      await notifyParent({ source: "university_status_sync", university, nextStatus });
     } catch (error) {
       setError(error.message || "Status sync failed.");
     } finally {

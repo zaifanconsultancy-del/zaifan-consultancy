@@ -4,7 +4,11 @@ import { supabase } from "../../lib/supabaseClient";
 const REQUEST_TIMEOUT_MS = 30000;
 const STORAGE_BUCKET = "student-documents";
 
-function StudentDocumentsPanel({ student }) {
+function StudentDocumentsPanel({
+  student,
+  sharedDocuments = [],
+  onSharedDataChange = null,
+}) {
   const requiredDocuments = useMemo(
     () => [
       "Passport",
@@ -38,6 +42,11 @@ function StudentDocumentsPanel({ student }) {
   }, []);
 
   useEffect(() => {
+    if (!Array.isArray(sharedDocuments) || sharedDocuments.length === 0) return;
+    setDocuments(sharedDocuments);
+  }, [sharedDocuments]);
+
+  useEffect(() => {
     loadDocuments();
   }, [studentId]);
 
@@ -52,6 +61,22 @@ function StudentDocumentsPanel({ student }) {
         setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
       ),
     ]);
+
+const notifyParent = async () => {
+  if (typeof onSharedDataChange !== "function") return;
+
+  try {
+    await Promise.race([
+      Promise.resolve(onSharedDataChange()),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Student OS refresh timed out.")), 10000)
+      ),
+    ]);
+  } catch (error) {
+    console.warn("Documents saved, but parent Student OS refresh failed:", error);
+  }
+};
+
 const createTimelineEvent = async ({
   eventType,
   title,
@@ -239,6 +264,8 @@ const createTimelineEvent = async ({
 safeSet(() => {
   setSuccessMessage(`${documentName} marked as ${status}.`);
 });
+
+await notifyParent();
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Document update failed.");
@@ -336,6 +363,8 @@ safeSet(() => {
 safeSet(() => {
   setSuccessMessage(`${documentName} uploaded successfully.`);
 });
+
+await notifyParent();
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Upload failed.");
@@ -407,6 +436,8 @@ safeSet(() => {
 safeSet(() => {
   setSuccessMessage(`${documentName} file deleted.`);
 });
+
+await notifyParent();
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Delete failed.");

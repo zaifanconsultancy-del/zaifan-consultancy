@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-function EmailWorkspace({ student = {} }) {
+function EmailWorkspace({ student = {}, saving = false, onSaveDraft = null }) {
   const fullName = student?.full_name || student?.name || "Student";
   const email = student?.email || "";
 
@@ -54,6 +54,19 @@ function EmailWorkspace({ student = {} }) {
     alert("Email copied.");
   };
 
+  const saveDraft = async () => {
+    if (typeof onSaveDraft !== "function") {
+      alert("Save draft is not connected yet.");
+      return;
+    }
+
+    const saved = await onSaveDraft({ subject, body });
+
+    if (saved) {
+      alert("Email draft saved to communication history.");
+    }
+  };
+
   return (
     <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -61,7 +74,8 @@ function EmailWorkspace({ student = {} }) {
           <h3 className="font-bold text-white">Email Workspace</h3>
 
           <p className="mt-2 text-sm text-white/45">
-            Prepare reusable student emails and open your mail client.
+            Prepare reusable student emails, save drafts, and open your mail
+            client.
           </p>
         </div>
 
@@ -104,6 +118,15 @@ function EmailWorkspace({ student = {} }) {
           className="rounded-full bg-blue-400 px-5 py-2 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-blue-300"
         >
           Open Email
+        </button>
+
+        <button
+          type="button"
+          onClick={saveDraft}
+          disabled={saving}
+          className="rounded-full border border-blue-400/25 bg-blue-500/10 px-5 py-2 text-sm font-bold text-blue-300 transition hover:border-blue-400/45 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? "Saving Draft..." : "Save Draft"}
         </button>
 
         <button

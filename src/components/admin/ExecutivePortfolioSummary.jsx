@@ -77,6 +77,45 @@ function ExecutivePortfolioSummary({ students = [] }) {
     };
   }, [portfolio]);
 
+
+
+  const executiveBoard = useMemo(() => {
+    const rows = Array.isArray(students) ? students : [];
+    const riskPipeline = rows
+      .map((item) => ({ student: item.student || item, executive: item.executive || item }))
+      .sort((a, b) => number(b.executive.risk_score) - number(a.executive.risk_score))
+      .slice(0, 8);
+
+    const opportunityPipeline = rows
+      .map((item) => ({ student: item.student || item, executive: item.executive || item }))
+      .sort((a, b) => number(b.executive.opportunity_score) - number(a.executive.opportunity_score))
+      .slice(0, 8);
+
+    const stalledPipeline = rows
+      .map((item) => ({ student: item.student || item, executive: item.executive || item }))
+      .filter(({ executive }) => number(executive.days_since_updated, -1) >= 10 || normalize(executive.journey_stage) === "not_started")
+      .sort((a, b) => number(b.executive.days_since_updated) - number(a.executive.days_since_updated))
+      .slice(0, 8);
+
+    const expectedOffers = rows.filter((item) => {
+      const executive = item.executive || item;
+      return number(executive.opportunity_score) >= 65 && ["application_submitted", "application_under_review"].includes(normalize(executive.journey_stage));
+    }).length;
+
+    const expectedVisaMovement = rows.filter((item) => {
+      const executive = item.executive || item;
+      return ["offer_accepted", "cas_pending", "cas_issued"].includes(normalize(executive.journey_stage));
+    }).length;
+
+    const urgentRecovery = rows.filter((item) => {
+      const executive = item.executive || item;
+      return number(executive.risk_score) >= 70 && number(executive.opportunity_score) >= 60;
+    }).length;
+
+    return { riskPipeline, opportunityPipeline, stalledPipeline, expectedOffers, expectedVisaMovement, urgentRecovery };
+  }, [students]);
+
+
   return (
     <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -123,6 +162,23 @@ function ExecutivePortfolioSummary({ students = [] }) {
         <MetricCard label="Weak Tasks" value={health.weakTasks} tone="red" />
         <MetricCard label="Weak Uni Plan" value={health.weakUniversityPlan} tone="orange" />
         <MetricCard label="Visa Rejected" value={health.visaHealth?.rejected || 0} tone="red" />
+      </div>
+
+
+
+      <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <BoardCard label="Expected Offers" value={executiveBoard.expectedOffers} detail="Strong submitted/review cases." tone="blue" />
+        <BoardCard label="Expected Visa Movement" value={executiveBoard.expectedVisaMovement} detail="Offer/CAS students moving next." tone="green" />
+        <BoardCard label="Urgent Recovery" value={executiveBoard.urgentRecovery} detail="High-risk but valuable cases." tone="red" />
+        <BoardCard label="Application Yield" value={pct(health.applicationSubmitted, health.total)} detail="Submitted or beyond." tone="gold" />
+        <BoardCard label="Visa Yield" value={pct(health.visaInMotion, health.total)} detail="Pending or approved." tone="green" />
+        <BoardCard label="Weak Ops Load" value={health.weakDocuments + health.weakTasks + health.weakUniversityPlan} detail="Docs/tasks/planning pressure." tone="orange" />
+      </div>
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-3">
+        <BoardList title="Risk Board" items={executiveBoard.riskPipeline} scoreKey="risk_score" tone="red" />
+        <BoardList title="Opportunity Board" items={executiveBoard.opportunityPipeline} scoreKey="opportunity_score" tone="gold" />
+        <BoardList title="Stalled Board" items={executiveBoard.stalledPipeline} scoreKey="days_since_updated" tone="orange" />
       </div>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-5">
@@ -203,6 +259,46 @@ function ExecutivePortfolioSummary({ students = [] }) {
           tone="gold"
           emptyText="No opportunity records."
         />
+      </div>
+    </div>
+  );
+}
+
+
+function BoardCard({ label, value, detail, tone = "default" }) {
+  const style = getToneStyle(tone);
+  return (
+    <div className={`rounded-2xl border p-4 ${style}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-75">{label}</p>
+      <p className="mt-3 text-3xl font-black text-white">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+    </div>
+  );
+}
+
+function BoardList({ title, items = [], scoreKey, tone = "gold" }) {
+  const style = getToneStyle(tone);
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+      <h3 className="font-black text-white">{title}</h3>
+      <div className="mt-4 space-y-3">
+        {items.length ? items.map((item, index) => {
+          const student = item.student || {};
+          const executive = item.executive || {};
+          const name = getStudentName(student, executive);
+          return (
+            <div key={`${title}-${name}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-white">{name}</p>
+                  <p className="mt-1 text-xs text-white/40">{formatLabel(executive.journey_stage || "not_started")} • {executive.executive_category || "Standard"}</p>
+                </div>
+                <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${style}`}>{executive[scoreKey] || 0}</span>
+              </div>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{executive.summary || "No portfolio summary."}</p>
+            </div>
+          );
+        }) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
       </div>
     </div>
   );

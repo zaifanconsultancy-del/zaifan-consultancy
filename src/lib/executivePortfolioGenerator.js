@@ -292,19 +292,31 @@ function mergeStudentOSData({
 }
 
 async function loadTable(tableName, options = {}) {
-  const query = supabase.from(tableName).select("*");
+  let query = supabase.from(tableName).select("*");
 
   if (options.orderBy) {
-    query.order(options.orderBy, { ascending: options.ascending ?? false });
+    query = query.order(options.orderBy, { ascending: options.ascending ?? false });
   }
 
-  const result = await query;
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`${tableName} load timed out.`)), 12000);
+  });
 
-  return {
-    data: result.data || [],
-    error: result.error || null,
-    tableName,
-  };
+  try {
+    const result = await Promise.race([query, timeoutPromise]);
+
+    return {
+      data: result.data || [],
+      error: result.error || null,
+      tableName,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error,
+      tableName,
+    };
+  }
 }
 
 export async function loadExecutiveStudents() {
@@ -404,21 +416,44 @@ export async function generateExecutiveScoresForStudents(students = []) {
         "inquiry",
     };
 
-    const { data, error, executive } = await saveExecutiveRiskScore(
-      normalizedStudent
-    );
+    const saveTimeout = new Promise((_, reject) => {
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              `Saving executive score timed out for ${
+                normalizedStudent.full_name || normalizedStudent.name || normalizedStudent.id
+              }.`
+            )
+          ),
+        12000
+      );
+    });
 
-    if (error) {
+    try {
+      const { data, error, executive } = await Promise.race([
+        saveExecutiveRiskScore(normalizedStudent),
+        saveTimeout,
+      ]);
+
+      if (error) {
+        failed.push({
+          student: normalizedStudent,
+          executive,
+          error,
+        });
+      } else {
+        saved.push({
+          student: normalizedStudent,
+          executive,
+          data,
+        });
+      }
+    } catch (error) {
       failed.push({
         student: normalizedStudent,
-        executive,
+        executive: null,
         error,
-      });
-    } else {
-      saved.push({
-        student: normalizedStudent,
-        executive,
-        data,
       });
     }
   }
@@ -432,7 +467,6 @@ export async function generateExecutiveScoresForStudents(students = []) {
     failedCount: failed.length,
   };
 }
-
 export async function generateExecutiveScoresFromDatabase() {
   const result = await loadExecutiveStudents();
 

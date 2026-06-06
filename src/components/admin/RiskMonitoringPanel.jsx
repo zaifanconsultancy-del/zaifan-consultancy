@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 function normalize(value = "") {
   return String(value || "")
     .toLowerCase()
@@ -378,6 +380,24 @@ function RiskMonitoringPanel({ students = [] }) {
     )
   ).length;
 
+  const riskCommand = useMemo(() => {
+    const rescue = riskyStudents.filter(({ student }) =>
+      getRiskScore(student) >= 70 && getOpportunityScore(student) >= 60
+    );
+    const documentCases = riskyStudents.filter(({ signals }) =>
+      signals.some((signal) => ["document_risk", "missing_documents"].includes(signal.type))
+    );
+    const taskCases = riskyStudents.filter(({ signals }) =>
+      signals.some((signal) => ["task_emergency", "overdue_tasks", "task_overload", "weak_tasks"].includes(signal.type))
+    );
+    const planningCases = riskyStudents.filter(({ signals }) =>
+      signals.some((signal) => ["no_university_plan", "no_safe_university"].includes(signal.type))
+    );
+
+    return { rescue, documentCases, taskCases, planningCases };
+  }, [riskyStudents]);
+
+
   return (
     <div className="rounded-[1.75rem] border border-red-400/20 bg-red-500/[0.03] p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -400,6 +420,22 @@ function RiskMonitoringPanel({ students = [] }) {
           <SummaryBadge label="Execution" value={executionCount} />
           <SummaryBadge label="Planning" value={planningCount} />
         </div>
+      </div>
+
+
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <RiskCommandCard label="Rescue Cases" value={riskCommand.rescue.length} detail="High risk + high opportunity; do not lose." tone="gold" />
+        <RiskCommandCard label="Document Pressure" value={riskCommand.documentCases.length} detail="Missing or weak readiness signals." tone="orange" />
+        <RiskCommandCard label="Task Pressure" value={riskCommand.taskCases.length} detail="Overdue, overloaded, or weak tasks." tone="red" />
+        <RiskCommandCard label="Planning Gaps" value={riskCommand.planningCases.length} detail="No university plan or no safe option." tone="blue" />
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-4">
+        <RiskMiniBoard title="Rescue Board" items={riskCommand.rescue.slice(0, 4)} tone="gold" />
+        <RiskMiniBoard title="Document Board" items={riskCommand.documentCases.slice(0, 4)} tone="orange" />
+        <RiskMiniBoard title="Task Board" items={riskCommand.taskCases.slice(0, 4)} tone="red" />
+        <RiskMiniBoard title="Planning Board" items={riskCommand.planningCases.slice(0, 4)} tone="blue" />
       </div>
 
       <div className="mt-5 space-y-3">
@@ -491,6 +527,60 @@ function RiskMonitoringPanel({ students = [] }) {
             </p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+
+function RiskCommandCard({ label, value, detail, tone = "red" }) {
+  const style =
+    tone === "gold"
+      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      : tone === "orange"
+      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      : tone === "blue"
+      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
+      : "border-red-400/25 bg-red-500/10 text-red-300";
+
+  return (
+    <div className={`rounded-2xl border p-4 ${style}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">{label}</p>
+      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
+      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+    </div>
+  );
+}
+
+function RiskMiniBoard({ title, items = [], tone = "red" }) {
+  const scoreClass =
+    tone === "gold"
+      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      : tone === "orange"
+      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      : tone === "blue"
+      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
+      : "border-red-400/25 bg-red-500/10 text-red-300";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+      <h3 className="font-black text-white">{title}</h3>
+      <div className="mt-4 space-y-3">
+        {items.length ? items.map(({ student, severity, riskScore }, index) => {
+          const name = getStudentName(student);
+          return (
+            <div key={`${title}-${student?.id || name}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-white">{name}</p>
+                  <p className="mt-1 text-xs text-white/40">{formatStage(getJourneyStage(student))} • Opp {getOpportunityScore(student)}</p>
+                </div>
+                <span className={`rounded-full border px-3 py-1 text-xs font-black ${scoreClass}`}>{Math.max(severity, riskScore)}</span>
+              </div>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{getRiskReason(student)}</p>
+            </div>
+          );
+        }) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
       </div>
     </div>
   );

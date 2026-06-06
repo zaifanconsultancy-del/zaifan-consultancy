@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 function normalize(value = "") {
   return String(value || "")
     .toLowerCase()
@@ -317,6 +319,22 @@ function OpportunityFeedPanel({ students = [] }) {
     item.signals.some((signal) => ["strong_plan", "good_plan"].includes(signal.type))
   ).length;
 
+  const opportunityCommand = useMemo(() => {
+    const hot = opportunities.filter(({ opportunityScore, strength }) => opportunityScore >= 80 || strength >= 85);
+    const visaReady = opportunities.filter(({ student }) =>
+      ["offer_accepted", "cas_pending", "cas_issued"].includes(getJourneyStage(student))
+    );
+    const cleanWins = opportunities.filter(({ student }) =>
+      getOpportunityScore(student) >= 70 && getRiskScore(student) < 60
+    );
+    const riskyWins = opportunities.filter(({ student }) =>
+      getOpportunityScore(student) >= 70 && getRiskScore(student) >= 60
+    );
+
+    return { hot, visaReady, cleanWins, riskyWins };
+  }, [opportunities]);
+
+
   return (
     <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-500/[0.03] p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -339,6 +357,21 @@ function OpportunityFeedPanel({ students = [] }) {
           <SummaryBadge label="Success" value={successCount} />
           <SummaryBadge label="Planning" value={planningCount} />
         </div>
+      </div>
+
+
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <OpportunityCommandCard label="Hot Opportunities" value={opportunityCommand.hot.length} detail="Highest strength or opportunity scores." tone="gold" />
+        <OpportunityCommandCard label="Clean Wins" value={opportunityCommand.cleanWins.length} detail="High opportunity with manageable risk." tone="green" />
+        <OpportunityCommandCard label="Risky Wins" value={opportunityCommand.riskyWins.length} detail="Valuable cases that need supervision." tone="orange" />
+        <OpportunityCommandCard label="Visa Ready" value={opportunityCommand.visaReady.length} detail="Offer/CAS stage, ready for visa push." tone="blue" />
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-3">
+        <OpportunityMiniBoard title="Clean Win Board" items={opportunityCommand.cleanWins.slice(0, 4)} tone="green" />
+        <OpportunityMiniBoard title="Risky Win Board" items={opportunityCommand.riskyWins.slice(0, 4)} tone="orange" />
+        <OpportunityMiniBoard title="Visa Push Board" items={opportunityCommand.visaReady.slice(0, 4)} tone="blue" />
       </div>
 
       <div className="mt-5 space-y-3">
@@ -425,6 +458,58 @@ function OpportunityFeedPanel({ students = [] }) {
             </p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+
+function OpportunityCommandCard({ label, value, detail, tone = "green" }) {
+  const style =
+    tone === "gold"
+      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      : tone === "orange"
+      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      : tone === "blue"
+      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
+      : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+
+  return (
+    <div className={`rounded-2xl border p-4 ${style}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">{label}</p>
+      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
+      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+    </div>
+  );
+}
+
+function OpportunityMiniBoard({ title, items = [], tone = "green" }) {
+  const scoreClass =
+    tone === "orange"
+      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      : tone === "blue"
+      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
+      : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+      <h3 className="font-black text-white">{title}</h3>
+      <div className="mt-4 space-y-3">
+        {items.length ? items.map(({ student, strength, opportunityScore }, index) => {
+          const name = getStudentName(student);
+          return (
+            <div key={`${title}-${student?.id || name}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-white">{name}</p>
+                  <p className="mt-1 text-xs text-white/40">{formatStage(getJourneyStage(student))} • Risk {getRiskScore(student)}</p>
+                </div>
+                <span className={`rounded-full border px-3 py-1 text-xs font-black ${scoreClass}`}>{Math.max(strength, opportunityScore)}</span>
+              </div>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{getOpportunityReason(student)}</p>
+            </div>
+          );
+        }) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
       </div>
     </div>
   );

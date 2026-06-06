@@ -171,6 +171,29 @@ function ExecutiveAlertsPanel({ scores: externalScores = null }) {
     alertGroups.visaWatch.length +
     alertGroups.successStories.length;
 
+  const commandInsights = useMemo(() => {
+    const sortedByRisk = [...scores]
+      .sort((a, b) => number(b.risk_score) - number(a.risk_score))
+      .slice(0, 5);
+
+    const offerAndVisaPressure = scores.filter((item) =>
+      ["offer_accepted", "cas_pending", "cas_issued", "visa_pending", "visa_rejected"].includes(
+        getJourneyStage(item)
+      )
+    );
+
+    const stale = scores
+      .filter((item) => number(item.days_since_updated, -1) >= 10)
+      .sort((a, b) => number(b.days_since_updated) - number(a.days_since_updated))
+      .slice(0, 5);
+
+    const docsWeak = scores.filter((item) => number(item.document_readiness_percent) < 60).length;
+    const taskOverload = scores.filter((item) => number(item.overdue_tasks_count) > 0 || number(item.pending_tasks_count) > 5).length;
+
+    return { sortedByRisk, offerAndVisaPressure, stale, docsWeak, taskOverload };
+  }, [scores]);
+
+
   return (
     <div className="space-y-6">
       <div className="rounded-[2rem] border border-red-400/20 bg-red-500/[0.04] p-6">
@@ -216,6 +239,22 @@ function ExecutiveAlertsPanel({ scores: externalScores = null }) {
             {error}
           </div>
         ) : null}
+      </div>
+
+
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <CommandAlertCard label="Immediate Escalations" value={alertGroups.criticalRisks.length} detail="Critical/visa rejected/highest risk." tone="red" />
+        <CommandAlertCard label="Counselor Workload" value={alertGroups.needsAttention.length} detail="Needs active staff review." tone="orange" />
+        <CommandAlertCard label="Conversion Window" value={alertGroups.conversionReady.length} detail="Students close to revenue/win." tone="gold" />
+        <CommandAlertCard label="Weak Documents" value={commandInsights.docsWeak} detail="Readiness below operating standard." tone="blue" />
+        <CommandAlertCard label="Task Pressure" value={commandInsights.taskOverload} detail="Overdue or overloaded task queues." tone="red" />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-3">
+        <ExecutiveMiniQueue title="Top Escalation Queue" items={commandInsights.sortedByRisk} scoreKey="risk_score" tone="red" />
+        <ExecutiveMiniQueue title="Offer / CAS / Visa Pressure" items={commandInsights.offerAndVisaPressure.slice(0, 5)} scoreKey="risk_score" tone="gold" />
+        <ExecutiveMiniQueue title="Stale Student Watch" items={commandInsights.stale} scoreKey="days_since_updated" tone="orange" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
@@ -392,6 +431,43 @@ function MiniBadge({ text }) {
     <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
       {text}
     </span>
+  );
+}
+
+
+function CommandAlertCard({ label, value, detail, tone = "gold" }) {
+  const style = getToneClass(tone);
+  return (
+    <div className={`rounded-[1.5rem] border p-5 ${style}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">{label}</p>
+      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
+      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+    </div>
+  );
+}
+
+function ExecutiveMiniQueue({ title, items = [], scoreKey, tone = "gold" }) {
+  const toneClass = getToneClass(tone);
+  return (
+    <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+      <h3 className="font-black text-white">{title}</h3>
+      <div className="mt-4 space-y-3">
+        {items.length ? items.map((item, index) => (
+          <div key={`${title}-${item.student_id || item.id || index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-white">{item.student_name || item.full_name || item.name || "Unknown Student"}</p>
+                <p className="mt-1 text-xs text-white/40">{formatLabel(getJourneyStage(item))} • {item.executive_category || "Standard"}</p>
+              </div>
+              <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${toneClass}`}>
+                {number(item[scoreKey])}
+              </span>
+            </div>
+            <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{item.summary || "No alert summary available."}</p>
+          </div>
+        )) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
+      </div>
+    </div>
   );
 }
 

@@ -35,6 +35,7 @@ function getJourneyStage(score = {}) {
   const offerStatus = normalize(score.offer_status);
   const visaStatus = normalize(score.visa_status);
 
+  if (applicationStatus === "enrolled") return "enrolled";
   if (["visa_approved", "approved"].includes(visaStatus)) return "visa_approved";
   if (["visa_rejected", "rejected", "refused", "visa_refused"].includes(visaStatus)) {
     return "visa_rejected";
@@ -97,7 +98,27 @@ function mapTaskPriority(priority = "") {
 
 function approvalRequired(recommendation = {}) {
   const priority = normalize(recommendation.priority);
-  return priority === "critical" || priority === "executive";
+  const action = normalize(recommendation.action);
+
+  return (
+    priority === "critical" ||
+    priority === "executive" ||
+    action === "send_email" ||
+    action === "send_whatsapp" ||
+    recommendation?.payload?.approval_required === true
+  );
+}
+
+function getApprovalReason(recommendation = {}) {
+  const priority = normalize(recommendation.priority);
+  const action = normalize(recommendation.action);
+
+  if (priority === "critical") return "Critical student risk requires human approval.";
+  if (priority === "executive") return "Executive-priority action requires counselor approval.";
+  if (action === "send_email") return "Email draft must be reviewed before sending.";
+  if (action === "send_whatsapp") return "WhatsApp draft must be reviewed before sending.";
+
+  return "";
 }
 
 function getDefaultDueDate(recommendation = {}) {
@@ -114,6 +135,7 @@ function getDefaultDueDate(recommendation = {}) {
       "offer_accepted_next_steps",
       "fast_track_student",
       "application_ready",
+      "visa_delay",
     ].includes(type)
   ) {
     return getTomorrowDate();
@@ -125,6 +147,7 @@ function getDefaultDueDate(recommendation = {}) {
       "visa_monitoring",
       "offer_follow_up",
       "conversion_opportunity",
+      "application_stalled",
     ].includes(type)
   ) {
     return getDateAfterDays(2);
@@ -133,7 +156,20 @@ function getDefaultDueDate(recommendation = {}) {
   return getDateAfterDays(3);
 }
 
+function buildDuplicateKey(score = {}, recommendation = {}, actionType = "") {
+  return [
+    score.student_id || score.id || getStudentName(score),
+    score.student_type || score.__leadType || score.type || "student",
+    normalize(recommendation.type || "recommendation"),
+    normalize(actionType || recommendation.action || "action"),
+  ].join("::");
+}
+
 function basePayload(score = {}, recommendation = {}) {
+  const actionType = normalize(recommendation.action);
+  const approval = approvalRequired(recommendation);
+  const approvalReason = getApprovalReason(recommendation);
+
   return {
     student_id: String(score.student_id || score.id || ""),
     student_type: score.student_type || score.__leadType || score.type || "inquiry",
@@ -166,7 +202,12 @@ function basePayload(score = {}, recommendation = {}) {
 
     generated_by: "executive_ai",
     generated_at: new Date().toISOString(),
-    approval_required: approvalRequired(recommendation),
+
+    approval_required: approval,
+    approval_reason: approvalReason,
+    duplicate_protection_key: buildDuplicateKey(score, recommendation, actionType),
+    automation_version: "v2",
+    automation_source: "student_os_executive_ai",
   };
 }
 
@@ -296,74 +337,92 @@ function buildEmailSubject(score = {}, recommendation = {}) {
   return "Zaifan Consultancy Follow-Up";
 }
 
+function enrichPayload(base = {}, extra = {}) {
+  return {
+    ...base,
+    ...extra,
+    execution_status: "queued",
+    queue_status: base.approval_required ? "approval_required" : "ready",
+    created_from: "executive_action_template_v2",
+  };
+}
+
 export function buildExecutiveActionTemplate(score = {}, recommendation = {}) {
   const studentName = getStudentName(score);
+  const action = normalize(recommendation.action);
+  const title =
+    recommendation.title ||
+    recommendation.payload?.title ||
+    `Executive Action: ${studentName}`;
+
+  const description =
+    getRecommendationText(
+      recommendation,
+      score.summary || "Executive AI identified a student action."
+    );
+
   const base = {
     ...basePayload(score, recommendation),
     ...(recommendation.payload || {}),
   };
-
-  const action = normalize(recommendation.action);
-  const title = recommendation.title || recommendation.payload?.title || `Executive Action: ${studentName}`;
-  const description =
-    getRecommendationText(recommendation, score.summary || "Executive AI identified a student action.");
 
   if (action === "create_task") {
     return {
       actionType: "create_task",
       title,
       description,
-      payload: {
-        ...base,
+      duplicateKey: buildDuplicateKey(score, recommendation, "create_task"),
+      requiresApproval: base.approval_required,
+      payload: enrichPayload(base, {
         title,
         description,
         priority: mapTaskPriority(recommendation.priority),
         status: "pending",
-        due_date:
-          recommendation.payload?.due_date ||
-          getDefaultDueDate(recommendation),
-      },
+        due_date: recommendation.payload?.due_date || getDefaultDueDate(recommendation),
+      }),
     };
   }
 
   if (action === "schedule_call") {
+    const callTitle = recommendation.title || `Schedule Call: ${studentName}`;
+
     return {
       actionType: "schedule_call",
-      title: recommendation.title || `Schedule Call: ${studentName}`,
+      title: callTitle,
       description,
-      payload: {
-        ...base,
-        title: recommendation.title || `Schedule Conversion Call: ${studentName}`,
+      duplicateKey: buildDuplicateKey(score, recommendation, "schedule_call"),
+      requiresApproval: base.approval_required,
+      payload: enrichPayload(base, {
+        title: callTitle,
         description:
           description || "High opportunity student. Schedule a counselor conversion call.",
         priority: "high",
         status: "pending",
-        due_date:
-          recommendation.payload?.due_date ||
-          getDefaultDueDate(recommendation),
-      },
+        due_date: recommendation.payload?.due_date || getDefaultDueDate(recommendation),
+      }),
     };
   }
 
   if (action === "create_reminder") {
+    const reminderTitle = recommendation.title || `Executive Follow-Up: ${studentName}`;
+
     return {
       actionType: "create_reminder",
-      title: recommendation.title || `Executive Follow-Up: ${studentName}`,
+      title: reminderTitle,
       description,
-      payload: {
-        ...base,
-        title: recommendation.title || `Executive Follow-Up: ${studentName}`,
+      duplicateKey: buildDuplicateKey(score, recommendation, "create_reminder"),
+      requiresApproval: base.approval_required,
+      payload: enrichPayload(base, {
+        title: reminderTitle,
         notes:
           recommendation.payload?.notes ||
           description ||
           score.summary ||
           "Executive AI recommends follow-up for this student.",
-        due_date:
-          recommendation.payload?.due_date ||
-          getDefaultDueDate(recommendation),
+        due_date: recommendation.payload?.due_date || getDefaultDueDate(recommendation),
         due_time: recommendation.payload?.due_time || null,
         status: "pending",
-      },
+      }),
     };
   }
 
@@ -372,17 +431,18 @@ export function buildExecutiveActionTemplate(score = {}, recommendation = {}) {
       actionType: "send_email",
       title: `Email Draft: ${studentName}`,
       description: "Prepare an email draft for this student.",
-      payload: {
-        ...base,
+      duplicateKey: buildDuplicateKey(score, recommendation, "send_email"),
+      requiresApproval: true,
+      payload: enrichPayload(base, {
         channel: "email",
-        subject:
-          recommendation.payload?.subject ||
-          buildEmailSubject(score, recommendation),
+        subject: recommendation.payload?.subject || buildEmailSubject(score, recommendation),
         message:
           recommendation.payload?.message ||
           buildStudentMessage(score, recommendation, "email"),
         status: "draft",
-      },
+        approval_required: true,
+        approval_reason: base.approval_reason || "Email draft requires human review.",
+      }),
     };
   }
 
@@ -391,14 +451,17 @@ export function buildExecutiveActionTemplate(score = {}, recommendation = {}) {
       actionType: "send_whatsapp",
       title: `WhatsApp Draft: ${studentName}`,
       description: "Prepare a WhatsApp draft for this student.",
-      payload: {
-        ...base,
+      duplicateKey: buildDuplicateKey(score, recommendation, "send_whatsapp"),
+      requiresApproval: true,
+      payload: enrichPayload(base, {
         channel: "whatsapp",
         message:
           recommendation.payload?.message ||
           buildStudentMessage(score, recommendation, "whatsapp"),
         status: "draft",
-      },
+        approval_required: true,
+        approval_reason: base.approval_reason || "WhatsApp draft requires human review.",
+      }),
     };
   }
 
@@ -406,17 +469,22 @@ export function buildExecutiveActionTemplate(score = {}, recommendation = {}) {
     actionType: "monitor",
     title: `Monitor ${studentName}`,
     description: "No direct CRM action required.",
-    payload: {
-      ...base,
+    duplicateKey: buildDuplicateKey(score, recommendation, "monitor"),
+    requiresApproval: false,
+    payload: enrichPayload(base, {
       status: "monitor",
-    },
+    }),
   };
 }
 
 export function buildExecutiveActionTemplates(scores = [], recommendationsByScore = {}) {
   return (scores || []).flatMap((score) => {
-    const key = `${score.student_id}-${score.student_type}`;
-    const recommendations = recommendationsByScore[key] || [];
+    const directKey = `${score.student_id}-${score.student_type}`;
+    const fallbackKey = `${score.id}-${score.__leadType || score.type || "inquiry"}`;
+    const recommendations =
+      recommendationsByScore[directKey] ||
+      recommendationsByScore[fallbackKey] ||
+      [];
 
     return recommendations.map((recommendation) => ({
       score,
@@ -424,4 +492,20 @@ export function buildExecutiveActionTemplates(scores = [], recommendationsByScor
       template: buildExecutiveActionTemplate(score, recommendation),
     }));
   });
+}
+
+export function buildExecutiveActionTemplateSummary(scores = [], recommendationsByScore = {}) {
+  const templates = buildExecutiveActionTemplates(scores, recommendationsByScore);
+
+  return {
+    total_templates: templates.length,
+    approval_required: templates.filter((item) => item.template.requiresApproval).length,
+    ready: templates.filter((item) => !item.template.requiresApproval).length,
+    tasks: templates.filter((item) => normalize(item.template.actionType) === "create_task").length,
+    reminders: templates.filter((item) => normalize(item.template.actionType) === "create_reminder").length,
+    calls: templates.filter((item) => normalize(item.template.actionType) === "schedule_call").length,
+    emails: templates.filter((item) => normalize(item.template.actionType) === "send_email").length,
+    whatsapp: templates.filter((item) => normalize(item.template.actionType) === "send_whatsapp").length,
+    templates,
+  };
 }

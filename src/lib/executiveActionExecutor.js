@@ -49,18 +49,48 @@ function getAdminId(adminProfile = null) {
   return adminProfile?.id || adminProfile?.admin_id || null;
 }
 
-function buildTimelineMetadata(template = {}) {
+function getAdminName(adminProfile = null) {
+  return (
+    adminProfile?.full_name ||
+    adminProfile?.name ||
+    adminProfile?.email ||
+    "Executive User"
+  );
+}
+
+function buildDuplicateKey(template = {}) {
+  const payload = getPayload(template);
+
+  return (
+    template.duplicateKey ||
+    payload.duplicate_protection_key ||
+    [
+      getStudentId(template),
+      getStudentType(template),
+      payload.recommendation_type || "recommendation",
+      normalizeActionType(template.actionType),
+      payload.title || template.title || "",
+    ].join("::")
+  );
+}
+
+function buildTimelineMetadata(template = {}, extra = {}) {
   const payload = getPayload(template);
 
   return {
-    source: "executive_action_executor",
+    source: "executive_action_executor_v2",
     generated_by: payload.generated_by || "executive_ai",
     generated_at: payload.generated_at || null,
+    automation_version: payload.automation_version || "v2",
+    automation_source: payload.automation_source || "student_os_executive_ai",
 
     action_type: normalizeActionType(template.actionType),
+    duplicate_protection_key: buildDuplicateKey(template),
+
     recommendation_type: payload.recommendation_type || null,
     recommendation_priority: payload.recommendation_priority || null,
     approval_required: payload.approval_required === true,
+    approval_reason: payload.approval_reason || null,
 
     executive_category: payload.executive_category || template.executive_category || null,
     priority_level: payload.priority_level || null,
@@ -82,6 +112,8 @@ function buildTimelineMetadata(template = {}) {
     target_university_count: payload.target_university_count ?? null,
     dream_university_count: payload.dream_university_count ?? null,
     days_since_updated: payload.days_since_updated ?? null,
+
+    ...extra,
   };
 }
 
@@ -92,6 +124,7 @@ async function writeTimelineEvent({
   title,
   description,
   executionStatus = "completed",
+  metadata = {},
 }) {
   try {
     await addTimelineEvent({
@@ -102,12 +135,95 @@ async function writeTimelineEvent({
       description,
       adminProfile,
       metadata: {
-        ...buildTimelineMetadata(template),
+        ...buildTimelineMetadata(template, metadata),
         execution_status: executionStatus,
       },
     });
   } catch (error) {
     console.warn("Executive timeline event failed:", error);
+  }
+}
+
+async function writeExecutionLog({
+  template,
+  adminProfile,
+  status = "completed",
+  targetTable = "",
+  targetId = null,
+  error = null,
+  metadata = {},
+}) {
+  const payload = getPayload(template);
+  const actionType = normalizeActionType(template.actionType);
+
+  const logPayload = {
+    student_id: String(getStudentId(template) || ""),
+    student_type: getStudentType(template),
+    student_name: payload.student_name || "",
+    action_type: actionType,
+    recommendation_type: payload.recommendation_type || "",
+    recommendation_priority: payload.recommendation_priority || payload.priority || "medium",
+    title: getTemplateTitle(template),
+    description: getTemplateDescription(template),
+    status,
+    target_table: targetTable || "",
+    target_id: targetId ? String(targetId) : null,
+    duplicate_key: buildDuplicateKey(template),
+    approval_required: payload.approval_required === true,
+    approval_reason: payload.approval_reason || "",
+    executed_by: getAdminId(adminProfile),
+    executed_by_name: getAdminName(adminProfile),
+    error_message: error?.message || error || "",
+    metadata: buildTimelineMetadata(template, metadata),
+  };
+
+  try {
+    const { data, error: logError } = await supabase
+      .from("executive_execution_logs")
+      .insert(logPayload)
+      .select()
+      .single();
+
+    if (logError) {
+      console.warn("Executive execution log insert failed:", logError);
+      return { data: null, error: logError };
+    }
+
+    return { data, error: null };
+  } catch (err) {
+    console.warn("Executive execution log crashed:", err);
+    return { data: null, error: err };
+  }
+}
+
+async function checkDuplicateExecution(template = {}) {
+  const duplicateKey = buildDuplicateKey(template);
+
+  if (!duplicateKey) {
+    return { duplicate: false, data: null, error: null };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("executive_execution_logs")
+      .select("*")
+      .eq("duplicate_key", duplicateKey)
+      .in("status", ["completed", "success", "executed"])
+      .limit(1);
+
+    if (error) {
+      console.warn("Executive duplicate check failed:", error);
+      return { duplicate: false, data: null, error };
+    }
+
+    return {
+      duplicate: Array.isArray(data) && data.length > 0,
+      data: Array.isArray(data) ? data[0] : null,
+      error: null,
+    };
+  } catch (err) {
+    console.warn("Executive duplicate check crashed:", err);
+    return { duplicate: false, data: null, error: err };
   }
 }
 
@@ -133,6 +249,8 @@ function buildExecutionResult({
   template = {},
   actionType = "",
   targetTable = "",
+  duplicate = false,
+  skipped = false,
 }) {
   return {
     data,
@@ -140,6 +258,9 @@ function buildExecutionResult({
     actionType: actionType || normalizeActionType(template.actionType),
     targetTable,
     template,
+    duplicate,
+    skipped,
+    duplicateKey: buildDuplicateKey(template),
     executedAt: new Date().toISOString(),
   };
 }
@@ -147,10 +268,18 @@ function buildExecutionResult({
 export async function executeExecutiveActionTemplate({
   template,
   adminProfile = null,
+  skipDuplicateCheck = false,
 }) {
   const validationError = validateTemplate(template);
 
   if (validationError) {
+    await writeExecutionLog({
+      template,
+      adminProfile,
+      status: "failed",
+      error: validationError,
+    });
+
     return buildExecutionResult({
       data: null,
       error: validationError,
@@ -160,6 +289,35 @@ export async function executeExecutiveActionTemplate({
   }
 
   const actionType = normalizeActionType(template.actionType);
+
+  if (!skipDuplicateCheck) {
+    const duplicateCheck = await checkDuplicateExecution(template);
+
+    if (duplicateCheck.duplicate) {
+      const duplicateError = new Error(
+        "Duplicate protection blocked this action because it was already executed."
+      );
+
+      await writeExecutionLog({
+        template,
+        adminProfile,
+        status: "duplicate_blocked",
+        error: duplicateError,
+        metadata: {
+          existing_log_id: duplicateCheck.data?.id || null,
+        },
+      });
+
+      return buildExecutionResult({
+        data: duplicateCheck.data,
+        error: duplicateError,
+        template,
+        actionType,
+        duplicate: true,
+        skipped: true,
+      });
+    }
+  }
 
   if (actionType === "create_task") {
     return await executeTaskTemplate({ template, adminProfile });
@@ -189,9 +347,18 @@ export async function executeExecutiveActionTemplate({
     });
   }
 
+  const unsupportedError = new Error(`Unsupported executive action: ${template.actionType}`);
+
+  await writeExecutionLog({
+    template,
+    adminProfile,
+    status: "failed",
+    error: unsupportedError,
+  });
+
   return buildExecutionResult({
     data: null,
-    error: new Error(`Unsupported executive action: ${template.actionType}`),
+    error: unsupportedError,
     template,
     actionType,
   });
@@ -227,6 +394,21 @@ async function executeTaskTemplate({ template, adminProfile, isCallTask = false 
         ? "Executive AI created a call task"
         : "Executive AI created a task",
       description: taskPayload.description || taskPayload.title,
+      metadata: {
+        target_table: "student_tasks",
+        target_id: data?.id || null,
+      },
+    });
+
+    await writeExecutionLog({
+      template,
+      adminProfile,
+      status: "completed",
+      targetTable: "student_tasks",
+      targetId: data?.id || null,
+      metadata: {
+        created_payload: taskPayload,
+      },
     });
   }
 
@@ -240,6 +422,17 @@ async function executeTaskTemplate({ template, adminProfile, isCallTask = false 
       title: "Executive AI task execution failed",
       description: error.message || "Task execution failed.",
       executionStatus: "failed",
+    });
+
+    await writeExecutionLog({
+      template,
+      adminProfile,
+      status: "failed",
+      targetTable: "student_tasks",
+      error,
+      metadata: {
+        attempted_payload: taskPayload,
+      },
     });
   }
 
@@ -276,6 +469,21 @@ async function executeReminderTemplate({ template, adminProfile }) {
         payload.summary ||
         payload.title ||
         "Executive reminder created",
+      metadata: {
+        target_table: "follow_up_reminders",
+        target_id: data?.id || null,
+      },
+    });
+
+    await writeExecutionLog({
+      template,
+      adminProfile,
+      status: "completed",
+      targetTable: "follow_up_reminders",
+      targetId: data?.id || null,
+      metadata: {
+        created_payload: data || payload,
+      },
     });
   }
 
@@ -289,6 +497,17 @@ async function executeReminderTemplate({ template, adminProfile }) {
       title: "Executive AI reminder execution failed",
       description: error.message || "Reminder execution failed.",
       executionStatus: "failed",
+    });
+
+    await writeExecutionLog({
+      template,
+      adminProfile,
+      status: "failed",
+      targetTable: "follow_up_reminders",
+      error,
+      metadata: {
+        attempted_payload: payload,
+      },
     });
   }
 
@@ -337,6 +556,21 @@ async function executeCommunicationTemplate({
           ? "Executive AI saved email draft"
           : "Executive AI saved WhatsApp draft",
       description: communicationPayload.message,
+      metadata: {
+        target_table: "student_communications",
+        target_id: data?.id || null,
+      },
+    });
+
+    await writeExecutionLog({
+      template,
+      adminProfile,
+      status: "completed",
+      targetTable: "student_communications",
+      targetId: data?.id || null,
+      metadata: {
+        created_payload: communicationPayload,
+      },
     });
   }
 
@@ -351,6 +585,17 @@ async function executeCommunicationTemplate({
       description: error.message || "Communication execution failed.",
       executionStatus: "failed",
     });
+
+    await writeExecutionLog({
+      template,
+      adminProfile,
+      status: "failed",
+      targetTable: "student_communications",
+      error,
+      metadata: {
+        attempted_payload: communicationPayload,
+      },
+    });
   }
 
   return buildExecutionResult({
@@ -360,4 +605,71 @@ async function executeCommunicationTemplate({
     actionType,
     targetTable: "student_communications",
   });
+}
+
+export async function fetchExecutiveExecutionLogs({
+  studentId = null,
+  studentType = null,
+  limit = 50,
+} = {}) {
+  let query = supabase
+    .from("executive_execution_logs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (studentId) query = query.eq("student_id", String(studentId));
+  if (studentType) query = query.eq("student_type", studentType);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Executive execution logs fetch failed:", error);
+  }
+
+  return { data: data || [], error };
+}
+
+export function buildExecutionAnalytics(logs = []) {
+  const rows = Array.isArray(logs) ? logs : [];
+
+  const analytics = {
+    total: rows.length,
+    completed: 0,
+    failed: 0,
+    duplicateBlocked: 0,
+    approvalRequired: 0,
+    tasks: 0,
+    reminders: 0,
+    calls: 0,
+    emails: 0,
+    whatsapp: 0,
+    byAction: {},
+    byStatus: {},
+  };
+
+  rows.forEach((log) => {
+    const status = normalizeActionType(log.status);
+    const actionType = normalizeActionType(log.action_type);
+
+    analytics.byStatus[status] = (analytics.byStatus[status] || 0) + 1;
+    analytics.byAction[actionType] = (analytics.byAction[actionType] || 0) + 1;
+
+    if (["completed", "success", "executed"].includes(status)) analytics.completed += 1;
+    if (status === "failed") analytics.failed += 1;
+    if (status === "duplicate_blocked") analytics.duplicateBlocked += 1;
+    if (log.approval_required) analytics.approvalRequired += 1;
+
+    if (actionType === "create_task") analytics.tasks += 1;
+    if (actionType === "create_reminder") analytics.reminders += 1;
+    if (actionType === "schedule_call") analytics.calls += 1;
+    if (actionType === "send_email") analytics.emails += 1;
+    if (actionType === "send_whatsapp") analytics.whatsapp += 1;
+  });
+
+  analytics.successRate = analytics.total
+    ? Math.round((analytics.completed / analytics.total) * 100)
+    : 0;
+
+  return analytics;
 }

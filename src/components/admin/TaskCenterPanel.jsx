@@ -13,8 +13,15 @@ const emptyTaskForm = {
   notes: "",
 };
 
-function TaskCenterPanel({ student = {}, adminProfile = null }) {
-  const [tasks, setTasks] = useState([]);
+function TaskCenterPanel({
+  student = {},
+  adminProfile = null,
+  sharedTasks = null,
+  sharedApplication = null,
+  sharedDocuments = null,
+  onSharedDataChange = null,
+}) {
+  const [tasks, setTasks] = useState(Array.isArray(sharedTasks) ? sharedTasks : []);
   const [taskForm, setTaskForm] = useState(emptyTaskForm);
 
   const [loading, setLoading] = useState(false);
@@ -29,14 +36,16 @@ function TaskCenterPanel({ student = {}, adminProfile = null }) {
 
   const studentId = student?.id;
   const numericStudentId = Number(studentId);
-  const studentType = student?.student_type || student?.type || "inquiry";
+  const studentType = student?.student_type || student?.__leadType || student?.type || "inquiry";
   const hasValidStudentId = Number.isFinite(numericStudentId);
 
   const studentName =
     student?.full_name || student?.name || student?.student_name || "Student";
 
-  const studentApplication = student?.application || null;
-  const studentDocuments = Array.isArray(student?.documents)
+  const studentApplication = sharedApplication || student?.application || null;
+  const studentDocuments = Array.isArray(sharedDocuments)
+    ? sharedDocuments
+    : Array.isArray(student?.documents)
     ? student.documents
     : [];
 
@@ -49,12 +58,19 @@ function TaskCenterPanel({ student = {}, adminProfile = null }) {
   }, []);
 
   useEffect(() => {
-    setTasks([]);
+    setTasks(Array.isArray(sharedTasks) ? sharedTasks : []);
     setError("");
     setSuccessMessage("");
     setTaskForm(emptyTaskForm);
     loadTasksOnly();
-  }, [studentId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId, studentType]);
+
+  useEffect(() => {
+    if (Array.isArray(sharedTasks)) {
+      setTasks(sharedTasks);
+    }
+  }, [sharedTasks]);
 
   const safeSet = (callback) => {
     if (mountedRef.current) callback();
@@ -67,6 +83,19 @@ function TaskCenterPanel({ student = {}, adminProfile = null }) {
         setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
       ),
     ]);
+
+  const notifyParent = async (payload = {}) => {
+    if (typeof onSharedDataChange !== "function") return;
+
+    try {
+      await withTimeout(
+        Promise.resolve(onSharedDataChange(payload)),
+        "Parent Student OS refresh timed out."
+      );
+    } catch (error) {
+      console.warn("Task updated, but parent refresh did not finish:", error);
+    }
+  };
 
   const loadTasksOnly = async () => {
     const requestId = Date.now();
@@ -311,6 +340,8 @@ function TaskCenterPanel({ student = {}, adminProfile = null }) {
       newValue: title,
     });
 
+    await notifyParent({ source: "task_created", task: payload });
+
     return true;
   } catch (error) {
     safeSet(() => {
@@ -395,6 +426,8 @@ function TaskCenterPanel({ student = {}, adminProfile = null }) {
         oldValue: oldStatus,
         newValue: status,
       });
+
+      await notifyParent({ source: "task_status_updated", task, status });
     } catch (error) {
       safeSet(() => {
         setError(error.message || "Task status update failed.");

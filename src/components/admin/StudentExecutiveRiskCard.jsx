@@ -6,28 +6,65 @@ import {
 import { supabase } from "../../lib/supabaseClient";
 import ExecutiveRecommendationPanel from "./ExecutiveRecommendationPanel";
 
-function StudentExecutiveRiskCard({ student = {} }) {
+const REQUEST_TIMEOUT_MS = 12000;
+
+function withTimeout(promise, message = "Request timed out.") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+    ),
+  ]);
+}
+
+function StudentExecutiveRiskCard({ student = {}, onSharedDataChange = null }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  const studentType =
+    student?.student_type || student?.__leadType || student?.type || "inquiry";
 
   const executiveScore = useMemo(() => {
     return calculateExecutiveRisk(student);
   }, [student]);
 
-  const createTimelineEvent = async () => {
-  try {
-    await supabase.from("student_application_timeline").insert({
-      student_id: Number(student.id),
-      student_type: student.student_type || "inquiry",
-      event_type: "executive_score_saved",
-      title: "Executive Score Saved",
-      description: executiveScore.summary,
-      new_value: String(executiveScore.risk_score),
-    });
-  } catch {
-    // Timeline failures should never break Executive AI
-  }
-};
+  const createTimelineEvent = async ({
+    eventType,
+    title,
+    description,
+    newValue = "",
+  }) => {
+    if (!student?.id) return;
+
+    try {
+      await withTimeout(
+        supabase.from("student_application_timeline").insert({
+          student_id: Number(student.id),
+          student_type: studentType,
+          event_type: eventType,
+          title,
+          description,
+          new_value: newValue ? String(newValue) : null,
+        }),
+        "Executive timeline event timed out."
+      );
+    } catch {
+      // Timeline failures should never break Executive AI.
+    }
+  };
+
+  const notifyParent = async () => {
+    if (typeof onSharedDataChange !== "function") return;
+
+    try {
+      await withTimeout(
+        Promise.resolve(onSharedDataChange()),
+        "Student OS refresh after executive score save timed out."
+      );
+    } catch (refreshError) {
+      console.warn("Executive score saved, but parent refresh failed:", refreshError);
+    }
+  };
 
   const saveScore = async () => {
     if (!student?.id || saving) return;
@@ -36,41 +73,47 @@ function StudentExecutiveRiskCard({ student = {} }) {
     setMessage("");
 
     try {
-      const { error } = await saveExecutiveRiskScore(student);
+      const { error } = await withTimeout(
+        saveExecutiveRiskScore({
+          ...student,
+          student_type: studentType,
+        }),
+        "Executive score save timed out."
+      );
 
       if (error) {
         setMessage(error.message || "Executive score save failed.");
         return;
       }
 
-      await createTimelineEvent();
+      await createTimelineEvent({
+        eventType: "executive_score_saved",
+        title: "Executive Score Saved",
+        description: executiveScore.summary,
+        newValue: executiveScore.risk_score,
+      });
 
       if (executiveScore.risk_score >= 80) {
-  await supabase.from("student_application_timeline").insert({
-    student_id: Number(student.id),
-    student_type: student.student_type || "inquiry",
-    event_type: "executive_alert",
-    title: "Critical Risk Alert",
-    description:
-      "Student flagged as critical risk and requires immediate counselor review.",
-    new_value: String(executiveScore.risk_score),
-  });
-}
+        await createTimelineEvent({
+          eventType: "executive_alert",
+          title: "Critical Risk Alert",
+          description:
+            "Student flagged as critical risk and requires immediate counselor review.",
+          newValue: executiveScore.risk_score,
+        });
+      }
 
-if (executiveScore.risk_score >= 60 && executiveScore.risk_score < 80) {
-  await supabase.from("student_application_timeline").insert({
-    student_id: Number(student.id),
-    student_type: student.student_type || "inquiry",
-    event_type: "executive_alert",
-    title: "High Risk Alert",
-    description:
-      "Student flagged as high risk and should be reviewed soon.",
-    new_value: String(executiveScore.risk_score),
-  });
-}
+      if (executiveScore.risk_score >= 60 && executiveScore.risk_score < 80) {
+        await createTimelineEvent({
+          eventType: "executive_alert",
+          title: "High Risk Alert",
+          description: "Student flagged as high risk and should be reviewed soon.",
+          newValue: executiveScore.risk_score,
+        });
+      }
 
-
-setMessage("Executive score saved.");
+      await notifyParent();
+      setMessage("Executive score saved.");
     } catch (error) {
       setMessage(error.message || "Executive score save failed.");
     } finally {

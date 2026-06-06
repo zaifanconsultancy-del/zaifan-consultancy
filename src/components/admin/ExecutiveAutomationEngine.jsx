@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { buildExecutiveRecommendations } from "../../lib/executiveRecommendations";
 import { buildExecutiveActionTemplate } from "../../lib/executiveActionTemplates";
 
+const MAX_TEMPLATE_ITEMS = 30;
+
 function normalize(value = "") {
   return String(value || "")
     .toLowerCase()
@@ -15,8 +17,31 @@ function number(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function formatLabel(value = "") {
+  const clean = normalize(value);
+  if (!clean) return "Unknown";
+
+  return clean
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function getStudentName(score = {}) {
   return score.student_name || score.full_name || score.name || "Unknown Student";
+}
+
+function getStudentId(score = {}) {
+  return String(score.student_id || score.id || "");
+}
+
+function getStudentType(score = {}) {
+  return score.student_type || score.__leadType || score.type || "student";
+}
+
+function getStudentKey(score = {}) {
+  return `${getStudentId(score) || getStudentName(score)}-${getStudentType(score)}`;
 }
 
 function getJourneyStage(score = {}, template = {}) {
@@ -33,78 +58,262 @@ function getJourneyStage(score = {}, template = {}) {
 
   if (app === "enrolled") return "enrolled";
   if (["visa_approved", "approved"].includes(visa)) return "visa_approved";
+
   if (["visa_rejected", "rejected", "refused", "visa_refused"].includes(visa)) {
     return "visa_rejected";
   }
+
   if (["visa_pending", "pending", "submitted", "under_review", "review"].includes(visa)) {
     return "visa_pending";
   }
+
   if (app === "cas_issued") return "cas_issued";
   if (app === "cas_pending") return "cas_pending";
-  if (["offer_accepted", "accepted"].includes(offer) || ["offer_accepted", "accepted"].includes(app)) {
+
+  if (
+    ["offer_accepted", "accepted", "confirmed"].includes(offer) ||
+    ["offer_accepted", "accepted", "confirmed"].includes(app)
+  ) {
     return "offer_accepted";
   }
-  if (["offer_received", "received", "offer"].includes(offer) || ["offer_received", "offer"].includes(app)) {
+
+  if (
+    ["offer_received", "received", "offer", "conditional_offer", "unconditional_offer"].includes(
+      offer
+    ) ||
+    ["offer_received", "received", "offer", "conditional_offer", "unconditional_offer"].includes(
+      app
+    )
+  ) {
     return "offer_received";
   }
-  if (["under_review", "review"].includes(app)) return "application_under_review";
-  if (["applied", "submitted"].includes(app)) return "application_submitted";
+
+  if (["under_review", "review", "processing"].includes(app)) {
+    return "application_under_review";
+  }
+
+  if (["applied", "submitted"].includes(app)) {
+    return "application_submitted";
+  }
+
+  if (["started", "draft", "in_progress"].includes(app)) {
+    return "application_started";
+  }
 
   return "not_started";
 }
 
+function getPriorityRank(priority = "") {
+  const clean = normalize(priority);
+
+  if (clean === "critical") return 6;
+  if (clean === "executive") return 5;
+  if (clean === "high") return 4;
+  if (clean === "medium") return 3;
+  if (clean === "low") return 2;
+
+  return 1;
+}
+
+function getActionRank(actionType = "") {
+  const clean = normalize(actionType);
+
+  if (clean === "create_task") return 5;
+  if (clean === "schedule_call") return 4;
+  if (clean === "create_reminder") return 3;
+  if (clean === "send_email") return 2;
+  if (clean === "send_whatsapp") return 2;
+
+  return 1;
+}
+
+function approvalRequired(recommendation = {}, template = {}) {
+  const priority = normalize(recommendation.priority);
+  const actionType = normalize(template.actionType);
+
+  return (
+    priority === "critical" ||
+    priority === "executive" ||
+    actionType === "send_email" ||
+    actionType === "send_whatsapp" ||
+    template?.payload?.approval_required === true
+  );
+}
+
+function buildDuplicateKey(score = {}, recommendation = {}, template = {}) {
+  return [
+    getStudentKey(score),
+    normalize(recommendation.type || "recommendation"),
+    normalize(template.actionType || recommendation.action || "action"),
+    normalize(template?.payload?.title || recommendation.title || ""),
+  ].join("-");
+}
+
+function buildAutomationTemplates(scores = []) {
+  const rawItems = (scores || []).flatMap((score) => {
+    const recommendations = buildExecutiveRecommendations(score);
+
+    return recommendations
+      .filter((recommendation) => normalize(recommendation.action) !== "none")
+      .map((recommendation) => {
+        const template = buildExecutiveActionTemplate(score, recommendation);
+        const studentStage = getJourneyStage(score, template);
+        const priorityRank = getPriorityRank(recommendation.priority);
+        const actionRank = getActionRank(template.actionType);
+
+        return {
+          key: `${getStudentKey(score)}-${recommendation.type}-${template.actionType}`,
+          duplicateKey: buildDuplicateKey(score, recommendation, template),
+          score,
+          recommendation,
+          template,
+          studentStage,
+          priorityRank,
+          actionRank,
+          approvalRequired: approvalRequired(recommendation, template),
+          impactScore:
+            number(score.risk_score) +
+            number(score.opportunity_score) +
+            priorityRank * 12 +
+            actionRank * 5,
+        };
+      });
+  });
+
+  const deduped = new Map();
+
+  rawItems.forEach((item) => {
+    const existing = deduped.get(item.duplicateKey);
+
+    if (!existing) {
+      deduped.set(item.duplicateKey, item);
+      return;
+    }
+
+    const existingIsAppointment = normalize(getStudentType(existing.score)) === "appointment";
+    const currentIsAppointment = normalize(getStudentType(item.score)) === "appointment";
+
+    if (!existingIsAppointment && currentIsAppointment) {
+      deduped.set(item.duplicateKey, item);
+      return;
+    }
+
+    if (item.impactScore > existing.impactScore) {
+      deduped.set(item.duplicateKey, item);
+    }
+  });
+
+  return [...deduped.values()]
+    .sort((a, b) => {
+      if (b.priorityRank !== a.priorityRank) return b.priorityRank - a.priorityRank;
+      if (b.impactScore !== a.impactScore) return b.impactScore - a.impactScore;
+      return b.actionRank - a.actionRank;
+    })
+    .slice(0, MAX_TEMPLATE_ITEMS);
+}
+
+function buildAutomationAnalytics(scores = [], automationTemplates = []) {
+  const analytics = {
+    totalStudents: scores.length,
+    totalTemplates: automationTemplates.length,
+
+    critical: 0,
+    executive: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+
+    approvalRequired: 0,
+    readyToExecute: 0,
+
+    communicationDrafts: 0,
+    taskActions: 0,
+    reminderActions: 0,
+    callActions: 0,
+    emailDrafts: 0,
+    whatsappDrafts: 0,
+
+    highImpact: 0,
+    conversionReady: 0,
+    visaStage: 0,
+    documentActions: 0,
+    universityActions: 0,
+
+    byStage: {},
+    byAction: {},
+    byPriority: {},
+    byStudentType: {},
+  };
+
+  automationTemplates.forEach((item) => {
+    const priority = normalize(item.recommendation.priority || "medium");
+    const actionType = normalize(item.template.actionType);
+    const stage = normalize(item.studentStage);
+    const studentType = normalize(getStudentType(item.score));
+    const recommendationType = normalize(item.recommendation.type);
+
+    if (analytics[priority] !== undefined) analytics[priority] += 1;
+
+    analytics.byStage[stage] = (analytics.byStage[stage] || 0) + 1;
+    analytics.byAction[actionType] = (analytics.byAction[actionType] || 0) + 1;
+    analytics.byPriority[priority] = (analytics.byPriority[priority] || 0) + 1;
+    analytics.byStudentType[studentType] = (analytics.byStudentType[studentType] || 0) + 1;
+
+    if (item.approvalRequired) analytics.approvalRequired += 1;
+    else analytics.readyToExecute += 1;
+
+    if (["send_email", "send_whatsapp"].includes(actionType)) analytics.communicationDrafts += 1;
+    if (actionType === "send_email") analytics.emailDrafts += 1;
+    if (actionType === "send_whatsapp") analytics.whatsappDrafts += 1;
+    if (actionType === "create_task") analytics.taskActions += 1;
+    if (actionType === "create_reminder") analytics.reminderActions += 1;
+    if (actionType === "schedule_call") analytics.callActions += 1;
+
+    if (item.impactScore >= 120) analytics.highImpact += 1;
+
+    if (["offer_accepted", "cas_pending", "cas_issued", "visa_pending"].includes(stage)) {
+      analytics.conversionReady += 1;
+    }
+
+    if (["visa_pending", "visa_approved", "visa_rejected", "cas_issued"].includes(stage)) {
+      analytics.visaStage += 1;
+    }
+
+    if (recommendationType.includes("document")) analytics.documentActions += 1;
+    if (recommendationType.includes("university")) analytics.universityActions += 1;
+  });
+
+  analytics.coverage = analytics.totalStudents
+    ? Math.round((analytics.totalTemplates / analytics.totalStudents) * 100)
+    : 0;
+
+  analytics.healthScore = analytics.totalTemplates
+    ? Math.round((analytics.readyToExecute / analytics.totalTemplates) * 100)
+    : 100;
+
+  analytics.approvalRate = analytics.totalTemplates
+    ? Math.round((analytics.approvalRequired / analytics.totalTemplates) * 100)
+    : 0;
+
+  return analytics;
+}
+
 function ExecutiveAutomationEngine({ scores = [] }) {
-  const automationTemplates = useMemo(() => {
-    return (scores || [])
-      .flatMap((score) => {
-        const recommendations = buildExecutiveRecommendations(score);
+  const automationTemplates = useMemo(() => buildAutomationTemplates(scores), [scores]);
 
-        return recommendations
-          .filter((recommendation) => normalize(recommendation.action) !== "none")
-          .map((recommendation) => {
-            const template = buildExecutiveActionTemplate(score, recommendation);
+  const analytics = useMemo(
+    () => buildAutomationAnalytics(scores, automationTemplates),
+    [scores, automationTemplates]
+  );
 
-            return {
-              score,
-              recommendation,
-              template,
-              studentStage: getJourneyStage(score, template),
-              priorityRank: getPriorityRank(recommendation.priority),
-              approvalRequired: template?.payload?.approval_required === true,
-              impactScore:
-                number(score.risk_score) +
-                number(score.opportunity_score) +
-                getPriorityRank(recommendation.priority) * 10,
-            };
-          });
-      })
-      .sort((a, b) => {
-        if (b.priorityRank !== a.priorityRank) return b.priorityRank - a.priorityRank;
-        return b.impactScore - a.impactScore;
-      })
-      .slice(0, 15);
-  }, [scores]);
-
-  const critical = automationTemplates.filter(
-    (item) => normalize(item.recommendation.priority) === "critical"
-  ).length;
-
-  const executive = automationTemplates.filter(
-    (item) => normalize(item.recommendation.priority) === "executive"
-  ).length;
-
-  const approvalRequired = automationTemplates.filter((item) => item.approvalRequired).length;
-  const readyToExecute = automationTemplates.filter((item) => !item.approvalRequired).length;
-  const communicationDrafts = automationTemplates.filter((item) =>
-    ["send_email", "send_whatsapp"].includes(normalize(item.template.actionType))
-  ).length;
+  const topTemplates = automationTemplates.slice(0, 15);
 
   return (
     <div className="rounded-[2rem] border border-purple-400/20 bg-purple-500/[0.04] p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
-            Executive Automation Engine
+            Executive Automation Engine V2
           </p>
 
           <h2 className="mt-2 text-2xl font-black text-white">
@@ -112,26 +321,66 @@ function ExecutiveAutomationEngine({ scores = [] }) {
           </h2>
 
           <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
-            Executive AI converts student journey intelligence into prepared
-            CRM actions. Human approval is tracked before execution.
+            Executive AI converts student journey intelligence into prepared actions with
+            duplicate protection, approval intelligence, action analytics, and automation
+            health scoring.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Badge label={`${automationTemplates.length} Templates`} />
-          <Badge label={`${critical} Critical`} danger />
-          <Badge label={`${executive} Executive`} gold />
-          <Badge label={`${approvalRequired} Approval`} gold />
-          <Badge label={`${readyToExecute} Ready`} success />
-          <Badge label={`${communicationDrafts} Drafts`} />
+          <Badge label={`${analytics.totalTemplates} Templates`} />
+          <Badge label={`${analytics.critical} Critical`} danger />
+          <Badge label={`${analytics.executive} Executive`} gold />
+          <Badge label={`${analytics.approvalRequired} Approval`} gold />
+          <Badge label={`${analytics.readyToExecute} Ready`} success />
+          <Badge label={`Health ${analytics.healthScore}%`} success={analytics.healthScore >= 70} />
         </div>
       </div>
 
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <MetricCard label="Students Scanned" value={analytics.totalStudents} />
+        <MetricCard label="Templates Generated" value={analytics.totalTemplates} />
+        <MetricCard label="Automation Coverage" value={`${analytics.coverage}%`} />
+        <MetricCard label="Approval Rate" value={`${analytics.approvalRate}%`} />
+        <MetricCard label="High Impact" value={analytics.highImpact} />
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <MetricCard label="Tasks" value={analytics.taskActions} compact />
+        <MetricCard label="Reminders" value={analytics.reminderActions} compact />
+        <MetricCard label="Calls" value={analytics.callActions} compact />
+        <MetricCard label="Email Drafts" value={analytics.emailDrafts} compact />
+        <MetricCard label="WhatsApp" value={analytics.whatsappDrafts} compact />
+        <MetricCard label="Comms Total" value={analytics.communicationDrafts} compact />
+      </div>
+
+      <div className="mt-6 grid gap-4 xl:grid-cols-3">
+        <DistributionPanel
+          title="Journey Stage Distribution"
+          description="Where Executive AI is generating the most workflow pressure."
+          items={analytics.byStage}
+        />
+
+        <DistributionPanel
+          title="Action Type Distribution"
+          description="Tasks, reminders, calls, emails, and WhatsApp drafts prepared."
+          items={analytics.byAction}
+        />
+
+        <DistributionPanel
+          title="Priority Distribution"
+          description="Critical, executive, high, medium, and low automation load."
+          items={analytics.byPriority}
+        />
+      </div>
+
+      <AutomationHealthPanel analytics={analytics} />
+
       <div className="mt-6 space-y-3">
-        {automationTemplates.length ? (
-          automationTemplates.map((item, index) => (
+        {topTemplates.length ? (
+          topTemplates.map((item, index) => (
             <AutomationTemplateCard
-              key={`${item.score.student_id || item.score.id}-${item.recommendation.type}-${index}`}
+              key={`${item.key}-${index}`}
               item={item}
             />
           ))
@@ -155,6 +404,7 @@ function AutomationTemplateCard({ item }) {
   const { score, recommendation, template, studentStage, approvalRequired } = item;
   const priorityStyle = getPriorityStyle(recommendation.priority);
   const payload = template.payload || {};
+  const actionType = normalize(template.actionType);
 
   return (
     <div className={`rounded-2xl border p-4 ${priorityStyle.wrapper}`}>
@@ -163,9 +413,10 @@ function AutomationTemplateCard({ item }) {
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-black text-white">{template.title}</p>
 
-            <Tag text={recommendation.priority} className={priorityStyle.badge} />
+            <Tag text={recommendation.priority || "medium"} className={priorityStyle.badge} />
             <Tag text={formatLabel(template.actionType)} />
             <Tag text={formatLabel(studentStage)} />
+            <Tag text={`Impact ${item.impactScore}`} />
 
             {approvalRequired ? (
               <Tag
@@ -193,7 +444,7 @@ function AutomationTemplateCard({ item }) {
 
           <div className="mt-4 grid gap-3 xl:grid-cols-2">
             <PayloadPreview title="Prepared Payload" payload={payload} />
-            <PayloadSummary payload={payload} />
+            <PayloadSummary payload={payload} actionType={actionType} />
           </div>
         </div>
 
@@ -207,6 +458,7 @@ function AutomationTemplateCard({ item }) {
           </p>
 
           <div className="mt-4 grid gap-2 text-xs text-white/45">
+            <p>Type: {formatLabel(getStudentType(score))}</p>
             <p>Risk: {score.risk_score || 0}</p>
             <p>Opportunity: {score.opportunity_score || 0}</p>
             <p>Priority: {score.priority_level || "Standard"}</p>
@@ -219,7 +471,80 @@ function AutomationTemplateCard({ item }) {
   );
 }
 
-function PayloadSummary({ payload = {} }) {
+function AutomationHealthPanel({ analytics }) {
+  const readinessTone =
+    analytics.healthScore >= 70
+      ? "border-emerald-400/20 bg-emerald-500/[0.04] text-emerald-300"
+      : analytics.healthScore >= 40
+      ? "border-orange-400/20 bg-orange-500/[0.04] text-orange-300"
+      : "border-red-400/20 bg-red-500/[0.04] text-red-300";
+
+  return (
+    <div className={`mt-6 rounded-2xl border p-5 ${readinessTone}`}>
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">
+            Automation Health
+          </p>
+
+          <h3 className="mt-2 text-xl font-black text-white">
+            {analytics.healthScore}% Ready Without Extra Approval
+          </h3>
+
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/50">
+            This score shows how much of the generated automation queue can move quickly.
+            Executive and communication-heavy actions still stay protected behind human approval.
+          </p>
+        </div>
+
+        <div className="grid gap-2 text-xs text-white/50 xl:w-72">
+          <p>Approval Required: {analytics.approvalRequired}</p>
+          <p>Ready To Execute: {analytics.readyToExecute}</p>
+          <p>Conversion Ready Actions: {analytics.conversionReady}</p>
+          <p>Visa Stage Actions: {analytics.visaStage}</p>
+          <p>Document Actions: {analytics.documentActions}</p>
+          <p>University Actions: {analytics.universityActions}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DistributionPanel({ title, description, items = {} }) {
+  const entries = Object.entries(items).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+        {title}
+      </p>
+
+      <p className="mt-2 text-sm leading-6 text-white/45">
+        {description}
+      </p>
+
+      <div className="mt-4 space-y-2">
+        {entries.length ? (
+          entries.map(([key, value]) => (
+            <div
+              key={key}
+              className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs"
+            >
+              <span className="font-bold text-white/55">{formatLabel(key)}</span>
+              <span className="font-black text-white">{value}</span>
+            </div>
+          ))
+        ) : (
+          <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/35">
+            No data yet.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PayloadSummary({ payload = {}, actionType = "" }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/20 p-4">
       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
@@ -230,7 +555,8 @@ function PayloadSummary({ payload = {} }) {
         <p>Student: {payload.student_name || "Unknown"}</p>
         <p>Journey: {formatLabel(payload.journey_stage || "not_started")}</p>
         <p>Recommendation: {formatLabel(payload.recommendation_type || "unknown")}</p>
-        <p>Priority: {payload.recommendation_priority || "medium"}</p>
+        <p>Priority: {payload.recommendation_priority || payload.priority || "medium"}</p>
+        <p>Action: {formatLabel(actionType)}</p>
         <p>Approval: {payload.approval_required ? "Required" : "Not Required"}</p>
       </div>
     </div>
@@ -251,10 +577,26 @@ function PayloadPreview({ title, payload }) {
   );
 }
 
+function MetricCard({ label, value, compact = false }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+        {label}
+      </p>
+
+      <p className={`${compact ? "text-2xl" : "text-3xl"} mt-2 font-black text-white`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function Tag({ text, className = "" }) {
   return (
     <span
-      className={`rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/45 ${className}`}
+      className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
+        className || "border-white/10 bg-black/20 text-white/45"
+      }`}
     >
       {text}
     </span>
@@ -283,18 +625,6 @@ function Badge({ label, danger = false, gold = false, success = false }) {
       {label}
     </span>
   );
-}
-
-function getPriorityRank(priority = "") {
-  const clean = normalize(priority);
-
-  if (clean === "critical") return 5;
-  if (clean === "executive") return 4;
-  if (clean === "high") return 3;
-  if (clean === "medium") return 2;
-  if (clean === "low") return 1;
-
-  return 0;
 }
 
 function getPriorityStyle(priority = "") {
@@ -334,14 +664,14 @@ function getPriorityStyle(priority = "") {
   };
 }
 
-function formatLabel(value = "") {
-  const clean = normalize(value);
-  if (!clean) return "Unknown";
+export function buildAutomationEngineV2Summary(scores = []) {
+  const rows = Array.isArray(scores) ? scores : [];
+  const templates = buildAutomationTemplates(rows);
+  return buildAutomationAnalytics(rows, templates);
+}
 
-  return clean
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+export function buildAutomationDuplicateKey(score = {}, recommendation = {}, template = {}) {
+  return buildDuplicateKey(score, recommendation, template);
 }
 
 export default ExecutiveAutomationEngine;

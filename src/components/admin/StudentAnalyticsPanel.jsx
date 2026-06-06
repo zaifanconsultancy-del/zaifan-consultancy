@@ -3,11 +3,18 @@ import { supabase } from "../../lib/supabaseClient";
 
 const REQUEST_TIMEOUT_MS = 20000;
 
-function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
-  const [application, setApplication] = useState(student?.application || null);
-  const [documents, setDocuments] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [universities, setUniversities] = useState([]);
+function StudentAnalyticsPanel({
+  student = {},
+  allLeads = [],
+  sharedApplication = null,
+  sharedDocuments = null,
+  sharedTasks = null,
+  sharedUniversities = null,
+}) {
+  const [application, setApplication] = useState(sharedApplication || student?.application || null);
+  const [documents, setDocuments] = useState(Array.isArray(sharedDocuments) ? sharedDocuments : []);
+  const [tasks, setTasks] = useState(Array.isArray(sharedTasks) ? sharedTasks : []);
+  const [universities, setUniversities] = useState(Array.isArray(sharedUniversities) ? sharedUniversities : []);
 
   const [applicationLoading, setApplicationLoading] = useState(false);
   const [documentsLoading, setDocumentsLoading] = useState(false);
@@ -21,6 +28,7 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
   const studentId = student?.id;
   const numericStudentId = Number(studentId);
   const hasValidStudentId = Number.isFinite(numericStudentId);
+  const studentType = student?.student_type || student?.__leadType || student?.type || "inquiry";
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -33,23 +41,29 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
   }, []);
 
   useEffect(() => {
-    setApplication(student?.application || null);
+    setApplication(sharedApplication || student?.application || null);
     setDocuments(
-      Array.isArray(student?.documents)
+      Array.isArray(sharedDocuments)
+        ? sharedDocuments
+        : Array.isArray(student?.documents)
         ? student.documents
         : Array.isArray(student?.student_documents)
         ? student.student_documents
         : []
     );
     setTasks(
-      Array.isArray(student?.tasks)
+      Array.isArray(sharedTasks)
+        ? sharedTasks
+        : Array.isArray(student?.tasks)
         ? student.tasks
         : Array.isArray(student?.student_tasks)
         ? student.student_tasks
         : []
     );
     setUniversities(
-      Array.isArray(student?.universities)
+      Array.isArray(sharedUniversities)
+        ? sharedUniversities
+        : Array.isArray(student?.universities)
         ? student.universities
         : Array.isArray(student?.student_universities)
         ? student.student_universities
@@ -58,11 +72,11 @@ function StudentAnalyticsPanel({ student = {}, allLeads = [] }) {
     setError("");
 
     loadApplicationOnly();
-loadDocumentsOnly();
-loadTasksOnly();
-loadUniversitiesOnly();
-    
-  }, [studentId]);
+    loadDocumentsOnly();
+    loadTasksOnly();
+    loadUniversitiesOnly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId, sharedApplication?.id, sharedApplication?.updated_at, sharedDocuments?.length, sharedTasks?.length, sharedUniversities?.length]);
 
   const safeSet = (callback) => {
     if (mountedRef.current) callback();
@@ -93,6 +107,7 @@ loadUniversitiesOnly();
           .from("student_applications")
           .select("*")
           .eq("student_id", numericStudentId)
+          .eq("student_type", studentType)
           .order("created_at", { ascending: false })
           .limit(1),
         "Application analytics loading timed out."
@@ -155,6 +170,7 @@ loadUniversitiesOnly();
           .from("student_tasks")
           .select("*")
           .eq("student_id", numericStudentId)
+          .eq("student_type", studentType)
           .order("created_at", { ascending: false })
           .limit(100),
         "Tasks analytics loading timed out."
@@ -185,6 +201,7 @@ loadUniversitiesOnly();
           .from("student_universities")
           .select("*")
           .eq("student_id", numericStudentId)
+          .eq("student_type", studentType)
           .order("created_at", { ascending: false })
           .limit(50),
         "Universities analytics loading timed out."
@@ -206,18 +223,20 @@ loadUniversitiesOnly();
     }
   };
 
-  const refreshAnalytics = () => {
+  const refreshAnalytics = async () => {
   setRefreshing(true);
   setError("");
 
-   loadApplicationOnly();
-  loadDocumentsOnly();
-  loadTasksOnly();
-  loadUniversitiesOnly();
-
-  window.setTimeout(() => {
-    setRefreshing(false);
-  }, 700);
+  try {
+    await Promise.allSettled([
+      loadApplicationOnly(),
+      loadDocumentsOnly(),
+      loadTasksOnly(),
+      loadUniversitiesOnly(),
+    ]);
+  } finally {
+    safeSet(() => setRefreshing(false));
+  }
 };
 
   const analytics = useMemo(() => {

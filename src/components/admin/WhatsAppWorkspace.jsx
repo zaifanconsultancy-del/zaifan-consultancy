@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-function WhatsAppWorkspace({ student = {} }) {
+function WhatsAppWorkspace({ student = {}, saving = false, onSaveDraft = null }) {
   const [selectedMessage, setSelectedMessage] = useState("");
 
   const fullName = student?.full_name || student?.name || "Student";
@@ -28,31 +28,41 @@ function WhatsAppWorkspace({ student = {} }) {
     [fullName]
   );
 
+  const getMessage = () =>
+    selectedMessage ||
+    `Hi ${fullName}, this is Zaifan Consultancy. I wanted to follow up with you.`;
+
   const openWhatsApp = () => {
-    const cleanPhone = phone.replace(/[^\d]/g, "");
+    const cleanPhone = String(phone || "").replace(/[^\d]/g, "");
 
     if (!cleanPhone) {
       alert("No phone number found for this student.");
       return;
     }
 
-    const message =
-      selectedMessage ||
-      `Hi ${fullName}, this is Zaifan Consultancy. I wanted to follow up with you.`;
-
     window.open(
-      `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`,
-      "_blank"
+      `https://wa.me/${cleanPhone}?text=${encodeURIComponent(getMessage())}`,
+      "_blank",
+      "noopener,noreferrer"
     );
   };
 
   const copyMessage = async () => {
-    const message =
-      selectedMessage ||
-      `Hi ${fullName}, this is Zaifan Consultancy. I wanted to follow up with you.`;
-
-    await navigator.clipboard.writeText(message);
+    await navigator.clipboard.writeText(getMessage());
     alert("WhatsApp message copied.");
+  };
+
+  const saveDraft = async () => {
+    if (typeof onSaveDraft !== "function") {
+      alert("Save draft is not connected yet.");
+      return;
+    }
+
+    const saved = await onSaveDraft(getMessage());
+
+    if (saved) {
+      alert("WhatsApp draft saved to communication history.");
+    }
   };
 
   return (
@@ -62,7 +72,8 @@ function WhatsAppWorkspace({ student = {} }) {
           <h3 className="font-bold text-white">WhatsApp Workspace</h3>
 
           <p className="mt-2 text-sm text-white/45">
-            Create quick counselor messages and open WhatsApp directly.
+            Create quick counselor messages, save drafts, and open WhatsApp
+            directly.
           </p>
         </div>
 
@@ -102,6 +113,15 @@ function WhatsAppWorkspace({ student = {} }) {
           className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-emerald-300"
         >
           Open WhatsApp
+        </button>
+
+        <button
+          type="button"
+          onClick={saveDraft}
+          disabled={saving}
+          className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-5 py-2 text-sm font-bold text-emerald-300 transition hover:border-emerald-400/45 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? "Saving Draft..." : "Save Draft"}
         </button>
 
         <button

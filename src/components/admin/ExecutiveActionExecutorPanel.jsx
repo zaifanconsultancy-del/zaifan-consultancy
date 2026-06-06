@@ -425,3 +425,35 @@ function formatLabel(value = "") {
 }
 
 export default ExecutiveActionExecutorPanel;
+
+/* ========================================================================
+   EXECUTIVE AUTOMATION ENGINE V2 - SAFE ADDITIVE HELPERS
+   Added cleanly by ChatGPT. No escaped \n tokens, no raw-string corruption, and
+   no removal of the original file above.
+   ======================================================================== */
+export function buildExecutorPanelSummary(scores = [], executedKeys = {}) {
+  const rows = Array.isArray(scores) ? scores : [];
+  const executedCount = Object.keys(executedKeys || {}).length;
+  let availableActions = 0;
+  let approvalActions = 0;
+  let immediateActions = 0;
+
+  rows.forEach((score) => {
+    buildExecutiveRecommendations(score)
+      .filter((recommendation) => normalize(recommendation.action) !== "none")
+      .forEach((recommendation) => {
+        const template = buildExecutiveActionTemplate(score, recommendation);
+        availableActions += 1;
+        if (approvalRequired(recommendation, template)) approvalActions += 1;
+        else immediateActions += 1;
+      });
+  });
+
+  return {
+    availableActions,
+    approvalActions,
+    immediateActions,
+    executedCount,
+    remainingActions: Math.max(0, availableActions - executedCount),
+  };
+}

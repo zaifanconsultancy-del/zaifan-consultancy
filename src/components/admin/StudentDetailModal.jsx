@@ -59,6 +59,28 @@ function StudentDetailModal({
   const [studentCommunications, setStudentCommunications] = useState([]);
   const [panelRefreshKey, setPanelRefreshKey] = useState(0);
 
+  const workingStudent = localStudent || student;
+
+  const studentId = workingStudent?.id;
+
+  const studentType =
+    workingStudent?.student_type ||
+    workingStudent?.__leadType ||
+    workingStudent?.type ||
+    type ||
+    "inquiry";
+
+  const safePermissions = {
+    canDelete: false,
+    canClearAll: false,
+    canExport: false,
+    canManageAdmins: false,
+    canUpdateStatus: true,
+    canUpdatePriority: true,
+    canConfirmAppointments: true,
+    ...permissions,
+  };
+
   const getStudentIdVariants = useCallback(() => {
     if (!studentId) return [];
 
