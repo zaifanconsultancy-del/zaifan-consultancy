@@ -362,6 +362,7 @@ function StudentDetailModal({
       items: [
         ["overview", "Overview", "Student details and controls", "📋"],
         ["analytics", "Analytics", "Student journey intelligence", "📈"],
+        ["portal-account", "Portal Account", "Student portal access", "🔐"],
         ["documents", "Documents", "Student file management", "📁"],
         ["applications", "Applications", "University workflow", "🎓"],
         ["visa", "Visa Processing", "Visa workflow tracking", "🌍"],
@@ -941,7 +942,53 @@ function StudentDetailModal({
                   adminProfile={adminProfile}
                 />
               ) : null}
+{activePanel === "portal-account" ? (
+  <div className="space-y-5">
+    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-5">
+      <h3 className="text-xl font-black text-white">
+        Student Portal Account
+      </h3>
 
+      <p className="mt-2 text-sm text-white/55">
+        Manage student login access for the Zaifan Student Portal.
+      </p>
+    </div>
+
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+          Student Email
+        </p>
+
+        <p className="mt-2 text-white">
+          {email}
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+          Student Mapping
+        </p>
+
+        <p className="mt-2 text-white">
+          {studentType} #{studentId}
+        </p>
+      </div>
+    </div>
+
+    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-5">
+      <p className="font-semibold text-emerald-300">
+        Portal Account System Ready
+      </p>
+
+      <p className="mt-2 text-sm text-white/60">
+        student_portal_accounts table and login verification are now active.
+        Next step is connecting Create Account, Reset Password,
+        Activate and Deactivate controls.
+      </p>
+    </div>
+  </div>
+) : null}
               {activePanel === "documents" ? (
                 <StudentDocumentsPanel
                   key={`documents-${studentId}-${panelRefreshKey}`}

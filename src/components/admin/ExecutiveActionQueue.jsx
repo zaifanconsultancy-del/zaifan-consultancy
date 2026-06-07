@@ -4,6 +4,7 @@ import { buildExecutiveActionTemplate } from "../../lib/executiveActionTemplates
 import { executeExecutiveActionTemplate } from "../../lib/executiveActionExecutor";
 
 const MAX_QUEUE_ITEMS = 30;
+const QUEUE_EXECUTION_TIMEOUT_MS = 4500;
 
 function normalize(value = "") {
   return String(value || "")
@@ -158,6 +159,7 @@ function buildQueueKey(score = {}, recommendation = {}, template = {}) {
     getStudentKey(score),
     normalize(recommendation.type || "recommendation"),
     normalize(template.actionType || recommendation.action || "action"),
+    normalize(template?.payload?.title || recommendation.title || ""),
   ].join("-");
 }
 
@@ -284,12 +286,17 @@ function buildQueueAnalytics(actionItems = [], executedKeys = {}, approvedKeys =
 
   return analytics;
 }
-async function withTimeout(promise, ms = 12000) {
+
+async function withQueueTimeout(promise, ms = QUEUE_EXECUTION_TIMEOUT_MS) {
   let timeoutId;
 
-  const timeout = new Promise((_, reject) => {
+  const timeout = new Promise((resolve) => {
     timeoutId = setTimeout(() => {
-      reject(new Error("Execution timed out. Check Supabase table/logs."));
+      resolve({
+        data: null,
+        error: new Error("Action is taking too long. It may still finish in Supabase. Refresh and check logs/tasks."),
+        timedOut: true,
+      });
     }, ms);
   });
 
@@ -299,8 +306,14 @@ async function withTimeout(promise, ms = 12000) {
     clearTimeout(timeoutId);
   }
 }
+
+function isDuplicateResult(result = {}) {
+  const message = result?.error?.message || "";
+  return result?.duplicate === true || message.toLowerCase().includes("duplicate protection");
+}
+
 function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecuted = () => {} }) {
-  const [executingKey, setExecutingKey] = useState("");
+  const [executingKeys, setExecutingKeys] = useState({});
   const [executedKeys, setExecutedKeys] = useState({});
   const [approvedKeys, setApprovedKeys] = useState({});
   const [rejectedKeys, setRejectedKeys] = useState({});
@@ -334,106 +347,107 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
   }, [actionItems, filter, approvedKeys, executedKeys]);
 
   function approveAction(item) {
-  if (executedKeys[item.key]) return;
+    if (executedKeys[item.key]) return;
 
-  setApprovedKeys((prev) => {
-    const next = { ...prev };
+    setApprovedKeys((prev) => {
+      const next = { ...prev };
+      if (next[item.key]) delete next[item.key];
+      else next[item.key] = true;
+      return next;
+    });
 
-    if (next[item.key]) {
+    setRejectedKeys((prev) => {
+      const next = { ...prev };
       delete next[item.key];
-    } else {
-      next[item.key] = true;
-    }
+      return next;
+    });
 
-    return next;
-  });
-
-  setRejectedKeys((prev) => {
-    const next = { ...prev };
-    delete next[item.key];
-    return next;
-  });
-
-  setErrors((prev) => ({ ...prev, [item.key]: "" }));
-}
-
-function rejectAction(item) {
-  if (executedKeys[item.key]) return;
-
-  setRejectedKeys((prev) => {
-    const next = { ...prev };
-
-    if (next[item.key]) {
-      delete next[item.key];
-    } else {
-      next[item.key] = true;
-    }
-
-    return next;
-  });
-
-  setApprovedKeys((prev) => {
-    const next = { ...prev };
-    delete next[item.key];
-    return next;
-  });
-
-  setErrors((prev) => ({ ...prev, [item.key]: "" }));
-}
-
- async function handleExecute(item) {
-  if (!item?.template || executingKey || executedKeys[item.key] || rejectedKeys[item.key]) return;
-
-  if (item.requiresApproval && !approvedKeys[item.key]) {
-    setErrors((prev) => ({
-      ...prev,
-      [item.key]: "Human approval is required before this action can execute.",
-    }));
-    return;
+    setErrors((prev) => ({ ...prev, [item.key]: "" }));
   }
 
-  setExecutingKey(item.key);
-  setErrors((prev) => ({ ...prev, [item.key]: "" }));
+  function rejectAction(item) {
+    if (executedKeys[item.key]) return;
 
-  try {
-    const { error } = await withTimeout(
-      executeExecutiveActionTemplate({
-        template: item.template,
-        adminProfile,
-      }),
-      12000
-    );
+    setRejectedKeys((prev) => {
+      const next = { ...prev };
+      if (next[item.key]) delete next[item.key];
+      else next[item.key] = true;
+      return next;
+    });
 
-    if (error) {
+    setApprovedKeys((prev) => {
+      const next = { ...prev };
+      delete next[item.key];
+      return next;
+    });
+
+    setErrors((prev) => ({ ...prev, [item.key]: "" }));
+  }
+
+  async function handleExecute(item) {
+    if (!item?.template || executingKeys[item.key] || executedKeys[item.key] || rejectedKeys[item.key]) return;
+
+    if (item.requiresApproval && !approvedKeys[item.key]) {
       setErrors((prev) => ({
         ...prev,
-        [item.key]: error.message || "Execution failed.",
+        [item.key]: "Human approval is required before this action can execute.",
       }));
       return;
     }
 
-    setExecutedKeys((prev) => ({
-      ...prev,
-      [item.key]: true,
-    }));
+    setExecutingKeys((prev) => ({ ...prev, [item.key]: true }));
+    setErrors((prev) => ({ ...prev, [item.key]: "" }));
 
-    onActionExecuted(item);
-  } catch (err) {
-    setErrors((prev) => ({
-      ...prev,
-      [item.key]: err.message || "Executive action timed out.",
-    }));
-  } finally {
-    setExecutingKey("");
+    try {
+      const result = await withQueueTimeout(
+        executeExecutiveActionTemplate({
+          template: item.template,
+          adminProfile,
+        }),
+        QUEUE_EXECUTION_TIMEOUT_MS
+      );
+
+      if (isDuplicateResult(result)) {
+        setExecutedKeys((prev) => ({ ...prev, [item.key]: true }));
+        setErrors((prev) => ({
+          ...prev,
+          [item.key]: "Already executed before. Marked as done by duplicate protection.",
+        }));
+        onActionExecuted(item);
+        return;
+      }
+
+      if (result?.error) {
+        setErrors((prev) => ({
+          ...prev,
+          [item.key]: result.error.message || "Execution failed.",
+        }));
+        return;
+      }
+
+      setExecutedKeys((prev) => ({ ...prev, [item.key]: true }));
+      setErrors((prev) => ({ ...prev, [item.key]: "" }));
+      onActionExecuted(item);
+    } catch (err) {
+      setErrors((prev) => ({
+        ...prev,
+        [item.key]: err.message || "Executive action failed.",
+      }));
+    } finally {
+      setExecutingKeys((prev) => {
+        const next = { ...prev };
+        delete next[item.key];
+        return next;
+      });
+    }
   }
-}
 
   return (
     <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
-            Executive Action Queue V2
+            Executive Action Queue V3
           </p>
 
           <h2 className="mt-2 text-2xl font-black text-white">
@@ -466,30 +480,14 @@ function rejectAction(item) {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>
-          All
-        </FilterButton>
-        <FilterButton active={filter === "approval"} onClick={() => setFilter("approval")}>
-          Approval
-        </FilterButton>
-        <FilterButton active={filter === "ready"} onClick={() => setFilter("ready")}>
-          Ready
-        </FilterButton>
-        <FilterButton active={filter === "critical"} onClick={() => setFilter("critical")}>
-          Critical
-        </FilterButton>
-        <FilterButton active={filter === "executive"} onClick={() => setFilter("executive")}>
-          Executive
-        </FilterButton>
-        <FilterButton active={filter === "tasks"} onClick={() => setFilter("tasks")}>
-          Tasks
-        </FilterButton>
-        <FilterButton active={filter === "communication"} onClick={() => setFilter("communication")}>
-          Communication
-        </FilterButton>
-        <FilterButton active={filter === "executed"} onClick={() => setFilter("executed")}>
-          Executed
-        </FilterButton>
+        <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>All</FilterButton>
+        <FilterButton active={filter === "approval"} onClick={() => setFilter("approval")}>Approval</FilterButton>
+        <FilterButton active={filter === "ready"} onClick={() => setFilter("ready")}>Ready</FilterButton>
+        <FilterButton active={filter === "critical"} onClick={() => setFilter("critical")}>Critical</FilterButton>
+        <FilterButton active={filter === "executive"} onClick={() => setFilter("executive")}>Executive</FilterButton>
+        <FilterButton active={filter === "tasks"} onClick={() => setFilter("tasks")}>Tasks</FilterButton>
+        <FilterButton active={filter === "communication"} onClick={() => setFilter("communication")}>Communication</FilterButton>
+        <FilterButton active={filter === "executed"} onClick={() => setFilter("executed")}>Executed</FilterButton>
       </div>
 
       <div className="mt-6 space-y-3">
@@ -498,7 +496,7 @@ function rejectAction(item) {
             <ActionQueueCard
               key={item.key}
               item={item}
-              executing={executingKey === item.key}
+              executing={Boolean(executingKeys[item.key])}
               executed={Boolean(executedKeys[item.key])}
               approved={Boolean(approvedKeys[item.key])}
               rejected={Boolean(rejectedKeys[item.key])}
@@ -553,33 +551,16 @@ function ActionQueueCard({
 
             {requiresApproval ? (
               approved ? (
-                <Tag
-                  text="Approved"
-                  className="border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-                />
+                <Tag text="Approved" className="border-emerald-400/25 bg-emerald-500/10 text-emerald-300" />
               ) : (
-                <Tag
-                  text="Approval Required"
-                  className="border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
-                />
+                <Tag text="Approval Required" className="border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]" />
               )
             ) : (
-              <Tag
-                text="Auto Ready"
-                className="border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
-              />
+              <Tag text="Auto Ready" className="border-emerald-400/20 bg-emerald-500/10 text-emerald-300" />
             )}
 
-            {rejected ? (
-              <Tag text="Rejected" className="border-red-400/25 bg-red-500/10 text-red-300" />
-            ) : null}
-
-            {executed ? (
-              <Tag
-                text="Executed"
-                className="border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-              />
-            ) : null}
+            {rejected ? <Tag text="Rejected" className="border-red-400/25 bg-red-500/10 text-red-300" /> : null}
+            {executed ? <Tag text="Executed" className="border-emerald-400/25 bg-emerald-500/10 text-emerald-300" /> : null}
           </div>
 
           <p className="mt-2 text-sm leading-6 text-white/55">
@@ -622,7 +603,7 @@ function ActionQueueCard({
 
           {executed ? (
             <p className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
-              Action executed successfully and timeline/log handling was triggered by the executor.
+              Action marked as executed. Refresh analytics/tasks if needed.
             </p>
           ) : null}
         </div>
@@ -633,7 +614,7 @@ function ActionQueueCard({
               <button
                 type="button"
                 onClick={onApprove}
-                disabled={executed}
+                disabled={executed || executing}
                 className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Approve
@@ -642,7 +623,7 @@ function ActionQueueCard({
               <button
                 type="button"
                 onClick={onReject}
-                disabled={executed}
+                disabled={executed || executing}
                 className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Reject

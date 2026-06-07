@@ -17,6 +17,7 @@ import AboutPage from "./pages/AboutPage";
 import CountriesPage from "./pages/CountriesPage";
 import ContactPage from "./pages/ContactPage";
 import AdminPage from "./pages/AdminPage";
+import StudentPortalPage from "./pages/StudentPortalPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function LoadingScreen() {
@@ -71,6 +72,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   const isAdminPage = location.pathname === "/admin";
+  const isStudentPortal = location.pathname.startsWith("/student");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -92,7 +94,7 @@ function App() {
         <>
           <ScrollToTop />
 
-          {!isAdminPage && <Navbar />}
+          {!isAdminPage && !isStudentPortal && <Navbar />}
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -160,6 +162,15 @@ function App() {
               />
 
               <Route
+                path="/student"
+                element={
+                  <PageTransition>
+                    <StudentPortalPage />
+                  </PageTransition>
+                }
+              />
+
+              <Route
                 path="*"
                 element={
                   <PageTransition>
@@ -170,7 +181,7 @@ function App() {
             </Routes>
           </AnimatePresence>
 
-          {!isAdminPage && (
+          {!isAdminPage && !isStudentPortal && (
             <>
               <LivePopup />
               <Footer />

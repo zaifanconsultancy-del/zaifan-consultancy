@@ -2,10 +2,9 @@ import { supabase } from "./supabaseClient";
 import { createFollowUpReminder } from "./followUpReminders";
 import { addTimelineEvent } from "./crmTimeline";
 
-function toNumberOrNull(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
+const QUERY_TIMEOUT_MS = 6500;
+const LOG_TIMEOUT_MS = 3500;
+const TIMELINE_TIMEOUT_MS = 2500;
 
 function safeString(value = "") {
   return String(value || "").trim();
@@ -20,11 +19,13 @@ function getPayload(template = {}) {
 }
 
 function getStudentId(template = {}) {
-  return getPayload(template).student_id || template.student_id || null;
+  const payload = getPayload(template);
+  return payload.student_id || template.student_id || null;
 }
 
 function getStudentType(template = {}) {
-  return getPayload(template).student_type || template.student_type || "inquiry";
+  const payload = getPayload(template);
+  return payload.student_type || template.student_type || "inquiry";
 }
 
 function getTemplateTitle(template = {}, fallback = "Executive Action") {
@@ -58,11 +59,24 @@ function getAdminName(adminProfile = null) {
   );
 }
 
+function getPriority(template = {}) {
+  const payload = getPayload(template);
+  return (
+    payload.priority ||
+    payload.recommendation_priority ||
+    payload.priority_level ||
+    template.priority ||
+    "medium"
+  );
+}
+
 function buildDuplicateKey(template = {}) {
   const payload = getPayload(template);
 
   return (
     template.duplicateKey ||
+    template.template_key ||
+    payload.template_key ||
     payload.duplicate_protection_key ||
     [
       getStudentId(template),
@@ -70,26 +84,50 @@ function buildDuplicateKey(template = {}) {
       payload.recommendation_type || "recommendation",
       normalizeActionType(template.actionType),
       payload.title || template.title || "",
-    ].join("::")
+    ]
+      .filter(Boolean)
+      .join("::")
   );
+}
+
+function timeoutResult(label, timeoutMs = QUERY_TIMEOUT_MS) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        data: null,
+        error: new Error(`${label} timed out after ${timeoutMs}ms.`),
+        timedOut: true,
+      });
+    }, timeoutMs);
+  });
+}
+
+async function withTimeout(promise, label, timeoutMs = QUERY_TIMEOUT_MS) {
+  try {
+    return await Promise.race([promise, timeoutResult(label, timeoutMs)]);
+  } catch (error) {
+    return { data: null, error, timedOut: false };
+  }
 }
 
 function buildTimelineMetadata(template = {}, extra = {}) {
   const payload = getPayload(template);
 
   return {
-    source: "executive_action_executor_v2",
+    source: "executive_action_executor_v3",
     generated_by: payload.generated_by || "executive_ai",
     generated_at: payload.generated_at || null,
-    automation_version: payload.automation_version || "v2",
+    automation_version: payload.automation_version || "v3",
     automation_source: payload.automation_source || "student_os_executive_ai",
 
     action_type: normalizeActionType(template.actionType),
+    template_key: buildDuplicateKey(template),
     duplicate_protection_key: buildDuplicateKey(template),
 
     recommendation_type: payload.recommendation_type || null,
-    recommendation_priority: payload.recommendation_priority || null,
+    priority: getPriority(template),
     approval_required: payload.approval_required === true,
+    approval_status: payload.approval_required === true ? "required" : "not_required",
     approval_reason: payload.approval_reason || null,
 
     executive_category: payload.executive_category || template.executive_category || null,
@@ -101,6 +139,7 @@ function buildTimelineMetadata(template = {}, extra = {}) {
     journey_stage: payload.journey_stage || template.journey_stage || null,
     application_status: payload.application_status || template.application_status || null,
     offer_status: payload.offer_status || template.offer_status || null,
+    cas_status: payload.cas_status || template.cas_status || null,
     visa_status: payload.visa_status || template.visa_status || null,
 
     document_readiness_percent: payload.document_readiness_percent ?? null,
@@ -126,9 +165,15 @@ async function writeTimelineEvent({
   executionStatus = "completed",
   metadata = {},
 }) {
-  try {
-    await addTimelineEvent({
-      studentId: getStudentId(template),
+  const studentId = getStudentId(template);
+
+  if (!studentId) {
+    return { data: null, error: new Error("Timeline skipped: missing student id.") };
+  }
+
+  const result = await withTimeout(
+    addTimelineEvent({
+      studentId,
       studentType: getStudentType(template),
       actionType,
       title,
@@ -138,13 +183,25 @@ async function writeTimelineEvent({
         ...buildTimelineMetadata(template, metadata),
         execution_status: executionStatus,
       },
-    });
-  } catch (error) {
-    console.warn("Executive timeline event failed:", error);
+    }),
+    "Executive timeline event",
+    TIMELINE_TIMEOUT_MS
+  );
+
+  if (result?.error) {
+    console.warn("Executive timeline event failed/skipped:", result.error);
   }
+
+  return result;
 }
 
-async function writeExecutionLog({
+function fireTimelineEvent(args) {
+  writeTimelineEvent(args).catch((error) => {
+    console.warn("Executive timeline fire-and-forget failed:", error);
+  });
+}
+
+function buildExecutionLogPayload({
   template,
   adminProfile,
   status = "completed",
@@ -154,46 +211,65 @@ async function writeExecutionLog({
   metadata = {},
 }) {
   const payload = getPayload(template);
-  const actionType = normalizeActionType(template.actionType);
+  const actionType = normalizeActionType(template?.actionType);
 
-  const logPayload = {
+  return {
     student_id: String(getStudentId(template) || ""),
     student_type: getStudentType(template),
-    student_name: payload.student_name || "",
+    student_name: payload.student_name || template?.student_name || "",
     action_type: actionType,
+
+    template_key: buildDuplicateKey(template),
     recommendation_type: payload.recommendation_type || "",
-    recommendation_priority: payload.recommendation_priority || payload.priority || "medium",
-    title: getTemplateTitle(template),
-    description: getTemplateDescription(template),
+    priority: getPriority(template),
+
     status,
-    target_table: targetTable || "",
+    approval_status: payload.approval_required === true ? "required" : "not_required",
+    duplicate_detected: status === "duplicate_blocked",
+
+    target_table: targetTable || null,
     target_id: targetId ? String(targetId) : null,
-    duplicate_key: buildDuplicateKey(template),
-    approval_required: payload.approval_required === true,
-    approval_reason: payload.approval_reason || "",
+
     executed_by: getAdminId(adminProfile),
-    executed_by_name: getAdminName(adminProfile),
-    error_message: error?.message || error || "",
-    metadata: buildTimelineMetadata(template, metadata),
+    executed_at: new Date().toISOString(),
+
+    error_message: error?.message || error || null,
+
+    metadata: buildTimelineMetadata(template, {
+      ...metadata,
+      title: getTemplateTitle(template),
+      description: getTemplateDescription(template),
+      executed_by_name: getAdminName(adminProfile),
+    }),
   };
+}
+
+async function writeExecutionLog(args) {
+  const logPayload = buildExecutionLogPayload(args);
 
   try {
-    const { data, error: logError } = await supabase
-      .from("executive_execution_logs")
-      .insert(logPayload)
-      .select()
-      .single();
+    const result = await withTimeout(
+      supabase.from("executive_execution_logs").insert(logPayload),
+      "Executive execution log insert",
+      LOG_TIMEOUT_MS
+    );
 
-    if (logError) {
-      console.warn("Executive execution log insert failed:", logError);
-      return { data: null, error: logError };
+    if (result?.error) {
+      console.warn("Executive execution log insert failed/skipped:", result.error);
+      return { data: null, error: result.error };
     }
 
-    return { data, error: null };
-  } catch (err) {
-    console.warn("Executive execution log crashed:", err);
-    return { data: null, error: err };
+    return { data: logPayload, error: null };
+  } catch (error) {
+    console.warn("Executive execution log crashed:", error);
+    return { data: null, error };
   }
+}
+
+function fireExecutionLog(args) {
+  writeExecutionLog(args).catch((error) => {
+    console.warn("Executive execution log fire-and-forget failed:", error);
+  });
 }
 
 async function checkDuplicateExecution(template = {}) {
@@ -203,28 +279,29 @@ async function checkDuplicateExecution(template = {}) {
     return { duplicate: false, data: null, error: null };
   }
 
-  try {
-    const { data, error } = await supabase
+  const result = await withTimeout(
+    supabase
       .from("executive_execution_logs")
       .select("*")
-      .eq("duplicate_key", duplicateKey)
+      .eq("template_key", duplicateKey)
       .in("status", ["completed", "success", "executed"])
-      .limit(1);
+      .limit(1),
+    "Executive duplicate check",
+    QUERY_TIMEOUT_MS
+  );
 
-    if (error) {
-      console.warn("Executive duplicate check failed:", error);
-      return { duplicate: false, data: null, error };
-    }
-
-    return {
-      duplicate: Array.isArray(data) && data.length > 0,
-      data: Array.isArray(data) ? data[0] : null,
-      error: null,
-    };
-  } catch (err) {
-    console.warn("Executive duplicate check crashed:", err);
-    return { duplicate: false, data: null, error: err };
+  if (result?.error) {
+    console.warn("Executive duplicate check failed/skipped:", result.error);
+    return { duplicate: false, data: null, error: result.error };
   }
+
+  const rows = Array.isArray(result?.data) ? result.data : [];
+
+  return {
+    duplicate: rows.length > 0,
+    data: rows[0] || null,
+    error: null,
+  };
 }
 
 function validateTemplate(template = {}) {
@@ -251,18 +328,331 @@ function buildExecutionResult({
   targetTable = "",
   duplicate = false,
   skipped = false,
+  timedOut = false,
 }) {
   return {
     data,
     error,
-    actionType: actionType || normalizeActionType(template.actionType),
+    actionType: actionType || normalizeActionType(template?.actionType),
     targetTable,
     template,
     duplicate,
     skipped,
+    timedOut,
     duplicateKey: buildDuplicateKey(template),
     executedAt: new Date().toISOString(),
   };
+}
+
+function buildTaskPayload({ template, adminProfile, isCallTask = false }) {
+  const payload = getPayload(template);
+
+  return {
+    student_id: String(getStudentId(template) || ""),
+    student_type: getStudentType(template),
+    title: getTemplateTitle(template, isCallTask ? "Executive Call Task" : "Executive Task"),
+    description: getTemplateDescription(template),
+    priority: payload.priority || payload.recommendation_priority || (isCallTask ? "high" : "medium"),
+    status: payload.status || "pending",
+    due_date: payload.due_date || payload.dueDate || null,
+    created_by: getAdminId(adminProfile),
+  };
+}
+
+async function insertStudentTask(taskPayload) {
+  let result = await withTimeout(
+    supabase.from("student_tasks").insert(taskPayload).select().single(),
+    "Student task insert",
+    QUERY_TIMEOUT_MS
+  );
+
+  if (!result?.error) return result;
+
+  const fallbackPayload = { ...taskPayload };
+  delete fallbackPayload.created_by;
+
+  result = await withTimeout(
+    supabase.from("student_tasks").insert(fallbackPayload).select().single(),
+    "Student task insert fallback",
+    QUERY_TIMEOUT_MS
+  );
+
+  return result;
+}
+
+async function executeTaskTemplate({ template, adminProfile, isCallTask = false }) {
+  const actionType = isCallTask ? "schedule_call" : "create_task";
+  const taskPayload = buildTaskPayload({ template, adminProfile, isCallTask });
+
+  const { data, error, timedOut } = await insertStudentTask(taskPayload);
+
+  if (error) {
+    console.error("Executive task execution failed:", error);
+
+    fireTimelineEvent({
+      template,
+      adminProfile,
+      actionType: "executive_action_failed",
+      title: "Executive AI task execution failed",
+      description: error.message || "Task execution failed.",
+      executionStatus: "failed",
+      metadata: {
+        target_table: "student_tasks",
+        attempted_payload: taskPayload,
+      },
+    });
+
+    fireExecutionLog({
+      template,
+      adminProfile,
+      status: "failed",
+      targetTable: "student_tasks",
+      error,
+      metadata: {
+        attempted_payload: taskPayload,
+        timed_out: timedOut === true,
+      },
+    });
+
+    return buildExecutionResult({
+      data: taskPayload,
+      error,
+      template,
+      actionType,
+      targetTable: "student_tasks",
+      timedOut: timedOut === true,
+    });
+  }
+
+  fireExecutionLog({
+    template,
+    adminProfile,
+    status: "completed",
+    targetTable: "student_tasks",
+    targetId: data?.id || null,
+    metadata: {
+      created_payload: taskPayload,
+      returned_data: data || null,
+    },
+  });
+
+  fireTimelineEvent({
+    template,
+    adminProfile,
+    actionType: isCallTask ? "executive_call_task_created" : "executive_task_created",
+    title: isCallTask ? "Executive AI created a call task" : "Executive AI created a task",
+    description: taskPayload.description || taskPayload.title,
+    metadata: {
+      target_table: "student_tasks",
+      target_id: data?.id || null,
+    },
+  });
+
+  return buildExecutionResult({
+    data: data || taskPayload,
+    error: null,
+    template,
+    actionType,
+    targetTable: "student_tasks",
+  });
+}
+
+async function executeReminderTemplate({ template, adminProfile }) {
+  const payload = getPayload(template);
+
+  const reminderPayload = {
+    studentId: getStudentId(template),
+    studentType: getStudentType(template),
+    title: getTemplateTitle(template, "Executive Follow-Up"),
+    notes: payload.notes || payload.summary || getTemplateDescription(template),
+    dueDate: payload.due_date || payload.dueDate || null,
+    dueTime: payload.due_time || payload.dueTime || null,
+    adminProfile,
+  };
+
+  const { data, error, timedOut } = await withTimeout(
+    createFollowUpReminder(reminderPayload),
+    "Executive reminder insert",
+    QUERY_TIMEOUT_MS
+  );
+
+  if (error) {
+    console.error("Executive reminder execution failed:", error);
+
+    fireTimelineEvent({
+      template,
+      adminProfile,
+      actionType: "executive_action_failed",
+      title: "Executive AI reminder execution failed",
+      description: error.message || "Reminder execution failed.",
+      executionStatus: "failed",
+      metadata: {
+        target_table: "follow_up_reminders",
+        attempted_payload: reminderPayload,
+      },
+    });
+
+    fireExecutionLog({
+      template,
+      adminProfile,
+      status: "failed",
+      targetTable: "follow_up_reminders",
+      error,
+      metadata: {
+        attempted_payload: reminderPayload,
+        timed_out: timedOut === true,
+      },
+    });
+
+    return buildExecutionResult({
+      data: reminderPayload,
+      error,
+      template,
+      actionType: "create_reminder",
+      targetTable: "follow_up_reminders",
+      timedOut: timedOut === true,
+    });
+  }
+
+  fireTimelineEvent({
+    template,
+    adminProfile,
+    actionType: "executive_reminder_created",
+    title: "Executive AI created a reminder",
+    description: reminderPayload.notes || reminderPayload.title,
+    metadata: {
+      target_table: "follow_up_reminders",
+      target_id: data?.id || null,
+    },
+  });
+
+  fireExecutionLog({
+    template,
+    adminProfile,
+    status: "completed",
+    targetTable: "follow_up_reminders",
+    targetId: data?.id || null,
+    metadata: {
+      created_payload: reminderPayload,
+      returned_data: data || null,
+    },
+  });
+
+  return buildExecutionResult({
+    data: data || reminderPayload,
+    error: null,
+    template,
+    actionType: "create_reminder",
+    targetTable: "follow_up_reminders",
+  });
+}
+
+function buildCommunicationPayload({ template, channel = "whatsapp" }) {
+  const payload = getPayload(template);
+
+  return {
+    student_id: String(getStudentId(template) || ""),
+    student_type: getStudentType(template),
+    channel: payload.channel || channel,
+    subject: payload.subject || "",
+    message: payload.message || payload.body || payload.notes || payload.summary || "",
+    status: payload.status || "draft",
+  };
+}
+
+async function insertCommunication(communicationPayload) {
+  return await withTimeout(
+    supabase.from("student_communications").insert(communicationPayload).select().single(),
+    "Student communication insert",
+    QUERY_TIMEOUT_MS
+  );
+}
+
+async function executeCommunicationTemplate({
+  template,
+  adminProfile,
+  channel = "whatsapp",
+}) {
+  const actionType = normalizeActionType(template.actionType);
+  const communicationPayload = buildCommunicationPayload({ template, channel });
+
+  const { data, error, timedOut } = await insertCommunication(communicationPayload);
+
+  if (error) {
+    console.error("Executive communication execution failed:", error);
+
+    fireTimelineEvent({
+      template,
+      adminProfile,
+      actionType: "executive_action_failed",
+      title: "Executive AI communication execution failed",
+      description: error.message || "Communication execution failed.",
+      executionStatus: "failed",
+      metadata: {
+        target_table: "student_communications",
+        attempted_payload: communicationPayload,
+      },
+    });
+
+    fireExecutionLog({
+      template,
+      adminProfile,
+      status: "failed",
+      targetTable: "student_communications",
+      error,
+      metadata: {
+        attempted_payload: communicationPayload,
+        timed_out: timedOut === true,
+      },
+    });
+
+    return buildExecutionResult({
+      data: communicationPayload,
+      error,
+      template,
+      actionType,
+      targetTable: "student_communications",
+      timedOut: timedOut === true,
+    });
+  }
+
+  fireTimelineEvent({
+    template,
+    adminProfile,
+    actionType:
+      actionType === "send_email"
+        ? "executive_email_draft_saved"
+        : "executive_whatsapp_draft_saved",
+    title:
+      actionType === "send_email"
+        ? "Executive AI saved email draft"
+        : "Executive AI saved WhatsApp draft",
+    description: communicationPayload.message || communicationPayload.subject,
+    metadata: {
+      target_table: "student_communications",
+      target_id: data?.id || null,
+    },
+  });
+
+  fireExecutionLog({
+    template,
+    adminProfile,
+    status: "completed",
+    targetTable: "student_communications",
+    targetId: data?.id || null,
+    metadata: {
+      created_payload: communicationPayload,
+      returned_data: data || null,
+    },
+  });
+
+  return buildExecutionResult({
+    data: data || communicationPayload,
+    error: null,
+    template,
+    actionType,
+    targetTable: "student_communications",
+  });
 }
 
 export async function executeExecutiveActionTemplate({
@@ -273,7 +663,7 @@ export async function executeExecutiveActionTemplate({
   const validationError = validateTemplate(template);
 
   if (validationError) {
-    await writeExecutionLog({
+    fireExecutionLog({
       template,
       adminProfile,
       status: "failed",
@@ -298,7 +688,7 @@ export async function executeExecutiveActionTemplate({
         "Duplicate protection blocked this action because it was already executed."
       );
 
-      await writeExecutionLog({
+      fireExecutionLog({
         template,
         adminProfile,
         status: "duplicate_blocked",
@@ -349,7 +739,7 @@ export async function executeExecutiveActionTemplate({
 
   const unsupportedError = new Error(`Unsupported executive action: ${template.actionType}`);
 
-  await writeExecutionLog({
+  fireExecutionLog({
     template,
     adminProfile,
     status: "failed",
@@ -364,249 +754,6 @@ export async function executeExecutiveActionTemplate({
   });
 }
 
-async function executeTaskTemplate({ template, adminProfile, isCallTask = false }) {
-  const payload = getPayload(template);
-  const actionType = isCallTask ? "schedule_call" : "create_task";
-
-  const taskPayload = {
-    student_id: toNumberOrNull(getStudentId(template)),
-    student_type: getStudentType(template),
-    title: getTemplateTitle(template, isCallTask ? "Executive Call Task" : "Executive Task"),
-    description: getTemplateDescription(template),
-    priority: payload.priority || (isCallTask ? "high" : "medium"),
-    status: payload.status || "pending",
-    due_date: payload.due_date || null,
-    created_by: getAdminId(adminProfile),
-  };
-
-  const { data, error } = await supabase
-    .from("student_tasks")
-    .insert(taskPayload)
-    .select()
-    .single();
-
-  if (!error) {
-    await writeTimelineEvent({
-      template,
-      adminProfile,
-      actionType: isCallTask ? "executive_call_task_created" : "executive_task_created",
-      title: isCallTask
-        ? "Executive AI created a call task"
-        : "Executive AI created a task",
-      description: taskPayload.description || taskPayload.title,
-      metadata: {
-        target_table: "student_tasks",
-        target_id: data?.id || null,
-      },
-    });
-
-    await writeExecutionLog({
-      template,
-      adminProfile,
-      status: "completed",
-      targetTable: "student_tasks",
-      targetId: data?.id || null,
-      metadata: {
-        created_payload: taskPayload,
-      },
-    });
-  }
-
-  if (error) {
-    console.error("Executive task execution failed:", error);
-
-    await writeTimelineEvent({
-      template,
-      adminProfile,
-      actionType: "executive_action_failed",
-      title: "Executive AI task execution failed",
-      description: error.message || "Task execution failed.",
-      executionStatus: "failed",
-    });
-
-    await writeExecutionLog({
-      template,
-      adminProfile,
-      status: "failed",
-      targetTable: "student_tasks",
-      error,
-      metadata: {
-        attempted_payload: taskPayload,
-      },
-    });
-  }
-
-  return buildExecutionResult({
-    data: data || taskPayload,
-    error,
-    template,
-    actionType,
-    targetTable: "student_tasks",
-  });
-}
-
-async function executeReminderTemplate({ template, adminProfile }) {
-  const payload = getPayload(template);
-
-  const { data, error } = await createFollowUpReminder({
-    studentId: getStudentId(template),
-    studentType: getStudentType(template),
-    title: getTemplateTitle(template, "Executive Follow-Up"),
-    notes: payload.notes || payload.summary || getTemplateDescription(template),
-    dueDate: payload.due_date || payload.dueDate || null,
-    dueTime: payload.due_time || payload.dueTime || null,
-    adminProfile,
-  });
-
-  if (!error) {
-    await writeTimelineEvent({
-      template,
-      adminProfile,
-      actionType: "executive_reminder_created",
-      title: "Executive AI created a reminder",
-      description:
-        payload.notes ||
-        payload.summary ||
-        payload.title ||
-        "Executive reminder created",
-      metadata: {
-        target_table: "follow_up_reminders",
-        target_id: data?.id || null,
-      },
-    });
-
-    await writeExecutionLog({
-      template,
-      adminProfile,
-      status: "completed",
-      targetTable: "follow_up_reminders",
-      targetId: data?.id || null,
-      metadata: {
-        created_payload: data || payload,
-      },
-    });
-  }
-
-  if (error) {
-    console.error("Executive reminder execution failed:", error);
-
-    await writeTimelineEvent({
-      template,
-      adminProfile,
-      actionType: "executive_action_failed",
-      title: "Executive AI reminder execution failed",
-      description: error.message || "Reminder execution failed.",
-      executionStatus: "failed",
-    });
-
-    await writeExecutionLog({
-      template,
-      adminProfile,
-      status: "failed",
-      targetTable: "follow_up_reminders",
-      error,
-      metadata: {
-        attempted_payload: payload,
-      },
-    });
-  }
-
-  return buildExecutionResult({
-    data,
-    error,
-    template,
-    actionType: "create_reminder",
-    targetTable: "follow_up_reminders",
-  });
-}
-
-async function executeCommunicationTemplate({
-  template,
-  adminProfile,
-  channel = "whatsapp",
-}) {
-  const payload = getPayload(template);
-  const actionType = normalizeActionType(template.actionType);
-
-  const communicationPayload = {
-    student_id: String(getStudentId(template) || ""),
-    student_type: getStudentType(template),
-    channel: payload.channel || channel,
-    subject: payload.subject || "",
-    message: payload.message || payload.body || "",
-    status: payload.status || "draft",
-  };
-
-  const { data, error } = await supabase
-    .from("student_communications")
-    .insert(communicationPayload)
-    .select()
-    .single();
-
-  if (!error) {
-    await writeTimelineEvent({
-      template,
-      adminProfile,
-      actionType:
-        actionType === "send_email"
-          ? "executive_email_draft_saved"
-          : "executive_whatsapp_draft_saved",
-      title:
-        actionType === "send_email"
-          ? "Executive AI saved email draft"
-          : "Executive AI saved WhatsApp draft",
-      description: communicationPayload.message,
-      metadata: {
-        target_table: "student_communications",
-        target_id: data?.id || null,
-      },
-    });
-
-    await writeExecutionLog({
-      template,
-      adminProfile,
-      status: "completed",
-      targetTable: "student_communications",
-      targetId: data?.id || null,
-      metadata: {
-        created_payload: communicationPayload,
-      },
-    });
-  }
-
-  if (error) {
-    console.error("Executive communication execution failed:", error);
-
-    await writeTimelineEvent({
-      template,
-      adminProfile,
-      actionType: "executive_action_failed",
-      title: "Executive AI communication execution failed",
-      description: error.message || "Communication execution failed.",
-      executionStatus: "failed",
-    });
-
-    await writeExecutionLog({
-      template,
-      adminProfile,
-      status: "failed",
-      targetTable: "student_communications",
-      error,
-      metadata: {
-        attempted_payload: communicationPayload,
-      },
-    });
-  }
-
-  return buildExecutionResult({
-    data: data || communicationPayload,
-    error,
-    template,
-    actionType,
-    targetTable: "student_communications",
-  });
-}
-
 export async function fetchExecutiveExecutionLogs({
   studentId = null,
   studentType = null,
@@ -615,7 +762,7 @@ export async function fetchExecutiveExecutionLogs({
   let query = supabase
     .from("executive_execution_logs")
     .select("*")
-    .order("created_at", { ascending: false })
+    .order("executed_at", { ascending: false })
     .limit(limit);
 
   if (studentId) query = query.eq("student_id", String(studentId));
@@ -658,7 +805,7 @@ export function buildExecutionAnalytics(logs = []) {
     if (["completed", "success", "executed"].includes(status)) analytics.completed += 1;
     if (status === "failed") analytics.failed += 1;
     if (status === "duplicate_blocked") analytics.duplicateBlocked += 1;
-    if (log.approval_required) analytics.approvalRequired += 1;
+    if (log.approval_status === "required") analytics.approvalRequired += 1;
 
     if (actionType === "create_task") analytics.tasks += 1;
     if (actionType === "create_reminder") analytics.reminders += 1;

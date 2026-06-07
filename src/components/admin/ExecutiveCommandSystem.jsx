@@ -5,6 +5,7 @@ import ExecutiveActionQueue from "./ExecutiveActionQueue";
 import ExecutiveAutomationEngine from "./ExecutiveAutomationEngine";
 import ExecutiveActionExecutorPanel from "./ExecutiveActionExecutorPanel";
 import ExecutivePortfolioSummary from "./ExecutivePortfolioSummary";
+import ExecutiveAutomationAnalytics from "./ExecutiveAutomationAnalytics";
 import { getExecutiveScoreSummary } from "../../lib/executivePortfolioGenerator";
 
 function normalize(value = "") {
@@ -143,7 +144,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
               Command view for risks, opportunities, CAS/visa movement,
-              human-approved execution, and real Student OS intelligence.
+              human-approved execution, automation analytics, and real Student OS intelligence.
             </p>
           </div>
 
@@ -196,7 +197,15 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
       ) : null}
 
       {activeView === "actions" ? (
-        <ExecutiveActionQueue scores={scores} adminProfile={adminProfile} />
+        <ExecutiveActionQueue
+          scores={scores}
+          adminProfile={adminProfile}
+          onActionExecuted={handleActionExecuted}
+        />
+      ) : null}
+
+      {activeView === "automation" ? (
+        <ExecutiveAutomationAnalytics adminProfile={adminProfile} />
       ) : null}
 
       {showDeveloperTools ? (
@@ -234,6 +243,7 @@ function CommandTabs({ activeView, setActiveView }) {
     { key: "alerts", label: "Alerts" },
     { key: "portfolio", label: "Portfolio" },
     { key: "actions", label: "Actions" },
+    { key: "automation", label: "Automation Analytics" },
   ];
 
   return (
