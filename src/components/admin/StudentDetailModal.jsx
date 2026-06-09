@@ -18,6 +18,8 @@ import TaskCenterPanel from "./TaskCenterPanel";
 import CounselorQueuePanel from "./CounselorQueuePanel";
 import SmartActionsPanel from "./SmartActionsPanel";
 import StudentAnalyticsPanel from "./StudentAnalyticsPanel";
+import PaymentCenterPanel from "./PaymentCenterPanel";
+import * as studentPortalApi from "../../lib/studentPortal";
 
 import {
   getPipelineStages,
@@ -57,11 +59,37 @@ function StudentDetailModal({
   const [studentUniversities, setStudentUniversities] = useState([]);
   const [studentTasks, setStudentTasks] = useState([]);
   const [studentCommunications, setStudentCommunications] = useState([]);
+  const [studentInvoices, setStudentInvoices] = useState([]);
+  const [studentPayments, setStudentPayments] = useState([]);
+  const [studentReceipts, setStudentReceipts] = useState([]);
+  const [studentPaymentRequests, setStudentPaymentRequests] = useState([]);
+  const [studentSupportRequests, setStudentSupportRequests] = useState([]);
+  const [supportResponseDrafts, setSupportResponseDrafts] = useState({});
+  const [savingSupportResponseId, setSavingSupportResponseId] = useState(null);
+  const [supportActionStatus, setSupportActionStatus] = useState({
+    type: "",
+    message: "",
+  });
+  const [portalAccount, setPortalAccount] = useState(null);
+  const [portalAccountLoading, setPortalAccountLoading] = useState(false);
+  const [portalAccountSaving, setPortalAccountSaving] = useState("");
+  const [portalAccountStatus, setPortalAccountStatus] = useState({
+    type: "",
+    message: "",
+  });
+  const [portalAccountForm, setPortalAccountForm] = useState({
+    email: "",
+    temporaryPassword: "student123",
+    resetPassword: "",
+    forcePasswordChange: true,
+  });
   const [panelRefreshKey, setPanelRefreshKey] = useState(0);
 
   const workingStudent = localStudent || student;
 
   const studentId = workingStudent?.id;
+
+  const studentEmail = workingStudent?.email || student?.email || "";
 
   const studentType =
     workingStudent?.student_type ||
@@ -118,6 +146,233 @@ function StudentDetailModal({
     workingStudent?.__leadType,
   ]);
 
+  const normalizePortalAccount = useCallback((account = null) => {
+    if (!account) return null;
+
+    const isActive =
+      account.is_active ??
+      account.active ??
+      account.status === "active" ??
+      true;
+
+    return {
+      ...account,
+      email: account.email || account.student_email || studentEmail,
+      is_active: Boolean(isActive),
+      must_change_password: Boolean(account.must_change_password),
+      last_login_at: account.last_login_at || account.last_login || null,
+      password_changed_at:
+        account.password_changed_at || account.password_updated_at || null,
+    };
+  }, [studentEmail]);
+
+  const loadPortalAccount = useCallback(async () => {
+    if (!studentId) return null;
+
+    setPortalAccountLoading(true);
+
+    try {
+      const idVariants = getStudentIdVariants();
+      const typeVariants = [...new Set(getStudentTypeVariants())];
+
+      const attempts = idVariants.map((idValue) =>
+        supabase
+          .from("student_portal_accounts")
+          .select("*")
+          .eq("student_id", idValue)
+          .in("student_type", typeVariants.length ? typeVariants : [studentType])
+          .order("created_at", { ascending: false })
+          .limit(1)
+      );
+
+      const results = await Promise.all(attempts);
+      const firstSuccess = results.find((result) => result.data?.length > 0);
+      const firstError = results.find((result) => result.error)?.error;
+
+      if (!firstSuccess && firstError) {
+        throw firstError;
+      }
+
+      const account = normalizePortalAccount(firstSuccess?.data?.[0] || null);
+      setPortalAccount(account);
+
+      setPortalAccountForm((prev) => ({
+        ...prev,
+        email: account?.email || studentEmail || prev.email,
+      }));
+
+      return account;
+    } catch (error) {
+      console.warn("Portal account failed to load:", error?.message || error);
+      setPortalAccount(null);
+      return null;
+    } finally {
+      setPortalAccountLoading(false);
+    }
+  }, [getStudentIdVariants, getStudentTypeVariants, normalizePortalAccount, studentEmail, studentId, studentType]);
+
+  const callPortalApi = async (functionName, payload = {}) => {
+    const handler = studentPortalApi?.[functionName];
+
+    if (typeof handler !== "function") {
+      throw new Error(`${functionName} is not exported from studentPortal.js.`);
+    }
+
+    const objectPayload = {
+      studentId,
+      student_id: studentId,
+      studentType,
+      student_type: studentType,
+      email: portalAccountForm.email || studentEmail,
+      password:
+        payload.password ||
+        portalAccountForm.resetPassword ||
+        portalAccountForm.temporaryPassword,
+      temporaryPassword: portalAccountForm.temporaryPassword,
+      resetPassword: portalAccountForm.resetPassword,
+      mustChangePassword: portalAccountForm.forcePasswordChange,
+      must_change_password: portalAccountForm.forcePasswordChange,
+      adminProfile,
+      ...payload,
+    };
+
+    const attempts = [
+      () => handler(objectPayload),
+      () => handler(studentId, studentType, objectPayload),
+      () => handler(studentId, studentType, objectPayload.email, objectPayload.password, objectPayload.mustChangePassword),
+      () => handler(portalAccount?.id, objectPayload),
+    ];
+
+    let lastError = null;
+
+    for (const attempt of attempts) {
+      try {
+        const result = await attempt();
+        return result;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error(`${functionName} failed.`);
+  };
+
+  const handlePortalAccountAction = async (action, options = {}) => {
+    if (!studentId || portalAccountSaving) return;
+
+    const actionLabels = {
+      create: "Creating portal account",
+      reset: "Resetting portal password",
+      activate: "Activating portal account",
+      deactivate: "Deactivating portal account",
+      force_change: "Forcing password change",
+    };
+
+    const apiMap = {
+      create: "createStudentPortalAccount",
+      reset: "resetStudentPortalAccountPassword",
+      activate: "activateStudentPortalAccount",
+      deactivate: "deactivateStudentPortalAccount",
+      force_change: "forceStudentPortalPasswordChange",
+    };
+
+    const emailToUse = String(portalAccountForm.email || studentEmail || "").trim();
+    const passwordToUse = String(
+      action === "reset"
+        ? portalAccountForm.resetPassword || portalAccountForm.temporaryPassword
+        : portalAccountForm.temporaryPassword
+    ).trim();
+
+    if (["create", "reset"].includes(action)) {
+      if (!emailToUse) {
+        setPortalAccountStatus({ type: "warning", message: "Student email is required." });
+        return;
+      }
+
+      if (!passwordToUse || passwordToUse.length < 6) {
+        setPortalAccountStatus({
+          type: "warning",
+          message: "Temporary password must be at least 6 characters.",
+        });
+        return;
+      }
+    }
+
+    setPortalAccountSaving(action);
+    setPortalAccountStatus({
+      type: "info",
+      message: `${actionLabels[action] || "Updating portal account"}...`,
+    });
+
+    try {
+      const result = await runWithTimeout(
+        callPortalApi(apiMap[action], {
+          email: emailToUse,
+          password: passwordToUse,
+          temporaryPassword: passwordToUse,
+          resetPassword: passwordToUse,
+          isActive: action !== "deactivate",
+          is_active: action !== "deactivate",
+          mustChangePassword:
+            action === "force_change" ? true : portalAccountForm.forcePasswordChange,
+          must_change_password:
+            action === "force_change" ? true : portalAccountForm.forcePasswordChange,
+          accountId: portalAccount?.id,
+          account_id: portalAccount?.id,
+          ...options,
+        }),
+        actionLabels[action] || "Portal account action",
+        20000
+      );
+
+      const accountFromResult = result?.account || result?.data || result;
+      if (accountFromResult && typeof accountFromResult === "object" && !Array.isArray(accountFromResult)) {
+        setPortalAccount(normalizePortalAccount(accountFromResult));
+      }
+
+      await fireSupportTimelineEvent({
+        actionType: `portal_account_${action}`,
+        title: "Portal Account Updated",
+        description: `Portal account action completed: ${action.replace(/_/g, " ")}.`,
+        request: null,
+        metadata: {
+          portal_account_id: portalAccount?.id || accountFromResult?.id || null,
+          email: emailToUse,
+        },
+      });
+
+      await loadPortalAccount();
+
+      setPortalAccountStatus({
+        type: "success",
+        message:
+          action === "create"
+            ? "Portal account created. Share the temporary password with the student."
+            : action === "reset"
+              ? "Password reset completed. Student should use the new temporary password."
+              : action === "activate"
+                ? "Portal account activated."
+                : action === "deactivate"
+                  ? "Portal account deactivated. Student login is blocked."
+                  : "Student will be forced to change password on next login.",
+      });
+
+      setPortalAccountForm((prev) => ({
+        ...prev,
+        resetPassword: "",
+      }));
+    } catch (error) {
+      console.error("Portal account action failed:", error);
+      setPortalAccountStatus({
+        type: "warning",
+        message: error.message || "Portal account action failed.",
+      });
+      await loadPortalAccount();
+    } finally {
+      setPortalAccountSaving("");
+    }
+  };
+
   const loadStudentOsData = useCallback(async () => {
     if (!studentId) return;
 
@@ -171,12 +426,21 @@ function StudentDetailModal({
       };
 
       const [
-        documentsData,
-        applicationsData,
-        universitiesData,
-        tasksData,
-        communicationsData,
-      ] = await Promise.all([
+  supportRequestsData,
+  documentsData,
+  applicationsData,
+  universitiesData,
+  tasksData,
+  communicationsData,
+  invoicesData,
+  paymentsData,
+  receiptsData,
+  paymentRequestsData,
+] = await Promise.all([
+  fetchByStudentId("student_support_requests", {
+  orderBy: "created_at",
+  ascending: false,
+}),
         fetchByStudentId("student_documents", {
           orderBy: "created_at",
           ascending: false,
@@ -221,6 +485,58 @@ function StudentDetailModal({
             matchStudentType: false,
           });
         }),
+
+        fetchByStudentId("student_invoices", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("student_invoices", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
+
+        fetchByStudentId("student_payments", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("student_payments", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
+
+        fetchByStudentId("student_receipts", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("student_receipts", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
+
+        fetchByStudentId("counselor_payment_requests", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("counselor_payment_requests", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
       ]);
 
       setStudentDocuments(documentsData || []);
@@ -228,6 +544,11 @@ function StudentDetailModal({
       setStudentUniversities(universitiesData || []);
       setStudentTasks(tasksData || []);
       setStudentCommunications(communicationsData || []);
+      setStudentInvoices(invoicesData || []);
+      setStudentPayments(paymentsData || []);
+      setStudentReceipts(receiptsData || []);
+      setStudentPaymentRequests(paymentRequestsData || []);
+      setStudentSupportRequests(supportRequestsData || []);
 
       setPanelRefreshKey((prev) => prev + 1);
     } catch (error) {
@@ -249,12 +570,34 @@ function StudentDetailModal({
     setStudentUniversities([]);
     setStudentTasks([]);
     setStudentCommunications([]);
+    setStudentInvoices([]);
+    setStudentPayments([]);
+    setStudentReceipts([]);
+    setStudentPaymentRequests([]);
+    setStudentSupportRequests([]);
+    setSupportResponseDrafts({});
+    setSavingSupportResponseId(null);
+    setSupportActionStatus({ type: "", message: "" });
+    setPortalAccount(null);
+    setPortalAccountLoading(false);
+    setPortalAccountSaving("");
+    setPortalAccountStatus({ type: "", message: "" });
+    setPortalAccountForm({
+      email: student?.email || "",
+      temporaryPassword: "student123",
+      resetPassword: "",
+      forcePasswordChange: true,
+    });
     setPanelRefreshKey((prev) => prev + 1);
   }, [student]);
 
   useEffect(() => {
     loadStudentOsData();
   }, [loadStudentOsData]);
+
+  useEffect(() => {
+    loadPortalAccount();
+  }, [loadPortalAccount]);
 
   const refreshCurrentPanel = async () => {
     if (osLoading) return;
@@ -367,6 +710,8 @@ function StudentDetailModal({
         ["applications", "Applications", "University workflow", "🎓"],
         ["visa", "Visa Processing", "Visa workflow tracking", "🌍"],
         ["universities", "Universities", "Destination planning", "🏫"],
+        ["payments", "Payments", "Invoices and receipt tracking", "💳"],
+        ["support-requests", "Support Requests", "Student help desk", "🎯"],
       ],
     },
     {
@@ -543,6 +888,256 @@ function StudentDetailModal({
       alert(error.message || "Pipeline stage update failed.");
     } finally {
       setSavingStage(false);
+    }
+  };
+
+  const patchLocalSupportRequest = useCallback((requestId, patch = {}) => {
+    if (!requestId) return;
+
+    setStudentSupportRequests((prev) =>
+      prev.map((item) =>
+        String(item.id) === String(requestId)
+          ? {
+              ...item,
+              ...patch,
+            }
+          : item
+      )
+    );
+  }, []);
+
+  const runWithTimeout = async (promise, label = "Action", timeoutMs = 15000) => {
+    let timer;
+
+    const timeout = new Promise((_, reject) => {
+      timer = window.setTimeout(() => {
+        reject(new Error(`${label} timed out. Please refresh and check the record.`));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      window.clearTimeout(timer);
+    }
+  };
+
+  const updateSupportRequestSafely = async (requestId, payload = {}) => {
+    const cleanPayload = Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== undefined)
+    );
+
+    let result = await supabase
+      .from("student_support_requests")
+      .update(cleanPayload)
+      .eq("id", requestId)
+      .select("*")
+      .single();
+
+    if (!result.error) return result.data;
+
+    const message = String(result.error?.message || "").toLowerCase();
+    const shouldRetryMinimal =
+      message.includes("updated_at") ||
+      message.includes("resolved_at") ||
+      message.includes("reviewed") ||
+      message.includes("column");
+
+    if (!shouldRetryMinimal) throw result.error;
+
+    const minimalPayload = { ...cleanPayload };
+    delete minimalPayload.updated_at;
+
+    if (message.includes("resolved_at")) {
+      delete minimalPayload.resolved_at;
+    }
+
+    result = await supabase
+      .from("student_support_requests")
+      .update(minimalPayload)
+      .eq("id", requestId)
+      .select("*")
+      .single();
+
+    if (result.error) throw result.error;
+    return result.data;
+  };
+
+  const fireSupportTimelineEvent = async ({
+    actionType,
+    title,
+    description,
+    oldValue = null,
+    newValue = null,
+    request,
+    metadata = {},
+  }) => {
+    try {
+      await runWithTimeout(
+        addTimelineEvent({
+          studentId,
+          studentType,
+          actionType,
+          title,
+          description,
+          oldValue,
+          newValue,
+          adminProfile,
+          metadata: {
+            support_request_id: request?.id || null,
+            category: request?.category || request?.request_type || null,
+            ...metadata,
+          },
+        }),
+        "Support timeline event",
+        7000
+      );
+    } catch (timelineError) {
+      console.warn("Support timeline event skipped:", timelineError?.message || timelineError);
+    }
+  };
+
+  const handleSupportResponseSubmit = async (request) => {
+    if (!request?.id || savingSupportResponseId === request.id) return;
+
+    const responseText = String(
+      supportResponseDrafts[request.id] ?? request.counselor_response ?? ""
+    ).trim();
+
+    if (!responseText) {
+      setSupportActionStatus({
+        type: "warning",
+        message: "Write a counselor response before sending.",
+      });
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    setSavingSupportResponseId(request.id);
+    setSupportActionStatus({
+      type: "info",
+      message: "Sending counselor response...",
+    });
+
+    try {
+      const optimisticPatch = {
+        counselor_response: responseText,
+        responded_at: now,
+        status: "resolved",
+        resolved_at: request.resolved_at || now,
+        updated_at: now,
+      };
+
+      patchLocalSupportRequest(request.id, optimisticPatch);
+
+      const savedRequest = await runWithTimeout(
+        updateSupportRequestSafely(request.id, optimisticPatch),
+        "Counselor response",
+        18000
+      );
+
+      if (savedRequest?.id) {
+        patchLocalSupportRequest(request.id, savedRequest);
+      }
+
+      setSupportResponseDrafts((prev) => ({
+        ...prev,
+        [request.id]: responseText,
+      }));
+
+      setSupportActionStatus({
+        type: "success",
+        message: "Counselor response sent. Student can now see it in Support Center.",
+      });
+
+      await fireSupportTimelineEvent({
+        actionType: "support_response",
+        title: "Counselor Responded",
+        description: `Counselor responded to support request: ${request.category || request.request_type || "Support Request"}.`,
+        request,
+        metadata: {
+          status: "resolved",
+        },
+      });
+
+      await loadStudentOsData();
+    } catch (error) {
+      console.error("Support response failed:", error);
+      setSupportActionStatus({
+        type: "warning",
+        message: error.message || "Counselor response failed.",
+      });
+      await loadStudentOsData();
+    } finally {
+      setSavingSupportResponseId(null);
+    }
+  };
+
+  const handleSupportStatusChange = async (request, nextStatus) => {
+    if (!request?.id || savingSupportResponseId === request.id) return;
+
+    const currentStatus = normalize(request.status || "open");
+    const cleanNextStatus = normalize(nextStatus || "open");
+
+    if (currentStatus === cleanNextStatus) return;
+
+    setSavingSupportResponseId(request.id);
+    setSupportActionStatus({
+      type: "info",
+      message: `Updating support request to ${cleanNextStatus.replace(/_/g, " ")}...`,
+    });
+
+    try {
+      const now = new Date().toISOString();
+      const payload = {
+        status: cleanNextStatus,
+        updated_at: now,
+      };
+
+      if (["resolved", "closed"].includes(cleanNextStatus)) {
+        payload.resolved_at = request.resolved_at || now;
+      }
+
+      patchLocalSupportRequest(request.id, payload);
+
+      const savedRequest = await runWithTimeout(
+        updateSupportRequestSafely(request.id, payload),
+        "Support status update",
+        15000
+      );
+
+      if (savedRequest?.id) {
+        patchLocalSupportRequest(request.id, savedRequest);
+      }
+
+      setSupportActionStatus({
+        type: "success",
+        message: `Support request marked ${cleanNextStatus.replace(/_/g, " ")}.`,
+      });
+
+      await fireSupportTimelineEvent({
+        actionType: "support_status_changed",
+        title: "Support Request Updated",
+        description: `Support request status changed from ${currentStatus.replace(/_/g, " ")} to ${cleanNextStatus.replace(/_/g, " ")}.`,
+        oldValue: currentStatus,
+        newValue: cleanNextStatus,
+        request,
+        metadata: {
+          status: cleanNextStatus,
+        },
+      });
+
+      await loadStudentOsData();
+    } catch (error) {
+      console.error("Support status update failed:", error);
+      setSupportActionStatus({
+        type: "warning",
+        message: error.message || "Support status could not be updated.",
+      });
+      await loadStudentOsData();
+    } finally {
+      setSavingSupportResponseId(null);
     }
   };
 
@@ -756,6 +1351,12 @@ function StudentDetailModal({
 <MiniOsStat label="Universities" value={studentUniversities.length} />
 <MiniOsStat label="Tasks" value={studentTasks.length} />
 <MiniOsStat label="Messages" value={studentCommunications.length} />
+<MiniOsStat label="Invoices" value={studentInvoices.length} />
+<MiniOsStat label="Receipts" value={studentReceipts.length} />
+<MiniOsStat
+  label="Support"
+  value={studentSupportRequests.length}
+/>
 
                 <p className="pt-2 text-[11px] leading-5 text-white/35">
                   Live Student OS snapshot loaded from documents, applications,
@@ -945,47 +1546,232 @@ function StudentDetailModal({
 {activePanel === "portal-account" ? (
   <div className="space-y-5">
     <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-5">
-      <h3 className="text-xl font-black text-white">
-        Student Portal Account
-      </h3>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+            Student Portal Access Control
+          </p>
+          <h3 className="mt-2 text-xl font-black text-white">
+            Portal Account Management
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-white/55">
+            Create login access, reset temporary passwords, activate or deactivate access,
+            and force password changes from the admin Student OS.
+          </p>
+        </div>
 
-      <p className="mt-2 text-sm text-white/55">
-        Manage student login access for the Zaifan Student Portal.
-      </p>
-    </div>
-
-    <div className="grid gap-4 md:grid-cols-2">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
-          Student Email
-        </p>
-
-        <p className="mt-2 text-white">
-          {email}
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
-          Student Mapping
-        </p>
-
-        <p className="mt-2 text-white">
-          {studentType} #{studentId}
-        </p>
+        <button
+          type="button"
+          onClick={loadPortalAccount}
+          disabled={portalAccountLoading || Boolean(portalAccountSaving)}
+          className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/45 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {portalAccountLoading ? "Checking Account..." : "Refresh Account"}
+        </button>
       </div>
     </div>
 
-    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-5">
-      <p className="font-semibold text-emerald-300">
-        Portal Account System Ready
-      </p>
+    {portalAccountStatus.message ? (
+      <div
+        className={`rounded-2xl border p-4 text-sm ${
+          portalAccountStatus.type === "success"
+            ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+            : portalAccountStatus.type === "warning"
+              ? "border-red-400/20 bg-red-500/10 text-red-200"
+              : "border-blue-400/20 bg-blue-500/10 text-blue-200"
+        }`}
+      >
+        {portalAccountStatus.message}
+      </div>
+    ) : null}
 
-      <p className="mt-2 text-sm text-white/60">
-        student_portal_accounts table and login verification are now active.
-        Next step is connecting Create Account, Reset Password,
-        Activate and Deactivate controls.
-      </p>
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <PortalAccountStat
+        label="Account Status"
+        value={portalAccount ? (portalAccount.is_active ? "Active" : "Inactive") : "Not Created"}
+        tone={portalAccount?.is_active ? "success" : portalAccount ? "danger" : "muted"}
+      />
+      <PortalAccountStat
+        label="Must Change Password"
+        value={portalAccount?.must_change_password ? "Yes" : "No"}
+        tone={portalAccount?.must_change_password ? "warning" : "muted"}
+      />
+      <PortalAccountStat
+        label="Last Login"
+        value={formatPortalDate(portalAccount?.last_login_at)}
+      />
+      <PortalAccountStat
+        label="Password Changed"
+        value={formatPortalDate(portalAccount?.password_changed_at)}
+      />
+    </div>
+
+    <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-lg font-bold text-white">Login Details</h4>
+            <p className="mt-1 text-sm text-white/45">
+              These values are used when creating or resetting a student's portal login.
+            </p>
+          </div>
+
+          {portalAccount ? (
+            <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+              Account Found
+            </span>
+          ) : (
+            <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-semibold text-yellow-300">
+              No Account
+            </span>
+          )}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+              Student Email
+            </span>
+            <input
+              value={portalAccountForm.email}
+              onChange={(event) =>
+                setPortalAccountForm((prev) => ({ ...prev, email: event.target.value }))
+              }
+              className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-[#D4AF37]/40"
+              placeholder="student@email.com"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+              Temporary Password
+            </span>
+            <input
+              value={portalAccountForm.temporaryPassword}
+              onChange={(event) =>
+                setPortalAccountForm((prev) => ({
+                  ...prev,
+                  temporaryPassword: event.target.value,
+                }))
+              }
+              className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-[#D4AF37]/40"
+              placeholder="Minimum 6 characters"
+            />
+          </label>
+
+          <label className="block md:col-span-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+              Reset Password Override
+            </span>
+            <input
+              value={portalAccountForm.resetPassword}
+              onChange={(event) =>
+                setPortalAccountForm((prev) => ({ ...prev, resetPassword: event.target.value }))
+              }
+              className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-[#D4AF37]/40"
+              placeholder="Optional. Leave blank to reuse temporary password."
+            />
+          </label>
+        </div>
+
+        <label className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+          <input
+            type="checkbox"
+            checked={portalAccountForm.forcePasswordChange}
+            onChange={(event) =>
+              setPortalAccountForm((prev) => ({
+                ...prev,
+                forcePasswordChange: event.target.checked,
+              }))
+            }
+            className="h-4 w-4 accent-[#D4AF37]"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-white">
+              Force password change on next login
+            </span>
+            <span className="text-xs text-white/45">
+              Recommended for all new and reset portal accounts.
+            </span>
+          </span>
+        </label>
+      </div>
+
+      <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+        <h4 className="text-lg font-bold text-white">Student Mapping</h4>
+        <div className="mt-4 grid gap-3">
+          <PortalInfoRow label="Student" value={fullName} />
+          <PortalInfoRow label="Email" value={portalAccount?.email || email} />
+          <PortalInfoRow label="Record" value={`${studentType} #${studentId}`} />
+          <PortalInfoRow label="Account ID" value={portalAccount?.id || "Not created yet"} />
+          <PortalInfoRow label="Created" value={formatPortalDate(portalAccount?.created_at)} />
+          <PortalInfoRow label="Updated" value={formatPortalDate(portalAccount?.updated_at)} />
+        </div>
+      </div>
+    </div>
+
+    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h4 className="text-lg font-bold text-white">Admin Controls</h4>
+          <p className="text-sm text-white/45">
+            Full portal access controls are connected to studentPortal.js backend actions.
+          </p>
+        </div>
+
+        {portalAccountSaving ? (
+          <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#D4AF37]">
+            Working...
+          </span>
+        ) : null}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <button
+          type="button"
+          disabled={Boolean(portalAccountSaving) || Boolean(portalAccount)}
+          onClick={() => handlePortalAccountAction("create")}
+          className="rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-3 text-sm font-bold text-[#D4AF37] transition hover:bg-[#D4AF37]/20 disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {portalAccountSaving === "create" ? "Creating..." : "Create Account"}
+        </button>
+
+        <button
+          type="button"
+          disabled={Boolean(portalAccountSaving) || !portalAccount}
+          onClick={() => handlePortalAccountAction("reset")}
+          className="rounded-2xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-300 transition hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {portalAccountSaving === "reset" ? "Resetting..." : "Reset Password"}
+        </button>
+
+        <button
+          type="button"
+          disabled={Boolean(portalAccountSaving) || !portalAccount || portalAccount.is_active}
+          onClick={() => handlePortalAccountAction("activate")}
+          className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {portalAccountSaving === "activate" ? "Activating..." : "Activate"}
+        </button>
+
+        <button
+          type="button"
+          disabled={Boolean(portalAccountSaving) || !portalAccount || !portalAccount.is_active}
+          onClick={() => handlePortalAccountAction("deactivate")}
+          className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {portalAccountSaving === "deactivate" ? "Deactivating..." : "Deactivate"}
+        </button>
+
+        <button
+          type="button"
+          disabled={Boolean(portalAccountSaving) || !portalAccount}
+          onClick={() => handlePortalAccountAction("force_change")}
+          className="rounded-2xl border border-orange-400/25 bg-orange-500/10 px-4 py-3 text-sm font-bold text-orange-300 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {portalAccountSaving === "force_change" ? "Updating..." : "Force Change"}
+        </button>
+      </div>
     </div>
   </div>
 ) : null}
@@ -1039,6 +1825,249 @@ function StudentDetailModal({
                 />
               ) : null}
 
+
+
+              {activePanel === "payments" ? (
+                <PaymentCenterPanel
+                  key={`payments-${studentId}-${panelRefreshKey}`}
+                  student={workingStudent}
+                  studentType={studentType}
+                  adminProfile={adminProfile}
+                  invoices={studentInvoices}
+                  payments={studentPayments}
+                  receipts={studentReceipts}
+                  paymentRequests={studentPaymentRequests}
+                  onSharedDataChange={loadStudentOsData}
+                />
+              ) : null}
+{activePanel === "support-requests" && (
+  <div className="space-y-4">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      <h3 className="mb-2 text-lg font-bold text-white">
+        Student Support Requests
+      </h3>
+
+      <p className="text-sm text-white/60">
+        Requests submitted through Student Portal.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+        <MiniOsStat label="Total" value={studentSupportRequests.length} />
+        <MiniOsStat
+          label="Open"
+          value={studentSupportRequests.filter((item) => ["open", "pending", "in_progress"].includes(normalize(item.status || "open"))).length}
+        />
+        <MiniOsStat
+          label="Responded"
+          value={studentSupportRequests.filter((item) => Boolean(item.counselor_response)).length}
+        />
+        <MiniOsStat
+          label="Resolved"
+          value={studentSupportRequests.filter((item) => ["resolved", "closed"].includes(normalize(item.status))).length}
+        />
+      </div>
+    </div>
+
+    {supportActionStatus.message ? (
+      <div
+        className={`rounded-2xl border p-4 text-sm ${
+          supportActionStatus.type === "success"
+            ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+            : supportActionStatus.type === "warning"
+              ? "border-red-400/20 bg-red-500/10 text-red-200"
+              : "border-blue-400/20 bg-blue-500/10 text-blue-200"
+        }`}
+      >
+        {supportActionStatus.message}
+      </div>
+    ) : null}
+
+    {studentSupportRequests.length === 0 ? (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center text-white/50">
+        No support requests found.
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {studentSupportRequests.map((request) => (
+          <div
+            key={request.id}
+            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-white">
+                  {request.subject}
+                </h4>
+
+                <p className="text-xs text-white/50">
+                  {request.request_type}
+                </p>
+
+                <div className="mt-1 flex gap-2">
+                  <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-2 py-1 text-[10px] uppercase text-yellow-300">
+                    {request.priority || "normal"}
+                  </span>
+                </div>
+              </div>
+
+              <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+                {request.status || "open"}
+              </span>
+            </div>
+
+            <div className="mt-3 text-sm text-white/70">
+              {request.message}
+
+              {request.admin_notes ? (
+  <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3">
+    <div className="text-xs font-semibold text-emerald-300">
+      Admin Notes
+    </div>
+
+    <div className="mt-1 text-sm text-white/80">
+      {request.admin_notes}
+    </div>
+  </div>
+) : null}
+
+              {request.counselor_response ? (
+                <div className="mt-3 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3">
+                  <div className="text-xs font-semibold text-[#D4AF37]">
+                    Counselor Response Sent
+                  </div>
+
+                  <div className="mt-1 whitespace-pre-wrap text-sm text-white/80">
+                    {request.counselor_response}
+                  </div>
+
+                  {request.responded_at ? (
+                    <div className="mt-2 text-xs text-white/40">
+                      Responded: {new Date(request.responded_at).toLocaleString()}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+<div className="mt-3 text-xs text-white/40">
+              {request.created_at
+                ? new Date(request.created_at).toLocaleString()
+                : "Unknown"}
+
+              {request.resolved_at ? (
+                <div className="mt-1 text-emerald-300">
+                  Resolved: {new Date(request.resolved_at).toLocaleString()}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+                Counselor Response
+              </p>
+
+              <textarea
+                value={
+                  supportResponseDrafts[request.id] ??
+                  request.counselor_response ??
+                  ""
+                }
+                onChange={(event) =>
+                  setSupportResponseDrafts((prev) => ({
+                    ...prev,
+                    [request.id]: event.target.value,
+                  }))
+                }
+                rows={4}
+                className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-sm leading-6 text-white outline-none placeholder:text-white/25 focus:border-[#D4AF37]/40"
+                placeholder="Write the response the student will see in their portal."
+              />
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={savingSupportResponseId === request.id}
+                  onClick={() => handleSupportResponseSubmit(request)}
+                  className="rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {savingSupportResponseId === request.id
+                    ? "Sending Response..."
+                    : request.counselor_response
+                      ? "Update Response"
+                      : "Send Response"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActivePanel("timeline")}
+                  className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/60 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+                >
+                  Open Timeline
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      ["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "in_progress")}
+    className="rounded-lg border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "In Progress"}
+  </button>
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      ["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "resolved")}
+    className="rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "Resolve"}
+  </button>
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      ["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "closed")}
+    className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "Close"}
+  </button>
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      !["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "open")}
+    className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/60 disabled:cursor-not-allowed disabled:opacity-40"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "Reopen"}
+  </button>
+
+</div>
+            <div className="mt-3 text-xs text-white/40">
+              {request.created_at
+                ? new Date(request.created_at).toLocaleString()
+                : "Unknown"}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
               {activePanel === "communication" ? (
                 <CommunicationCenterPanel
                   key={`communication-${studentId}-${panelRefreshKey}`}
@@ -1200,6 +2229,58 @@ function StudentDetailModal({
         </motion.div>
       </motion.div>
     </AnimatePresence>
+  );
+}
+
+function normalize(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+
+function formatPortalDate(value) {
+  if (!value) return "Never";
+
+  try {
+    return new Date(value).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch (_error) {
+    return String(value);
+  }
+}
+
+function PortalAccountStat({ label, value, tone = "muted" }) {
+  const styles = {
+    success: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
+    danger: "border-red-400/20 bg-red-500/10 text-red-300",
+    warning: "border-orange-400/20 bg-orange-500/10 text-orange-300",
+    muted: "border-white/10 bg-white/[0.035] text-white/75",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-4 ${styles[tone] || styles.muted}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-60">
+        {label}
+      </p>
+      <p className="mt-2 break-words text-sm font-black">{value}</p>
+    </div>
+  );
+}
+
+function PortalInfoRow({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm text-white/75">{value}</p>
+    </div>
   );
 }
 

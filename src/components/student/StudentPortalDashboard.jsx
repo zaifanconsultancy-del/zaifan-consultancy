@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
 import {
   buildPortalSummary,
   getStudentDisplayName,
+  uploadStudentReceipt,
 } from "../../lib/studentPortal";
 
 function normalize(value = "") {
@@ -59,6 +61,8 @@ function getNotificationTarget(source = "") {
   if (clean.includes("message")) return "messages";
   if (clean.includes("communication")) return "messages";
   if (clean.includes("timeline")) return "timeline";
+  if (clean.includes("support")) return "support";
+  if (clean.includes("counselor")) return "support";
   if (clean.includes("universit")) return "universities";
 
   return "overview";
@@ -76,6 +80,7 @@ function notificationMatchesFilter(item, filter) {
   if (filter === "tasks") return source.includes("task");
   if (filter === "applications") return source.includes("application");
   if (filter === "visa") return source.includes("visa");
+  if (filter === "support") return source.includes("support") || source.includes("counselor");
 
   return true;
 }
@@ -89,6 +94,25 @@ function clampPercent(value = 0) {
 
 function asPortalArray(value) {
   return Array.isArray(value) ? value : [];
+}
+
+function uniqueMergeRows(...groups) {
+  return Array.from(
+    new Map(
+      groups
+        .flatMap((group) => asPortalArray(group))
+        .filter(Boolean)
+        .map((row) => [row.id || row.uuid || `${row.student_id || "student"}-${row.created_at || Math.random()}`, row])
+    ).values()
+  ).sort((a, b) => new Date(b.created_at || b.paid_at || b.submitted_at || 0).getTime() - new Date(a.created_at || a.paid_at || a.submitted_at || 0).getTime());
+}
+
+function getPortalStudentId(student = {}) {
+  return String(student?.id || student?.student_id || "").trim();
+}
+
+function getPortalStudentType(student = {}, fallback = "inquiry") {
+  return student?.student_type || student?.__leadType || student?.type || fallback || "inquiry";
 }
 
 function numericCount(...values) {
@@ -120,6 +144,11 @@ function buildDashboardCounts(portalData = {}, summary = {}) {
   const universitiesCount = countFromPortalData(portalData, "universities");
   const communicationsCount = countFromPortalData(portalData, "communications");
   const timelineCount = countFromPortalData(portalData, "timeline");
+  const supportRequestsCount = Math.max(
+    countFromPortalData(portalData, "supportRequests"),
+    countFromPortalData(portalData, "studentSupportRequests"),
+    countFromPortalData(portalData, "support_requests")
+  );
 
   const pendingTasksCount = Math.max(
     asPortalArray(portalData?.tasks).filter((task) => {
@@ -141,6 +170,7 @@ function buildDashboardCounts(portalData = {}, summary = {}) {
     universitiesCount,
     communicationsCount,
     timelineCount,
+    supportRequestsCount,
     pendingTasksCount,
     totalPortalRecords:
       applicationsCount +
@@ -148,7 +178,8 @@ function buildDashboardCounts(portalData = {}, summary = {}) {
       tasksCount +
       universitiesCount +
       communicationsCount +
-      timelineCount,
+      timelineCount +
+      supportRequestsCount,
   };
 }
 
@@ -1031,6 +1062,145 @@ function buildCounselorCenter({ student = {}, account = null }) {
 }
 
 
+const SUPPORT_REQUEST_TYPES = [
+  {
+    id: "callback_request",
+    icon: "📞",
+    title: "Request Callback",
+    subject: "Callback Request",
+    description: "Ask Zaifan team to call you back about your student journey.",
+    priority: "normal",
+  },
+  {
+    id: "document_review",
+    icon: "📄",
+    title: "Document Review",
+    subject: "Document Review Request",
+    description: "Ask your counselor to check uploaded or pending documents.",
+    priority: "important",
+  },
+  {
+    id: "application_review",
+    icon: "🎓",
+    title: "Application Review",
+    subject: "Application Review Request",
+    description: "Ask for help with application status, offers, or next steps.",
+    priority: "important",
+  },
+  {
+    id: "visa_help",
+    icon: "🌍",
+    title: "Visa Help",
+    subject: "Visa Help Request",
+    description: "Ask for help with CAS, visa documents, or visa status questions.",
+    priority: "high",
+  },
+  {
+    id: "general_question",
+    icon: "❓",
+    title: "Ask Counselor",
+    subject: "Question for Counselor",
+    description: "Send a general question to your counselor.",
+    priority: "normal",
+  },
+];
+
+function getSupportRequestTypeMeta(type = "") {
+  const clean = normalize(type);
+  return (
+    SUPPORT_REQUEST_TYPES.find((item) => normalize(item.id) === clean) ||
+    SUPPORT_REQUEST_TYPES.find((item) => clean.includes(normalize(item.id))) ||
+    SUPPORT_REQUEST_TYPES[SUPPORT_REQUEST_TYPES.length - 1]
+  );
+}
+
+function buildSupportAnalytics(supportRequests = []) {
+  const rows = asPortalArray(supportRequests);
+  const closedStatuses = ["resolved", "closed", "completed"];
+  const open = rows.filter((request) => normalize(request.status || "open") === "open").length;
+  const inProgress = rows.filter((request) => normalize(request.status) === "in_progress").length;
+  const resolved = rows.filter((request) =>
+    closedStatuses.includes(normalize(request.status))
+  ).length;
+  const waitingForCounselor = rows.filter(
+    (request) =>
+      !request.counselor_response &&
+      !closedStatuses.includes(normalize(request.status))
+  ).length;
+  const responsesReceived = rows.filter((request) => Boolean(request.counselor_response)).length;
+  const highPriority = rows.filter((request) =>
+    ["high", "urgent", "important"].includes(normalize(request.priority))
+  ).length;
+
+  const latest = rows[0] || null;
+  const latestResponse = rows.find((request) => Boolean(request.counselor_response)) || null;
+  const urgentOpen = rows.filter((request) => {
+    const status = normalize(request.status || "open");
+    const priority = normalize(request.priority || "normal");
+    return !closedStatuses.includes(status) &&
+      ["high", "urgent", "important"].includes(priority);
+  }).length;
+
+  const timeline = rows
+    .flatMap((request) => {
+      const meta = getSupportRequestTypeMeta(request.request_type);
+      const events = [
+        {
+          id: `${request.id}-created`,
+          title: request.subject || meta.subject || "Support request submitted",
+          message: request.message || meta.description,
+          date: request.created_at,
+          type: "created",
+          status: request.status || "open",
+          priority: request.priority || meta.priority || "normal",
+        },
+      ];
+
+      if (request.counselor_response) {
+        events.push({
+          id: `${request.id}-response`,
+          title: "Counselor responded",
+          message: request.counselor_response,
+          date: request.responded_at || request.updated_at || request.created_at,
+          type: "response",
+          status: request.status || "resolved",
+          priority: request.priority || meta.priority || "normal",
+        });
+      }
+
+      if (request.resolved_at) {
+        events.push({
+          id: `${request.id}-resolved`,
+          title: "Request resolved",
+          message: request.subject || meta.subject || "Support request was resolved.",
+          date: request.resolved_at,
+          type: "resolved",
+          status: request.status || "resolved",
+          priority: request.priority || meta.priority || "normal",
+        });
+      }
+
+      return events;
+    })
+    .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+    .slice(0, 8);
+
+  return {
+    total: rows.length,
+    open,
+    inProgress,
+    resolved,
+    waitingForCounselor,
+    responsesReceived,
+    highPriority,
+    urgentOpen,
+    latest,
+    latestResponse,
+    timeline,
+  };
+}
+
+
 function buildStudentNotifications({
   summary = {},
   applications = [],
@@ -1039,6 +1209,7 @@ function buildStudentNotifications({
   universities = [],
   communications = [],
   timeline = [],
+  supportRequests = [],
 }) {
   const notifications = [];
 
@@ -1264,6 +1435,39 @@ function buildStudentNotifications({
     });
   });
 
+  supportRequests.slice(0, 5).forEach((request) => {
+    const status = normalize(request.status || "open");
+    const priority = normalize(request.priority || "normal");
+    const meta = getSupportRequestTypeMeta(request.request_type);
+
+    if (request.counselor_response) {
+      notifications.push({
+        id: `support-response-${request.id}`,
+        type: "success",
+        title: "Counselor Responded",
+        message: request.subject || meta.subject || "Your counselor replied to a support request.",
+        date: request.responded_at || request.updated_at || request.created_at,
+        source: "Support",
+        action: "Open Support",
+        targetTab: "support",
+      });
+      return;
+    }
+
+    if (!["resolved", "closed", "completed"].includes(status)) {
+      notifications.push({
+        id: `support-open-${request.id}`,
+        type: ["high", "urgent", "important"].includes(priority) ? "warning" : "info",
+        title: "Support Request Open",
+        message: request.subject || meta.subject || "Your support request is waiting for review.",
+        date: request.created_at,
+        source: "Support",
+        action: "Open Support",
+        targetTab: "support",
+      });
+    }
+  });
+
   return notifications
     .filter(Boolean)
     .map((item) => ({
@@ -1306,6 +1510,41 @@ function StudentPortalDashboard({
     message: "",
     loading: false,
   });
+  const [receiptForm, setReceiptForm] = useState({
+    invoiceId: "",
+    amount: "",
+    currency: "PKR",
+    reference: "",
+    notes: "",
+    file: null,
+  });
+  const [receiptUploadStatus, setReceiptUploadStatus] = useState({
+    type: "",
+    message: "",
+    loading: false,
+  });
+  const [supportForm, setSupportForm] = useState({
+    requestType: "callback_request",
+    subject: "Callback Request",
+    message: "",
+    priority: "normal",
+  });
+  const [supportSubmitStatus, setSupportSubmitStatus] = useState({
+    type: "",
+    message: "",
+    loading: false,
+  });
+  const [localSubmittedSupportRequests, setLocalSubmittedSupportRequests] = useState([]);
+  const [localPaymentData, setLocalPaymentData] = useState({
+    invoices: [],
+    payments: [],
+    receipts: [],
+    paymentRequests: [],
+    paymentAccounts: [],
+    loading: false,
+    error: "",
+    loadedFor: "",
+  });
 
   const rawSummary = useMemo(
     () => buildPortalSummary(student || {}, portalData || {}),
@@ -1318,6 +1557,174 @@ function StudentPortalDashboard({
   const universities = asPortalArray(portalData?.universities);
   const communications = asPortalArray(portalData?.communications);
   const timeline = asPortalArray(portalData?.timeline);
+  const portalInvoices = asPortalArray(portalData?.invoices);
+  const portalPayments = asPortalArray(portalData?.payments);
+  const portalReceipts = asPortalArray(portalData?.receipts);
+  const portalPaymentRequests = asPortalArray(
+    portalData?.paymentRequests || portalData?.counselorPaymentRequests
+  );
+  const portalPaymentAccounts = asPortalArray(portalData?.paymentAccounts);
+
+  const invoices = useMemo(
+    () => uniqueMergeRows(localPaymentData.invoices, portalInvoices),
+    [localPaymentData.invoices, portalInvoices]
+  );
+
+  const payments = useMemo(
+    () => uniqueMergeRows(localPaymentData.payments, portalPayments),
+    [localPaymentData.payments, portalPayments]
+  );
+
+  const receipts = useMemo(
+    () => uniqueMergeRows(localPaymentData.receipts, portalReceipts),
+    [localPaymentData.receipts, portalReceipts]
+  );
+
+  const paymentRequests = useMemo(
+    () => uniqueMergeRows(localPaymentData.paymentRequests, portalPaymentRequests),
+    [localPaymentData.paymentRequests, portalPaymentRequests]
+  );
+
+  const paymentAccounts = useMemo(
+    () => uniqueMergeRows(localPaymentData.paymentAccounts, portalPaymentAccounts),
+    [localPaymentData.paymentAccounts, portalPaymentAccounts]
+  );
+
+  useEffect(() => {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(student, rawSummary?.studentType || "inquiry");
+    const loadKey = `${studentType}-${studentId}`;
+
+    if (activeTab !== "payments" || !studentId || localPaymentData.loadedFor === loadKey) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadLivePaymentData() {
+      setLocalPaymentData((prev) => ({
+        ...prev,
+        loading: true,
+        error: "",
+      }));
+
+      const fetchRows = async (table, options = {}) => {
+        const {
+          orderBy = "created_at",
+          ascending = false,
+          limit = 50,
+          matchStudentType = false,
+        } = options;
+
+        let query = supabase.from(table).select("*").eq("student_id", studentId);
+
+        if (matchStudentType && studentType) {
+          query = query.eq("student_type", studentType);
+        }
+
+        if (orderBy) query = query.order(orderBy, { ascending });
+        if (limit) query = query.limit(limit);
+
+        const strict = await query;
+
+        if (!strict.error && Array.isArray(strict.data) && strict.data.length) {
+          return strict.data;
+        }
+
+        if (matchStudentType) {
+          let fallback = supabase.from(table).select("*").eq("student_id", studentId);
+          if (orderBy) fallback = fallback.order(orderBy, { ascending });
+          if (limit) fallback = fallback.limit(limit);
+          const fallbackResult = await fallback;
+          if (!fallbackResult.error) return fallbackResult.data || [];
+        }
+
+        if (strict.error) {
+          console.warn(`Student portal payment live fetch skipped: ${table}`, strict.error.message || strict.error);
+        }
+
+        return [];
+      };
+
+      try {
+        const [liveInvoices, livePayments, liveReceipts, livePaymentRequests, livePaymentAccounts] =
+          await Promise.all([
+            fetchRows("student_invoices", { matchStudentType: true, limit: 50 }),
+            fetchRows("student_payments", { matchStudentType: true, limit: 50 }),
+            fetchRows("student_receipts", { matchStudentType: true, limit: 50 }),
+            fetchRows("counselor_payment_requests", { matchStudentType: true, limit: 50 }),
+            supabase
+              .from("payment_accounts")
+              .select("*")
+              .eq("is_active", true)
+              .order("id", { ascending: false })
+              .limit(10)
+              .then((result) => {
+                if (result.error) {
+                  console.warn("Student portal payment accounts live fetch skipped:", result.error.message || result.error);
+                  return [];
+                }
+                return result.data || [];
+              }),
+          ]);
+
+        if (cancelled) return;
+
+        setLocalPaymentData({
+          invoices: liveInvoices || [],
+          payments: livePayments || [],
+          receipts: liveReceipts || [],
+          paymentRequests: livePaymentRequests || [],
+          paymentAccounts: livePaymentAccounts || [],
+          loading: false,
+          error: "",
+          loadedFor: loadKey,
+        });
+      } catch (paymentError) {
+        if (cancelled) return;
+
+        setLocalPaymentData((prev) => ({
+          ...prev,
+          loading: false,
+          error: paymentError?.message || "Payment data could not be loaded.",
+          loadedFor: loadKey,
+        }));
+      }
+    }
+
+    loadLivePaymentData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, student, rawSummary?.studentType, localPaymentData.loadedFor]);
+
+  const supportRequests = useMemo(() => {
+    const portalSupportRequests = asPortalArray(
+      portalData?.supportRequests ||
+        portalData?.studentSupportRequests ||
+        portalData?.support_requests
+    );
+
+    const merged = [...localSubmittedSupportRequests, ...portalSupportRequests];
+
+    return Array.from(
+      new Map(
+        merged
+          .filter(Boolean)
+          .map((request) => [request.id || `${request.request_type}-${request.created_at}`, request])
+      ).values()
+    ).sort(
+      (a, b) =>
+        new Date(b.created_at || 0).getTime() -
+        new Date(a.created_at || 0).getTime()
+    );
+  }, [portalData, localSubmittedSupportRequests]);
+
+  const supportAnalytics = useMemo(
+    () => buildSupportAnalytics(supportRequests),
+    [supportRequests]
+  );
 
   const dashboardCounts = useMemo(
     () => buildDashboardCounts(portalData || {}, rawSummary || {}),
@@ -1367,8 +1774,9 @@ function StudentPortalDashboard({
         universities,
         communications,
         timeline,
+        supportRequests,
       }),
-    [summary, applications, documents, tasks, universities, communications, timeline]
+    [summary, applications, documents, tasks, universities, communications, timeline, supportRequests]
   );
 
   const urgentNotifications = notifications.filter((item) => item.type === "urgent").length;
@@ -1388,6 +1796,7 @@ function StudentPortalDashboard({
     ["tasks", "Tasks", notifications.filter((item) => notificationMatchesFilter(item, "tasks")).length],
     ["applications", "Applications", notifications.filter((item) => notificationMatchesFilter(item, "applications")).length],
     ["visa", "Visa", notifications.filter((item) => notificationMatchesFilter(item, "visa")).length],
+    ["support", "Support", notifications.filter((item) => normalize(item?.source).includes("support")).length],
   ];
 
   const analytics = useMemo(
@@ -1471,6 +1880,189 @@ function StudentPortalDashboard({
 
   const urgentActions = actionCenterItems.filter((item) => item.priority === "urgent").length;
   const importantActions = actionCenterItems.filter((item) => item.priority === "important").length;
+
+  const totalInvoiceAmount = invoices.reduce(
+    (sum, row) => sum + Number(row.total_amount || row.amount || row.invoice_amount || 0),
+    0
+  );
+
+  const paidAmount = payments.reduce(
+    (sum, row) => sum + Number(row.amount || row.paid_amount || row.payment_amount || 0),
+    0
+  );
+
+  const pendingAmount = Math.max(0, totalInvoiceAmount - paidAmount);
+  const overdueInvoices = invoices.filter((invoice) => {
+    if (!invoice.due_date) return false;
+    const status = normalize(invoice.status);
+    if (["paid", "cancelled", "void"].includes(status)) return false;
+    return new Date(invoice.due_date).getTime() < new Date().setHours(0, 0, 0, 0);
+  });
+
+  const formatMoney = (amount, currency = "PKR") => `${currency} ${Number(amount || 0).toLocaleString()}`;
+
+  async function handleDashboardRefresh() {
+    setLocalPaymentData((prev) => ({
+      ...prev,
+      loadedFor: "",
+      error: "",
+    }));
+
+    await onRefresh();
+  }
+
+  function handleSupportTypeSelect(typeId) {
+    const meta = getSupportRequestTypeMeta(typeId);
+
+    setSupportForm((prev) => ({
+      ...prev,
+      requestType: meta.id,
+      subject: prev.subject && prev.subject !== getSupportRequestTypeMeta(prev.requestType).subject
+        ? prev.subject
+        : meta.subject,
+      priority: meta.priority || "normal",
+    }));
+
+    setActiveTab("support");
+  }
+
+  async function handleSupportRequestSubmit(event) {
+    event.preventDefault();
+
+    if (!student?.id) {
+      setSupportSubmitStatus({
+        type: "warning",
+        message: "Student session is missing. Please refresh and try again.",
+        loading: false,
+      });
+      return;
+    }
+
+    if (!supportForm.subject.trim() || !supportForm.message.trim()) {
+      setSupportSubmitStatus({
+        type: "warning",
+        message: "Add a subject and message before submitting.",
+        loading: false,
+      });
+      return;
+    }
+
+    setSupportSubmitStatus({
+      type: "info",
+      message: "Submitting your request...",
+      loading: true,
+    });
+
+    try {
+      const payload = {
+        student_id: student.id,
+        student_type:
+          summary.studentType ||
+          student.student_type ||
+          student.__leadType ||
+          student.type ||
+          "inquiry",
+        request_type: supportForm.requestType || "general_question",
+        subject: supportForm.subject.trim(),
+        message: supportForm.message.trim(),
+        priority: supportForm.priority || "normal",
+        status: "open",
+      };
+
+      const { data, error: supportError } = await supabase
+        .from("student_support_requests")
+        .insert(payload)
+        .select("*")
+        .single();
+
+      if (supportError) throw supportError;
+
+      const savedRequest = data || {
+        ...payload,
+        id: `local-${Date.now()}`,
+        created_at: new Date().toISOString(),
+      };
+
+      setLocalSubmittedSupportRequests((prev) => [savedRequest, ...prev]);
+      setSupportForm({
+        requestType: "callback_request",
+        subject: "Callback Request",
+        message: "",
+        priority: "normal",
+      });
+      setSupportSubmitStatus({
+        type: "success",
+        message: "Support request submitted. Zaifan team can now see it in Admin Support Requests.",
+        loading: false,
+      });
+
+      await handleDashboardRefresh();
+    } catch (supportError) {
+      setSupportSubmitStatus({
+        type: "warning",
+        message:
+          supportError?.message ||
+          "Support request could not be submitted. Please try again.",
+        loading: false,
+      });
+    }
+  }
+
+  async function handleReceiptUploadSubmit(event) {
+    event.preventDefault();
+
+    setReceiptUploadStatus({ type: "", message: "", loading: true });
+
+    try {
+      if (!receiptForm.file) {
+        throw new Error("Attach receipt image or PDF before submitting.");
+      }
+
+      const receiptResult = await uploadStudentReceipt({
+        student,
+        invoiceId: receiptForm.invoiceId,
+        amount: receiptForm.amount,
+        currency: receiptForm.currency || "PKR",
+        reference: receiptForm.reference,
+        notes: receiptForm.notes,
+        file: receiptForm.file,
+      });
+
+      if (receiptResult?.receipt) {
+        setLocalPaymentData((prev) => ({
+          ...prev,
+          receipts: uniqueMergeRows([receiptResult.receipt], prev.receipts),
+          loadedFor: "",
+          error: "",
+        }));
+      }
+
+      setReceiptForm({
+        invoiceId: "",
+        amount: "",
+        currency: "PKR",
+        reference: "",
+        notes: "",
+        file: null,
+      });
+
+      setReceiptUploadStatus({
+        type: "success",
+        message: "Receipt submitted. Zaifan team will review it.",
+        loading: false,
+      });
+
+      await handleDashboardRefresh();
+    } catch (uploadError) {
+      setReceiptUploadStatus({
+        type: "warning",
+        message:
+          uploadError?.message ||
+          "Receipt upload failed. Please try again or send the receipt to your counselor.",
+        loading: false,
+      });
+    }
+  }
 
   async function handlePasswordChangeSubmit(event) {
     event.preventDefault();
@@ -1674,7 +2266,7 @@ const journeyProgress = roadmap.length
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={onRefresh}
+                onClick={handleDashboardRefresh}
                 disabled={loadingData}
                 className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -1705,7 +2297,7 @@ const journeyProgress = roadmap.length
           <StatusCard title="Visa" value={summary.visaStatus} />
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-10">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-11">
   <MetricCard label="Applications" value={summary.applicationsCount} />
   <MetricCard label="Documents" value={summary.documentsCount} />
   <MetricCard label="Tasks" value={summary.tasksCount} />
@@ -1719,6 +2311,7 @@ const journeyProgress = roadmap.length
   value={`${journeyProgress}%`}
 />
   <MetricCard label="Alerts" value={urgentNotifications + warningNotifications} warning />
+  <MetricCard label="Support" value={supportAnalytics.total} warning={supportAnalytics.urgentOpen > 0} />
 </div>
 
         <div className="mt-5 rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.055] p-5">
@@ -1735,8 +2328,19 @@ const journeyProgress = roadmap.length
 Health {analytics.overallHealth}% ·
 {urgentActions} urgent action(s) ·
 {deadlineCenter.urgentCount} urgent deadline(s) ·
+{supportAnalytics.open} open support request(s) ·
 Current stage: {successCenter.stageLabel}
               </p>
+
+              {supportAnalytics.urgentOpen > 0 ? (
+                <div className="mt-4 rounded-2xl border border-orange-400/25 bg-orange-500/10 p-3 text-sm text-orange-200">
+                  {supportAnalytics.urgentOpen} high-priority support request(s) are open. Your counselor can see them in Admin Support Requests.
+                </div>
+              ) : supportAnalytics.latestResponse ? (
+                <div className="mt-4 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                  Latest counselor response is available in Support Center.
+                </div>
+              ) : null}
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
@@ -1760,10 +2364,17 @@ Current stage: {successCenter.stageLabel}
                 >
                   Success Center
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("support")}
+                  className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-300 transition hover:bg-cyan-500/20"
+                >
+                  Ask Counselor
+                </button>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <QuickLaunchCard label="Next Action" value={actionCenterItems?.[0]?.title || "All clear"} onOpen={() => setActiveTab("actions")} />
               <QuickLaunchCard label="Application Ready" value={`${readiness.applicationReadiness}%`} onOpen={() => setActiveTab("roadmap")} />
               <QuickLaunchCard label="CAS Ready" value={`${readiness.casReadiness}%`} onOpen={() => setActiveTab("visa")} />
@@ -1779,6 +2390,12 @@ Current stage: {successCenter.stageLabel}
   value={`${readiness.taskScore}%`}
   onOpen={() => setActiveTab("tasks")}
 />
+
+<QuickLaunchCard
+  label="Support"
+  value={`${supportAnalytics.open} open`}
+  onOpen={() => setActiveTab("support")}
+/>
             </div>
           </div>
         </div>
@@ -1791,6 +2408,8 @@ Current stage: {successCenter.stageLabel}
             ["roadmap", "Roadmap"],
             ["success", "Success Center"],
             ["counselor", "Counselor"],
+            ["support", `Support Center${supportRequests.length ? ` (${supportRequests.length})` : ""}`],
+            ["payments", `Payments${overdueInvoices.length ? ` (${overdueInvoices.length})` : ""}`],
             ["profile", "Profile"],
             ["applications", "Applications"],
             ["visa", "Visa"],
@@ -1820,6 +2439,310 @@ Current stage: {successCenter.stageLabel}
         </nav>
 
         <main className="mt-6">
+          {activeTab === "support" ? (
+          <div className="space-y-5">
+            <div className="rounded-[2rem] border border-cyan-400/20 bg-cyan-500/10 p-5">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
+                Student Support Center
+              </p>
+              <h3 className="mt-2 text-2xl font-black text-white">
+                Ask your counselor and track every response
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-white/55">
+                Submit callback, document review, application review, visa help, or general counselor questions. Replies from Zaifan appear here automatically.
+              </p>
+            </div>
+
+            {supportAnalytics.urgentOpen > 0 ? (
+              <div className="rounded-2xl border border-orange-400/25 bg-orange-500/10 p-4 text-sm text-orange-200">
+                {supportAnalytics.urgentOpen} high-priority request(s) are still open. Keep an eye on counselor responses.
+              </div>
+            ) : supportAnalytics.latestResponse ? (
+              <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+                Latest counselor response: {supportAnalytics.latestResponse.subject || "Support request response"}
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <MetricCard label="Total Requests" value={supportAnalytics.total} />
+              <MetricCard label="Open" value={supportAnalytics.open} warning={supportAnalytics.open > 0} />
+              <MetricCard label="In Progress" value={supportAnalytics.inProgress} />
+              <MetricCard label="Responses" value={supportAnalytics.responsesReceived} />
+              <MetricCard label="Resolved" value={supportAnalytics.resolved} />
+            </div>
+
+            <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+              <form onSubmit={handleSupportRequestSubmit} className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5">
+                <p className="text-sm font-black text-white">Create Support Request</p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {SUPPORT_REQUEST_TYPES.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSupportTypeSelect(item.id)}
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        supportForm.requestType === item.id
+                          ? "border-cyan-400/40 bg-cyan-500/10 text-cyan-200"
+                          : "border-white/10 bg-black/20 text-white/55 hover:border-cyan-400/25 hover:text-white"
+                      }`}
+                    >
+                      <p className="font-black text-white">{item.icon} {item.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-white/45">{item.description}</p>
+                    </button>
+                  ))}
+                </div>
+
+                <label className="mt-4 block space-y-2">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-white/35">Subject</span>
+                  <input
+                    value={supportForm.subject}
+                    onChange={(event) => setSupportForm((prev) => ({ ...prev, subject: event.target.value }))}
+                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40"
+                  />
+                </label>
+
+                <label className="mt-4 block space-y-2">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-white/35">Message</span>
+                  <textarea
+                    value={supportForm.message}
+                    onChange={(event) => setSupportForm((prev) => ({ ...prev, message: event.target.value }))}
+                    rows={5}
+                    placeholder="Write what you need help with. Include document, application, university, CAS, or visa details if relevant."
+                    className="w-full resize-none rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-white/25 focus:border-cyan-400/40"
+                  />
+                </label>
+
+                {supportSubmitStatus.message ? (
+                  <div className={`mt-4 rounded-2xl border p-3 text-sm ${
+                    supportSubmitStatus.type === "success"
+                      ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                      : "border-orange-400/25 bg-orange-500/10 text-orange-200"
+                  }`}>
+                    {supportSubmitStatus.message}
+                  </div>
+                ) : null}
+
+                <button
+                  type="submit"
+                  disabled={supportSubmitStatus.loading}
+                  className="mt-4 rounded-full bg-[#D4AF37] px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-black disabled:opacity-50"
+                >
+                  {supportSubmitStatus.loading ? "Submitting..." : "Submit Request"}
+                </button>
+              </form>
+
+              <div className="space-y-4">
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5">
+                  <p className="text-sm font-black text-white">Support Timeline</p>
+                  <div className="mt-4 space-y-3">
+                    {supportAnalytics.timeline?.length ? (
+                      supportAnalytics.timeline.map((event) => (
+                        <SupportTimelineCard key={event.id} event={event} />
+                      ))
+                    ) : (
+                      <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-white/40">
+                        No support activity yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5">
+              <p className="text-sm font-black text-white">Request History</p>
+              <div className="mt-4 space-y-3">
+                {supportRequests.length ? (
+                  supportRequests.map((request) => (
+                    <SupportRequestHistoryCard key={request.id || `${request.request_type}-${request.created_at}`} request={request} />
+                  ))
+                ) : (
+                  <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-white/40">
+                    No support requests submitted yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
+          {activeTab === "payments" ? (
+  <Panel title="Payment Center">
+    {localPaymentData.loading ? (
+      <div className="mb-4 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3 text-sm font-bold text-[#D4AF37]">
+        Syncing latest payment records from Admin Payment Center...
+      </div>
+    ) : null}
+
+    {localPaymentData.error ? (
+      <div className="mb-4 rounded-2xl border border-orange-400/20 bg-orange-500/10 p-3 text-sm text-orange-200">
+        {localPaymentData.error}
+      </div>
+    ) : null}
+
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <MetricCard label="Invoices" value={invoices.length} />
+      <MetricCard label="Paid" value={formatMoney(paidAmount)} />
+      <MetricCard label="Outstanding" value={formatMoney(pendingAmount)} warning />
+      <MetricCard label="Overdue" value={overdueInvoices.length} warning />
+    </div>
+
+    <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+        <p className="text-sm font-black text-white">Invoices</p>
+
+        <div className="mt-4 space-y-3">
+          {invoices.length ? (
+            invoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-white">
+                      {invoice.title || invoice.invoice_title || `Invoice #${invoice.id}`}
+                    </p>
+
+                    <p className="mt-1 text-xs text-white/40">
+                      Due: {formatDate(invoice.due_date)} · Created:{" "}
+                      {formatDate(invoice.created_at)}
+                    </p>
+
+                    {invoice.description || invoice.notes ? (
+                      <p className="mt-2 text-sm leading-6 text-white/45">
+                        {invoice.description || invoice.notes}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="text-left sm:text-right">
+                    <p className="text-lg font-black text-[#D4AF37]">
+                      {formatMoney(
+                        invoice.total_amount || invoice.amount || invoice.invoice_amount,
+                        invoice.currency || "PKR"
+                      )}
+                    </p>
+
+                    <span
+                      className={`mt-2 inline-flex rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getStatusStyle(
+                        invoice.status || invoice.payment_status || invoice.invoice_status
+                      )}`}
+                    >
+                      {formatStatus(
+                        invoice.status || invoice.payment_status || invoice.invoice_status || "pending"
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <EmptyState text="No invoices are visible yet." />
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+          <p className="text-sm font-black text-white">Payment Summary</p>
+
+          <div className="mt-4 space-y-3">
+            <InfoRow label="Total Invoice Amount" value={formatMoney(totalInvoiceAmount)} />
+            <InfoRow label="Total Paid" value={formatMoney(paidAmount)} />
+            <InfoRow label="Outstanding" value={formatMoney(pendingAmount)} />
+            <InfoRow label="Overdue Invoices" value={overdueInvoices.length} />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+          <p className="text-sm font-black text-white">Recent Payments</p>
+
+          <div className="mt-4 space-y-3">
+            {payments.length ? (
+              payments.slice(0, 6).map((payment) => (
+                <div
+                  key={payment.id}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-white">
+                        {payment.payment_method || payment.method || "Payment"}
+                      </p>
+                      <p className="mt-1 text-xs text-white/40">
+                        {formatDate(payment.payment_date || payment.created_at)}
+                      </p>
+                    </div>
+
+                    <p className="text-sm font-black text-emerald-300">
+                      {formatMoney(payment.amount || payment.paid_amount, payment.currency || "PKR")}
+                    </p>
+                  </div>
+
+                  {payment.notes ? (
+                    <p className="mt-2 text-xs leading-5 text-white/40">
+                      {payment.notes}
+                    </p>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <EmptyState text="No payments recorded yet." />
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+          <p className="text-sm font-black text-white">Receipts</p>
+
+          <div className="mt-4 space-y-3">
+            {receipts.length ? (
+              receipts.slice(0, 6).map((receipt) => (
+                <div
+                  key={receipt.id}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-white">
+                        Receipt Upload
+                      </p>
+                      <p className="mt-1 text-xs text-white/40">
+                        {formatDate(receipt.created_at)}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getStatusStyle(
+                        receipt.status || receipt.review_status || "pending"
+                      )}`}
+                    >
+                      {formatStatus(receipt.status || receipt.review_status || "pending")}
+                    </span>
+                  </div>
+
+                  {receipt.receipt_url ? (
+                    <a
+                      href={receipt.receipt_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                    >
+                      View Receipt
+                    </a>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <EmptyState text="No receipts uploaded yet." />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </Panel>
+) : null}
           {activeTab === "overview" ? (
             <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
               <Panel title="Journey Snapshot">
@@ -2259,6 +3182,209 @@ Current stage: {successCenter.stageLabel}
                   Check Actions
                 </button>
               </div>
+            </Panel>
+          ) : null}
+
+
+
+          {activeTab === "payments" ? (
+            <Panel title="Payment Center">
+              <div className="grid gap-4 xl:grid-cols-4">
+                <MetricCard label="Invoice Total" value={formatMoney(totalInvoiceAmount, invoices[0]?.currency || payments[0]?.currency || "PKR")} />
+                <MetricCard label="Paid" value={formatMoney(paidAmount, payments[0]?.currency || invoices[0]?.currency || "PKR")} />
+                <MetricCard label="Pending" value={formatMoney(pendingAmount, invoices[0]?.currency || payments[0]?.currency || "PKR")} />
+                <MetricCard label="Overdue" value={overdueInvoices.length} />
+              </div>
+
+              <div className="mt-5 grid gap-5 xl:grid-cols-2">
+                <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+                  <p className="text-sm font-black text-white">Invoices</p>
+                  <div className="mt-4 space-y-3">
+                    {invoices.length ? invoices.map((invoice) => (
+                      <RecordCard
+                        key={invoice.id}
+                        title={invoice.title || invoice.invoice_number || "Student Invoice"}
+                        description={invoice.description || invoice.category || "Invoice record"}
+                        meta={[
+                          ["Amount", formatMoney(invoice.total_amount || invoice.amount, invoice.currency || "PKR")],
+                          ["Status", formatStatus(invoice.status || "unpaid")],
+                          ["Due", formatDate(invoice.due_date)],
+                          ["Created", formatDate(invoice.created_at)],
+                        ]}
+                      />
+                    )) : <EmptyState text="No invoices are visible yet." />}
+                  </div>
+                </div>
+
+                <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+                  <p className="text-sm font-black text-white">Payments & Receipts</p>
+                  <div className="mt-4 space-y-3">
+                    {payments.length ? payments.map((payment) => (
+                      <RecordCard
+                        key={payment.id}
+                        title={payment.reference || payment.payment_method || "Payment"}
+                        description={payment.notes || "Confirmed payment record"}
+                        meta={[
+                          ["Amount", formatMoney(payment.amount, payment.currency || "PKR")],
+                          ["Status", formatStatus(payment.status || "confirmed")],
+                          ["Paid", formatDate(payment.paid_at || payment.created_at)],
+                        ]}
+                      />
+                    )) : null}
+
+                    {receipts.length ? receipts.map((receipt) => (
+                      <RecordCard
+                        key={receipt.id}
+                        title={receipt.receipt_url ? "Receipt Uploaded" : "Receipt Submitted"}
+                        description={receipt.notes || "Receipt waiting for Zaifan review"}
+                        meta={[
+                          ["Amount", formatMoney(receipt.amount, receipt.currency || "PKR")],
+                          ["Status", formatStatus(receipt.status || receipt.review_status || "pending_review")],
+                          ["Reference", receipt.reference || receipt.payment_reference || "Not added"],
+                          ["Submitted", formatDate(receipt.submitted_at || receipt.created_at)],
+                        ]}
+                      />
+                    )) : null}
+
+                    {!payments.length && !receipts.length ? (
+                      <EmptyState text="No payments or receipts are visible yet." />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-5 xl:grid-cols-2">
+                <form onSubmit={handleReceiptUploadSubmit} className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+                  <p className="text-sm font-black text-[#D4AF37]">Upload Payment Receipt</p>
+                  <p className="mt-2 text-sm leading-6 text-white/55">
+                    Upload your payment proof here. The Zaifan team will review and approve it from Admin Payment Center.
+                  </p>
+
+                  {receiptUploadStatus.message ? (
+                    <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3 text-sm text-white/65">
+                      {receiptUploadStatus.message}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Invoice</span>
+                      <select
+                        value={receiptForm.invoiceId}
+                        onChange={(event) => setReceiptForm((prev) => ({ ...prev, invoiceId: event.target.value }))}
+                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                      >
+                        <option value="">General receipt / no invoice</option>
+                        {invoices.map((invoice) => (
+                          <option key={invoice.id} value={invoice.id}>
+                            {invoice.title || invoice.invoice_number || "Invoice"} — {formatMoney(invoice.total_amount || invoice.amount, invoice.currency || "PKR")}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Amount</span>
+                      <input
+                        type="number"
+                        value={receiptForm.amount}
+                        onChange={(event) => setReceiptForm((prev) => ({ ...prev, amount: event.target.value }))}
+                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Currency</span>
+                      <input
+                        value={receiptForm.currency}
+                        onChange={(event) => setReceiptForm((prev) => ({ ...prev, currency: event.target.value }))}
+                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Reference Number</span>
+                      <input
+                        value={receiptForm.reference}
+                        onChange={(event) => setReceiptForm((prev) => ({ ...prev, reference: event.target.value }))}
+                        placeholder="Transaction ID / bank reference"
+                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Receipt File</span>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(event) => setReceiptForm((prev) => ({ ...prev, file: event.target.files?.[0] || null }))}
+                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                      />
+                      {receiptForm.file ? (
+                        <p className="text-xs text-emerald-300">
+                          Selected: {receiptForm.file.name}
+                        </p>
+                      ) : null}
+                    </label>
+
+                    <label className="space-y-2 md:col-span-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Notes / Reference</span>
+                      <textarea
+                        value={receiptForm.notes}
+                        onChange={(event) => setReceiptForm((prev) => ({ ...prev, notes: event.target.value }))}
+                        className="min-h-[90px] w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                      />
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={receiptUploadStatus.loading}
+                    className="mt-4 rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50"
+                  >
+                    {receiptUploadStatus.loading ? "Uploading..." : "Submit Receipt"}
+                  </button>
+                </form>
+
+                <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+                  <p className="text-sm font-black text-white">Payment Accounts</p>
+                  <div className="mt-4 space-y-3">
+                    {paymentAccounts.length ? paymentAccounts.map((account) => (
+                      <RecordCard
+                        key={account.id}
+                        title={account.account_title || account.bank_name || "Payment Account"}
+                        description={account.instructions || "Use this account for manual payment."}
+                        meta={[
+                          ["Type", formatStatus(account.account_type || "account")],
+                          ["Bank", account.bank_name],
+                          ["Account", account.account_number || account.mobile_wallet_number],
+                          ["IBAN", account.iban],
+                        ]}
+                      />
+                    )) : <EmptyState text="No active payment accounts are visible yet." />}
+                  </div>
+                </div>
+              </div>
+
+              {paymentRequests.length ? (
+                <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+                  <p className="text-sm font-black text-white">Counselor Payment Requests</p>
+                  <div className="mt-4 grid gap-3 xl:grid-cols-2">
+                    {paymentRequests.map((request) => (
+                      <RecordCard
+                        key={request.id}
+                        title={request.title || "Payment Request"}
+                        description={request.message || request.notes || "Counselor requested a payment action."}
+                        meta={[
+                          ["Amount", formatMoney(request.amount, request.currency || "PKR")],
+                          ["Status", formatStatus(request.status || "pending")],
+                          ["Requested", formatDate(request.created_at)],
+                        ]}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </Panel>
           ) : null}
 
@@ -3469,6 +4595,76 @@ function NotificationItem({ item, onOpen = () => {} }) {
             {item.action}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SupportTimelineCard({ event }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="font-black text-white">{event.title}</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-white/55">
+            {event.message || "No extra details."}
+          </p>
+        </div>
+        <span className={`w-fit rounded-full border px-3 py-1 text-xs font-bold ${getStatusStyle(event.status || event.type)}`}>
+          {formatStatus(event.type || event.status)}
+        </span>
+      </div>
+      <p className="mt-3 text-xs text-white/35">{formatDate(event.date)}</p>
+    </div>
+  );
+}
+
+function SupportRequestHistoryCard({ request }) {
+  const meta = getSupportRequestTypeMeta(request.request_type);
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-lg font-black text-white">
+            {meta.icon} {request.subject || meta.subject}
+          </p>
+          <p className="mt-1 text-sm leading-6 text-white/55">
+            {request.message || meta.description}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <span className={`rounded-full border px-3 py-1 text-xs font-bold ${getStatusStyle(request.status || "open")}`}>
+            {formatStatus(request.status || "open")}
+          </span>
+          <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-300">
+            {formatStatus(request.priority || meta.priority || "normal")}
+          </span>
+        </div>
+      </div>
+
+      {request.counselor_response ? (
+        <div className="mt-4 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+            Counselor Response
+          </p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/80">
+            {request.counselor_response}
+          </p>
+          <p className="mt-3 text-xs text-white/40">
+            Responded: {formatDate(request.responded_at || request.updated_at)}
+          </p>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-500/10 p-4 text-sm text-blue-200">
+          Waiting for counselor response. Zaifan team can see this request in Admin Support Requests.
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/40">
+        <span>Submitted: {formatDate(request.created_at)}</span>
+        {request.resolved_at ? <span>Resolved: {formatDate(request.resolved_at)}</span> : null}
       </div>
     </div>
   );

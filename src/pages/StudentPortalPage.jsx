@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import StudentPortalAuth from "../components/student/StudentPortalAuth";
 import StudentPortalDashboard from "../components/student/StudentPortalDashboard";
+import { supabase } from "../lib/supabaseClient";
 import {
   fetchStudentPortalAccountForStudent,
   fetchStudentPortalData,
@@ -11,6 +12,7 @@ import {
 } from "../lib/studentPortal";
 
 const SESSION_KEY = "zaifan_student_portal_session_v2";
+const AUTO_REFRESH_COOLDOWN_MS = 8000;
 
 const EMPTY_PORTAL_DATA = {
   applications: [],
@@ -19,6 +21,14 @@ const EMPTY_PORTAL_DATA = {
   communications: [],
   timeline: [],
   universities: [],
+  invoices: [],
+  payments: [],
+  receipts: [],
+  counselorPaymentRequests: [],
+  paymentRequests: [],
+  paymentAccounts: [],
+  supportRequests: [],
+  studentSupportRequests: [],
   counts: {
     applications: 0,
     documents: 0,
@@ -26,8 +36,16 @@ const EMPTY_PORTAL_DATA = {
     communications: 0,
     timeline: 0,
     universities: 0,
+    invoices: 0,
+    payments: 0,
+    receipts: 0,
+    counselorPaymentRequests: 0,
+    paymentRequests: 0,
+    supportRequests: 0,
+    studentSupportRequests: 0,
     total: 0,
   },
+  error: null,
 };
 
 function getFirstArray(candidates = [], key) {
@@ -69,6 +87,20 @@ function normalizePortalDataResult(result = {}) {
   const communications = getFirstArray(candidates, "communications");
   const timeline = getFirstArray(candidates, "timeline");
   const universities = getFirstArray(candidates, "universities");
+  const invoices = getFirstArray(candidates, "invoices");
+  const payments = getFirstArray(candidates, "payments");
+  const receipts = getFirstArray(candidates, "receipts");
+  const counselorPaymentRequests = getFirstArray(candidates, "counselorPaymentRequests");
+  const paymentRequests =
+    getFirstArray(candidates, "paymentRequests").length
+      ? getFirstArray(candidates, "paymentRequests")
+      : counselorPaymentRequests;
+  const paymentAccounts = getFirstArray(candidates, "paymentAccounts");
+  const supportRequests = getFirstArray(candidates, "supportRequests");
+  const studentSupportRequests =
+    getFirstArray(candidates, "studentSupportRequests").length
+      ? getFirstArray(candidates, "studentSupportRequests")
+      : supportRequests;
 
   const counts = {
     applications: getFirstCount(candidates, "applications", applications.length),
@@ -77,6 +109,21 @@ function normalizePortalDataResult(result = {}) {
     communications: getFirstCount(candidates, "communications", communications.length),
     timeline: getFirstCount(candidates, "timeline", timeline.length),
     universities: getFirstCount(candidates, "universities", universities.length),
+    invoices: getFirstCount(candidates, "invoices", invoices.length),
+    payments: getFirstCount(candidates, "payments", payments.length),
+    receipts: getFirstCount(candidates, "receipts", receipts.length),
+    counselorPaymentRequests: getFirstCount(
+      candidates,
+      "counselorPaymentRequests",
+      counselorPaymentRequests.length
+    ),
+    paymentRequests: getFirstCount(candidates, "paymentRequests", paymentRequests.length),
+    supportRequests: getFirstCount(candidates, "supportRequests", supportRequests.length),
+    studentSupportRequests: getFirstCount(
+      candidates,
+      "studentSupportRequests",
+      studentSupportRequests.length
+    ),
   };
 
   counts.total =
@@ -85,7 +132,12 @@ function normalizePortalDataResult(result = {}) {
     counts.tasks +
     counts.communications +
     counts.timeline +
-    counts.universities;
+    counts.universities +
+    counts.invoices +
+    counts.payments +
+    counts.receipts +
+    counts.counselorPaymentRequests +
+    counts.supportRequests;
 
   return {
     applications,
@@ -94,6 +146,14 @@ function normalizePortalDataResult(result = {}) {
     communications,
     timeline,
     universities,
+    invoices,
+    payments,
+    receipts,
+    counselorPaymentRequests,
+    paymentRequests,
+    paymentAccounts,
+    supportRequests,
+    studentSupportRequests,
     counts,
     error: result?.error || result?.portalData?.error || result?.data?.error || null,
   };
@@ -128,7 +188,7 @@ function buildSessionPayload({ account = null, student = null, mode = "legacy" }
 }
 
 function mergePortalData(previous = EMPTY_PORTAL_DATA, next = EMPTY_PORTAL_DATA) {
-  return {
+  const merged = {
     applications: next.applications?.length ? next.applications : previous.applications || [],
     documents: next.documents?.length ? next.documents : previous.documents || [],
     tasks: next.tasks?.length ? next.tasks : previous.tasks || [],
@@ -137,14 +197,48 @@ function mergePortalData(previous = EMPTY_PORTAL_DATA, next = EMPTY_PORTAL_DATA)
       : previous.communications || [],
     timeline: next.timeline?.length ? next.timeline : previous.timeline || [],
     universities: next.universities?.length ? next.universities : previous.universities || [],
-    counts: next.counts || previous.counts || EMPTY_PORTAL_DATA.counts,
+    invoices: next.invoices?.length ? next.invoices : previous.invoices || [],
+    payments: next.payments?.length ? next.payments : previous.payments || [],
+    receipts: next.receipts?.length ? next.receipts : previous.receipts || [],
+    counselorPaymentRequests: next.counselorPaymentRequests?.length
+      ? next.counselorPaymentRequests
+      : previous.counselorPaymentRequests || [],
+    paymentRequests: next.paymentRequests?.length
+      ? next.paymentRequests
+      : previous.paymentRequests || previous.counselorPaymentRequests || [],
+    paymentAccounts: next.paymentAccounts?.length ? next.paymentAccounts : previous.paymentAccounts || [],
+    supportRequests: next.supportRequests?.length ? next.supportRequests : previous.supportRequests || [],
+    studentSupportRequests: next.studentSupportRequests?.length
+      ? next.studentSupportRequests
+      : previous.studentSupportRequests || previous.supportRequests || [],
+    counts: {
+      ...(previous.counts || EMPTY_PORTAL_DATA.counts),
+      ...(next.counts || {}),
+    },
+    error: next.error || previous.error || null,
   };
+
+  merged.counts.total =
+    Number(merged.counts.applications || merged.applications.length || 0) +
+    Number(merged.counts.documents || merged.documents.length || 0) +
+    Number(merged.counts.tasks || merged.tasks.length || 0) +
+    Number(merged.counts.communications || merged.communications.length || 0) +
+    Number(merged.counts.timeline || merged.timeline.length || 0) +
+    Number(merged.counts.universities || merged.universities.length || 0) +
+    Number(merged.counts.invoices || merged.invoices.length || 0) +
+    Number(merged.counts.payments || merged.payments.length || 0) +
+    Number(merged.counts.receipts || merged.receipts.length || 0) +
+    Number(merged.counts.counselorPaymentRequests || merged.counselorPaymentRequests.length || 0) +
+    Number(merged.counts.supportRequests || merged.supportRequests.length || 0);
+
+  return merged;
 }
 
 function StudentPortalPage() {
   const mountedRef = useRef(false);
   const restoreStartedRef = useRef(false);
   const activeLoadIdRef = useRef(0);
+  const lastAutoRefreshAtRef = useRef(0);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -246,7 +340,9 @@ const loadOverviewData = useCallback(async (nextStudent, options = {}) => {
     const result = await fetchStudentPortalData(nextStudent);
     const nextPortalData = normalizePortalDataResult(result);
 
-    setPortalData(nextPortalData);
+    setPortalData((previous) =>
+      options.merge ? mergePortalData(previous, nextPortalData) : nextPortalData
+    );
 
     if (nextPortalData?.error) {
       setError(nextPortalData.error.message || "Some portal data could not be loaded.");
@@ -293,14 +389,24 @@ const loadOverviewData = useCallback(async (nextStudent, options = {}) => {
       }
 
       if (loadData) {
-  setTimeout(async () => {
-    await loadOverviewData(nextStudent, { keepError: true });
+        const loadId = activeLoadIdRef.current + 1;
+        activeLoadIdRef.current = loadId;
 
-    setTimeout(() => {
-      loadPortalData(nextStudent, { keepError: true });
-    }, 250);
-  }, 0);
-}
+        setTimeout(async () => {
+          if (!mountedRef.current || activeLoadIdRef.current !== loadId) return;
+
+          await loadOverviewData(nextStudent, { keepError: true });
+
+          setTimeout(() => {
+            if (!mountedRef.current || activeLoadIdRef.current !== loadId) return;
+
+            loadPortalData(nextStudent, {
+              keepError: true,
+              merge: true,
+            });
+          }, 250);
+        }, 0);
+      }
     },
     [loadLinkedAccount, loadOverviewData, loadPortalData, saveSession]
   );
@@ -344,7 +450,14 @@ const loadOverviewData = useCallback(async (nextStudent, options = {}) => {
             });
           }
 
-          loadPortalData(saved.student, { keepError: true });
+          await loadOverviewData(saved.student, { keepError: true });
+
+          setTimeout(() => {
+            loadPortalData(saved.student, {
+              keepError: true,
+              merge: true,
+            });
+          }, 250);
         }, 50);
       } catch (err) {
         clearSession();
@@ -363,7 +476,7 @@ const loadOverviewData = useCallback(async (nextStudent, options = {}) => {
       mountedRef.current = false;
       activeLoadIdRef.current += 1;
     };
-  }, [clearSession, loadLinkedAccount, loadPortalData]);
+  }, [clearSession, loadLinkedAccount, loadOverviewData, loadPortalData]);
 
   async function handleAccountLogin(event) {
     event.preventDefault();
@@ -437,18 +550,98 @@ const loadOverviewData = useCallback(async (nextStudent, options = {}) => {
     });
   }
 
-async function handleRefresh() {
-  if (!student?.id || loadingData) return;
+async function handleRefresh(options = {}) {
+  if (!student?.id || loadingData) return EMPTY_PORTAL_DATA;
 
-  await loadPortalData(student, {
-    keepError: false,
+  const now = Date.now();
+
+  if (options.auto) {
+    const elapsed = now - Number(lastAutoRefreshAtRef.current || 0);
+    if (elapsed < AUTO_REFRESH_COOLDOWN_MS) return portalData;
+    lastAutoRefreshAtRef.current = now;
+  }
+
+  const loadId = activeLoadIdRef.current + 1;
+  activeLoadIdRef.current = loadId;
+
+  if (!options.silent) setError("");
+
+  const overviewData = await loadOverviewData(student, {
+    keepError: true,
+  });
+
+  if (!mountedRef.current || activeLoadIdRef.current !== loadId) return overviewData;
+
+  const fullData = await loadPortalData(student, {
+    keepError: true,
+    merge: true,
   });
 
   loadLinkedAccount(student, {
     save: true,
     mode: sessionMode,
   });
+
+  return fullData;
 }
+
+  useEffect(() => {
+    if (!student?.id) return undefined;
+
+    const handleFocusRefresh = () => {
+      if (document.visibilityState === "hidden") return;
+      handleRefresh({ auto: true, silent: true });
+    };
+
+    window.addEventListener("focus", handleFocusRefresh);
+    document.addEventListener("visibilitychange", handleFocusRefresh);
+
+    return () => {
+      window.removeEventListener("focus", handleFocusRefresh);
+      document.removeEventListener("visibilitychange", handleFocusRefresh);
+    };
+  }, [student?.id, loadingData, sessionMode]);
+
+  useEffect(() => {
+    if (!student?.id) return undefined;
+
+    const studentId = String(student.id || student.student_id || "").trim();
+    if (!studentId) return undefined;
+
+    const studentType = student.student_type || student.__leadType || student.type || sessionMode || "inquiry";
+    const refreshFromRealtime = () => handleRefresh({ auto: true, silent: true });
+    const channel = supabase.channel(`student-portal-live-${studentType}-${studentId}`);
+
+    [
+      "student_support_requests",
+      "student_receipts",
+      "student_payments",
+      "student_invoices",
+      "counselor_payment_requests",
+      "crm_timeline",
+    ].forEach((table) => {
+      channel.on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table,
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshFromRealtime
+      );
+    });
+
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        console.log("Student portal live sync connected", { studentId, studentType });
+      }
+    });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [student?.id, sessionMode, loadingData]);
   async function handlePasswordChange({ currentPassword, newPassword }) {
   if (!account?.id && !account?.account_id) {
     return {

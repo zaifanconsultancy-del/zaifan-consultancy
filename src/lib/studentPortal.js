@@ -1,9 +1,12 @@
 import { supabase } from "./supabaseClient";
 
 const SEARCH_TIMEOUT_MS = 12000;
-const COUNT_TIMEOUT_MS = 5000;
-const DATA_TIMEOUT_MS = 7000;
+const COUNT_TIMEOUT_MS = 7000;
+const DATA_TIMEOUT_MS = 9000;
+const PAYMENT_TIMEOUT_MS = 12000;
+const PAYMENT_ACCOUNT_TIMEOUT_MS = 9000;
 const LOGIN_TIMEOUT_MS = 25000;
+const ACCOUNT_TIMEOUT_MS = 18000;
 
 const TABLES = {
   inquiries: "inquiries",
@@ -15,6 +18,29 @@ const TABLES = {
   communications: "student_communications",
   timeline: "crm_timeline",
   universities: "student_universities",
+  invoices: "student_invoices",
+  payments: "student_payments",
+  receipts: "student_receipts",
+  counselorPaymentRequests: "counselor_payment_requests",
+  paymentAccounts: "payment_accounts",
+  supportRequests: "student_support_requests",
+};
+
+const EMPTY_COUNTS = {
+  applications: 0,
+  documents: 0,
+  tasks: 0,
+  communications: 0,
+  timeline: 0,
+  universities: 0,
+  invoices: 0,
+  payments: 0,
+  receipts: 0,
+  counselorPaymentRequests: 0,
+  paymentRequests: 0,
+  supportRequests: 0,
+  studentSupportRequests: 0,
+  total: 0,
 };
 
 const EMPTY_PORTAL_DATA = {
@@ -24,17 +50,48 @@ const EMPTY_PORTAL_DATA = {
   communications: [],
   timeline: [],
   universities: [],
-  counts: {
-    applications: 0,
-    documents: 0,
-    tasks: 0,
-    communications: 0,
-    timeline: 0,
-    universities: 0,
-    total: 0,
-  },
+  invoices: [],
+  payments: [],
+  receipts: [],
+  counselorPaymentRequests: [],
+  paymentRequests: [],
+  paymentAccounts: [],
+  supportRequests: [],
+  studentSupportRequests: [],
+  counts: EMPTY_COUNTS,
   error: null,
 };
+
+const PAYMENT_SECTION_KEYS = new Set([
+  "invoices",
+  "payments",
+  "receipts",
+  "counselorPaymentRequests",
+  "paymentRequests",
+  "paymentAccounts",
+]);
+
+function isPaymentSection(key = "") {
+  return PAYMENT_SECTION_KEYS.has(key);
+}
+
+function buildPortalWarningMessage(failedSections = []) {
+  const importantFailures = failedSections.filter((item) => !isPaymentSection(item.key));
+  const paymentFailures = failedSections.filter((item) => isPaymentSection(item.key));
+
+  if (!importantFailures.length && paymentFailures.length) {
+    return "";
+  }
+
+  if (!failedSections.length) return "";
+
+  return (
+    "Some portal sections could not be loaded: " +
+    failedSections
+      .map((item) => item.label || item.key || "unknown section")
+      .join(", ")
+  );
+}
 
 const STUDENT_SEARCH_COLUMNS = "*";
 
@@ -42,13 +99,31 @@ function normalize(value = "") {
   return String(value || "").trim().toLowerCase();
 }
 
+function sanitizePhone(value = "") {
+  return String(value || "").replace(/[^\d]/g, "");
+}
+
+function normalizePortalStudent(row = {}, sourceType = "inquiry") {
+  return {
+    ...row,
+    id: row.id,
+    student_type: sourceType,
+    __leadType: sourceType,
+    portal_student_key: `${sourceType}-${row.id}`,
+  };
+}
+
 function uniqueById(rows = []) {
   return Array.from(
     new Map(
-      rows.map((item) => [
-        `${item.student_type || item.__leadType || "student"}-${item.id || JSON.stringify(item)}`,
-        item,
-      ])
+      rows
+        .filter(Boolean)
+        .map((item) => [
+          `${item.student_type || item.__leadType || "student"}-${
+            item.id || JSON.stringify(item)
+          }`,
+          item,
+        ])
     ).values()
   );
 }
@@ -61,6 +136,28 @@ function uniqueRows(rows = []) {
         .map((item) => [item.id || item.uuid || JSON.stringify(item), item])
     ).values()
   );
+}
+
+function getStudentIdVariants(student = {}) {
+  const rawId = student?.id ?? student?.student_id ?? "";
+  const stringId = String(rawId || "").trim();
+
+  if (!stringId) return [];
+
+  const variants = [stringId];
+  const numericId = Number(stringId);
+
+  if (Number.isFinite(numericId)) {
+    variants.push(numericId);
+  }
+
+  return [
+    ...new Set(
+      variants.filter(
+        (value) => value !== "" && value !== null && value !== undefined
+      )
+    ),
+  ];
 }
 
 async function withTimeout(
@@ -84,7 +181,12 @@ async function withTimeout(
   try {
     return await Promise.race([promise, timeout]);
   } catch (error) {
-    return { data: [], error, count: 0, timedOut: false };
+    return {
+      data: [],
+      error,
+      count: 0,
+      timedOut: false,
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -158,16 +260,16 @@ function buildCountsFromRows(data = {}) {
     communications: data.communications?.length || 0,
     timeline: data.timeline?.length || 0,
     universities: data.universities?.length || 0,
+    invoices: data.invoices?.length || 0,
+    payments: data.payments?.length || 0,
+    receipts: data.receipts?.length || 0,
+    counselorPaymentRequests: data.counselorPaymentRequests?.length || 0,
+    paymentRequests: data.paymentRequests?.length || data.counselorPaymentRequests?.length || 0,
+    supportRequests: data.supportRequests?.length || 0,
+    studentSupportRequests: data.studentSupportRequests?.length || data.supportRequests?.length || 0,
   };
 
-  counts.total =
-    counts.applications +
-    counts.documents +
-    counts.tasks +
-    counts.communications +
-    counts.timeline +
-    counts.universities;
-
+  counts.total = Object.values(counts).reduce((sum, value) => sum + Number(value || 0), 0);
   return counts;
 }
 
@@ -179,16 +281,30 @@ function mergeCounts(primary = {}, fallback = {}) {
     communications: Number(primary.communications || fallback.communications || 0),
     timeline: Number(primary.timeline || fallback.timeline || 0),
     universities: Number(primary.universities || fallback.universities || 0),
+    invoices: Number(primary.invoices || fallback.invoices || 0),
+    payments: Number(primary.payments || fallback.payments || 0),
+    receipts: Number(primary.receipts || fallback.receipts || 0),
+    counselorPaymentRequests: Number(
+      primary.counselorPaymentRequests || fallback.counselorPaymentRequests || 0
+    ),
+    paymentRequests: Number(
+      primary.paymentRequests ||
+        primary.counselorPaymentRequests ||
+        fallback.paymentRequests ||
+        fallback.counselorPaymentRequests ||
+        0
+    ),
+    supportRequests: Number(primary.supportRequests || fallback.supportRequests || 0),
+    studentSupportRequests: Number(
+      primary.studentSupportRequests ||
+        fallback.studentSupportRequests ||
+        primary.supportRequests ||
+        fallback.supportRequests ||
+        0
+    ),
   };
 
-  counts.total =
-    counts.applications +
-    counts.documents +
-    counts.tasks +
-    counts.communications +
-    counts.timeline +
-    counts.universities;
-
+  counts.total = Object.values(counts).reduce((sum, value) => sum + Number(value || 0), 0);
   return counts;
 }
 
@@ -216,20 +332,6 @@ export function getStudentType(student = {}) {
 
 export function getStudentId(student = {}) {
   return String(student.id || student.student_id || "").trim();
-}
-
-function normalizePortalStudent(row = {}, sourceType = "inquiry") {
-  return {
-    ...row,
-    id: row.id,
-    student_type: sourceType,
-    __leadType: sourceType,
-    portal_student_key: `${sourceType}-${row.id}`,
-  };
-}
-
-function sanitizePhone(value = "") {
-  return String(value || "").replace(/[^\d]/g, "");
 }
 
 async function runSearchQuery(buildQuery, label = "") {
@@ -300,21 +402,32 @@ async function searchStudentsInSource(source, clean) {
 }
 
 async function countByStudent(table, student, { matchStudentType = false, label = "" } = {}) {
-  const studentId = getStudentId(student);
+  const studentIds = getStudentIdVariants(student);
   const studentType = getStudentType(student);
 
-  if (!studentId) return 0;
+  if (!studentIds.length) return 0;
 
-  let query = supabase
-    .from(table)
-    .select("id", { count: "exact", head: true })
-    .eq("student_id", studentId);
+  const results = await Promise.allSettled(
+    studentIds.map((studentId) => {
+      let query = supabase
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId);
 
-  if (matchStudentType && studentType) {
-    query = query.eq("student_type", studentType);
-  }
+      if (matchStudentType && studentType) {
+        query = query.eq("student_type", studentType);
+      }
 
-  return safeCount(query, label || table);
+      return safeCount(query, label || table);
+    })
+  );
+
+  return Math.max(
+    0,
+    ...results.map((result) =>
+      result.status === "fulfilled" ? Number(result.value || 0) : 0
+    )
+  );
 }
 
 export async function getPortalDataCountsForStudent(student = {}) {
@@ -325,6 +438,23 @@ export async function getPortalDataCountsForStudent(student = {}) {
     ["communications", countByStudent(TABLES.communications, student, { matchStudentType: true, label: "communications" })],
     ["timeline", countByStudent(TABLES.timeline, student, { matchStudentType: true, label: "timeline" })],
     ["universities", countByStudent(TABLES.universities, student, { matchStudentType: false, label: "universities" })],
+    ["invoices", countByStudent(TABLES.invoices, student, { matchStudentType: false, label: "invoices" })],
+    ["payments", countByStudent(TABLES.payments, student, { matchStudentType: false, label: "payments" })],
+    ["receipts", countByStudent(TABLES.receipts, student, { matchStudentType: false, label: "receipts" })],
+    [
+      "counselorPaymentRequests",
+      countByStudent(TABLES.counselorPaymentRequests, student, {
+        matchStudentType: false,
+        label: "counselor payment requests",
+      }),
+    ],
+    [
+      "supportRequests",
+      countByStudent(TABLES.supportRequests, student, {
+        matchStudentType: false,
+        label: "support requests",
+      }),
+    ],
   ];
 
   const results = await Promise.allSettled(countJobs.map(([, promise]) => promise));
@@ -334,13 +464,9 @@ export async function getPortalDataCountsForStudent(student = {}) {
     return acc;
   }, {});
 
-  counts.total =
-    counts.applications +
-    counts.documents +
-    counts.tasks +
-    counts.communications +
-    counts.timeline +
-    counts.universities;
+  counts.paymentRequests = counts.counselorPaymentRequests || 0;
+  counts.studentSupportRequests = counts.supportRequests || 0;
+  counts.total = Object.values(counts).reduce((sum, value) => sum + Number(value || 0), 0);
 
   return counts;
 }
@@ -358,7 +484,7 @@ export async function enrichStudentsWithPortalCounts(students = []) {
       ? result.value
       : {
           ...students[index],
-          portalCounts: EMPTY_PORTAL_DATA.counts,
+          portalCounts: EMPTY_COUNTS,
         }
   );
 }
@@ -427,23 +553,34 @@ async function fetchByStudent(table, student, options = {}) {
     limit = null,
     matchStudentType = true,
     label = table,
+    timeoutMs = DATA_TIMEOUT_MS,
   } = options;
 
-  const studentId = getStudentId(student);
+  const studentIds = getStudentIdVariants(student);
   const studentType = getStudentType(student);
 
-  if (!studentId) return [];
+  if (!studentIds.length) return [];
 
-  let query = supabase.from(table).select("*").eq("student_id", studentId);
+  const attempts = studentIds.map((studentId) => {
+    let query = supabase.from(table).select("*").eq("student_id", studentId);
 
-  if (matchStudentType && studentType) {
-    query = query.eq("student_type", studentType);
-  }
+    if (matchStudentType && studentType) {
+      query = query.eq("student_type", studentType);
+    }
 
-  if (orderBy) query = query.order(orderBy, { ascending });
-  if (limit) query = query.limit(limit);
+    if (orderBy) query = query.order(orderBy, { ascending });
+    if (limit) query = query.limit(limit);
 
-  return safeQuery(query, [], DATA_TIMEOUT_MS, label);
+    return safeQuery(query, [], timeoutMs, `${label} id:${studentId}`);
+  });
+
+  const results = await Promise.allSettled(attempts);
+
+  return uniqueRows(
+    results.flatMap((result) =>
+      result.status === "fulfilled" ? result.value || [] : []
+    )
+  );
 }
 
 async function fetchWithFallback(table, student, options = {}) {
@@ -462,42 +599,156 @@ async function fetchWithFallback(table, student, options = {}) {
   });
 }
 
+async function fetchPaymentRows(table, student, options = {}) {
+  const {
+    orderBy = "created_at",
+    ascending = false,
+    limit = 50,
+    label = table,
+  } = options;
+
+  const strictRows = await fetchByStudent(table, student, {
+    orderBy,
+    ascending,
+    limit,
+    matchStudentType: true,
+    label: `${label} payment strict`,
+    timeoutMs: PAYMENT_TIMEOUT_MS,
+  });
+
+  const fallbackRows = await fetchByStudent(table, student, {
+    orderBy,
+    ascending,
+    limit,
+    matchStudentType: false,
+    label: `${label} payment fallback`,
+    timeoutMs: PAYMENT_TIMEOUT_MS,
+  });
+
+  const rows = uniqueRows([...strictRows, ...fallbackRows]);
+
+  console.log("STUDENT PORTAL PAYMENT FETCH", {
+    table,
+    label,
+    studentId: getStudentId(student),
+    studentType: getStudentType(student),
+    strictRows: strictRows.length,
+    fallbackRows: fallbackRows.length,
+    mergedRows: rows.length,
+  });
+
+  return rows;
+}
+
+export async function fetchActivePaymentAccounts() {
+  return safeQuery(
+    supabase
+      .from(TABLES.paymentAccounts)
+      .select("*")
+      .eq("is_active", true)
+      .order("id", { ascending: false })
+      .limit(10),
+    [],
+    PAYMENT_ACCOUNT_TIMEOUT_MS,
+    "active payment accounts"
+  );
+}
+
 export async function fetchStudentPortalOverview(student) {
   if (!student?.id && !student?.student_id) {
     return EMPTY_PORTAL_DATA;
   }
 
-  const [applicationsResult, countsResult] = await Promise.allSettled([
+  const [
+    applicationsResult,
+    invoicesResult,
+    paymentsResult,
+    receiptsResult,
+    paymentRequestsResult,
+    paymentAccountsResult,
+    supportRequestsResult,
+    countsResult,
+  ] = await Promise.allSettled([
     fetchWithFallback(TABLES.applications, student, {
       orderBy: "created_at",
       ascending: false,
       limit: 5,
       label: "overview applications",
     }),
+    fetchPaymentRows(TABLES.invoices, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "overview invoices",
+    }),
+    fetchPaymentRows(TABLES.payments, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "overview payments",
+    }),
+    fetchPaymentRows(TABLES.receipts, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "overview receipts",
+    }),
+    fetchPaymentRows(TABLES.counselorPaymentRequests, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "overview counselor payment requests",
+    }),
+    fetchActivePaymentAccounts(),
+    fetchPaymentRows(TABLES.supportRequests, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 10,
+      label: "overview support requests",
+    }),
     getPortalDataCountsForStudent(student),
   ]);
 
   const applications =
     applicationsResult.status === "fulfilled" ? uniqueRows(applicationsResult.value) : [];
+  const invoices =
+    invoicesResult.status === "fulfilled" ? uniqueRows(invoicesResult.value) : [];
+  const payments =
+    paymentsResult.status === "fulfilled" ? uniqueRows(paymentsResult.value) : [];
+  const receipts =
+    receiptsResult.status === "fulfilled" ? uniqueRows(receiptsResult.value) : [];
+  const counselorPaymentRequests =
+    paymentRequestsResult.status === "fulfilled" ? uniqueRows(paymentRequestsResult.value) : [];
+  const paymentAccounts =
+    paymentAccountsResult.status === "fulfilled" ? uniqueRows(paymentAccountsResult.value) : [];
+  const supportRequests =
+    supportRequestsResult.status === "fulfilled" ? uniqueRows(supportRequestsResult.value) : [];
 
   const counts =
     countsResult.status === "fulfilled"
       ? countsResult.value
-      : student.portalCounts || EMPTY_PORTAL_DATA.counts;
+      : student.portalCounts || EMPTY_COUNTS;
 
-  return {
+  const data = {
     applications,
     documents: [],
     tasks: [],
     communications: [],
     timeline: [],
     universities: [],
-    counts: mergeCounts(
-      {
-        applications: applications.length,
-      },
-      counts
-    ),
+    invoices,
+    payments,
+    receipts,
+    counselorPaymentRequests,
+    paymentRequests: counselorPaymentRequests,
+    paymentAccounts,
+    supportRequests,
+    studentSupportRequests: supportRequests,
+  };
+
+  return {
+    ...data,
+    counts: mergeCounts(buildCountsFromRows(data), counts),
     error: null,
   };
 }
@@ -547,12 +798,47 @@ export async function fetchStudentPortalData(student) {
       limit: 50,
       label: "universities",
     }),
+    invoices: fetchPaymentRows(TABLES.invoices, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "invoices",
+    }),
+    payments: fetchPaymentRows(TABLES.payments, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "payments",
+    }),
+    receipts: fetchPaymentRows(TABLES.receipts, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "receipts",
+    }),
+    counselorPaymentRequests: fetchPaymentRows(TABLES.counselorPaymentRequests, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "counselor payment requests",
+    }),
+    paymentAccounts: fetchActivePaymentAccounts(),
+    supportRequests: fetchPaymentRows(TABLES.supportRequests, student, {
+      orderBy: "created_at",
+      ascending: false,
+      limit: 50,
+      label: "support requests",
+    }),
   };
 
   const results = await Promise.allSettled(
     Object.entries(fetchJobs).map(async ([key, promise]) => {
-      const rows = await promise;
-      return [key, uniqueRows(rows)];
+      try {
+        const rows = await promise;
+        return [key, uniqueRows(rows), null];
+      } catch (error) {
+        return [key, [], error];
+      }
     })
   );
 
@@ -563,37 +849,82 @@ export async function fetchStudentPortalData(student) {
     communications: [],
     timeline: [],
     universities: [],
+    invoices: [],
+    payments: [],
+    receipts: [],
+    counselorPaymentRequests: [],
+    paymentRequests: [],
+    paymentAccounts: [],
+    supportRequests: [],
+    studentSupportRequests: [],
   };
 
   const failedSections = [];
 
   results.forEach((result) => {
     if (result.status === "fulfilled") {
-      const [key, rows] = result.value;
+      const [key, rows, sectionError] = result.value;
       data[key] = rows;
-    } else {
-      failedSections.push(result.reason?.message || "Unknown portal section failed.");
+
+      if (sectionError) {
+        failedSections.push({
+          key,
+          label: key,
+          message: sectionError?.message || `${key} failed.`,
+        });
+      }
+
+      return;
     }
+
+    failedSections.push({
+      key: "unknown",
+      label: "Unknown portal section",
+      message: result.reason?.message || "Unknown portal section failed.",
+    });
   });
+
+  data.paymentRequests = data.counselorPaymentRequests;
+  data.studentSupportRequests = data.supportRequests;
 
   const rowCounts = buildCountsFromRows(data);
   const savedCounts = student.portalCounts || {};
   const counts = mergeCounts(rowCounts, savedCounts);
+
   console.log("PORTAL DATA DEBUG", {
-  student,
-  applications: data.applications.length,
-  documents: data.documents.length,
-  tasks: data.tasks.length,
-  universities: data.universities.length,
-  communications: data.communications.length,
-  timeline: data.timeline.length,
-  counts,
-});
+    student,
+    studentId: getStudentId(student),
+    studentType: getStudentType(student),
+    studentIdVariants: getStudentIdVariants(student),
+    applications: data.applications.length,
+    documents: data.documents.length,
+    tasks: data.tasks.length,
+    universities: data.universities.length,
+    communications: data.communications.length,
+    timeline: data.timeline.length,
+    invoices: data.invoices.length,
+    payments: data.payments.length,
+    receipts: data.receipts.length,
+    counselorPaymentRequests: data.counselorPaymentRequests.length,
+    paymentAccounts: data.paymentAccounts.length,
+    supportRequests: data.supportRequests.length,
+    paymentDiagnostics: {
+      invoices: data.invoices.length,
+      payments: data.payments.length,
+      receipts: data.receipts.length,
+      paymentAccounts: data.paymentAccounts.length,
+      paymentSectionsAreNonBlocking: true,
+      paymentTimeoutMs: PAYMENT_TIMEOUT_MS,
+    },
+    failedSections,
+    counts,
+  });
+
   return {
     ...data,
     counts,
-    error: failedSections.length
-      ? new Error(`Some portal sections could not be loaded: ${failedSections.join(", ")}`)
+    error: buildPortalWarningMessage(failedSections)
+      ? new Error(buildPortalWarningMessage(failedSections))
       : null,
   };
 }
@@ -605,9 +936,20 @@ export function buildPortalSummary(student = {}, data = {}) {
   const communications = data.communications || [];
   const timeline = data.timeline || [];
   const universities = data.universities || [];
+  const invoices = data.invoices || [];
+  const payments = data.payments || [];
+  const receipts = data.receipts || [];
+  const counselorPaymentRequests = data.counselorPaymentRequests || data.paymentRequests || [];
+  const paymentAccounts = data.paymentAccounts || [];
+  const supportRequests = data.supportRequests || data.studentSupportRequests || [];
   const fallbackCounts = data.counts || student.portalCounts || {};
 
   const latestApplication = applications[0] || {};
+  const latestInvoice = invoices[0] || {};
+  const latestPayment = payments[0] || {};
+  const latestSupportRequest = supportRequests[0] || {};
+  const activePaymentAccount =
+    paymentAccounts.find((account) => account.is_active) || paymentAccounts[0] || null;
 
   const pendingTasks = tasks.filter((task) => {
     const status = normalize(task.status);
@@ -615,6 +957,41 @@ export function buildPortalSummary(student = {}, data = {}) {
   });
 
   const completedTasks = tasks.length - pendingTasks.length;
+
+  const unpaidInvoices = invoices.filter((invoice) => {
+    const status = normalize(invoice.status || invoice.payment_status || invoice.invoice_status);
+    return !["paid", "completed", "cancelled", "void"].includes(status);
+  });
+
+  const paidInvoices = invoices.filter((invoice) => {
+    const status = normalize(invoice.status || invoice.payment_status || invoice.invoice_status);
+    return ["paid", "completed"].includes(status);
+  });
+
+  const pendingReceipts = receipts.filter((receipt) => {
+    const status = normalize(receipt.status || receipt.review_status);
+    return ["pending", "pending_review", "submitted", "under_review", "review"].includes(status);
+  });
+
+  const openSupportRequests = supportRequests.filter((request) =>
+    ["open", "in_progress", "pending"].includes(normalize(request.status))
+  );
+
+  const resolvedSupportRequests = supportRequests.filter((request) =>
+    ["resolved", "closed"].includes(normalize(request.status))
+  );
+
+  const totalInvoiceAmount = invoices.reduce(
+    (sum, invoice) => sum + Number(invoice.amount || invoice.total_amount || invoice.invoice_amount || 0),
+    0
+  );
+
+  const totalPaidAmount = payments.reduce(
+    (sum, payment) => sum + Number(payment.amount || payment.paid_amount || payment.payment_amount || 0),
+    0
+  );
+
+  const outstandingAmount = Math.max(0, totalInvoiceAmount - totalPaidAmount);
 
   return {
     studentName: getStudentDisplayName(student),
@@ -624,6 +1001,11 @@ export function buildPortalSummary(student = {}, data = {}) {
     phone: getStudentPhone(student),
 
     latestApplication,
+    latestInvoice,
+    latestPayment,
+    latestSupportRequest,
+    activePaymentAccount,
+    paymentAccounts,
 
     applicationStatus:
       latestApplication.application_status ||
@@ -649,14 +1031,136 @@ export function buildPortalSummary(student = {}, data = {}) {
 
     documentsCount: documents.length || fallbackCounts.documents || 0,
     tasksCount: tasks.length || fallbackCounts.tasks || 0,
-    pendingTasksCount:
-      tasks.length > 0 ? pendingTasks.length : fallbackCounts.tasks || 0,
+    pendingTasksCount: tasks.length > 0 ? pendingTasks.length : fallbackCounts.tasks || 0,
     completedTasksCount: completedTasks,
     communicationsCount: communications.length || fallbackCounts.communications || 0,
     timelineCount: timeline.length || fallbackCounts.timeline || 0,
     universitiesCount: universities.length || fallbackCounts.universities || 0,
 
+    invoicesCount: invoices.length || fallbackCounts.invoices || 0,
+    paymentsCount: payments.length || fallbackCounts.payments || 0,
+    receiptsCount: receipts.length || fallbackCounts.receipts || 0,
+    counselorPaymentRequestsCount:
+      counselorPaymentRequests.length ||
+      fallbackCounts.counselorPaymentRequests ||
+      fallbackCounts.paymentRequests ||
+      0,
+
+    supportRequestsCount:
+      supportRequests.length ||
+      fallbackCounts.supportRequests ||
+      fallbackCounts.studentSupportRequests ||
+      0,
+    openSupportRequestsCount: openSupportRequests.length,
+    resolvedSupportRequestsCount: resolvedSupportRequests.length,
+
+    unpaidInvoicesCount: unpaidInvoices.length,
+    paidInvoicesCount: paidInvoices.length,
+    pendingReceiptsCount: pendingReceipts.length,
+    totalInvoiceAmount,
+    totalPaidAmount,
+    outstandingAmount,
+
     pendingTasks,
+    unpaidInvoices,
+    pendingReceipts,
+    supportRequests,
+    openSupportRequests,
+    resolvedSupportRequests,
+  };
+}
+
+export async function uploadStudentReceipt({
+  student,
+  invoiceId = null,
+  amount = null,
+  currency = "PKR",
+  paymentMethod = "",
+  reference = "",
+  receiptUrl = "",
+  notes = "",
+  file = null,
+}) {
+  const studentId = getStudentId(student);
+  const studentType = getStudentType(student);
+
+  if (!studentId) {
+    throw new Error("Student record is missing.");
+  }
+
+  let finalReceiptUrl = receiptUrl || "";
+
+  if (file) {
+    const extension = file.name?.split(".").pop() || "file";
+    const safeName = `${studentType}-${studentId}-${Date.now()}.${extension}`;
+    const uploadPath = `student-receipts/${studentType}/${studentId}/${safeName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("student-receipts")
+      .upload(uploadPath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicData } = supabase.storage
+      .from("student-receipts")
+      .getPublicUrl(uploadPath);
+
+    finalReceiptUrl = publicData?.publicUrl || uploadPath;
+  }
+
+  if (!finalReceiptUrl) {
+    throw new Error("Receipt file or receipt URL is required.");
+  }
+
+  const payload = {
+    student_id: studentId,
+    student_type: studentType,
+    invoice_id: invoiceId || null,
+    amount: amount === "" || amount === null ? null : Number(amount),
+    currency: currency || "PKR",
+    payment_method: paymentMethod || null,
+    reference: reference || null,
+    receipt_url: finalReceiptUrl,
+    notes: notes || null,
+    status: "pending_review",
+    review_status: "pending_review",
+    submitted_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from(TABLES.receipts)
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  try {
+    await supabase.from(TABLES.timeline).insert({
+      student_id: studentId,
+      student_type: studentType,
+      action_type: "receipt_uploaded",
+      title: "Receipt Uploaded",
+      description: "Student uploaded a payment receipt for admin review.",
+      new_value: finalReceiptUrl,
+      metadata: {
+        receipt_id: data?.id || null,
+        invoice_id: invoiceId || null,
+        amount: payload.amount,
+        currency: payload.currency,
+        source: "student_portal",
+      },
+    });
+  } catch (timelineError) {
+    console.warn("Receipt upload timeline event skipped:", timelineError?.message || timelineError);
+  }
+
+  return {
+    receipt: data,
+    error: null,
   };
 }
 
@@ -718,6 +1222,262 @@ export async function fetchStudentPortalAccountForStudent(student = {}) {
     account,
     error: null,
   };
+}
+
+function buildAccountPayloadFromStudent(student = {}, options = {}) {
+  const studentId = getStudentId(student);
+  const studentType = getStudentType(student);
+  const email = String(options.email || getStudentEmail(student) || "").trim().toLowerCase();
+
+  if (!studentId) {
+    throw new Error("Student record is missing.");
+  }
+
+  if (!email) {
+    throw new Error("Student email is required to create a portal account.");
+  }
+
+  return {
+    email,
+    student_id: studentId,
+    student_type: studentType,
+    is_active: options.isActive ?? true,
+    must_change_password: options.mustChangePassword ?? true,
+  };
+}
+
+async function callAccountRpc(names = [], params = {}, timeoutMs = ACCOUNT_TIMEOUT_MS) {
+  const errors = [];
+
+  for (const name of names) {
+    const result = await withTimeout(
+      supabase.rpc(name, params),
+      `${name} timed out.`,
+      timeoutMs
+    );
+
+    if (!result.error && !result.timedOut) {
+      return {
+        data: result.data,
+        error: null,
+        rpcName: name,
+      };
+    }
+
+    errors.push(result.error || new Error(`${name} timed out.`));
+  }
+
+  return {
+    data: null,
+    error: errors[errors.length - 1] || new Error("Portal account RPC failed."),
+    rpcName: null,
+  };
+}
+
+export async function createStudentPortalAccount({
+  student,
+  email = "",
+  temporaryPassword = "",
+  mustChangePassword = true,
+  isActive = true,
+  adminProfile = null,
+}) {
+  try {
+    const payload = buildAccountPayloadFromStudent(student, {
+      email,
+      mustChangePassword,
+      isActive,
+    });
+
+    if (!temporaryPassword || String(temporaryPassword).length < 6) {
+      throw new Error("Temporary password must be at least 6 characters.");
+    }
+
+    const rpcResult = await callAccountRpc(
+      [
+        "create_student_portal_account",
+        "admin_create_student_portal_account",
+        "create_or_reset_student_portal_account",
+      ],
+      {
+        p_email: payload.email,
+        p_password: temporaryPassword,
+        p_student_id: payload.student_id,
+        p_student_type: payload.student_type,
+        p_is_active: payload.is_active,
+        p_must_change_password: payload.must_change_password,
+        p_admin_id: adminProfile?.id || null,
+      }
+    );
+
+    if (rpcResult.error) {
+      throw new Error(
+        `${rpcResult.error.message || "Portal account RPC is missing."} Create/reset account requires a Supabase RPC that hashes the password safely.`
+      );
+    }
+
+    const accountResult = await fetchStudentPortalAccountForStudent({
+      ...student,
+      student_type: payload.student_type,
+    });
+
+    return {
+      success: true,
+      account: accountResult.account || null,
+      data: rpcResult.data,
+      message: "Portal account created.",
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      account: null,
+      data: null,
+      message: error.message || "Portal account could not be created.",
+      error,
+    };
+  }
+}
+
+export async function resetStudentPortalAccountPassword({
+  accountId,
+  email = "",
+  newPassword = "",
+  mustChangePassword = true,
+  adminProfile = null,
+}) {
+  try {
+    if (!accountId && !email) {
+      throw new Error("Portal account is missing.");
+    }
+
+    if (!newPassword || String(newPassword).length < 6) {
+      throw new Error("New password must be at least 6 characters.");
+    }
+
+    const rpcResult = await callAccountRpc(
+      [
+        "reset_student_portal_password",
+        "admin_reset_student_portal_password",
+        "set_student_portal_password",
+      ],
+      {
+        p_account_id: accountId || null,
+        p_email: String(email || "").trim().toLowerCase() || null,
+        p_new_password: newPassword,
+        p_password: newPassword,
+        p_must_change_password: mustChangePassword,
+        p_admin_id: adminProfile?.id || null,
+      }
+    );
+
+    if (rpcResult.error) {
+      throw new Error(
+        `${rpcResult.error.message || "Portal password reset RPC is missing."} Reset requires a Supabase RPC that hashes the password safely.`
+      );
+    }
+
+    return {
+      success: true,
+      data: rpcResult.data,
+      message: "Portal password reset.",
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      message: error.message || "Portal password could not be reset.",
+      error,
+    };
+  }
+}
+
+export async function updateStudentPortalAccountStatus({
+  accountId,
+  isActive,
+  mustChangePassword,
+}) {
+  try {
+    if (!accountId) {
+      throw new Error("Portal account is missing.");
+    }
+
+    const payload = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (typeof isActive === "boolean") {
+      payload.is_active = isActive;
+    }
+
+    if (typeof mustChangePassword === "boolean") {
+      payload.must_change_password = mustChangePassword;
+    }
+
+    let { data, error } = await supabase
+      .from(TABLES.accounts)
+      .update(payload)
+      .eq("id", accountId)
+      .select(
+        "id, email, student_id, student_type, is_active, must_change_password, password_changed_at, last_login_at, created_at, updated_at"
+      )
+      .single();
+
+    if (error) {
+      const minimalPayload = { ...payload };
+      delete minimalPayload.updated_at;
+
+      const retry = await supabase
+        .from(TABLES.accounts)
+        .update(minimalPayload)
+        .eq("id", accountId)
+        .select(
+          "id, email, student_id, student_type, is_active, must_change_password, password_changed_at, last_login_at, created_at, updated_at"
+        )
+        .single();
+
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      account: data,
+      message: "Portal account updated.",
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      account: null,
+      message: error.message || "Portal account could not be updated.",
+      error,
+    };
+  }
+}
+
+export async function activateStudentPortalAccount(accountId) {
+  return updateStudentPortalAccountStatus({
+    accountId,
+    isActive: true,
+  });
+}
+
+export async function deactivateStudentPortalAccount(accountId) {
+  return updateStudentPortalAccountStatus({
+    accountId,
+    isActive: false,
+  });
+}
+
+export async function forceStudentPortalPasswordChange(accountId, mustChangePassword = true) {
+  return updateStudentPortalAccountStatus({
+    accountId,
+    mustChangePassword,
+  });
 }
 
 export async function loginStudentPortalAccount(email = "", password = "") {
