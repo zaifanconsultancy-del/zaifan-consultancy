@@ -668,6 +668,12 @@ function ExecutiveAIDashboard({ students = [] }) {
         />
       </div>
 
+      <ExecutiveOperationsExpansion
+        metrics={metrics}
+        executiveIntelligence={executiveIntelligence}
+        automationPressure={automationPressure}
+      />
+
       <RiskMonitoringPanel students={students} />
       <OpportunityFeedPanel students={students} />
     </div>
@@ -956,11 +962,75 @@ function SmallInfo({ label, value }) {
   );
 }
 
-export function buildExecutiveDashboardAutomationSummary(students = []) {
+
+function ExecutiveOperationsExpansion({ metrics, executiveIntelligence, automationPressure }) {
+  const operatingScore = Math.round(
+    (metrics.coverage +
+      metrics.journeyPercent.started +
+      metrics.journeyPercent.submitted +
+      metrics.journeyPercent.offers +
+      metrics.journeyPercent.cas +
+      metrics.journeyPercent.visa +
+      Math.max(0, 100 - automationPressure.pressureScore)) /
+      7
+  );
+
+  const commandRows = [
+    ["Executive Priority", metrics.executivePriority, "Students needing owner/counselor attention."],
+    ["Critical Risk", metrics.criticalRisk, "Cases that should not wait."],
+    ["Visa/CAS Watch", metrics.casPending + metrics.casIssued + metrics.visaPending + metrics.visaRejected, "Students in late-stage movement."],
+    ["Stalled Watch", executiveIntelligence.stalled.length, "Students with low movement or stale activity."],
+    ["Automation Candidates", automationPressure.automationCandidates, "Actions Executive AI can prepare."],
+    ["Approval Likely", automationPressure.approvalLikely, "Actions that should stay human-approved."],
+  ];
+
+  return (
+    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">
+            Admin Operations Extension
+          </p>
+          <h3 className="mt-1 text-xl font-black text-white">
+            Command Readiness Snapshot
+          </h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+            This connects Executive AI intelligence to daily admin operations. Use it
+            with the new Operations Center tab for one-screen CEO/Counselor visibility.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+            Operating Score
+          </p>
+          <p className="mt-2 text-3xl font-black text-[#D4AF37]">
+            {operatingScore}/100
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {commandRows.map(([label, value, detail]) => (
+          <div key={label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+              {label}
+            </p>
+            <p className="mt-2 text-3xl font-black text-white">{value}</p>
+            <p className="mt-2 text-xs leading-5 text-white/40">{detail}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+function buildExecutiveDashboardAutomationSummary(students = []) {
   return buildAutomationPressure(Array.isArray(students) ? students : []);
 }
 
-export function buildExecutiveLeadershipSnapshot(students = []) {
+function buildExecutiveLeadershipSnapshot(students = []) {
   const rows = Array.isArray(students) ? students : [];
   const automation = buildExecutiveDashboardAutomationSummary(rows);
 
