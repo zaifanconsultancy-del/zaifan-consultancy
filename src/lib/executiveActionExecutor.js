@@ -240,6 +240,7 @@ function buildExecutionLogPayload({
       title: getTemplateTitle(template),
       description: getTemplateDescription(template),
       executed_by_name: getAdminName(adminProfile),
+      original_template: template,
     }),
   };
 }
@@ -387,8 +388,6 @@ async function executeTaskTemplate({ template, adminProfile, isCallTask = false 
   const { data, error, timedOut } = await insertStudentTask(taskPayload);
 
   if (error) {
-    console.error("Executive task execution failed:", error);
-
     fireTimelineEvent({
       template,
       adminProfile,
@@ -477,8 +476,6 @@ async function executeReminderTemplate({ template, adminProfile }) {
   );
 
   if (error) {
-    console.error("Executive reminder execution failed:", error);
-
     fireTimelineEvent({
       template,
       adminProfile,
@@ -579,8 +576,6 @@ async function executeCommunicationTemplate({
   const { data, error, timedOut } = await insertCommunication(communicationPayload);
 
   if (error) {
-    console.error("Executive communication execution failed:", error);
-
     fireTimelineEvent({
       template,
       adminProfile,
@@ -819,4 +814,281 @@ export function buildExecutionAnalytics(logs = []) {
     : 0;
 
   return analytics;
+}
+
+export async function executeBulkExecutiveActions({
+  templates = [],
+  adminProfile = null,
+  skipDuplicateCheck = false,
+}) {
+  const safeTemplates = Array.isArray(templates) ? templates.filter(Boolean) : [];
+  const results = [];
+
+  for (const template of safeTemplates) {
+    try {
+      const result = await executeExecutiveActionTemplate({
+        template,
+        adminProfile,
+        skipDuplicateCheck,
+      });
+
+      results.push(result);
+    } catch (error) {
+      fireExecutionLog({
+        template,
+        adminProfile,
+        status: "failed",
+        error,
+        metadata: {
+          bulk_execution_error: true,
+        },
+      });
+
+      results.push(
+        buildExecutionResult({
+          template,
+          error,
+          actionType: normalizeActionType(template?.actionType),
+        })
+      );
+    }
+  }
+
+  const successful = results.filter((result) => !result.error && !result.duplicate).length;
+  const failed = results.filter((result) => result.error && !result.duplicate).length;
+  const duplicateBlocked = results.filter((result) => result.duplicate).length;
+  const timedOut = results.filter((result) => result.timedOut).length;
+
+  return {
+    total: safeTemplates.length,
+    successful,
+    failed,
+    duplicateBlocked,
+    timedOut,
+    successRate: safeTemplates.length
+      ? Math.round((successful / safeTemplates.length) * 100)
+      : 0,
+    results,
+    executedAt: new Date().toISOString(),
+  };
+}
+
+export async function executeCriticalExecutiveActions({
+  templates = [],
+  adminProfile = null,
+}) {
+  const criticalTemplates = (templates || []).filter((template) => {
+    const payload = template?.payload || {};
+    const riskScore = Number(payload.risk_score || template?.risk_score || 0);
+    const riskLevel = normalizeActionType(payload.risk_level || template?.risk_level || "");
+    const priority = normalizeActionType(
+      payload.priority ||
+        payload.priority_level ||
+        payload.recommendation_priority ||
+        template?.priority ||
+        ""
+    );
+
+    return (
+      riskScore >= 80 ||
+      riskLevel === "critical" ||
+      priority === "critical" ||
+      priority === "urgent"
+    );
+  });
+
+  return executeBulkExecutiveActions({
+    templates: criticalTemplates,
+    adminProfile,
+  });
+}
+
+export async function executeExecutivePriorityActions({
+  templates = [],
+  adminProfile = null,
+}) {
+  const executiveTemplates = (templates || []).filter((template) => {
+    const payload = template?.payload || {};
+    const riskScore = Number(payload.risk_score || template?.risk_score || 0);
+    const opportunityScore = Number(payload.opportunity_score || template?.opportunity_score || 0);
+    const executiveCategory = normalizeActionType(
+      payload.executive_category || template?.executive_category || ""
+    );
+    const priorityLevel = normalizeActionType(
+      payload.priority_level || payload.priority || template?.priority_level || ""
+    );
+
+    return (
+      executiveCategory === "executive_priority" ||
+      priorityLevel === "executive" ||
+      riskScore >= 85 ||
+      opportunityScore >= 85
+    );
+  });
+
+  return executeBulkExecutiveActions({
+    templates: executiveTemplates,
+    adminProfile,
+  });
+}
+
+export async function executeConversionExecutiveActions({
+  templates = [],
+  adminProfile = null,
+}) {
+  const conversionTemplates = (templates || []).filter((template) => {
+    const payload = template?.payload || {};
+    const opportunityScore = Number(payload.opportunity_score || template?.opportunity_score || 0);
+    const category = normalizeActionType(payload.executive_category || template?.executive_category || "");
+    const stage = normalizeActionType(payload.journey_stage || template?.journey_stage || "");
+
+    return (
+      opportunityScore >= 80 ||
+      category === "conversion_ready" ||
+      ["offer_accepted", "cas_pending", "cas_issued", "visa_pending"].includes(stage)
+    );
+  });
+
+  return executeBulkExecutiveActions({
+    templates: conversionTemplates,
+    adminProfile,
+  });
+}
+
+export async function retryFailedExecutiveActions({
+  failedLogs = [],
+  templates = [],
+  adminProfile = null,
+}) {
+  const logs = Array.isArray(failedLogs) ? failedLogs : [];
+  const fallbackTemplates = Array.isArray(templates) ? templates : [];
+
+  const retryTemplates = logs
+    .map((log) => log?.metadata?.original_template || log?.metadata?.template || null)
+    .filter(Boolean);
+
+  const finalTemplates = retryTemplates.length ? retryTemplates : fallbackTemplates;
+
+  return executeBulkExecutiveActions({
+    templates: finalTemplates,
+    adminProfile,
+    skipDuplicateCheck: true,
+  });
+}
+
+export function buildQueueHealthAnalytics({
+  queue = [],
+  logs = [],
+} = {}) {
+  const queueRows = Array.isArray(queue) ? queue : [];
+  const logRows = Array.isArray(logs) ? logs : [];
+
+  const pending = queueRows.filter((item) => {
+    const status = normalizeActionType(item.status || item.approval_status || item.queue_status || "");
+    return status.includes("pending") || status.includes("queued") || status === "approval_required";
+  });
+
+  const approvalRequired = queueRows.filter((item) => {
+    const payload = item?.payload || {};
+    return (
+      item.requiresApproval === true ||
+      payload.approval_required === true ||
+      normalizeActionType(item.approval_status) === "required" ||
+      normalizeActionType(payload.queue_status) === "approval_required"
+    );
+  });
+
+  const failed = logRows.filter((log) => {
+    const status = normalizeActionType(log.status || "");
+    return status.includes("failed") || status.includes("error");
+  });
+
+  const completed = logRows.filter((log) => {
+    const status = normalizeActionType(log.status || "");
+    return ["completed", "success", "executed"].includes(status);
+  });
+
+  const duplicateBlocked = logRows.filter(
+    (log) =>
+      log.duplicate_detected === true ||
+      normalizeActionType(log.status) === "duplicate_blocked"
+  );
+
+  const oldestPending =
+    pending.length > 0
+      ? pending.reduce((oldest, item) => {
+          const currentDate = new Date(item.created_at || item.createdAt || item.generated_at || Date.now());
+          const oldestDate = new Date(oldest.created_at || oldest.createdAt || oldest.generated_at || Date.now());
+          return currentDate < oldestDate ? item : oldest;
+        })
+      : null;
+
+  const now = Date.now();
+  const oldestPendingAgeHours = oldestPending
+    ? Math.max(
+        0,
+        Math.round(
+          (now -
+            new Date(
+              oldestPending.created_at ||
+                oldestPending.createdAt ||
+                oldestPending.generated_at ||
+                Date.now()
+            ).getTime()) /
+            (1000 * 60 * 60)
+        )
+      )
+    : 0;
+
+  const totalFinished = completed.length + failed.length;
+
+  const byAction = {};
+  const byStatus = {};
+
+  logRows.forEach((log) => {
+    const action = normalizeActionType(log.action_type || "unknown");
+    const status = normalizeActionType(log.status || "unknown");
+
+    byAction[action] = (byAction[action] || 0) + 1;
+    byStatus[status] = (byStatus[status] || 0) + 1;
+  });
+
+  return {
+    queueCount: queueRows.length,
+    pendingCount: pending.length,
+    approvalRequiredCount: approvalRequired.length,
+    failedCount: failed.length,
+    completedCount: completed.length,
+    duplicateBlockedCount: duplicateBlocked.length,
+    queuePressure: pending.length + approvalRequired.length + failed.length + duplicateBlocked.length,
+    successRate: totalFinished ? Math.round((completed.length / totalFinished) * 100) : 0,
+    failureRate: totalFinished ? Math.round((failed.length / totalFinished) * 100) : 0,
+    oldestPending,
+    oldestPendingAgeHours,
+    byAction,
+    byStatus,
+  };
+}
+
+export function buildBulkExecutionSummary(results = {}) {
+  const rows = Array.isArray(results?.results) ? results.results : [];
+
+  return {
+    total: results.total || rows.length || 0,
+    successful: results.successful || rows.filter((result) => !result.error && !result.duplicate).length,
+    failed: results.failed || rows.filter((result) => result.error && !result.duplicate).length,
+    duplicateBlocked:
+      results.duplicateBlocked || rows.filter((result) => result.duplicate).length,
+    timedOut: results.timedOut || rows.filter((result) => result.timedOut).length,
+    successRate:
+      results.successRate ||
+      (rows.length
+        ? Math.round(
+            (rows.filter((result) => !result.error && !result.duplicate).length /
+              rows.length) *
+              100
+          )
+        : 0),
+    executedAt: results.executedAt || new Date().toISOString(),
+  };
 }

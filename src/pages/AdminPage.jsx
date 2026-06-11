@@ -137,6 +137,14 @@ function AdminPage() {
     studentUniversities,
     studentRiskScores,
 
+    studentInvoices,
+    studentPayments,
+    studentReceipts,
+    studentPortalAccounts,
+    supportRequests,
+    counselorPaymentRequests,
+    executiveExecutionLogs,
+
     loading,
     loadError,
     fetchAllData,
@@ -723,6 +731,20 @@ function AdminPage() {
             role={role}
             adminProfile={adminProfile}
             permissions={currentPermissions}
+            studentApplications={studentApplications}
+            studentDocuments={studentDocuments}
+            studentTasks={studentTasks}
+            studentUniversities={studentUniversities}
+            studentRiskScores={studentRiskScores}
+            studentInvoices={studentInvoices}
+            studentPayments={studentPayments}
+            studentReceipts={studentReceipts}
+            studentPortalAccounts={studentPortalAccounts}
+            supportRequests={supportRequests}
+            counselorPaymentRequests={counselorPaymentRequests}
+            executiveExecutionLogs={executiveExecutionLogs}
+            setActiveTab={setActiveTab}
+            setActiveAnalyticsSection={setActiveAnalyticsSection}
           />
 
           {shouldShowStats(activeTab) && (
@@ -734,6 +756,18 @@ function AdminPage() {
                 appointmentConfirmedCount={appointmentConfirmedCount}
                 role={role}
                 permissions={currentPermissions}
+                studentApplications={studentApplications}
+                studentDocuments={studentDocuments}
+                studentTasks={studentTasks}
+                studentUniversities={studentUniversities}
+                studentRiskScores={studentRiskScores}
+                studentInvoices={studentInvoices}
+                studentPayments={studentPayments}
+                studentReceipts={studentReceipts}
+                studentPortalAccounts={studentPortalAccounts}
+                supportRequests={supportRequests}
+                counselorPaymentRequests={counselorPaymentRequests}
+                executiveExecutionLogs={executiveExecutionLogs}
               />
 
               <AdminStats
@@ -746,6 +780,18 @@ function AdminPage() {
                 appointmentConfirmedCount={appointmentConfirmedCount}
                 appointmentCompletedCount={appointmentCompletedCount}
                 appointmentCancelledCount={appointmentCancelledCount}
+                studentApplications={studentApplications}
+                studentDocuments={studentDocuments}
+                studentTasks={studentTasks}
+                studentUniversities={studentUniversities}
+                studentRiskScores={studentRiskScores}
+                studentInvoices={studentInvoices}
+                studentPayments={studentPayments}
+                studentReceipts={studentReceipts}
+                studentPortalAccounts={studentPortalAccounts}
+                supportRequests={supportRequests}
+                counselorPaymentRequests={counselorPaymentRequests}
+                executiveExecutionLogs={executiveExecutionLogs}
               />
             </>
           )}
@@ -790,6 +836,13 @@ function AdminPage() {
               todayAppointmentsCount={todayAppointmentsCount}
               latestInquiry={latestInquiry}
               latestAppointment={latestAppointment}
+              studentInvoices={studentInvoices}
+              studentPayments={studentPayments}
+              studentReceipts={studentReceipts}
+              studentPortalAccounts={studentPortalAccounts}
+              supportRequests={supportRequests}
+              counselorPaymentRequests={counselorPaymentRequests}
+              executiveExecutionLogs={executiveExecutionLogs}
             />
           ) : activeTab === "settings" ? (
             <SettingsPage

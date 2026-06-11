@@ -1,6 +1,14 @@
 import { useMemo } from "react";
 import RiskMonitoringPanel from "./RiskMonitoringPanel";
 import OpportunityFeedPanel from "./OpportunityFeedPanel";
+import {
+  verifyEntireStudentJourney,
+  generatePlatformHealthReport,
+} from "../../lib/platformVerificationEngine";
+import {
+  buildExecutiveRecoveryActions,
+  buildBrokenWorkflowScannerSnapshot,
+} from "../../lib/executiveAutomationEngine";
 
 function normalize(value = "") {
   return String(value || "")
@@ -476,6 +484,42 @@ function ExecutiveAIDashboard({ students = [] }) {
   const metrics = useMemo(() => buildMetrics(students), [students]);
   const executiveIntelligence = useMemo(() => buildExecutiveIntelligence(students), [students]);
   const automationPressure = useMemo(() => buildAutomationPressure(students), [students]);
+  const platformHealth = useMemo(
+  () => generatePlatformHealthReport(students),
+  [students]
+);
+
+const verificationResults = useMemo(
+  () =>
+    students.map((student) =>
+      verifyEntireStudentJourney(
+        student,
+        student.portalData || {}
+      )
+    ),
+  [students]
+);
+
+const brokenWorkflows = useMemo(
+  () =>
+    verificationResults.filter(
+      (item) => item.failures?.length
+    ),
+  [verificationResults]
+);
+
+const workflowScanner = useMemo(
+  () => buildBrokenWorkflowScannerSnapshot(students),
+  [students]
+);
+
+const recoveryEngine = useMemo(
+  () =>
+    buildExecutiveRecoveryActions(
+      workflowScanner.issues || []
+    ),
+  [workflowScanner]
+);
 
   return (
     <div className="space-y-5">
@@ -671,6 +715,32 @@ function ExecutiveAIDashboard({ students = [] }) {
       <ExecutiveOperationsExpansion
         metrics={metrics}
         executiveIntelligence={executiveIntelligence}
+        automationPressure={automationPressure}
+      />
+<PlatformVerificationCenter
+  platformHealth={platformHealth}
+  brokenWorkflows={brokenWorkflows}
+/>
+
+      <RecoveryIntelligenceCenter
+        workflowScanner={workflowScanner}
+        recoveryEngine={recoveryEngine}
+      />
+
+      <WorkflowFailureHeatmap
+        workflowScanner={workflowScanner}
+      />
+
+      <ExecutiveRecoveryQueue
+        issues={workflowScanner.issues || []}
+        recoveryEngine={recoveryEngine}
+      />
+
+      <ProductionHardeningMonitor
+        metrics={metrics}
+        platformHealth={platformHealth}
+        workflowScanner={workflowScanner}
+        recoveryEngine={recoveryEngine}
         automationPressure={automationPressure}
       />
 
@@ -1041,6 +1111,419 @@ function buildExecutiveLeadershipSnapshot(students = []) {
         ? "Portfolio is stable. No urgent automation pressure detected."
         : `${automation.automationCandidates} student action(s) are ready for counselor review. ${automation.approvalLikely} may need human approval first.`,
   };
+}
+
+function PlatformVerificationCenter({
+  platformHealth,
+  brokenWorkflows,
+}) {
+  return (
+    <div className="rounded-[1.75rem] border border-cyan-400/20 bg-cyan-500/[0.04] p-5">
+      <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
+        Platform Verification
+      </p>
+
+      <h3 className="mt-1 text-xl font-black text-white">
+        End-to-End Workflow Validation
+      </h3>
+
+      <p className="mt-2 text-sm text-white/45">
+        Verifies Inquiry → University →
+        Application → Offer → CAS →
+        Visa → Payment → Portal →
+        Counselor → Executive →
+        Automation.
+      </p>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-4">
+        <MetricCard
+          label="Students"
+          value={
+            platformHealth.totalStudents
+          }
+        />
+
+        <MetricCard
+          label="Healthy"
+          value={
+            platformHealth.healthyStudents
+          }
+          tone="good"
+        />
+
+        <MetricCard
+          label="At Risk"
+          value={
+            platformHealth.atRiskStudents
+          }
+          tone="risk"
+        />
+
+        <MetricCard
+          label="Platform Score"
+          value={`${platformHealth.averageScore}%`}
+          tone="gold"
+        />
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+        <p className="text-sm font-black text-white">
+          Broken Workflow Records
+        </p>
+
+        <p className="mt-2 text-3xl font-black text-cyan-300">
+          {brokenWorkflows.length}
+        </p>
+
+        <p className="mt-2 text-xs text-white/45">
+          Students with one or more
+          workflow failures detected.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+function RecoveryIntelligenceCenter({ workflowScanner = {}, recoveryEngine = {} }) {
+  const totalActions = asNumber(recoveryEngine.totalActions);
+  const totalIssues = asNumber(workflowScanner.totalIssues);
+  const critical = asNumber(workflowScanner.critical);
+  const high = asNumber(workflowScanner.high);
+  const casQueue = recoveryEngine.casQueue || [];
+  const visaQueue = recoveryEngine.visaQueue || [];
+  const paymentQueue = recoveryEngine.paymentQueue || [];
+  const portalQueue = recoveryEngine.portalQueue || [];
+
+  const healthLabel =
+    workflowScanner.health_status === "critical"
+      ? "Critical Recovery"
+      : workflowScanner.health_status === "needs_recovery"
+      ? "Recovery Required"
+      : workflowScanner.health_status === "monitor"
+      ? "Monitor"
+      : "Healthy";
+
+  return (
+    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">
+            Recovery Intelligence
+          </p>
+          <h3 className="mt-1 text-xl font-black text-white">
+            Automatic Recovery Workflow Center
+          </h3>
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-white/45">
+            Converts broken verification signals into executive recovery queues for CAS, visa, payment, portal, timeline, documents, and task execution.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+            Recovery Status
+          </p>
+          <p className="mt-2 text-2xl font-black text-[#D4AF37]">
+            {healthLabel}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        <RecoveryMetric label="Recovery Actions" value={totalActions} tone="gold" />
+        <RecoveryMetric label="Broken Issues" value={totalIssues} tone={totalIssues ? "warning" : "good"} />
+        <RecoveryMetric label="Critical" value={critical} tone={critical ? "risk" : "good"} />
+        <RecoveryMetric label="High" value={high} tone={high ? "warning" : "good"} />
+        <RecoveryMetric label="CAS Queue" value={casQueue.length} tone={casQueue.length ? "warning" : "good"} />
+        <RecoveryMetric label="Visa Queue" value={visaQueue.length} tone={visaQueue.length ? "risk" : "good"} />
+        <RecoveryMetric label="Payment Queue" value={paymentQueue.length} tone={paymentQueue.length ? "warning" : "good"} />
+        <RecoveryMetric label="Portal Queue" value={portalQueue.length} tone={portalQueue.length ? "warning" : "good"} />
+        <RecoveryMetric label="Broken Stages" value={asNumber(workflowScanner.brokenStages)} tone={workflowScanner.brokenStages ? "warning" : "good"} />
+        <RecoveryMetric label="Auto Actions" value={asNumber(recoveryEngine.totalActions)} tone="gold" />
+        <RecoveryMetric label="Critical Issues" value={asNumber(recoveryEngine.criticalIssues)} tone={recoveryEngine.criticalIssues ? "risk" : "good"} />
+        <RecoveryMetric label="High Issues" value={asNumber(recoveryEngine.highIssues)} tone={recoveryEngine.highIssues ? "warning" : "good"} />
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-4">
+        <RecoveryQueuePreview title="CAS Recovery" items={casQueue} tone="warning" />
+        <RecoveryQueuePreview title="Visa Recovery" items={visaQueue} tone="risk" />
+        <RecoveryQueuePreview title="Payment Recovery" items={paymentQueue} tone="gold" />
+        <RecoveryQueuePreview title="Portal Recovery" items={portalQueue} tone="good" />
+      </div>
+    </div>
+  );
+}
+
+function WorkflowFailureHeatmap({ workflowScanner = {} }) {
+  const byStage = workflowScanner.byStage || {};
+  const stages = [
+    "inquiry",
+    "university_planning",
+    "application",
+    "offer",
+    "cas",
+    "visa",
+    "payment",
+    "student_portal",
+    "timeline",
+    "documents",
+    "tasks",
+    "executive",
+    "automation",
+  ];
+
+  const maxValue = Math.max(1, ...stages.map((stage) => asNumber(byStage[stage])));
+
+  return (
+    <div className="rounded-[1.75rem] border border-red-400/15 bg-red-500/[0.035] p-5">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-red-300">
+            Workflow Failure Heatmap
+          </p>
+          <h3 className="mt-1 text-xl font-black text-white">
+            Stage-Level Break Detection
+          </h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+            Shows where student journeys are breaking across Inquiry → University → Application → Offer → CAS → Visa → Payment → Portal → Executive → Automation.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Total Breaks</p>
+          <p className="mt-2 text-3xl font-black text-red-200">{asNumber(workflowScanner.totalIssues)}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {stages.map((stage) => {
+          const value = asNumber(byStage[stage]);
+          const width = Math.round((value / maxValue) * 100);
+          return (
+            <div key={stage} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-white/50">
+                  {formatLabel(stage)}
+                </p>
+                <p className={`text-xl font-black ${value ? "text-red-200" : "text-emerald-300"}`}>
+                  {value}
+                </p>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className={`h-full rounded-full ${value ? "bg-red-300" : "bg-emerald-300"}`}
+                  style={{ width: `${value ? width : 8}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
+  const rows = [...(issues || [])]
+    .sort((a, b) => asNumber(b.priority_score) - asNumber(a.priority_score))
+    .slice(0, 10);
+
+  return (
+    <div className="rounded-[1.75rem] border border-orange-400/20 bg-orange-500/[0.04] p-5">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-300">
+            Executive Recovery Queue
+          </p>
+          <h3 className="mt-1 text-xl font-black text-white">
+            Highest Priority Workflow Repairs
+          </h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+            Prioritized list of broken workflows and recommended recovery actions generated by the recovery engine.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Generated Actions</p>
+          <p className="mt-2 text-3xl font-black text-orange-200">{asNumber(recoveryEngine.totalActions)}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {rows.length ? (
+          rows.map((issue, index) => (
+            <div
+              key={issue.id || `${issue.student_id}-${issue.issue_type}-${index}`}
+              className="rounded-2xl border border-white/10 bg-black/25 p-4"
+            >
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getSeverityBadgeClass(issue.severity)}`}>
+                      {formatLabel(issue.severity)}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+                      {formatLabel(issue.stage)}
+                    </span>
+                  </div>
+                  <p className="mt-3 truncate text-lg font-black text-white">
+                    {issue.student_name || "Unknown Student"}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-orange-100">
+                    {issue.title || formatLabel(issue.issue_type)}
+                  </p>
+                  <p className="mt-1 max-w-4xl text-xs leading-5 text-white/45">
+                    {issue.recommendation || issue.description || "Review and recover this workflow."}
+                  </p>
+                </div>
+
+                <div className="min-w-[220px] rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">
+                    Recovery Action
+                  </p>
+                  <p className="mt-2 text-sm font-black text-white">
+                    {formatLabel(issue.recovery_action || issue.recovery_type)}
+                  </p>
+                  <p className="mt-2 text-xs text-white/35">
+                    Priority {asNumber(issue.priority_score)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-5 text-sm text-white/40">
+            No recovery issues detected from the current student dataset.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProductionHardeningMonitor({
+  metrics = {},
+  platformHealth = {},
+  workflowScanner = {},
+  recoveryEngine = {},
+  automationPressure = {},
+}) {
+  const total = asNumber(metrics.total);
+  const platformScore = asNumber(platformHealth.averageScore);
+  const recoveryReadiness = Math.max(0, 100 - Math.min(100, asNumber(workflowScanner.totalIssues) * 8));
+  const timelineRisk = asNumber((workflowScanner.byStage || {}).timeline);
+  const portalRisk = asNumber((workflowScanner.byStage || {}).student_portal);
+  const paymentRisk = asNumber((workflowScanner.byStage || {}).payment);
+  const automationRisk = Math.min(100, asNumber(automationPressure.pressureScore));
+  const verificationCoverage = total ? Math.max(0, Math.min(100, platformScore || metrics.coverage || 0)) : 0;
+
+  const rows = [
+    ["Workflow Health", `${Math.max(0, 100 - asNumber(workflowScanner.totalIssues) * 5)}%`, workflowScanner.totalIssues ? "Active breaks detected" : "Stable", workflowScanner.totalIssues ? "warning" : "good"],
+    ["Verification Coverage", `${verificationCoverage}%`, "Platform verification score", verificationCoverage >= 80 ? "good" : "warning"],
+    ["Recovery Readiness", `${recoveryReadiness}%`, `${asNumber(recoveryEngine.totalActions)} actions generated`, recoveryReadiness >= 80 ? "good" : "warning"],
+    ["Timeline Integrity", timelineRisk, "Timeline-specific workflow breaks", timelineRisk ? "risk" : "good"],
+    ["Automation Integrity", `${Math.max(0, 100 - automationRisk)}%`, "Automation pressure inverse score", automationRisk >= 75 ? "risk" : automationRisk >= 40 ? "warning" : "good"],
+    ["Portal Integrity", portalRisk, "Portal account/access breaks", portalRisk ? "warning" : "good"],
+    ["Payment Integrity", paymentRisk, "Payment reconciliation breaks", paymentRisk ? "warning" : "good"],
+    ["Production Gate", workflowScanner.totalIssues ? "Hold" : "Pass", "Move only after full test pass", workflowScanner.totalIssues ? "risk" : "good"],
+  ];
+
+  return (
+    <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-500/[0.035] p-5">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-emerald-300">
+            Production Hardening
+          </p>
+          <h3 className="mt-1 text-xl font-black text-white">
+            Final Readiness Monitor
+          </h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+            Final operating layer for deciding whether Zaifan Student OS is ready for full workflow testing, production hardening, and main website handoff.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Platform Gate</p>
+          <p className={`mt-2 text-3xl font-black ${workflowScanner.totalIssues ? "text-orange-200" : "text-emerald-300"}`}>
+            {workflowScanner.totalIssues ? "Harden" : "Ready"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {rows.map(([label, value, detail, tone]) => (
+          <div key={label} className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+              {label}
+            </p>
+            <p className="mt-2 text-3xl font-black text-white">{value}</p>
+            <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RecoveryMetric({ label, value, tone = "default" }) {
+  return (
+    <div className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+        {label}
+      </p>
+      <p className="mt-2 text-3xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function RecoveryQueuePreview({ title, items = [], tone = "default" }) {
+  return (
+    <div className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+            {title}
+          </p>
+          <p className="mt-2 text-3xl font-black text-white">{items.length}</p>
+        </div>
+        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+          Queue
+        </span>
+      </div>
+      <div className="mt-4 space-y-2">
+        {items.slice(0, 3).map((item, index) => (
+          <div key={item.id || `${title}-${index}`} className="rounded-xl border border-white/10 bg-black/20 p-3">
+            <p className="truncate text-xs font-black text-white">
+              {item.student_name || "Unknown Student"}
+            </p>
+            <p className="mt-1 truncate text-[11px] text-white/40">
+              {item.title || formatLabel(item.issue_type)}
+            </p>
+          </div>
+        ))}
+        {!items.length ? (
+          <p className="rounded-xl border border-dashed border-white/10 bg-black/10 p-3 text-xs text-white/35">
+            Clear
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function getSeverityBadgeClass(severity = "") {
+  const key = normalize(severity);
+  if (key === "critical") return "border-red-400/25 bg-red-500/10 text-red-300";
+  if (key === "high") return "border-orange-400/25 bg-orange-500/10 text-orange-300";
+  if (key === "executive") return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+  if (key === "medium") return "border-yellow-400/25 bg-yellow-500/10 text-yellow-100";
+  return "border-white/10 bg-white/[0.04] text-white/50";
+}
+
+function getHardeningCardClass(tone = "default") {
+  if (tone === "risk") return "border-red-400/20 bg-red-500/[0.06]";
+  if (tone === "warning") return "border-orange-400/20 bg-orange-500/[0.06]";
+  if (tone === "good") return "border-emerald-400/20 bg-emerald-500/[0.06]";
+  if (tone === "gold") return "border-[#D4AF37]/20 bg-[#D4AF37]/[0.06]";
+  return "border-white/10 bg-white/[0.035]";
 }
 
 export default ExecutiveAIDashboard;

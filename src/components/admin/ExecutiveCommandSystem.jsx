@@ -6,8 +6,11 @@ import ExecutiveAutomationEngine from "./ExecutiveAutomationEngine";
 import ExecutiveActionExecutorPanel from "./ExecutiveActionExecutorPanel";
 import ExecutivePortfolioSummary from "./ExecutivePortfolioSummary";
 import ExecutiveAutomationAnalytics from "./ExecutiveAutomationAnalytics";
+import ExecutiveAutomationControlCenter from "./ExecutiveAutomationControlCenter";
 import ExecutiveAIDashboard from "./ExecutiveAIDashboard";
+import MissionControlNotificationCenter from "./MissionControlNotificationCenter";
 import { getExecutiveScoreSummary } from "../../lib/executivePortfolioGenerator";
+import ExecutiveBulkOperationsPanel from "./ExecutiveBulkOperationsPanel";
 
 function normalize(value = "") {
   return String(value || "")
@@ -60,6 +63,26 @@ function getScoreValue(score = {}, key, fallback = 0) {
 
 function getStudentName(score = {}) {
   return score.student_name || score.full_name || score.name || "Unknown Student";
+}
+
+
+function buildExecutiveAlertSnapshot(scores = []) {
+  const critical = scores.filter((score) => number(score.risk_score) >= 85 || normalize(score.risk_level) === "critical").length;
+  const high = scores.filter((score) => number(score.risk_score) >= 70 || normalize(score.risk_level) === "high").length;
+  const visa = scores.filter((score) => ["cas_pending", "cas_issued", "visa_pending", "visa_rejected"].includes(getJourneyStage(score))).length;
+  const stalled = scores.filter((score) => number(getScoreValue(score, "days_since_updated"), 0) >= 10).length;
+  const documents = scores.filter((score) => number(getScoreValue(score, "document_readiness_percent"), 100) < 60).length;
+  const tasks = scores.filter((score) => number(getScoreValue(score, "overdue_tasks_count"), 0) > 0).length;
+
+  return {
+    critical,
+    high,
+    visa,
+    stalled,
+    documents,
+    tasks,
+    total: critical + high + visa + stalled + documents + tasks,
+  };
 }
 
 function buildCommandMetrics(scores = []) {
@@ -281,6 +304,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
 
   const commandMetrics = useMemo(() => buildCommandMetrics(scores), [scores]);
   const operations = useMemo(() => buildOperationsCenter(scores), [scores]);
+  const alertSnapshot = useMemo(() => buildExecutiveAlertSnapshot(scores), [scores]);
 
   const handleGenerated = async () => {
     await loadExecutiveScores();
@@ -345,6 +369,37 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
           <SummaryCard label="Avg Risk" value={summary?.averageRisk || commandMetrics.averageRisk} tone="orange" />
           <SummaryCard label="Avg Opportunity" value={summary?.averageOpportunity || commandMetrics.averageOpportunity} tone="green" />
         </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <CommandLaunchCard
+            title="Notification Center"
+            value={alertSnapshot.total}
+            detail={`${alertSnapshot.critical} critical • ${alertSnapshot.visa} visa watch`}
+            tone={alertSnapshot.total > 0 ? "red" : "green"}
+            onClick={() => setActiveView("notification-center")}
+          />
+          <CommandLaunchCard
+            title="Automation Control"
+            value="Live"
+            detail="Approval queue, failures, duplicate protection"
+            tone="gold"
+            onClick={() => setActiveView("automation-control")}
+          />
+          <CommandLaunchCard
+            title="Revenue Intelligence"
+            value={operations.revenue.conversionReady}
+            detail={`${operations.revenue.offerAccepted} offer accepted • ${operations.revenue.visaReadySoon} visa ready`}
+            tone="green"
+            onClick={() => setActiveView("operations")}
+          />
+          <CommandLaunchCard
+            title="Operations Health"
+            value={`${operations.health.applications || 0}%`}
+            detail="Applications, documents, tasks, visa, automation"
+            tone="blue"
+            onClick={() => setActiveView("operations")}
+          />
+        </div>
       </div>
 
       <CommandTabs activeView={activeView} setActiveView={setActiveView} />
@@ -355,6 +410,14 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
 
       {activeView === "intelligence" ? (
         <ExecutiveAIDashboard students={scores} />
+      ) : null}
+
+      {activeView === "notification-center" ? (
+        <MissionControlNotificationCenter
+          scores={scores}
+          studentRiskScores={scores}
+          adminProfile={adminProfile}
+        />
       ) : null}
 
       {activeView === "alerts" ? (
@@ -370,6 +433,19 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
           scores={scores}
           adminProfile={adminProfile}
           onActionExecuted={handleActionExecuted}
+        />
+      ) : null}
+      {activeView === "bulk-operations" ? (
+  <ExecutiveBulkOperationsPanel
+    scores={scores}
+    adminProfile={adminProfile}
+    onActionExecuted={handleActionExecuted}
+  />
+) : null}
+
+      {activeView === "automation-control" ? (
+        <ExecutiveAutomationControlCenter
+          adminProfile={adminProfile}
         />
       ) : null}
 
@@ -560,13 +636,18 @@ function OperationsHealthPanel({ health }) {
 
 function CommandTabs({ activeView, setActiveView }) {
   const tabs = [
-    { key: "operations", label: "Operations Center" },
-    { key: "intelligence", label: "Intelligence" },
-    { key: "alerts", label: "Alerts" },
-    { key: "portfolio", label: "Portfolio" },
-    { key: "actions", label: "Actions" },
-    { key: "automation", label: "Automation Analytics" },
-  ];
+  { key: "operations", label: "Operations Center" },
+  { key: "intelligence", label: "Intelligence" },
+  { key: "alerts", label: "Alerts" },
+  { key: "notification-center", label: "Notification Center" },
+  { key: "portfolio", label: "Portfolio" },
+  { key: "actions", label: "Actions" },
+
+  { key: "bulk-operations", label: "Bulk Operations" },
+
+  { key: "automation-control", label: "Automation Control" },
+  { key: "automation", label: "Automation Analytics" },
+];
 
   return (
     <div className="flex flex-wrap gap-2 rounded-[1.5rem] border border-white/10 bg-black/20 p-2">
@@ -589,6 +670,23 @@ function CommandTabs({ activeView, setActiveView }) {
         );
       })}
     </div>
+  );
+}
+
+
+function CommandLaunchCard({ title, value, detail, tone = "default", onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-[1.5rem] border p-4 text-left transition hover:-translate-y-0.5 hover:border-[#D4AF37]/40 ${getToneStyle(tone)}`}
+    >
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+        {title}
+      </p>
+      <p className="mt-3 text-3xl font-black text-white">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+    </button>
   );
 }
 

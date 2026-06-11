@@ -1070,6 +1070,162 @@ export function buildPortalSummary(student = {}, data = {}) {
   };
 }
 
+export function buildPortalHealthReport(
+  student = {},
+  data = {}
+) {
+  const summary = buildPortalSummary(student, data);
+
+  const checks = {
+    applications:
+      summary.applicationsCount > 0,
+
+    universities:
+      summary.universitiesCount > 0,
+
+    documents:
+      summary.documentsCount > 0,
+
+    tasks:
+      summary.tasksCount > 0,
+
+    communications:
+      summary.communicationsCount > 0,
+
+    timeline:
+      summary.timelineCount > 0,
+
+    payments:
+      summary.invoicesCount > 0 ||
+      summary.paymentsCount > 0,
+
+    support:
+      summary.supportRequestsCount > 0,
+  };
+
+  const passed =
+    Object.values(checks)
+      .filter(Boolean)
+      .length;
+
+  const total =
+    Object.keys(checks).length;
+
+  return {
+    score: Math.round(
+      (passed / total) * 100
+    ),
+
+    passed,
+    total,
+
+    checks,
+
+    health:
+      passed >= 7
+        ? "Excellent"
+        : passed >= 5
+        ? "Good"
+        : passed >= 3
+        ? "Needs Review"
+        : "Critical",
+  };
+}
+
+export function buildPortalWorkflowVerification(
+  student = {},
+  data = {}
+) {
+  const summary =
+    buildPortalSummary(student, data);
+
+  return {
+    inquiry:
+      Boolean(student.id),
+
+    universityPlanning:
+      summary.universitiesCount > 0,
+
+    application:
+      summary.applicationsCount > 0,
+
+    offer:
+      data.applications?.some(
+        app =>
+          String(
+            app.offer_status || ""
+          )
+            .toLowerCase()
+            .includes("offer")
+      ) || false,
+
+    cas:
+      data.applications?.some(
+        app =>
+          String(
+            app.cas_status || ""
+          )
+            .toLowerCase()
+            .includes("issued")
+      ) || false,
+
+    visa:
+      data.applications?.some(
+        app =>
+          String(
+            app.visa_status || ""
+          )
+            .toLowerCase()
+            .includes("approved")
+      ) || false,
+
+    payments:
+      summary.paymentsCount > 0,
+
+    support:
+      summary.supportRequestsCount > 0,
+
+    timeline:
+      summary.timelineCount > 0,
+  };
+}
+
+export function buildPortalDiagnostics(
+  student = {},
+  data = {}
+) {
+  const verification =
+    buildPortalWorkflowVerification(
+      student,
+      data
+    );
+
+  const missing = Object.entries(
+    verification
+  )
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  return {
+    verified:
+      missing.length === 0,
+
+    missing,
+
+    workflowCoverage:
+      Math.round(
+        ((Object.keys(verification)
+          .length -
+          missing.length) /
+          Object.keys(verification)
+            .length) *
+          100
+      ),
+
+    verification,
+  };
+}
+
 export async function uploadStudentReceipt({
   student,
   invoiceId = null,
@@ -1597,3 +1753,34 @@ export async function changeStudentPortalPassword({
     error: null,
   };
 }
+
+export default {
+  findStudentsForPortal,
+  findStudentForPortal,
+
+  getPortalDataCountsForStudent,
+  enrichStudentsWithPortalCounts,
+
+  fetchStudentPortalOverview,
+  fetchStudentPortalData,
+
+  buildPortalSummary,
+  buildPortalHealthReport,
+  buildPortalWorkflowVerification,
+  buildPortalDiagnostics,
+
+  uploadStudentReceipt,
+
+  fetchStudentPortalAccountForStudent,
+
+  createStudentPortalAccount,
+  resetStudentPortalAccountPassword,
+  updateStudentPortalAccountStatus,
+
+  activateStudentPortalAccount,
+  deactivateStudentPortalAccount,
+  forceStudentPortalPasswordChange,
+
+  loginStudentPortalAccount,
+  changeStudentPortalPassword,
+};

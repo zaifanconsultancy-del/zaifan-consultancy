@@ -9,9 +9,37 @@ function AnimatedNumber({ value }) {
 
   const rounded = useTransform(springValue, (latest) => Math.round(latest));
 
-  motionValue.set(value || 0);
+  motionValue.set(Number(value || 0));
 
   return <motion.span>{rounded}</motion.span>;
+}
+
+function toLower(value) {
+  return String(value || "").toLowerCase().trim();
+}
+
+function isDone(status) {
+  const value = toLower(status);
+
+  return (
+    value.includes("completed") ||
+    value.includes("complete") ||
+    value.includes("done") ||
+    value.includes("approved") ||
+    value.includes("verified") ||
+    value.includes("resolved") ||
+    value.includes("closed") ||
+    value.includes("paid")
+  );
+}
+
+function isOverdue(dateValue) {
+  if (!dateValue) return false;
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return false;
+
+  return date < new Date();
 }
 
 function AdminStats({
@@ -24,6 +52,19 @@ function AdminStats({
   appointmentConfirmedCount = 0,
   appointmentCompletedCount = 0,
   appointmentCancelledCount = 0,
+
+  studentApplications = [],
+  studentDocuments = [],
+  studentTasks = [],
+  studentUniversities = [],
+  studentRiskScores = [],
+
+  studentInvoices = [],
+  studentPayments = [],
+  studentReceipts = [],
+  studentPortalAccounts = [],
+  supportRequests = [],
+  counselorPaymentRequests = [],
 }) {
   const allLeads = [...inquiries, ...appointments];
   const totalLeads = allLeads.length;
@@ -63,7 +104,149 @@ function AdminStats({
   const urgentRate =
     totalLeads === 0 ? 0 : Math.round((urgentLeads / totalLeads) * 100);
 
-  const stats = [
+  const applicationsCount = studentApplications.length;
+
+  const offerCount = studentApplications.filter((app) => {
+    const status = toLower(app.status);
+    const offerStatus = toLower(app.offer_status);
+
+    return status.includes("offer") || offerStatus.includes("received");
+  }).length;
+
+  const casIssuedCount = studentApplications.filter((app) => {
+    const casStatus = toLower(app.cas_status || app.cas);
+
+    return casStatus.includes("issued");
+  }).length;
+
+  const visaApprovedCount = studentApplications.filter((app) => {
+    const visaStatus = toLower(app.visa_status || app.visa);
+
+    return visaStatus.includes("approved");
+  }).length;
+
+  const pendingDocuments = studentDocuments.filter(
+    (doc) => !isDone(doc.status || doc.document_status || doc.verification_status)
+  ).length;
+
+  const pendingTasks = studentTasks.filter(
+    (task) => !isDone(task.status || task.task_status)
+  );
+
+  const overdueTasks = pendingTasks.filter((task) =>
+    isOverdue(task.due_date || task.deadline || task.target_date)
+  ).length;
+
+  const highRiskStudents = studentRiskScores.filter((risk) => {
+    const score = Number(risk.risk_score || risk.score || risk.overall_score || 0);
+    const level = toLower(risk.risk_level || risk.priority || risk.level);
+
+    return score >= 70 || level.includes("high") || level.includes("critical");
+  }).length;
+
+  const unpaidInvoices = studentInvoices.filter((invoice) => {
+    const status = toLower(invoice.status || invoice.payment_status);
+
+    return !status.includes("paid") && !status.includes("complete");
+  }).length;
+
+  const outstandingAmount = studentInvoices.reduce((sum, invoice) => {
+    const status = toLower(invoice.status || invoice.payment_status);
+
+    if (status.includes("paid") || status.includes("complete")) return sum;
+
+    return (
+      sum +
+      Number(
+        invoice.outstanding_amount ||
+          invoice.balance ||
+          invoice.amount ||
+          invoice.total_amount ||
+          invoice.invoice_amount ||
+          0
+      )
+    );
+  }, 0);
+
+  const pendingReceipts = studentReceipts.filter((receipt) => {
+    const status = toLower(
+      receipt.status || receipt.receipt_status || receipt.approval_status
+    );
+
+    return !status.includes("approved") && !status.includes("rejected");
+  }).length;
+
+  const activePortalAccounts = studentPortalAccounts.filter((account) => {
+    const active = account.is_active ?? account.active ?? account.status;
+
+    if (typeof active === "boolean") return active;
+
+    return !["inactive", "disabled", "blocked", "false"].includes(toLower(active));
+  }).length;
+
+  const portalResetCount = studentPortalAccounts.filter(
+    (account) => account.must_change_password || account.force_password_change
+  ).length;
+
+  const openSupportRequests = supportRequests.filter((request) => {
+    const status = toLower(request.status || request.request_status);
+
+    return !status.includes("resolved") && !status.includes("closed");
+  }).length;
+
+  const escalatedSupportRequests = supportRequests.filter((request) => {
+    const status = toLower(request.status || request.request_status);
+    const priority = toLower(request.priority || request.severity);
+
+    return (
+      status.includes("escalated") ||
+      priority.includes("urgent") ||
+      priority.includes("high") ||
+      priority.includes("critical")
+    );
+  }).length;
+
+  const studentJourneyRate =
+    applicationsCount === 0
+      ? 0
+      : Math.round(
+          ((offerCount + casIssuedCount + visaApprovedCount) /
+            Math.max(applicationsCount * 3, 1)) *
+            100
+        );
+
+  const documentReadyRate =
+    studentDocuments.length === 0
+      ? 0
+      : Math.round(
+          ((studentDocuments.length - pendingDocuments) / studentDocuments.length) * 100
+        );
+
+  const taskHealthRate =
+    studentTasks.length === 0
+      ? 0
+      : Math.round(((studentTasks.length - pendingTasks.length) / studentTasks.length) * 100);
+
+  const revenueHealthRate =
+    studentInvoices.length === 0
+      ? 0
+      : Math.round(
+          ((studentInvoices.length - unpaidInvoices) / studentInvoices.length) * 100
+        );
+
+  const portalActivationRate =
+    studentPortalAccounts.length === 0
+      ? 0
+      : Math.round((activePortalAccounts / studentPortalAccounts.length) * 100);
+
+  const supportHealthRate =
+    supportRequests.length === 0
+      ? 100
+      : Math.round(
+          ((supportRequests.length - openSupportRequests) / supportRequests.length) * 100
+        );
+
+  const crmStats = [
     {
       label: "Total Inquiries",
       value: totalInquiries,
@@ -126,11 +309,145 @@ function AdminStats({
     },
   ];
 
+  const studentOsStats = [
+    {
+      label: "Applications",
+      value: applicationsCount,
+      icon: "📝",
+      color: "text-cyan-300",
+      description: `${offerCount} offers · ${casIssuedCount} CAS · ${visaApprovedCount} visa approved`,
+      progress: studentJourneyRate,
+      progressLabel: "Journey progress",
+      tone: "cyan",
+    },
+    {
+      label: "Documents",
+      value: studentDocuments.length,
+      icon: "📂",
+      color: "text-purple-300",
+      description: `${pendingDocuments} pending review`,
+      progress: documentReadyRate,
+      progressLabel: "Readiness rate",
+      tone: "purple",
+    },
+    {
+      label: "Tasks",
+      value: pendingTasks.length,
+      icon: "⏳",
+      color: "text-orange-300",
+      description: `${overdueTasks} overdue tasks`,
+      progress: taskHealthRate,
+      progressLabel: "Task health",
+      tone: "orange",
+    },
+    {
+      label: "Universities",
+      value: studentUniversities.length,
+      icon: "🏛️",
+      color: "text-pink-300",
+      description: "Dream / target / safe planning",
+      progress: studentUniversities.length ? 100 : 0,
+      progressLabel: "Plan coverage",
+      tone: "pink",
+    },
+    {
+      label: "Risk Students",
+      value: highRiskStudents,
+      icon: "🚨",
+      color: "text-red-300",
+      description: "Executive AI high-risk queue",
+      progress: studentRiskScores.length
+        ? Math.round((highRiskStudents / studentRiskScores.length) * 100)
+        : 0,
+      progressLabel: "Risk pressure",
+      tone: "red",
+    },
+    {
+      label: "Revenue",
+      value: studentInvoices.length,
+      icon: "💷",
+      color: "text-[#D4AF37]",
+      description: `${unpaidInvoices} unpaid · £${Math.round(outstandingAmount).toLocaleString()} outstanding`,
+      progress: revenueHealthRate,
+      progressLabel: "Revenue health",
+      tone: "gold",
+    },
+    {
+      label: "Receipts",
+      value: studentReceipts.length,
+      icon: "📎",
+      color: "text-blue-300",
+      description: `${pendingReceipts} pending approval`,
+      progress: studentReceipts.length
+        ? Math.round(
+            ((studentReceipts.length - pendingReceipts) / studentReceipts.length) * 100
+          )
+        : 0,
+      progressLabel: "Receipt processing",
+      tone: "blue",
+    },
+    {
+      label: "Portal Accounts",
+      value: studentPortalAccounts.length,
+      icon: "🔐",
+      color: "text-green-300",
+      description: `${activePortalAccounts} active · ${portalResetCount} password resets`,
+      progress: portalActivationRate,
+      progressLabel: "Portal activation",
+      tone: "green",
+    },
+    {
+      label: "Support",
+      value: openSupportRequests,
+      icon: "🎧",
+      color: "text-orange-300",
+      description: `${escalatedSupportRequests} escalated requests`,
+      progress: supportHealthRate,
+      progressLabel: "Support health",
+      tone: "orange",
+    },
+    {
+      label: "Payment Requests",
+      value: counselorPaymentRequests.length,
+      icon: "🧾",
+      color: "text-cyan-300",
+      description: "Counselor payment request queue",
+      progress: counselorPaymentRequests.length ? 50 : 100,
+      progressLabel: "Queue pressure",
+      tone: "cyan",
+    },
+  ];
+
+  const stats = [...crmStats, ...studentOsStats];
+
   return (
-    <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:mb-6 xl:gap-4 2xl:grid-cols-3">
-      {stats.map((stat, index) => (
-        <StatCard key={stat.label} stat={stat} index={index} cardClass={cardClass} />
-      ))}
+    <div className="mb-5 space-y-4 xl:mb-6">
+      <div className="flex flex-col gap-2">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+          Executive Dashboard KPIs
+        </p>
+
+        <h2 className="text-xl font-black text-white">
+          CRM + Student OS Operating Snapshot
+        </h2>
+
+        <p className="max-w-4xl text-sm text-gray-500">
+          Classic CRM performance remains active while Student OS, Revenue,
+          Portal, Support, Risk, Documents, Tasks, Universities, CAS, and Visa
+          intelligence are now visible from the main admin dashboard.
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:gap-4 2xl:grid-cols-4">
+        {stats.map((stat, index) => (
+          <StatCard
+            key={stat.label}
+            stat={stat}
+            index={index}
+            cardClass={cardClass}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -142,13 +459,16 @@ function StatCard({ stat, index, cardClass }) {
     cyan: "from-cyan-400/15 via-cyan-400/5 to-transparent",
     red: "from-red-400/15 via-red-400/5 to-transparent",
     blue: "from-blue-400/15 via-blue-400/5 to-transparent",
+    purple: "from-purple-400/15 via-purple-400/5 to-transparent",
+    orange: "from-orange-400/15 via-orange-400/5 to-transparent",
+    pink: "from-pink-400/15 via-pink-400/5 to-transparent",
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.06 }}
+      transition={{ duration: 0.4, delay: index * 0.035 }}
       className={`${cardClass} p-4 sm:p-5`}
     >
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
@@ -196,7 +516,7 @@ function StatCard({ stat, index, cardClass }) {
         <div className="h-1.5 overflow-hidden rounded-full bg-white/10 sm:h-2">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${stat.progress}%` }}
+            animate={{ width: `${Math.min(Math.max(stat.progress, 0), 100)}%` }}
             transition={{ duration: 0.8, delay: 0.15 }}
             className="h-full rounded-full bg-[#D4AF37]"
           ></motion.div>

@@ -27,6 +27,7 @@ import CounselorPerformanceAI from "../CounselorPerformanceAI";
 import WorkloadBalancerAI from "../WorkloadBalancerAI";
 import { buildAiLeadInsights } from "../../../services/aiLeadEngine";
 import ExecutiveCommandSystem from "../ExecutiveCommandSystem";
+import StudentOSMissionControl from "../StudentOSMissionControl";
 
 function AnalyticsPage({
   cardClass,
@@ -39,6 +40,14 @@ function AnalyticsPage({
   studentTasks = [],
   studentUniversities = [],
   studentRiskScores = [],
+
+  studentInvoices = [],
+  studentPayments = [],
+  studentReceipts = [],
+  studentPortalAccounts = [],
+  supportRequests = [],
+  counselorPaymentRequests = [],
+  executiveExecutionLogs = [],
   activeAnalyticsSection,
   setActiveAnalyticsSection,
   toggleInquiryStatus,
@@ -52,6 +61,7 @@ function AnalyticsPage({
 }) {
   const analyticsNavItems = [
     ["ai-executive", "AI Executive"],
+    ["mission-control", "Mission Control"],
     ["command", "Command"],
     ["operations", "Ops Center"],
     ["visa-risk", "Visa Risk"],
@@ -81,8 +91,42 @@ function AnalyticsPage({
       title="AI Executive Intelligence Center"
     >
       <div className="space-y-6">
-  <ExecutiveCommandSystem />
+  <ExecutiveCommandSystem
+    executiveExecutionLogs={executiveExecutionLogs}
+    studentRiskScores={studentRiskScores}
+    studentApplications={studentApplications}
+    studentTasks={studentTasks}
+    supportRequests={supportRequests}
+    counselorPaymentRequests={counselorPaymentRequests}
+  />
 </div>
+    </AnalyticsSection>
+  );
+}
+if (activeAnalyticsSection === "mission-control") {
+  return (
+    <AnalyticsSection
+      eyebrow="Student OS Executive Layer"
+      title="Mission Control"
+    >
+      <StudentOSMissionControl
+        cardClass={cardClass}
+        studentApplications={studentApplications}
+        studentDocuments={studentDocuments}
+        studentTasks={studentTasks}
+        studentUniversities={studentUniversities}
+        studentRiskScores={studentRiskScores}
+        studentInvoices={studentInvoices}
+        studentPayments={studentPayments}
+        studentReceipts={studentReceipts}
+        studentPortalAccounts={studentPortalAccounts}
+        supportRequests={supportRequests}
+        counselorPaymentRequests={counselorPaymentRequests}
+        executiveExecutionLogs={executiveExecutionLogs}
+        inquiries={inquiries}
+        appointments={appointments}
+        followUpReminders={followUpReminders}
+      />
     </AnalyticsSection>
   );
 }

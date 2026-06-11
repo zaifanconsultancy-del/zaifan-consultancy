@@ -1,10 +1,19 @@
 import { useMemo, useState } from "react";
 import { buildExecutiveRecommendations } from "../../lib/executiveRecommendations";
 import { buildExecutiveActionTemplate } from "../../lib/executiveActionTemplates";
-import { executeExecutiveActionTemplate } from "../../lib/executiveActionExecutor";
+import {
+  executeExecutiveActionTemplate,
+  executeBulkExecutiveActions,
+  executeCriticalExecutiveActions,
+  executeExecutivePriorityActions,
+  executeConversionExecutiveActions,
+  retryFailedExecutiveActions,
+  buildQueueHealthAnalytics,
+  buildBulkExecutionSummary,
+} from "../../lib/executiveActionExecutor";
 
-const MAX_QUEUE_ITEMS = 30;
-const QUEUE_EXECUTION_TIMEOUT_MS = 4500;
+const MAX_QUEUE_ITEMS = 75;
+const QUEUE_EXECUTION_TIMEOUT_MS = 9000;
 
 function normalize(value = "") {
   return String(value || "")
@@ -60,72 +69,37 @@ function getJourneyStage(score = {}, template = {}) {
 
   if (applicationStatus === "enrolled") return "enrolled";
   if (["visa_approved", "approved"].includes(visaStatus)) return "visa_approved";
-
-  if (["visa_rejected", "rejected", "refused", "visa_refused"].includes(visaStatus)) {
-    return "visa_rejected";
-  }
-
-  if (["visa_pending", "pending", "submitted", "under_review", "review"].includes(visaStatus)) {
-    return "visa_pending";
-  }
-
+  if (["visa_rejected", "rejected", "refused", "visa_refused"].includes(visaStatus)) return "visa_rejected";
+  if (["visa_pending", "pending", "submitted", "under_review", "review", "processing"].includes(visaStatus)) return "visa_pending";
   if (applicationStatus === "cas_issued") return "cas_issued";
   if (applicationStatus === "cas_pending") return "cas_pending";
-
-  if (
-    ["offer_accepted", "accepted", "confirmed"].includes(applicationStatus) ||
-    ["offer_accepted", "accepted", "confirmed"].includes(offerStatus)
-  ) {
-    return "offer_accepted";
-  }
-
-  if (
-    ["offer_received", "offer", "received", "conditional_offer", "unconditional_offer"].includes(
-      applicationStatus
-    ) ||
-    ["offer_received", "offer", "received", "conditional_offer", "unconditional_offer"].includes(
-      offerStatus
-    )
-  ) {
-    return "offer_received";
-  }
-
-  if (["under_review", "review", "processing"].includes(applicationStatus)) {
-    return "application_under_review";
-  }
-
-  if (["applied", "submitted"].includes(applicationStatus)) {
-    return "application_submitted";
-  }
-
-  if (["started", "draft", "in_progress"].includes(applicationStatus)) {
-    return "application_started";
-  }
+  if (["offer_accepted", "accepted", "confirmed"].includes(applicationStatus) || ["offer_accepted", "accepted", "confirmed"].includes(offerStatus)) return "offer_accepted";
+  if (["offer_received", "offer", "received", "conditional_offer", "unconditional_offer"].includes(applicationStatus) || ["offer_received", "offer", "received", "conditional_offer", "unconditional_offer"].includes(offerStatus)) return "offer_received";
+  if (["under_review", "review", "processing"].includes(applicationStatus)) return "application_under_review";
+  if (["applied", "submitted"].includes(applicationStatus)) return "application_submitted";
+  if (["started", "draft", "in_progress"].includes(applicationStatus)) return "application_started";
 
   return "not_started";
 }
 
 function getPriorityRank(priority = "") {
   const clean = normalize(priority);
-
-  if (clean === "critical") return 6;
+  if (clean === "critical") return 7;
+  if (clean === "urgent") return 6;
   if (clean === "executive") return 5;
   if (clean === "high") return 4;
   if (clean === "medium") return 3;
   if (clean === "low") return 2;
-
   return 1;
 }
 
 function getActionRank(actionType = "") {
   const clean = normalize(actionType);
-
   if (clean === "create_task") return 5;
   if (clean === "schedule_call") return 4;
   if (clean === "create_reminder") return 3;
   if (clean === "send_email") return 2;
   if (clean === "send_whatsapp") return 2;
-
   return 1;
 }
 
@@ -135,6 +109,7 @@ function approvalRequired(recommendation = {}, template = {}) {
 
   return (
     priority === "critical" ||
+    priority === "urgent" ||
     priority === "executive" ||
     actionType === "send_email" ||
     actionType === "send_whatsapp" ||
@@ -172,7 +147,9 @@ function buildDuplicateKey(score = {}, recommendation = {}, template = {}) {
   ].join("-");
 }
 
-function buildActionItems(scores = []) {
+export function buildExecutiveActionItems(scores = [], options = {}) {
+  const maxItems = options.maxItems || MAX_QUEUE_ITEMS;
+
   const rawItems = (scores || []).flatMap((score) => {
     const recommendations = buildExecutiveRecommendations(score);
 
@@ -183,11 +160,19 @@ function buildActionItems(scores = []) {
         const studentStage = getJourneyStage(score, template);
         const priorityRank = getPriorityRank(recommendation.priority);
         const actionRank = getActionRank(template.actionType);
+        const riskScore = number(score.risk_score);
+        const opportunityScore = number(score.opportunity_score);
+        const overdueTasks = number(score?.diagnostics?.overdue_tasks_count ?? score.overdue_tasks_count);
+        const documentGap = 100 - number(score?.diagnostics?.document_readiness_percent ?? score.document_readiness_percent, 100);
+        const staleDays = number(score?.diagnostics?.days_since_updated ?? score.days_since_updated);
         const impactScore =
-          number(score.risk_score) +
-          number(score.opportunity_score) +
+          riskScore +
+          opportunityScore +
           priorityRank * 12 +
-          actionRank * 5;
+          actionRank * 5 +
+          Math.min(30, overdueTasks * 4) +
+          Math.min(25, Math.max(0, documentGap) / 2) +
+          Math.min(25, staleDays);
 
         return {
           key: buildQueueKey(score, recommendation, template),
@@ -200,8 +185,9 @@ function buildActionItems(scores = []) {
           requiresApproval: approvalRequired(recommendation, template),
           priorityRank,
           actionRank,
-          impactScore,
-          createdAt: new Date().toISOString(),
+          impactScore: Math.round(impactScore),
+          createdAt: template?.payload?.generated_at || new Date().toISOString(),
+          queueStatus: approvalRequired(recommendation, template) ? "approval_required" : "ready",
         };
       });
   });
@@ -235,13 +221,14 @@ function buildActionItems(scores = []) {
       if (b.impactScore !== a.impactScore) return b.impactScore - a.impactScore;
       return b.actionRank - a.actionRank;
     })
-    .slice(0, MAX_QUEUE_ITEMS);
+    .slice(0, maxItems);
 }
 
-function buildQueueAnalytics(actionItems = [], executedKeys = {}, approvedKeys = {}, rejectedKeys = {}) {
+function buildQueueAnalytics(actionItems = [], executedKeys = {}, approvedKeys = {}, rejectedKeys = {}, failedKeys = {}) {
   const analytics = {
     total: actionItems.length,
     critical: 0,
+    urgent: 0,
     executive: 0,
     high: 0,
     medium: 0,
@@ -258,6 +245,7 @@ function buildQueueAnalytics(actionItems = [], executedKeys = {}, approvedKeys =
     calls: 0,
     emailDrafts: 0,
     whatsappDrafts: 0,
+    highImpact: 0,
   };
 
   actionItems.forEach((item) => {
@@ -265,6 +253,7 @@ function buildQueueAnalytics(actionItems = [], executedKeys = {}, approvedKeys =
     const actionType = normalize(item.template.actionType);
 
     if (analytics[priority] !== undefined) analytics[priority] += 1;
+    if (item.impactScore >= 120) analytics.highImpact += 1;
 
     if (item.requiresApproval) analytics.approvalRequired += 1;
     else analytics.ready += 1;
@@ -272,8 +261,9 @@ function buildQueueAnalytics(actionItems = [], executedKeys = {}, approvedKeys =
     if (approvedKeys[item.key]) analytics.approved += 1;
     if (rejectedKeys[item.key]) analytics.rejected += 1;
     if (executedKeys[item.key]) analytics.executed += 1;
+    if (failedKeys[item.key]) analytics.failed += 1;
 
-    if (!approvedKeys[item.key] && !rejectedKeys[item.key] && !executedKeys[item.key]) {
+    if (!approvedKeys[item.key] && !rejectedKeys[item.key] && !executedKeys[item.key] && !failedKeys[item.key]) {
       analytics.pending += 1;
     }
 
@@ -284,7 +274,71 @@ function buildQueueAnalytics(actionItems = [], executedKeys = {}, approvedKeys =
     if (actionType === "send_whatsapp") analytics.whatsappDrafts += 1;
   });
 
+  analytics.approvalSla = analytics.approvalRequired
+    ? Math.round((analytics.approved / analytics.approvalRequired) * 100)
+    : 100;
+
+  analytics.executionRate = analytics.total
+    ? Math.round((analytics.executed / analytics.total) * 100)
+    : 0;
+
+  analytics.failureRate = analytics.executed + analytics.failed
+    ? Math.round((analytics.failed / (analytics.executed + analytics.failed)) * 100)
+    : 0;
+
   return analytics;
+}
+
+function buildQueueAgingAnalytics(actionItems = []) {
+  const now = Date.now();
+  const rows = (actionItems || []).map((item) => {
+    const created = new Date(item.createdAt || item.template?.payload?.generated_at || Date.now()).getTime();
+    const ageHours = Math.max(0, Math.round((now - created) / (1000 * 60 * 60)));
+    return { ...item, ageHours };
+  });
+
+  return {
+    fresh: rows.filter((item) => item.ageHours <= 12).length,
+    aging: rows.filter((item) => item.ageHours > 12 && item.ageHours <= 48).length,
+    stale: rows.filter((item) => item.ageHours > 48).length,
+    oldestAgeHours: rows.length ? Math.max(...rows.map((item) => item.ageHours)) : 0,
+    oldestItem: rows.sort((a, b) => b.ageHours - a.ageHours)[0] || null,
+  };
+}
+
+function buildApprovalSLAAnalytics(actionItems = [], approvedKeys = {}, rejectedKeys = {}) {
+  const approvalRows = actionItems.filter((item) => item.requiresApproval);
+  const approved = approvalRows.filter((item) => approvedKeys[item.key]);
+  const rejected = approvalRows.filter((item) => rejectedKeys[item.key]);
+  const waiting = approvalRows.filter((item) => !approvedKeys[item.key] && !rejectedKeys[item.key]);
+
+  return {
+    total: approvalRows.length,
+    approved: approved.length,
+    rejected: rejected.length,
+    waiting: waiting.length,
+    approvalRate: approvalRows.length ? Math.round((approved.length / approvalRows.length) * 100) : 100,
+    rejectionRate: approvalRows.length ? Math.round((rejected.length / approvalRows.length) * 100) : 0,
+    waitingRate: approvalRows.length ? Math.round((waiting.length / approvalRows.length) * 100) : 0,
+  };
+}
+
+function buildThroughputAnalytics(batchHistory = []) {
+  const rows = Array.isArray(batchHistory) ? batchHistory : [];
+  const totalExecuted = rows.reduce((sum, batch) => sum + number(batch.summary?.successful), 0);
+  const totalFailed = rows.reduce((sum, batch) => sum + number(batch.summary?.failed), 0);
+  const totalDuplicate = rows.reduce((sum, batch) => sum + number(batch.summary?.duplicateBlocked), 0);
+
+  return {
+    batches: rows.length,
+    totalExecuted,
+    totalFailed,
+    totalDuplicate,
+    successRate: totalExecuted + totalFailed
+      ? Math.round((totalExecuted / (totalExecuted + totalFailed)) * 100)
+      : 0,
+    lastBatch: rows[0] || null,
+  };
 }
 
 async function withQueueTimeout(promise, ms = QUEUE_EXECUTION_TIMEOUT_MS) {
@@ -312,19 +366,54 @@ function isDuplicateResult(result = {}) {
   return result?.duplicate === true || message.toLowerCase().includes("duplicate protection");
 }
 
+function mapItemsToTemplates(items = []) {
+  return items.map((item) => item.template).filter(Boolean);
+}
+
 function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecuted = () => {} }) {
   const [executingKeys, setExecutingKeys] = useState({});
   const [executedKeys, setExecutedKeys] = useState({});
   const [approvedKeys, setApprovedKeys] = useState({});
   const [rejectedKeys, setRejectedKeys] = useState({});
+  const [failedKeys, setFailedKeys] = useState({});
   const [errors, setErrors] = useState({});
   const [filter, setFilter] = useState("all");
+  const [bulkExecuting, setBulkExecuting] = useState("");
+  const [batchHistory, setBatchHistory] = useState([]);
 
-  const actionItems = useMemo(() => buildActionItems(scores), [scores]);
+  const actionItems = useMemo(() => buildExecutiveActionItems(scores), [scores]);
 
   const analytics = useMemo(
-    () => buildQueueAnalytics(actionItems, executedKeys, approvedKeys, rejectedKeys),
-    [actionItems, executedKeys, approvedKeys, rejectedKeys]
+    () => buildQueueAnalytics(actionItems, executedKeys, approvedKeys, rejectedKeys, failedKeys),
+    [actionItems, executedKeys, approvedKeys, rejectedKeys, failedKeys]
+  );
+
+  const aging = useMemo(() => buildQueueAgingAnalytics(actionItems), [actionItems]);
+  const approvalSla = useMemo(
+    () => buildApprovalSLAAnalytics(actionItems, approvedKeys, rejectedKeys),
+    [actionItems, approvedKeys, rejectedKeys]
+  );
+  const throughput = useMemo(() => buildThroughputAnalytics(batchHistory), [batchHistory]);
+  const queueHealth = useMemo(
+    () =>
+      buildQueueHealthAnalytics({
+        queue: actionItems.map((item) => ({
+          ...item,
+          status: executedKeys[item.key]
+            ? "executed"
+            : failedKeys[item.key]
+            ? "failed"
+            : rejectedKeys[item.key]
+            ? "rejected"
+            : approvedKeys[item.key]
+            ? "approved"
+            : item.queueStatus,
+          approval_status: item.requiresApproval ? "required" : "not_required",
+          created_at: item.createdAt,
+        })),
+        logs: batchHistory.flatMap((batch) => batch.results || []),
+      }),
+    [actionItems, approvedKeys, rejectedKeys, executedKeys, failedKeys, batchHistory]
   );
 
   const filteredItems = useMemo(() => {
@@ -337,51 +426,168 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
       if (filter === "approval") return item.requiresApproval && !approvedKeys[item.key];
       if (filter === "ready") return !item.requiresApproval || approvedKeys[item.key];
       if (filter === "executed") return executedKeys[item.key];
-      if (filter === "critical") return priority === "critical";
+      if (filter === "failed") return failedKeys[item.key];
+      if (filter === "critical") return priority === "critical" || priority === "urgent";
       if (filter === "executive") return priority === "executive";
       if (filter === "communication") return ["send_email", "send_whatsapp"].includes(actionType);
       if (filter === "tasks") return ["create_task", "create_reminder", "schedule_call"].includes(actionType);
+      if (filter === "high-impact") return item.impactScore >= 120;
 
       return true;
     });
-  }, [actionItems, filter, approvedKeys, executedKeys]);
+  }, [actionItems, filter, approvedKeys, executedKeys, failedKeys]);
 
   function approveAction(item) {
     if (executedKeys[item.key]) return;
 
-    setApprovedKeys((prev) => {
-      const next = { ...prev };
-      if (next[item.key]) delete next[item.key];
-      else next[item.key] = true;
-      return next;
-    });
-
+    setApprovedKeys((prev) => ({ ...prev, [item.key]: true }));
     setRejectedKeys((prev) => {
       const next = { ...prev };
       delete next[item.key];
       return next;
     });
-
     setErrors((prev) => ({ ...prev, [item.key]: "" }));
   }
 
   function rejectAction(item) {
     if (executedKeys[item.key]) return;
 
-    setRejectedKeys((prev) => {
-      const next = { ...prev };
-      if (next[item.key]) delete next[item.key];
-      else next[item.key] = true;
-      return next;
-    });
-
+    setRejectedKeys((prev) => ({ ...prev, [item.key]: true }));
     setApprovedKeys((prev) => {
       const next = { ...prev };
       delete next[item.key];
       return next;
     });
-
     setErrors((prev) => ({ ...prev, [item.key]: "" }));
+  }
+
+  function handleBulkApprove(scope = "all") {
+    const targetItems = getScopedItems(scope);
+
+    setApprovedKeys((prev) => {
+      const next = { ...prev };
+      targetItems.forEach((item) => {
+        if (item.requiresApproval && !executedKeys[item.key] && !rejectedKeys[item.key]) {
+          next[item.key] = true;
+        }
+      });
+      return next;
+    });
+
+    setRejectedKeys((prev) => {
+      const next = { ...prev };
+      targetItems.forEach((item) => delete next[item.key]);
+      return next;
+    });
+  }
+
+  function handleBulkReject(scope = "approval") {
+    const targetItems = getScopedItems(scope);
+
+    setRejectedKeys((prev) => {
+      const next = { ...prev };
+      targetItems.forEach((item) => {
+        if (!executedKeys[item.key]) next[item.key] = true;
+      });
+      return next;
+    });
+
+    setApprovedKeys((prev) => {
+      const next = { ...prev };
+      targetItems.forEach((item) => delete next[item.key]);
+      return next;
+    });
+  }
+
+  function getScopedItems(scope = "all") {
+    return actionItems.filter((item) => {
+      const priority = normalize(item.recommendation.priority);
+      const category = normalize(item.score.executive_category || item.template?.payload?.executive_category);
+      const opportunity = number(item.score.opportunity_score || item.template?.payload?.opportunity_score);
+      const stage = normalize(item.studentStage);
+
+      if (executedKeys[item.key] || rejectedKeys[item.key]) return false;
+      if (scope === "critical") return priority === "critical" || priority === "urgent" || number(item.score.risk_score) >= 80;
+      if (scope === "executive") return priority === "executive" || category === "executive_priority" || number(item.score.risk_score) >= 85 || opportunity >= 85;
+      if (scope === "conversion") return opportunity >= 80 || category === "conversion_ready" || ["offer_accepted", "cas_pending", "cas_issued", "visa_pending"].includes(stage);
+      if (scope === "approval") return item.requiresApproval && !approvedKeys[item.key];
+      if (scope === "failed") return failedKeys[item.key];
+      return true;
+    });
+  }
+
+  function markBatchResults(items = [], results = {}) {
+    const resultRows = Array.isArray(results?.results) ? results.results : [];
+
+    setExecutedKeys((prev) => {
+      const next = { ...prev };
+      items.forEach((item, index) => {
+        const result = resultRows[index];
+        if (!result?.error || isDuplicateResult(result)) next[item.key] = true;
+      });
+      return next;
+    });
+
+    setFailedKeys((prev) => {
+      const next = { ...prev };
+      items.forEach((item, index) => {
+        const result = resultRows[index];
+        if (result?.error && !isDuplicateResult(result)) next[item.key] = true;
+      });
+      return next;
+    });
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      items.forEach((item, index) => {
+        const result = resultRows[index];
+        if (isDuplicateResult(result)) next[item.key] = "Already executed before. Marked as done by duplicate protection.";
+        else if (result?.error) next[item.key] = result.error.message || "Bulk execution failed.";
+        else next[item.key] = "";
+      });
+      return next;
+    });
+  }
+
+  async function runBulkExecution(scope = "all") {
+    const targetItems = getScopedItems(scope).filter((item) => !item.requiresApproval || approvedKeys[item.key]);
+    const templates = mapItemsToTemplates(targetItems);
+
+    if (!templates.length) return;
+
+    setBulkExecuting(scope);
+
+    try {
+      let result;
+
+      if (scope === "critical") {
+        result = await executeCriticalExecutiveActions({ templates, adminProfile });
+      } else if (scope === "executive") {
+        result = await executeExecutivePriorityActions({ templates, adminProfile });
+      } else if (scope === "conversion") {
+        result = await executeConversionExecutiveActions({ templates, adminProfile });
+      } else if (scope === "failed") {
+        result = await retryFailedExecutiveActions({ templates, adminProfile });
+      } else {
+        result = await executeBulkExecutiveActions({ templates, adminProfile });
+      }
+
+      const summary = buildBulkExecutionSummary(result);
+      markBatchResults(targetItems, result);
+      setBatchHistory((prev) => [
+        {
+          id: `${scope}-${Date.now()}`,
+          scope,
+          summary,
+          results: result?.results || [],
+          executedAt: new Date().toISOString(),
+        },
+        ...prev,
+      ].slice(0, 12));
+      onActionExecuted({ scope, result, summary });
+    } finally {
+      setBulkExecuting("");
+    }
   }
 
   async function handleExecute(item) {
@@ -418,6 +624,7 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
       }
 
       if (result?.error) {
+        setFailedKeys((prev) => ({ ...prev, [item.key]: true }));
         setErrors((prev) => ({
           ...prev,
           [item.key]: result.error.message || "Execution failed.",
@@ -426,9 +633,15 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
       }
 
       setExecutedKeys((prev) => ({ ...prev, [item.key]: true }));
+      setFailedKeys((prev) => {
+        const next = { ...prev };
+        delete next[item.key];
+        return next;
+      });
       setErrors((prev) => ({ ...prev, [item.key]: "" }));
       onActionExecuted(item);
     } catch (err) {
+      setFailedKeys((prev) => ({ ...prev, [item.key]: true }));
       setErrors((prev) => ({
         ...prev,
         [item.key]: err.message || "Executive action failed.",
@@ -443,54 +656,82 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
   }
 
   return (
-    <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
-            Executive Action Queue V3
-          </p>
+    <div className="space-y-6">
+      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+              Executive Action Queue V4
+            </p>
 
-          <h2 className="mt-2 text-2xl font-black text-white">
-            Human-Approved Student OS Decision Queue
-          </h2>
+            <h2 className="mt-2 text-2xl font-black text-white">
+              Human-Approved Student OS Decision Queue
+            </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
-            Converts Executive AI recommendations into controlled actions with approval,
-            duplicate protection, execution state, and queue analytics.
-          </p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+              Converts Executive AI recommendations into controlled actions with approval,
+              duplicate protection, bulk execution, queue health, SLA tracking, recovery,
+              and batch history.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Badge label={`${analytics.total} Actions`} />
+            <Badge label={`${analytics.critical} Critical`} danger />
+            <Badge label={`${analytics.executive} Executive`} gold />
+            <Badge label={`${analytics.approvalRequired} Approval`} gold />
+            <Badge label={`${analytics.ready} Ready`} success />
+            <Badge label={`${analytics.executed} Done`} success />
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Badge label={`${analytics.total} Actions`} />
-          <Badge label={`${analytics.critical} Critical`} danger />
-          <Badge label={`${analytics.executive} Executive`} gold />
-          <Badge label={`${analytics.approvalRequired} Approval`} gold />
-          <Badge label={`${analytics.ready} Ready`} success />
-          <Badge label={`${analytics.executed} Done`} success />
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <QueueMetric label="Tasks" value={analytics.tasks} />
+          <QueueMetric label="Reminders" value={analytics.reminders} />
+          <QueueMetric label="Calls" value={analytics.calls} />
+          <QueueMetric label="Emails" value={analytics.emailDrafts} />
+          <QueueMetric label="WhatsApp" value={analytics.whatsappDrafts} />
+          <QueueMetric label="Pending" value={analytics.pending} />
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <QueueMetric label="Queue Pressure" value={queueHealth.queuePressure || 0} tone="gold" />
+          <QueueMetric label="Approval SLA" value={`${approvalSla.approvalRate}%`} tone="green" />
+          <QueueMetric label="Oldest Queue" value={`${aging.oldestAgeHours}h`} tone={aging.oldestAgeHours > 48 ? "red" : "default"} />
+          <QueueMetric label="Throughput" value={throughput.totalExecuted} tone="green" />
+          <QueueMetric label="Failed" value={analytics.failed} tone="red" />
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          <BulkButton label="Approve Critical" onClick={() => handleBulkApprove("critical")} />
+          <BulkButton label="Approve Executive" onClick={() => handleBulkApprove("executive")} />
+          <BulkButton label="Approve All" onClick={() => handleBulkApprove("all")} />
+          <BulkButton label="Execute Critical" onClick={() => runBulkExecution("critical")} loading={bulkExecuting === "critical"} danger />
+          <BulkButton label="Execute Executive" onClick={() => runBulkExecution("executive")} loading={bulkExecuting === "executive"} gold />
+          <BulkButton label="Execute Conversion" onClick={() => runBulkExecution("conversion")} loading={bulkExecuting === "conversion"} success />
+          <BulkButton label="Retry Failed" onClick={() => runBulkExecution("failed")} loading={bulkExecuting === "failed"} />
+          <BulkButton label="Reject Waiting" onClick={() => handleBulkReject("approval")} danger />
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>All</FilterButton>
+          <FilterButton active={filter === "approval"} onClick={() => setFilter("approval")}>Approval</FilterButton>
+          <FilterButton active={filter === "ready"} onClick={() => setFilter("ready")}>Ready</FilterButton>
+          <FilterButton active={filter === "critical"} onClick={() => setFilter("critical")}>Critical</FilterButton>
+          <FilterButton active={filter === "executive"} onClick={() => setFilter("executive")}>Executive</FilterButton>
+          <FilterButton active={filter === "high-impact"} onClick={() => setFilter("high-impact")}>High Impact</FilterButton>
+          <FilterButton active={filter === "tasks"} onClick={() => setFilter("tasks")}>Tasks</FilterButton>
+          <FilterButton active={filter === "communication"} onClick={() => setFilter("communication")}>Communication</FilterButton>
+          <FilterButton active={filter === "failed"} onClick={() => setFilter("failed")}>Failed</FilterButton>
+          <FilterButton active={filter === "executed"} onClick={() => setFilter("executed")}>Executed</FilterButton>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-        <QueueMetric label="Tasks" value={analytics.tasks} />
-        <QueueMetric label="Reminders" value={analytics.reminders} />
-        <QueueMetric label="Calls" value={analytics.calls} />
-        <QueueMetric label="Emails" value={analytics.emailDrafts} />
-        <QueueMetric label="WhatsApp" value={analytics.whatsappDrafts} />
-        <QueueMetric label="Pending" value={analytics.pending} />
-      </div>
+      {batchHistory.length ? (
+        <BatchHistoryPanel batchHistory={batchHistory} />
+      ) : null}
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>All</FilterButton>
-        <FilterButton active={filter === "approval"} onClick={() => setFilter("approval")}>Approval</FilterButton>
-        <FilterButton active={filter === "ready"} onClick={() => setFilter("ready")}>Ready</FilterButton>
-        <FilterButton active={filter === "critical"} onClick={() => setFilter("critical")}>Critical</FilterButton>
-        <FilterButton active={filter === "executive"} onClick={() => setFilter("executive")}>Executive</FilterButton>
-        <FilterButton active={filter === "tasks"} onClick={() => setFilter("tasks")}>Tasks</FilterButton>
-        <FilterButton active={filter === "communication"} onClick={() => setFilter("communication")}>Communication</FilterButton>
-        <FilterButton active={filter === "executed"} onClick={() => setFilter("executed")}>Executed</FilterButton>
-      </div>
-
-      <div className="mt-6 space-y-3">
+      <div className="space-y-3">
         {filteredItems.length ? (
           filteredItems.map((item) => (
             <ActionQueueCard
@@ -500,6 +741,7 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
               executed={Boolean(executedKeys[item.key])}
               approved={Boolean(approvedKeys[item.key])}
               rejected={Boolean(rejectedKeys[item.key])}
+              failed={Boolean(failedKeys[item.key])}
               error={errors[item.key]}
               onApprove={() => approveAction(item)}
               onReject={() => rejectAction(item)}
@@ -528,6 +770,7 @@ function ActionQueueCard({
   executed = false,
   approved = false,
   rejected = false,
+  failed = false,
   error = "",
   onApprove,
   onReject,
@@ -548,6 +791,7 @@ function ActionQueueCard({
             <Tag text={recommendation.priority || "medium"} className={style.badge} />
             <Tag text={formatLabel(studentStage)} />
             <Tag text={formatLabel(template.actionType)} />
+            <Tag text={`Impact ${item.impactScore}`} />
 
             {requiresApproval ? (
               approved ? (
@@ -560,6 +804,7 @@ function ActionQueueCard({
             )}
 
             {rejected ? <Tag text="Rejected" className="border-red-400/25 bg-red-500/10 text-red-300" /> : null}
+            {failed ? <Tag text="Failed" className="border-red-400/25 bg-red-500/10 text-red-300" /> : null}
             {executed ? <Tag text="Executed" className="border-emerald-400/25 bg-emerald-500/10 text-emerald-300" /> : null}
           </div>
 
@@ -573,7 +818,7 @@ function ActionQueueCard({
             <MiniStat label="Risk" value={score.risk_score || 0} />
             <MiniStat label="Opp" value={score.opportunity_score || 0} />
             <MiniStat label="Category" value={score.executive_category || "Standard"} />
-            <MiniStat label="Impact" value={item.impactScore} />
+            <MiniStat label="Type" value={getStudentType(score)} />
           </div>
 
           <div className="mt-4 grid gap-3 xl:grid-cols-2">
@@ -645,6 +890,34 @@ function ActionQueueCard({
   );
 }
 
+function BatchHistoryPanel({ batchHistory = [] }) {
+  return (
+    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D4AF37]">
+        Batch Execution History
+      </p>
+      <div className="mt-4 grid gap-3">
+        {batchHistory.slice(0, 4).map((batch) => (
+          <div key={batch.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-black text-white">{formatLabel(batch.scope)} Batch</p>
+                <p className="mt-1 text-xs text-white/40">{new Date(batch.executedAt).toLocaleString()}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge label={`${batch.summary?.successful || 0} Success`} success />
+                <Badge label={`${batch.summary?.failed || 0} Failed`} danger />
+                <Badge label={`${batch.summary?.duplicateBlocked || 0} Duplicate`} gold />
+                <Badge label={`${batch.summary?.successRate || 0}% Rate`} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PayloadSummary({ payload = {} }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/20 p-4">
@@ -663,14 +936,44 @@ function PayloadSummary({ payload = {} }) {
   );
 }
 
-function QueueMetric({ label, value }) {
+function QueueMetric({ label, value, tone = "default" }) {
+  const toneClass =
+    tone === "red"
+      ? "border-red-400/20 bg-red-500/10 text-red-200"
+      : tone === "gold"
+      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      : tone === "green"
+      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+      : "border-white/10 bg-black/20 text-white";
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className={`rounded-2xl border p-4 ${toneClass}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+      <p className="mt-2 text-2xl font-black">{value}</p>
     </div>
+  );
+}
+
+function BulkButton({ label, onClick, loading = false, danger = false, gold = false, success = false }) {
+  const style = danger
+    ? "border-red-400/25 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+    : gold
+    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20"
+    : success
+    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+    : "border-white/10 bg-black/20 text-white/55 hover:border-white/25 hover:text-white";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-50 ${style}`}
+    >
+      {loading ? "Running..." : label}
+    </button>
   );
 }
 
@@ -729,7 +1032,7 @@ function Tag({ text, className = "" }) {
 function getPriorityStyle(priority = "") {
   const clean = normalize(priority);
 
-  if (clean === "critical") {
+  if (clean === "critical" || clean === "urgent") {
     return {
       wrapper: "border-red-400/25 bg-red-500/10",
       badge: "border-red-400/25 bg-red-500/10 text-red-200",
@@ -765,7 +1068,7 @@ function getPriorityStyle(priority = "") {
 
 export function buildExecutiveQueueAnalytics(scores = []) {
   const rows = Array.isArray(scores) ? scores : [];
-  const items = buildActionItems(rows);
+  const items = buildExecutiveActionItems(rows);
 
   return {
     ...buildQueueAnalytics(items),
@@ -774,6 +1077,7 @@ export function buildExecutiveQueueAnalytics(scores = []) {
     approvalRate: items.length
       ? Math.round((items.filter((item) => item.requiresApproval).length / items.length) * 100)
       : 0,
+    aging: buildQueueAgingAnalytics(items),
   };
 }
 

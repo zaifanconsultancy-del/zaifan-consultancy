@@ -2,6 +2,23 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
+const toLower = (value) => String(value || "").toLowerCase().trim();
+
+const isDone = (status) => {
+  const value = toLower(status);
+
+  return (
+    value.includes("completed") ||
+    value.includes("complete") ||
+    value.includes("done") ||
+    value.includes("approved") ||
+    value.includes("verified") ||
+    value.includes("resolved") ||
+    value.includes("closed") ||
+    value.includes("paid")
+  );
+};
+
 function AdminHeader({
   inquiries = [],
   appointments = [],
@@ -16,6 +33,21 @@ function AdminHeader({
   role = "staff",
   adminProfile = null,
   permissions = {},
+
+  studentApplications = [],
+  studentDocuments = [],
+  studentTasks = [],
+  studentUniversities = [],
+  studentRiskScores = [],
+
+  studentInvoices = [],
+  studentPayments = [],
+  studentReceipts = [],
+  studentPortalAccounts = [],
+  supportRequests = [],
+  counselorPaymentRequests = [],
+  setActiveTab = null,
+  setActiveAnalyticsSection = null,
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotifications, setReadNotifications] = useState([]);
@@ -61,21 +93,119 @@ function AdminHeader({
   const allLeads = [...inquiries, ...appointments];
 
   const newInquiries = inquiries.filter(
-    (inquiry) => (inquiry.status || "new") === "new"
+    (inquiry) => toLower(inquiry.status || "new") === "new"
   ).length;
 
   const confirmedAppointments = appointments.filter(
-    (appointment) => appointment.status === "confirmed"
+    (appointment) => toLower(appointment.status) === "confirmed"
   ).length;
 
-  const vipLeads = allLeads.filter((lead) => lead.priority === "vip").length;
+  const vipLeads = allLeads.filter((lead) => toLower(lead.priority) === "vip").length;
 
   const highPriorityLeads = allLeads.filter(
-    (lead) => lead.priority === "high"
+    (lead) => toLower(lead.priority) === "high"
   ).length;
 
   const assignedLeads = allLeads.filter((lead) => lead.assigned_admin_id).length;
   const unassignedLeads = Math.max(allLeads.length - assignedLeads, 0);
+
+  const pendingApplications = studentApplications.filter((app) => {
+    const status = toLower(app.application_status || app.status);
+    return (
+      status.includes("pending") ||
+      status.includes("draft") ||
+      status.includes("review") ||
+      status.includes("submitted")
+    );
+  }).length;
+
+  const offers = studentApplications.filter((app) => {
+    const status = toLower(app.status);
+    const offerStatus = toLower(app.offer_status);
+    return status.includes("offer") || offerStatus.includes("received");
+  }).length;
+
+  const casDelays = studentApplications.filter((app) => {
+    const offer = toLower(app.offer_status);
+    const cas = toLower(app.cas_status || app.cas);
+    return (offer.includes("accepted") || offer.includes("firm")) && !cas.includes("issued");
+  }).length;
+
+  const visaDelays = studentApplications.filter((app) => {
+    const cas = toLower(app.cas_status || app.cas);
+    const visa = toLower(app.visa_status || app.visa);
+    return cas.includes("issued") && !visa.includes("approved");
+  }).length;
+
+  const pendingDocuments = studentDocuments.filter(
+    (doc) => !isDone(doc.status || doc.document_status || doc.verification_status)
+  ).length;
+
+  const pendingTasks = studentTasks.filter(
+    (task) => !isDone(task.status || task.task_status)
+  ).length;
+
+  const highRiskStudents = studentRiskScores.filter((risk) => {
+    const score = Number(risk.risk_score || risk.score || risk.overall_score || 0);
+    const level = toLower(risk.risk_level || risk.priority || risk.level);
+    return score >= 70 || level.includes("high") || level.includes("critical");
+  }).length;
+
+  const unpaidInvoices = studentInvoices.filter((invoice) => {
+    const status = toLower(invoice.status || invoice.payment_status);
+    return !status.includes("paid") && !status.includes("complete");
+  }).length;
+
+  const outstandingAmount = studentInvoices.reduce((sum, invoice) => {
+    const status = toLower(invoice.status || invoice.payment_status);
+    if (status.includes("paid") || status.includes("complete")) return sum;
+
+    return (
+      sum +
+      Number(
+        invoice.outstanding_amount ||
+          invoice.balance ||
+          invoice.amount ||
+          invoice.total_amount ||
+          invoice.invoice_amount ||
+          0
+      )
+    );
+  }, 0);
+
+  const pendingReceipts = studentReceipts.filter((receipt) => {
+    const status = toLower(
+      receipt.status || receipt.receipt_status || receipt.approval_status
+    );
+    return !status.includes("approved") && !status.includes("rejected");
+  }).length;
+
+  const portalResetRequired = studentPortalAccounts.filter(
+    (account) => account.must_change_password || account.force_password_change
+  ).length;
+
+  const activePortalAccounts = studentPortalAccounts.filter((account) => {
+    const active = account.is_active ?? account.active ?? account.status;
+    if (typeof active === "boolean") return active;
+    return !["inactive", "disabled", "blocked", "false"].includes(toLower(active));
+  }).length;
+
+  const openSupportRequests = supportRequests.filter((request) => {
+    const status = toLower(request.status || request.request_status);
+    return !status.includes("resolved") && !status.includes("closed");
+  }).length;
+
+  const escalatedSupportRequests = supportRequests.filter((request) => {
+    const status = toLower(request.status || request.request_status);
+    const priority = toLower(request.priority || request.severity);
+
+    return (
+      status.includes("escalated") ||
+      priority.includes("urgent") ||
+      priority.includes("high") ||
+      priority.includes("critical")
+    );
+  }).length;
 
   const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -139,6 +269,69 @@ function AdminHeader({
       today: today.length,
     };
   }, [followUpAlerts, todayKey]);
+
+  const executivePressure =
+    reminderStats.overdue +
+    appointmentPendingCount +
+    newInquiries +
+    casDelays +
+    visaDelays +
+    unpaidInvoices +
+    pendingReceipts +
+    portalResetRequired +
+    escalatedSupportRequests +
+    highRiskStudents;
+
+  const studentOsHealthItems = [
+    {
+      label: "Apps",
+      value: studentApplications.length,
+      color: "text-cyan-300",
+      helper: `${pendingApplications} pending`,
+    },
+    {
+      label: "Offers",
+      value: offers,
+      color: "text-green-300",
+      helper: "opportunities",
+    },
+    {
+      label: "CAS Risk",
+      value: casDelays,
+      color: casDelays > 0 ? "text-orange-300" : "text-green-300",
+      helper: "delays",
+    },
+    {
+      label: "Visa Risk",
+      value: visaDelays,
+      color: visaDelays > 0 ? "text-red-300" : "text-green-300",
+      helper: "delays",
+    },
+    {
+      label: "Revenue",
+      value: unpaidInvoices,
+      color: unpaidInvoices > 0 ? "text-orange-300" : "text-green-300",
+      helper: "unpaid",
+    },
+    {
+      label: "Portal",
+      value: activePortalAccounts,
+      color: "text-blue-300",
+      helper: `${portalResetRequired} resets`,
+    },
+    {
+      label: "Support",
+      value: openSupportRequests,
+      color: openSupportRequests > 0 ? "text-orange-300" : "text-green-300",
+      helper: `${escalatedSupportRequests} escalated`,
+    },
+    {
+      label: "Risk",
+      value: highRiskStudents,
+      color: highRiskStudents > 0 ? "text-red-300" : "text-green-300",
+      helper: "AI watch",
+    },
+  ];
 
   const notifications = useMemo(
     () => [
@@ -230,6 +423,72 @@ function AdminHeader({
         time: "Ownership",
         priority: "medium",
       },
+      {
+        id: "cas-delays",
+        icon: "📄",
+        title: "CAS Delays",
+        text: `${casDelays} students have accepted offers but no CAS issued`,
+        show: casDelays > 0,
+        color: "text-orange-300",
+        glow: "bg-orange-500/10",
+        time: "CAS",
+        priority: "high",
+      },
+      {
+        id: "visa-delays",
+        icon: "✈️",
+        title: "Visa Delays",
+        text: `${visaDelays} students have CAS issued but visa not approved`,
+        show: visaDelays > 0,
+        color: "text-red-300",
+        glow: "bg-red-500/10",
+        time: "Visa",
+        priority: "high",
+      },
+      {
+        id: "payment-risks",
+        icon: "💷",
+        title: "Payment Risks",
+        text: `${unpaidInvoices} unpaid invoices and ${pendingReceipts} pending receipts`,
+        show: unpaidInvoices > 0 || pendingReceipts > 0,
+        color: "text-[#D4AF37]",
+        glow: "bg-[#D4AF37]/10",
+        time: "Revenue",
+        priority: "high",
+      },
+      {
+        id: "portal-resets",
+        icon: "🔐",
+        title: "Portal Password Resets",
+        text: `${portalResetRequired} students must change their portal password`,
+        show: portalResetRequired > 0,
+        color: "text-orange-300",
+        glow: "bg-orange-500/10",
+        time: "Portal",
+        priority: "medium",
+      },
+      {
+        id: "support-escalations",
+        icon: "🎧",
+        title: "Support Escalations",
+        text: `${escalatedSupportRequests} support requests need urgent attention`,
+        show: escalatedSupportRequests > 0,
+        color: "text-red-300",
+        glow: "bg-red-500/10",
+        time: "Support",
+        priority: "urgent",
+      },
+      {
+        id: "executive-risk",
+        icon: "🧠",
+        title: "Executive AI Risk",
+        text: `${highRiskStudents} students are flagged by Executive AI`,
+        show: highRiskStudents > 0,
+        color: "text-red-300",
+        glow: "bg-red-500/10",
+        time: "AI Risk",
+        priority: "urgent",
+      },
     ],
     [
       reminderStats.overdue,
@@ -240,6 +499,13 @@ function AdminHeader({
       vipLeads,
       highPriorityLeads,
       unassignedLeads,
+      casDelays,
+      visaDelays,
+      unpaidInvoices,
+      pendingReceipts,
+      portalResetRequired,
+      escalatedSupportRequests,
+      highRiskStudents,
     ]
   );
 
@@ -268,9 +534,9 @@ function AdminHeader({
       color: "text-orange-300",
     },
     {
-      label: "Open Pool",
-      value: unassignedLeads,
-      color: "text-cyan-300",
+      label: "Executive Pressure",
+      value: executivePressure,
+      color: executivePressure > 0 ? "text-red-300" : "text-green-300",
     },
   ];
 
@@ -281,6 +547,16 @@ function AdminHeader({
   const markSingleAsRead = (id) => {
     if (readNotifications.includes(id)) return;
     setReadNotifications((current) => [...current, id]);
+  };
+
+  const handleMissionControl = () => {
+    if (typeof setActiveTab === "function") {
+      setActiveTab("analytics");
+    }
+
+    if (typeof setActiveAnalyticsSection === "function") {
+      setActiveAnalyticsSection("mission-control");
+    }
   };
 
   const handleRefresh = async () => {
@@ -362,7 +638,7 @@ function AdminHeader({
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
                 <span className="h-2 w-2 rounded-full bg-[#D4AF37] shadow-[0_0_16px_rgba(212,175,55,0.75)]"></span>
-                Student OS Admin Command
+                Student OS Executive Command
               </div>
 
               <div
@@ -371,16 +647,29 @@ function AdminHeader({
                 <span>{currentRole.icon}</span>
                 {currentRole.label}
               </div>
+
+              <div
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${
+                  executivePressure > 0
+                    ? "border-red-400/25 bg-red-500/10 text-red-300"
+                    : "border-green-400/25 bg-green-500/10 text-green-300"
+                }`}
+              >
+                <span>{executivePressure > 0 ? "⚠️" : "✅"}</span>
+                {executivePressure > 0
+                  ? `${executivePressure} Pressure Points`
+                  : "Systems Stable"}
+              </div>
             </div>
 
             <h1 className="mt-4 text-3xl font-black leading-tight text-white sm:text-5xl">
               Zaifan Student OS
             </h1>
 
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400">
-              Student operating system with real-time admin data, consultation scheduling,
-              lead ownership, Student OS visibility, role permissions, and
-              executive intelligence.
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-400">
+              Executive top bar for CRM, Student Journey, Mission Control,
+              payments, portal accounts, support, documents, tasks, visa,
+              CAS, and real-time operational intelligence.
             </p>
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -454,7 +743,7 @@ function AdminHeader({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 14, scale: 0.96 }}
                     transition={{ duration: 0.22 }}
-                    className="absolute right-0 top-[72px] z-[999] w-[min(92vw,430px)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#070707]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl"
+                    className="absolute right-0 top-[72px] z-[999] w-[min(92vw,460px)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#070707]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl"
                   >
                     <div className="relative overflow-hidden border-b border-white/10 p-5">
                       <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
@@ -462,16 +751,16 @@ function AdminHeader({
                       <div className="relative flex items-start justify-between gap-4">
                         <div>
                           <p className="text-[10px] uppercase tracking-[0.32em] text-[#D4AF37]">
-                            Notification Center
+                            Executive Alerts
                           </p>
 
                           <h3 className="mt-2 text-2xl font-black text-white">
-                            CRM Alerts
+                            CRM + Student OS Signals
                           </h3>
 
                           <p className="mt-2 text-xs leading-relaxed text-gray-400">
-                            Real-time signals from leads, appointments, and
-                            follow-up reminders.
+                            Real-time signals from CRM, reminders, CAS, visa,
+                            payments, portal, support, and Executive AI.
                           </p>
                         </div>
 
@@ -499,7 +788,7 @@ function AdminHeader({
                           </h3>
 
                           <p className="mt-2 text-sm leading-relaxed text-gray-400">
-                            No active notifications right now.
+                            No active executive notifications right now.
                           </p>
                         </div>
                       ) : (
@@ -538,9 +827,7 @@ function AdminHeader({
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
-                                        <p
-                                          className={`text-sm font-black ${item.color}`}
-                                        >
+                                        <p className={`text-sm font-black ${item.color}`}>
                                           {item.title}
                                         </p>
 
@@ -584,21 +871,9 @@ function AdminHeader({
 
                     <div className="border-t border-white/10 p-4">
                       <div className="grid grid-cols-3 gap-2">
-                        <MiniStat
-                          label="Unread"
-                          value={notificationCount}
-                          color="text-[#D4AF37]"
-                        />
-                        <MiniStat
-                          label="Overdue"
-                          value={reminderStats.overdue}
-                          color="text-red-300"
-                        />
-                        <MiniStat
-                          label="Today"
-                          value={reminderStats.today}
-                          color="text-orange-300"
-                        />
+                        <MiniStat label="Unread" value={notificationCount} color="text-[#D4AF37]" />
+                        <MiniStat label="Overdue" value={reminderStats.overdue} color="text-red-300" />
+                        <MiniStat label="Pressure" value={executivePressure} color="text-orange-300" />
                       </div>
                     </div>
                   </motion.div>
@@ -608,7 +883,30 @@ function AdminHeader({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {studentOsHealthItems.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500">
+                  {item.label}
+                </p>
+
+                <p className={`text-lg font-black ${item.color}`}>
+                  {item.value}
+                </p>
+              </div>
+
+              <p className="mt-1 text-xs text-gray-500">
+                {item.helper}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
           <ActionButton
             onClick={handleRefresh}
             label={refreshing ? "Refreshing..." : "Refresh"}
@@ -617,10 +915,17 @@ function AdminHeader({
           />
 
           <ActionButton
+            onClick={handleMissionControl}
+            label="Mission Control"
+            icon="🚀"
+            variant="gold"
+          />
+
+          <ActionButton
             onClick={handleExport}
             label={safePermissions.canExport ? "Export CSV" : "Export Locked"}
             icon="📤"
-            variant={safePermissions.canExport ? "gold" : "locked"}
+            variant={safePermissions.canExport ? "default" : "locked"}
             disabled={!safePermissions.canExport}
           />
 
@@ -630,9 +935,7 @@ function AdminHeader({
             onClick={handleClear}
             label={
               safePermissions.canClearAll
-                ? `Clear ${
-                    activeTab === "inquiries" ? "Inquiries" : "Appointments"
-                  }`
+                ? `Clear ${activeTab === "inquiries" ? "Inquiries" : "Appointments"}`
                 : "Clear Locked"
             }
             icon="🗑️"

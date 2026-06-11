@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -18,6 +18,7 @@ import CountriesPage from "./pages/CountriesPage";
 import ContactPage from "./pages/ContactPage";
 import AdminPage from "./pages/AdminPage";
 import StudentPortalPage from "./pages/StudentPortalPage";
+import CounselorPortalPage from "./pages/CounselorPortalPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function LoadingScreen() {
@@ -28,7 +29,7 @@ function LoadingScreen() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <div className="absolute h-[420px] w-[420px] rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
+      <div className="absolute h-[420px] w-[420px] rounded-full bg-[#D4AF37]/10 blur-3xl" />
 
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.96 }}
@@ -61,6 +62,7 @@ function PageTransition({ children }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -18 }}
       transition={{ duration: 0.35 }}
+      className="min-h-screen"
     >
       {children}
     </motion.div>
@@ -71,13 +73,22 @@ function App() {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
 
-  const isAdminPage = location.pathname === "/admin";
-  const isStudentPortal = location.pathname.startsWith("/student");
+  const portalMode = useMemo(() => {
+    const path = location.pathname;
+    return {
+      isAdminPage: path.startsWith("/admin"),
+      isStudentPortal: path.startsWith("/student"),
+      isCounselorPortal: path.startsWith("/counselor"),
+    };
+  }, [location.pathname]);
+
+  const isPrivateWorkspace =
+    portalMode.isAdminPage || portalMode.isStudentPortal || portalMode.isCounselorPortal;
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1600);
+    }, 900);
 
     return () => clearTimeout(timer);
   }, []);
@@ -86,15 +97,13 @@ function App() {
     <main className="relative min-h-screen overflow-x-hidden bg-[#050505] text-white selection:bg-[#D4AF37] selection:text-black">
       <CursorGlow />
 
-      <AnimatePresence>
-        {loading && <LoadingScreen />}
-      </AnimatePresence>
+      <AnimatePresence>{loading && <LoadingScreen />}</AnimatePresence>
 
       {!loading && (
         <>
           <ScrollToTop />
 
-          {!isAdminPage && !isStudentPortal && <Navbar />}
+          {!isPrivateWorkspace && <Navbar />}
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -171,6 +180,15 @@ function App() {
               />
 
               <Route
+                path="/counselor"
+                element={
+                  <PageTransition>
+                    <CounselorPortalPage />
+                  </PageTransition>
+                }
+              />
+
+              <Route
                 path="*"
                 element={
                   <PageTransition>
@@ -181,7 +199,7 @@ function App() {
             </Routes>
           </AnimatePresence>
 
-          {!isAdminPage && !isStudentPortal && (
+          {!isPrivateWorkspace && (
             <>
               <LivePopup />
               <Footer />
