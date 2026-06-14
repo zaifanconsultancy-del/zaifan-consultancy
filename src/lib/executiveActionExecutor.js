@@ -650,6 +650,362 @@ async function executeCommunicationTemplate({
   });
 }
 
+
+const V4_RECOVERY_ACTION_TYPES = new Set([
+  "recover_cas_workflow",
+  "verify_cas_blocker",
+  "create_cas_follow_up_task",
+  "write_cas_timeline_event",
+  "create_visa_tracking",
+  "create_visa_checklist_tasks",
+  "notify_counselor_visa_recovery",
+  "reconcile_payment_records",
+  "audit_receipts",
+  "write_payment_timeline_event",
+  "create_or_activate_portal_account",
+  "activate_portal_account",
+  "send_portal_access_message",
+  "write_portal_timeline_event",
+  "regenerate_timeline",
+  "create_document_recovery_tasks",
+  "draft_document_request",
+  "recover_overdue_tasks",
+  "create_executive_escalation",
+  "assign_senior_counselor",
+  "manual_recovery_review",
+]);
+
+function isV4RecoveryAction(actionType = "") {
+  return V4_RECOVERY_ACTION_TYPES.has(normalizeActionType(actionType));
+}
+
+function isTimelineRecoveryAction(actionType = "") {
+  const clean = normalizeActionType(actionType);
+  return clean.includes("timeline") || clean === "regenerate_timeline";
+}
+
+function isCommunicationRecoveryAction(actionType = "") {
+  const clean = normalizeActionType(actionType);
+  return (
+    clean.includes("notify") ||
+    clean.includes("message") ||
+    clean.includes("draft_document_request") ||
+    clean === "send_portal_access_message"
+  );
+}
+
+function isTaskRecoveryAction(actionType = "") {
+  const clean = normalizeActionType(actionType);
+  return (
+    clean.includes("task") ||
+    clean.includes("checklist") ||
+    clean.includes("follow_up") ||
+    clean.includes("escalation") ||
+    clean.includes("assign") ||
+    clean.includes("recovery") ||
+    clean.includes("review") ||
+    clean.includes("audit") ||
+    clean.includes("reconcile") ||
+    clean.includes("tracking")
+  );
+}
+
+function getRecoveryPriority(template = {}) {
+  const payload = getPayload(template);
+  const raw = normalizeActionType(
+    payload.priority ||
+      payload.severity ||
+      payload.recommendation_priority ||
+      template.priority ||
+      "high"
+  );
+
+  if (["critical", "urgent"].includes(raw)) return "critical";
+  if (["executive", "high"].includes(raw)) return "high";
+  if (raw === "low") return "low";
+  return "medium";
+}
+
+function getRecoveryDueDate(template = {}) {
+  const payload = getPayload(template);
+  if (payload.due_date || payload.dueDate) return payload.due_date || payload.dueDate;
+
+  const priority = getRecoveryPriority(template);
+  const actionType = normalizeActionType(template.actionType);
+
+  const hours = priority === "critical" ? 24 : priority === "high" ? 48 : 72;
+  const date = new Date(Date.now() + hours * 60 * 60 * 1000);
+
+  if (actionType.includes("cas") || actionType.includes("visa") || actionType.includes("escalation")) {
+    date.setTime(Date.now() + 24 * 60 * 60 * 1000);
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
+function buildV4RecoveryTaskPayload({ template, adminProfile }) {
+  const payload = getPayload(template);
+  const actionType = normalizeActionType(template.actionType);
+  const stage = normalizeActionType(payload.stage || payload.recovery_stage || payload.target_stage || "workflow_recovery");
+  const title = getTemplateTitle(template, `Recovery Action: ${stage.replace(/_/g, " ")}`);
+  const description =
+    getTemplateDescription(template) ||
+    payload.recommendation ||
+    `Complete V4 recovery action ${actionType.replace(/_/g, " ")} for ${stage.replace(/_/g, " ")}.`;
+
+  return {
+    student_id: String(getStudentId(template) || ""),
+    student_type: getStudentType(template),
+    title,
+    description,
+    priority: getRecoveryPriority(template),
+    status: payload.status || "pending",
+    due_date: getRecoveryDueDate(template),
+    created_by: getAdminId(adminProfile),
+  };
+}
+
+function buildV4RecoveryCommunicationPayload({ template, channel = "whatsapp" }) {
+  const payload = getPayload(template);
+  const actionType = normalizeActionType(template.actionType);
+  const title = getTemplateTitle(template, "Workflow Recovery Message");
+  const description = getTemplateDescription(template);
+
+  return {
+    student_id: String(getStudentId(template) || ""),
+    student_type: getStudentType(template),
+    channel: payload.channel || channel,
+    subject: payload.subject || title,
+    message:
+      payload.message ||
+      payload.body ||
+      description ||
+      `Workflow recovery action required: ${actionType.replace(/_/g, " ")}.`,
+    status: payload.status || "draft",
+  };
+}
+
+async function updatePortalAccountForRecovery({ template }) {
+  const payload = getPayload(template);
+  const studentId = getStudentId(template);
+  const studentType = getStudentType(template);
+  const accountId = payload.account_id || payload.portal_account_id || payload.target_id || null;
+
+  let query = supabase.from("student_portal_accounts").update({ is_active: true });
+
+  if (accountId) {
+    query = query.eq("id", accountId);
+  } else {
+    query = query.eq("student_id", studentId).eq("student_type", studentType);
+  }
+
+  return withTimeout(
+    query.select("id, email, student_id, student_type, is_active").maybeSingle(),
+    "Portal account recovery update",
+    QUERY_TIMEOUT_MS
+  );
+}
+
+async function executeV4RecoveryTemplate({ template, adminProfile }) {
+  const actionType = normalizeActionType(template.actionType);
+  const payload = getPayload(template);
+  const targetTable = payload.target_table || "student_tasks";
+
+  if (actionType === "activate_portal_account" || actionType === "create_or_activate_portal_account") {
+    const { data, error, timedOut } = await updatePortalAccountForRecovery({ template });
+
+    if (!error && data) {
+      fireExecutionLog({
+        template,
+        adminProfile,
+        status: "completed",
+        targetTable: "student_portal_accounts",
+        targetId: data?.id || null,
+        metadata: { recovered_portal_account: data },
+      });
+
+      fireTimelineEvent({
+        template,
+        adminProfile,
+        actionType: "executive_portal_recovery_completed",
+        title: "Executive AI recovered portal access",
+        description: "Student portal account was activated by V4 recovery execution.",
+        metadata: {
+          target_table: "student_portal_accounts",
+          target_id: data?.id || null,
+        },
+      });
+
+      return buildExecutionResult({
+        data,
+        error: null,
+        template,
+        actionType,
+        targetTable: "student_portal_accounts",
+      });
+    }
+
+    // If no account exists or schema/RLS blocks update, fall through to task creation.
+    if (error || timedOut) {
+      console.warn("Portal account recovery update skipped; creating recovery task instead:", error?.message || error);
+    }
+  }
+
+  if (isTimelineRecoveryAction(actionType)) {
+    const result = await writeTimelineEvent({
+      template,
+      adminProfile,
+      actionType: `executive_${actionType}`,
+      title: getTemplateTitle(template, "Executive AI logged workflow recovery"),
+      description:
+        getTemplateDescription(template) ||
+        "Executive AI logged a V4 workflow recovery action.",
+      metadata: {
+        target_table: targetTable,
+        target_status: payload.target_status || "logged",
+        v4_recovery_action: true,
+      },
+    });
+
+    fireExecutionLog({
+      template,
+      adminProfile,
+      status: result?.error ? "failed" : "completed",
+      targetTable: "crm_timeline",
+      error: result?.error || null,
+      metadata: {
+        v4_recovery_action: true,
+        timeline_result: result?.data || null,
+      },
+    });
+
+    return buildExecutionResult({
+      data: result?.data || payload,
+      error: result?.error || null,
+      template,
+      actionType,
+      targetTable: "crm_timeline",
+      timedOut: result?.timedOut === true,
+    });
+  }
+
+  if (isCommunicationRecoveryAction(actionType)) {
+    const communicationPayload = buildV4RecoveryCommunicationPayload({ template });
+    const { data, error, timedOut } = await insertCommunication(communicationPayload);
+
+    fireExecutionLog({
+      template,
+      adminProfile,
+      status: error ? "failed" : "completed",
+      targetTable: "student_communications",
+      targetId: data?.id || null,
+      error,
+      metadata: {
+        v4_recovery_action: true,
+        created_payload: communicationPayload,
+        returned_data: data || null,
+        timed_out: timedOut === true,
+      },
+    });
+
+    fireTimelineEvent({
+      template,
+      adminProfile,
+      actionType: error ? "executive_action_failed" : "executive_recovery_communication_created",
+      title: error ? "Executive AI recovery communication failed" : "Executive AI created recovery communication",
+      description: error?.message || communicationPayload.message || communicationPayload.subject,
+      executionStatus: error ? "failed" : "completed",
+      metadata: {
+        target_table: "student_communications",
+        target_id: data?.id || null,
+      },
+    });
+
+    return buildExecutionResult({
+      data: data || communicationPayload,
+      error,
+      template,
+      actionType,
+      targetTable: "student_communications",
+      timedOut: timedOut === true,
+    });
+  }
+
+  if (isTaskRecoveryAction(actionType)) {
+    const taskPayload = buildV4RecoveryTaskPayload({ template, adminProfile });
+    const { data, error, timedOut } = await insertStudentTask(taskPayload);
+
+    fireExecutionLog({
+      template,
+      adminProfile,
+      status: error ? "failed" : "completed",
+      targetTable: "student_tasks",
+      targetId: data?.id || null,
+      error,
+      metadata: {
+        v4_recovery_action: true,
+        intended_target_table: targetTable,
+        intended_target_status: payload.target_status || null,
+        created_payload: taskPayload,
+        returned_data: data || null,
+        timed_out: timedOut === true,
+      },
+    });
+
+    fireTimelineEvent({
+      template,
+      adminProfile,
+      actionType: error ? "executive_action_failed" : "executive_v4_recovery_task_created",
+      title: error ? "Executive AI recovery task failed" : "Executive AI created V4 recovery task",
+      description: error?.message || taskPayload.description || taskPayload.title,
+      executionStatus: error ? "failed" : "completed",
+      metadata: {
+        target_table: "student_tasks",
+        target_id: data?.id || null,
+        intended_target_table: targetTable,
+        v4_recovery_action: true,
+      },
+    });
+
+    return buildExecutionResult({
+      data: data || taskPayload,
+      error,
+      template,
+      actionType,
+      targetTable: "student_tasks",
+      timedOut: timedOut === true,
+    });
+  }
+
+  const manualTaskPayload = buildV4RecoveryTaskPayload({ template, adminProfile });
+  const { data, error, timedOut } = await insertStudentTask(manualTaskPayload);
+
+  fireExecutionLog({
+    template,
+    adminProfile,
+    status: error ? "failed" : "completed",
+    targetTable: "student_tasks",
+    targetId: data?.id || null,
+    error,
+    metadata: {
+      v4_recovery_action: true,
+      manual_fallback: true,
+      intended_target_table: targetTable,
+      created_payload: manualTaskPayload,
+      timed_out: timedOut === true,
+    },
+  });
+
+  return buildExecutionResult({
+    data: data || manualTaskPayload,
+    error,
+    template,
+    actionType,
+    targetTable: "student_tasks",
+    timedOut: timedOut === true,
+  });
+}
+
 export async function executeExecutiveActionTemplate({
   template,
   adminProfile = null,
@@ -732,6 +1088,10 @@ export async function executeExecutiveActionTemplate({
     });
   }
 
+  if (isV4RecoveryAction(actionType)) {
+    return await executeV4RecoveryTemplate({ template, adminProfile });
+  }
+
   const unsupportedError = new Error(`Unsupported executive action: ${template.actionType}`);
 
   fireExecutionLog({
@@ -786,6 +1146,7 @@ export function buildExecutionAnalytics(logs = []) {
     calls: 0,
     emails: 0,
     whatsapp: 0,
+    v4Recovery: 0,
     byAction: {},
     byStatus: {},
   };
@@ -807,7 +1168,10 @@ export function buildExecutionAnalytics(logs = []) {
     if (actionType === "schedule_call") analytics.calls += 1;
     if (actionType === "send_email") analytics.emails += 1;
     if (actionType === "send_whatsapp") analytics.whatsapp += 1;
+    if (isV4RecoveryAction(actionType)) analytics.v4Recovery = (analytics.v4Recovery || 0) + 1;
   });
+
+  analytics.v4Recovery = analytics.v4Recovery || 0;
 
   analytics.successRate = analytics.total
     ? Math.round((analytics.completed / analytics.total) * 100)

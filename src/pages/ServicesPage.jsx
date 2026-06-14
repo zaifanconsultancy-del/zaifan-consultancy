@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import PageHeader from "../components/PageHeader";
-import Services from "../components/Services";
+import Services from "../components/DreamSupportSection";
 
 function ServicesPage() {
   const features = [

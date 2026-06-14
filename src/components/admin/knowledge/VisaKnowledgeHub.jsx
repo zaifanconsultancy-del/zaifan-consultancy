@@ -1,0 +1,28 @@
+import React, { useMemo, useState } from "react";
+import { ShieldCheck, Search, FileWarning, CheckCircle2, Plane, BadgeAlert, ClipboardCheck, Users, BarChart3, Clock } from "lucide-react";
+
+const visaGuides = [
+  { id: "VISA-PAK-001", title: "Pakistan UK Student Visa Evidence Matrix", country: "Pakistan", destination: "UK", category: "Evidence", status: "Approved", risk: "Low", completeness: 96, updated: "2026-06-11", owner: "Visa Desk" },
+  { id: "VISA-PAK-002", title: "Sponsor Funds Document Guide", country: "Pakistan", destination: "UK", category: "Finance", status: "Approved", risk: "Medium", completeness: 91, updated: "2026-06-10", owner: "Visa Desk" },
+  { id: "VISA-INT-004", title: "Interview Preparation Framework", country: "Global", destination: "UK", category: "Interview", status: "Live", risk: "Low", completeness: 94, updated: "2026-06-09", owner: "Training Lead" },
+  { id: "VISA-CAN-003", title: "Canada Study Permit Evidence Guide", country: "Pakistan", destination: "Canada", category: "Evidence", status: "Review", risk: "High", completeness: 78, updated: "2026-06-05", owner: "Canada Desk" }
+];
+
+function Card({ icon: Icon, label, value, note }) { return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><Icon className="text-blue-600"/><div className="mt-3 text-2xl font-black">{value}</div><div className="text-sm font-bold">{label}</div><div className="text-xs text-slate-500">{note}</div></div>; }
+function Status({ value }) { const tone = value === "Approved" || value === "Live" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"; return <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${tone}`}>{value}</span>; }
+function Risk({ value }) { const tone = value === "High" ? "text-red-700 bg-red-50 border-red-200" : value === "Medium" ? "text-amber-700 bg-amber-50 border-amber-200" : "text-emerald-700 bg-emerald-50 border-emerald-200"; return <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${tone}`}>{value}</span>; }
+
+export default function VisaKnowledgeHub({ compact = false }) {
+  const [query, setQuery] = useState("");
+  const visible = useMemo(() => visaGuides.filter(g => !query || Object.values(g).join(" ").toLowerCase().includes(query.toLowerCase())), [query]);
+  const avg = Math.round(visaGuides.reduce((s,g)=>s+g.completeness,0)/visaGuides.length);
+
+  return <div className="space-y-6">
+    <div className="grid gap-4 md:grid-cols-4"><Card icon={ShieldCheck} label="Visa Guides" value={visaGuides.length} note="Evidence and process records"/><Card icon={CheckCircle2} label="Approved" value={visaGuides.filter(g=>g.status==='Approved'||g.status==='Live').length} note="Ready to execute"/><Card icon={BadgeAlert} label="High Risk" value={visaGuides.filter(g=>g.risk==='High').length} note="Needs review"/><Card icon={BarChart3} label="Completeness" value={`${avg}%`} note="Average readiness"/></div>
+    <div className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div><h2 className="text-lg font-black">Visa Knowledge Hub</h2><p className="text-sm text-slate-500">Visa evidence, finance, sponsor, interview and destination rules connected to student journey risk.</p></div><div className="relative"><Search className="absolute left-3 top-2.5 text-slate-400" size={16}/><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search visa knowledge" className="rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none"/></div></div>
+      <div className="mt-5 grid gap-4">{visible.map(g=><div key={g.id} className="rounded-3xl border border-slate-100 p-4 hover:bg-slate-50"><div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-900">{g.title}</h3><Status value={g.status}/><Risk value={g.risk}/></div><p className="mt-1 text-sm text-slate-500">{g.id} · {g.country} → {g.destination} · {g.category} · Owner: {g.owner}</p></div><div className="text-right"><div className="text-xl font-black">{g.completeness}%</div><div className="text-xs text-slate-500">Completeness</div></div></div><div className="mt-4 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-blue-600" style={{width:`${g.completeness}%`}}/></div></div>)}</div></div>
+      <div className="space-y-6"><div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="font-black">Evidence Checklist</h3><div className="mt-4 space-y-3">{["CAS verified", "Bank statement checked", "Sponsor relation proof", "TB test where required", "Interview notes saved"].map((x,i)=><div key={x} className="flex items-center gap-2 rounded-2xl bg-slate-50 p-3 text-sm"><ClipboardCheck size={15} className={i<3 ? "text-emerald-600" : "text-amber-600"}/><span className="font-semibold">{x}</span></div>)}</div></div>{!compact && <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="font-black">Visa Desk Signals</h3><div className="mt-4 space-y-3"><div className="rounded-2xl bg-red-50 p-3 text-sm text-red-800"><FileWarning size={16}/> Canada evidence guide needs update before scale.</div><div className="rounded-2xl bg-blue-50 p-3 text-sm text-blue-800"><Users size={16}/> Interview training should be assigned to counselors.</div><div className="rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-800"><Plane size={16}/> UK Pakistan evidence matrix is production-ready.</div></div></div>}</div>
+    </div>
+  </div>;
+}

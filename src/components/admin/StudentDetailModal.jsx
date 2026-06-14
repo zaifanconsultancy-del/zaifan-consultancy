@@ -891,20 +891,20 @@ function StudentDetailModal({
     }
   };
 
-  const patchLocalSupportRequest = useCallback((requestId, patch = {}) => {
-    if (!requestId) return;
+ const patchLocalSupportRequest = (requestId, patch = {}) => {
+  if (!requestId) return;
 
-    setStudentSupportRequests((prev) =>
-      prev.map((item) =>
-        String(item.id) === String(requestId)
-          ? {
-              ...item,
-              ...patch,
-            }
-          : item
-      )
-    );
-  }, []);
+  setStudentSupportRequests((prev) =>
+    prev.map((item) =>
+      String(item.id) === String(requestId)
+        ? {
+            ...item,
+            ...patch,
+          }
+        : item
+    )
+  );
+};
 
   const runWithTimeout = async (promise, label = "Action", timeoutMs = 15000) => {
     let timer;

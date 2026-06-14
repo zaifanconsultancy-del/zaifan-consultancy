@@ -1,19 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
-import {
-  buildRecoveryQueue,
-  buildWorkflowFailureHeatmap,
-} from "../../lib/platformVerificationEngine";
+import { getExecutiveScoreSummary } from "../../lib/executivePortfolioGenerator";
 import {
   buildExecutiveVerificationSnapshot,
-} from "../../lib/platformVerificationEngine";
-import {
   buildExecutiveRecoveryActions,
   buildBrokenWorkflowScannerSnapshot,
-} from "../../lib/executiveAutomationEngine";
+  buildWorkflowIntegrityScore,
+  generateProductionReadinessReport,
+} from "../../lib/platformVerificationEngine";
 
 const toLower = (value) => String(value || "").toLowerCase().trim();
+
+const formatLabel = (value = "") => {
+  const clean = String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/-/g, "_");
+
+  if (!clean) return "Unknown";
+
+  return clean
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
 
 const formatDate = (value) => {
   if (!value) return "No date";
@@ -97,12 +110,15 @@ function ExecutiveAutomationControlCenter({
   executiveExecutionLogs = [],
   automationQueue = [],
   executiveActionQueue = [],
+  platformScores = [],
 }) {
   const [logs, setLogs] = useState(executiveExecutionLogs);
   const [queueRows, setQueueRows] = useState([
     ...automationQueue,
     ...executiveActionQueue,
   ]);
+  const [scores, setScores] = useState(platformScores);
+  const [scoreSummary, setScoreSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -111,7 +127,7 @@ function ExecutiveAutomationControlCenter({
     setError("");
 
     try {
-      const [logsResult, queueResult] = await Promise.allSettled([
+      const [logsResult, queueResult, scoresResult] = await Promise.allSettled([
         supabase
           .from("executive_execution_logs")
           .select("*")
@@ -123,6 +139,8 @@ function ExecutiveAutomationControlCenter({
           .select("*")
           .order("created_at", { ascending: false })
           .limit(150),
+
+        getExecutiveScoreSummary(),
       ]);
 
       if (logsResult.status === "fulfilled") {
@@ -141,6 +159,15 @@ function ExecutiveAutomationControlCenter({
           console.warn("Executive action queue fetch warning:", queueResult.value.error);
         } else {
           setQueueRows(queueResult.value.data || []);
+        }
+      }
+
+      if (scoresResult.status === "fulfilled") {
+        if (scoresResult.value?.error) {
+          console.warn("Executive score summary fetch warning:", scoresResult.value.error);
+        } else {
+          setScores(scoresResult.value?.scores || []);
+          setScoreSummary(scoresResult.value || null);
         }
       }
     } catch (err) {
@@ -164,6 +191,12 @@ function ExecutiveAutomationControlCenter({
       setQueueRows(nextQueue);
     }
   }, [automationQueue, executiveActionQueue]);
+
+  useEffect(() => {
+    if (platformScores.length) {
+      setScores(platformScores);
+    }
+  }, [platformScores]);
 
   useEffect(() => {
     loadAutomationData();
@@ -233,29 +266,42 @@ function ExecutiveAutomationControlCenter({
     };
   }, [logs, queueRows]);
 
+  const verificationDataset = useMemo(() => {
+    if (scores.length) return scores;
+    if (queueRows.length) return queueRows;
+    return logs;
+  }, [scores, queueRows, logs]);
+
   const verificationSnapshot = useMemo(
-  () =>
-    buildExecutiveVerificationSnapshot(
-      queueRows
-    ),
-  [queueRows]
-);
+    () => buildExecutiveVerificationSnapshot(verificationDataset),
+    [verificationDataset]
+  );
 
-const recoverySnapshot = useMemo(
-  () =>
-    buildBrokenWorkflowScannerSnapshot(
-      queueRows
-    ),
-  [queueRows]
-);
+  const workflowScanner = useMemo(
+    () => buildBrokenWorkflowScannerSnapshot(verificationDataset),
+    [verificationDataset]
+  );
 
-const recoveryEngine = useMemo(
-  () =>
-    buildExecutiveRecoveryActions(
-      recoverySnapshot.issues || []
-    ),
-  [recoverySnapshot]
-);
+  const workflowIntegrity = useMemo(
+    () => buildWorkflowIntegrityScore(verificationDataset),
+    [verificationDataset]
+  );
+
+  const productionReadiness = useMemo(
+    () => generateProductionReadinessReport(verificationDataset),
+    [verificationDataset]
+  );
+
+  const recoveryEngine = useMemo(
+    () => buildExecutiveRecoveryActions(verificationDataset),
+    [verificationDataset]
+  );
+
+  const launchBlockers = productionReadiness.launchBlockers || [];
+  const criticalIssues = productionReadiness.criticalIssues || [];
+  const brokenWorkflows = workflowScanner.brokenWorkflows || workflowScanner.issues || [];
+  const readinessScore = productionReadiness.readinessScore || 0;
+  const integrityScore = workflowIntegrity.overallIntegrity || 0;
 
   const kpis = [
     {
@@ -297,6 +343,30 @@ const recoveryEngine = useMemo(
       icon: "🧑‍⚖️",
       color: "text-purple-300",
       tone: "purple",
+    },
+    {
+      title: "Workflow Integrity",
+      value: `${integrityScore}%`,
+      note: `${workflowScanner.totalBrokenWorkflows || brokenWorkflows.length || 0} broken workflows`,
+      icon: "🧭",
+      color: integrityScore >= 75 ? "text-green-300" : "text-orange-300",
+      tone: integrityScore >= 75 ? "green" : "orange",
+    },
+    {
+      title: "Production Readiness",
+      value: `${readinessScore}%`,
+      note: formatLabel(productionReadiness.goLiveStatus || "not_ready"),
+      icon: "🚀",
+      color: readinessScore >= 75 ? "text-green-300" : "text-red-300",
+      tone: readinessScore >= 75 ? "green" : "red",
+    },
+    {
+      title: "Launch Blockers",
+      value: launchBlockers.length,
+      note: `${criticalIssues.length} critical issues`,
+      icon: "🛑",
+      color: launchBlockers.length ? "text-red-300" : "text-green-300",
+      tone: launchBlockers.length ? "red" : "green",
     },
     {
       title: "Automation Pressure",
@@ -354,12 +424,21 @@ const recoveryEngine = useMemo(
           </div>
         ) : null}
 
-        <div className="relative mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <div className="relative mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-9">
           {kpis.map((item, index) => (
             <MetricCard key={item.title} item={item} index={index} />
           ))}
         </div>
       </div>
+
+      <ExecutiveLaunchCenter
+        productionReadiness={productionReadiness}
+        workflowIntegrity={workflowIntegrity}
+        workflowScanner={workflowScanner}
+        verificationSnapshot={verificationSnapshot}
+        recoveryEngine={recoveryEngine}
+        scoreSummary={scoreSummary}
+      />
 
       <CommandPanel
   eyebrow="Platform Recovery"
@@ -527,6 +606,146 @@ const recoveryEngine = useMemo(
             <EmptyState text="No action type distribution available yet." />
           )}
         </CommandPanel>
+      </div>
+    </div>
+  );
+}
+
+
+function ExecutiveLaunchCenter({
+  productionReadiness = {},
+  workflowIntegrity = {},
+  workflowScanner = {},
+  verificationSnapshot = {},
+  recoveryEngine = {},
+  scoreSummary = null,
+}) {
+  const readinessScore = productionReadiness.readinessScore || 0;
+  const integrityScore = workflowIntegrity.overallIntegrity || 0;
+  const goLiveStatus = productionReadiness.goLiveStatus || "not_ready";
+  const launchBlockers = productionReadiness.launchBlockers || [];
+  const criticalIssues = productionReadiness.criticalIssues || [];
+  const brokenWorkflows = workflowScanner.brokenWorkflows || workflowScanner.issues || [];
+  const severityBreakdown = workflowScanner.severityBreakdown || {};
+  const totalBroken = workflowScanner.totalBrokenWorkflows || brokenWorkflows.length || 0;
+  const recoveryQueue = verificationSnapshot.recoveryQueue || [];
+  const totalRecoveryActions = recoveryEngine.totalActions || recoveryEngine.totals?.total || recoveryQueue.length || 0;
+
+  const launchTone =
+    goLiveStatus === "ready" || readinessScore >= 85
+      ? "green"
+      : readinessScore >= 70
+      ? "orange"
+      : "red";
+
+  const topIssues = [
+    ...launchBlockers.map((issue) => ({ ...issue, source: "Launch Blocker" })),
+    ...criticalIssues.map((issue) => ({ ...issue, source: "Critical Issue" })),
+    ...brokenWorkflows.slice(0, 6).map((issue) => ({ ...issue, source: "Broken Workflow" })),
+  ].slice(0, 10);
+
+  return (
+    <CommandPanel
+      eyebrow="Executive Launch Center"
+      title="Production readiness, go-live status, and workflow blockers"
+      description="V4 verification layer for deciding whether the executive automation system is ready for production launch or needs recovery first."
+    >
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        <SmallMetric label="Readiness Score" value={`${readinessScore}%`} />
+        <SmallMetric label="Go Live Status" value={formatLabel(goLiveStatus)} />
+        <SmallMetric label="Workflow Integrity" value={`${integrityScore}%`} />
+        <SmallMetric label="Launch Blockers" value={launchBlockers.length} />
+        <SmallMetric label="Critical Failures" value={criticalIssues.length || severityBreakdown.critical || 0} />
+        <SmallMetric label="Recovery Actions" value={totalRecoveryActions} />
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+        <div className={`rounded-[1.5rem] border p-5 ${getToneStyle(launchTone)}`}>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+            Launch Decision
+          </p>
+          <p className="mt-3 text-3xl font-black text-white">
+            {formatLabel(goLiveStatus)}
+          </p>
+          <p className="mt-2 text-xs leading-5 text-white/45">
+            {readinessScore >= 85
+              ? "System is trending launch-ready. Keep monitoring failed automations and critical queue items."
+              : readinessScore >= 70
+              ? "System is close, but launch should wait until high-risk blockers and broken workflows are reduced."
+              : "System needs recovery before clean launch. Resolve blockers, critical failures, and broken workflows first."}
+          </p>
+
+          <div className="mt-5 space-y-4">
+            <ProgressRow
+              label="Production Readiness"
+              value={readinessScore}
+              detail={`${launchBlockers.length} launch blockers detected`}
+              tone={readinessScore >= 75 ? "green" : "red"}
+            />
+            <ProgressRow
+              label="Workflow Integrity"
+              value={integrityScore}
+              detail={`${totalBroken} broken workflows detected`}
+              tone={integrityScore >= 75 ? "green" : "orange"}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-[1.5rem] border border-red-400/20 bg-red-500/[0.035] p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-300/80">
+                Launch Blocker Feed
+              </p>
+              <h4 className="mt-1 font-black text-white">What must be fixed before clean go-live</h4>
+            </div>
+            <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-black text-white/55">
+              {scoreSummary?.total || 0} scored records
+            </span>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {topIssues.length ? (
+              topIssues.map((issue, index) => (
+                <LaunchIssueRow
+                  key={issue.id || `${issue.title || issue.source}-${index}`}
+                  issue={issue}
+                />
+              ))
+            ) : (
+              <EmptyState text="No launch blockers or critical workflow failures detected." />
+            )}
+          </div>
+        </div>
+      </div>
+    </CommandPanel>
+  );
+}
+
+function LaunchIssueRow({ issue = {} }) {
+  const severity = issue.severity || issue.priority || "medium";
+  const tone =
+    severity === "critical" || severity === "urgent"
+      ? "red"
+      : severity === "high"
+      ? "orange"
+      : "blue";
+
+  return (
+    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-black text-white">
+            {issue.title || issue.issue || issue.source || "Workflow Issue"}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-white/45">
+            {issue.student_name ? `${issue.student_name} • ` : ""}
+            {issue.description || issue.detail || issue.message || "No issue detail available."}
+          </p>
+        </div>
+        <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/55">
+          {formatLabel(severity)}
+        </span>
       </div>
     </div>
   );

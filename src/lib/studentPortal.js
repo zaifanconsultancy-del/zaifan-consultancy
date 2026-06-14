@@ -1029,6 +1029,7 @@ export function buildPortalSummary(student = {}, data = {}) {
       student.visa_status ||
       "not_started",
 
+    applicationsCount: applications.length || fallbackCounts.applications || 0,
     documentsCount: documents.length || fallbackCounts.documents || 0,
     tasksCount: tasks.length || fallbackCounts.tasks || 0,
     pendingTasksCount: tasks.length > 0 ? pendingTasks.length : fallbackCounts.tasks || 0,

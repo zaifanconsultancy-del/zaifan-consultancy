@@ -1,55 +1,57 @@
 import { useEffect, useMemo, useState } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import Navbar from "./components/Navbar";
-import LivePopup from "./components/LivePopup";
-import Footer from "./components/Footer";
-import WhatsAppButton from "./components/WhatsAppButton";
-import Chatbot from "./components/Chatbot";
 import ScrollToTop from "./components/ScrollToTop";
-import CursorGlow from "./components/CursorGlow";
-import AppointmentBooking from "./components/AppointmentBooking";
+import loadingLogo from "./assets/loading-logo.png";
 
 import Home from "./pages/Home";
 import ServicesPage from "./pages/ServicesPage";
 import AboutPage from "./pages/AboutPage";
 import CountriesPage from "./pages/CountriesPage";
-import ContactPage from "./pages/ContactPage";
 import AdminPage from "./pages/AdminPage";
 import StudentPortalPage from "./pages/StudentPortalPage";
 import CounselorPortalPage from "./pages/CounselorPortalPage";
-import NotFoundPage from "./pages/NotFoundPage";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
+import AppointmentPage from "./pages/AppointmentPage.jsx";
 
 function LoadingScreen() {
   return (
     <motion.div
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-[#050505] text-white"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-[#fff4e8] text-[#071d43]"
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.45 }}
     >
-      <div className="absolute h-[420px] w-[420px] rounded-full bg-[#D4AF37]/10 blur-3xl" />
-
       <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.96 }}
+        initial={{ opacity: 0, y: 22, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="relative text-center"
+        transition={{ duration: 0.5 }}
+        className="relative flex flex-col items-center text-center"
       >
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
-          className="mx-auto mb-8 h-20 w-20 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]"
+        <motion.img
+          src={loadingLogo}
+          alt="Zaifan Consultancy"
+          className="h-36 w-36 object-contain drop-shadow-[0_18px_35px_rgba(234,88,12,0.18)] md:h-44 md:w-44"
         />
 
-        <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl">
-          Zaifan <span className="text-[#D4AF37]">Consultancy</span>
+        <h1 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
+          Zaifan <span className="text-orange-600">Consultancy</span>
         </h1>
 
-        <p className="mt-4 text-sm uppercase tracking-[0.35em] text-gray-400">
-          Preparing your gateway to global success
+        <p className="mt-4 text-sm font-black uppercase tracking-[0.32em] text-slate-500">
+          Loading your study abroad adventure
         </p>
+
+        <div className="mt-7 h-2 w-56 overflow-hidden rounded-full bg-orange-100">
+          <motion.div
+            className="h-full rounded-full bg-orange-500"
+            initial={{ x: "-100%", width: "45%" }}
+            animate={{ x: "230%" }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -58,15 +60,37 @@ function LoadingScreen() {
 function PageTransition({ children }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -18 }}
-      transition={{ duration: 0.35 }}
+      exit={{ opacity: 0, y: -14 }}
+      transition={{ duration: 0.32 }}
       className="min-h-screen"
     >
       {children}
     </motion.div>
   );
+}
+
+function ContactRoute() {
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const contactSection = document.getElementById("contact");
+
+      if (contactSection) {
+        const navbarOffset = 88;
+        const targetTop =
+          contactSection.getBoundingClientRect().top +
+          window.scrollY -
+          navbarOffset;
+
+        window.scrollTo({ top: targetTop, behavior: "smooth" });
+      }
+    }, 180);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return <Home />;
 }
 
 function App() {
@@ -75,6 +99,7 @@ function App() {
 
   const portalMode = useMemo(() => {
     const path = location.pathname;
+
     return {
       isAdminPage: path.startsWith("/admin"),
       isStudentPortal: path.startsWith("/student"),
@@ -82,28 +107,28 @@ function App() {
     };
   }, [location.pathname]);
 
-  const isPrivateWorkspace =
-    portalMode.isAdminPage || portalMode.isStudentPortal || portalMode.isCounselorPortal;
+  const shouldShowNavbar =
+    !portalMode.isAdminPage &&
+    !portalMode.isStudentPortal &&
+    !portalMode.isCounselorPortal;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setLoading(false);
-    }, 900);
+    }, 700);
 
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#050505] text-white selection:bg-[#D4AF37] selection:text-black">
-      <CursorGlow />
-
+    <main className="relative min-h-screen overflow-x-hidden bg-[#fff4e8] text-[#071d43] selection:bg-orange-600 selection:text-white">
       <AnimatePresence>{loading && <LoadingScreen />}</AnimatePresence>
 
       {!loading && (
         <>
           <ScrollToTop />
 
-          {!isPrivateWorkspace && <Navbar />}
+          {shouldShowNavbar && <Navbar />}
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -147,7 +172,16 @@ function App() {
                 path="/contact"
                 element={
                   <PageTransition>
-                    <ContactPage />
+                    <ContactRoute />
+                  </PageTransition>
+                }
+              />
+
+              <Route
+                path="/consultation"
+                element={
+                  <PageTransition>
+                    <ContactRoute />
                   </PageTransition>
                 }
               />
@@ -156,7 +190,7 @@ function App() {
                 path="/appointment"
                 element={
                   <PageTransition>
-                    <AppointmentBooking />
+                    <AppointmentPage />
                   </PageTransition>
                 }
               />
@@ -198,15 +232,6 @@ function App() {
               />
             </Routes>
           </AnimatePresence>
-
-          {!isPrivateWorkspace && (
-            <>
-              <LivePopup />
-              <Footer />
-              <WhatsAppButton />
-              <Chatbot />
-            </>
-          )}
         </>
       )}
     </main>

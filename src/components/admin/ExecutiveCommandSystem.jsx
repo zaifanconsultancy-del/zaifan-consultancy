@@ -11,6 +11,19 @@ import ExecutiveAIDashboard from "./ExecutiveAIDashboard";
 import MissionControlNotificationCenter from "./MissionControlNotificationCenter";
 import { getExecutiveScoreSummary } from "../../lib/executivePortfolioGenerator";
 import ExecutiveBulkOperationsPanel from "./ExecutiveBulkOperationsPanel";
+import FounderGrowthDashboard from "./FounderGrowthDashboard";
+import AnalyticsOSDashboard from "./analytics/AnalyticsOSDashboard";
+import KnowledgeOSDashboard from "./knowledge/KnowledgeOSDashboard";
+import CommunicationOSDashboard from "./communication/CommunicationOSDashboard";
+import PartnerOSDashboard from "./partner/PartnerOSDashboard";
+import AICommandCenter from "./ai-command/AICommandCenter";
+import {
+  buildExecutiveVerificationSnapshot,
+  buildBrokenWorkflowScannerSnapshot,
+  buildWorkflowIntegrityScore,
+  generateProductionReadinessReport,
+  buildExecutiveRecoveryActions,
+} from "../../lib/platformVerificationEngine";
 
 function normalize(value = "") {
   return String(value || "")
@@ -63,6 +76,142 @@ function getScoreValue(score = {}, key, fallback = 0) {
 
 function getStudentName(score = {}) {
   return score.student_name || score.full_name || score.name || "Unknown Student";
+}
+
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function clampPercent(value, fallback = 0) {
+  return Math.max(0, Math.min(100, number(value, fallback)));
+}
+
+function getFirstNumber(source = {}, keys = [], fallback = 0) {
+  for (const key of keys) {
+    const value = source?.[key];
+    if (Number.isFinite(Number(value))) return Number(value);
+  }
+  return fallback;
+}
+
+function runVerificationBuilder(builder, scores = [], fallback = {}) {
+  try {
+    const result = builder?.(safeArray(scores));
+    return result && typeof result === "object" ? result : fallback;
+  } catch (err) {
+    console.error("Executive verification builder failed:", err);
+    return {
+      ...fallback,
+      error: err?.message || "Verification builder failed.",
+    };
+  }
+}
+
+function normalizeWorkflowIntegrity(raw = {}) {
+  const overallIntegrity = clampPercent(
+    raw.overallIntegrity ?? raw.overall_integrity ?? raw.score ?? raw.integrityScore ?? raw.workflowIntegrityScore,
+    0
+  );
+
+  return {
+    ...raw,
+    overallIntegrity,
+    inquiryIntegrity: clampPercent(raw.inquiryIntegrity ?? raw.inquiry_integrity ?? raw.inquiry ?? raw.stageScores?.inquiry, overallIntegrity),
+    applicationIntegrity: clampPercent(raw.applicationIntegrity ?? raw.application_integrity ?? raw.application ?? raw.stageScores?.application, overallIntegrity),
+    visaIntegrity: clampPercent(raw.visaIntegrity ?? raw.visa_integrity ?? raw.visa ?? raw.stageScores?.visa, overallIntegrity),
+    paymentIntegrity: clampPercent(raw.paymentIntegrity ?? raw.payment_integrity ?? raw.payment ?? raw.stageScores?.payment, overallIntegrity),
+    portalIntegrity: clampPercent(raw.portalIntegrity ?? raw.portal_integrity ?? raw.portal ?? raw.stageScores?.portal, overallIntegrity),
+    enterpriseIntegrity: clampPercent(raw.enterpriseIntegrity ?? raw.enterprise_integrity ?? raw.enterprise ?? raw.stageScores?.enterprise, overallIntegrity),
+  };
+}
+
+function normalizeWorkflowScanner(raw = {}) {
+  const brokenWorkflows = safeArray(raw.brokenWorkflows || raw.broken_workflows || raw.issues || raw.workflowIssues);
+  const stalledStudents = safeArray(raw.stalledStudents || raw.stalled_students);
+  const missingTransitions = safeArray(raw.missingTransitions || raw.missing_transitions);
+  const orphanRecords = safeArray(raw.orphanRecords || raw.orphan_records);
+  const criticalFailures = safeArray(raw.criticalFailures || raw.critical_failures).length
+    ? safeArray(raw.criticalFailures || raw.critical_failures)
+    : brokenWorkflows.filter((issue) => normalize(issue.severity || issue.priority) === "critical");
+  const severityBreakdown = raw.severityBreakdown || raw.severity_breakdown || {};
+
+  return {
+    ...raw,
+    brokenWorkflows,
+    stalledStudents,
+    missingTransitions,
+    orphanRecords,
+    criticalFailures,
+    totalBrokenWorkflows: getFirstNumber(
+      raw,
+      ["totalBrokenWorkflows", "total_broken_workflows", "brokenWorkflowCount", "issueCount", "totalIssues"],
+      brokenWorkflows.length + missingTransitions.length + orphanRecords.length
+    ),
+    severityBreakdown: {
+      critical: number(severityBreakdown.critical, criticalFailures.length),
+      high: number(severityBreakdown.high, brokenWorkflows.filter((issue) => normalize(issue.severity || issue.priority) === "high").length),
+      medium: number(severityBreakdown.medium, brokenWorkflows.filter((issue) => normalize(issue.severity || issue.priority) === "medium").length),
+      low: number(severityBreakdown.low, brokenWorkflows.filter((issue) => normalize(issue.severity || issue.priority) === "low").length),
+    },
+  };
+}
+
+function normalizeProductionReadiness(raw = {}) {
+  const launchBlockers = safeArray(raw.launchBlockers || raw.launch_blockers || raw.blockers);
+  const criticalIssues = safeArray(raw.criticalIssues || raw.critical_issues || raw.criticalFailures);
+  const readinessScore = clampPercent(raw.readinessScore ?? raw.readiness_score ?? raw.score ?? raw.productionReadinessScore, 0);
+  const statusRaw = normalize(raw.goLiveStatus || raw.go_live_status || raw.status || raw.launchStatus);
+  const goLiveStatus = statusRaw || (readinessScore >= 90 && !launchBlockers.length ? "go" : readinessScore >= 75 ? "go_with_warnings" : "no_go");
+
+  return {
+    ...raw,
+    readinessScore,
+    goLiveStatus,
+    launchBlockers,
+    criticalIssues,
+  };
+}
+
+function normalizeExecutiveRecoveryActions(raw = {}) {
+  const immediateActions = safeArray(raw.immediateActions || raw.immediate_actions || raw.immediate || raw.actions?.immediate);
+  const executiveActions = safeArray(raw.executiveActions || raw.executive_actions || raw.executive || raw.actions?.executive);
+  const counselorActions = safeArray(raw.counselorActions || raw.counselor_actions || raw.counselor || raw.actions?.counselor);
+  const allActions = safeArray(raw.allActions || raw.all_actions || raw.actionsList).length
+    ? safeArray(raw.allActions || raw.all_actions || raw.actionsList)
+    : [...immediateActions, ...executiveActions, ...counselorActions];
+
+  return {
+    ...raw,
+    immediateActions,
+    executiveActions,
+    counselorActions,
+    allActions,
+    totals: {
+      ...(raw.totals || {}),
+      immediate: number(raw.totals?.immediate, immediateActions.length),
+      executive: number(raw.totals?.executive, executiveActions.length),
+      counselor: number(raw.totals?.counselor, counselorActions.length),
+      total: number(raw.totals?.total, allActions.length),
+    },
+  };
+}
+
+function normalizeExecutiveVerificationSnapshot(raw = {}) {
+  return {
+    ...raw,
+    recoveryQueue: safeArray(raw.recoveryQueue || raw.recovery_queue || raw.executiveRecoveryQueue),
+    criticalFailures: safeArray(raw.criticalFailures || raw.critical_failures),
+    healthReport: raw.healthReport || raw.health_report || {},
+  };
+}
+
+function getGoLiveTone(status = "", readinessScore = 0) {
+  const clean = normalize(status);
+  if (["go", "ready", "production_ready"].includes(clean)) return "green";
+  if (["go_with_warnings", "ready_with_warnings", "warning", "warnings"].includes(clean)) return "gold";
+  if (["no_go", "not_ready", "blocked", "fail", "failed"].includes(clean)) return "red";
+  return readinessScore >= 90 ? "green" : readinessScore >= 75 ? "gold" : "red";
 }
 
 
@@ -265,6 +414,69 @@ function buildOperationsCenter(scores = []) {
   };
 }
 
+
+function buildExecutiveSnapshotV2(scores = [], operations = {}, commandMetrics = {}, alertSnapshot = {}) {
+  const total = scores.length;
+  const applications = scores.filter((score) =>
+    ["application_started", "application_submitted", "application_under_review"].includes(getJourneyStage(score))
+  ).length;
+  const offers = scores.filter((score) =>
+    ["offer_received", "offer_accepted"].includes(getJourneyStage(score))
+  ).length;
+  const cas = scores.filter((score) =>
+    ["cas_pending", "cas_issued"].includes(getJourneyStage(score))
+  ).length;
+  const visas = scores.filter((score) =>
+    ["visa_pending", "visa_rejected", "visa_approved", "enrolled"].includes(getJourneyStage(score))
+  ).length;
+  const approved = scores.filter((score) => ["visa_approved", "enrolled"].includes(getJourneyStage(score))).length;
+  const overdueTasks = scores.reduce((sum, score) => sum + number(getScoreValue(score, "overdue_tasks_count"), 0), 0);
+  const pendingTasks = scores.reduce((sum, score) => sum + number(getScoreValue(score, "pending_tasks_count"), 0), 0);
+  const weakDocs = scores.filter((score) => number(getScoreValue(score, "document_readiness_percent"), 100) < 70).length;
+  const staleStudents = scores.filter((score) => number(getScoreValue(score, "days_since_updated"), 0) >= 10).length;
+  const automationCoverage = operations?.health?.automation || 0;
+  const verificationHealth = Math.max(0, Math.min(99, Math.round(((operations?.health?.applications || 0) + (operations?.health?.documents || 0) + (operations?.health?.tasks || 0)) / 3)));
+  const revenuePressure = operations?.revenue?.conversionReady || 0;
+  const collectionRisk = operations?.revenue?.paymentRiskStudents || 0;
+
+  return {
+    headline: {
+      platformHealth: Math.round(((operations?.health?.applications || 0) + (operations?.health?.universities || 0) + (operations?.health?.visa || 0) + (operations?.health?.documents || 0) + (operations?.health?.tasks || 0) + automationCoverage) / 6),
+      executiveRisk: alertSnapshot?.critical || commandMetrics?.critical || 0,
+      opportunities: commandMetrics?.executivePriority || 0,
+      conversionReady: commandMetrics?.conversionReady || revenuePressure || 0,
+    },
+    journey: [
+      { label: "Students", value: total, detail: "Scored records", tone: "gold" },
+      { label: "Applications", value: applications, detail: "Started/submitted/review", tone: "blue" },
+      { label: "Offers", value: offers, detail: "Received or accepted", tone: "green" },
+      { label: "CAS", value: cas, detail: "Pending or issued", tone: "orange" },
+      { label: "Visa", value: visas, detail: `${approved} approved/enrolled`, tone: "blue" },
+      { label: "Revenue", value: revenuePressure, detail: `${collectionRisk} collection risk`, tone: "green" },
+    ],
+    systems: [
+      { label: "Student OS", value: `${operations?.health?.applications || 0}%`, detail: "Journey coverage", tone: "gold" },
+      { label: "Counselor OS", value: pendingTasks, detail: `${overdueTasks} overdue tasks`, tone: overdueTasks > 0 ? "orange" : "green" },
+      { label: "University OS", value: `${operations?.health?.universities || 0}%`, detail: "Planning coverage", tone: "blue" },
+      { label: "Application OS", value: applications, detail: "Active application movement", tone: "blue" },
+      { label: "Visa OS", value: visas, detail: `${alertSnapshot?.visa || 0} visa watch`, tone: "orange" },
+      { label: "Payment OS", value: collectionRisk, detail: "Payment risk watch", tone: collectionRisk > 0 ? "orange" : "green" },
+      { label: "Analytics OS", value: "Live", detail: "Executive reporting connected", tone: "gold" },
+      { label: "Knowledge OS", value: "Live", detail: "SOP, training, policy layer", tone: "gold" },
+      { label: "Communication OS", value: staleStudents, detail: "Students needing follow-up", tone: staleStudents > 0 ? "orange" : "green" },
+      { label: "Partner OS", value: "Live", detail: "Agent and university partner layer", tone: "gold" },
+      { label: "AI Command", value: "Live", detail: "Prediction and intelligence layer", tone: "gold" },
+      { label: "Verification", value: `${verificationHealth}%`, detail: "Readiness estimate", tone: verificationHealth >= 85 ? "green" : "orange" },
+    ],
+    riskFeed: [
+      { label: "Critical Students", value: alertSnapshot?.critical || 0, detail: "Immediate executive attention", tone: "red" },
+      { label: "High Risk", value: alertSnapshot?.high || 0, detail: "Needs counselor ownership", tone: "orange" },
+      { label: "Weak Documents", value: weakDocs, detail: "Document readiness below 70%", tone: weakDocs > 0 ? "orange" : "green" },
+      { label: "Stale Records", value: staleStudents, detail: "No movement for 10+ days", tone: staleStudents > 0 ? "orange" : "green" },
+    ],
+  };
+}
+
 function ExecutiveCommandSystem({ adminProfile = null }) {
   const [scores, setScores] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -305,6 +517,50 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
   const commandMetrics = useMemo(() => buildCommandMetrics(scores), [scores]);
   const operations = useMemo(() => buildOperationsCenter(scores), [scores]);
   const alertSnapshot = useMemo(() => buildExecutiveAlertSnapshot(scores), [scores]);
+  const executiveSnapshotV2 = useMemo(
+    () => buildExecutiveSnapshotV2(scores, operations, commandMetrics, alertSnapshot),
+    [scores, operations, commandMetrics, alertSnapshot]
+  );
+
+  const platformVerificationSnapshot = useMemo(
+    () =>
+      normalizeExecutiveVerificationSnapshot(
+        runVerificationBuilder(buildExecutiveVerificationSnapshot, scores, { recoveryQueue: [] })
+      ),
+    [scores]
+  );
+
+  const brokenWorkflowScanner = useMemo(
+    () =>
+      normalizeWorkflowScanner(
+        runVerificationBuilder(buildBrokenWorkflowScannerSnapshot, scores, { brokenWorkflows: [] })
+      ),
+    [scores]
+  );
+
+  const workflowIntegrity = useMemo(
+    () =>
+      normalizeWorkflowIntegrity(
+        runVerificationBuilder(buildWorkflowIntegrityScore, scores, { overallIntegrity: 0 })
+      ),
+    [scores]
+  );
+
+  const productionReadiness = useMemo(
+    () =>
+      normalizeProductionReadiness(
+        runVerificationBuilder(generateProductionReadinessReport, scores, { readinessScore: 0, goLiveStatus: "no_go" })
+      ),
+    [scores]
+  );
+
+  const executiveRecoveryActions = useMemo(
+    () =>
+      normalizeExecutiveRecoveryActions(
+        runVerificationBuilder(buildExecutiveRecoveryActions, scores, { immediateActions: [], executiveActions: [], counselorActions: [] })
+      ),
+    [scores]
+  );
 
   const handleGenerated = async () => {
     await loadExecutiveScores();
@@ -359,7 +615,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
           </div>
         ) : null}
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-8">
+        <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-10">
           <SummaryCard label="Students Scored" value={summary?.total || commandMetrics.total} />
           <SummaryCard label="Critical Risk" value={summary?.criticalRisk || summary?.critical || commandMetrics.critical} tone="red" />
           <SummaryCard label="Executive Priority" value={commandMetrics.executivePriority} tone="gold" />
@@ -368,9 +624,21 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
           <SummaryCard label="Success Stories" value={summary?.successStories || commandMetrics.successStories} tone="green" />
           <SummaryCard label="Avg Risk" value={summary?.averageRisk || commandMetrics.averageRisk} tone="orange" />
           <SummaryCard label="Avg Opportunity" value={summary?.averageOpportunity || commandMetrics.averageOpportunity} tone="green" />
+          <SummaryCard label="Workflow Integrity" value={`${workflowIntegrity.overallIntegrity || 0}%`} tone={(workflowIntegrity.overallIntegrity || 0) >= 75 ? "green" : "orange"} />
+          <SummaryCard label="Production Ready" value={`${productionReadiness.readinessScore || 0}%`} tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)} />
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <ExecutiveSnapshotV2
+          snapshot={executiveSnapshotV2}
+          setActiveView={setActiveView}
+          verificationSnapshot={platformVerificationSnapshot}
+          workflowScanner={brokenWorkflowScanner}
+          workflowIntegrity={workflowIntegrity}
+          productionReadiness={productionReadiness}
+          executiveRecoveryActions={executiveRecoveryActions}
+        />
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <CommandLaunchCard
             title="Notification Center"
             value={alertSnapshot.total}
@@ -399,6 +667,56 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
             tone="blue"
             onClick={() => setActiveView("operations")}
           />
+          <CommandLaunchCard
+            title="Verification Readiness"
+            value={`${productionReadiness.readinessScore || 0}%`}
+            detail={`${brokenWorkflowScanner.totalBrokenWorkflows || 0} broken workflows • ${workflowIntegrity.overallIntegrity || 0}% integrity`}
+            tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)}
+            onClick={() => setActiveView("verification")}
+          />
+
+          <CommandLaunchCard
+            title="Founder Growth"
+            value={`${commandMetrics.conversionReady || 0}`}
+            detail="Funnel, revenue, market demand, counselor performance"
+            tone="gold"
+            onClick={() => setActiveView("founder-growth")}
+          />
+          <CommandLaunchCard
+            title="Analytics OS"
+            value="Live"
+            detail="KPI command, BI, forecasts, trends, reports"
+            tone="blue"
+            onClick={() => setActiveView("analytics-os")}
+          />
+          <CommandLaunchCard
+            title="Knowledge OS"
+            value="Live"
+            detail="SOP, training, university, visa, policy hub"
+            tone="gold"
+            onClick={() => setActiveView("knowledge-os")}
+          />
+          <CommandLaunchCard
+            title="Communication OS"
+            value={operations.today.communicationFollowups}
+            detail="Email, WhatsApp, calls, meetings, follow-ups"
+            tone="blue"
+            onClick={() => setActiveView("communication-os")}
+          />
+          <CommandLaunchCard
+            title="Partner OS"
+            value="Live"
+            detail="Agents, universities, commissions, partner analytics"
+            tone="green"
+            onClick={() => setActiveView("partner-os")}
+          />
+          <CommandLaunchCard
+            title="AI Command OS"
+            value="Live"
+            detail="Copilot, forecasts, workflow, cross-system intelligence"
+            tone="gold"
+            onClick={() => setActiveView("ai-command")}
+          />
         </div>
       </div>
 
@@ -406,6 +724,85 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
 
       {activeView === "operations" ? (
         <ExecutiveOperationsCenter operations={operations} totalStudents={scores.length} />
+      ) : null}
+
+      {activeView === "verification" ? (
+        <ExecutiveVerificationReadinessPanel
+          productionReadiness={productionReadiness}
+          workflowIntegrity={workflowIntegrity}
+          workflowScanner={brokenWorkflowScanner}
+          verificationSnapshot={platformVerificationSnapshot}
+          executiveRecoveryActions={executiveRecoveryActions}
+        />
+      ) : null}
+
+      {activeView === "founder-growth" ? (
+        <FounderGrowthDashboard
+          snapshot={{
+            students: scores,
+            applications: scores.filter((score) =>
+              ["application_started", "application_submitted", "application_under_review"].includes(getJourneyStage(score))
+            ),
+            offers: scores.filter((score) =>
+              ["offer_received", "offer_accepted"].includes(getJourneyStage(score))
+            ),
+            casRecords: scores.filter((score) =>
+              ["cas_pending", "cas_issued"].includes(getJourneyStage(score))
+            ),
+            visas: scores.filter((score) =>
+              ["visa_pending", "visa_rejected", "visa_approved", "enrolled"].includes(getJourneyStage(score))
+            ),
+            tasks: scores.flatMap((score) => {
+              const pending = number(getScoreValue(score, "pending_tasks_count"), 0);
+              const overdue = number(getScoreValue(score, "overdue_tasks_count"), 0);
+              return Array.from({ length: pending + overdue }).map((_, index) => ({
+                id: `${score.student_id || score.id || "student"}-task-${index}`,
+                student_name: getStudentName(score),
+                status: index < overdue ? "overdue" : "pending",
+                assigned_counselor: score.assigned_counselor || score.counselor_name || score.assigned_to,
+              }));
+            }),
+            supportRequests: scores
+              .filter((score) => number(getScoreValue(score, "support_requests_count"), 0) > 0)
+              .map((score) => ({
+                id: `${score.student_id || score.id || "student"}-support`,
+                student_name: getStudentName(score),
+                status: "open",
+                assigned_counselor: score.assigned_counselor || score.counselor_name || score.assigned_to,
+              })),
+          }}
+          executiveSnapshot={{
+            scores,
+            summary,
+            operations,
+            commandMetrics,
+            alertSnapshot,
+          }}
+          counselorSnapshot={{ students: scores }}
+          paymentSnapshot={{ invoices: [], payments: [] }}
+          adminProfile={adminProfile}
+          onRefresh={loadExecutiveScores}
+        />
+      ) : null}
+
+      {activeView === "analytics-os" ? (
+        <AnalyticsOSDashboard adminProfile={adminProfile} />
+      ) : null}
+
+      {activeView === "knowledge-os" ? (
+        <KnowledgeOSDashboard adminProfile={adminProfile} />
+      ) : null}
+
+      {activeView === "communication-os" ? (
+        <CommunicationOSDashboard adminProfile={adminProfile} />
+      ) : null}
+
+      {activeView === "partner-os" ? (
+        <PartnerOSDashboard adminProfile={adminProfile} />
+      ) : null}
+
+      {activeView === "ai-command" ? (
+        <AICommandCenter adminProfile={adminProfile} />
       ) : null}
 
       {activeView === "intelligence" ? (
@@ -483,6 +880,175 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
   );
 }
 
+
+function ExecutiveSnapshotV2({
+  snapshot = {},
+  setActiveView,
+  verificationSnapshot = {},
+  workflowScanner = {},
+  workflowIntegrity = {},
+  productionReadiness = {},
+  executiveRecoveryActions = {},
+}) {
+  const headline = snapshot.headline || {};
+  const journey = snapshot.journey || [];
+  const systems = snapshot.systems || [];
+  const riskFeed = snapshot.riskFeed || [];
+  const readinessScore = productionReadiness.readinessScore || 0;
+  const integrityScore = workflowIntegrity.overallIntegrity || 0;
+  const brokenWorkflows = workflowScanner.totalBrokenWorkflows || 0;
+  const criticalFailures = workflowScanner.criticalFailures?.length || 0;
+  const recoveryTotal =
+    executiveRecoveryActions?.totals?.total ||
+    executiveRecoveryActions?.totals?.immediate ||
+    verificationSnapshot?.recoveryQueue?.length ||
+    0;
+
+  return (
+    <div className="mt-6 space-y-5 rounded-[2rem] border border-white/10 bg-black/25 p-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+            Executive Snapshot V2
+          </p>
+          <h3 className="mt-2 text-2xl font-black text-white">
+            Unified Enterprise Health Wall
+          </h3>
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-white/45">
+            One view across students, applications, CAS, visa, revenue, tasks, communication, partners,
+            analytics, AI, automation, and verification. This is the new top-level snapshot before full verification.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <MiniSnapshotMetric label="Platform" value={`${headline.platformHealth || 0}%`} tone="green" />
+          <MiniSnapshotMetric label="Risk" value={headline.executiveRisk || 0} tone="red" />
+          <MiniSnapshotMetric label="Priority" value={headline.opportunities || 0} tone="gold" />
+          <MiniSnapshotMetric label="Ready" value={headline.conversionReady || 0} tone="blue" />
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <SnapshotTile
+          label="Production Readiness"
+          value={`${readinessScore}%`}
+          detail={formatLabel(productionReadiness.goLiveStatus || "not_ready")}
+          tone={readinessScore >= 75 ? "green" : "red"}
+        />
+        <SnapshotTile
+          label="Workflow Integrity"
+          value={`${integrityScore}%`}
+          detail="Inquiry, application, visa, payment, portal, enterprise integrity"
+          tone={integrityScore >= 75 ? "green" : "orange"}
+        />
+        <SnapshotTile
+          label="Broken Workflows"
+          value={brokenWorkflows}
+          detail={`${criticalFailures} critical failures detected`}
+          tone={criticalFailures > 0 ? "red" : brokenWorkflows > 0 ? "orange" : "green"}
+        />
+        <SnapshotTile
+          label="Recovery Queue"
+          value={recoveryTotal}
+          detail="Immediate executive/counselor recovery actions"
+          tone={recoveryTotal > 0 ? "gold" : "green"}
+        />
+        <button
+          type="button"
+          onClick={() => setActiveView?.("verification")}
+          className="rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-left transition hover:-translate-y-0.5 hover:bg-[#D4AF37] hover:text-black"
+        >
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">
+            Verification Center
+          </p>
+          <p className="mt-3 text-2xl font-black text-white">Open</p>
+          <p className="mt-2 text-xs leading-5 text-white/45">
+            Full workflow scanner and launch readiness report
+          </p>
+        </button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        {journey.map((item) => (
+          <SnapshotTile key={item.label} {...item} />
+        ))}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.025] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+                System Coverage
+              </p>
+              <h4 className="mt-1 font-black text-white">Enterprise OS connection status</h4>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveView?.("ai-command")}
+              className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black"
+            >
+              Open AI Command
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {systems.map((item) => (
+              <SnapshotTile key={item.label} compact {...item} />
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[1.5rem] border border-red-400/20 bg-red-500/[0.035] p-4">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-red-300/80">
+            Executive Risk Feed
+          </p>
+          <h4 className="mt-1 font-black text-white">What needs attention first</h4>
+
+          <div className="mt-4 space-y-3">
+            {riskFeed.map((item) => (
+              <SnapshotRiskRow key={item.label} {...item} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniSnapshotMetric({ label, value, tone = "default" }) {
+  return (
+    <div className={`rounded-2xl border p-3 ${getToneStyle(tone)}`}>
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function SnapshotTile({ label, value, detail, tone = "default", compact = false }) {
+  return (
+    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black text-white`}>{value}</p>
+      <p className="mt-2 text-xs leading-5 text-white/40">{detail}</p>
+    </div>
+  );
+}
+
+function SnapshotRiskRow({ label, value, detail, tone = "default" }) {
+  return (
+    <div className={`flex items-start justify-between gap-3 rounded-2xl border p-4 ${getToneStyle(tone)}`}>
+      <div>
+        <p className="font-black text-white">{label}</p>
+        <p className="mt-1 text-xs leading-5 text-white/40">{detail}</p>
+      </div>
+      <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-sm font-black text-white">
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function ExecutiveOperationsCenter({ operations, totalStudents = 0 }) {
   const stageRows = [
     ["Not Started", operations.stages.notStarted, "Students with no active application movement."],
@@ -551,6 +1117,215 @@ function ExecutiveOperationsCenter({ operations, totalStudents = 0 }) {
       </div>
 
       <OperationsHealthPanel health={operations.health} />
+    </div>
+  );
+}
+
+function ExecutiveVerificationReadinessPanel({
+  productionReadiness = {},
+  workflowIntegrity = {},
+  workflowScanner = {},
+  verificationSnapshot = {},
+  executiveRecoveryActions = {},
+}) {
+  const blockers = productionReadiness.launchBlockers || [];
+  const criticalIssues = productionReadiness.criticalIssues || [];
+  const topBrokenWorkflows = workflowScanner.brokenWorkflows?.slice(0, 8) || [];
+  const recoveryActions = [
+    ...(executiveRecoveryActions.immediateActions || []),
+    ...(executiveRecoveryActions.executiveActions || []),
+    ...(executiveRecoveryActions.counselorActions || []),
+  ].slice(0, 10);
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+          Platform Verification V4
+        </p>
+        <h3 className="mt-2 text-2xl font-black text-white">
+          Workflow Integrity & Production Readiness
+        </h3>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-white/55">
+          Final launch-readiness layer across broken workflows, recovery actions,
+          stage integrity, platform health, and executive blockers.
+        </p>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <SummaryCard
+            label="Readiness Score"
+            value={`${productionReadiness.readinessScore || 0}%`}
+            tone={(productionReadiness.readinessScore || 0) >= 75 ? "green" : "red"}
+          />
+          <SummaryCard
+            label="Go Live Status"
+            value={formatLabel(productionReadiness.goLiveStatus || "not_ready")}
+            tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)}
+          />
+          <SummaryCard
+            label="Workflow Integrity"
+            value={`${workflowIntegrity.overallIntegrity || 0}%`}
+            tone={(workflowIntegrity.overallIntegrity || 0) >= 75 ? "green" : "orange"}
+          />
+          <SummaryCard
+            label="Broken Workflows"
+            value={workflowScanner.totalBrokenWorkflows || 0}
+            tone={(workflowScanner.totalBrokenWorkflows || 0) > 0 ? "red" : "green"}
+          />
+          <SummaryCard
+            label="Recovery Queue"
+            value={verificationSnapshot.recoveryQueue?.length || 0}
+            tone={(verificationSnapshot.recoveryQueue?.length || 0) > 0 ? "gold" : "green"}
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="space-y-6">
+          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+            <SectionHeader
+              eyebrow="Integrity Score"
+              title="Workflow integrity breakdown"
+              description="Weighted score across inquiry, application, visa, payment, portal, and enterprise systems."
+            />
+
+            <div className="mt-5 grid gap-3">
+              <HealthProgress label="Inquiry" value={workflowIntegrity.inquiryIntegrity || 0} />
+              <HealthProgress label="Application" value={workflowIntegrity.applicationIntegrity || 0} />
+              <HealthProgress label="Visa" value={workflowIntegrity.visaIntegrity || 0} />
+              <HealthProgress label="Payment" value={workflowIntegrity.paymentIntegrity || 0} />
+              <HealthProgress label="Portal" value={workflowIntegrity.portalIntegrity || 0} />
+              <HealthProgress label="Enterprise" value={workflowIntegrity.enterpriseIntegrity || 0} />
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-red-400/20 bg-red-500/[0.04] p-5">
+            <SectionHeader
+              eyebrow="Launch Blockers"
+              title="Issues blocking clean launch"
+              description="Critical and high readiness blockers produced by the production readiness report."
+            />
+
+            <div className="mt-4 space-y-3">
+              {blockers.length ? (
+                blockers.map((blocker, index) => (
+                  <ReadinessIssueRow
+                    key={`${blocker.title}-${index}`}
+                    title={blocker.title}
+                    detail={blocker.description}
+                    severity={blocker.severity}
+                  />
+                ))
+              ) : (
+                <EmptyState text="No launch blockers detected by the readiness report." />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-[1.75rem] border border-orange-400/20 bg-orange-500/[0.04] p-5">
+            <SectionHeader
+              eyebrow="Broken Workflow Scanner"
+              title="Detected workflow breaks"
+              description="Missing transitions, orphan records, stalled students, portal/payment gaps, and counselor backlog."
+            />
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+              <WatchMetric label="Critical" value={workflowScanner.severityBreakdown?.critical || 0} tone="red" />
+              <WatchMetric label="High" value={workflowScanner.severityBreakdown?.high || 0} tone="orange" />
+              <WatchMetric label="Stalled" value={workflowScanner.stalledStudents?.length || 0} tone="yellow" />
+              <WatchMetric label="Missing Transitions" value={workflowScanner.missingTransitions?.length || 0} tone="blue" />
+              <WatchMetric label="Orphan Records" value={workflowScanner.orphanRecords?.length || 0} tone="orange" />
+              <WatchMetric label="Critical Failures" value={workflowScanner.criticalFailures?.length || 0} tone="red" />
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {topBrokenWorkflows.length ? (
+                topBrokenWorkflows.map((issue) => (
+                  <ReadinessIssueRow
+                    key={issue.id}
+                    title={issue.title}
+                    detail={`${issue.student_name} • ${issue.description}`}
+                    severity={issue.severity}
+                  />
+                ))
+              ) : (
+                <EmptyState text="No broken workflows detected." />
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+            <SectionHeader
+              eyebrow="Executive Recovery"
+              title="Next recovery actions"
+              description="Highest priority recovery queue items from the verification engine."
+            />
+
+            <div className="mt-4 space-y-3">
+              {recoveryActions.length ? (
+                recoveryActions.map((action, index) => (
+                  <ReadinessIssueRow
+                    key={`${action.id || action.title}-${index}`}
+                    title={action.title}
+                    detail={`${action.student_name || "Unknown Student"} • ${action.description}`}
+                    severity={action.priority}
+                  />
+                ))
+              ) : (
+                <EmptyState text="No recovery actions required." />
+              )}
+            </div>
+          </div>
+
+          {criticalIssues.length ? (
+            <div className="rounded-[1.75rem] border border-red-400/20 bg-red-500/[0.04] p-5">
+              <SectionHeader
+                eyebrow="Critical Issues"
+                title="Executive intervention required"
+                description="Critical failures that should be resolved before full launch."
+              />
+
+              <div className="mt-4 space-y-3">
+                {criticalIssues.slice(0, 6).map((issue) => (
+                  <ReadinessIssueRow
+                    key={issue.id}
+                    title={issue.title}
+                    detail={`${issue.student_name} • ${issue.description}`}
+                    severity="critical"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReadinessIssueRow({ title, detail, severity = "medium" }) {
+  const tone =
+    severity === "critical" || severity === "urgent"
+      ? "red"
+      : severity === "high"
+        ? "orange"
+        : severity === "medium"
+          ? "yellow"
+          : "blue";
+
+  return (
+    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-black text-white">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-white/45">{detail}</p>
+        </div>
+        <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/55">
+          {formatLabel(severity)}
+        </span>
+      </div>
     </div>
   );
 }
@@ -644,6 +1419,15 @@ function CommandTabs({ activeView, setActiveView }) {
   { key: "actions", label: "Actions" },
 
   { key: "bulk-operations", label: "Bulk Operations" },
+  { key: "verification", label: "Verification Readiness" },
+
+  { key: "founder-growth", label: "Founder Growth" },
+
+  { key: "analytics-os", label: "Analytics OS" },
+  { key: "knowledge-os", label: "Knowledge OS" },
+  { key: "communication-os", label: "Communication OS" },
+  { key: "partner-os", label: "Partner OS" },
+  { key: "ai-command", label: "AI Command OS" },
 
   { key: "automation-control", label: "Automation Control" },
   { key: "automation", label: "Automation Analytics" },

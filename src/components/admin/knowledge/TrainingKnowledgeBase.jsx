@@ -1,0 +1,28 @@
+import React, { useMemo, useState } from "react";
+import { GraduationCap, PlayCircle, CheckCircle2, Users, Search, Award, Clock, Target, BookOpenCheck, TrendingUp } from "lucide-react";
+
+const courses = [
+  { id: "TRN-001", title: "Student OS Daily Operations", track: "Core", audience: "Counselors", level: "Foundation", lessons: 12, completion: 93, status: "Live", owner: "Training Lead", updated: "2026-06-09" },
+  { id: "TRN-006", title: "Counselor Portal Masterclass", track: "Counselor OS", audience: "Counselors", level: "Advanced", lessons: 16, completion: 88, status: "Live", owner: "Training Lead", updated: "2026-06-08" },
+  { id: "TRN-011", title: "Application + CAS Operating Standards", track: "Application OS", audience: "Application Team", level: "Advanced", lessons: 14, completion: 81, status: "Live", owner: "CAS Desk", updated: "2026-06-07" },
+  { id: "TRN-019", title: "Executive Recovery Queue Training", track: "Executive AI", audience: "Managers", level: "Leadership", lessons: 9, completion: 62, status: "Draft", owner: "Automation Lead", updated: "2026-06-05" },
+  { id: "TRN-024", title: "Finance OS Payment Verification", track: "Finance", audience: "Finance Team", level: "Specialist", lessons: 10, completion: 78, status: "Review", owner: "Finance OS", updated: "2026-06-06" }
+];
+
+function Metric({ icon: Icon, label, value, note }) { return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><Icon className="text-blue-600" /><div className="mt-3 text-2xl font-black">{value}</div><div className="text-sm font-semibold text-slate-700">{label}</div><div className="text-xs text-slate-500">{note}</div></div>; }
+function Pill({ children }) { return <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700">{children}</span>; }
+
+export default function TrainingKnowledgeBase({ compact = false }) {
+  const [query, setQuery] = useState("");
+  const visible = useMemo(() => courses.filter((course) => !query || Object.values(course).join(" ").toLowerCase().includes(query.toLowerCase())), [query]);
+  const avgCompletion = Math.round(courses.reduce((sum, c) => sum + c.completion, 0) / courses.length);
+
+  return <div className="space-y-6">
+    <div className="grid gap-4 md:grid-cols-4"><Metric icon={GraduationCap} label="Courses" value={courses.length} note="Training modules" /><Metric icon={Users} label="Audience Groups" value="5" note="Role-based coverage" /><Metric icon={Award} label="Completion" value={`${avgCompletion}%`} note="Average progress" /><Metric icon={Target} label="Skill Gaps" value="2" note="Need manager focus" /></div>
+    <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><h2 className="text-lg font-black">Training Knowledge Base</h2><p className="text-sm text-slate-500">Structured enablement center for counselors, application team, finance, leadership and automation operators.</p></div><div className="relative"><Search className="absolute left-3 top-2.5 text-slate-400" size={16}/><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search training" className="rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none"/></div></div>
+      <div className="mt-5 grid gap-4">{visible.map((course)=><div key={course.id} className="rounded-3xl border border-slate-100 p-4 hover:bg-slate-50"><div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-900">{course.title}</h3><Pill>{course.status}</Pill><Pill>{course.level}</Pill></div><p className="mt-1 text-sm text-slate-500">{course.id} · {course.track} · {course.audience} · Owner: {course.owner}</p></div><button className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-bold text-white"><PlayCircle size={15}/> Open</button></div><div className="mt-4 grid gap-3 md:grid-cols-3"><div className="rounded-2xl bg-slate-50 p-3 text-sm"><BookOpenCheck size={15}/><div className="mt-1 font-bold">{course.lessons} Lessons</div></div><div className="rounded-2xl bg-slate-50 p-3 text-sm"><Clock size={15}/><div className="mt-1 font-bold">Updated {course.updated}</div></div><div className="rounded-2xl bg-slate-50 p-3 text-sm"><TrendingUp size={15}/><div className="mt-1 font-bold">{course.completion}% Complete</div></div></div><div className="mt-3 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-blue-600" style={{width:`${course.completion}%`}}/></div></div>)}</div></div>
+      <div className="space-y-6"><div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="font-black">Certification Pipeline</h3><div className="mt-4 space-y-3">{["Counselor Foundation", "Application Specialist", "Visa Evidence Specialist", "Executive Operator"].map((x,i)=><div key={x} className="flex items-center justify-between rounded-2xl bg-slate-50 p-3"><span className="font-semibold">{x}</span><span className="text-sm text-slate-500">{[18,9,7,3][i]} certified</span></div>)}</div></div>{!compact && <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="font-black">Training Actions</h3><div className="mt-4 space-y-3"><button className="w-full rounded-2xl bg-slate-900 p-3 text-sm font-bold text-white">Assign Missing Training</button><button className="w-full rounded-2xl border border-slate-200 p-3 text-sm font-bold text-slate-700">Export Completion Report</button></div></div>}</div>
+    </div>
+  </div>;
+}

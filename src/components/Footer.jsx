@@ -6,250 +6,397 @@ import {
   FaEnvelope,
   FaPhoneAlt,
   FaMapMarkerAlt,
+  FaArrowRight,
+  FaGraduationCap,
+  FaPassport,
+  FaUniversity,
+  FaPlaneDeparture,
 } from "react-icons/fa";
+
+const whatsappNumber = "923305718131";
+const whatsappMessage = encodeURIComponent(
+  "Hello Zaifan Consultancy, I want to book a free study abroad consultation."
+);
+
+function buildAppointmentServiceLink(serviceTitle) {
+  const serviceParam = encodeURIComponent(
+    serviceTitle.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-")
+  );
+
+  return `/appointment?service=${serviceParam}`;
+}
 
 function Footer() {
   const quickLinks = [
     { name: "Home", href: "#home" },
-    { name: "Services", href: "#services" },
-    { name: "About", href: "#about" },
+    { name: "Dream Support", href: "#dream-support" },
     { name: "Countries", href: "#countries" },
+    { name: "Universities", href: "#universities" },
     { name: "Contact", href: "#contact" },
   ];
 
   const services = [
-    "University Admissions",
-    "Scholarship Assistance",
-    "Visa Guidance",
-    "SOP & Documentation",
+    "Scholarships & Funding",
     "Application Support",
+    "Visa Assistance",
+    "Student Housing",
+    "Test Preparation",
+    "Career Advice",
   ];
 
+  const destinations = [
+    "United Kingdom",
+    "Canada",
+    "Australia",
+    "Germany",
+    "Italy",
+    "Turkey",
+  ];
+
+  const highlights = [
+    {
+      icon: <FaUniversity />,
+      title: "University Matching",
+      text: "Find universities that fit your goals.",
+    },
+    {
+      icon: <FaGraduationCap />,
+      title: "Scholarship Routes",
+      text: "Discover funding opportunities.",
+    },
+    {
+      icon: <FaPassport />,
+      title: "Visa Support",
+      text: "Prepare your visa path clearly.",
+    },
+  ];
+
+  const scrollToTop = (event) => {
+    event.preventDefault();
+
+    if (typeof window === "undefined") return;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-[#050505] px-6 pt-24 pb-8 text-white">
-      {/* BACKGROUND BLOBS */}
-      <div className="absolute right-[-12%] top-[-20%] h-[520px] w-[520px] rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-      <div className="absolute bottom-[-25%] left-[-12%] h-[520px] w-[520px] rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
+    <footer className="relative overflow-hidden bg-[#fff7ed] px-4 pb-8 pt-14 text-[#071b3a] sm:px-6 lg:px-8">
+      <style>{`
+        @keyframes footerTrailMove {
+          0% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: -170; }
+        }
 
-      <div className="relative mx-auto max-w-7xl">
-        {/* MAIN FOOTER CARD */}
-        <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl md:p-10">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-100"></div>
+        @keyframes footerFloat {
+          0%, 100% { transform: translateY(0px) rotate(-8deg); }
+          50% { transform: translateY(-12px) rotate(4deg); }
+        }
 
-          <div className="grid gap-12 lg:grid-cols-4">
-            {/* BRAND */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D4AF37]/40 bg-[#D4AF37]/15 text-2xl font-extrabold text-[#E7C768] shadow-[0_0_35px_rgba(212,175,55,0.18)]">
+        .footer-trail {
+          animation: footerTrailMove 9s linear infinite;
+        }
+
+        .footer-float {
+          animation: footerFloat 4.8s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .footer-trail,
+          .footer-float {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[-10%] top-[-18%] h-[540px] w-[540px] rounded-full bg-orange-200/45 blur-3xl" />
+        <div className="absolute right-[-12%] bottom-[-28%] h-[560px] w-[560px] rounded-full bg-orange-100/90 blur-3xl" />
+        <div className="absolute left-[35%] top-[12%] h-32 w-32 rounded-full bg-white/80 blur-2xl" />
+
+        <svg
+          className="absolute left-0 top-4 h-[240px] w-full opacity-80"
+          viewBox="0 0 1440 240"
+          fill="none"
+          preserveAspectRatio="none"
+        >
+          <path
+            className="footer-trail"
+            d="M-40 140 C130 35 270 185 455 82 C635 -18 765 180 955 82 C1145 -20 1285 85 1490 35"
+            stroke="#fb923c"
+            strokeWidth="2.8"
+            strokeDasharray="10 14"
+            strokeLinecap="round"
+            opacity="0.72"
+          />
+          <path
+            className="footer-trail"
+            d="M120 210 C300 90 455 220 620 120 C790 15 950 230 1120 110 C1260 12 1360 70 1460 42"
+            stroke="#fed7aa"
+            strokeWidth="2.5"
+            strokeDasharray="10 14"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
+        </svg>
+
+        <div className="footer-float absolute left-[7%] top-7 hidden h-16 w-16 items-center justify-center rounded-3xl bg-white/80 text-orange-500 shadow-xl lg:flex">
+          <FaPlaneDeparture className="h-8 w-8" />
+        </div>
+
+        <div className="absolute right-[8%] top-12 hidden h-20 w-28 rounded-full bg-white/75 shadow-[0_20px_60px_rgba(251,146,60,0.12)] lg:block">
+          <div className="absolute left-5 top-5 h-10 w-10 rounded-full bg-white" />
+          <div className="absolute left-10 top-2 h-14 w-14 rounded-full bg-white" />
+          <div className="absolute right-4 top-6 h-9 w-9 rounded-full bg-white" />
+        </div>
+
+        <div className="absolute left-[45%] top-24 text-4xl text-orange-400">
+          ✦
+        </div>
+        <div className="absolute right-[30%] bottom-28 text-3xl text-orange-300">
+          ✦
+        </div>
+      </div>
+
+      <div className="relative mx-auto max-w-[1500px]">
+        <div className="overflow-hidden rounded-[2.7rem] border border-orange-100 bg-white/78 p-6 shadow-[0_34px_100px_rgba(251,146,60,0.18)] backdrop-blur-xl sm:p-8 lg:p-10">
+          <div className="mb-10 grid gap-4 lg:grid-cols-3">
+            {highlights.map((item) => (
+              <div
+                key={item.title}
+                className="group rounded-[1.8rem] border border-orange-100 bg-gradient-to-br from-white to-orange-50/70 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(251,146,60,0.16)] focus-within:-translate-y-1"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-600/20 transition group-hover:scale-110">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-[#2d145f]">{item.title}</h4>
+                    <p className="mt-1 text-sm font-semibold text-slate-600">
+                      {item.text}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-10 lg:grid-cols-[1.45fr_0.8fr_0.95fr_0.9fr]">
+            <div>
+              <a
+                href="#home"
+                onClick={scrollToTop}
+                className="group inline-flex items-center gap-4 rounded-[1.8rem] outline-none focus:ring-4 focus:ring-orange-100"
+                aria-label="Back to top"
+              >
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-[1.7rem] bg-gradient-to-br from-orange-500 to-orange-700 text-4xl font-black text-white shadow-2xl shadow-orange-600/25 transition group-hover:-translate-y-1 group-hover:scale-105">
                   Z
+                  <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-orange-600 shadow-md">
+                    ✦
+                  </div>
                 </div>
 
                 <div>
-                  <h2 className="text-2xl font-extrabold">
+                  <h2 className="text-3xl font-black text-[#2d145f]">
                     Zaifan Consultancy
                   </h2>
-
-                  <p className="mt-1 text-xs uppercase tracking-[0.28em] text-[#D4AF37]">
+                  <p className="mt-1 text-xs font-black uppercase tracking-[0.28em] text-orange-600">
                     Study Abroad Guidance
                   </p>
                 </div>
-              </div>
+              </a>
 
-              <p className="mt-7 max-w-xl leading-relaxed text-gray-400">
-                Professional overseas education guidance for students planning
-                admissions, scholarships, documentation, and visa preparation
-                with clarity and confidence.
+              <p className="mt-6 max-w-xl text-base font-semibold leading-8 text-slate-600">
+                Helping students choose the right country, university,
+                scholarship route, documents and visa pathway with clear,
+                friendly guidance from first question to final departure.
               </p>
 
-              {/* CTA BUTTONS */}
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <a
-                  href="#contact"
-                  className="inline-flex items-center justify-center rounded-full bg-[#D4AF37] px-7 py-3 font-semibold text-black transition duration-300 hover:-translate-y-1 hover:bg-[#E7C768]"
+                  href="/appointment"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-7 py-4 font-black text-white shadow-xl shadow-orange-600/20 transition hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200"
                 >
                   Book Consultation
+                  <FaArrowRight className="text-sm" />
                 </a>
 
                 <a
-                  href="https://wa.me/923305718131"
+                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37]/30 bg-white/[0.04] px-7 py-3 font-semibold text-[#E7C768] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/10"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-green-300 bg-white px-7 py-4 font-black text-green-600 transition hover:-translate-y-1 hover:bg-green-50 focus:outline-none focus:ring-4 focus:ring-green-100"
                 >
                   <FaWhatsapp />
                   WhatsApp Us
                 </a>
               </div>
 
-              {/* SOCIALS */}
-              <div className="mt-8 flex gap-4">
-                <a
-                  href="#"
-                  aria-label="Facebook"
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-gray-300 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37] hover:text-black"
-                >
-                  <FaFacebookF />
-                </a>
-
-                <a
-                  href="#"
-                  aria-label="Instagram"
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-gray-300 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37] hover:text-black"
-                >
-                  <FaInstagram />
-                </a>
-
-                <a
-                  href="https://wa.me/923305718131"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="WhatsApp"
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-gray-300 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37] hover:text-black"
-                >
-                  <FaWhatsapp />
-                </a>
-
-                <a
-                  href="#"
-                  aria-label="LinkedIn"
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-gray-300 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37] hover:text-black"
-                >
-                  <FaLinkedinIn />
-                </a>
+              <div className="mt-7 flex gap-3" aria-label="Social links">
+                <SocialIcon icon={<FaFacebookF />} label="Facebook" href="#" />
+                <SocialIcon icon={<FaInstagram />} label="Instagram" href="#" />
+                <SocialIcon
+                  icon={<FaWhatsapp />}
+                  label="WhatsApp"
+                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                  external
+                />
+                <SocialIcon icon={<FaLinkedinIn />} label="LinkedIn" href="#" />
               </div>
-            </div>
 
-            {/* QUICK LINKS */}
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.28em] text-[#D4AF37]">
-                Quick Links
-              </h3>
-
-              <ul className="mt-7 space-y-4 text-gray-400">
-                {quickLinks.map((link) => (
-                  <li key={link.name}>
-                    <a
-                      href={link.href}
-                      className="transition duration-300 hover:pl-2 hover:text-[#D4AF37]"
-                    >
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* SERVICES */}
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.28em] text-[#D4AF37]">
-                Services
-              </h3>
-
-              <ul className="mt-7 space-y-4 text-gray-400">
-                {services.map((service) => (
-                  <li
-                    key={service}
-                    className="transition duration-300 hover:pl-2 hover:text-[#D4AF37]"
+              <div className="mt-6 flex flex-wrap gap-2">
+                {["Free consultation", "Profile review", "Visa roadmap"].map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-orange-700 ring-1 ring-orange-100"
                   >
-                    {service}
-                  </li>
+                    {item}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
+
+            <FooterColumn title="Quick Links" items={quickLinks} links />
+
+            <FooterColumn title="Services" items={services} />
+
+            <FooterColumn title="Destinations" items={destinations} destinations />
           </div>
         </div>
 
-        {/* CONTACT STRIP */}
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          <div className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055]">
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0 transition duration-500 group-hover:opacity-100"></div>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <ContactCard
+            icon={<FaPhoneAlt />}
+            label="Phone"
+            value="+92 330 5718131"
+            sub="+92 333 9396336"
+            href="tel:+923305718131"
+            color="orange"
+          />
 
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]">
-                <FaPhoneAlt />
-              </div>
+          <ContactCard
+            icon={<FaEnvelope />}
+            label="Email"
+            value="zaifanconsultancy@gmail.com"
+            sub="Send documents or questions anytime"
+            href="mailto:zaifanconsultancy@gmail.com"
+            color="purple"
+          />
 
-              <div>
-                <p className="text-sm uppercase tracking-[0.22em] text-gray-500">
-                  Phone
-                </p>
-
-                <a
-                  href="tel:+923305718131"
-                  className="mt-3 block font-semibold text-gray-200 transition hover:text-[#D4AF37]"
-                >
-                  +92 330 5718131
-                </a>
-
-                <a
-                  href="tel:+923339396336"
-                  className="mt-1 block font-semibold text-gray-200 transition hover:text-[#D4AF37]"
-                >
-                  +92 333 9396336
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055]">
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0 transition duration-500 group-hover:opacity-100"></div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]">
-                <FaEnvelope />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-sm uppercase tracking-[0.22em] text-gray-500">
-                  Email
-                </p>
-
-                <a
-                  href="mailto:zaifanconsultancy@gmail.com"
-                  className="mt-3 block break-words font-semibold text-gray-200 transition hover:text-[#D4AF37]"
-                >
-                  zaifanconsultancy@gmail.com
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055]">
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0 transition duration-500 group-hover:opacity-100"></div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]">
-                <FaMapMarkerAlt />
-              </div>
-
-              <div>
-                <p className="text-sm uppercase tracking-[0.22em] text-gray-500">
-                  Location
-                </p>
-
-                <h4 className="mt-3 font-semibold text-gray-200">
-                  Pakistan
-                </h4>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Online consultation available
-                </p>
-              </div>
-            </div>
-          </div>
+          <ContactCard
+            icon={<FaMapMarkerAlt />}
+            label="Location"
+            value="Pakistan"
+            sub="Online consultation available"
+            href="/appointment"
+            color="green"
+          />
         </div>
 
-        {/* BOTTOM BAR */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-center text-sm text-gray-500 md:flex-row md:text-left">
+        <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-orange-100 pt-7 text-center text-sm font-semibold text-slate-500 md:flex-row">
           <p>© 2026 Zaifan Consultancy. All rights reserved.</p>
 
           <p>
-            Built for students planning their{" "}
-            <span className="text-[#D4AF37]">global education journey.</span>
+            Built for every student chasing a{" "}
+            <span className="font-black text-orange-600">
+              global education dream.
+            </span>
           </p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({ title, items, links = false, destinations = false }) {
+  return (
+    <div>
+      <h3 className="text-sm font-black uppercase tracking-[0.24em] text-orange-600">
+        {title}
+      </h3>
+
+      <ul className="mt-6 space-y-3">
+        {items.map((item) => {
+          const name = links ? item.name : item;
+          const href = links
+            ? item.href
+            : destinations
+            ? `/appointment?country=${encodeURIComponent(item)}`
+            : buildAppointmentServiceLink(item);
+
+          return (
+            <li key={name}>
+              <a
+                href={href}
+                className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-600 transition hover:translate-x-1 hover:text-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-100"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition group-hover:bg-orange-600" />
+                {name}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function SocialIcon({ icon, label, href = "#", external = false }) {
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      aria-label={label}
+      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 shadow-sm transition hover:-translate-y-1 hover:bg-orange-600 hover:text-white hover:shadow-xl hover:shadow-orange-600/20 focus:outline-none focus:ring-4 focus:ring-orange-100"
+    >
+      {icon}
+    </a>
+  );
+}
+
+function ContactCard({ icon, label, value, sub, href, color }) {
+  const colorMap = {
+    orange: "bg-orange-50 text-orange-600 group-hover:bg-orange-600",
+    purple: "bg-purple-50 text-purple-600 group-hover:bg-purple-600",
+    green: "bg-green-50 text-green-600 group-hover:bg-green-600",
+  };
+
+  const content = (
+    <div className="group rounded-[2rem] border border-orange-100 bg-white/82 p-6 shadow-[0_18px_55px_rgba(251,146,60,0.11)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(251,146,60,0.18)]">
+      <div className="flex items-start gap-4">
+        <div
+          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl p-4 transition group-hover:text-white ${
+            colorMap[color] || colorMap.orange
+          }`}
+        >
+          {icon}
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-600">
+            {label}
+          </p>
+
+          <p className="mt-2 break-words font-black text-[#2d145f]">{value}</p>
+
+          <p className="mt-1 text-sm font-semibold text-slate-500">{sub}</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!href) return content;
+
+  return (
+    <a
+      href={href}
+      className="block rounded-[2rem] outline-none focus:ring-4 focus:ring-orange-100"
+    >
+      {content}
+    </a>
   );
 }
 

@@ -96,13 +96,194 @@ function mapTaskPriority(priority = "") {
   return "medium";
 }
 
+
+const V4_RECOVERY_ACTION_TYPES = new Set([
+  "recover_cas_workflow",
+  "verify_cas_blocker",
+  "create_cas_follow_up_task",
+  "write_cas_timeline_event",
+  "create_visa_tracking",
+  "create_visa_checklist_tasks",
+  "notify_counselor_visa_recovery",
+  "reconcile_payment_records",
+  "audit_receipts",
+  "write_payment_timeline_event",
+  "create_or_activate_portal_account",
+  "activate_portal_account",
+  "send_portal_access_message",
+  "write_portal_timeline_event",
+  "regenerate_timeline",
+  "create_document_recovery_tasks",
+  "draft_document_request",
+  "recover_overdue_tasks",
+  "create_executive_escalation",
+  "assign_senior_counselor",
+  "manual_recovery_review",
+]);
+
+function isV4RecoveryAction(action = "") {
+  return V4_RECOVERY_ACTION_TYPES.has(normalize(action));
+}
+
+function getRecoveryStage(recommendation = {}) {
+  return normalize(
+    recommendation.stage ||
+      recommendation.payload?.stage ||
+      recommendation.payload?.target_stage ||
+      recommendation.type ||
+      "workflow_recovery"
+  );
+}
+
+function getRecoveryTargetTable(action = "", stage = "", recommendation = {}) {
+  const explicit = recommendation.target_table || recommendation.payload?.target_table;
+  if (explicit) return explicit;
+
+  const cleanAction = normalize(action);
+  const cleanStage = normalize(stage);
+
+  if (cleanAction.includes("cas") || cleanStage === "cas") return "student_applications";
+  if (cleanAction.includes("visa") || cleanStage === "visa") return "student_visas";
+  if (cleanAction.includes("payment") || cleanAction.includes("reconcile")) return "student_invoices";
+  if (cleanAction.includes("receipt")) return "student_receipts";
+  if (cleanAction.includes("portal")) return "student_portal_accounts";
+  if (cleanAction.includes("timeline")) return "crm_timeline";
+  if (cleanAction.includes("document") || cleanAction.includes("task")) return "student_tasks";
+  if (cleanAction.includes("communication") || cleanAction.includes("message") || cleanAction.includes("notify")) {
+    return "student_communications";
+  }
+  if (cleanAction.includes("executive") || cleanAction.includes("escalation")) return "executive_recovery_queue";
+
+  return "executive_recovery_queue";
+}
+
+function getRecoveryTargetStatus(action = "", recommendation = {}) {
+  const explicit = recommendation.target_status || recommendation.payload?.target_status;
+  if (explicit) return explicit;
+
+  const cleanAction = normalize(action);
+
+  if (cleanAction.includes("timeline")) return "logged";
+  if (cleanAction.includes("draft") || cleanAction.includes("message") || cleanAction.includes("notify")) return "draft";
+  if (cleanAction.includes("activate")) return "active";
+  if (cleanAction.includes("reconcile")) return "reconciliation_required";
+  if (cleanAction.includes("audit")) return "audit_required";
+  if (cleanAction.includes("escalation")) return "critical";
+  if (cleanAction.includes("task")) return "pending";
+
+  return "recovery_required";
+}
+
+function buildRecoveryTitle(score = {}, recommendation = {}) {
+  const studentName = getStudentName(score);
+  const action = normalize(recommendation.action || recommendation.recovery_action || recommendation.action_type);
+  const stage = getRecoveryStage(recommendation).replace(/_/g, " ");
+
+  if (recommendation.title || recommendation.payload?.title) {
+    return recommendation.title || recommendation.payload?.title;
+  }
+
+  if (action.includes("cas")) return `CAS Recovery: ${studentName}`;
+  if (action.includes("visa")) return `Visa Recovery: ${studentName}`;
+  if (action.includes("payment") || action.includes("reconcile")) return `Payment Recovery: ${studentName}`;
+  if (action.includes("portal")) return `Portal Recovery: ${studentName}`;
+  if (action.includes("timeline")) return `Timeline Recovery: ${studentName}`;
+  if (action.includes("document")) return `Document Recovery: ${studentName}`;
+  if (action.includes("executive") || action.includes("escalation")) return `Executive Escalation: ${studentName}`;
+
+  return `Workflow Recovery (${stage}): ${studentName}`;
+}
+
+function buildRecoveryDescription(score = {}, recommendation = {}) {
+  const action = normalize(recommendation.action || recommendation.recovery_action || recommendation.action_type);
+  const fallback = getRecommendationText(
+    recommendation,
+    recommendation.recommendation || recommendation.description || "Recover this broken workflow and log the result."
+  );
+
+  if (fallback) return fallback;
+
+  if (action.includes("cas")) return "Verify CAS blocker, update application CAS status, create counselor follow-up, and log recovery timeline.";
+  if (action.includes("visa")) return "Create or recover visa tracking, generate visa checklist tasks, and notify counselor.";
+  if (action.includes("payment") || action.includes("reconcile")) return "Reconcile invoice, payment, and receipt records and log payment recovery.";
+  if (action.includes("portal")) return "Create, activate, or recover student portal access and log the portal recovery.";
+  if (action.includes("timeline")) return "Regenerate missing timeline evidence from student operational records.";
+  if (action.includes("document")) return "Create document recovery tasks and draft a student document request.";
+  if (action.includes("executive") || action.includes("escalation")) return "Create executive escalation with urgent recovery ownership and SLA.";
+
+  return "Review this broken workflow and complete the required recovery action.";
+}
+
+function buildV4RecoveryTemplate(score = {}, recommendation = {}) {
+  const actionType = normalize(
+    recommendation.action ||
+      recommendation.recovery_action ||
+      recommendation.action_type ||
+      recommendation.type ||
+      "manual_recovery_review"
+  );
+
+  const stage = getRecoveryStage(recommendation);
+  const title = buildRecoveryTitle(score, recommendation);
+  const description = buildRecoveryDescription(score, recommendation);
+  const base = {
+    ...basePayload(score, {
+      ...recommendation,
+      action: actionType,
+      priority: recommendation.priority || recommendation.severity || "high",
+    }),
+    ...(recommendation.payload || {}),
+  };
+
+  const targetTable = getRecoveryTargetTable(actionType, stage, recommendation);
+  const targetStatus = getRecoveryTargetStatus(actionType, recommendation);
+  const requiresApproval =
+    base.approval_required === true ||
+    ["critical", "executive", "urgent", "high"].includes(normalize(recommendation.priority || recommendation.severity));
+
+  return {
+    actionType,
+    title,
+    description,
+    duplicateKey: buildDuplicateKey(score, { ...recommendation, type: recommendation.type || stage }, actionType),
+    requiresApproval,
+    payload: enrichPayload(base, {
+      title,
+      description,
+      stage,
+      recovery_stage: stage,
+      recovery_action: actionType,
+      action_type: actionType,
+      issue_type: recommendation.issue_type || recommendation.type || recommendation.payload?.issue_type || "workflow_recovery",
+      severity: recommendation.severity || recommendation.priority || "high",
+      priority: recommendation.priority || recommendation.severity || "high",
+      target_table: targetTable,
+      target_status: targetStatus,
+      automation_template:
+        recommendation.automation_template ||
+        recommendation.payload?.automation_template ||
+        `${actionType}_template`,
+      approval_required: requiresApproval,
+      approval_reason:
+        recommendation.approval_reason ||
+        recommendation.payload?.approval_reason ||
+        (requiresApproval ? "Workflow recovery action requires human approval before execution." : ""),
+      status: "pending",
+      source_issue_id: recommendation.issue_id || recommendation.id || recommendation.payload?.issue_id || null,
+      source: recommendation.source || recommendation.payload?.source || "platform_verification_v4",
+    }),
+  };
+}
+
 function approvalRequired(recommendation = {}) {
-  const priority = normalize(recommendation.priority);
-  const action = normalize(recommendation.action);
+  const priority = normalize(recommendation.priority || recommendation.severity);
+  const action = normalize(recommendation.action || recommendation.recovery_action || recommendation.action_type);
 
   return (
     priority === "critical" ||
     priority === "executive" ||
+    priority === "urgent" ||
+    priority === "high" && isV4RecoveryAction(action) ||
     action === "send_email" ||
     action === "send_whatsapp" ||
     recommendation?.payload?.approval_required === true
@@ -110,11 +291,13 @@ function approvalRequired(recommendation = {}) {
 }
 
 function getApprovalReason(recommendation = {}) {
-  const priority = normalize(recommendation.priority);
-  const action = normalize(recommendation.action);
+  const priority = normalize(recommendation.priority || recommendation.severity);
+  const action = normalize(recommendation.action || recommendation.recovery_action || recommendation.action_type);
 
   if (priority === "critical") return "Critical student risk requires human approval.";
   if (priority === "executive") return "Executive-priority action requires counselor approval.";
+  if (priority === "urgent") return "Urgent recovery action requires human approval.";
+  if (priority === "high" && isV4RecoveryAction(action)) return "High-priority workflow recovery requires approval.";
   if (action === "send_email") return "Email draft must be reviewed before sending.";
   if (action === "send_whatsapp") return "WhatsApp draft must be reviewed before sending.";
 
@@ -463,6 +646,10 @@ export function buildExecutiveActionTemplate(score = {}, recommendation = {}) {
         approval_reason: base.approval_reason || "WhatsApp draft requires human review.",
       }),
     };
+  }
+
+  if (isV4RecoveryAction(action)) {
+    return buildV4RecoveryTemplate(score, recommendation);
   }
 
   return {
