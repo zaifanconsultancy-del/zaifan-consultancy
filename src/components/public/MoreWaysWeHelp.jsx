@@ -24,6 +24,7 @@ const services = [
     desc: "We help you discover funding opportunities and reduce study costs.",
     image: scholarshipsImage,
     link: "/scholarships",
+    newTab: true,
     accent: "#a855f7",
     soft: "bg-purple-50",
     wins: ["Funding routes", "Profile fit", "Cost planning"],
@@ -105,12 +106,23 @@ const trustItems = [
 const AUTOPLAY_DELAY = 6200;
 const SWIPE_THRESHOLD = 44;
 
-function buildAppointmentLink(serviceTitle) {
+function buildServiceLink(service) {
+  if (service.link) return service.link;
+
   const serviceParam = encodeURIComponent(
-    serviceTitle.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-")
+    service.title.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-")
   );
 
   return `/appointment?service=${serviceParam}`;
+}
+
+function getLinkProps(service) {
+  if (!service.newTab) return {};
+
+  return {
+    target: "_blank",
+    rel: "noopener noreferrer",
+  };
 }
 
 export default function MoreWaysWeHelp() {
@@ -409,7 +421,8 @@ export default function MoreWaysWeHelp() {
               </button>
 
               <a
-                href={buildAppointmentLink(services[index].title)}
+                href={buildServiceLink(services[index])}
+                {...getLinkProps(services[index])}
                 className="group flex min-h-[430px] flex-1 flex-col items-center justify-center rounded-[30px] border border-orange-100 bg-white p-7 text-center shadow-[0_24px_60px_rgba(251,146,60,0.20)] transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-orange-100"
               >
                 <img
@@ -441,7 +454,7 @@ export default function MoreWaysWeHelp() {
                   className="mx-auto mt-7 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-black text-white"
                   style={{ backgroundColor: services[index].accent }}
                 >
-                  Book Guidance
+                  Open Details
                   <ArrowRight size={18} />
                 </div>
               </a>
@@ -519,7 +532,8 @@ export default function MoreWaysWeHelp() {
 function ServiceCard({ service }) {
   return (
     <a
-      href={buildAppointmentLink(service.title)}
+      href={buildServiceLink(service)}
+      {...getLinkProps(service)}
       className="group grid min-h-[270px] grid-cols-[43%_57%] items-center overflow-hidden rounded-[30px] border border-orange-100 bg-white/95 p-6 shadow-[0_28px_70px_rgba(251,146,60,0.18)] backdrop-blur transition duration-500 hover:-translate-y-2 hover:shadow-[0_34px_90px_rgba(251,146,60,0.30)] focus:outline-none focus:ring-4 focus:ring-orange-100"
     >
       <div className="relative flex items-center justify-center">
@@ -555,7 +569,7 @@ function ServiceCard({ service }) {
           className="mt-5 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-black text-white shadow-sm transition group-hover:scale-105"
           style={{ backgroundColor: service.accent }}
         >
-          Book Guidance
+          {service.newTab ? "Open Details" : "Book Guidance"}
           <ArrowRight size={18} />
         </div>
       </div>

@@ -45,13 +45,14 @@ function Footer() {
   ];
 
   const destinations = [
-    "United Kingdom",
-    "Canada",
-    "Australia",
-    "Germany",
-    "Italy",
-    "Turkey",
-  ];
+  { name: "Italy", live: true },
+
+  { name: "United Kingdom", live: false },
+  { name: "Canada", live: false },
+  { name: "Australia", live: false },
+  { name: "Germany", live: false },
+  { name: "Turkey", live: false },
+];
 
   const highlights = [
     {
@@ -318,27 +319,61 @@ function FooterColumn({ title, items, links = false, destinations = false }) {
       </h3>
 
       <ul className="mt-6 space-y-3">
-        {items.map((item) => {
-          const name = links ? item.name : item;
-          const href = links
-            ? item.href
-            : destinations
-            ? `/appointment?country=${encodeURIComponent(item)}`
-            : buildAppointmentServiceLink(item);
+  {items.map((item) => {
+    if (destinations) {
+      const destination = item;
 
-          return (
-            <li key={name}>
-              <a
-                href={href}
-                className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-600 transition hover:translate-x-1 hover:text-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-100"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition group-hover:bg-orange-600" />
-                {name}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
+      if (!destination.live) {
+        return (
+          <li key={destination.name}>
+            <div className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-200" />
+
+              <span>{destination.name}</span>
+
+              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-orange-700">
+                Soon
+              </span>
+            </div>
+          </li>
+        );
+      }
+
+      return (
+        <li key={destination.name}>
+          <a
+  href="/countries/italy"
+  className="group inline-flex items-center gap-2 rounded-lg font-black text-[#ff4b12] transition hover:translate-x-1"
+>
+  <span className="h-1.5 w-1.5 rounded-full bg-[#ff4b12]" />
+  🇮🇹 Italy
+
+  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-black uppercase text-green-700">
+    Live
+  </span>
+</a>
+        </li>
+      );
+    }
+
+    const name = links ? item.name : item;
+    const href = links
+      ? item.href
+      : buildAppointmentServiceLink(item);
+
+    return (
+      <li key={name}>
+        <a
+          href={href}
+          className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-600 transition hover:translate-x-1 hover:text-orange-600"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition group-hover:bg-orange-600" />
+          {name}
+        </a>
+      </li>
+    );
+  })}
+</ul>
     </div>
   );
 }

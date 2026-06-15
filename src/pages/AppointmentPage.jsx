@@ -11,6 +11,7 @@ import {
   MapPin,
   MessageCircle,
   Plane,
+  Route,
   Send,
   ShieldCheck,
   Sparkles,
@@ -18,6 +19,15 @@ import {
   UsersRound,
   LockKeyhole,
   MessagesSquare,
+  BookOpenCheck,
+  Building2,
+  Wallet,
+  Landmark,
+  Award,
+  ArrowRight,
+  CircleHelp,
+  ClipboardCheck,
+  X,
 } from "lucide-react";
 
 import consultantMascot from "../assets/images/appointment/consultant-mascot.png";
@@ -28,8 +38,8 @@ const initialFormData = {
   full_name: "",
   email: "",
   phone: "",
-  country_interest: "",
-  consultation_type: "",
+  country_interest: "Italy",
+  consultation_type: "Free Italy Study Plan",
   appointment_date: "",
   appointment_time: "",
   message: "",
@@ -46,37 +56,29 @@ const timeSlots = [
 ];
 
 const consultationTypes = [
-  "Free Initial Consultation",
-  "University Selection",
-  "Admission Guidance",
-  "Scholarship Guidance",
-  "Visa Guidance",
+  "Free Italy Study Plan",
+  "Italy University Selection",
+  "Italy Admission Guidance",
+  "Italy Scholarship Guidance",
+  "Italy Visa Guidance",
   "SOP & Documentation",
 ];
 
-const countries = [
-  "Italy",
-  "Germany",
-  "Turkey",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Other",
-];
+const countries = ["Italy"];
 
 const journeySteps = [
-  { title: "Dream", body: "Share your goals", color: "bg-purple-500" },
-  { title: "Choose", body: "We suggest the best options", color: "bg-orange-500" },
-  { title: "Apply", body: "We guide your application", color: "bg-sky-500" },
-  { title: "Fly", body: "Begin your journey abroad", color: "bg-emerald-500" },
+  { title: "Profile", body: "Share your goals", color: "bg-purple-500" },
+  { title: "Match", body: "We shortlist Italy options", color: "bg-orange-500" },
+  { title: "Scholarship", body: "We map DSU and merit routes", color: "bg-sky-500" },
+  { title: "Visa", body: "We plan your documents", color: "bg-emerald-500" },
 ];
 
 const stats = [
-  { icon: GraduationCap, value: "500+", label: "Universities", color: "text-orange-500", bg: "bg-orange-50" },
-  { icon: UsersRound, value: "20+", label: "Countries", color: "text-purple-500", bg: "bg-purple-50" },
-  { icon: FileCheck2, value: "10K+", label: "Students Guided", color: "text-blue-500", bg: "bg-blue-50" },
-  { icon: BadgeDollarSign, value: "₹50Cr+", label: "Scholarships Helped", color: "text-emerald-500", bg: "bg-emerald-50" },
-  { icon: Trophy, value: "Expert", label: "Counselor Support", color: "text-rose-500", bg: "bg-rose-50" },
+  { icon: GraduationCap, value: "30+", label: "Italy Universities", color: "text-orange-500", bg: "bg-orange-50" },
+  { icon: UsersRound, value: "18+", label: "Student Cities", color: "text-purple-500", bg: "bg-purple-50" },
+  { icon: FileCheck2, value: "DSU", label: "Scholarship Routes", color: "text-blue-500", bg: "bg-blue-50" },
+  { icon: BadgeDollarSign, value: "Visa", label: "Roadmap Support", color: "text-emerald-500", bg: "bg-emerald-50" },
+  { icon: Trophy, value: "Free", label: "Consultation", color: "text-rose-500", bg: "bg-rose-50" },
 ];
 
 const trustCards = [
@@ -84,6 +86,198 @@ const trustCards = [
   { icon: CheckCircle2, title: "Personalized", body: "Advice for your unique goals", color: "text-orange-500", bg: "bg-orange-50", ring: "ring-orange-100" },
   { icon: LockKeyhole, title: "Secure & Private", body: "Your information is protected", color: "text-purple-500", bg: "bg-purple-50", ring: "ring-purple-100" },
   { icon: MessagesSquare, title: "Expert Guidance", body: "From experienced counselors", color: "text-sky-500", bg: "bg-sky-50", ring: "ring-sky-100" },
+];
+
+const italyRoutes = [
+  { icon: BookOpenCheck, title: "Computer Science", body: "English-taught programs, DSU routes and tech-city options." },
+  { icon: Building2, title: "Business", body: "Milan, Rome, Bologna and strong public university pathways." },
+  { icon: GraduationCap, title: "Engineering", body: "Technical universities, public options and practical intake planning." },
+  { icon: Award, title: "Medicine & Health", body: "Admission timelines, document planning and realistic fit checks." },
+];
+
+const italyBenefits = [
+  "Low public university tuition",
+  "DSU and regional scholarships",
+  "English-taught study options",
+  "Strong student cities",
+  "Clear visa document roadmap",
+];
+
+const popularCities = ["Milan", "Rome", "Bologna", "Padua", "Turin", "Pisa"];
+
+
+const afterBookingSteps = [
+  {
+    icon: Send,
+    title: "Submit Request",
+    body: "Share your profile, preferred date, service focus and study goals.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Profile Review",
+    body: "We review your education, budget, target course, city interest and scholarship needs.",
+  },
+  {
+    icon: MessagesSquare,
+    title: "Consultation Call",
+    body: "A counselor discusses realistic Italy options, risks and next actions with you.",
+  },
+  {
+    icon: Route,
+    title: "Study Roadmap",
+    body: "You get a clear direction for universities, DSU, documents and visa preparation.",
+  },
+];
+
+const whoShouldBook = [
+  {
+    icon: MapPin,
+    title: "Still Researching",
+    body: "You like Italy but do not know which city, university or course direction fits yet.",
+  },
+  {
+    icon: BadgeDollarSign,
+    title: "Need Scholarship Help",
+    body: "You want to understand DSU, regional support, merit awards and realistic affordability.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Choosing Universities",
+    body: "You are comparing Milan, Rome, Bologna, Padua, Turin or other Italian study routes.",
+  },
+  {
+    icon: Plane,
+    title: "Ready To Apply",
+    body: "You need an organized plan for deadlines, documents, admission steps and visa readiness.",
+  },
+];
+
+const consultationCards = [
+  {
+    icon: Sparkles,
+    type: "Free Italy Study Plan",
+    title: "Italy Starter Call",
+    body: "Best if you are new and want a complete first direction.",
+  },
+  {
+    icon: BadgeDollarSign,
+    type: "Italy Scholarship Guidance",
+    title: "Scholarship Strategy",
+    body: "DSU, regional support, affordability and document planning.",
+  },
+  {
+    icon: GraduationCap,
+    type: "Italy University Selection",
+    title: "University Selection",
+    body: "Compare universities by program, city, tuition and student fit.",
+  },
+  {
+    icon: FileCheck2,
+    type: "Italy Admission Guidance",
+    title: "Application Roadmap",
+    body: "Plan requirements, deadlines and file preparation clearly.",
+  },
+  {
+    icon: ShieldCheck,
+    type: "Italy Visa Guidance",
+    title: "Visa Preparation",
+    body: "Understand the visa file, financial proof and appointment direction.",
+  },
+  {
+    icon: BookOpenCheck,
+    type: "SOP & Documentation",
+    title: "SOP & Documents",
+    body: "Organize academic, financial, scholarship and supporting documents.",
+  },
+];
+
+const readinessCards = [
+  {
+    icon: CircleHelp,
+    title: "Just Researching",
+    message: "I am just researching Italy and need help understanding universities, cities, scholarships and cost.",
+    body: "You need a simple first roadmap before making decisions.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Shortlisting Universities",
+    message: "I am shortlisting Italian universities and need help comparing course fit, city, tuition and scholarship route.",
+    body: "You have a direction but need help choosing smartly.",
+  },
+  {
+    icon: FileCheck2,
+    title: "Preparing Documents",
+    message: "I want to prepare my Italy admission, DSU scholarship and visa documents correctly.",
+    body: "You need document clarity before deadlines become stressful.",
+  },
+  {
+    icon: Plane,
+    title: "Ready To Apply",
+    message: "I am ready to apply for Italy and need a complete application, scholarship and visa roadmap.",
+    body: "You need a focused execution plan, not random browsing.",
+  },
+];
+
+const promiseCards = [
+  {
+    title: "What we will do",
+    tone: "green",
+    items: [
+      "University matching",
+      "Scholarship and DSU guidance",
+      "Application strategy",
+      "Visa roadmap direction",
+      "Document planning",
+      "Realistic next steps",
+    ],
+  },
+  {
+    title: "What we will not do",
+    tone: "orange",
+    items: [
+      "Fake admission guarantees",
+      "Guaranteed DSU claims",
+      "Guaranteed visa promises",
+      "One-size-fits-all advice",
+      "Pressure without clarity",
+      "Fake success outcomes",
+    ],
+  },
+];
+
+const consultationFaqs = [
+  {
+    q: "Is the Italy consultation free?",
+    a: "Yes. The first Italy consultation request is free. The goal is to understand your profile and guide you toward a realistic study direction.",
+  },
+  {
+    q: "How long does the consultation take?",
+    a: "The exact duration can vary, but the focus is to clarify your university direction, scholarship route, document needs and next steps.",
+  },
+  {
+    q: "Can parents join the call?",
+    a: "Yes. Parents can join, especially when budget, scholarship, documents and long-term planning need to be discussed together.",
+  },
+  {
+    q: "Is DSU scholarship guaranteed?",
+    a: "No. DSU and regional support depend on eligibility, ranking, deadlines, documents and current regional rules. We help you plan, not fake guarantees.",
+  },
+  {
+    q: "Do I need documents before booking?",
+    a: "Not always. You can book early. If you already have transcripts, passport, income documents or target universities, mention them in the message box.",
+  },
+  {
+    q: "Can you help me choose universities?",
+    a: "Yes. The consultation can focus on matching your course, budget, city preference, scholarship potential and application readiness with Italian universities.",
+  },
+  {
+    q: "What happens after the consultation?",
+    a: "You should have a clearer direction for university shortlisting, scholarship planning, documents, deadlines and possible next steps with Zaifan.",
+  },
+  {
+    q: "Do you help with visa planning?",
+    a: "Yes. We can help you understand the visa roadmap, document preparation and file direction after your admission and study route are clearer.",
+  },
 ];
 
 const normalizeValue = (value) => value?.trim().toLowerCase();
@@ -97,16 +291,18 @@ function AppointmentPage() {
   const [formData, setFormData] = useState(initialFormData);
   const [submittedAppointment, setSubmittedAppointment] = useState(null);
   const [prefillNotice, setPrefillNotice] = useState("");
+  const [selectedUniversity, setSelectedUniversity] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [openFaq, setOpenFaq] = useState(0);
 
   const minDate = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    const countryParam = params.get("country");
+    const countryParam = params.get("country") || "Italy";
     const serviceParam = params.get("service") || params.get("consultation");
     const universityParam = params.get("university");
     const dateParam = params.get("date");
@@ -116,33 +312,42 @@ function AppointmentPage() {
     const phoneParam = params.get("phone");
     const messageParam = params.get("message");
 
-    const matchedCountry = findMatchingOption(countries, countryParam);
     const matchedService = findMatchingOption(consultationTypes, serviceParam);
     const matchedTime = findMatchingOption(timeSlots, timeParam);
 
-    const nextData = {};
+    const nextData = {
+      country_interest: "Italy",
+      consultation_type: matchedService || "Free Italy Study Plan",
+    };
 
     if (nameParam) nextData.full_name = nameParam;
     if (emailParam) nextData.email = emailParam;
     if (phoneParam) nextData.phone = phoneParam;
-    if (matchedCountry) nextData.country_interest = matchedCountry;
-    if (matchedService) nextData.consultation_type = matchedService;
     if (matchedTime) nextData.appointment_time = matchedTime;
     if (dateParam && dateParam >= minDate) nextData.appointment_date = dateParam;
 
     const messageParts = [];
 
     if (messageParam) messageParts.push(messageParam);
-    if (universityParam) messageParts.push(`Interested university: ${universityParam}`);
-    if (countryParam && !matchedCountry) messageParts.push(`Interested country: ${countryParam}`);
-    if (serviceParam && !matchedService) messageParts.push(`Requested service: ${serviceParam}`);
+
+    if (universityParam) {
+      setSelectedUniversity(universityParam);
+      messageParts.push(
+        `I would like guidance for ${universityParam} in ${countryParam || "Italy"}.`
+      );
+    }
+
+    if (serviceParam && !matchedService) {
+      messageParts.push(`Requested service: ${serviceParam}`);
+    }
 
     if (messageParts.length) {
       nextData.message = messageParts.join("\n");
     }
 
-    if (Object.keys(nextData).length) {
-      setFormData((prev) => ({ ...prev, ...nextData }));
+    setFormData((prev) => ({ ...prev, ...nextData }));
+
+    if (universityParam || serviceParam || countryParam) {
       setPrefillNotice("We prefilled your appointment details from the link.");
     }
   }, [minDate]);
@@ -151,21 +356,34 @@ function AppointmentPage() {
     return [
       { icon: MapPin, label: "Country", value: formData.country_interest },
       { icon: Sparkles, label: "Service", value: formData.consultation_type },
+      { icon: GraduationCap, label: "University", value: selectedUniversity },
       { icon: CalendarDays, label: "Date", value: formData.appointment_date },
       { icon: Clock, label: "Time", value: formData.appointment_time },
     ].filter((item) => item.value);
-  }, [formData]);
+  }, [formData, selectedUniversity]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+
+  const selectConsultationType = (type) => {
+    setFormData((prev) => ({ ...prev, consultation_type: type }));
+  };
+
+  const selectReadiness = (message) => {
+    setFormData((prev) => ({
+      ...prev,
+      message: prev.message ? `${prev.message}\n\n${message}` : message,
+    }));
+  };
+
   const openWhatsApp = () => {
     const text = encodeURIComponent(
-      `Hi Zaifan Consultancy, I want to book a study abroad consultation.\n\nName: ${
+      `Hi Zaifan Consultancy, I want to book an Italy study consultation.\n\nName: ${
         formData.full_name || "-"
-      }\nCountry: ${formData.country_interest || "-"}\nService: ${
+      }\nCountry: Italy\nUniversity: ${selectedUniversity || "-"}\nService: ${
         formData.consultation_type || "-"
       }\nPreferred Date: ${formData.appointment_date || "-"}\nPreferred Time: ${
         formData.appointment_time || "-"
@@ -187,15 +405,22 @@ function AppointmentPage() {
     setError("");
 
     try {
+      const finalMessage = [
+        selectedUniversity ? `Selected university: ${selectedUniversity}` : "",
+        formData.message.trim(),
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
       const appointmentData = {
         full_name: formData.full_name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        country_interest: formData.country_interest,
-        consultation_type: formData.consultation_type,
+        country_interest: "Italy",
+        consultation_type: formData.consultation_type || "Free Italy Study Plan",
         appointment_date: formData.appointment_date,
         appointment_time: formData.appointment_time,
-        message: formData.message.trim(),
+        message: finalMessage,
         status: "pending",
       };
 
@@ -237,8 +462,9 @@ function AppointmentPage() {
         return;
       }
 
-      setSuccess("Your consultation request is confirmed. Our team will contact you soon.");
+      setSuccess("Your Italy consultation request is confirmed. Our team will contact you soon.");
       setFormData(initialFormData);
+      setSelectedUniversity("");
       setPrefillNotice("");
     } catch (err) {
       console.log("APPOINTMENT SUBMIT ERROR:", err);
@@ -249,7 +475,7 @@ function AppointmentPage() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#fff4e8] px-4 pb-6 pt-28 text-[#071d43] sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-[#fff4e8] px-4 pb-8 pt-28 text-[#071d43] sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute left-[-180px] top-20 h-[420px] w-[420px] rounded-full bg-orange-200/45 blur-3xl" />
       <div className="pointer-events-none absolute bottom-[-90px] right-[-120px] h-[320px] w-[320px] rounded-full bg-[#ffd7a8]/60 blur-3xl" />
       <div className="pointer-events-none absolute left-1/2 top-0 h-[260px] w-[520px] -translate-x-1/2 rounded-full bg-white/60 blur-3xl" />
@@ -268,15 +494,15 @@ function AppointmentPage() {
               <div className="relative z-10">
                 <p className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-orange-600 shadow-sm ring-1 ring-orange-100">
                   <Sparkles size={15} />
-                  Free Consultation
+                  Free Italy Consultation
                 </p>
 
-                <h1 className="mt-5 max-w-[450px] text-4xl font-black leading-[1.06] tracking-tight text-[#071d43] md:text-5xl">
-                  Book your study abroad appointment
+                <h1 className="mt-5 max-w-[520px] text-4xl font-black leading-[1.04] tracking-tight text-[#071d43] md:text-5xl">
+                  Book your Italy study appointment
                 </h1>
 
-                <p className="mt-3 max-w-[360px] text-base font-bold leading-relaxed text-[#17335d]">
-                  Let&apos;s plan your global education journey together.
+                <p className="mt-3 max-w-[430px] text-base font-bold leading-relaxed text-[#17335d]">
+                  Let&apos;s map your Italian university, scholarship and visa roadmap together.
                 </p>
               </div>
 
@@ -315,7 +541,7 @@ function AppointmentPage() {
 
                   <div className="absolute right-0 -top-20 z-20 max-w-[240px] rounded-[1.35rem] bg-white p-4 shadow-[0_20px_45px_rgba(60,35,15,0.14)] ring-1 ring-orange-100 sm:right-2 sm:-top-16">
                     <p className="text-sm font-extrabold leading-relaxed text-[#54321c]">
-                      We help you choose the right country, university and the best path forward.
+                      We help you choose the right Italian university, scholarship path and visa steps.
                     </p>
                     <div className="absolute -bottom-2 right-5 grid h-5 w-5 place-items-center rounded-full bg-orange-500 text-white">
                       <Check size={12} strokeWidth={4} />
@@ -342,6 +568,42 @@ function AppointmentPage() {
                 </div>
               </div>
 
+              <div className="relative z-10 mt-4 rounded-[2rem] bg-white/95 p-5 shadow-[0_18px_45px_rgba(120,70,20,0.08)] ring-1 ring-orange-100 backdrop-blur">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
+                      Popular Italy Routes
+                    </p>
+                    <h3 className="mt-2 text-2xl font-black text-[#071d43]">
+                      Pick your study direction
+                    </h3>
+                  </div>
+                  <div className="hidden h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-orange-600 sm:grid">
+                    <Landmark size={24} />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {italyRoutes.map((route) => {
+                    const Icon = route.icon;
+
+                    return (
+                      <div key={route.title} className="rounded-[1.35rem] border border-orange-100 bg-[#fffaf4] p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-md">
+                        <div className="flex items-start gap-3">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+                            <Icon size={20} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-black text-[#071d43]">{route.title}</h4>
+                            <p className="mt-1 text-xs font-bold leading-5 text-slate-600">{route.body}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="relative z-10 mx-auto mt-3 flex max-w-[540px] flex-wrap items-center justify-center gap-3 rounded-full bg-white/95 px-5 py-3 text-sm font-black text-[#7c3f16] shadow-[0_14px_35px_rgba(120,70,20,0.08)] ring-1 ring-orange-100">
                 <span className="inline-flex items-center gap-2">
                   <ShieldCheck size={17} />
@@ -350,7 +612,7 @@ function AppointmentPage() {
                 <span className="text-orange-400">•</span>
                 <span>No Hidden Charges</span>
                 <span className="text-orange-400">•</span>
-                <span>Personalized Guidance</span>
+                <span>Italy Roadmap</span>
               </div>
             </div>
           </motion.div>
@@ -361,10 +623,44 @@ function AppointmentPage() {
             transition={{ duration: 0.55, delay: 0.08 }}
             className="rounded-[2.5rem] bg-white p-5 shadow-[0_24px_70px_rgba(120,70,20,0.12)] ring-1 ring-orange-100 sm:p-6"
           >
+            <div className="mb-5 rounded-[1.7rem] border border-orange-100 bg-[#fff8ef] p-5">
+              <div className="flex items-start gap-4">
+                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-500/20">
+                  <CalendarDays size={25} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-600">
+                    Italy Appointment Form
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black leading-tight text-[#071d43]">
+                    Get Your Italy Study Plan
+                  </h2>
+                  <p className="mt-2 text-sm font-bold leading-6 text-[#244263]">
+                    Italy is selected by default for now. Pick your university focus, date and time — our counselor will build the roadmap.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {prefillNotice && (
               <div className="mb-4 flex items-start gap-3 rounded-2xl border border-orange-100 bg-orange-50 px-5 py-4 text-sm font-black leading-relaxed text-orange-700">
                 <Sparkles className="mt-0.5 shrink-0" size={18} />
                 {prefillNotice}
+              </div>
+            )}
+
+            {selectedUniversity && (
+              <div className="mb-4 rounded-[1.6rem] border border-orange-100 bg-[#fff8ef] p-5">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
+                  Selected University
+                </p>
+                <h3 className="mt-2 text-xl font-black text-[#071d43]">
+                  {selectedUniversity}
+                </h3>
+                <p className="mt-2 text-sm font-bold text-slate-600">
+                  Your consultation will focus on this university.
+                </p>
               </div>
             )}
 
@@ -385,40 +681,66 @@ function AppointmentPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                <input type="text" name="full_name" placeholder="Full Name" value={formData.full_name} onChange={handleChange} required className="rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
-                <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} required className="rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                <label>
+                  <span className="mb-2 block text-xs font-black text-[#071d43]">Full Name *</span>
+                  <input type="text" name="full_name" placeholder="Enter your full name" value={formData.full_name} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                </label>
+
+                <label>
+                  <span className="mb-2 block text-xs font-black text-[#071d43]">Email Address *</span>
+                  <input type="email" name="email" placeholder="Enter your email" value={formData.email} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                </label>
               </div>
 
-              <input type="tel" name="phone" placeholder="Phone / WhatsApp Number" value={formData.phone} onChange={handleChange} required className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+              <label>
+                <span className="mb-2 block text-xs font-black text-[#071d43]">Phone / WhatsApp Number *</span>
+                <input type="tel" name="phone" placeholder="+92 98765 43210" value={formData.phone} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+              </label>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <select name="country_interest" value={formData.country_interest} onChange={handleChange} required className="rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
-                  <option value="">Country Interest</option>
-                  {countries.map((country) => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
-                </select>
+                <label>
+                  <span className="mb-2 block text-xs font-black text-[#071d43]">Destination Focus *</span>
+                  <select name="country_interest" value="Italy" disabled className="w-full cursor-not-allowed rounded-2xl border border-orange-100 bg-orange-50 px-5 py-4 font-black text-orange-700 outline-none">
+                    {countries.map((country) => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
+                  <span className="mt-2 block text-[11px] font-black text-orange-600">
+                    Italy is active now. More countries unlock after real data is ready.
+                  </span>
+                </label>
 
-                <select name="consultation_type" value={formData.consultation_type} onChange={handleChange} required className="rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
-                  <option value="">Consultation Type</option>
-                  {consultationTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                <label>
+                  <span className="mb-2 block text-xs font-black text-[#071d43]">Consultation Type *</span>
+                  <select name="consultation_type" value={formData.consultation_type} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
+                    {consultationTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <input type="date" name="appointment_date" min={minDate} value={formData.appointment_date} onChange={handleChange} required className="rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                <label>
+                  <span className="mb-2 block text-xs font-black text-[#071d43]">Preferred Date *</span>
+                  <input type="date" name="appointment_date" min={minDate} value={formData.appointment_date} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                </label>
 
-                <select name="appointment_time" value={formData.appointment_time} onChange={handleChange} required className="rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
-                  <option value="">Select Time Slot</option>
-                  {timeSlots.map((slot) => (
-                    <option key={slot} value={slot}>{slot}</option>
-                  ))}
-                </select>
+                <label>
+                  <span className="mb-2 block text-xs font-black text-[#071d43]">Preferred Time *</span>
+                  <select name="appointment_time" value={formData.appointment_time} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
+                    <option value="">Select Time Slot</option>
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot}>{slot}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
-              <textarea name="message" placeholder="Tell us briefly about your study plan..." value={formData.message} onChange={handleChange} rows="5" className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+              <label>
+                <span className="mb-2 block text-xs font-black text-[#071d43]">Your Italy Study Goals</span>
+                <textarea name="message" placeholder="Example: I want to study in Italy, need university matching, scholarship options and visa roadmap..." value={formData.message} onChange={handleChange} rows="5" className="w-full resize-none rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+              </label>
 
               {appointmentSummary.length > 0 && (
                 <div className="rounded-[1.5rem] border border-orange-100 bg-[#fff8ef] p-4">
@@ -454,7 +776,7 @@ function AppointmentPage() {
 
               <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-full bg-orange-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition duration-300 hover:-translate-y-1 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60">
                 <Send size={18} />
-                {loading ? "Submitting..." : "Request Appointment"}
+                {loading ? "Submitting..." : "Request Italy Appointment"}
               </button>
 
               <button type="button" onClick={openWhatsApp} className="flex w-full items-center justify-center gap-3 rounded-full bg-green-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(34,197,94,0.2)] transition duration-300 hover:-translate-y-1 hover:bg-green-600">
@@ -490,7 +812,34 @@ function AppointmentPage() {
                 })}
               </div>
 
-              <img src={globeBooks} alt="Study abroad books and globe" className="mx-auto w-[190px] drop-shadow-[0_24px_35px_rgba(120,70,20,0.18)]" />
+              <div className="rounded-[2rem] bg-white/90 p-5 shadow-[0_18px_48px_rgba(120,70,20,0.10)] ring-1 ring-orange-100 backdrop-blur">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+                    <Wallet size={22} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">Why Italy</p>
+                    <h3 className="mt-1 text-lg font-black text-[#071d43]">A smarter first destination</h3>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  {italyBenefits.map((benefit) => (
+                    <div key={benefit} className="flex items-start gap-2 rounded-2xl bg-[#fff8ef] px-3 py-2 text-xs font-black leading-5 text-[#244263] ring-1 ring-orange-100">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
+                      {benefit}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              
+
+              <img
+  src={globeBooks}
+  alt="Study abroad books and globe"
+  className="mx-auto -mt-8 w-[190px] drop-shadow-[0_24px_35px_rgba(120,70,20,0.18)]"
+/>
 
               <div className="rounded-[1.5rem] bg-white/90 p-4 shadow-[0_14px_34px_rgba(120,70,20,0.10)] ring-1 ring-orange-100">
                 <div className="flex items-center gap-3">
@@ -499,13 +848,284 @@ function AppointmentPage() {
                   </div>
 
                   <p className="text-sm font-black leading-relaxed text-[#7c3f16]">
-                    Guiding students to top universities worldwide.
+                    Italy-first guidance now. More countries come after real data is ready.
                   </p>
                 </div>
               </div>
             </div>
           </motion.aside>
         </div>
+
+        <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.18 }}
+            transition={{ duration: 0.55 }}
+            className="rounded-[2.5rem] bg-white/92 p-6 shadow-[0_24px_70px_rgba(120,70,20,0.10)] ring-1 ring-orange-100 sm:p-7"
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 ring-1 ring-orange-100">
+                  <Route size={15} />
+                  What happens after booking
+                </p>
+                <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-[#071d43] md:text-4xl">
+                  Your request turns into a clear Italy study roadmap.
+                </h2>
+              </div>
+              <p className="max-w-xl text-sm font-bold leading-7 text-[#244263]">
+                Students should know what happens after they submit the form. This makes the booking feel safe, organized and purposeful.
+              </p>
+            </div>
+
+            <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {afterBookingSteps.map((step, index) => {
+                const Icon = step.icon;
+
+                return (
+                  <div
+                    key={step.title}
+                    className="rounded-[1.8rem] bg-[#fff8ef] p-5 ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
+                  >
+                    <div className="mb-5 flex items-center justify-between gap-3">
+                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-500/20">
+                        <Icon size={22} />
+                      </div>
+                      <span className="text-3xl font-black tracking-[-0.06em] text-orange-100">
+                        0{index + 1}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-[#071d43]">{step.title}</h3>
+                    <p className="mt-2 text-sm font-bold leading-6 text-slate-600">{step.body}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.18 }}
+            transition={{ duration: 0.55, delay: 0.04 }}
+            className="rounded-[2.5rem] bg-[#071d43] p-6 text-white shadow-[0_24px_70px_rgba(7,29,67,0.18)] sm:p-7"
+          >
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-200 ring-1 ring-white/10">
+              <UsersRound size={15} />
+              Who should book
+            </p>
+            <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-white md:text-4xl">
+              This call is useful at every planning stage.
+            </h2>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              {whoShouldBook.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <div key={item.title} className="rounded-[1.6rem] bg-white/10 p-4 ring-1 ring-white/10">
+                    <Icon className="text-orange-300" size={24} />
+                    <h3 className="mt-3 font-black text-white">{item.title}</h3>
+                    <p className="mt-2 text-xs font-semibold leading-6 text-white/70">{item.body}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.section>
+        </div>
+
+        <motion.section
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.18 }}
+          transition={{ duration: 0.55 }}
+          className="mt-8 rounded-[2.5rem] bg-white/92 p-6 shadow-[0_24px_70px_rgba(120,70,20,0.10)] ring-1 ring-orange-100 sm:p-7"
+        >
+          <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 ring-1 ring-orange-100">
+                <Sparkles size={15} />
+                Choose your consultation type
+              </p>
+              <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-[#071d43] md:text-4xl">
+                Pick the support you need before submitting.
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm font-bold leading-7 text-[#244263]">
+              These cards connect directly with the form dropdown, so users understand the options instead of seeing only a plain select field.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {consultationCards.map((card) => {
+              const Icon = card.icon;
+              const isActive = formData.consultation_type === card.type;
+
+              return (
+                <button
+                  key={card.type}
+                  type="button"
+                  onClick={() => selectConsultationType(card.type)}
+                  className={`rounded-[1.8rem] p-5 text-left ring-1 transition hover:-translate-y-1 ${
+                    isActive
+                      ? "bg-orange-500 text-white ring-orange-500 shadow-[0_20px_45px_rgba(249,115,22,0.20)]"
+                      : "bg-[#fff8ef] text-[#071d43] ring-orange-100 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
+                  }`}
+                >
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div
+                      className={`grid h-12 w-12 place-items-center rounded-2xl ${
+                        isActive ? "bg-white/16 text-white" : "bg-orange-50 text-orange-600"
+                      }`}
+                    >
+                      <Icon size={23} />
+                    </div>
+                    {isActive && <CheckCircle2 size={22} />}
+                  </div>
+                  <h3 className="text-lg font-black">{card.title}</h3>
+                  <p className={`mt-2 text-sm font-bold leading-6 ${isActive ? "text-white/82" : "text-slate-600"}`}>
+                    {card.body}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </motion.section>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.18 }}
+            transition={{ duration: 0.55 }}
+            className="rounded-[2.5rem] bg-white/92 p-6 shadow-[0_24px_70px_rgba(120,70,20,0.10)] ring-1 ring-orange-100 sm:p-7"
+          >
+            <p className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 ring-1 ring-orange-100">
+              <ClipboardCheck size={15} />
+              Student readiness checker
+            </p>
+            <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-[#071d43]">
+              Tell us where you are in the journey.
+            </h2>
+            <p className="mt-3 text-sm font-bold leading-7 text-[#244263]">
+              Click a stage and we will add it to your message field. This helps the counselor understand your situation faster.
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {readinessCards.map((card) => {
+                const Icon = card.icon;
+
+                return (
+                  <button
+                    key={card.title}
+                    type="button"
+                    onClick={() => selectReadiness(card.message)}
+                    className="rounded-[1.6rem] bg-[#fff8ef] p-4 text-left ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
+                  >
+                    <Icon className="text-orange-600" size={24} />
+                    <h3 className="mt-3 font-black text-[#071d43]">{card.title}</h3>
+                    <p className="mt-2 text-xs font-bold leading-6 text-slate-600">{card.body}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.18 }}
+            transition={{ duration: 0.55, delay: 0.04 }}
+            className="rounded-[2.5rem] bg-white/92 p-6 shadow-[0_24px_70px_rgba(120,70,20,0.10)] ring-1 ring-orange-100 sm:p-7"
+          >
+            <p className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 ring-1 ring-orange-100">
+              <ShieldCheck size={15} />
+              Clear expectations
+            </p>
+            <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-[#071d43]">
+              Honest guidance, not fake promises.
+            </h2>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {promiseCards.map((group) => {
+                const isPositive = group.tone === "green";
+
+                return (
+                  <div
+                    key={group.title}
+                    className={`rounded-[1.8rem] p-5 ring-1 ${
+                      isPositive ? "bg-green-50 ring-green-100" : "bg-orange-50 ring-orange-100"
+                    }`}
+                  >
+                    <h3 className={`text-xl font-black ${isPositive ? "text-green-800" : "text-orange-800"}`}>
+                      {group.title}
+                    </h3>
+                    <div className="mt-4 space-y-2">
+                      {group.items.map((item) => (
+                        <div key={item} className="flex items-start gap-3 rounded-2xl bg-white px-3 py-2 text-xs font-black leading-5 text-[#244263] ring-1 ring-white/70">
+                          {isPositive ? (
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                          ) : (
+                            <X className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
+                          )}
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.section>
+        </div>
+
+        <motion.section
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.18 }}
+          transition={{ duration: 0.55 }}
+          className="mt-8 rounded-[2.5rem] bg-white/92 p-6 shadow-[0_24px_70px_rgba(120,70,20,0.10)] ring-1 ring-orange-100 sm:p-7"
+        >
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 ring-1 ring-orange-100">
+              <CircleHelp size={15} />
+              Consultation FAQs
+            </p>
+            <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-[#071d43] md:text-4xl">
+              Questions students ask before booking.
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-7 max-w-[1050px] space-y-3">
+            {consultationFaqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+
+              return (
+                <div key={faq.q} className="overflow-hidden rounded-[1.5rem] bg-[#fff8ef] ring-1 ring-orange-100">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? -1 : index)}
+                    className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left font-black text-[#071d43]"
+                  >
+                    <span className="flex items-center gap-3">
+                      <CircleHelp className="text-orange-600" size={20} />
+                      {faq.q}
+                    </span>
+                    <span className={`text-orange-600 transition ${isOpen ? "rotate-45" : ""}`}>+</span>
+                  </button>
+
+                  {isOpen && (
+                    <p className="px-5 pb-5 text-sm font-bold leading-7 text-slate-600">
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </motion.section>
+
       </div>
     </section>
   );

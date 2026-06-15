@@ -10,11 +10,19 @@ import Home from "./pages/Home";
 import ServicesPage from "./pages/ServicesPage";
 import AboutPage from "./pages/AboutPage";
 import CountriesPage from "./pages/CountriesPage";
+import UniversitiesPage from "./pages/UniversitiesPage";
+import UniversityDetailPage from "./pages/UniversityDetailPage";
+import ScholarshipExplorer from "./components/ScholarshipExplorer";
+
 import AdminPage from "./pages/AdminPage";
 import StudentPortalPage from "./pages/StudentPortalPage";
 import CounselorPortalPage from "./pages/CounselorPortalPage";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import AppointmentPage from "./pages/AppointmentPage.jsx";
+import ItalyGuide from "./pages/ItalyGuide";
+import CityDetailPage from "./pages/CityDetailPage";
+import FloatingConsultationCTA from "./components/FloatingConsultationCTA";
+
 
 function LoadingScreen() {
   return (
@@ -128,7 +136,8 @@ function App() {
         <>
           <ScrollToTop />
 
-          {shouldShowNavbar && <Navbar />}
+         {shouldShowNavbar && <Navbar />}
+{shouldShowNavbar && <FloatingConsultationCTA />}
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -150,6 +159,8 @@ function App() {
                 }
               />
 
+              <Route path="/services" element={<ServicesPage />} />
+
               <Route
                 path="/about"
                 element={
@@ -164,6 +175,53 @@ function App() {
                 element={
                   <PageTransition>
                     <CountriesPage />
+                  </PageTransition>
+                }
+              />
+
+              <Route
+                path="/countries/italy"
+                element={
+                  <PageTransition>
+                    <ItalyGuide />
+                  </PageTransition>
+                }
+              />
+
+              <Route
+                path="/countries/italy/:citySlug"
+                element={
+                  <PageTransition>
+                    <CityDetailPage />
+                  </PageTransition>
+                }
+              />
+
+              <Route
+                path="/universities"
+                element={
+                  <PageTransition>
+                    <UniversitiesPage />
+                  </PageTransition>
+                }
+              />
+
+              <Route
+                path="/universities/:slug"
+                element={
+                  <PageTransition>
+                    <UniversityDetailPage />
+                  </PageTransition>
+                }
+              />
+
+              
+
+              <Route
+                path="/scholarships"
+                element={
+                  <PageTransition>
+                    <ScholarshipExplorer />
                   </PageTransition>
                 }
               />
