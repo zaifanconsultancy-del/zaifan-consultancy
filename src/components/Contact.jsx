@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
-import consultationMascot from "../assets/images/contact/consultation-mascot.png";
+import consultationMascot from "../assets/images/contact/contact-mascot-pointing.png";
+import contactWindow from "../assets/images/contact/contact-window-italy.png";
 
 const countries = [
   "Italy",
@@ -134,10 +135,10 @@ function Contact() {
   const completionPercentage = Math.round((completedFields / 8) * 100);
 
   const inputClass =
-    "mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
+    "mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-orange-400 focus:shadow-md focus:ring-4 focus:ring-orange-100";
 
   const selectClass =
-    "mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
+    "mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-orange-400 focus:shadow-md focus:ring-4 focus:ring-orange-100";
 
   const labelClass = "text-sm font-black text-[#2d145f]";
 
@@ -274,17 +275,17 @@ ${formData.message}
   return (
     <section
       id="contact"
-      className="relative overflow-hidden bg-[#fff7ed] px-4 py-14 text-[#071b3a] sm:px-6 lg:px-8"
+      className="relative overflow-hidden bg-[#fff8f1] px-4 py-12 text-[#071f50] sm:px-6 lg:px-8"
     >
       <style>{`
         @keyframes contactTrail {
           0% { stroke-dashoffset: 0; }
-          100% { stroke-dashoffset: -180; }
+          100% { stroke-dashoffset: -220; }
         }
 
         @keyframes softFloat {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-12px) rotate(2deg); }
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
 
         @keyframes tinyPulse {
@@ -293,7 +294,7 @@ ${formData.message}
         }
 
         .contact-trail {
-          animation: contactTrail 10s linear infinite;
+          animation: contactTrail 12s linear infinite;
         }
 
         .soft-float {
@@ -314,19 +315,18 @@ ${formData.message}
       `}</style>
 
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-12%] top-[-24%] h-[560px] w-[560px] rounded-full bg-orange-200/40 blur-3xl" />
-        <div className="absolute right-[-14%] bottom-[-28%] h-[620px] w-[620px] rounded-full bg-orange-100/95 blur-3xl" />
-        <div className="absolute left-[30%] top-[24%] h-40 w-40 rounded-full bg-white/80 blur-3xl" />
+        <div className="absolute -left-36 top-20 h-[440px] w-[440px] rounded-full bg-orange-200/28 blur-3xl" />
+        <div className="absolute -right-40 bottom-0 h-[520px] w-[520px] rounded-full bg-[#0a4aa6]/10 blur-3xl" />
 
         <svg
-          className="absolute left-0 top-0 h-[260px] w-full opacity-70"
+          className="absolute left-0 top-6 h-[260px] w-full opacity-55"
           viewBox="0 0 1440 260"
           fill="none"
           preserveAspectRatio="none"
         >
           <path
             className="contact-trail"
-            d="M-60 120 C140 30 290 175 455 86 C650 -20 785 158 955 76 C1155 -20 1305 68 1510 20"
+            d="M-60 160 C150 50 310 190 510 88 C750 -30 920 178 1110 92 C1260 24 1380 38 1510 8"
             stroke="#fb923c"
             strokeWidth="2.5"
             strokeDasharray="10 15"
@@ -334,11 +334,8 @@ ${formData.message}
           />
         </svg>
 
-        <div className="soft-float absolute left-[6%] top-10 hidden text-5xl lg:block">
+        <div className="soft-float absolute left-[5%] top-16 hidden text-5xl lg:block">
           🛫
-        </div>
-        <div className="soft-float absolute right-[8%] top-10 hidden text-5xl lg:block">
-          ☁️
         </div>
       </div>
 
@@ -360,7 +357,7 @@ ${formData.message}
                 ✓
               </div>
 
-              <h3 className="mt-6 text-3xl font-black text-[#2d145f]">
+              <h3 className="mt-6 text-3xl font-black text-[#071f50]">
                 Italy Plan Request Sent
               </h3>
 
@@ -382,192 +379,188 @@ ${formData.message}
         )}
       </AnimatePresence>
 
-      <div className="relative mx-auto max-w-[1500px]">
+      <div className="relative mx-auto max-w-[1460px]">
         <motion.div
-          initial={{ opacity: 0, y: 26 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.65 }}
           viewport={{ once: true }}
-          className="mx-auto max-w-4xl text-center"
+          className="relative mx-auto max-w-5xl text-center"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-2 text-sm font-black text-orange-600 shadow-sm">
-            <Sparkles className="h-4 w-4" />
-            Let&apos;s Plan Your Italian Journey
+          <div className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-black text-white shadow-[0_12px_26px_rgba(249,115,22,0.22)]">
+            <Plane className="h-4 w-4" />
+            Let&apos;s Plan Your Italy Journey
           </div>
 
-          <h2 className="mt-5 text-5xl font-black leading-[0.95] tracking-tight text-[#2d145f] sm:text-6xl lg:text-7xl">
+          <h2 className="mt-5 text-5xl font-black leading-[0.95] tracking-[-0.05em] text-[#071f50] sm:text-6xl lg:text-7xl">
             Get Your <span className="text-orange-600">Italy Study Plan</span>
           </h2>
 
-          <p className="mx-auto mt-5 max-w-2xl text-lg font-semibold leading-8 text-slate-600">
-            Get a personalized university match, scholarship opportunities, visa
-            roadmap, and expert guidance for studying in Italy.
+          <p className="mx-auto mt-5 max-w-3xl text-lg font-semibold leading-8 text-slate-600">
+            Personalized university matches, scholarships, visa roadmap and clear
+            next-step guidance for studying in Italy.
           </p>
 
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            {["University Match", "Scholarships", "Visa Roadmap"].map((item) => (
+            {[
+              ["🎓", "University Match"],
+              ["🏆", "Scholarships"],
+              ["🛂", "Visa Roadmap"],
+              ["👤", "Expert Guidance"],
+            ].map(([icon, item]) => (
               <span
                 key={item}
-                className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-5 py-2.5 text-sm font-black text-[#2d145f] shadow-sm"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#071f50] shadow-[0_10px_28px_rgba(15,23,42,0.08)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_16px_36px_rgba(15,23,42,0.12)]"
               >
-                <CheckCircle2 className="h-4 w-4 text-orange-600" />
+                <span>{icon}</span>
                 {item}
               </span>
             ))}
           </div>
+
         </motion.div>
 
-        <div className="mt-11 rounded-[2.6rem] border border-orange-100 bg-white/70 p-4 shadow-[0_30px_100px_rgba(251,146,60,0.18)] backdrop-blur-xl sm:p-5">
-          <div className="grid gap-5 lg:grid-cols-[1.03fr_0.97fr]">
+        <div className="mt-8 overflow-hidden rounded-[2.7rem] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.10)] ring-1 ring-orange-100 transition-shadow duration-500 hover:shadow-[0_34px_110px_rgba(15,23,42,0.14)]">
+          <div className="grid lg:grid-cols-[1.03fr_0.97fr]">
             <motion.div
-              initial={{ opacity: 0, x: -34 }}
+              initial={{ opacity: 0, x: -28 }}
               whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.75 }}
+              transition={{ duration: 0.7 }}
               viewport={{ once: true }}
-              className="relative min-h-[720px] overflow-hidden rounded-[2.1rem] bg-gradient-to-br from-white via-[#fff8f1] to-orange-50 p-8 sm:p-10"
+              className="group relative min-h-[890px] overflow-hidden border-b border-orange-100 p-7 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(7,31,80,0.10)] sm:p-9 lg:border-b-0 lg:border-r"
             >
-              <div className="absolute inset-x-10 bottom-6 h-[360px] rounded-full bg-orange-200/35 blur-3xl" />
+              <img
+                src={contactWindow}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover object-left opacity-95"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/96 via-white/58 to-white/5" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/8 via-transparent to-white/10" />
 
-              <div className="relative z-20 max-w-[620px]">
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/90 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-orange-600 shadow-sm">
-                  <Stars className="h-4 w-4" />
-                  Italy-first study roadmap
+              {/* Covers the blue/orange decorative arc baked into the background image */}
+              <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-[12%] bg-white" />
+
+              <div className="relative z-20 max-w-[540px]">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-[0.15em] text-orange-600 shadow-sm ring-1 ring-orange-100">
+                  🇮🇹 Italy-Focused Guidance
                 </div>
 
-                <h3 className="max-w-[600px] text-5xl font-black leading-[0.92] tracking-tight sm:text-6xl xl:text-[4.65rem]">
-                  <span className="block text-[#2d145f]">Your dream</span>
-                  <span className="block text-[#2d145f]">deserves a</span>
+                <h3 className="mt-5 text-5xl font-black leading-[0.92] tracking-[-0.055em] text-[#071f50] sm:text-6xl">
+                  Your dream
+                  <span className="block">deserves a</span>
                   <span className="block text-orange-600">clear plan.</span>
                 </h3>
 
-                <div className="mt-5 flex max-w-[520px] gap-4 rounded-[1.7rem] border border-orange-100 bg-white/75 p-4 shadow-[0_16px_45px_rgba(15,23,42,0.07)] backdrop-blur">
-                  <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-                    <Sparkles className="h-5 w-5" />
-                  </div>
-                  <p className="text-base font-bold leading-7 text-slate-600">
-                    Tell us your goals and we&apos;ll shape your Italian university,
-                    scholarship and visa direction step by step.
-                  </p>
-                </div>
-
+                <p className="mt-5 max-w-md text-base font-semibold leading-7 text-slate-600">
+                  Tell us your goals and we&apos;ll help shape your personalized Italy study roadmap.
+                </p>
               </div>
 
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute right-8 top-[34%] z-30 hidden max-w-[230px] rounded-[1.6rem] border border-orange-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.12)] xl:block"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-                  <Target className="h-6 w-6" />
-                </div>
-                <h4 className="mt-3 text-lg font-black text-[#2d145f]">
-                  Study. <span className="text-orange-600">Apply.</span> Fly.
-                </h4>
-                <p className="mt-2 text-sm font-bold leading-6 text-slate-600">
-                  One focused roadmap for university fit, DSU routes, budget and visa steps.
-                </p>
-              </motion.div>
-
-              <motion.div
-                animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute left-8 bottom-20 z-30 hidden max-w-[230px] rounded-[1.6rem] border border-orange-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.12)] sm:block"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-50 text-purple-700">
-                  <GraduationCap className="h-6 w-6" />
-                </div>
-                <h4 className="mt-3 text-lg font-black text-[#2d145f]">
-                  Personal shortlist
-                </h4>
-                <p className="mt-2 text-sm font-bold leading-6 text-slate-600">
-                  We help you understand which Italian universities match your profile.
-                </p>
-              </motion.div>
-
-              <div className="absolute right-10 bottom-24 z-30 hidden flex-col gap-3 xl:flex">
-                {["University Match", "Scholarship Route", "Visa Roadmap"].map(
-                  (item, index) => (
-                    <motion.div
-                      key={item}
-                      animate={{ x: [0, index % 2 === 0 ? 8 : -8, 0] }}
-                      transition={{
-                        duration: 4 + index,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                      className="w-fit rounded-full border border-orange-100 bg-white/95 px-4 py-2 text-sm font-black text-[#2d145f] shadow-lg"
-                    >
-                      <span className="text-orange-600">✦</span> {item}
-                    </motion.div>
-                  )
-                )}
+              <div className="absolute left-7 top-[330px] z-30 hidden w-[240px] space-y-3 xl:block">
+                {[
+                  ["🎯", "Personalized University Match", "Shortlist universities that fit your profile."],
+                  ["🏆", "Scholarships & Funding", "Understand DSU and regional funding routes."],
+                  ["🛂", "Visa & Documentation", "Build a clearer document and visa preparation path."],
+                  ["🎧", "End-to-End Support", "Keep the journey connected from shortlist to next steps."],
+                ].map(([icon, title, text]) => (
+                  <div
+                    key={title}
+                    className="group/card rounded-[1.5rem] bg-white/95 p-4 shadow-[0_14px_38px_rgba(15,23,42,0.10)] ring-1 ring-orange-100 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:scale-[1.025] hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">{icon}</span>
+                      <div>
+                        <h4 className="text-sm font-black text-[#071f50]">{title}</h4>
+                        <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">{text}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <img
                 src={consultationMascot}
                 alt="Zaifan consultation mascot pointing toward the Italy study plan form"
-                className="absolute -bottom-8 left-1/2 z-10 w-[84%] max-w-[650px] -translate-x-1/2 object-contain drop-shadow-[0_34px_40px_rgba(15,23,42,0.14)]"
+                className="
+                  absolute
+                  bottom-[72px]
+                  left-[57%]
+                  z-20
+                  w-[62%]
+                  max-w-[500px]
+                  -translate-x-1/2
+                  object-contain
+                  object-bottom
+                  drop-shadow-[0_28px_38px_rgba(7,31,80,0.16)]
+                  lg:left-[58%]
+                  lg:w-[64%]
+                  xl:left-[60%]
+                  xl:w-[66%]
+                "
               />
+
+              <div className="absolute bottom-6 left-7 right-7 z-30 rounded-[1.8rem] bg-[#071f50] p-5 text-white shadow-[0_18px_45px_rgba(7,31,80,0.24)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_24px_60px_rgba(7,31,80,0.32)]">
+                <div className="flex items-center gap-4">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-orange-100 text-2xl ring-2 ring-white/20">
+                    🧭
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-black">Not sure where to start?</p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-white/65">
+                      Share your profile and goals — we&apos;ll help you identify the smartest next step for studying in Italy.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 34 }}
+              initial={{ opacity: 0, x: 28 }}
               whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.75 }}
+              transition={{ duration: 0.7 }}
               viewport={{ once: true }}
-              className="rounded-[2.1rem] border border-orange-100 bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.09)] sm:p-7 lg:p-8"
+              className="bg-white p-6 transition-all duration-500 sm:p-8 lg:p-10"
             >
-              <div className="mb-6 flex items-start gap-5">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-                  <CalendarCheck className="h-8 w-8" />
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#071f50] text-white">
+                  <CalendarCheck className="h-7 w-7" />
                 </div>
 
                 <div>
-                  <h3 className="text-3xl font-black leading-tight text-[#2d145f]">
+                  <h3 className="text-3xl font-black leading-tight text-[#071f50]">
                     Get Your Italy Study Plan
                   </h3>
-                  <p className="mt-2 text-base font-semibold leading-6 text-slate-600">
-                    Fill this once. We&apos;ll turn it into your Italy study roadmap.
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                    Fill in the details below and we&apos;ll understand your next useful step.
                   </p>
                 </div>
               </div>
 
-              <div className="mb-6 rounded-2xl border border-orange-100 bg-[#fff8f1] p-4">
+              <div className="mt-6 rounded-[1.5rem] bg-[#fff8f1] p-4 ring-1 ring-orange-100">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
+                  <span className="text-xs font-black uppercase tracking-[0.15em] text-orange-600">
                     Profile Progress
                   </span>
-                  <span className="text-sm font-black text-[#2d145f]">
+                  <span className="text-sm font-black text-[#071f50]">
                     {completionPercentage}%
                   </span>
                 </div>
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
                   <div
-                    className="h-full rounded-full bg-orange-600 transition-all duration-500"
+                    className="h-full rounded-full bg-[#0a4aa6] transition-all duration-500"
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
               </div>
 
-              <div className="mb-6 grid gap-3 sm:grid-cols-3">
-                {["Match", "DSU", "Visa"].map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-2xl border border-orange-100 bg-orange-50/60 px-4 py-3 text-center"
-                  >
-                    <p className="text-sm font-black text-orange-600">{item}</p>
-                    <p className="mt-1 text-xs font-bold text-slate-500">Included</p>
-                  </div>
-                ))}
-              </div>
-
               {submissionError && (
-                <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600">
+                <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600">
                   {submissionError}
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <label>
                     <span className={labelClass}>Full Name *</span>
@@ -623,7 +616,7 @@ ${formData.message}
                       className={selectClass}
                     >
                       {countries.map((country) => (
-                        <option key={country}>{country}</option>
+                        <option key={country} disabled={String(country).includes("(Coming Soon)")}>{country}</option>
                       ))}
                     </select>
                   </label>
@@ -689,7 +682,7 @@ ${formData.message}
                     required
                     value={formValues.message}
                     onChange={(event) => updateField("message", event.target.value)}
-                    className="mt-2 h-28 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className="mt-2 h-28 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-[#0a4aa6] focus:shadow-md focus:ring-4 focus:ring-blue-100"
                   />
                 </label>
 
@@ -704,16 +697,16 @@ ${formData.message}
 
                 <a
                   href="/appointment?country=Italy"
-                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-orange-200 bg-white text-lg font-black text-orange-600 transition hover:-translate-y-1 hover:border-orange-500 hover:bg-orange-50 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-orange-300 bg-white text-lg font-black text-orange-600 transition hover:-translate-y-1 hover:bg-orange-50 focus:outline-none focus:ring-4 focus:ring-orange-100"
                 >
                   <CalendarCheck className="h-5 w-5" />
-                  Book Italy Appointment Instead
+                  Book Free Consultation Instead
                 </a>
 
                 <div className="flex items-center gap-4 py-1">
-                  <div className="h-px flex-1 bg-orange-100" />
-                  <span className="text-sm font-black text-slate-400">or</span>
-                  <div className="h-px flex-1 bg-orange-100" />
+                  <div className="h-px flex-1 bg-slate-200" />
+                  <span className="text-sm font-black text-slate-400">OR</span>
+                  <div className="h-px flex-1 bg-slate-200" />
                 </div>
 
                 <a
@@ -723,14 +716,13 @@ ${formData.message}
                   className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-green-300 bg-white text-lg font-black text-green-600 transition hover:-translate-y-1 hover:bg-green-50 focus:outline-none focus:ring-4 focus:ring-green-100"
                 >
                   <MessageCircle className="h-5 w-5" />
-                  Chat About Italy on WhatsApp
+                  Chat with Us on WhatsApp
                 </a>
 
-                <div className="rounded-2xl bg-orange-50 p-4">
-                  <p className="flex items-start gap-2 text-xs font-bold leading-5 text-orange-700">
-                    <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" />
-                    Your details will be saved as an Italy-focused inquiry for advisor
-                    follow-up.
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="flex items-start gap-2 text-xs font-bold leading-5 text-slate-600">
+                    <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#0a4aa6]" />
+                    Your details will be saved as an Italy-focused inquiry for advisor follow-up.
                   </p>
                 </div>
               </form>
@@ -738,21 +730,30 @@ ${formData.message}
           </div>
         </div>
 
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3 rounded-[2rem] border border-orange-100 bg-white/80 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)] backdrop-blur">
-          {bottomStrip.map((item) => {
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {bottomStrip.map((item, index) => {
             const Icon = item.icon;
 
             return (
               <div
                 key={item.label}
-                className="flex items-center gap-2 rounded-full border border-orange-100 bg-[#fff8f1] px-5 py-3 text-sm font-black text-[#2d145f] transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
+                className="group flex items-center gap-3 rounded-[1.5rem] bg-white px-5 py-4 text-sm font-black text-[#071f50] shadow-[0_14px_40px_rgba(15,23,42,0.06)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.025] hover:shadow-[0_20px_50px_rgba(15,23,42,0.10)]"
               >
-                <Icon className="h-4 w-4 text-orange-600" />
+                <div
+                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-full transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${
+                    index % 2 === 0
+                      ? "bg-[#071f50] text-white"
+                      : "bg-orange-600 text-white"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
                 {item.label}
               </div>
             );
           })}
         </div>
+
       </div>
     </section>
   );

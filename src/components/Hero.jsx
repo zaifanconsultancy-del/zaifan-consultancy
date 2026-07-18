@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import heroStudent from "../assets/images/zaifan/hero-student-globe.png";
 import walkingStudent from "../assets/images/zaifan/student-walking.png";
 import guideStudent from "../assets/images/zaifan/student-guide.png";
+import italyImage from "../assets/images/country-explorer/italy.png";
 
 
 
@@ -35,17 +36,41 @@ const adventureSteps = [
 ];
 
 const explorers = [
-  { icon: "🌎", title: "Country Explorer", section: "countries", text: "Discover top study destinations worldwide." },
-  { icon: "🏛️", title: "University Explorer", section: "universities", text: "Find universities that shape your future." },
-  { icon: "🏆", title: "Scholarship Explorer", section: "more-help", text: "Explore scholarships that match your dreams." },
-  { icon: "🚀", title: "Success Stories", section: "contact", text: "Real students. Real achievements." },
+  {
+    icon: "🌎",
+    title: "Country Explorer",
+    action: "scroll",
+    target: "countries",
+    text: "Explore Italy now and see which destinations are coming next.",
+  },
+  {
+    icon: "🏛️",
+    title: "University Explorer",
+    action: "route",
+    target: "/universities",
+    text: "Compare 50+ Italian university profiles, cities and study routes.",
+  },
+  {
+    icon: "🏆",
+    title: "Scholarship Explorer",
+    action: "route",
+    target: "/scholarships",
+    text: "Explore DSU, regional funding and university scholarship routes.",
+  },
+  {
+    icon: "🇮🇹",
+    title: "Italy Study Guide",
+    action: "route",
+    target: "/countries/italy",
+    text: "Open the complete Italy guide for costs, cities, universities and planning.",
+  },
 ];
 
 const trustStats = [
-  { icon: GraduationCap, value: "18k+", label: "Courses" },
-  { icon: University, value: "1k+", label: "Universities" },
-  { icon: WalletCards, value: "Scholarships", label: "Available" },
-  { icon: Globe2, value: "6+", label: "Destinations" },
+  { icon: Globe2, value: "Italy", label: "Live Now" },
+  { icon: University, value: "50+", label: "University Profiles" },
+  { icon: WalletCards, value: "DSU", label: "Funding Hub" },
+  { icon: GraduationCap, value: "Visa", label: "Planning Route" },
 ];
 
 
@@ -76,6 +101,16 @@ export default function Hero() {
       top: targetTop,
       behavior: "smooth",
     });
+  };
+
+  const handleExplorerAction = (card) => {
+    if (card.action === "route") {
+      navigate(card.target);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    scrollToSection(card.target);
   };
 
   return (
@@ -128,7 +163,7 @@ export default function Hero() {
             <div className="mt-4 flex flex-wrap items-center gap-3 xl:flex-nowrap">
               <button
                 type="button"
-                onClick={() => scrollToSection("universities")}
+                onClick={() => navigate("/universities")}
                 className="flex items-center gap-3 rounded-full bg-[#ff4b12] px-5 py-3 text-xs font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
               >
                 Find My Course <Search size={18} />
@@ -142,7 +177,7 @@ export default function Hero() {
               </button>
               <button
                 type="button"
-                onClick={() => scrollToSection("more-help")}
+                onClick={() => navigate("/services")}
                 className="flex items-center gap-3 rounded-full bg-white px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] transition hover:-translate-y-1 hover:text-[#ff4b12]"
               >
                 <CirclePlay size={18} /> How It Works
@@ -190,10 +225,16 @@ export default function Hero() {
               <div className="card-shine pointer-events-none absolute -left-24 top-[-20%] h-[150%] w-16 bg-white/60 blur-xl" />
               <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-60" />
 
-              <div className="pointer-events-none absolute right-0 top-0 h-16 w-16 overflow-hidden rounded-bl-[28px] bg-gradient-to-br from-emerald-400 via-white to-red-400 opacity-80 shadow-[0_12px_26px_rgba(9,31,80,0.08)] transition duration-500 group-hover:scale-105" />
+              <div className="pointer-events-none absolute right-4 top-4 z-20 h-[78px] w-[78px] overflow-hidden rounded-full bg-white p-1.5 shadow-[0_14px_34px_rgba(9,31,80,0.16)] ring-1 ring-orange-100 transition duration-500 group-hover:scale-105">
+                <img
+                  src={italyImage}
+                  alt=""
+                  className="h-full w-full rounded-full object-cover"
+                />
+              </div>
 
               <div className="relative z-10">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 pr-20">
                   <div className="min-w-0">
                     <div className="flex items-center gap-3">
                       <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-lg font-black text-[#071f50] shadow-[0_14px_30px_rgba(9,31,80,0.10)] ring-1 ring-orange-100 transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-3deg]">
@@ -227,12 +268,12 @@ export default function Hero() {
 
                 <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
                   {[
-                    ["🎓", "DSU Scholarships", "Up to 100% tuition routes"],
+                    ["🎓", "DSU Scholarships", "Regional need-based funding routes"],
                     ["💶", "Low Tuition Universities", "From €500–€4,000/year"],
                     ["🌍", "English-Taught Programs", "Bachelor & master options"],
-                    ["💼", "Work While Studying", "Up to 20 hrs/week"],
-                    ["🏙️", "Student-Friendly Cities", "Safe, vibrant and affordable"],
-                    ["✈️", "Clear Visa Pathway", "Documents planned step by step"],
+                    ["💼", "Student Planning", "Work rules + budget planning"],
+                    ["🏙️", "City Guides", "Compare lifestyle, costs and universities"],
+                    ["✈️", "Visa Planning", "Documents and preparation roadmap"],
                   ].map(([icon, title, text]) => (
                     <div
                       key={title}
@@ -251,10 +292,10 @@ export default function Hero() {
 
                 <div className="mt-4 grid grid-cols-2 gap-2.5">
                   {[
-                    ["Tuition", "€500–€4,000"],
+                    ["Universities", "50+ Profiles"],
                     ["Scholarships", "DSU + Regional"],
-                    ["Student Cities", "30+"],
-                    ["Visa", "4–8 Weeks"],
+                    ["City Guides", "Live"],
+                    ["Planning", "Admission → Visa"],
                   ].map(([label, value]) => (
                     <div
                       key={label}
@@ -283,7 +324,7 @@ export default function Hero() {
 
                 <button
                   type="button"
-                  onClick={goToAppointment}
+                  onClick={() => navigate("/countries/italy")}
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-[#ff4b12] px-5 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.25)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] hover:shadow-[0_24px_50px_rgba(255,75,18,0.38)]"
                 >
                   Start Your Italy Plan
@@ -315,7 +356,7 @@ export default function Hero() {
               <h2 className="text-base font-black tracking-[-0.02em]">Choose your adventure 🗺️</h2>
               <button
                 type="button"
-                onClick={() => scrollToSection("more-help")}
+                onClick={() => navigate("/services")}
                 className="rounded-full bg-orange-50 px-4 py-1.5 text-[11px] font-black text-[#ff4b12] transition hover:bg-orange-100"
               >
                 See Full Process
@@ -361,7 +402,7 @@ export default function Hero() {
               <p className="mt-1 text-[11px] font-semibold leading-4 text-[#17335f]">{card.text}</p>
               <button
                 type="button"
-                onClick={() => scrollToSection(card.section)}
+                onClick={() => handleExplorerAction(card)}
                 className="mt-1.5 grid h-6 w-6 place-items-center rounded-full bg-[#ff4b12] text-white transition group-hover:translate-x-1"
                 aria-label={`Open ${card.title}`}
               >
@@ -371,8 +412,8 @@ export default function Hero() {
           ))}
         </section>
 
-        <section className="relative mt-4 h-[96px] overflow-visible rounded-[22px] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] px-8 shadow-[0_22px_48px_rgba(255,75,18,0.24)]">
-          <div className="absolute inset-0 overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.22),transparent_22%),radial-gradient(circle_at_82%_40%,rgba(255,255,255,0.20),transparent_20%)]" />
+        <section className="relative mt-4 h-[96px] overflow-visible rounded-[22px] bg-gradient-to-r from-[#071f50] via-[#0b3478] to-[#071f50] px-8 shadow-[0_22px_52px_rgba(7,31,80,0.28)]">
+          <div className="absolute inset-0 overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_20%_50%,rgba(255,122,59,0.22),transparent_22%),radial-gradient(circle_at_82%_40%,rgba(255,255,255,0.16),transparent_20%)]" />
 
           <div className="relative z-10 flex h-[96px] flex-col items-start justify-center gap-3 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:py-0">
             <div className="relative hidden h-[96px] w-[390px] shrink-0 overflow-visible lg:block">
@@ -389,7 +430,7 @@ export default function Hero() {
               </div>
             </div>
 
-            <div className="min-w-0 flex-1 pl-0 lg:-ml-8">
+            <div className="min-w-0 flex-1 pl-0 lg:ml-4 xl:ml-6">
               <h2 className="text-[20px] font-black leading-tight tracking-[-0.03em] text-white xl:text-[27px]">Let’s turn your dreams into reality!</h2>
               <p className="mt-1 text-xs font-semibold text-white/95">Book a free 1-on-1 consultation with our study abroad experts.</p>
             </div>
@@ -397,7 +438,7 @@ export default function Hero() {
             <button
               type="button"
               onClick={goToAppointment}
-              className="hidden shrink-0 items-center gap-3 rounded-full bg-[#071f50] px-7 py-3.5 text-xs font-black text-white shadow-[0_18px_35px_rgba(7,31,80,0.28)] transition hover:-translate-y-1 hover:bg-[#092b72] md:flex"
+              className="hidden shrink-0 items-center gap-3 rounded-full bg-[#ff4b12] px-7 py-3.5 text-xs font-black text-white shadow-[0_18px_35px_rgba(255,75,18,0.28)] transition hover:-translate-y-1 hover:bg-[#ff642f] md:flex"
             >
               <CalendarDays size={20} /> Book Free Consultation
             </button>

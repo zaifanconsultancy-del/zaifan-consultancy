@@ -20,6 +20,14 @@ import {
   Star,
   UsersRound,
   Wallet,
+  Target,
+  Compass,
+  Layers3,
+  Lightbulb,
+  CalendarDays,
+  HeartHandshake,
+  CircleAlert,
+  ArrowUpRight,
 } from "lucide-react";
 
 const services = [
@@ -114,6 +122,61 @@ const processSteps = [
   },
 ];
 
+
+const studentStages = [
+  {
+    icon: Compass,
+    stage: "I'm still exploring",
+    title: "Start with direction",
+    text: "Understand Italy, cities, universities, courses and realistic budget before choosing a route.",
+    service: "Free Consultation",
+  },
+  {
+    icon: Target,
+    stage: "I know my field",
+    title: "Build the shortlist",
+    text: "Compare universities by course fit, city, tuition and scholarship potential.",
+    service: "University Selection",
+  },
+  {
+    icon: FileCheck2,
+    stage: "I'm ready to apply",
+    title: "Prepare the application",
+    text: "Turn requirements, documents and deadlines into one clear admission plan.",
+    service: "Admission Guidance",
+  },
+  {
+    icon: Plane,
+    stage: "I have admission",
+    title: "Prepare the move",
+    text: "Connect scholarship follow-up, visa readiness and arrival planning.",
+    service: "Visa Guidance",
+  },
+];
+
+const servicePromises = [
+  {
+    icon: CheckCircle2,
+    title: "What we do",
+    items: [
+      "Explain realistic study routes",
+      "Help structure your decision",
+      "Map documents and timelines",
+      "Connect university, funding and visa planning",
+    ],
+  },
+  {
+    icon: CircleAlert,
+    title: "What we never promise",
+    items: [
+      "Guaranteed admission",
+      "Guaranteed scholarship",
+      "Guaranteed visa approval",
+      "Fake shortcuts or invented outcomes",
+    ],
+  },
+];
+
 const trustItems = [
   "No fake admission guarantees",
   "No fake DSU promises",
@@ -130,91 +193,175 @@ export default function ServicesPage() {
         <div className="pointer-events-none absolute right-[-160px] top-32 h-[380px] w-[380px] rounded-full bg-yellow-200/40 blur-3xl" />
 
         <div className="relative mx-auto max-w-[1500px]">
-          <div className="grid gap-7 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[1fr_0.92fr] lg:items-stretch">
+            <div className="flex flex-col justify-center">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-orange-100 bg-white px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm">
                 <Sparkles className="h-4 w-4 fill-orange-500" />
-                Zaifan Services Ecosystem
+                Zaifan Student Support System
               </div>
 
-              <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.98] tracking-tight text-[#071b3a] sm:text-6xl lg:text-7xl">
-                How can we help you{" "}
-                <span className="text-orange-600">study in Italy?</span>
+              <h1 className="mt-6 max-w-5xl text-5xl font-black leading-[0.94] tracking-[-0.06em] text-[#071b3a] sm:text-6xl lg:text-7xl">
+                Don't buy a service.
+                <span className="text-orange-600"> Build the right study path.</span>
               </h1>
 
-              <p className="mt-5 max-w-2xl text-base font-bold leading-8 text-slate-700 sm:text-lg">
-                Choose the support you need: university selection, scholarships, admission, documents, visa guidance or a free consultation.
+              <p className="mt-6 max-w-3xl text-base font-bold leading-8 text-slate-700 sm:text-lg">
+                From choosing Italy to selecting a university, planning scholarships,
+                preparing applications and understanding the visa route — use only the
+                support you actually need at your current stage.
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <a
                   href="/appointment?country=Italy&service=Free Italy Study Plan"
-                  className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-7 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(234,88,12,0.25)] transition hover:-translate-y-1 hover:bg-orange-700"
+                  className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-8 py-5 text-sm font-black text-white shadow-[0_18px_38px_rgba(234,88,12,0.25)] transition hover:-translate-y-1 hover:bg-orange-700"
                 >
-                  Book Free Consultation
+                  Find My Next Step
                   <ArrowRight className="h-4 w-4" />
                 </a>
 
                 <Link
                   to="/universities"
-                  className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-black text-[#071b3a] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-orange-600 hover:ring-orange-300"
+                  className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-sm font-black text-[#071b3a] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-orange-600 hover:ring-orange-300"
                 >
                   Explore Universities
                   <Building2 className="h-4 w-4" />
                 </Link>
               </div>
+
+              <div className="mt-8 flex flex-wrap gap-2">
+                {["Italy-first", "50+ universities", "DSU guidance", "Admission roadmap", "Visa planning"].map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full bg-white px-4 py-2 text-xs font-black text-[#071b3a] shadow-sm ring-1 ring-orange-100"
+                  >
+                    ✓ {item}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="rounded-[2.5rem] border border-orange-100 bg-white/90 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
-              <div className="rounded-[2rem] bg-gradient-to-br from-orange-50 via-white to-yellow-50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="grid h-16 w-16 place-items-center rounded-3xl bg-orange-600 text-white shadow-lg shadow-orange-600/20">
-                    <Landmark className="h-8 w-8" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
-                      Italy-first support
-                    </p>
-                    <h2 className="mt-1 text-2xl font-black">
-                      One ecosystem, not random advice.
-                    </h2>
-                  </div>
-                </div>
+            <div className="relative overflow-hidden rounded-[2.8rem] bg-[#071b3a] p-6 text-white shadow-[0_32px_90px_rgba(7,27,58,0.22)] sm:p-8">
+              <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full border-[34px] border-white/5" />
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="relative">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">
+                  Your Italy Journey
+                </p>
+                <h2 className="mt-3 text-4xl font-black leading-[0.98] tracking-[-0.05em]">
+                  One connected ecosystem.
+                </h2>
+                <p className="mt-4 max-w-xl text-sm font-semibold leading-7 text-white/70">
+                  Every stage should connect to the next. Random advice creates gaps;
+                  a structured journey makes decisions easier.
+                </p>
+
+                <div className="mt-7 space-y-3">
                   {[
-                    ["50+", "Universities"],
-                    ["DSU", "Scholarship route"],
-                    ["Visa", "Roadmap"],
-                    ["Free", "Consultation"],
-                  ].map(([value, label]) => (
+                    ["01", "Discover Italy", "Country, cities and student life"],
+                    ["02", "Choose University", "Course, city, tuition and fit"],
+                    ["03", "Plan Funding", "DSU, regional routes and backup budget"],
+                    ["04", "Prepare Application", "Requirements, documents and deadlines"],
+                    ["05", "Move Toward Visa", "Financial proof, timeline and readiness"],
+                  ].map(([number, title, text], index) => (
                     <div
-                      key={label}
-                      className="rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-orange-100"
+                      key={title}
+                      className={`flex items-center gap-4 rounded-2xl p-4 ring-1 ${
+                        index === 0
+                          ? "bg-orange-600 ring-orange-500"
+                          : "bg-white/8 ring-white/10"
+                      }`}
                     >
-                      <p className="text-3xl font-black text-orange-600">{value}</p>
-                      <p className="mt-1 text-xs font-black text-slate-600">{label}</p>
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-xs font-black text-orange-200">
+                        {number}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-black">{title}</p>
+                        <p className="mt-1 text-xs font-semibold text-white/65">{text}</p>
+                      </div>
+                      <ArrowUpRight className="h-4 w-4 text-white/35" />
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-5 rounded-[1.5rem] bg-[#071b3a] p-5 text-white">
-                  <p className="text-sm font-bold leading-7 text-white/80">
-                    DSU stays inside the Scholarship Guidance ecosystem. No separate DSU page, no fake promises, no standalone shortcut.
-                  </p>
+                <div className="mt-6 rounded-[1.6rem] bg-white p-5 text-[#071b3a]">
+                  <div className="flex items-start gap-3">
+                    <Lightbulb className="mt-1 shrink-0 text-orange-600" />
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-600">
+                        The Zaifan approach
+                      </p>
+                      <p className="mt-2 text-sm font-bold leading-6 text-slate-600">
+                        Start where you are. Use the service that solves your current
+                        problem instead of paying for support you do not need yet.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <section className="mt-10">
+            <div className="mb-6">
+              <p className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 ring-1 ring-orange-100">
+                Find your stage
+              </p>
+              <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                Where are you in your Italy journey?
+              </h2>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {studentStages.map((item, index) => (
+                <article
+                  key={item.stage}
+                  className={`rounded-[2rem] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ${
+                    index === 0
+                      ? "bg-orange-600 text-white"
+                      : index === 1
+                        ? "bg-[#071b3a] text-white"
+                        : "bg-white text-[#071b3a] ring-1 ring-orange-100"
+                  }`}
+                >
+                  <div className={`grid h-13 w-13 place-items-center rounded-2xl p-3 ${
+                    index < 2 ? "bg-white/10 text-orange-200" : "bg-orange-50 text-orange-600"
+                  }`}>
+                    <item.icon className="h-6 w-6" />
+                  </div>
+                  <p className={`mt-5 text-[10px] font-black uppercase tracking-[0.15em] ${
+                    index < 2 ? "text-orange-200" : "text-orange-600"
+                  }`}>
+                    {item.stage}
+                  </p>
+                  <h3 className="mt-2 text-xl font-black">{item.title}</h3>
+                  <p className={`mt-3 text-sm font-bold leading-6 ${
+                    index < 2 ? "text-white/72" : "text-slate-600"
+                  }`}>
+                    {item.text}
+                  </p>
+                  <a
+                    href={`/appointment?country=Italy&service=${encodeURIComponent(item.service)}`}
+                    className={`mt-5 inline-flex items-center gap-2 text-xs font-black ${
+                      index < 2 ? "text-white" : "text-orange-600"
+                    }`}
+                  >
+                    {item.service}
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-10">
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 ring-1 ring-orange-100">
-                  Choose your support
+                  Support library
                 </p>
                 <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
-                  Services built around real student decisions.
+                  Choose support based on the problem you need to solve.
                 </h2>
               </div>
               <p className="max-w-xl text-sm font-bold leading-7 text-slate-600">
@@ -229,7 +376,7 @@ export default function ServicesPage() {
                 return (
                   <article
                     key={service.title}
-                    className="group overflow-hidden rounded-[2rem] border border-orange-100 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.07)] transition duration-500 hover:-translate-y-2 hover:shadow-[0_28px_80px_rgba(255,91,18,0.14)]"
+                    className="group overflow-hidden rounded-[2rem] border border-orange-100 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.07)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(255,91,18,0.14)]"
                   >
                     <div className={`h-2 bg-gradient-to-r ${service.color}`} />
 
@@ -283,6 +430,46 @@ export default function ServicesPage() {
                   </article>
                 );
               })}
+            </div>
+          </section>
+
+          <section className="mt-10">
+            <div className="grid gap-5 lg:grid-cols-2">
+              {servicePromises.map((group, index) => (
+                <div
+                  key={group.title}
+                  className={`rounded-[2.4rem] p-7 shadow-[0_22px_65px_rgba(15,23,42,0.08)] ${
+                    index === 0
+                      ? "bg-emerald-50 text-emerald-950 ring-1 ring-emerald-100"
+                      : "bg-orange-50 text-[#071b3a] ring-1 ring-orange-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`grid h-13 w-13 place-items-center rounded-2xl p-3 ${
+                      index === 0 ? "bg-emerald-600 text-white" : "bg-orange-600 text-white"
+                    }`}>
+                      <group.icon className="h-6 w-6" />
+                    </div>
+                    <h2 className="text-2xl font-black">{group.title}</h2>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {group.items.map((item) => (
+                      <div
+                        key={item}
+                        className="flex items-start gap-3 rounded-2xl bg-white/75 p-4 text-sm font-bold leading-6 ring-1 ring-black/5"
+                      >
+                        {index === 0 ? (
+                          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                        ) : (
+                          <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-orange-600" />
+                        )}
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 

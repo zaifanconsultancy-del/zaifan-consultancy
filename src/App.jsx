@@ -8,7 +8,6 @@ import loadingLogo from "./assets/loading-logo.png";
 
 import Home from "./pages/Home";
 import ServicesPage from "./pages/ServicesPage";
-import AboutPage from "./pages/AboutPage";
 import CountriesPage from "./pages/CountriesPage";
 import UniversitiesPage from "./pages/UniversitiesPage";
 import UniversityDetailPage from "./pages/UniversityDetailPage";
@@ -22,7 +21,6 @@ import AppointmentPage from "./pages/AppointmentPage.jsx";
 import ItalyGuide from "./pages/ItalyGuide";
 import CityDetailPage from "./pages/CityDetailPage";
 import FloatingConsultationCTA from "./components/FloatingConsultationCTA";
-
 
 function LoadingScreen() {
   return (
@@ -136,8 +134,8 @@ function App() {
         <>
           <ScrollToTop />
 
-         {shouldShowNavbar && <Navbar />}
-{shouldShowNavbar && <FloatingConsultationCTA />}
+          {shouldShowNavbar && <Navbar />}
+          {shouldShowNavbar && <FloatingConsultationCTA />}
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -155,17 +153,6 @@ function App() {
                 element={
                   <PageTransition>
                     <ServicesPage />
-                  </PageTransition>
-                }
-              />
-
-              <Route path="/services" element={<ServicesPage />} />
-
-              <Route
-                path="/about"
-                element={
-                  <PageTransition>
-                    <AboutPage />
                   </PageTransition>
                 }
               />
@@ -214,8 +201,6 @@ function App() {
                   </PageTransition>
                 }
               />
-
-              
 
               <Route
                 path="/scholarships"

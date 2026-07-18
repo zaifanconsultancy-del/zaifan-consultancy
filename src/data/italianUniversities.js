@@ -1,4 +1,17 @@
-import italyUniversity from "../assets/images/universities/italy-university.png";
+const universityImageModules = import.meta.glob(
+  "../assets/images/universities/*.{jpg,jpeg,png,webp}",
+  { eager: true, import: "default" }
+);
+
+function getUniversityImage(slug) {
+  const match = Object.entries(universityImageModules).find(([path]) => {
+    const filename = path.split("/").pop() || "";
+    const basename = filename.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+    return basename === slug;
+  });
+
+  return match?.[1] || "";
+}
 
 export const italianUniversities = [
   {
@@ -17,7 +30,7 @@ export const italianUniversities = [
     popularFor: "Engineering, Design & Architecture",
     vibe: "Italy's strongest technical and design route",
     rankingNote: "Top QS-ranked Italian university",
-    image: italyUniversity,
+    image: getUniversityImage("politecnico-di-milano"),
   },
   {
     rank: "#2",
@@ -35,7 +48,7 @@ export const italianUniversities = [
     popularFor: "Medicine, Research & Big-city student life",
     vibe: "Massive capital-city university with strong global recognition",
     rankingNote: "Highly ranked in Italy and worldwide",
-    image: italyUniversity,
+    image: getUniversityImage("sapienza-university-of-rome"),
   },
   {
     rank: "#3",
@@ -53,7 +66,7 @@ export const italianUniversities = [
     popularFor: "Historic prestige, business and humanities",
     vibe: "Europe's oldest university in a true student city",
     rankingNote: "Historic powerhouse and top Italy choice",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-bologna"),
   },
   {
     rank: "#4",
@@ -71,7 +84,7 @@ export const italianUniversities = [
     popularFor: "Scholarships, science and research",
     vibe: "Scholarship-friendly university with strong academic depth",
     rankingNote: "One of Italy's most respected public universities",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-padua"),
   },
   {
     rank: "#5",
@@ -89,7 +102,7 @@ export const italianUniversities = [
     popularFor: "Medicine, law and science in Milan",
     vibe: "Large public university in Italy's opportunity capital",
     rankingNote: "Strong Milan public university option",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-milan"),
   },
   {
     rank: "#6",
@@ -107,7 +120,7 @@ export const italianUniversities = [
     popularFor: "Engineering, automotive and technology",
     vibe: "Technical route with strong value and industry links",
     rankingNote: "Top technical university in northern Italy",
-    image: italyUniversity,
+    image: getUniversityImage("politecnico-di-torino"),
   },
   {
     rank: "#7",
@@ -125,7 +138,7 @@ export const italianUniversities = [
     popularFor: "Computer science, physics and research",
     vibe: "Research-focused university in a famous student city",
     rankingNote: "Known for science and research strength",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-pisa"),
   },
   {
     rank: "#8",
@@ -143,7 +156,7 @@ export const italianUniversities = [
     popularFor: "Affordable public university route",
     vibe: "Southern Italy value with a large academic ecosystem",
     rankingNote: "Historic public university with broad programs",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-naples-federico-ii"),
   },
   {
     rank: "#9",
@@ -161,7 +174,7 @@ export const italianUniversities = [
     popularFor: "Business, economics and affordable north Italy",
     vibe: "Strong public university in an affordable northern city",
     rankingNote: "Popular option for balanced cost and quality",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-turin"),
   },
   {
     rank: "#10",
@@ -179,7 +192,7 @@ export const italianUniversities = [
     popularFor: "Business, finance and elite career routes",
     vibe: "Premium business school route for ambitious students",
     rankingNote: "Globally known for business and economics",
-    image: italyUniversity,
+    image: getUniversityImage("bocconi-university"),
   },
   {
     rank: "#11",
@@ -197,7 +210,7 @@ export const italianUniversities = [
     popularFor: "Architecture, arts and culture",
     vibe: "Creative and cultural route in one of Italy's iconic cities",
     rankingNote: "Strong public university in Tuscany",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-florence"),
   },
   {
     rank: "#12",
@@ -215,7 +228,7 @@ export const italianUniversities = [
     popularFor: "Medicine and historic campus life",
     vibe: "Historic university close to Milan with strong student feel",
     rankingNote: "Known for long academic tradition",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-pavia"),
   },
   {
     rank: "#13",
@@ -233,7 +246,7 @@ export const italianUniversities = [
     popularFor: "Computer science and data science",
     vibe: "Modern, research-driven university in a peaceful city",
     rankingNote: "Strong for technology and social sciences",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-trento"),
   },
   {
     rank: "#14",
@@ -251,7 +264,7 @@ export const italianUniversities = [
     popularFor: "Business, medicine and languages",
     vibe: "Student-friendly city with balanced academic options",
     rankingNote: "Rising public university option",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-verona"),
   },
   {
     rank: "#15",
@@ -269,7 +282,7 @@ export const italianUniversities = [
     popularFor: "Food science, health and practical programs",
     vibe: "Affordable public route in a calm student city",
     rankingNote: "Good fit for practical and applied subjects",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-parma"),
   },
   {
     rank: "#16",
@@ -287,7 +300,7 @@ export const italianUniversities = [
     popularFor: "Engineering, medicine and coastal student life",
     vibe: "Public university with sea-city lifestyle and broad programs",
     rankingNote: "Large public university with diverse faculties",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-genoa"),
   },
   {
     rank: "#17",
@@ -305,7 +318,7 @@ export const italianUniversities = [
     popularFor: "Business, languages and international studies",
     vibe: "International study route in Venice with strong humanities",
     rankingNote: "Known for languages, business and global studies",
-    image: italyUniversity,
+    image: getUniversityImage("ca-foscari-university-of-venice"),
   },
   {
     rank: "#18",
@@ -323,7 +336,7 @@ export const italianUniversities = [
     popularFor: "Medicine and calm city experience",
     vibe: "Historic smaller-city university with strong student community",
     rankingNote: "Good option for students wanting a quieter city",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-siena"),
   },
   {
     rank: "#19",
@@ -341,7 +354,7 @@ export const italianUniversities = [
     popularFor: "Economics, engineering and Rome access",
     vibe: "Modern Rome campus route with broad English-taught options",
     rankingNote: "Strong second Rome public university option",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-rome-tor-vergata"),
   },
   {
     rank: "#20",
@@ -359,7 +372,7 @@ export const italianUniversities = [
     popularFor: "Architecture, law and education",
     vibe: "Accessible Rome public university with urban student life",
     rankingNote: "Popular Rome option for practical study routes",
-    image: italyUniversity,
+    image: getUniversityImage("roma-tre-university"),
   },
   {
     rank: "#21",
@@ -377,7 +390,7 @@ export const italianUniversities = [
     popularFor: "Affordable south Italy route",
     vibe: "Budget-friendly public university in a coastal city",
     rankingNote: "Strong regional public university",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-bari-aldo-moro"),
   },
   {
     rank: "#22",
@@ -395,7 +408,7 @@ export const italianUniversities = [
     popularFor: "Architecture, medicine and smaller-city study",
     vibe: "Historic public university with affordable student lifestyle",
     rankingNote: "Good scholarship-region option",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-ferrara"),
   },
   {
     rank: "#23",
@@ -413,7 +426,7 @@ export const italianUniversities = [
     popularFor: "Budget route and Mediterranean lifestyle",
     vibe: "Southern public university with lower living costs",
     rankingNote: "Useful option for value-focused students",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-palermo"),
   },
   {
     rank: "#24",
@@ -431,7 +444,7 @@ export const italianUniversities = [
     popularFor: "Medicine, engineering and budget study",
     vibe: "Large Sicilian public university with affordable living",
     rankingNote: "Strong southern Italy public option",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-catania"),
   },
   {
     rank: "#25",
@@ -449,7 +462,7 @@ export const italianUniversities = [
     popularFor: "Computer science and affordable campus life",
     vibe: "Campus-style university close to the Amalfi region",
     rankingNote: "Good fit for budget and tech-focused students",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-salerno"),
   },
   {
     rank: "#26",
@@ -467,7 +480,7 @@ export const italianUniversities = [
     popularFor: "Campus life and budget-friendly study",
     vibe: "Large campus university with lower living expenses",
     rankingNote: "Affordable southern Italy pathway",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-calabria"),
   },
   {
     rank: "#27",
@@ -485,7 +498,7 @@ export const italianUniversities = [
     popularFor: "Business and Lombardy access",
     vibe: "Smaller Lombardy option near Milan with practical programs",
     rankingNote: "Good northern Italy value pick",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-bergamo"),
   },
   {
     rank: "#28",
@@ -503,7 +516,7 @@ export const italianUniversities = [
     popularFor: "Science, international relations and border-city life",
     vibe: "International-feeling city with strong science roots",
     rankingNote: "Interesting route for science and global studies",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-trieste"),
   },
   {
     rank: "#29",
@@ -521,7 +534,7 @@ export const italianUniversities = [
     popularFor: "Agriculture, engineering and affordable living",
     vibe: "Smaller public university in a calm northern city",
     rankingNote: "Useful option for affordable north Italy",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-udine"),
   },
   {
     rank: "#30",
@@ -539,8 +552,8 @@ export const italianUniversities = [
     popularFor: "Medicine, law and budget route",
     vibe: "Affordable Sicilian public university with coastal lifestyle",
     rankingNote: "Good future-detail-page candidate",
-    image: italyUniversity,
-  },,
+    image: getUniversityImage("university-of-messina"),
+  },
 
   {
     rank: "#31",
@@ -558,7 +571,7 @@ export const italianUniversities = [
     popularFor: "Medicine, psychology, economics and Milan public university route",
     vibe: "Modern Milan public university with strong science and healthcare options",
     rankingNote: "Strong public option for students who want Milan without private tuition",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-milan-bicocca"),
   },
   {
     rank: "#32",
@@ -576,7 +589,7 @@ export const italianUniversities = [
     popularFor: "Engineering, medicine and practical northern Italy routes",
     vibe: "Affordable Lombardy option with strong applied programs",
     rankingNote: "Good value public university close to Milan's wider ecosystem",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-brescia"),
   },
   {
     rank: "#33",
@@ -594,7 +607,7 @@ export const italianUniversities = [
     popularFor: "Medicine, agriculture and central Italy student life",
     vibe: "Historic central Italy university with a balanced cost profile",
     rankingNote: "Useful public option for students considering smaller Italian cities",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-perugia"),
   },
   {
     rank: "#34",
@@ -612,7 +625,7 @@ export const italianUniversities = [
     popularFor: "Engineering, economics, medicine and Emilia-Romagna industry links",
     vibe: "Practical public university route in a strong northern region",
     rankingNote: "Good fit for students comparing Bologna-region alternatives",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-modena-and-reggio-emilia"),
   },
   {
     rank: "#35",
@@ -630,7 +643,7 @@ export const italianUniversities = [
     popularFor: "Medicine, biology and affordable Lombardy study",
     vibe: "Smaller northern public university with calm city lifestyle",
     rankingNote: "Useful option near Milan and Como for value-focused students",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-insubria"),
   },
   {
     rank: "#36",
@@ -648,7 +661,7 @@ export const italianUniversities = [
     popularFor: "Medicine, economics and affordable Piedmont routes",
     vibe: "Regional public university with practical study options",
     rankingNote: "Good alternative for students considering Turin-region universities",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-eastern-piedmont"),
   },
   {
     rank: "#37",
@@ -666,7 +679,7 @@ export const italianUniversities = [
     popularFor: "Pharmacy, architecture and smaller-campus experience",
     vibe: "Compact university route with strong applied science options",
     rankingNote: "Interesting public option for students who prefer quieter cities",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-camerino"),
   },
   {
     rank: "#38",
@@ -684,7 +697,7 @@ export const italianUniversities = [
     popularFor: "Law, humanities and political science",
     vibe: "Humanities-focused university in a calm student city",
     rankingNote: "Good fit for non-STEM students comparing affordable public routes",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-macerata"),
   },
   {
     rank: "#39",
@@ -702,7 +715,7 @@ export const italianUniversities = [
     popularFor: "Medicine, psychology and affordable Adriatic city lifestyle",
     vibe: "Budget-friendly central-southern route near the coast",
     rankingNote: "Useful option for students comparing lower-cost Italian cities",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-chieti-pescara"),
   },
   {
     rank: "#40",
@@ -720,7 +733,7 @@ export const italianUniversities = [
     popularFor: "Engineering, computer science and affordable study",
     vibe: "Central Italy public university with solid STEM options",
     rankingNote: "Good value option for tech-focused students",
-    image: italyUniversity,
+    image: getUniversityImage("university-of-laquila"),
   },
   {
     rank: "#41",
@@ -738,7 +751,7 @@ export const italianUniversities = [
     popularFor: "Business, economics, law and international relations",
     vibe: "Premium Rome route for business, politics and leadership careers",
     rankingNote: "Well-known private university for business and social sciences",
-    image: italyUniversity,
+    image: getUniversityImage("luiss-guido-carli"),
   },
   {
     rank: "#42",
@@ -756,7 +769,7 @@ export const italianUniversities = [
     popularFor: "Medicine, economics, psychology and business",
     vibe: "Large private university with strong Milan recognition",
     rankingNote: "Well-known private route with broad academic options",
-    image: italyUniversity,
+    image: getUniversityImage("catholic-university-of-the-sacred-heart"),
   },
   {
     rank: "#43",
@@ -774,7 +787,7 @@ export const italianUniversities = [
     popularFor: "Medicine, surgery and health sciences",
     vibe: "Premium medical university route connected to healthcare training",
     rankingNote: "Strong private option for medicine-focused students",
-    image: italyUniversity,
+    image: getUniversityImage("humanitas-university"),
   },
   {
     rank: "#44",
@@ -792,7 +805,7 @@ export const italianUniversities = [
     popularFor: "Communication, marketing, languages and tourism",
     vibe: "Creative private Milan route for communication and media students",
     rankingNote: "Recognized for communication, media and language-focused study",
-    image: italyUniversity,
+    image: getUniversityImage("iulm-university"),
   },
   {
     rank: "#45",
@@ -810,7 +823,7 @@ export const italianUniversities = [
     popularFor: "Multilingual study, computer science, economics and design",
     vibe: "Unique northern Italy university with international and multilingual feel",
     rankingNote: "Strong fit for students seeking a distinctive northern Italy route",
-    image: italyUniversity,
+    image: getUniversityImage("free-university-of-bozen-bolzano"),
   },
   {
     rank: "#46",
@@ -828,7 +841,7 @@ export const italianUniversities = [
     popularFor: "Design, fashion and luxury brand management",
     vibe: "Premium creative route in Milan for design-focused students",
     rankingNote: "Useful option for students targeting design and luxury sectors",
-    image: italyUniversity,
+    image: getUniversityImage("domus-academy"),
   },
   {
     rank: "#47",
@@ -846,7 +859,7 @@ export const italianUniversities = [
     popularFor: "Design, fashion, media and visual arts",
     vibe: "Creative private academy for students building design portfolios",
     rankingNote: "Good route for art, design and creative industry pathways",
-    image: italyUniversity,
+    image: getUniversityImage("naba"),
   },
   {
     rank: "#48",
@@ -864,7 +877,7 @@ export const italianUniversities = [
     popularFor: "Design, fashion, communication and visual arts",
     vibe: "Creative institute route for students focused on design careers",
     rankingNote: "Relevant option for fashion, product and communication design",
-    image: italyUniversity,
+    image: getUniversityImage("istituto-europeo-di-design"),
   },
   {
     rank: "#49",
@@ -882,7 +895,7 @@ export const italianUniversities = [
     popularFor: "Fashion, design and luxury business",
     vibe: "Premium fashion and luxury education route in Milan",
     rankingNote: "Known for fashion and luxury-industry focused study routes",
-    image: italyUniversity,
+    image: getUniversityImage("istituto-marangoni"),
   },
   {
     rank: "#50",
@@ -900,7 +913,7 @@ export const italianUniversities = [
     popularFor: "Elite research, engineering, economics and life sciences",
     vibe: "Highly selective academic route for top-performing students",
     rankingNote: "Elite Italian higher education institution with strong research reputation",
-    image: italyUniversity,
+    image: getUniversityImage("scuola-superiore-sant-anna"),
   },
 ];
 

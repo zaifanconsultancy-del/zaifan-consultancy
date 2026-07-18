@@ -29,9 +29,21 @@ import {
   ClipboardCheck,
   MapPinned,
   Scale,
+  Search,
   Star,
   Trophy,
   UsersRound,
+  CalendarDays,
+  Clock3,
+  Globe2,
+  Map,
+  Languages,
+  Lightbulb,
+  Rocket,
+  Zap,
+  TrendingUp,
+  ArrowUpRight,
+  MousePointer2,
 } from "lucide-react";
 
 import { italianUniversities } from "../data/italianUniversities";
@@ -103,20 +115,67 @@ const pathwaySteps = [
 
 const costCards = [
   {
-    label: "Tuition",
-    value: "Often lower than many popular destinations",
-    text: "Exact tuition depends on university, course, degree level and student profile.",
+    label: "Public University Tuition",
+    value: "Approx. €500–€4,000 / year",
+    text: "Many Italian public universities use comparatively moderate tuition structures. The exact fee can depend on the university, programme, nationality and financial documentation, so students must verify the current official fee table for their course.",
   },
   {
-    label: "Living Costs",
-    value: "City dependent",
-    text: "Milan and Rome are usually more expensive; smaller student cities can feel easier to manage.",
+    label: "Typical Student Living Budget",
+    value: "Approx. €700–€1,500+ / month",
+    text: "Rent is usually the biggest variable. Milan, Rome and central Venice can cost substantially more, while Turin, Pisa, Padua and other student cities may offer more manageable routes depending on accommodation.",
   },
   {
-    label: "Scholarship Impact",
-    value: "Can reduce pressure",
-    text: "Regional scholarships may support eligible students, but deadlines and documents matter a lot.",
+    label: "Scholarship Strategy",
+    value: "DSU + regional + university aid",
+    text: "Eligible students may explore regional right-to-study benefits, merit awards and university-specific support. Funding should be treated as a planned opportunity—not guaranteed money—and a backup budget remains essential.",
   },
+];
+
+const practicalPlanning = [
+  {
+    title: "Bachelor's applicants",
+    items: [
+      "Check whether your secondary education meets the university's entry-equivalence rules",
+      "Verify programme language and any entrance-test requirements",
+      "Prepare academic records, identity documents and required translations",
+      "Check programme-specific deadlines before starting scholarship planning",
+    ],
+  },
+  {
+    title: "Master's applicants",
+    items: [
+      "Match your previous degree and credits with the target programme",
+      "Prepare transcripts, degree documents, CV and programme-specific material",
+      "Check English or Italian language evidence required by the university",
+      "Compare admission deadlines with regional scholarship preparation windows",
+    ],
+  },
+  {
+    title: "Before committing",
+    items: [
+      "Compare tuition, rent and realistic monthly living costs",
+      "Identify the scholarship body connected to the university's region",
+      "Build a backup budget that does not depend entirely on scholarship approval",
+      "Plan admission, pre-enrolment, visa and accommodation as one connected timeline",
+    ],
+  },
+];
+
+const monthlyBudget = [
+  ["Shared accommodation", "€300–€900+", "Largest variable; premium cities and central locations can cost more."],
+  ["Food & groceries", "€180–€350+", "Cooking at home and student canteens can reduce monthly spending."],
+  ["Local transport", "€25–€60+", "Student passes may be available depending on the city and operator."],
+  ["Phone & essentials", "€20–€50+", "SIM, toiletries and routine personal expenses."],
+  ["Study & personal buffer", "€75–€200+", "Books, social life, clothing and unexpected small expenses."],
+];
+
+const applicationTimeline = [
+  { phase: "Research", timing: "9–12+ months before", text: "Choose subject area, degree level, language, cities and a realistic budget. Build a shortlist instead of applying randomly." },
+  { phase: "University Applications", timing: "6–10 months before", text: "Track each programme separately. Requirements and deadlines vary, so the course page—not a generic country deadline—must guide the application." },
+  { phase: "Funding Documents", timing: "Start early", text: "Prepare family, income, property and supporting documents early enough for translation, legalization or other formalities where applicable." },
+  { phase: "Admission & Pre-enrolment", timing: "After the relevant admission stage", text: "Follow the university and official pre-enrolment procedure applicable to your case. Keep names and document details consistent." },
+  { phase: "Visa Preparation", timing: "As soon as eligible to proceed", text: "Organize financial evidence, accommodation, insurance and the rest of the required file according to the competent official authority." },
+  { phase: "Arrival", timing: "Before & after landing", text: "Confirm housing, travel, local registration and residence-permit responsibilities. Keep original documents accessible." },
 ];
 
 const dsuChecklist = [
@@ -175,6 +234,7 @@ const universities = [
 
 const cityCards = [
   {
+    emoji: "🏙️",
     city: "Milan",
     slug: "milan",
     vibe: "Business, fashion, design, technology",
@@ -182,6 +242,7 @@ const cityCards = [
     status: "Live City Guide",
   },
   {
+    emoji: "🏛️",
     city: "Rome",
     slug: "rome",
     vibe: "History, culture, international student life",
@@ -189,6 +250,7 @@ const cityCards = [
     status: "Live City Guide",
   },
   {
+    emoji: "🎒",
     city: "Bologna",
     slug: "bologna",
     vibe: "Classic student city with strong academic identity",
@@ -196,6 +258,7 @@ const cityCards = [
     status: "Live City Guide",
   },
   {
+    emoji: "📚",
     city: "Padua",
     slug: "padua",
     vibe: "Historic, student-friendly and education focused",
@@ -203,6 +266,7 @@ const cityCards = [
     status: "Live City Guide",
   },
   {
+    emoji: "🎨",
     city: "Florence",
     slug: "florence",
     vibe: "Arts, architecture, culture and Tuscany lifestyle",
@@ -210,6 +274,7 @@ const cityCards = [
     status: "Live City Guide",
   },
   {
+    emoji: "🏎️",
     city: "Turin",
     slug: "turin",
     vibe: "Engineering, automotive, business and value",
@@ -217,6 +282,7 @@ const cityCards = [
     status: "Live City Guide",
   },
   {
+    emoji: "🔬",
     city: "Pisa",
     slug: "pisa",
     vibe: "Science, research and focused student life",
@@ -224,6 +290,7 @@ const cityCards = [
     status: "Live City Guide",
   },
   {
+    emoji: "🚤",
     city: "Venice",
     slug: "venice",
     vibe: "Languages, business, tourism and culture",
@@ -454,10 +521,10 @@ const universityCategoryBlocks = [
 ];
 
 const lifeItems = [
-  { icon: Coffee, title: "Daily Life", text: "Cafes, piazzas, local markets and city walking culture." },
-  { icon: Utensils, title: "Food", text: "Pasta, pizza, regional dishes and affordable student meals." },
-  { icon: Train, title: "Transport", text: "Public transport and trains help students move between cities." },
-  { icon: Home, title: "Housing", text: "Options can include dorms, shared apartments and private rentals." },
+  { icon: Coffee, emoji: "☕", title: "Daily Life", text: "Cafes, piazzas, local markets and city walking culture." },
+  { icon: Utensils, emoji: "🍝", title: "Food", text: "Pasta, pizza, regional dishes and affordable student meals." },
+  { icon: Train, emoji: "🚆", title: "Transport", text: "Public transport and trains help students move between cities." },
+  { icon: Home, emoji: "🏡", title: "Housing", text: "Options can include dorms, shared apartments and private rentals." },
 ];
 
 const decisionFramework = {
@@ -480,12 +547,12 @@ const decisionFramework = {
 };
 
 const cityGoals = [
-  { goal: "Engineering", city: "Turin", slug: "turin", reason: "Politecnico di Torino, automotive links and strong northern Italy value." },
-  { goal: "Business", city: "Milan", slug: "milan", reason: "Finance, consulting, fashion, management and international exposure." },
-  { goal: "Medicine", city: "Rome", slug: "rome", reason: "Sapienza and major public university routes in a capital-city ecosystem." },
-  { goal: "Research", city: "Padua", slug: "padua", reason: "Strong research identity, scholarship-friendly positioning and student focus." },
-  { goal: "Student Life", city: "Bologna", slug: "bologna", reason: "Classic student-city atmosphere with deep academic identity." },
-  { goal: "Arts & Architecture", city: "Florence", slug: "florence", reason: "Culture, architecture, museums, heritage and creative pathways." },
+  { goal: "Engineering", city: "Turin", slug: "turin", icon: Building2, emoji: "⚙️", reason: "Politecnico di Torino, automotive links and strong northern Italy value." },
+  { goal: "Business", city: "Milan", slug: "milan", icon: BriefcaseBusiness, emoji: "💼", reason: "Finance, consulting, fashion, management and international exposure." },
+  { goal: "Medicine", city: "Rome", slug: "rome", icon: HeartHandshake, emoji: "🩺", reason: "Sapienza and major public university routes in a capital-city ecosystem." },
+  { goal: "Research", city: "Padua", slug: "padua", icon: BookOpenCheck, emoji: "🔬", reason: "Strong research identity, scholarship-friendly positioning and student focus." },
+  { goal: "Student Life", city: "Bologna", slug: "bologna", icon: GraduationCap, emoji: "🎒", reason: "Classic student-city atmosphere with deep academic identity." },
+  { goal: "Arts & Architecture", city: "Florence", slug: "florence", icon: Landmark, emoji: "🎨", reason: "Culture, architecture, museums, heritage and creative pathways." },
 ];
 
 const realityChecks = [
@@ -540,6 +607,76 @@ const faqs = [
   { q: "Can Zaifan help me choose city and university together?", a: "Yes. The best Italy plan connects country, city, university, scholarships, documents and visa preparation instead of treating each step separately." },
 ];
 
+
+const italySnapshot = [
+  {
+    label: "Public tuition",
+    value: "€500–€4,000",
+    suffix: "/ year",
+    icon: Euro,
+    emoji: "💶",
+    note: "Planning range for many public-university routes",
+  },
+  {
+    label: "Living budget",
+    value: "€700–€1,500+",
+    suffix: "/ month",
+    icon: WalletCards,
+    emoji: "🏠",
+    note: "City and housing choice make the biggest difference",
+  },
+  {
+    label: "Main intake",
+    value: "September",
+    suffix: "",
+    icon: CalendarDays,
+    emoji: "📅",
+    note: "Exact programme deadlines can open much earlier",
+  },
+  {
+    label: "Scholarship route",
+    value: "Regional",
+    suffix: "+ university",
+    icon: BadgePercent,
+    emoji: "🎓",
+    note: "DSU-style support is connected to regions and institutions",
+  },
+];
+
+const quickChoices = [
+  {
+    eyebrow: "I care about budget",
+    title: "Find the best-value city route",
+    text: "Compare rent pressure, tuition, scholarship body and student lifestyle before choosing.",
+    icon: WalletCards,
+    action: "Compare cities",
+    target: "italy-comparison-center",
+  },
+  {
+    eyebrow: "I care about scholarships",
+    title: "Understand DSU before applying",
+    text: "See what regional support means, which documents matter and why preparation must start early.",
+    icon: BadgeDollarSign,
+    action: "Explore DSU",
+    target: "italy-dsu-scholarship",
+  },
+  {
+    eyebrow: "I care about universities",
+    title: "Build a serious shortlist",
+    text: "Move from broad interest to university pathways grouped by engineering, business, medicine and more.",
+    icon: GraduationCap,
+    action: "See universities",
+    target: "italy-universities",
+  },
+];
+
+const journeySignals = [
+  { icon: Search, title: "Discover", text: "Country, cities and study routes" },
+  { icon: Scale, title: "Compare", text: "Cost, scholarships and fit" },
+  { icon: ClipboardCheck, title: "Prepare", text: "Admission and documents" },
+  { icon: Rocket, title: "Move", text: "Visa, arrival and next steps" },
+];
+
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
   show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
@@ -554,14 +691,19 @@ function Badge({ children }) {
   );
 }
 
-function SectionHeader({ eyebrow, title, text }) {
+function SectionHeader({ eyebrow, title, text, align = "center" }) {
+  const centered = align === "center";
   return (
-    <div className="mx-auto max-w-4xl text-center">
+    <div className={centered ? "mx-auto max-w-4xl text-center" : "max-w-4xl"}>
       <Badge>{eyebrow}</Badge>
-      <h2 className="mt-5 text-4xl font-black leading-[0.98] tracking-[-0.055em] text-[#071f50] md:text-6xl">
+      <h2 className={`mt-5 text-4xl font-black leading-[0.96] tracking-[-0.06em] text-[#071f50] md:text-6xl ${centered ? "" : "max-w-3xl"}`}>
         {title}
       </h2>
-      {text && <p className="mx-auto mt-5 max-w-3xl text-base font-semibold leading-8 text-[#5f6f89] md:text-lg">{text}</p>}
+      {text && (
+        <p className={`${centered ? "mx-auto" : ""} mt-5 max-w-3xl text-base font-semibold leading-8 text-[#5f6f89] md:text-lg`}>
+          {text}
+        </p>
+      )}
     </div>
   );
 }
@@ -629,94 +771,207 @@ function ItalyGuide() {
 
   return (
     <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
-      <section className="relative px-5 pb-20 pt-32 md:pt-36">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_22%,rgba(255,75,18,0.16),transparent_30%),radial-gradient(circle_at_84%_12%,rgba(255,178,89,0.18),transparent_26%)]" />
-        <div className="pointer-events-none absolute -left-28 top-16 h-96 w-96 rounded-full bg-orange-300/20 blur-3xl" />
-        <div className="pointer-events-none absolute -right-28 top-32 h-96 w-96 rounded-full bg-[#ff4b12]/10 blur-3xl" />
+      <section className="relative isolate min-h-[820px] overflow-hidden px-5 pb-16 pt-28 md:pt-32">
+        <div className="pointer-events-none absolute inset-0 -z-20 bg-[#fff7ed]" />
+        <div className="pointer-events-none absolute left-[-8%] top-[10%] -z-10 h-[460px] w-[460px] rounded-full bg-orange-300/28 blur-[95px]" />
+        <div className="pointer-events-none absolute right-[-5%] top-[4%] -z-10 h-[520px] w-[520px] rounded-full bg-[#ff4b12]/14 blur-[110px]" />
+        <div className="pointer-events-none absolute bottom-[-18%] left-[32%] -z-10 h-[420px] w-[420px] rounded-full bg-amber-200/28 blur-[100px]" />
 
-        <div className="relative mx-auto grid max-w-[1450px] items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-          <motion.div initial="hidden" animate="show" variants={fadeUp}>
-            <Badge>Italy Destination Guide</Badge>
-            <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.9] tracking-[-0.07em] text-[#071f50] md:text-7xl xl:text-[88px]">
-              Study in <span className="text-[#ff4b12]">Italy</span> with a clear plan.
-            </h1>
-            <p className="mt-7 max-w-3xl text-lg font-semibold leading-9 text-[#526178]">
-              This is Zaifan’s Italy-first guide for students who want affordable European education, scholarship planning, university shortlisting and a step-by-step route from research to consultation.
-            </p>
+        <div className="mx-auto max-w-[1450px]">
+          <div className="grid items-center gap-12 lg:grid-cols-[0.94fr_1.06fr]">
+            <motion.div initial="hidden" animate="show" variants={fadeUp} className="relative z-10">
+              <Badge>Italy Destination Experience</Badge>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="/appointment?country=Italy"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20"
-              >
-                Book Italy Consultation
-                <ArrowRight size={21} strokeWidth={3} />
-              </a>
-              <button
-                type="button"
-                onClick={() => scrollToId("italy-dsu-scholarship")}
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-base font-black text-[#ff4b12] shadow-[0_14px_32px_rgba(255,75,18,0.1)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-[#fff1ea] focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20"
-              >
-                Understand DSU
-              </button>
-            </div>
-          </motion.div>
+              <div className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#071f50] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_35px_rgba(7,31,80,0.18)]">
+                <Zap size={14} className="text-[#ffb36d]" fill="currentColor" />
+                Built for students who want clarity, not brochure talk
+              </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 32, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.08 }}
-            className="relative"
-          >
-            <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-[#ff4b12]/15 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[42px] bg-white p-6 shadow-[0_35px_100px_rgba(9,31,80,0.12)] ring-1 ring-orange-100">
-              <div className="rounded-[34px] bg-[radial-gradient(circle_at_18%_20%,rgba(255,75,18,0.18),transparent_28%),linear-gradient(135deg,#fffaf5,#ffffff)] p-6 md:p-8">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12]">Live Destination</p>
-                    <h2 className="mt-2 text-4xl font-black tracking-[-0.055em] text-[#071f50]">Italy</h2>
-                  </div>
-                  <div className="grid h-20 w-20 place-items-center rounded-[26px] bg-white text-5xl shadow-inner ring-1 ring-orange-100">🇮🇹</div>
-                </div>
+              <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.88] tracking-[-0.075em] text-[#071f50] sm:text-6xl md:text-7xl xl:text-[92px]">
+                Your complete
+                <span className="ml-3 inline-block text-[#ff4b12]">
+                  Italy
+                </span>
+                <span className="ml-3 inline-block text-[#071f50]">IT</span>
+                <br />
+                study game plan.
+              </h1>
 
-                <div className="mt-7 grid gap-4 sm:grid-cols-2">
-                  {italyHighlights.map((item) => (
-                    <div key={item.title} className="rounded-[24px] bg-white/88 p-4 shadow-sm ring-1 ring-orange-100">
-                      <div className="flex items-center gap-3">
-                        <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12]">
-                          <item.icon size={22} strokeWidth={2.7} />
-                        </div>
-                        <h3 className="text-sm font-black leading-tight text-[#071f50]">{item.title}</h3>
+              <p className="mt-7 max-w-2xl text-lg font-semibold leading-9 text-[#526178]">
+                Compare cities, universities, costs, scholarships and the application journey in one place—then turn everything into a clear next-step plan.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a
+                  href="/appointment?country=Italy"
+                  className="inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
+                >
+                  Build My Italy Plan
+                  <ArrowRight size={21} strokeWidth={3} />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => scrollToId("italy-comparison-center")}
+                  className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-base font-black text-[#071f50] shadow-[0_14px_32px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-[#ff4b12]"
+                >
+                  <MousePointer2 size={19} />
+                  Explore the Guide
+                </button>
+              </div>
+
+              <div className="mt-9 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
+                {journeySignals.map((item, index) => (
+                  <div key={item.title} className="relative rounded-[22px] bg-white/88 p-4 shadow-[0_14px_35px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 backdrop-blur">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#fff1ea] text-[#ff4b12]">
+                        <item.icon size={17} strokeWidth={2.8} />
                       </div>
-                      <p className="mt-3 text-xs font-semibold leading-6 text-[#61708a]">{item.text}</p>
+                      <span className="text-[10px] font-black text-orange-200">0{index + 1}</span>
                     </div>
-                  ))}
-                </div>
+                    <p className="text-sm font-black text-[#071f50]">{item.title}</p>
+                    <p className="mt-1 text-[11px] font-semibold leading-5 text-[#7a879c]">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
 
-                <div className="mt-7 rounded-[26px] bg-[#071f50] p-5 text-white">
-                  <div className="flex items-start gap-4">
-                    <ShieldCheck className="mt-1 text-[#ffb36d]" size={28} />
+            <motion.div
+              initial={{ opacity: 0, y: 35, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.75, delay: 0.08 }}
+              className="relative"
+            >
+              <div className="relative overflow-hidden rounded-[34px] bg-white/96 p-6 shadow-[0_32px_90px_rgba(9,31,80,0.12)] ring-1 ring-orange-100 md:p-8">
+                <div className="pointer-events-none absolute -right-14 -top-12 h-44 w-44 rounded-full border-[28px] border-[#ff4b12]/7" />
+                <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-orange-100/50 blur-2xl" />
+                <div className="relative">
+                  <div className="pointer-events-none absolute right-[-70px] top-[-70px] h-52 w-52 rounded-full border-[34px] border-[#ff4b12]/8" />
+                  <div className="pointer-events-none absolute bottom-[-90px] left-[-70px] h-64 w-64 rounded-full border-[44px] border-[#071f50]/5" />
+
+                  <div className="relative flex items-start justify-between">
                     <div>
-                      <h3 className="text-xl font-black tracking-[-0.035em]">Honest Italy-first guidance</h3>
-                      <p className="mt-2 text-sm font-semibold leading-7 text-white/76">
-                        No fake country database. No fake promises. Italy is the focus, and this page will grow into Zaifan’s complete student guide.
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12]">Live Italy Dashboard</p>
+                      <h2 className="mt-2 text-4xl font-black tracking-[-0.06em] text-[#071f50] md:text-5xl">
+                        Know before you decide.
+                      </h2>
+                      <p className="mt-3 max-w-md text-sm font-semibold leading-7 text-[#61708a]">
+                        A quick overview of the things that actually shape your decision.
                       </p>
+                    </div>
+                    <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-[#fffaf5] text-3xl font-black text-[#071f50] shadow-inner ring-[12px] ring-[#fff1ea]">
+                      IT
+                    </div>
+                  </div>
+
+                  <div className="relative mt-7 grid gap-3 sm:grid-cols-2">
+                    {italySnapshot.map((item) => (
+                      <div key={item.label} className="group rounded-[24px] bg-white p-5 shadow-[0_10px_28px_rgba(9,31,80,0.045)] ring-1 ring-orange-100/80 transition hover:-translate-y-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12]">
+                              <item.icon size={21} strokeWidth={2.8} />
+                            </div>
+                            <span className="text-xl" aria-hidden="true">{item.emoji}</span>
+                          </div>
+                          <ArrowUpRight size={17} className="text-orange-200 transition group-hover:text-[#ff4b12]" />
+                        </div>
+                        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.15em] text-[#ff4b12]">{item.label}</p>
+                        <p className="mt-1 text-2xl font-black tracking-[-0.04em] text-[#071f50]">
+                          {item.value} <span className="text-xs text-[#7c899b]">{item.suffix}</span>
+                        </p>
+                        <p className="mt-2 text-xs font-semibold leading-5 text-[#7a879c]">{item.note}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="relative mt-4 rounded-[24px] bg-[#fff7ed] p-5 ring-1 ring-orange-100">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#ffe7d7] text-[#ff4b12]">
+                          <Lightbulb size={22} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-[#071f50]">The Zaifan approach</p>
+                          <p className="mt-1 text-xs font-semibold leading-5 text-[#61708a]">
+                            University + city + money + scholarship + visa = one decision.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => scrollToId("italy-decision-framework")}
+                        className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black text-[#071f50] shadow-sm ring-1 ring-orange-100 transition hover:text-[#ff4b12]"
+                      >
+                        Check my fit
+                        <ArrowRight size={14} strokeWidth={3} />
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
+            </motion.div>
+          </div>
+
+          <div className="mt-12 grid gap-4 lg:grid-cols-3">
+            {quickChoices.map((item, index) => (
+              <button
+                key={item.title}
+                type="button"
+                onClick={() => scrollToId(item.target)}
+                className="group relative overflow-hidden rounded-[28px] bg-white p-5 text-left shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,75,18,0.12)]"
+              >
+                <div className="absolute right-4 top-4 text-5xl font-black tracking-[-0.08em] text-orange-50">0{index + 1}</div>
+                <div className="relative">
+                  <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12]">
+                    <item.icon size={23} strokeWidth={2.8} />
+                  </div>
+                  <p className="mt-4 text-[10px] font-black uppercase tracking-[0.15em] text-[#ff4b12]">{item.eyebrow}</p>
+                  <h3 className="mt-2 text-xl font-black tracking-[-0.035em] text-[#071f50]">{item.title}</h3>
+                  <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-[#69778d]">{item.text}</p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-black text-[#ff4b12]">
+                    {item.action}
+                    <ArrowRight size={14} strokeWidth={3} className="transition group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-10 rounded-[30px] bg-white/88 p-5 shadow-[0_20px_55px_rgba(9,31,80,0.06)] ring-1 ring-orange-100">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ff4b12]">Italy Pulse</p>
+                <h3 className="mt-1 text-xl font-black text-[#071f50]">A country that feels different from city to city.</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["🏙️ Milan", "🏛️ Rome", "🎒 Bologna", "📚 Padua", "🔬 Pisa", "🏎️ Turin", "🎨 Florence", "🚤 Venice"].map((item) => (
+                  <span key={item} className="rounded-full bg-[#fff1ea] px-3 py-2 text-xs font-black text-[#071f50] ring-1 ring-orange-100">
+                    {item}
+                  </span>
+                ))}
+              </div>
             </div>
-          </motion.div>
+          </div>
+
         </div>
       </section>
 
-      <section className="px-5 pb-10">
-        <div className="mx-auto max-w-[1250px] rounded-[34px] bg-white/86 p-5 shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 md:p-7">
-          <div className="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-[#ff4b12]">
-            <Route size={18} strokeWidth={3} />
-            Table of Contents
+      <section className="relative z-30 -mt-2 px-5 pb-12">
+        <div className="mx-auto max-w-[1320px] overflow-hidden rounded-[34px] bg-white shadow-[0_28px_80px_rgba(9,31,80,0.10)] ring-1 ring-orange-100">
+          <div className="flex flex-col gap-3 border-b border-orange-100 bg-[#071f50] px-6 py-5 text-white md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-[#ffb36d]">
+                <Route size={21} strokeWidth={3} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">Explore your way</p>
+                <h3 className="mt-1 text-lg font-black">Choose what you want to explore first</h3>
+              </div>
+            </div>
+            <p className="max-w-xl text-xs font-semibold leading-5 text-white/64">
+              You do not have to read this page top to bottom. Pick a topic and build your own Italy journey.
+            </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 p-4 sm:grid-cols-2 md:p-5 lg:grid-cols-4">
             {toc.map((item) => {
               const id = `italy-${item.toLowerCase().replace(/\s+/g, "-")}`;
               return (
@@ -724,10 +979,10 @@ function ItalyGuide() {
                   key={item}
                   type="button"
                   onClick={() => scrollToId(id)}
-                  className="flex items-center gap-3 rounded-2xl bg-[#fffaf5] px-4 py-4 text-left text-sm font-black text-[#071f50] ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-[#fff1ea] hover:text-[#ff4b12]"
+                  className="group flex items-center justify-between gap-3 rounded-2xl bg-[#fffaf5] px-4 py-3 text-left text-sm font-black text-[#071f50] ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-[#fff1ea] hover:text-[#ff4b12]"
                 >
-                  <CheckCircle2 size={18} className="text-[#ff4b12]" strokeWidth={3} />
-                  {item}
+                  <span className="flex items-center gap-3"><CheckCircle2 size={17} className="text-[#ff4b12]" strokeWidth={3} />{item}</span>
+                  <ArrowRight size={14} className="text-orange-200 transition group-hover:translate-x-1 group-hover:text-[#ff4b12]" strokeWidth={3} />
                 </button>
               );
             })}
@@ -735,7 +990,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-why-italy" className="px-5 py-20">
+      <section id="italy-why-italy" className="px-5 py-16">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Why Italy"
@@ -743,32 +998,79 @@ function ItalyGuide() {
             text="Italy is not just a destination card. It needs a real guide because students must understand universities, cities, documents, costs, scholarships and lifestyle before choosing it."
           />
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.18 }} className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {italyHighlights.map((item) => <InfoCard key={item.title} {...item} />)}
+            {italyHighlights.map((item, index) => (
+              <motion.div
+                key={item.title}
+                variants={fadeUp}
+                className={`group relative overflow-hidden rounded-[30px] p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 transition duration-300 hover:-translate-y-1 ${
+                  index === 0
+                    ? "bg-[#071f50] text-white ring-[#071f50] xl:col-span-2"
+                    : index === 3
+                    ? "bg-[#ff4b12] text-white ring-[#ff4b12]"
+                    : "bg-white text-[#071f50] ring-orange-100"
+                }`}
+              >
+                <div className={`mb-5 grid h-14 w-14 place-items-center rounded-2xl ${
+                  index === 0 || index === 3 ? "bg-white/12 text-[#ffb36d] ring-1 ring-white/10" : "bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100"
+                }`}>
+                  <item.icon size={27} strokeWidth={2.6} />
+                </div>
+                <p className={`text-[10px] font-black uppercase tracking-[0.16em] ${
+                  index === 0 || index === 3 ? "text-[#ffb36d]" : "text-[#ff4b12]"
+                }`}>Reason 0{index + 1}</p>
+                <h3 className={`mt-2 text-2xl font-black tracking-[-0.04em] ${
+                  index === 0 || index === 3 ? "text-white" : "text-[#071f50]"
+                }`}>{item.title}</h3>
+                <p className={`mt-3 max-w-xl text-sm font-semibold leading-7 ${
+                  index === 0 || index === 3 ? "text-white/72" : "text-[#61708a]"
+                }`}>{item.text}</p>
+                {index === 0 && (
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {["Universities", "Cities", "Scholarships", "Visa"].map((tag) => (
+                      <span key={tag} className="rounded-full bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-white ring-1 ring-white/10">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      <section id="italy-study-pathway" className="bg-white/52 px-5 py-20">
+      <section id="italy-study-pathway" className="relative overflow-hidden bg-[#071f50] px-5 py-20 text-white">
         <div className="mx-auto max-w-[1350px]">
-          <SectionHeader eyebrow="Study Pathway" title="From interest to application — one step at a time." />
+          <div className="mx-auto max-w-4xl text-center">
+            <Badge>Study Pathway</Badge>
+            <h2 className="mt-5 text-4xl font-black leading-[0.96] tracking-[-0.06em] text-white md:text-6xl">
+              From “I like Italy” to “I know exactly what I’m doing.”
+            </h2>
+            <p className="mx-auto mt-5 max-w-3xl text-base font-semibold leading-8 text-white/68 md:text-lg">
+              A good journey should feel like progress. Each step answers a different question and unlocks the next one.
+            </p>
+          </div>
           <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {pathwaySteps.map((step, index) => (
-              <div key={step.title} className="rounded-[30px] bg-white p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100">
+              <div key={step.title} className="group relative overflow-hidden rounded-[30px] bg-white/10 p-6 text-white ring-1 ring-white/10 backdrop-blur transition hover:-translate-y-1 hover:bg-white/14">
                 <div className="mb-5 flex items-center justify-between">
                   <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12]">
                     <step.icon size={27} strokeWidth={2.7} />
                   </div>
-                  <span className="text-4xl font-black tracking-[-0.06em] text-orange-100">0{index + 1}</span>
+                  <span className="text-4xl font-black tracking-[-0.06em] text-white/10">0{index + 1}</span>
                 </div>
-                <h3 className="text-xl font-black tracking-[-0.035em] text-[#071f50]">{step.title}</h3>
-                <p className="mt-3 text-sm font-semibold leading-7 text-[#61708a]">{step.text}</p>
+                <h3 className="text-xl font-black tracking-[-0.035em] text-white">{step.title}</h3>
+                <p className="mt-3 text-sm font-semibold leading-7 text-white/68">{step.text}</p>
+                <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full rounded-full bg-[#ff4b12]" style={{ width: `${25 * (index + 1)}%` }} />
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="italy-costs" className="px-5 py-20">
+      <section id="italy-costs" className="relative bg-[linear-gradient(180deg,#fff7ed_0%,#fff1ea_100%)] px-5 py-20">
         <div className="mx-auto max-w-[1250px]">
           <SectionHeader eyebrow="Costs" title="Understand costs before you fall in love with the destination." text="Italy can be affordable compared with many popular routes, but students still need realistic budgeting by city, university and scholarship status." />
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
@@ -784,7 +1086,81 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-comparison-center" className="bg-white/52 px-5 py-20">
+      <section className="bg-white/52 px-5 py-16">
+        <div className="mx-auto max-w-[1350px]">
+          <SectionHeader
+            eyebrow="Admission Planning"
+            title="Bachelor's and master's routes need different preparation."
+            text="A useful Italy plan starts with the student's actual academic level. These are planning checkpoints—not universal admission rules—because every university and programme can set its own requirements."
+          />
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {practicalPlanning.map((group) => (
+              <div key={group.title} className="rounded-[32px] bg-white p-7 shadow-[0_22px_65px_rgba(9,31,80,0.07)] ring-1 ring-orange-100">
+                <h3 className="text-2xl font-black tracking-[-0.04em] text-[#071f50]">{group.title}</h3>
+                <div className="mt-5 space-y-3">
+                  {group.items.map((item) => (
+                    <div key={item} className="flex items-start gap-3 rounded-2xl bg-[#fffaf5] p-4 text-sm font-bold leading-6 text-[#61708a] ring-1 ring-orange-100">
+                      <CheckCircle2 className="mt-0.5 shrink-0 text-[#ff4b12]" size={18} strokeWidth={3} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-16">
+        <div className="mx-auto max-w-[1250px]">
+          <SectionHeader
+            eyebrow="Realistic Budget"
+            title="Build the monthly budget before choosing the city."
+            text="These figures are broad planning ranges rather than quotes. Housing and lifestyle can move the total significantly, so students should verify current local costs before committing."
+          />
+          <div className="mt-12 overflow-hidden rounded-[34px] bg-white shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100">
+            <div className="hidden grid-cols-[1fr_0.65fr_1.7fr] bg-[#071f50] px-6 py-4 text-xs font-black uppercase tracking-[0.14em] text-white md:grid">
+              <div>Expense</div><div>Planning Range</div><div>What to Know</div>
+            </div>
+            {monthlyBudget.map(([expense, range, note]) => (
+              <div key={expense} className="grid gap-2 border-b border-orange-100 px-6 py-5 last:border-0 md:grid-cols-[1fr_0.65fr_1.7fr] md:items-center">
+                <p className="font-black text-[#071f50]">{expense}</p>
+                <p className="font-black text-[#ff4b12]">{range}</p>
+                <p className="text-sm font-semibold leading-6 text-[#61708a]">{note}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-center text-xs font-bold leading-6 text-[#7b879b]">
+            Planning ranges change over time and by city. Always verify current university fees, housing prices and official requirements before making financial decisions.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-[#fff1ea] px-5 py-16">
+        <div className="mx-auto max-w-[1350px]">
+          <SectionHeader
+            eyebrow="Application Timeline"
+            title="Plan Italy as one connected timeline—not six separate tasks."
+            text="Admission, funding documents, pre-enrolment, visa preparation and arrival planning affect one another. Starting early creates room to solve problems instead of reacting to them."
+          />
+          <div className="mt-12 grid gap-4 lg:grid-cols-2">
+            {applicationTimeline.map((item, index) => (
+              <div key={item.phase} className="flex gap-5 rounded-[30px] bg-white p-6 shadow-[0_18px_50px_rgba(9,31,80,0.06)] ring-1 ring-orange-100">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#ff4b12] text-sm font-black text-white">{index + 1}</div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-xl font-black text-[#071f50]">{item.phase}</h3>
+                    <span className="rounded-full bg-[#fff1ea] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#ff4b12]">{item.timing}</span>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold leading-7 text-[#61708a]">{item.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="italy-comparison-center" className="bg-white/52 px-5 py-16">
         <div className="mx-auto max-w-[1450px]">
           <SectionHeader
             eyebrow="Comparison Center"
@@ -830,7 +1206,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-dsu-scholarship" className="bg-[#071f50] px-5 py-20 text-white">
+      <section id="italy-dsu-scholarship" className="bg-[#071f50] px-5 py-16 text-white">
         <div className="mx-auto grid max-w-[1350px] gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
           <div>
             <Badge>DSU Scholarship</Badge>
@@ -906,7 +1282,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-universities" className="px-5 py-20">
+      <section id="italy-universities" className="relative overflow-hidden bg-[radial-gradient(circle_at_80%_10%,rgba(255,75,18,0.10),transparent_28%),#fff7ed] px-5 py-20">
         <div className="mx-auto max-w-[1250px]">
           <SectionHeader
             eyebrow="Universities"
@@ -998,7 +1374,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-scholarship-map" className="bg-[#071f50] px-5 py-20 text-white">
+      <section id="italy-scholarship-map" className="bg-[#071f50] px-5 py-16 text-white">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Scholarship Map"
@@ -1051,7 +1427,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-scholarships" className="bg-[#fff1ea] px-5 py-20">
+      <section id="italy-scholarships" className="bg-[#fff1ea] px-5 py-16">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Scholarships"
@@ -1093,7 +1469,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-cities" className="bg-white/52 px-5 py-20">
+      <section id="italy-cities" className="relative overflow-hidden bg-[linear-gradient(180deg,#fff_0%,#fff7ed_100%)] px-5 py-20">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader eyebrow="Cities" title="The city matters almost as much as the university." />
           <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -1103,8 +1479,11 @@ function ItalyGuide() {
                 to={`/countries/italy/${city.slug}`}
                 className="group rounded-[30px] bg-white p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
               >
-                <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12]">
-                  <city.icon size={27} />
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12]">
+                    <city.icon size={27} />
+                  </div>
+                  <span className="text-3xl" aria-hidden="true">{city.emoji}</span>
                 </div>
                 <h3 className="text-2xl font-black tracking-[-0.045em] text-[#071f50] group-hover:text-[#ff4b12]">
                   {city.city}
@@ -1120,16 +1499,47 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-student-life" className="px-5 py-20">
+      <section id="italy-student-life" className="px-5 py-16">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader eyebrow="Student Life" title="Italy is not only study. It is lifestyle, culture and adjustment." />
           <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {lifeItems.map((item) => <InfoCard key={item.title} {...item} />)}
+            {lifeItems.map((item, index) => (
+              <div
+                key={item.title}
+                className={`group relative min-h-[240px] overflow-hidden rounded-[32px] p-6 shadow-[0_22px_60px_rgba(9,31,80,0.08)] transition hover:-translate-y-1 ${
+                  index % 2 === 0 ? "bg-[#071f50] text-white" : "bg-[#ff4b12] text-white"
+                }`}
+              >
+                <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full border-[20px] border-white/5" />
+                <div className="relative">
+                  <span
+                    className="pointer-events-none absolute -right-2 -top-5 text-6xl opacity-20"
+                    aria-hidden="true"
+                  >
+                    {item.emoji}
+                  </span>
+
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-[#ffb36d] ring-1 ring-white/10">
+                    <item.icon size={27} strokeWidth={2.7} />
+                  </div>
+
+                  <p className="mt-8 text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">
+                    Student life 0{index + 1}
+                  </p>
+                  <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-white">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 text-sm font-semibold leading-7 text-white/72">
+                    {item.text}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section id="italy-decision-framework" className="bg-white/52 px-5 py-20">
+      <section id="italy-decision-framework" className="bg-white/52 px-5 py-16">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Decision Framework"
@@ -1177,7 +1587,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-city-goals" className="px-5 py-20">
+      <section id="italy-city-goals" className="px-5 py-16">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Best Cities By Goal"
@@ -1186,28 +1596,46 @@ function ItalyGuide() {
           />
 
           <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {cityGoals.map((item) => (
+            {cityGoals.map((item, index) => (
               <Link
                 key={item.goal}
                 to={`/countries/italy/${item.slug}`}
-                className="group rounded-[32px] bg-white/90 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
+                className="group relative overflow-hidden rounded-[32px] bg-white p-7 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
               >
-                <div className="mb-5 flex items-start justify-between gap-3">
-                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
-                    <MapPinned size={27} strokeWidth={2.7} />
-                  </div>
-                  <ArrowRight className="text-[#ff4b12] transition group-hover:translate-x-1" size={20} strokeWidth={3} />
+                <div className="pointer-events-none absolute -right-10 -top-10 text-[110px] font-black leading-none text-[#fff1ea] transition duration-300 group-hover:scale-110">
+                  {item.emoji}
                 </div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ff4b12]">Best for {item.goal}</p>
-                <h3 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[#071f50]">{item.city}</h3>
-                <p className="mt-3 text-sm font-semibold leading-7 text-[#61708a]">{item.reason}</p>
+
+                <div className="relative">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 text-[#ff4b12]">
+                      <item.icon size={24} strokeWidth={2.5} />
+                      <span className="text-xs font-black uppercase tracking-[0.16em]">
+                        {item.goal}
+                      </span>
+                    </div>
+                    <span className="text-xs font-black text-orange-200">0{index + 1}</span>
+                  </div>
+
+                  <h3 className="mt-8 text-4xl font-black tracking-[-0.055em] text-[#071f50]">
+                    {item.city}
+                  </h3>
+                  <p className="mt-4 max-w-md text-sm font-semibold leading-7 text-[#61708a]">
+                    {item.reason}
+                  </p>
+
+                  <div className="mt-6 inline-flex items-center gap-2 text-xs font-black text-[#ff4b12]">
+                    Explore {item.city}
+                    <ArrowRight size={14} strokeWidth={3} className="transition group-hover:translate-x-1" />
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="italy-reality-check" className="bg-[#071f50] px-5 py-20 text-white">
+      <section id="italy-reality-check" className="bg-[#071f50] px-5 py-16 text-white">
         <div className="mx-auto max-w-[1350px]">
           <div className="mx-auto max-w-4xl text-center">
             <Badge>Reality Check</Badge>
@@ -1236,7 +1664,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-university-pathways" className="bg-white/52 px-5 py-20">
+      <section id="italy-university-pathways" className="bg-white/52 px-5 py-16">
         <div className="mx-auto max-w-[1450px]">
           <SectionHeader
             eyebrow="University Pathways"
@@ -1275,7 +1703,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-visa-roadmap" className="bg-[#fff1ea] px-5 py-20">
+      <section id="italy-visa-roadmap" className="bg-[#fff1ea] px-5 py-16">
         <div className="mx-auto max-w-[1150px]">
           <SectionHeader eyebrow="Visa Roadmap" title="A clear visa file starts before the appointment." text="The exact process depends on your profile and the official procedure for your country, but this is the high-level student journey." />
           <div className="mt-12 overflow-hidden rounded-[34px] bg-white shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100">
@@ -1292,7 +1720,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-faqs" className="px-5 py-20">
+      <section id="italy-faqs" className="px-5 py-16">
         <div className="mx-auto max-w-[1050px]">
           <SectionHeader eyebrow="FAQs" title="Common Italy questions students ask first." />
           <div className="mt-12 space-y-3">
@@ -1319,12 +1747,16 @@ function ItalyGuide() {
       </section>
 
       <section className="px-5 pb-24">
-        <div className="mx-auto max-w-[1200px] overflow-hidden rounded-[38px] bg-[#071f50] p-6 text-white shadow-[0_30px_90px_rgba(9,31,80,0.18)] md:p-9">
+        <div className="relative mx-auto max-w-[1200px] overflow-hidden rounded-[42px] bg-[#071f50] p-6 text-white shadow-[0_35px_100px_rgba(9,31,80,0.22)] md:p-10">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border-[48px] border-white/5" />
+          <div className="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-[#ff4b12]/18 blur-3xl" />
           <div className="grid gap-7 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ffb36d]">Start with Italy</p>
               <h2 className="mt-3 text-3xl font-black tracking-[-0.045em] text-white md:text-5xl">Want to know if Italy fits your profile?</h2>
-              <p className="mt-4 max-w-3xl text-base font-semibold leading-8 text-white/76">Book a consultation and we’ll help you understand course fit, university direction, scholarship planning and next steps.</p>
+              <p className="mt-4 max-w-3xl text-base font-semibold leading-8 text-white/76">
+                You have now seen the full Italy journey—universities, cities, costs, scholarships, student life and visa planning. Book a consultation and we’ll turn that information into a route built around your own profile.
+              </p>
             </div>
             <a href="/appointment?country=Italy" className="inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-9 py-5 font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f]">
               Get Italy Guidance

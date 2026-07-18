@@ -33,8 +33,8 @@ const supportCards = [
     accent: "#ff4b12",
     glow: "bg-orange-300/35",
     stats: [
-      { value: "18k+", label: "Courses" },
-      { value: "45+", label: "Fields" },
+      { value: "50+", label: "Universities" },
+      { value: "Italy", label: "Live Hub" },
     ],
     chips: ["Business", "Computer Science", "Medicine", "Engineering"],
     checklist: ["Profile review", "Career fit", "Course shortlist"],
@@ -52,8 +52,8 @@ const supportCards = [
     accent: "#10b981",
     glow: "bg-emerald-300/30",
     stats: [
-      { value: "92%", label: "Match" },
-      { value: "$50k", label: "Routes" },
+      { value: "DSU", label: "Funding" },
+      { value: "Regional", label: "Routes" },
     ],
     chips: ["Merit", "Need-based", "Country funds", "University awards"],
     checklist: ["Eligibility scan", "Funding plan", "Deadline tracker"],
@@ -71,8 +71,8 @@ const supportCards = [
     accent: "#0284c7",
     glow: "bg-sky-300/30",
     stats: [
-      { value: "4", label: "Steps" },
-      { value: "0", label: "Stress" },
+      { value: "Visa", label: "Planning" },
+      { value: "Arrival", label: "Support" },
     ],
     chips: ["Visa", "Flights", "Housing", "Packing"],
     checklist: ["Visa documents", "Arrival plan", "Accommodation"],
@@ -90,10 +90,10 @@ const supportCards = [
     accent: "#ec4899",
     glow: "bg-pink-300/30",
     stats: [
-      { value: "Offer", label: "Letter" },
-      { value: "CAS", label: "Ready" },
+      { value: "Apply", label: "Clearly" },
+      { value: "Track", label: "Progress" },
     ],
-    chips: ["SOP", "Documents", "Application", "Offer"],
+    chips: ["Documents", "Application", "Requirements", "Offer"],
     checklist: ["Application check", "Offer tracking", "Final guidance"],
     footer: "Acceptance journey complete",
   },
@@ -125,6 +125,18 @@ export default function DreamSupportSection() {
       top: targetTop,
       behavior: "smooth",
     });
+  };
+
+  const handleSupportAction = (index) => {
+    const routes = [
+      "/universities",
+      "/scholarships",
+      "/services",
+      "/appointment?country=Italy&service=Italy Admission Guidance",
+    ];
+
+    navigate(routes[index] || "/appointment");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -182,8 +194,8 @@ export default function DreamSupportSection() {
               </h2>
 
               <p className="mt-4 max-w-2xl text-lg font-semibold leading-8 text-[#526178] xl:text-[19px] xl:leading-8">
-                We’re with you at every step, turning your study abroad dream into a
-                successful reality.
+                We’re with you at every step, turning your Italy study plan into a
+                clear, practical journey.
               </p>
 
               <div className="relative z-40 mt-5 grid max-w-[650px] gap-2.5 sm:grid-cols-3">
@@ -201,7 +213,10 @@ export default function DreamSupportSection() {
               <div className="relative z-40 mt-5 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={goToAppointment}
+                  onClick={() => {
+                    navigate("/services");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   className="inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-7 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.28)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
                 >
                   Explore your support
@@ -209,10 +224,13 @@ export default function DreamSupportSection() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => scrollToSection("more-help")}
+                  onClick={() => {
+                    navigate("/scholarships");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   className="inline-flex items-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-black text-[#071f50] shadow-[0_12px_30px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-orange-50"
                 >
-                  View scholarships
+                  Explore scholarships
                 </button>
               </div>
             </div>
@@ -435,7 +453,7 @@ export default function DreamSupportSection() {
 
                     <button
                       type="button"
-                      onClick={goToAppointment}
+                      onClick={() => handleSupportAction(index)}
                       className="mt-7 inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-6 py-4 text-sm font-black text-white shadow-[0_18px_35px_rgba(255,75,18,0.32)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] group-hover:gap-4"
                     >
                       Start this step

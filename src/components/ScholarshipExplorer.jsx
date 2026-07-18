@@ -26,6 +26,14 @@ import {
   Building2,
   GraduationCap,
   WalletCards,
+  Target,
+  Lightbulb,
+  ArrowUpRight,
+  Compass,
+  Layers3,
+  TrendingUp,
+  CalendarDays,
+  HeartHandshake,
 } from "lucide-react";
 
 const scholarshipTypes = [
@@ -390,6 +398,41 @@ const facts = [
   { icon: ShieldCheck, value: "No", label: "Fake Guarantees" },
 ];
 
+
+const fundingDecisionCards = [
+  {
+    icon: Target,
+    label: "Start With Fit",
+    title: "University + region first",
+    text: "Scholarship planning works best when the university, city, region and course are already connected.",
+  },
+  {
+    icon: FileCheck2,
+    label: "Documents Matter",
+    title: "Preparation beats panic",
+    text: "Family, income, property and legalization documents can take longer than students expect.",
+  },
+  {
+    icon: WalletCards,
+    label: "Budget Safety",
+    title: "Never rely on one outcome",
+    text: "A safe plan includes a scholarship strategy and a realistic backup budget.",
+  },
+  {
+    icon: CalendarDays,
+    label: "Timing Wins",
+    title: "Deadlines can decide everything",
+    text: "Strong students still lose opportunities when documents and regional applications start too late.",
+  },
+];
+
+const scholarshipJourneySignals = [
+  { icon: Compass, title: "Discover", text: "Country, city and university fit" },
+  { icon: Layers3, title: "Match", text: "Regional + university funding" },
+  { icon: FileCheck2, title: "Prepare", text: "Documents and deadlines" },
+  { icon: TrendingUp, title: "Decide", text: "Compare support vs backup budget" },
+];
+
 const faqs = [
   {
     q: "Is DSU guaranteed?",
@@ -505,166 +548,178 @@ export default function ScholarshipExplorer() {
       <div className="pointer-events-none absolute right-[-110px] bottom-20 h-[320px] w-[320px] rounded-full bg-amber-300/20 blur-3xl" />
 
       <div className="relative mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-10">
-        <div className="mx-auto max-w-5xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/90 px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm">
-            <Sparkles className="h-4 w-4 fill-orange-500" />
-            Scholarship Explorer — Italy live now
-          </div>
+        <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/90 px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm">
+              <Sparkles className="h-4 w-4 fill-orange-500" />
+              Italy Scholarship Intelligence
+            </div>
 
-          <h2 className="mt-5 text-5xl font-black leading-[0.98] tracking-[-0.06em] sm:text-6xl lg:text-7xl">
-            Understand <span className="text-orange-600">Italy funding</span>{" "}
-            before you apply.
-          </h2>
+            <h2 className="mt-6 max-w-5xl text-5xl font-black leading-[0.94] tracking-[-0.06em] sm:text-6xl lg:text-7xl">
+              Build your funding plan
+              <span className="text-orange-600"> before the deadline builds pressure.</span>
+            </h2>
 
-          <p className="mx-auto mt-5 max-w-3xl text-base font-semibold leading-8 text-slate-700 md:text-lg">
-            Italy scholarship guidance is live first because the Italy ecosystem
-            is the strongest right now. DSU, regional support, university awards
-            and document planning are handled together — not as random separate
-            pages.
-          </p>
+            <p className="mt-6 max-w-3xl text-base font-semibold leading-8 text-slate-700 md:text-lg">
+              DSU, regional support, university awards and merit scholarships only make sense when they are connected to the right university, city, documents and timeline.
+            </p>
 
-          <div className="mt-7 flex flex-wrap justify-center gap-2">
-            {[
-              ["Types", "scholarship-types"],
-              ["DSU", "scholarship-dsu"],
-              ["Documents", "scholarship-documents"],
-              ["Regions", "scholarship-regions"],
-              ["Compare", "scholarship-comparison"],
-              ["Pathways", "scholarship-pathways"],
-              ["Countries", "scholarship-countries"],
-              ["Calculator", "scholarship-calculator"],
-              ["FAQ", "scholarship-faq"],
-            ].map(([label, id]) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => scrollToId(id)}
-                className="rounded-full bg-white px-4 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-50"
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="/appointment?country=Italy&service=Scholarship Guidance"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-8 py-5 text-base font-black text-white shadow-[0_20px_44px_rgba(255,91,18,0.28)] transition hover:-translate-y-1 hover:bg-orange-700"
               >
-                {label}
+                Build My Scholarship Plan
+                <ArrowRight className="h-5 w-5" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => scrollToId("scholarship-calculator")}
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-base font-black text-[#071f50] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-orange-600"
+              >
+                Check My Profile
+                <ArrowRight className="h-5 w-5" />
               </button>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
-          <div className="group relative overflow-hidden rounded-[2.4rem] border border-orange-100 bg-white/92 p-6 shadow-[0_24px_70px_rgba(255,91,18,0.11)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_34px_90px_rgba(255,91,18,0.18)] sm:p-8">
-            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-orange-300/20 blur-3xl transition duration-700 group-hover:bg-orange-300/35" />
-            <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-60" />
-
-            <div className="relative z-10 flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
-              <div className="max-w-xl">
-                <div className="inline-flex rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-orange-700 ring-1 ring-orange-100">
-                  🇮🇹 Italy funding live now
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {scholarshipJourneySignals.map((item, index) => (
+                <div key={item.title} className="rounded-[1.5rem] bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.055)] ring-1 ring-orange-100">
+                  <div className="flex items-center justify-between">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-orange-50 text-orange-600">
+                      <item.icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-xs font-black text-orange-200">0{index + 1}</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">{item.title}</p>
+                  <p className="mt-1 text-[11px] font-semibold leading-5 text-slate-500">{item.text}</p>
                 </div>
-
-                <h3 className="mt-4 text-3xl font-black leading-tight sm:text-5xl">
-                  Scholarships can change the entire Italy plan.
-                </h3>
-
-                <p className="mt-4 text-sm font-semibold leading-7 text-slate-600 sm:text-base">
-                  Many students panic when they see total cost. Italy needs a
-                  smarter approach: choose the university, region, scholarship
-                  route and documents together.
-                </p>
-
-                <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                  {[
-                    "Tuition support",
-                    "Accommodation support",
-                    "Meal support",
-                    "Regional funding",
-                  ].map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-2xl bg-[#fff7ed] px-3 py-3 text-xs font-black text-orange-700 ring-1 ring-orange-100"
-                    >
-                      <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative mx-auto grid h-[260px] w-full max-w-[300px] place-items-center overflow-hidden rounded-[2rem] bg-gradient-to-br from-orange-500 via-orange-600 to-amber-500 p-5 text-white shadow-[0_28px_70px_rgba(249,115,22,0.25)]">
-                <div className="scholarship-shine pointer-events-none absolute inset-y-0 left-0 w-24 rotate-12 bg-white/20 blur-xl" />
-                <div className="text-center">
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-white/80">
-                    Possible support value
-                  </p>
-                  <p className="mt-3 text-5xl font-black tracking-tight">
-                    €8k+
-                  </p>
-                  <p className="mt-2 text-sm font-bold leading-6 text-white/90">
-                    Planning example only. Final award depends on rules,
-                    documents and ranking.
-                  </p>
-                </div>
-                <PiggyBank className="scholarship-float absolute -bottom-5 -right-2 h-20 w-20 text-white/95 drop-shadow-xl" />
-              </div>
+              ))}
             </div>
           </div>
 
-          <div className="rounded-[2.4rem] border border-orange-100 bg-[#071f50] p-6 text-white shadow-[0_24px_70px_rgba(7,31,80,0.18)] sm:p-7">
+          <div className="rounded-[2.6rem] bg-[#071f50] p-6 text-white shadow-[0_32px_90px_rgba(7,31,80,0.20)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">
-                  Honest scholarship snapshot
+                  Funding Command Center
                 </p>
-                <h3 className="mt-3 text-3xl font-black leading-tight">
+                <h3 className="mt-3 text-4xl font-black leading-[0.98] tracking-[-0.05em]">
                   Start with the right route.
                 </h3>
+                <p className="mt-4 max-w-xl text-sm font-semibold leading-7 text-white/70">
+                  Choose a funding route to understand what it supports, what it depends on and where students usually make mistakes.
+                </p>
               </div>
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 p-3 text-orange-300 ring-1 ring-white/10">
-                <ShieldCheck className="h-7 w-7" />
+              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/10 text-3xl ring-1 ring-white/10">
+                🎓
               </div>
             </div>
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 grid gap-3">
               {scholarshipRoutes.map((route) => (
                 <button
                   key={route.title}
                   type="button"
                   onClick={() => setActiveRoute(route.title)}
-                  className={`flex w-full items-center gap-3 rounded-2xl p-4 text-left ring-1 transition ${
+                  className={`flex w-full items-center gap-4 rounded-2xl p-4 text-left ring-1 transition ${
                     activeRoute === route.title
-                      ? "bg-white text-[#071f50] ring-white"
+                      ? "bg-white text-[#071f50] ring-white shadow-lg"
                       : "bg-white/8 text-white ring-white/10 hover:bg-white/12"
                   }`}
                 >
                   <div
-                    className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${
+                    className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${
                       activeRoute === route.title
                         ? "bg-orange-500 text-white"
-                        : "bg-orange-400 text-[#071f50]"
+                        : "bg-white/10 text-orange-300"
                     }`}
                   >
                     <route.icon className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-black">{route.title}</p>
                     <p
-                      className={`mt-0.5 text-xs font-semibold ${
+                      className={`mt-1 text-xs font-semibold ${
                         activeRoute === route.title
                           ? "text-slate-600"
-                          : "text-white/70"
+                          : "text-white/65"
                       }`}
                     >
                       {route.short}
                     </p>
                   </div>
+                  <ArrowUpRight className={`h-4 w-4 shrink-0 ${
+                    activeRoute === route.title ? "text-orange-600" : "text-white/40"
+                  }`} />
                 </button>
               ))}
             </div>
 
-            <a
-              href="/appointment?country=Italy&service=Scholarship Guidance"
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-1 hover:bg-orange-600"
-            >
-              Build My Scholarship Plan
-              <ArrowRight className="h-4 w-4" />
-            </a>
+            <div className="mt-5 rounded-[1.8rem] bg-white/10 p-5 ring-1 ring-white/10">
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-300">
+                Selected Route
+              </p>
+              <h4 className="mt-2 text-2xl font-black">{selectedRoute.title}</h4>
+              <p className="mt-3 text-sm font-semibold leading-7 text-white/72">
+                {selectedRoute.text}
+              </p>
+            </div>
           </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {fundingDecisionCards.map((item, index) => (
+            <article
+              key={item.title}
+              className={`rounded-[1.8rem] p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] ${
+                index === 0
+                  ? "bg-orange-600 text-white"
+                  : index === 1
+                    ? "bg-[#071f50] text-white"
+                    : "bg-white/92 text-[#071f50] ring-1 ring-orange-100"
+              }`}
+            >
+              <div className={`grid h-12 w-12 place-items-center rounded-2xl ${
+                index < 2 ? "bg-white/10 text-orange-200" : "bg-orange-50 text-orange-600"
+              }`}>
+                <item.icon className="h-6 w-6" />
+              </div>
+              <p className={`mt-5 text-[10px] font-black uppercase tracking-[0.16em] ${
+                index < 2 ? "text-orange-200" : "text-orange-600"
+              }`}>
+                {item.label}
+              </p>
+              <h3 className="mt-2 text-xl font-black">{item.title}</h3>
+              <p className={`mt-3 text-sm font-semibold leading-6 ${
+                index < 2 ? "text-white/72" : "text-slate-600"
+              }`}>
+                {item.text}
+              </p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-7 flex flex-wrap justify-center gap-2 rounded-[1.6rem] bg-white/80 p-3 ring-1 ring-orange-100">
+          {[
+            ["Types", "scholarship-types"],
+            ["DSU", "scholarship-dsu"],
+            ["Documents", "scholarship-documents"],
+            ["Regions", "scholarship-regions"],
+            ["Compare", "scholarship-comparison"],
+            ["Calculator", "scholarship-calculator"],
+            ["FAQ", "scholarship-faq"],
+          ].map(([label, id]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => scrollToId(id)}
+              className="rounded-full bg-white px-4 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-50"
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         <section id="scholarship-types" className="mt-6">
@@ -710,7 +765,7 @@ export default function ScholarshipExplorer() {
               </div>
 
               <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
-                Selected route
+                Funding route deep dive
               </p>
               <h3 className="mt-2 text-3xl font-black tracking-[-0.04em]">
                 {selectedRoute.title}
@@ -755,10 +810,10 @@ export default function ScholarshipExplorer() {
               <BookOpenCheck className="h-7 w-7 text-orange-600" />
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
-                  DSU readiness
+                  Scholarship readiness
                 </p>
                 <h3 className="text-3xl font-black tracking-[-0.04em]">
-                  Know your scholarship position before panic starts.
+                  Know your readiness level before the application window opens.
                 </h3>
               </div>
             </div>
@@ -870,6 +925,38 @@ export default function ScholarshipExplorer() {
                 View Italy Universities
                 <ArrowRight className="h-4 w-4" />
               </a>
+            </div>
+
+            <div className="mb-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <div className="rounded-[1.8rem] bg-[#071f50] p-6 text-white">
+                <MapPin className="h-7 w-7 text-orange-300" />
+                <p className="mt-4 text-[10px] font-black uppercase tracking-[0.16em] text-orange-300">
+                  Regional Logic
+                </p>
+                <h4 className="mt-2 text-2xl font-black">
+                  In Italy, your city can change your funding route.
+                </h4>
+                <p className="mt-3 text-sm font-semibold leading-7 text-white/70">
+                  That is why scholarship planning should happen at the same time as university shortlisting.
+                </p>
+              </div>
+
+              <div className="rounded-[1.8rem] bg-orange-50 p-6 ring-1 ring-orange-100">
+                <div className="flex items-start gap-4">
+                  <Lightbulb className="mt-1 h-7 w-7 shrink-0 text-orange-600" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">
+                      Smart planning rule
+                    </p>
+                    <h4 className="mt-2 text-2xl font-black text-[#071f50]">
+                      Never shortlist the university and check the scholarship later.
+                    </h4>
+                    <p className="mt-3 text-sm font-semibold leading-7 text-slate-600">
+                      University, city, region, tuition, scholarship documents and deadlines should be reviewed as one connected decision.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -986,7 +1073,7 @@ export default function ScholarshipExplorer() {
               {mistakes.map((mistake) => (
                 <article
                   key={mistake.title}
-                  className="rounded-[1.7rem] bg-[#fff7ed] p-5 ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-white"
+                  className="rounded-[1.7rem] bg-red-50/60 p-5 ring-1 ring-red-100 transition hover:-translate-y-1 hover:bg-white"
                 >
                   <h4 className="text-lg font-black">{mistake.title}</h4>
                   <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
@@ -1328,6 +1415,12 @@ export default function ScholarshipExplorer() {
             </div>
           </div>
         </section>
+
+        <div className="mt-6 rounded-[1.7rem] bg-white/85 p-5 text-center ring-1 ring-orange-100">
+          <p className="mx-auto max-w-4xl text-xs font-bold leading-6 text-slate-500">
+            Scholarship values, eligibility rules, deadlines and benefits can change. This page is a planning tool, not a guarantee of funding. Always verify the current official rules for the relevant university and region.
+          </p>
+        </div>
 
         <div className="mt-6 overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-6 text-white shadow-[0_24px_70px_rgba(255,75,18,0.24)] sm:p-7">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">

@@ -425,17 +425,17 @@ function UniversityDetailPage() {
               initial={{ opacity: 0, x: -26 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.65 }}
-              className="overflow-hidden rounded-[2.7rem] border border-orange-100 bg-white shadow-[0_28px_85px_rgba(15,23,42,0.09)]"
+              className="h-full overflow-hidden rounded-[2.7rem] border border-orange-100 bg-white shadow-[0_28px_85px_rgba(15,23,42,0.09)]"
             >
-              <div className="relative min-h-[500px] overflow-hidden bg-gradient-to-br from-orange-100 via-white to-emerald-50">
+              <div className="relative h-full min-h-[500px] overflow-hidden bg-gradient-to-br from-orange-100 via-white to-emerald-50">
                 <img
                   src={university.image}
                   alt={`${university.name} Italy university`}
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#071b3a]/90 via-[#071b3a]/64 to-[#071b3a]/20" />
 
-                <div className="relative z-10 flex min-h-[500px] flex-col justify-end p-6 text-white sm:p-8 lg:p-10">
+                <div className="relative z-10 flex h-full min-h-[500px] flex-col justify-end p-6 text-white sm:p-8 lg:p-10">
                   <div className="mb-4 flex flex-wrap gap-2">
                     <span className="rounded-full bg-white/95 px-4 py-2 text-xs font-black text-orange-600 shadow-md">
                       {university.rank} Italy Choice

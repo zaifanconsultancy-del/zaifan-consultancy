@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,10 +22,10 @@ import careerImage from "../../assets/images/services/career.png";
 const services = [
   {
     title: "Scholarships & Funding",
-    desc: "We help you discover funding opportunities and reduce study costs.",
+    desc: "Explore DSU, regional funding and university scholarship routes for Italy.",
     image: scholarshipsImage,
     link: "/scholarships",
-    newTab: true,
+    newTab: false,
     accent: "#a855f7",
     soft: "bg-purple-50",
     wins: ["Funding routes", "Profile fit", "Cost planning"],
@@ -33,43 +34,43 @@ const services = [
     title: "Application Support",
     desc: "Expert guidance for applications, documents, and admissions.",
     image: applicationImage,
-    link: "/application-support",
+    link: "/appointment?country=Italy&service=Italy Admission Guidance",
     accent: "#f97316",
     soft: "bg-orange-50",
     wins: ["Document review", "Application checks", "Deadline support"],
   },
   {
     title: "Visa Assistance",
-    desc: "Complete visa guidance from preparation to approval.",
+    desc: "Understand the Italy visa route, document readiness and next steps.",
     image: visaImage,
-    link: "/visa-assistance",
+    link: "/appointment?country=Italy&service=Italy Visa Guidance",
     accent: "#2563eb",
     soft: "bg-blue-50",
     wins: ["Visa checklist", "Interview prep", "File guidance"],
   },
   {
     title: "Student Housing",
-    desc: "Find safe and comfortable housing before you arrive.",
+    desc: "Plan accommodation, arrival and housing questions before you move.",
     image: accommodationImage,
-    link: "/accommodation",
+    link: "/appointment?country=Italy&service=Accommodation Planning",
     accent: "#22c55e",
     soft: "bg-green-50",
     wins: ["Safe options", "Arrival planning", "Budget support"],
   },
   {
     title: "Test Preparation",
-    desc: "Support for IELTS, PTE and other language requirements.",
+    desc: "Get direction on language requirements and the preparation route that fits your target university.",
     image: testImage,
-    link: "/test-preparation",
+    link: "/appointment?country=Italy&service=Language Test Preparation",
     accent: "#6366f1",
     soft: "bg-indigo-50",
     wins: ["IELTS route", "PTE support", "Score planning"],
   },
   {
     title: "Career Advice",
-    desc: "Build skills and prepare for opportunities after graduation.",
+    desc: "Think ahead about skills, employability and your longer-term student journey.",
     image: careerImage,
-    link: "/career-advice",
+    link: "/appointment?country=Italy&service=Career Planning",
     accent: "#d97706",
     soft: "bg-amber-50",
     wins: ["Career map", "Skill planning", "Future goals"],
@@ -79,13 +80,13 @@ const services = [
 const trustItems = [
   {
     title: "Expert Guidance",
-    desc: "Years of experience helping students succeed.",
+    desc: "Practical guidance built around clearer student decisions.",
     icon: Users,
     color: "text-purple-500 bg-purple-50",
   },
   {
     title: "Global Network",
-    desc: "Strong university partnerships worldwide.",
+    desc: "Connected guidance across universities, cities and study routes.",
     icon: Globe2,
     color: "text-blue-500 bg-blue-50",
   },
@@ -127,11 +128,9 @@ function getLinkProps(service) {
 
 export default function MoreWaysWeHelp() {
   const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState("idle");
   const [direction, setDirection] = useState("next");
   const [isPaused, setIsPaused] = useState(false);
   const [touchStartX, setTouchStartX] = useState(null);
-  const timeoutRef = useRef(null);
 
   const visibleServices = useMemo(() => {
     return [0, 1, 2].map((offset) => services[(index + offset) % services.length]);
@@ -139,67 +138,34 @@ export default function MoreWaysWeHelp() {
 
   const activeService = services[index];
 
-  const clearSlideTimeout = () => {
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  };
 
   const changeSlide = (dir = "next") => {
-    if (phase !== "idle") return;
-
-    clearSlideTimeout();
     setDirection(dir);
-    setPhase("leave");
-
-    timeoutRef.current = window.setTimeout(() => {
-      setIndex((prev) => {
-        if (dir === "next") return (prev + 1) % services.length;
-        return (prev - 1 + services.length) % services.length;
-      });
-
-      setPhase("enter");
-
-      window.requestAnimationFrame(() => {
-        timeoutRef.current = window.setTimeout(() => setPhase("idle"), 40);
-      });
-    }, 320);
+    setIndex((prev) => {
+      if (dir === "next") return (prev + 1) % services.length;
+      return (prev - 1 + services.length) % services.length;
+    });
   };
 
   const goToSlide = (targetIndex) => {
-    if (targetIndex === index || phase !== "idle") return;
-
-    clearSlideTimeout();
+    if (targetIndex === index) return;
     setDirection(targetIndex > index ? "next" : "prev");
-    setPhase("leave");
-
-    timeoutRef.current = window.setTimeout(() => {
-      setIndex(targetIndex);
-      setPhase("enter");
-
-      window.requestAnimationFrame(() => {
-        timeoutRef.current = window.setTimeout(() => setPhase("idle"), 40);
-      });
-    }, 320);
+    setIndex(targetIndex);
   };
 
   const nextSlide = () => changeSlide("next");
   const prevSlide = () => changeSlide("prev");
 
   useEffect(() => {
-    if (isPaused || phase !== "idle") return undefined;
+    if (isPaused) return undefined;
 
     const timer = window.setInterval(() => {
-      changeSlide("next");
+      setDirection("next");
+      setIndex((prev) => (prev + 1) % services.length);
     }, AUTOPLAY_DELAY);
 
     return () => window.clearInterval(timer);
-  }, [isPaused, phase]);
-
-  useEffect(() => {
-    return () => clearSlideTimeout();
-  }, []);
+  }, [isPaused]);
 
   const handleTouchStart = (event) => {
     setTouchStartX(event.touches[0].clientX);
@@ -219,16 +185,7 @@ export default function MoreWaysWeHelp() {
     setTouchStartX(null);
   };
 
-  const slideClass =
-    phase === "leave"
-      ? direction === "next"
-        ? "-translate-x-12 opacity-0"
-        : "translate-x-12 opacity-0"
-      : phase === "enter"
-      ? direction === "next"
-        ? "translate-x-12 opacity-0"
-        : "-translate-x-12 opacity-0"
-      : "translate-x-0 opacity-100";
+
 
   return (
     <section
@@ -396,13 +353,41 @@ export default function MoreWaysWeHelp() {
 
         <div className="relative z-20">
           <div className="mx-auto hidden max-w-[1280px] overflow-hidden lg:block">
-            <div
-              className={`grid grid-cols-3 gap-6 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${slideClass}`}
-            >
-              {visibleServices.map((service) => (
-                <ServiceCard key={service.title} service={service} />
-              ))}
-            </div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={index}
+                initial={{
+                  opacity: 0,
+                  x: direction === "next" ? 72 : -72,
+                  scale: 0.985,
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  x: direction === "next" ? -72 : 72,
+                  scale: 0.985,
+                }}
+                transition={{
+                  x: {
+                    type: "spring",
+                    stiffness: 150,
+                    damping: 24,
+                    mass: 0.82,
+                  },
+                  opacity: { duration: 0.26 },
+                  scale: { duration: 0.34 },
+                }}
+                className="grid grid-cols-3 gap-6 will-change-transform"
+              >
+                {visibleServices.map((service) => (
+                  <ServiceCard key={service.title} service={service} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           <div
@@ -420,11 +405,38 @@ export default function MoreWaysWeHelp() {
                 <ArrowLeft size={20} />
               </button>
 
-              <a
-                href={buildServiceLink(services[index])}
-                {...getLinkProps(services[index])}
-                className="group flex min-h-[430px] flex-1 flex-col items-center justify-center rounded-[30px] border border-orange-100 bg-white p-7 text-center shadow-[0_24px_60px_rgba(251,146,60,0.20)] transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-orange-100"
-              >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.a
+                  key={index}
+                  href={buildServiceLink(services[index])}
+                  {...getLinkProps(services[index])}
+                  initial={{
+                    opacity: 0,
+                    x: direction === "next" ? 44 : -44,
+                    scale: 0.985,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    x: 0,
+                    scale: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    x: direction === "next" ? -44 : 44,
+                    scale: 0.985,
+                  }}
+                  transition={{
+                    x: {
+                      type: "spring",
+                      stiffness: 165,
+                      damping: 23,
+                      mass: 0.8,
+                    },
+                    opacity: { duration: 0.22 },
+                    scale: { duration: 0.3 },
+                  }}
+                  className="group flex min-h-[430px] flex-1 flex-col items-center justify-center rounded-[30px] border border-orange-100 bg-white p-7 text-center shadow-[0_24px_60px_rgba(251,146,60,0.20)] transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                >
                 <img
                   src={services[index].image}
                   alt={services[index].title}
@@ -457,7 +469,8 @@ export default function MoreWaysWeHelp() {
                   Open Details
                   <ArrowRight size={18} />
                 </div>
-              </a>
+                </motion.a>
+              </AnimatePresence>
 
               <button
                 type="button"

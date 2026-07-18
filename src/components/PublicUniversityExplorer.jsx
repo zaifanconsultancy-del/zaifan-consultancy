@@ -26,7 +26,7 @@ import {
 import australiaUniversity from "../assets/images/universities/australia-university.png";
 import canadaUniversity from "../assets/images/universities/canada-university.png";
 import germanyUniversity from "../assets/images/universities/germany-university.png";
-import italyUniversity from "../assets/images/universities/italy-university.png";
+import italyUniversity from "../assets/images/universities/politecnico-di-milano.png";
 import turkeyUniversity from "../assets/images/universities/turkey-university.png";
 import ukUniversity from "../assets/images/universities/uk-university.png";
 import mascotExplorer from "../assets/images/universities/mascot-explorer.png";
