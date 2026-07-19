@@ -16,13 +16,13 @@ import {
   MessageCircle,
 } from "lucide-react";
 
-import mascotImage from "../../../assets/images/services/zaifan-services-mascot.png";
-import scholarshipsImage from "../../../assets/images/services/scholarships.png";
-import applicationImage from "../../../assets/images/services/application.png";
-import visaImage from "../../../assets/images/services/visa.png";
-import accommodationImage from "../../../assets/images/services/accommodation.png";
-import testPreparationImage from "../../../assets/images/services/test-preparation.png";
-import careerImage from "../../../assets/images/services/career.png";
+import mascotImage from "../../../assets/images/services/zaifan-services-mascot.webp";
+import scholarshipsImage from "../../../assets/images/services/scholarships.webp";
+import applicationImage from "../../../assets/images/services/application.webp";
+import visaImage from "../../../assets/images/services/visa.webp";
+import accommodationImage from "../../../assets/images/services/accommodation.webp";
+import testPreparationImage from "../../../assets/images/services/test-preparation.webp";
+import careerImage from "../../../assets/images/services/career.webp";
 
 const MOTION = {
   duration: 0.55,
@@ -156,6 +156,12 @@ export default function MoreWaysWeHelp() {
   useEffect(() => {
     if (isPaused) return undefined;
 
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefersReducedMotion || document.hidden) return undefined;
+
     const timer = window.setInterval(() => {
       setDirection("next");
       setIndex((prev) => (prev + 1) % services.length);
@@ -220,6 +226,15 @@ export default function MoreWaysWeHelp() {
           .zaifan-trail,
           .service-progress {
             animation: none !important;
+          }
+
+          #more-help *,
+          #more-help *::before,
+          #more-help *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
           }
         }
       `}</style>
@@ -292,6 +307,8 @@ export default function MoreWaysWeHelp() {
           <img
             src={mascotImage}
             alt="Zaifan student mascot"
+            loading="lazy"
+            decoding="async"
             className="relative z-10 h-[280px] w-auto object-contain sm:h-[360px] lg:h-[430px]"
           />
         </div>
@@ -299,7 +316,7 @@ export default function MoreWaysWeHelp() {
         <button
           type="button"
           onClick={prevSlide}
-          className="absolute left-5 top-[58%] z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-[#071f50] focus:outline-none focus:ring-4 focus:ring-orange-200 lg:flex"
+          className="absolute left-5 top-[58%] z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-[#071f50] focus:outline-none focus-visible:ring-4 focus:ring-orange-200 lg:flex"
           aria-label="Previous service"
         >
           <ArrowLeft size={25} />
@@ -308,7 +325,7 @@ export default function MoreWaysWeHelp() {
         <button
           type="button"
           onClick={nextSlide}
-          className="absolute right-5 top-[58%] z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-white text-orange-500 shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-orange-500 hover:text-white focus:outline-none focus:ring-4 focus:ring-orange-200 lg:flex"
+          className="absolute right-5 top-[58%] z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-white text-orange-500 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-orange-500 hover:text-white focus:outline-none focus-visible:ring-4 focus:ring-orange-200 lg:flex"
           aria-label="Next service"
         >
           <ArrowRight size={25} />
@@ -352,7 +369,7 @@ export default function MoreWaysWeHelp() {
               <button
                 type="button"
                 onClick={prevSlide}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-100"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
                 aria-label="Previous service"
               >
                 <ArrowLeft size={20} />
@@ -378,7 +395,7 @@ export default function MoreWaysWeHelp() {
                 >
                   <Link
                     to={services[index].link}
-                    className="group flex min-h-[430px] flex-col items-center justify-center rounded-[30px] border border-orange-100 bg-white p-7 text-center shadow-[0_24px_60px_rgba(251,146,60,0.20)] transition duration-300 hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                    className="group flex min-h-[430px] flex-col items-center justify-center rounded-[30px] border border-orange-100 bg-white p-7 text-center shadow-[0_24px_60px_rgba(251,146,60,0.20)] transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
                   >
                     <div
                       className={`mb-4 grid h-12 w-12 place-items-center rounded-2xl ${services[index].soft}`}
@@ -390,7 +407,9 @@ export default function MoreWaysWeHelp() {
                     <img
                       src={services[index].image}
                       alt={services[index].title}
-                      className="mb-5 h-[180px] w-full object-contain transition duration-300 group-hover:scale-105"
+                      loading="lazy"
+                      decoding="async"
+                      className="mb-5 h-[180px] w-full object-contain transition-all duration-300 group-hover:scale-105"
                     />
 
                     <h3 className="text-2xl font-black leading-tight text-[#071f50]">
@@ -426,7 +445,7 @@ export default function MoreWaysWeHelp() {
               <button
                 type="button"
                 onClick={nextSlide}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-100"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
                 aria-label="Next service"
               >
                 <ArrowRight size={20} />
@@ -451,7 +470,7 @@ export default function MoreWaysWeHelp() {
                   key={service.title}
                   type="button"
                   onClick={() => goToSlide(dotIndex)}
-                  className="h-3 rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="h-3 rounded-full transition-[width,background-color] duration-300 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
                   style={{
                     width: dotIndex === index ? "36px" : "12px",
                     backgroundColor:
@@ -472,10 +491,10 @@ export default function MoreWaysWeHelp() {
             return (
               <div
                 key={item.title}
-                className="group flex items-center gap-4 border-orange-100 transition duration-300 hover:-translate-y-1 lg:border-r lg:last:border-r-0"
+                className="group flex items-center gap-4 border-orange-100 transition-all duration-300 hover:-translate-y-1 lg:border-r lg:last:border-r-0"
               >
                 <div
-                  className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${item.color} transition duration-300 group-hover:scale-105`}
+                  className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${item.color} transition-all duration-300 group-hover:scale-105`}
                 >
                   <Icon size={32} />
                 </div>
@@ -494,7 +513,7 @@ export default function MoreWaysWeHelp() {
         <div className="mt-8 flex justify-center">
           <Link
             to="/services"
-            className="inline-flex items-center gap-3 rounded-full bg-[#071f50] px-8 py-4 font-black text-white transition duration-300 hover:-translate-y-1 hover:bg-orange-600"
+            className="inline-flex items-center gap-3 rounded-full bg-[#071f50] px-8 py-4 font-black text-white transition-all duration-300 hover:-translate-y-1 hover:bg-orange-600"
           >
             Explore Full Services Hub
             <ArrowRight size={18} />
@@ -511,7 +530,7 @@ function ServiceCard({ service }) {
   return (
     <Link
       to={service.link}
-      className="group grid min-h-[290px] grid-cols-[43%_57%] items-center overflow-hidden rounded-[30px] border border-orange-100 bg-white p-6 shadow-[0_28px_70px_rgba(251,146,60,0.18)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_34px_90px_rgba(251,146,60,0.30)] focus:outline-none focus:ring-4 focus:ring-orange-100"
+      className="group grid min-h-[290px] grid-cols-[43%_57%] items-center overflow-hidden rounded-[30px] border border-orange-100 bg-white p-6 shadow-[0_28px_70px_rgba(251,146,60,0.18)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_34px_90px_rgba(251,146,60,0.30)] focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
     >
       <div className="relative flex items-center justify-center">
         <div className={`absolute inset-2 rounded-full ${service.soft} blur-2xl`} />
@@ -519,7 +538,9 @@ function ServiceCard({ service }) {
         <img
           src={service.image}
           alt={service.title}
-          className={`relative z-10 w-full object-contain transition duration-300 group-hover:scale-105 ${
+          loading="lazy"
+          decoding="async"
+          className={`relative z-10 w-full object-contain transition-all duration-300 group-hover:scale-105 ${
   service.title === "Admission Guidance"
     ? "h-[225px] scale-[1.18]"
     : "h-[185px]"
@@ -555,7 +576,7 @@ function ServiceCard({ service }) {
         </div>
 
         <div
-          className="mt-5 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-black text-white shadow-sm transition duration-300 group-hover:gap-3"
+          className="mt-5 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-black text-white shadow-sm transition-all duration-300 group-hover:gap-3"
           style={{ backgroundColor: service.accent }}
         >
           Explore Service

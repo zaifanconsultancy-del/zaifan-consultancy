@@ -23,14 +23,14 @@ import {
   Zap,
 } from "lucide-react";
 
-import australiaUniversity from "../../../assets/images/universities/australia-university.png";
-import canadaUniversity from "../../../assets/images/universities/canada-university.png";
-import germanyUniversity from "../../../assets/images/universities/germany-university.png";
-import italyUniversity from "../../../assets/images/universities/politecnico-di-milano.png";
-import turkeyUniversity from "../../../assets/images/universities/turkey-university.png";
-import ukUniversity from "../../../assets/images/universities/uk-university.png";
-import mascotExplorer from "../../../assets/images/universities/mascot-explorer.png";
-import mascotThumbsup from "../../../assets/images/universities/mascot-thumbsup.png";
+import australiaUniversity from "../../../assets/images/universities/australia-university.webp";
+import canadaUniversity from "../../../assets/images/universities/canada-university.webp";
+import germanyUniversity from "../../../assets/images/universities/germany-university.webp";
+import italyUniversity from "../../../assets/images/universities/politecnico-di-milano.webp";
+import turkeyUniversity from "../../../assets/images/universities/turkey-university.webp";
+import ukUniversity from "../../../assets/images/universities/uk-university.webp";
+import mascotExplorer from "../../../assets/images/universities/mascot-explorer.webp";
+import mascotThumbsup from "../../../assets/images/universities/mascot-thumbsup.webp";
 
 import {
   getScholarshipBadge,
@@ -101,6 +101,9 @@ const journeySteps = [
 const buildAppointmentUrl = (universityName, service = "University Guidance") =>
   `/appointment?country=Italy&university=${encodeURIComponent(universityName)}&service=${encodeURIComponent(service)}`;
 
+const INTERACTIVE_TRANSITION =
+  "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+
 export default function PublicUniversityExplorer() {
   const [featuredUniversity, secondUniversity, thirdUniversity] = getTopItalianUniversities(3);
 
@@ -142,6 +145,15 @@ export default function PublicUniversityExplorer() {
             transition: none !important;
             transform: none !important;
             animation: none !important;
+          }
+
+          #universities *,
+          #universities *::before,
+          #universities *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
           }
         }
       `}</style>
@@ -195,7 +207,7 @@ export default function PublicUniversityExplorer() {
               ].map(([Icon, value, label]) => (
                 <div
                   key={label}
-                  className="flex items-center justify-center gap-3 border-orange-100 px-4 py-5 transition hover:bg-orange-50/50 sm:border-r sm:last:border-r-0 lg:justify-start lg:px-5"
+                  className="flex items-center justify-center gap-3 border-orange-100 px-4 py-5 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-orange-50/50 sm:border-r sm:last:border-r-0 lg:justify-start lg:px-5"
                 >
                   <div className="rounded-2xl bg-orange-50 p-2 text-orange-600">
                     <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -213,7 +225,7 @@ export default function PublicUniversityExplorer() {
                 to="/universities"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
               >
                 Explore More Universities
                 <ExternalLink className="h-4 w-4" />
@@ -221,7 +233,7 @@ export default function PublicUniversityExplorer() {
 
               <a
                 href="/appointment?country=Italy&service=University Selection"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-black text-[#071b3a] shadow-sm ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-orange-600 hover:ring-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-black text-[#071b3a] shadow-sm ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:text-orange-600 hover:ring-orange-300 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
               >
                 Get Shortlist Help
                 <ArrowRight className="h-4 w-4" />
@@ -239,6 +251,8 @@ export default function PublicUniversityExplorer() {
               <img
                 src={mascotExplorer}
                 alt="Zaifan student exploring Italian universities"
+                loading="lazy"
+                decoding="async"
                 className="relative z-10 max-h-[535px] w-full object-contain drop-shadow-[0_28px_35px_rgba(15,23,42,0.16)]"
               />
 
@@ -266,7 +280,7 @@ export default function PublicUniversityExplorer() {
                     to="/universities"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center justify-center rounded-xl border border-orange-100 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-orange-100 bg-white px-3 text-xs font-black text-slate-700 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-orange-300 hover:text-orange-600"
                   >
                     All Cities
                   </Link>
@@ -274,7 +288,7 @@ export default function PublicUniversityExplorer() {
                     to="/universities"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center justify-center rounded-xl border border-orange-100 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-orange-100 bg-white px-3 text-xs font-black text-slate-700 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-orange-300 hover:text-orange-600"
                   >
                     All Programs
                   </Link>
@@ -284,7 +298,7 @@ export default function PublicUniversityExplorer() {
                   to="/universities"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl bg-orange-600 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition hover:-translate-y-0.5 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200"
+                  className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl bg-orange-600 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-200"
                 >
                   Open Full Database
                 </Link>
@@ -316,7 +330,7 @@ export default function PublicUniversityExplorer() {
                   to="/universities"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-orange-100 bg-white px-4 py-2 text-xs font-black text-slate-600 transition hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="rounded-full border border-orange-100 bg-white px-4 py-2 text-xs font-black text-slate-600 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
                 >
                   {item}
                 </Link>
@@ -337,7 +351,7 @@ export default function PublicUniversityExplorer() {
                   {[secondUniversity, thirdUniversity].filter(Boolean).map((university) => (
                     <article
                       key={university.slug}
-                      className="group rounded-[1.4rem] border border-orange-100 bg-[#fff8f1] p-3 transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
+                      className="group rounded-[1.4rem] border border-orange-100 bg-[#fff8f1] p-3 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-md"
                     >
                       <Link
                         to={`/universities/${university.slug}`}
@@ -348,6 +362,8 @@ export default function PublicUniversityExplorer() {
                         <img
                           src={university.image}
                           alt={`${university.name} Italy university`}
+                          loading="lazy"
+                          decoding="async"
                           className="h-16 w-16 rounded-2xl object-cover"
                         />
                         <div className="min-w-0 flex-1">
@@ -366,14 +382,14 @@ export default function PublicUniversityExplorer() {
                           to={`/universities/${university.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 text-[11px] font-black text-[#071b3a] ring-1 ring-orange-100 transition hover:text-orange-600 hover:ring-orange-300"
+                          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 text-[11px] font-black text-[#071b3a] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-orange-600 hover:ring-orange-300"
                         >
                           View Details
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                         <a
                           href={buildAppointmentUrl(university.name, "Ask About This University")}
-                          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-3 text-[11px] font-black text-white shadow-sm shadow-orange-600/20 transition hover:bg-orange-700"
+                          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-3 text-[11px] font-black text-white shadow-sm shadow-orange-600/20 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-orange-700"
                         >
                           Ask Zaifan
                           <MessageCircleQuestion className="h-3.5 w-3.5" />
@@ -387,7 +403,7 @@ export default function PublicUniversityExplorer() {
                   to="/universities"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#071b3a] px-5 py-4 text-sm font-black text-white transition hover:-translate-y-1 hover:bg-[#092b72]"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#071b3a] px-5 py-4 text-sm font-black text-white transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-[#092b72]"
                 >
                   View All 50 Universities
                   <ExternalLink className="h-4 w-4" />
@@ -412,11 +428,13 @@ export default function PublicUniversityExplorer() {
                 <img
                   src={mascotThumbsup}
                   alt="Zaifan university guide"
+                  loading="lazy"
+                  decoding="async"
                   className="mx-auto h-40 object-contain"
                 />
                 <a
                   href="/appointment?country=Italy&service=University Shortlist"
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 px-5 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition hover:-translate-y-1 hover:bg-orange-700"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 px-5 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700"
                 >
                   Get Italy Consultation
                   <ArrowRight className="h-4 w-4" />
@@ -430,7 +448,7 @@ export default function PublicUniversityExplorer() {
           {journeySteps.map((item) => (
             <div
               key={item.title}
-              className="group rounded-[1.6rem] border border-orange-100 bg-white/85 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.05)] transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_22px_60px_rgba(255,91,18,0.12)]"
+              className="group rounded-[1.6rem] border border-orange-100 bg-white/85 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.05)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-[0_22px_60px_rgba(255,91,18,0.12)]"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="grid h-13 w-13 place-items-center rounded-2xl bg-orange-50 text-orange-600">
@@ -463,7 +481,7 @@ export default function PublicUniversityExplorer() {
 
             <a
               href="/appointment?country=Italy"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-100"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
             >
               Start With Italy
               <ArrowRight className="h-4 w-4" />
@@ -474,13 +492,15 @@ export default function PublicUniversityExplorer() {
             {comingSoonCountries.map((item) => (
               <article
                 key={item.name}
-                className="group overflow-hidden rounded-[1.5rem] border border-orange-100 bg-white shadow-sm transition duration-500 hover:-translate-y-2 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
+                className="group overflow-hidden rounded-[1.5rem] border border-orange-100 bg-white shadow-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
               >
                 <div className="relative h-36 overflow-hidden bg-orange-50">
                   <img
                     src={item.image}
                     alt={`${item.name} coming soon university image`}
-                    className="h-full w-full object-cover opacity-65 grayscale transition duration-700 group-hover:scale-110 group-hover:grayscale-0"
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover opacity-65 grayscale transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 group-hover:grayscale-0"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#071b3a]/55 via-[#071b3a]/10 to-transparent" />
                   <div className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-black text-[#071b3a] shadow-md">
@@ -505,7 +525,7 @@ export default function PublicUniversityExplorer() {
 
 function FeaturedUniversityCard({ university }) {
   return (
-    <article className="group overflow-hidden rounded-[1.9rem] border border-orange-100 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] transition duration-500 hover:-translate-y-2 hover:shadow-[0_34px_90px_rgba(255,91,18,0.18)]">
+    <article className="group overflow-hidden rounded-[1.9rem] border border-orange-100 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-[0_34px_90px_rgba(255,91,18,0.18)]">
       <Link
         to={`/universities/${university.slug}`}
         target="_blank"
@@ -516,7 +536,9 @@ function FeaturedUniversityCard({ university }) {
         <img
           src={university.image}
           alt={`${university.name} Italy university`}
-          className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071b3a]/76 via-[#071b3a]/22 to-white/8" />
 
@@ -592,7 +614,7 @@ function FeaturedUniversityCard({ university }) {
               to={`/universities/${university.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#071b3a] px-4 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(7,27,58,0.20)] transition hover:-translate-y-1 hover:bg-[#092b72]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#071b3a] px-4 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(7,27,58,0.20)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-[#092b72]"
             >
               View Details
               <ExternalLink className="h-4 w-4" />
@@ -600,7 +622,7 @@ function FeaturedUniversityCard({ university }) {
 
             <a
               href={buildAppointmentUrl(university.name, "Ask About This University")}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-4 text-sm font-black text-[#071b3a] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-orange-600 hover:ring-orange-300"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-4 text-sm font-black text-[#071b3a] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:text-orange-600 hover:ring-orange-300"
             >
               Ask About This
               <MessageCircleQuestion className="h-4 w-4" />
@@ -608,7 +630,7 @@ function FeaturedUniversityCard({ university }) {
 
             <a
               href={buildAppointmentUrl(university.name, "Book Consultation")}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-4 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition hover:-translate-y-1 hover:bg-orange-700"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-4 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700"
             >
               Book Consultation
               <CalendarCheck2 className="h-4 w-4" />

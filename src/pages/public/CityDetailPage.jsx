@@ -45,6 +45,9 @@ const MOTION = {
   hoverY: -4,
 };
 
+const INTERACTIVE_TRANSITION =
+  "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   show: {
@@ -245,7 +248,22 @@ function CityDetailPage() {
 
   return (
     <>
-      <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
+      <main
+        id="city-detail-page"
+        className="overflow-hidden bg-[#fff7ed] text-[#071f50]"
+      >
+        <style>{`
+          @media (prefers-reduced-motion: reduce) {
+            #city-detail-page *,
+            #city-detail-page *::before,
+            #city-detail-page *::after {
+              scroll-behavior: auto !important;
+              transition-duration: 0.01ms !important;
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+            }
+          }
+        `}</style>
         <section className="relative px-5 pb-20 pt-32 md:pt-36">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_22%,rgba(255,75,18,0.16),transparent_30%),radial-gradient(circle_at_84%_12%,rgba(255,178,89,0.18),transparent_26%)]" />
           <div className="pointer-events-none absolute -left-28 top-16 h-96 w-96 rounded-full bg-orange-300/20 blur-3xl" />
@@ -254,7 +272,7 @@ function CityDetailPage() {
           <div className="relative mx-auto max-w-[1450px]">
             <Link
               to="/countries/italy"
-              className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-black text-[#ff4b12] shadow-sm ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-[#fff1ea]"
+              className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-black text-[#ff4b12] shadow-sm ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-[#fff1ea]"
             >
               <ArrowLeft size={16} strokeWidth={3} />
               Back to Italy Guide
@@ -273,17 +291,17 @@ function CityDetailPage() {
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href={`/appointment?country=Italy&city=${encodeURIComponent(city.name)}`}
-                    className="inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20"
+                  <Link
+                    to={`/appointment?country=Italy&city=${encodeURIComponent(city.name)}`}
+                    className={`inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#ff4b12]/20 ${INTERACTIVE_TRANSITION}`}
                   >
                     Plan {city.name} Study Route
                     <ArrowRight size={21} strokeWidth={3} />
-                  </a>
+                  </Link>
 
                   <Link
                     to="/universities"
-                    className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-base font-black text-[#ff4b12] shadow-[0_14px_32px_rgba(255,75,18,0.1)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-[#fff1ea] focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20"
+                    className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-base font-black text-[#ff4b12] shadow-[0_14px_32px_rgba(255,75,18,0.1)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-[#fff1ea] focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20"
                   >
                     Explore Universities
                   </Link>
@@ -317,7 +335,7 @@ function CityDetailPage() {
                     </div>
 
                     <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-[24px] bg-white/10 p-5 ring-1 ring-white/10">
+                      <div className="rounded-[24px] bg-white/10 p-5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white/14">
                         <Building2 className="text-[#ffb36d]" size={24} />
                         <p className="mt-4 text-[10px] font-black uppercase tracking-[0.15em] text-[#ffb36d]">
                           Linked Universities
@@ -326,7 +344,7 @@ function CityDetailPage() {
                       </div>
 
                       {city.heroStats.slice(0, 3).map(([label, value]) => (
-                        <div key={label} className="rounded-[24px] bg-white/10 p-5 ring-1 ring-white/10">
+                        <div key={label} className="rounded-[24px] bg-white/10 p-5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white/14">
                           <MapPin className="text-[#ffb36d]" size={24} />
                           <p className="mt-4 text-[10px] font-black uppercase tracking-[0.15em] text-[#ffb36d]">
                             {label}
@@ -419,7 +437,7 @@ function CityDetailPage() {
                   <motion.div
                     key={item.title}
                     variants={fadeUp}
-                    className="rounded-[30px] bg-white/90 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
+                    className="rounded-[30px] bg-white/90 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
                   >
                     <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
                       <Icon size={27} strokeWidth={2.6} />
@@ -451,13 +469,15 @@ function CityDetailPage() {
                   <Link
                     key={university.slug}
                     to={`/universities/${university.slug}`}
-                    className="group overflow-hidden rounded-[30px] bg-white shadow-[0_18px_48px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,75,18,0.13)]"
+                    className="group overflow-hidden rounded-[30px] bg-white shadow-[0_18px_48px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,75,18,0.13)]"
                   >
                     <div className="relative h-52 overflow-hidden">
                       <img
                         src={university.image}
                         alt={`${university.name} campus`}
-                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/88 via-[#071f50]/15 to-transparent" />
                       <div className="absolute bottom-4 left-4 right-4">
@@ -485,7 +505,7 @@ function CityDetailPage() {
                           </p>
                         </div>
                       </div>
-                      <ArrowRight className="mt-1 shrink-0 text-[#ff4b12] transition group-hover:translate-x-1" size={18} />
+                      <ArrowRight className="mt-1 shrink-0 text-[#ff4b12] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1" size={18} />
                     </div>
 
                     <p className="mt-4 text-sm font-semibold leading-6 text-[#61708a]">
@@ -521,7 +541,7 @@ function CityDetailPage() {
             <div className="mt-8 flex justify-center">
               <Link
                 to="/universities"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-[#071f50] px-8 py-5 text-sm font-black text-white shadow-[0_20px_44px_rgba(9,31,80,0.18)] transition hover:-translate-y-1 hover:bg-[#092b72]"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-[#071f50] px-8 py-5 text-sm font-black text-white shadow-[0_20px_44px_rgba(9,31,80,0.18)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-[#092b72]"
               >
                 Explore Full Italy University Database
                 <ArrowRight size={20} strokeWidth={3} />
@@ -546,7 +566,7 @@ function CityDetailPage() {
                   whileInView="show"
                   viewport={{ once: true, amount: 0.2 }}
                   variants={fadeUp}
-                  className="rounded-[32px] bg-white/90 p-7 shadow-[0_22px_65px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
+                  className="rounded-[32px] bg-white/90 p-7 shadow-[0_22px_65px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
                 >
                   <Euro className="text-[#ff4b12]" size={34} strokeWidth={2.5} />
                   <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12]">
@@ -576,7 +596,7 @@ function CityDetailPage() {
               </p>
               <Link
                 to="/scholarships"
-                className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
+                className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-[#ff642f]"
               >
                 Open Scholarship Hub
                 <ArrowRight size={21} strokeWidth={3} />
@@ -629,7 +649,7 @@ function CityDetailPage() {
                     whileInView="show"
                     viewport={{ once: true, amount: 0.2 }}
                     variants={fadeUp}
-                    className="rounded-[30px] bg-white/90 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
+                    className="rounded-[30px] bg-white/90 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(255,75,18,0.13)]"
                   >
                     <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
                       <Icon size={27} strokeWidth={2.6} />
@@ -751,13 +771,13 @@ function CityDetailPage() {
                   We can check university options, budget, scholarship direction, documents and whether {city.name} is worth choosing over other Italian cities.
                 </p>
               </div>
-              <a
-                href={`/appointment?country=Italy&city=${encodeURIComponent(city.name)}&service=City Guidance`}
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-9 py-5 font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
+              <Link
+                to={`/appointment?country=Italy&city=${encodeURIComponent(city.name)}&service=City%20Guidance`}
+                className={`inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-9 py-5 font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
               >
                 Get {city.name} Guidance
                 <Plane size={22} strokeWidth={3} />
-              </a>
+              </Link>
             </div>
           </div>
         </section>

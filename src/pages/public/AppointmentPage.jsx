@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   BadgeDollarSign,
   CalendarDays,
@@ -30,14 +30,19 @@ import {
   X,
 } from "lucide-react";
 
-import consultantMascot from "../../assets/images/appointment/consultant-mascot.png";
-import globeBooks from "../../assets/images/appointment/globe-books.png";
+import consultantMascot from "../../assets/images/appointment/consultant-mascot.webp";
+import globeBooks from "../../assets/images/appointment/globe-books.webp";
 import { supabase } from "../../lib/supabaseClient";
 
 const MOTION = {
   duration: 0.55,
   ease: [0.22, 1, 0.36, 1],
   stagger: 0.06,
+};
+
+const ACCORDION_MOTION = {
+  duration: 0.32,
+  ease: MOTION.ease,
 };
 
 const fadeUp = {
@@ -312,6 +317,7 @@ const findMatchingOption = (options, value) => {
 };
 
 function AppointmentPage() {
+  const prefersReducedMotion = useReducedMotion();
   const [formData, setFormData] = useState(initialFormData);
   const [submittedAppointment, setSubmittedAppointment] = useState(null);
   const [prefillNotice, setPrefillNotice] = useState("");
@@ -518,7 +524,22 @@ function AppointmentPage() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#fff4e8] px-4 pb-8 pt-28 text-[#071d43] sm:px-6 lg:px-8">
+    <section
+      id="appointment-page"
+      className="relative overflow-hidden bg-[#fff4e8] px-4 pb-8 pt-28 text-[#071d43] sm:px-6 lg:px-8"
+    >
+      <style>{`
+        @media (prefers-reduced-motion: reduce) {
+          #appointment-page *,
+          #appointment-page *::before,
+          #appointment-page *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+          }
+        }
+      `}</style>
       <div className="pointer-events-none absolute left-[-180px] top-20 h-[420px] w-[420px] rounded-full bg-orange-200/45 blur-3xl" />
       <div className="pointer-events-none absolute bottom-[-90px] right-[-120px] h-[320px] w-[320px] rounded-full bg-[#ffd7a8]/60 blur-3xl" />
       <div className="pointer-events-none absolute left-1/2 top-0 h-[260px] w-[520px] -translate-x-1/2 rounded-full bg-white/60 blur-3xl" />
@@ -579,6 +600,11 @@ function AppointmentPage() {
                   <img
                     src={consultantMascot}
                     alt="Study abroad consultant"
+                    width="1024"
+                    height="1024"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     className="relative z-10 mx-auto mt-8 w-full max-w-[490px] object-contain drop-shadow-[0_24px_35px_rgba(120,70,20,0.18)]"
                   />
 
@@ -599,7 +625,7 @@ function AppointmentPage() {
                     const Icon = stat.icon;
 
                     return (
-                      <div key={stat.label} className="rounded-[1.25rem] px-2 py-2 text-center transition duration-300 hover:-translate-y-1 hover:bg-[#fff8ec]">
+                      <div key={stat.label} className="rounded-[1.25rem] px-2 py-2 text-center transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-[#fff8ec]">
                         <div className={`mx-auto grid h-10 w-10 place-items-center rounded-full ${stat.bg} ${stat.color}`}>
                           <Icon size={21} />
                         </div>
@@ -631,7 +657,7 @@ function AppointmentPage() {
                     const Icon = route.icon;
 
                     return (
-                      <div key={route.title} className="rounded-[1.35rem] border border-orange-100 bg-[#fffaf4] p-4 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-md">
+                      <div key={route.title} className="rounded-[1.35rem] border border-orange-100 bg-[#fffaf4] p-4 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-md">
                         <div className="flex items-start gap-3">
                           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-600">
                             <Icon size={20} />
@@ -699,12 +725,16 @@ function AppointmentPage() {
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
                 <motion.div
                   className="h-full rounded-full bg-[#0a4aa6]"
-                  initial={{ width: 0 }}
+                  initial={prefersReducedMotion ? false : { width: 0 }}
                   animate={{ width: `${completionPercentage}%` }}
-                  transition={{
-                    duration: MOTION.duration,
-                    ease: MOTION.ease,
-                  }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0 }
+                      : {
+                          duration: MOTION.duration,
+                          ease: MOTION.ease,
+                        }
+                  }
                 />
               </div>
             </div>
@@ -749,18 +779,18 @@ function AppointmentPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label>
                   <span className="mb-2 block text-xs font-black text-[#071d43]">Full Name *</span>
-                  <input type="text" name="full_name" placeholder="Enter your full name" value={formData.full_name} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                  <input type="text" name="full_name" autoComplete="name" placeholder="Enter your full name" value={formData.full_name} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100" />
                 </label>
 
                 <label>
                   <span className="mb-2 block text-xs font-black text-[#071d43]">Email Address *</span>
-                  <input type="email" name="email" placeholder="Enter your email" value={formData.email} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                  <input type="email" name="email" autoComplete="email" placeholder="Enter your email" value={formData.email} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100" />
                 </label>
               </div>
 
               <label>
                 <span className="mb-2 block text-xs font-black text-[#071d43]">Phone / WhatsApp Number *</span>
-                <input type="tel" name="phone" placeholder="+92 98765 43210" value={formData.phone} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                <input type="tel" name="phone" autoComplete="tel" placeholder="+92 330 5718131" value={formData.phone} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100" />
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -775,7 +805,7 @@ function AppointmentPage() {
 
                 <label>
                   <span className="mb-2 block text-xs font-black text-[#071d43]">Consultation Type *</span>
-                  <select name="consultation_type" value={formData.consultation_type} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
+                  <select name="consultation_type" value={formData.consultation_type} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100">
                     {consultationTypes.map((type) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
@@ -786,12 +816,12 @@ function AppointmentPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label>
                   <span className="mb-2 block text-xs font-black text-[#071d43]">Preferred Date *</span>
-                  <input type="date" name="appointment_date" min={minDate} value={formData.appointment_date} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                  <input type="date" name="appointment_date" min={minDate} value={formData.appointment_date} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100" />
                 </label>
 
                 <label>
                   <span className="mb-2 block text-xs font-black text-[#071d43]">Preferred Time *</span>
-                  <select name="appointment_time" value={formData.appointment_time} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
+                  <select name="appointment_time" value={formData.appointment_time} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100">
                     <option value="">Select Time Slot</option>
                     {timeSlots.map((slot) => (
                       <option key={slot} value={slot}>{slot}</option>
@@ -802,7 +832,7 @@ function AppointmentPage() {
 
               <label>
                 <span className="mb-2 block text-xs font-black text-[#071d43]">Your Italy Study Goals</span>
-                <textarea name="message" placeholder="Example: I want to study in Italy, need university matching, scholarship options and visa roadmap..." value={formData.message} onChange={handleChange} rows="5" className="w-full resize-none rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                <textarea name="message" placeholder="Example: I want to study in Italy, need university matching, scholarship options and visa roadmap..." value={formData.message} onChange={handleChange} rows="5" className="w-full resize-none rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100" />
               </label>
 
               {appointmentSummary.length > 0 && (
@@ -837,12 +867,12 @@ function AppointmentPage() {
                 </p>
               )}
 
-              <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-full bg-orange-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition duration-300 hover:-translate-y-1 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-full bg-orange-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60">
                 <Send size={18} />
                 {loading ? "Submitting..." : "Request Italy Appointment"}
               </button>
 
-              <button type="button" onClick={openWhatsApp} className="flex w-full items-center justify-center gap-3 rounded-full bg-green-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(34,197,94,0.2)] transition duration-300 hover:-translate-y-1 hover:bg-green-600">
+              <button type="button" onClick={openWhatsApp} className="flex w-full items-center justify-center gap-3 rounded-full bg-green-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(34,197,94,0.2)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-green-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-200">
                 <MessageCircle size={18} />
                 Continue on WhatsApp
               </button>
@@ -903,10 +933,14 @@ function AppointmentPage() {
               
 
               <img
-  src={globeBooks}
-  alt="Study abroad books and globe"
-  className="mx-auto -mt-8 w-[190px] drop-shadow-[0_24px_35px_rgba(120,70,20,0.18)]"
-/>
+                src={globeBooks}
+                alt="Study abroad books and globe"
+                width="992"
+                height="1070"
+                loading="lazy"
+                decoding="async"
+                className="mx-auto -mt-8 w-[190px] drop-shadow-[0_24px_35px_rgba(120,70,20,0.18)]"
+              />
 
               <div className="rounded-[1.5rem] bg-white/90 p-4 shadow-[0_14px_34px_rgba(120,70,20,0.10)] ring-1 ring-orange-100">
                 <div className="flex items-center gap-3">
@@ -953,7 +987,7 @@ function AppointmentPage() {
                 return (
                   <div
                     key={step.title}
-                    className="rounded-[1.8rem] bg-[#fff8ef] p-5 ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
+                    className="rounded-[1.8rem] bg-[#fff8ef] p-5 ring-1 ring-orange-100 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
                   >
                     <div className="mb-5 flex items-center justify-between gap-3">
                       <div className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-500/20">
@@ -1034,7 +1068,7 @@ function AppointmentPage() {
                   key={card.type}
                   type="button"
                   onClick={() => selectConsultationType(card.type)}
-                  className={`rounded-[1.8rem] p-5 text-left ring-1 transition duration-300 hover:-translate-y-1 ${
+                  className={`rounded-[1.8rem] p-5 text-left ring-1 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 ${
                     isActive
                       ? "bg-orange-500 text-white ring-orange-500 shadow-[0_20px_45px_rgba(249,115,22,0.20)]"
                       : "bg-[#fff8ef] text-[#071d43] ring-orange-100 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
@@ -1088,7 +1122,7 @@ function AppointmentPage() {
                     key={card.title}
                     type="button"
                     onClick={() => selectReadiness(card.message)}
-                    className="rounded-[1.6rem] bg-[#fff8ef] p-4 text-left ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
+                    className="rounded-[1.6rem] bg-[#fff8ef] p-4 text-left ring-1 ring-orange-100 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(120,70,20,0.08)]"
                   >
                     <Icon className="text-orange-600" size={24} />
                     <h3 className="mt-3 font-black text-[#071d43]">{card.title}</h3>
@@ -1173,7 +1207,7 @@ function AppointmentPage() {
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? -1 : index)}
-                    className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left font-black text-[#071d43]"
+                    className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left font-black text-[#071d43] transition duration-300 hover:bg-orange-50/70 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-200"
                   >
                     <span className="flex items-center gap-3">
                       <CircleHelp className="text-orange-600" size={20} />
@@ -1194,20 +1228,22 @@ function AppointmentPage() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{
-                          duration: MOTION.duration,
-                          ease: MOTION.ease,
-                        }}
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0 }
+                            : ACCORDION_MOTION
+                        }
                         className="overflow-hidden"
                       >
                         <motion.p
                           initial={{ y: -6 }}
                           animate={{ y: 0 }}
                           exit={{ y: -4 }}
-                          transition={{
-                            duration: MOTION.duration,
-                            ease: MOTION.ease,
-                          }}
+                          transition={
+                            prefersReducedMotion
+                              ? { duration: 0 }
+                              : ACCORDION_MOTION
+                          }
                           className="px-5 pb-5 text-sm font-bold leading-7 text-slate-600"
                         >
                           {faq.a}

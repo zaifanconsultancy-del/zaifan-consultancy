@@ -20,13 +20,13 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import australiaImage from "../../../assets/images/country-explorer/australia.png";
-import canadaImage from "../../../assets/images/country-explorer/canada.png";
-import guideCharacter from "../../../assets/images/country-explorer/country-guide-character.png";
-import germanyImage from "../../../assets/images/country-explorer/germany.png";
-import italyImage from "../../../assets/images/country-explorer/italy.png";
-import turkeyImage from "../../../assets/images/country-explorer/turkey.png";
-import ukImage from "../../../assets/images/country-explorer/united-kingdom.png";
+import australiaImage from "../../../assets/images/country-explorer/australia.webp";
+import canadaImage from "../../../assets/images/country-explorer/canada.webp";
+import guideCharacter from "../../../assets/images/country-explorer/country-guide-character.webp";
+import germanyImage from "../../../assets/images/country-explorer/germany.webp";
+import italyImage from "../../../assets/images/country-explorer/italy.webp";
+import turkeyImage from "../../../assets/images/country-explorer/turkey.webp";
+import ukImage from "../../../assets/images/country-explorer/united-kingdom.webp";
 
 const destinations = [
   {
@@ -218,21 +218,26 @@ const whyItalyReasons = [
   },
 ];
 
+const MOTION = {
+  duration: 0.55,
+  ease: [0.22, 1, 0.36, 1],
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.08 },
+    transition: { staggerChildren: 0.07 },
   },
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 34, scale: 0.98 },
+  hidden: { opacity: 0, y: 24, scale: 0.99 },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.55, ease: "easeOut" },
+    transition: { duration: MOTION.duration, ease: MOTION.ease },
   },
 };
 
@@ -240,7 +245,7 @@ function FocusStat({ item }) {
   const Icon = item.icon;
 
   return (
-    <div className="group/stat relative overflow-hidden rounded-[26px] bg-white/90 p-5 text-left shadow-[0_18px_42px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_58px_rgba(255,75,18,0.13)]">
+    <div className="group/stat relative overflow-hidden rounded-[26px] bg-white/90 p-5 text-left shadow-[0_18px_42px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_58px_rgba(255,75,18,0.13)]">
       <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#fff1ea]" />
       <div className="relative flex items-start gap-4">
         <div className="grid h-13 w-13 shrink-0 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] shadow-inner ring-1 ring-orange-100 transition duration-300 group-hover/stat:scale-105">
@@ -308,7 +313,7 @@ function ItalyReasonPanel() {
           return (
             <div
               key={item.title}
-              className="rounded-[24px] bg-white/90 p-5 text-center shadow-[0_16px_38px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(255,75,18,0.12)]"
+              className="rounded-[24px] bg-white/90 p-5 text-center shadow-[0_16px_38px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(255,75,18,0.12)]"
             >
               <div className="mx-auto grid h-13 w-13 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
                 <Icon size={25} strokeWidth={2.7} />
@@ -393,12 +398,14 @@ function ItalySpotlightCard({ country, onActivate }) {
       onMouseEnter={onActivate}
       onFocus={onActivate}
       tabIndex={0}
-      className="group relative overflow-hidden rounded-[34px] bg-white shadow-[0_26px_75px_rgba(255,75,18,0.14)] ring-2 ring-[#ff4b12]/28 focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20"
+      className="group relative overflow-hidden rounded-[34px] bg-white shadow-[0_26px_75px_rgba(255,75,18,0.14)] ring-2 ring-[#ff4b12]/28 focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20"
     >
       <div className="relative h-[380px] overflow-hidden bg-orange-50">
         <img
           src={country.image}
           alt="Study in Italy with Zaifan"
+          loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover transition duration-700 group-hover:scale-105 group-focus:scale-105"
         />
 
@@ -479,7 +486,7 @@ function ItalySpotlightCard({ country, onActivate }) {
         <div className="relative mt-6 grid gap-3 sm:grid-cols-2">
           <a
             href={country.href}
-            className="inline-flex items-center justify-center gap-3 rounded-2xl bg-[#ff4b12] px-5 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.28)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
+            className="inline-flex items-center justify-center gap-3 rounded-2xl bg-[#ff4b12] px-5 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.28)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f]"
           >
             Explore Italy Hub
             <ArrowRight size={18} strokeWidth={3} />
@@ -487,7 +494,7 @@ function ItalySpotlightCard({ country, onActivate }) {
 
           <a
             href="/appointment?country=Italy"
-            className="inline-flex items-center justify-center gap-3 rounded-2xl border border-[#ff4b12]/25 bg-white px-5 py-4 text-sm font-black text-[#ff4b12] shadow-sm transition hover:-translate-y-1 hover:bg-[#fff1ea]"
+            className="inline-flex items-center justify-center gap-3 rounded-2xl border border-[#ff4b12]/25 bg-white px-5 py-4 text-sm font-black text-[#ff4b12] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-[#fff1ea]"
           >
             Book Consultation
           </a>
@@ -505,7 +512,7 @@ function ComingSoonCountryCard({ country, isActive, onActivate }) {
       onMouseEnter={onActivate}
       onFocus={onActivate}
       aria-label={`${country.name} study destination coming soon`}
-      className={`group relative flex h-full min-h-[268px] flex-col overflow-hidden rounded-[26px] bg-white shadow-[0_16px_34px_rgba(9,31,80,0.08)] ring-1 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(9,31,80,0.12)] focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20 ${
+      className={`group relative flex h-full min-h-[268px] flex-col overflow-hidden rounded-[26px] bg-white shadow-[0_16px_34px_rgba(9,31,80,0.08)] ring-1 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(9,31,80,0.12)] focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20 ${
         isActive ? "ring-[#ffb36d]/90" : "ring-orange-100/90"
       }`}
     >
@@ -513,6 +520,8 @@ function ComingSoonCountryCard({ country, isActive, onActivate }) {
         <img
           src={country.image}
           alt={`${country.name} destination preview`}
+          loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover opacity-[0.62] grayscale transition duration-700 group-hover:scale-105 group-focus:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/32 via-white/10 to-white/0" />
@@ -627,6 +636,15 @@ function Countries() {
           .soft-pulse {
             animation: none !important;
           }
+
+          #countries *,
+          #countries *::before,
+          #countries *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+          }
         }
       `}</style>
 
@@ -663,17 +681,19 @@ function Countries() {
           <motion.img
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: MOTION.duration, ease: MOTION.ease }}
             viewport={{ once: true }}
             src={guideCharacter}
             alt="Zaifan guide pointing to Italy study destination"
+            loading="lazy"
+            decoding="async"
             className="guide-peek pointer-events-none absolute left-[-12px] top-[-18px] z-0 hidden h-[430px] w-[310px] object-contain object-left-top drop-shadow-[0_28px_34px_rgba(9,31,80,0.16)] lg:block xl:left-[8px] xl:h-[460px] xl:w-[340px]"
           />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
+            transition={{ duration: MOTION.duration, ease: MOTION.ease }}
             viewport={{ once: true }}
             className="relative z-10 mx-auto mb-7 inline-flex items-center gap-2 rounded-full bg-white/85 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-[#ff4b12] shadow-[0_14px_34px_rgba(9,31,80,0.08)] ring-1 ring-orange-100"
           >
@@ -684,7 +704,7 @@ function Countries() {
           <motion.h2
             initial={{ opacity: 0, y: 25 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.05 }}
+            transition={{ duration: MOTION.duration, delay: 0.05, ease: MOTION.ease }}
             viewport={{ once: true }}
             className="relative z-10 mx-auto max-w-5xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-[#071f50] md:text-7xl xl:text-[82px]"
           >
@@ -695,7 +715,7 @@ function Countries() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.12 }}
+            transition={{ duration: MOTION.duration, delay: 0.12, ease: MOTION.ease }}
             viewport={{ once: true }}
             className="relative z-10 mx-auto mt-6 max-w-3xl text-lg font-semibold leading-8 text-[#526178]"
           >
@@ -708,7 +728,7 @@ function Countries() {
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.16 }}
+          transition={{ duration: MOTION.duration, delay: 0.16, ease: MOTION.ease }}
           viewport={{ once: true }}
           className="relative z-20 mx-auto mt-8 flex max-w-5xl flex-wrap justify-center gap-2"
           aria-label="Country quick selector"
@@ -722,7 +742,7 @@ function Countries() {
                 key={country.name}
                 type="button"
                 onClick={() => setActiveCountry(country.name)}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-black shadow-sm ring-1 transition duration-300 focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20 ${
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-black shadow-sm ring-1 transition duration-300 focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20 ${
                   isActive
                     ? isLive
                       ? "bg-[#ff4b12] text-white ring-[#ff4b12]"
@@ -746,7 +766,7 @@ function Countries() {
           key={selectedCountry.name}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
+          transition={{ duration: 0.35, ease: MOTION.ease }}
           className="relative z-20 mx-auto mt-6 max-w-4xl rounded-[24px] bg-white/82 p-4 text-center shadow-[0_16px_38px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 backdrop-blur md:p-5"
         >
           <p className="text-sm font-black text-[#071f50] md:text-base">
@@ -782,7 +802,7 @@ function Countries() {
         <motion.div
           initial={{ opacity: 0, y: 26 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.08 }}
+          transition={{ duration: MOTION.duration, delay: 0.08, ease: MOTION.ease }}
           viewport={{ once: true }}
           className="relative z-20 mt-9 hidden overflow-hidden rounded-[34px] bg-white/86 p-5 shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 backdrop-blur md:block md:p-6"
         >
@@ -804,7 +824,7 @@ function Countries() {
 
             <a
               href="/countries/italy"
-              className="inline-flex shrink-0 items-center justify-center gap-3 rounded-[20px] bg-[#ff4b12] px-7 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.26)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus:ring-4 focus:ring-[#ff4b12]/20"
+              className="inline-flex shrink-0 items-center justify-center gap-3 rounded-[20px] bg-[#ff4b12] px-7 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.26)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20"
             >
               Start With Italy
               <ArrowRight size={18} strokeWidth={3} />
@@ -832,7 +852,7 @@ function Countries() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65 }}
+          transition={{ duration: MOTION.duration, ease: MOTION.ease }}
           viewport={{ once: true }}
           className="mt-9 overflow-hidden rounded-[34px] bg-[#071f50] p-5 text-white shadow-[0_28px_80px_rgba(9,31,80,0.18)] ring-1 ring-white/10 md:p-7"
         >
@@ -859,7 +879,7 @@ function Countries() {
 
             <a
               href="/appointment?country=Italy"
-              className="relative inline-flex min-w-[260px] items-center justify-center gap-3 rounded-[20px] bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus:ring-4 focus:ring-white/20 md:min-w-[320px]"
+              className="relative inline-flex min-w-[260px] items-center justify-center gap-3 rounded-[20px] bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus-visible:ring-4 focus:ring-white/20 md:min-w-[320px]"
             >
               Get Free Italy Consultation
               <ArrowRight size={22} strokeWidth={3} />

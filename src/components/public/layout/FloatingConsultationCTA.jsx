@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, MessageCircle, Sparkles, X } from "lucide-react";
@@ -9,6 +9,9 @@ const MOTION = {
   duration: 0.55,
   ease: [0.22, 1, 0.36, 1],
 };
+
+const INTERACTIVE_TRANSITION =
+  "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
 
 const hiddenRoutes = [
   "/appointment",
@@ -23,27 +26,49 @@ function FloatingConsultationCTA() {
 
   const [closed, setClosed] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem("zaifan-floating-cta-closed") === "true";
+
+    try {
+      return (
+        window.sessionStorage.getItem("zaifan-floating-cta-closed") === "true"
+      );
+    } catch {
+      return false;
+    }
   });
 
-  useEffect(() => {
-    setClosed(
-      window.sessionStorage.getItem("zaifan-floating-cta-closed") === "true"
-    );
-  }, [location.pathname]);
-
-  const routeHidden = hiddenRoutes.some((route) =>
-    location.pathname.startsWith(route)
+  const routeHidden = useMemo(
+    () =>
+      hiddenRoutes.some((route) => location.pathname.startsWith(route)),
+    [location.pathname]
   );
+
+  const whatsappMessage = useMemo(
+    () =>
+      encodeURIComponent(
+        "Hi Zaifan Consultancy, I want Italy study guidance for universities, scholarships and visa planning."
+      ),
+    []
+  );
+
+  useEffect(() => {
+    try {
+      setClosed(
+        window.sessionStorage.getItem("zaifan-floating-cta-closed") === "true"
+      );
+    } catch {
+      setClosed(false);
+    }
+  }, [location.pathname]);
 
   const handleClose = () => {
     setClosed(true);
-    window.sessionStorage.setItem("zaifan-floating-cta-closed", "true");
-  };
 
-  const whatsappMessage = encodeURIComponent(
-    "Hi Zaifan Consultancy, I want Italy study guidance for universities, scholarships and visa planning."
-  );
+    try {
+      window.sessionStorage.setItem("zaifan-floating-cta-closed", "true");
+    } catch {
+      // Session storage may be unavailable in restrictive browser modes.
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -62,7 +87,7 @@ function FloatingConsultationCTA() {
             <button
               type="button"
               onClick={handleClose}
-              className="absolute -right-2 -top-2 grid h-8 w-8 place-items-center rounded-full bg-[#071f50] text-white shadow-lg transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-100"
+              className={`absolute -right-2 -top-2 grid h-8 w-8 place-items-center rounded-full bg-[#071f50] text-white shadow-lg hover:-translate-y-0.5 hover:bg-orange-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${INTERACTIVE_TRANSITION}`}
               aria-label="Close consultation prompt"
             >
               <X size={15} strokeWidth={3} />
@@ -92,7 +117,7 @@ function FloatingConsultationCTA() {
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Link
                 to="/appointment?country=Italy&service=Free%20Italy%20Study%20Plan"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-4 py-3 text-xs font-black text-white transition duration-300 hover:-translate-y-1 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                className={`inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-4 py-3 text-xs font-black text-white hover:-translate-y-1 hover:bg-orange-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${INTERACTIVE_TRANSITION}`}
               >
                 Book Free
               </Link>
@@ -101,7 +126,7 @@ function FloatingConsultationCTA() {
                 href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-green-500 px-4 py-3 text-xs font-black text-white transition duration-300 hover:-translate-y-1 hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-100"
+                className={`inline-flex items-center justify-center gap-2 rounded-full bg-green-500 px-4 py-3 text-xs font-black text-white hover:-translate-y-1 hover:bg-green-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-100 ${INTERACTIVE_TRANSITION}`}
               >
                 <MessageCircle size={14} />
                 WhatsApp

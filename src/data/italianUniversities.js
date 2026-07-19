@@ -1,5 +1,5 @@
 const universityImageModules = import.meta.glob(
-  "../assets/images/universities/*.{jpg,jpeg,png,webp}",
+  "../assets/images/universities/*.{jpg,jpeg,webp}",
   { eager: true, import: "default" }
 );
 

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -36,9 +36,18 @@ import {
 import Footer from "../../components/public/layout/Footer";
 import NotFoundPage from "./NotFoundPage.jsx";
 
+const MOTION = {
+  duration: 0.55,
+  ease: [0.22, 1, 0.36, 1],
+};
+
 const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: MOTION.duration, ease: MOTION.ease },
+  },
 };
 
 const pageSections = [
@@ -306,6 +315,7 @@ function UniversityDetailPage() {
   const university = findItalianUniversityBySlug(slug);
   const detail = buildUniversityDetail(university);
   const [openFaq, setOpenFaq] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
 
   const faqs = useMemo(() => {
     if (!university) return [];
@@ -397,7 +407,7 @@ function UniversityDetailPage() {
     const target = document.getElementById(id);
     if (!target) return;
     const y = target.getBoundingClientRect().top + window.scrollY - 96;
-    window.scrollTo({ top: y, behavior: "smooth" });
+    window.scrollTo({ top: y, behavior: shouldReduceMotion ? "auto" : "smooth" });
   };
 
   const appointmentHref = `/appointment?country=Italy&university=${encodeURIComponent(
@@ -422,15 +432,17 @@ function UniversityDetailPage() {
 
           <div className="grid gap-6 lg:grid-cols-[1fr_430px] lg:items-stretch">
             <motion.div
-              initial={{ opacity: 0, x: -26 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, x: -24 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.65 }}
+              transition={{ duration: MOTION.duration, ease: MOTION.ease }}
               className="h-full overflow-hidden rounded-[2.7rem] border border-orange-100 bg-white shadow-[0_28px_85px_rgba(15,23,42,0.09)]"
             >
               <div className="relative h-full min-h-[500px] overflow-hidden bg-gradient-to-br from-orange-100 via-white to-emerald-50">
                 <img
                   src={university.image}
                   alt={`${university.name} Italy university`}
+                  decoding="async"
+                  fetchPriority="high"
                   className="absolute inset-0 h-full w-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#071b3a]/90 via-[#071b3a]/64 to-[#071b3a]/20" />
@@ -475,9 +487,9 @@ function UniversityDetailPage() {
             </motion.div>
 
             <motion.aside
-              initial={{ opacity: 0, x: 26 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.65 }}
+              transition={{ duration: MOTION.duration, ease: MOTION.ease }}
               className="rounded-[2.7rem] border border-orange-100 bg-white/94 p-6 shadow-[0_28px_85px_rgba(15,23,42,0.09)] backdrop-blur"
             >
               <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
@@ -503,13 +515,13 @@ function UniversityDetailPage() {
                 </span>
               </div>
 
-              <a
-                href={appointmentHref}
+              <Link
+                to={appointmentHref}
                 className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-orange-600 px-7 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition hover:-translate-y-1 hover:bg-orange-700"
               >
                 Get Guidance For This University
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
 
               <div className="mt-5 rounded-[1.8rem] bg-[#071f50] p-5 text-white">
                 <div className="flex gap-3">
@@ -717,15 +729,15 @@ function UniversityDetailPage() {
               </div>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href={`/appointment?country=Italy&university=${encodeURIComponent(
+                <Link
+                  to={`/appointment?country=Italy&university=${encodeURIComponent(
                     university.name
                   )}&service=Scholarships and Funding`}
                   className="inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
                 >
                   Plan Scholarship File
                   <ArrowRight size={21} strokeWidth={3} />
-                </a>
+                </Link>
 
                 <Link
                   to="/scholarships"
@@ -873,7 +885,9 @@ function UniversityDetailPage() {
                     <img
                       src={item.image}
                       alt={`${item.name} Italy university`}
-                      className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#071b3a]/82 via-[#071b3a]/25 to-transparent" />
                     <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-[10px] font-black text-orange-600 shadow-md">
@@ -1012,22 +1026,32 @@ function UniversityDetailPage() {
                     <button
                       type="button"
                       onClick={() => setOpenFaq(isOpen ? -1 : index)}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left font-black text-[#071f50] md:px-6"
+                      aria-expanded={isOpen}
+                      aria-controls={`university-faq-panel-${index}`}
+                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left font-black text-[#071f50] transition-colors duration-300 hover:bg-orange-50/60 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-100 md:px-6"
                     >
                       <span className="flex items-center gap-3">
                         <CircleHelp className="text-orange-600" size={21} />
                         {faq.q}
                       </span>
-                      <ChevronDown className={`shrink-0 text-orange-600 transition ${isOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        className={`shrink-0 text-orange-600 transition-transform duration-300 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      />
                     </button>
 
                     <AnimatePresence initial={false}>
                       {isOpen && (
                         <motion.div
-                          initial={{ height: 0, opacity: 0 }}
+                          id={`university-faq-panel-${index}`}
+                          initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.22 }}
+                          transition={{
+                            duration: shouldReduceMotion ? 0 : 0.35,
+                            ease: MOTION.ease,
+                          }}
                           className="overflow-hidden"
                         >
                           <p className="px-5 pb-5 text-sm font-semibold leading-7 text-slate-600 md:px-6">
@@ -1058,8 +1082,8 @@ function UniversityDetailPage() {
                 </p>
               </div>
 
-              <a
-                href={`/appointment?country=Italy&university=${encodeURIComponent(
+              <Link
+                to={`/appointment?country=Italy&university=${encodeURIComponent(
                   university.name
                 )}&city=${encodeURIComponent(
                   university.city
@@ -1068,7 +1092,7 @@ function UniversityDetailPage() {
               >
                 Book University Consultation
                 <Star className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
           </div>
         </section>

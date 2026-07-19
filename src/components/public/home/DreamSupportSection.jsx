@@ -14,11 +14,11 @@ import {
   FileCheck2,
 } from "lucide-react";
 
-import courseExplorer from "../../../assets/images/dream-support/course-explorer.png";
-import scholarshipHunter from "../../../assets/images/dream-support/scholarship-hunter.png";
-import movePlanner from "../../../assets/images/dream-support/move-planner.png";
-import acceptanceSuccess from "../../../assets/images/dream-support/acceptance-success.png";
-import dreamSupportMascot from "../../../assets/images/dream-support/dream-support-mascot.png";
+import courseExplorer from "../../../assets/images/dream-support/course-explorer.webp";
+import scholarshipHunter from "../../../assets/images/dream-support/scholarship-hunter.webp";
+import movePlanner from "../../../assets/images/dream-support/move-planner.webp";
+import acceptanceSuccess from "../../../assets/images/dream-support/acceptance-success.webp";
+import dreamSupportMascot from "../../../assets/images/dream-support/dream-support-mascot.webp";
 
 const supportCards = [
   {
@@ -28,6 +28,8 @@ const supportCards = [
     title: "Find Your Perfect Course",
     text: "Explore the right course that matches your passion, goals and future career.",
     image: courseExplorer,
+    imageWidth: 976,
+    imageHeight: 1078,
     bg: "from-[#fff4ea] via-[#fffaf5] to-white",
     ring: "ring-orange-100",
     accent: "#ff4b12",
@@ -47,6 +49,8 @@ const supportCards = [
     title: "Unlock Scholarships",
     text: "Discover funding opportunities and maximize your scholarship potential.",
     image: scholarshipHunter,
+    imageWidth: 1264,
+    imageHeight: 842,
     bg: "from-[#eafff6] via-[#f7fffb] to-white",
     ring: "ring-emerald-100",
     accent: "#10b981",
@@ -66,6 +70,8 @@ const supportCards = [
     title: "Plan Your Move",
     text: "From visas to flights and accommodation, we help you prepare stress-free.",
     image: movePlanner,
+    imageWidth: 976,
+    imageHeight: 1078,
     bg: "from-[#eaf7ff] via-[#f8fcff] to-white",
     ring: "ring-sky-100",
     accent: "#0284c7",
@@ -85,6 +91,8 @@ const supportCards = [
     title: "Get Accepted",
     text: "Complete your application with confidence and move toward your dream university.",
     image: acceptanceSuccess,
+    imageWidth: 976,
+    imageHeight: 1078,
     bg: "from-[#fff0fb] via-[#fff9fd] to-white",
     ring: "ring-pink-100",
     accent: "#ec4899",
@@ -105,38 +113,27 @@ const promiseChips = [
   "Application confidence",
 ];
 
+const supportRoutes = [
+  "/universities",
+  "/scholarships",
+  "/services",
+  "/appointment?country=Italy&service=Italy Admission Guidance",
+];
+
+const INTERACTIVE_TRANSITION =
+  "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+
 export default function DreamSupportSection() {
   const [activeCard, setActiveCard] = useState(null);
   const navigate = useNavigate();
 
-  const goToAppointment = () => {
-    navigate("/appointment");
+  const goToRoute = (path) => {
+    navigate(path);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const scrollToSection = (sectionId) => {
-    const target = document.getElementById(sectionId);
-    if (!target) return;
-
-    const navbarOffset = 92;
-    const targetTop = target.getBoundingClientRect().top + window.scrollY - navbarOffset;
-
-    window.scrollTo({
-      top: targetTop,
-      behavior: "smooth",
-    });
   };
 
   const handleSupportAction = (index) => {
-    const routes = [
-      "/universities",
-      "/scholarships",
-      "/services",
-      "/appointment?country=Italy&service=Italy Admission Guidance",
-    ];
-
-    navigate(routes[index] || "/appointment");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    goToRoute(supportRoutes[index] || "/appointment");
   };
 
   return (
@@ -158,17 +155,26 @@ export default function DreamSupportSection() {
         .group:hover .zaifan-dash-hover {
           animation: zaifanDash 12s linear infinite;
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          .group:hover .zaifan-dash-hover {
+            animation: none !important;
+          }
+
+          .dream-motion-safe {
+            transition-duration: 0.01ms !important;
+          }
+        }
       `}</style>
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(255,75,18,0.10),transparent_28%),radial-gradient(circle_at_82%_32%,rgba(255,178,87,0.12),transparent_34%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.72),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.42),rgba(255,245,233,0))]" />
       <div className="pointer-events-none absolute left-[-90px] top-16 h-64 w-64 rounded-full bg-orange-300/14 blur-3xl" />
-      <div className="pointer-events-none absolute right-[-110px] bottom-16 h-72 w-72 rounded-full bg-[#ff4b12]/8 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-16 right-[-110px] h-72 w-72 rounded-full bg-[#ff4b12]/8 blur-3xl" />
 
       <div className="relative mx-auto max-w-[1660px]">
         <div className="relative mb-4 overflow-hidden rounded-[34px] border border-orange-100/80 bg-gradient-to-br from-white/88 via-[#fff9f1] to-[#fff0df] px-6 py-3 shadow-[0_18px_58px_rgba(9,31,80,0.07)] ring-1 ring-white/75 sm:px-8 lg:px-12 lg:py-4 xl:px-14">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(255,75,18,0.07),transparent_28%),radial-gradient(circle_at_82%_48%,rgba(255,178,87,0.15),transparent_36%),linear-gradient(90deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.68)_44%,rgba(255,241,222,0.16)_100%)]" />
           <div className="pointer-events-none absolute -left-28 -top-28 h-64 w-64 rounded-full bg-[#ff4b12]/8 blur-3xl" />
-
           <div className="pointer-events-none absolute right-[-160px] top-[-185px] hidden h-[690px] w-[690px] rounded-full bg-gradient-to-br from-orange-100/42 via-white/14 to-orange-200/26 lg:block xl:right-[-120px] xl:top-[-180px] xl:h-[740px] xl:w-[740px]" />
           <div className="pointer-events-none absolute right-[11%] top-[12%] hidden h-56 w-56 rounded-full bg-orange-300/10 blur-3xl xl:block" />
 
@@ -194,8 +200,8 @@ export default function DreamSupportSection() {
               </h2>
 
               <p className="mt-4 max-w-2xl text-lg font-semibold leading-8 text-[#526178] xl:text-[19px] xl:leading-8">
-                We’re with you at every step, turning your Italy study plan into a
-                clear, practical journey.
+                We’re with you at every step, turning your Italy study plan into
+                a clear, practical journey.
               </p>
 
               <div className="relative z-40 mt-5 grid max-w-[650px] gap-2.5 sm:grid-cols-3">
@@ -204,7 +210,10 @@ export default function DreamSupportSection() {
                     key={item}
                     className="flex min-h-[58px] items-center gap-3 rounded-2xl bg-white/94 px-4 py-3 text-sm font-black text-[#071f50] shadow-[0_10px_28px_rgba(9,31,80,0.055)] ring-1 ring-orange-100/80 backdrop-blur"
                   >
-                    <CheckCircle2 size={17} className="shrink-0 text-[#ff4b12]" />
+                    <CheckCircle2
+                      size={17}
+                      className="shrink-0 text-[#ff4b12]"
+                    />
                     <span className="leading-tight">{item}</span>
                   </div>
                 ))}
@@ -213,22 +222,17 @@ export default function DreamSupportSection() {
               <div className="relative z-40 mt-5 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    navigate("/services");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-7 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.28)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
+                  onClick={() => goToRoute("/services")}
+                  className={`dream-motion-safe inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-7 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.28)] hover:-translate-y-1 hover:bg-[#ff642f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
                 >
                   Explore your support
                   <ArrowRight size={21} strokeWidth={3} />
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => {
-                    navigate("/scholarships");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="inline-flex items-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-black text-[#071f50] shadow-[0_12px_30px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-orange-50"
+                  onClick={() => goToRoute("/scholarships")}
+                  className={`dream-motion-safe inline-flex items-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-black text-[#071f50] shadow-[0_12px_30px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 hover:-translate-y-1 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
                 >
                   Explore scholarships
                 </button>
@@ -242,26 +246,24 @@ export default function DreamSupportSection() {
               <img
                 src={dreamSupportMascot}
                 alt="Dream Support Mascot"
+                width="1536"
+                height="1024"
+                loading="lazy"
+                decoding="async"
                 className="
                   pointer-events-none
                   relative
                   z-10
-
                   w-[122%]
                   max-w-none
-
                   translate-x-[2%]
                   translate-y-[-55px]
-
                   object-contain
                   object-bottom
-
                   drop-shadow-[0_32px_48px_rgba(9,31,80,0.16)]
-
                   xl:w-[130%]
                   xl:translate-x-[4%]
                   xl:translate-y-[-70px]
-
                   2xl:w-[136%]
                   2xl:translate-x-[6%]
                   2xl:translate-y-[-75px]
@@ -284,7 +286,7 @@ export default function DreamSupportSection() {
                 onMouseLeave={() => setActiveCard(null)}
                 onFocus={() => setActiveCard(index)}
                 onBlur={() => setActiveCard(null)}
-                className={`group relative overflow-hidden rounded-[20px] border bg-white/78 p-3.5 text-left shadow-[0_12px_32px_rgba(9,31,80,0.055)] ring-1 transition-all duration-300 hover:-translate-y-1 ${
+                className={`group dream-motion-safe relative overflow-hidden rounded-[20px] border bg-white/78 p-3.5 text-left shadow-[0_12px_32px_rgba(9,31,80,0.055)] ring-1 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION} ${
                   isActive
                     ? "border-[#ff4b12]/25 ring-[#ff4b12]/20 shadow-[0_18px_45px_rgba(255,75,18,0.11)]"
                     : "border-white/80 ring-orange-100/70"
@@ -308,7 +310,7 @@ export default function DreamSupportSection() {
                 </div>
 
                 <div
-                  className={`absolute bottom-0 left-0 h-1 rounded-r-full transition-all duration-300 ${
+                  className={`absolute bottom-0 left-0 h-1 rounded-r-full ${INTERACTIVE_TRANSITION} ${
                     isActive ? "w-full" : "w-0"
                   }`}
                   style={{ backgroundColor: card.accent }}
@@ -328,10 +330,10 @@ export default function DreamSupportSection() {
                 key={card.number}
                 onMouseEnter={() => setActiveCard(index)}
                 onMouseLeave={() => setActiveCard(null)}
-                className={`group relative min-h-[430px] overflow-hidden rounded-[40px] border border-white/85 bg-gradient-to-br ${card.bg} p-6 shadow-[0_24px_65px_rgba(9,31,80,0.09)] ring-1 ${card.ring} transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_36px_95px_rgba(9,31,80,0.15)]`}
+                className={`group dream-motion-safe relative min-h-[430px] overflow-hidden rounded-[40px] border border-white/85 bg-gradient-to-br ${card.bg} p-6 shadow-[0_24px_65px_rgba(9,31,80,0.09)] ring-1 ${card.ring} hover:-translate-y-2 hover:shadow-[0_36px_95px_rgba(9,31,80,0.15)] ${INTERACTIVE_TRANSITION}`}
               >
                 <div
-                  className={`absolute -left-24 -top-24 h-64 w-64 rounded-full ${card.glow} blur-3xl transition duration-700 group-hover:scale-125`}
+                  className={`dream-motion-safe absolute -left-24 -top-24 h-64 w-64 rounded-full ${card.glow} blur-3xl group-hover:scale-125 ${INTERACTIVE_TRANSITION}`}
                 />
                 <div className="absolute -bottom-16 -right-16 h-56 w-56 rounded-full bg-white/65 blur-xl" />
 
@@ -339,6 +341,7 @@ export default function DreamSupportSection() {
                   className="pointer-events-none absolute inset-x-8 top-8 h-24 w-[calc(100%-4rem)] text-[#ff8a4b]/35"
                   viewBox="0 0 600 120"
                   preserveAspectRatio="none"
+                  aria-hidden="true"
                 >
                   <path
                     d="M8 78 C120 8 210 110 318 45 S500 5 592 72"
@@ -364,7 +367,10 @@ export default function DreamSupportSection() {
 
                     <div className="absolute left-2 top-8 z-20 hidden rounded-2xl bg-white/85 px-4 py-3 shadow-[0_14px_35px_rgba(9,31,80,0.10)] ring-1 ring-white/70 backdrop-blur md:block">
                       <div className="flex items-center gap-2">
-                        <MousePointerClick size={15} className="text-[#ff4b12]" />
+                        <MousePointerClick
+                          size={15}
+                          className="text-[#ff4b12]"
+                        />
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#526178]">
                           Interactive
                         </p>
@@ -396,7 +402,11 @@ export default function DreamSupportSection() {
                     <img
                       src={card.image}
                       alt={card.title}
-                      className={`relative z-10 max-h-[340px] w-full object-contain object-bottom drop-shadow-[0_26px_30px_rgba(9,31,80,0.14)] transition duration-700 group-hover:scale-[1.055] ${
+                      width={card.imageWidth}
+                      height={card.imageHeight}
+                      loading="lazy"
+                      decoding="async"
+                      className={`dream-motion-safe relative z-10 max-h-[340px] w-full object-contain object-bottom drop-shadow-[0_26px_30px_rgba(9,31,80,0.14)] group-hover:scale-[1.055] ${INTERACTIVE_TRANSITION} ${
                         isActive ? "scale-[1.035]" : ""
                       }`}
                     />
@@ -454,7 +464,7 @@ export default function DreamSupportSection() {
                     <button
                       type="button"
                       onClick={() => handleSupportAction(index)}
-                      className="mt-7 inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-6 py-4 text-sm font-black text-white shadow-[0_18px_35px_rgba(255,75,18,0.32)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] group-hover:gap-4"
+                      className={`dream-motion-safe mt-7 inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-6 py-4 text-sm font-black text-white shadow-[0_18px_35px_rgba(255,75,18,0.32)] hover:-translate-y-1 hover:bg-[#ff642f] group-hover:gap-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
                     >
                       Start this step
                       <ArrowRight size={22} strokeWidth={3} />
@@ -500,6 +510,7 @@ export default function DreamSupportSection() {
             className="pointer-events-none h-12 w-full text-[#ff8a4b]/35"
             viewBox="0 0 1200 60"
             preserveAspectRatio="none"
+            aria-hidden="true"
           >
             <path
               d="M0 35 C180 0 320 60 500 30 S820 0 1020 30 S1160 55 1200 25"

@@ -4,23 +4,25 @@ import {
   Award,
   BadgeCheck,
   CalendarCheck,
-  CheckCircle2,
   FileText,
   GraduationCap,
   Landmark,
   MessageCircle,
   Plane,
   Send,
-  Sparkles,
-  Stars,
-  Target,
 } from "lucide-react";
 import { supabase } from "../../../lib/supabaseClient";
 
-import consultationMascot from "../../../assets/images/contact/contact-mascot-pointing.png";
-import contactWindow from "../../../assets/images/contact/contact-window-italy.png";
+import consultationMascot from "../../../assets/images/contact/contact-mascot-pointing.webp";
+import contactWindow from "../../../assets/images/contact/contact-window-italy.webp";
 
-const countries = ["Italy"];
+const MOTION = {
+  duration: 0.55,
+  ease: [0.22, 1, 0.36, 1],
+};
+
+const INTERACTIVE_TRANSITION =
+  "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
 
 const studyLevels = [
   "Bachelor",
@@ -121,10 +123,10 @@ function Contact() {
   const completionPercentage = Math.round((completedFields / 8) * 100);
 
   const inputClass =
-    "mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-orange-400 focus:shadow-md focus:ring-4 focus:ring-orange-100";
+    `mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none placeholder:text-slate-400 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-orange-400 focus:shadow-md focus:ring-4 focus:ring-orange-100 ${INTERACTIVE_TRANSITION}`;
 
   const selectClass =
-    "mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-orange-400 focus:shadow-md focus:ring-4 focus:ring-orange-100";
+    `mt-2 h-12 w-full rounded-2xl border border-orange-100 bg-white px-4 text-sm font-bold text-slate-700 outline-none hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-orange-400 focus:shadow-md focus:ring-4 focus:ring-orange-100 ${INTERACTIVE_TRANSITION}`;
 
   const labelClass = "text-sm font-black text-[#2d145f]";
 
@@ -297,6 +299,15 @@ ${formData.message}
           .tiny-pulse {
             animation: none !important;
           }
+
+          #contact *,
+          #contact *::before,
+          #contact *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+          }
         }
       `}</style>
 
@@ -332,11 +343,13 @@ ${formData.message}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: MOTION.duration, ease: MOTION.ease }}
           >
             <motion.div
               initial={{ opacity: 0, y: 30, scale: 0.94 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: MOTION.duration, ease: MOTION.ease }}
               className="w-full max-w-lg rounded-[2rem] border border-orange-100 bg-white p-8 text-center shadow-[0_30px_90px_rgba(15,23,42,0.22)]"
             >
               <div className="tiny-pulse mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-500 text-3xl font-black text-white">
@@ -356,7 +369,7 @@ ${formData.message}
               <button
                 type="button"
                 onClick={() => setShowSuccess(false)}
-                className="mt-7 w-full rounded-2xl bg-orange-600 py-4 font-black text-white transition hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200"
+                className="mt-7 w-full rounded-2xl bg-orange-600 py-4 font-black text-white transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-200"
               >
                 Continue
               </button>
@@ -369,7 +382,7 @@ ${formData.message}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65 }}
+          transition={{ duration: MOTION.duration, ease: MOTION.ease }}
           viewport={{ once: true }}
           className="relative mx-auto max-w-5xl text-center"
         >
@@ -396,7 +409,7 @@ ${formData.message}
             ].map(([icon, item]) => (
               <span
                 key={item}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#071f50] shadow-[0_10px_28px_rgba(15,23,42,0.08)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_16px_36px_rgba(15,23,42,0.12)]"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#071f50] shadow-[0_10px_28px_rgba(15,23,42,0.08)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:scale-105 hover:shadow-[0_16px_36px_rgba(15,23,42,0.12)]"
               >
                 <span>{icon}</span>
                 {item}
@@ -406,18 +419,20 @@ ${formData.message}
 
         </motion.div>
 
-        <div className="mt-8 overflow-hidden rounded-[2.7rem] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.10)] ring-1 ring-orange-100 transition-shadow duration-500 hover:shadow-[0_34px_110px_rgba(15,23,42,0.14)]">
+        <div className="mt-8 overflow-hidden rounded-[2.7rem] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.10)] ring-1 ring-orange-100 transition-shadow duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-[0_34px_110px_rgba(15,23,42,0.14)]">
           <div className="grid lg:grid-cols-[1.03fr_0.97fr]">
             <motion.div
               initial={{ opacity: 0, x: -28 }}
               whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: MOTION.duration, ease: MOTION.ease }}
               viewport={{ once: true }}
-              className="group relative hidden min-h-[890px] overflow-hidden border-b border-orange-100 p-7 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(7,31,80,0.10)] sm:p-9 lg:block lg:border-b-0 lg:border-r"
+              className="group relative hidden min-h-[890px] overflow-hidden border-b border-orange-100 p-7 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(7,31,80,0.10)] sm:p-9 lg:block lg:border-b-0 lg:border-r"
             >
               <img
                 src={contactWindow}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 h-full w-full object-cover object-left opacity-95"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-white/96 via-white/58 to-white/5" />
@@ -451,7 +466,7 @@ ${formData.message}
                 ].map(([icon, title, text]) => (
                   <div
                     key={title}
-                    className="group/card rounded-[1.5rem] bg-white/95 p-4 shadow-[0_14px_38px_rgba(15,23,42,0.10)] ring-1 ring-orange-100 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:scale-[1.025] hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)]"
+                    className="group/card rounded-[1.5rem] bg-white/95 p-4 shadow-[0_14px_38px_rgba(15,23,42,0.10)] ring-1 ring-orange-100 backdrop-blur transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:scale-[1.025] hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)]"
                   >
                     <div className="flex items-start gap-3">
                       <span className="text-xl">{icon}</span>
@@ -467,6 +482,8 @@ ${formData.message}
               <img
                 src={consultationMascot}
                 alt="Zaifan consultation mascot pointing toward the Italy study plan form"
+                loading="lazy"
+                decoding="async"
                 className="
                   absolute
                   bottom-[72px]
@@ -485,7 +502,7 @@ ${formData.message}
                 "
               />
 
-              <div className="absolute bottom-6 left-7 right-7 z-30 rounded-[1.8rem] bg-[#071f50] p-5 text-white shadow-[0_18px_45px_rgba(7,31,80,0.24)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_24px_60px_rgba(7,31,80,0.32)]">
+              <div className="absolute bottom-6 left-7 right-7 z-30 rounded-[1.8rem] bg-[#071f50] p-5 text-white shadow-[0_18px_45px_rgba(7,31,80,0.24)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_24px_60px_rgba(7,31,80,0.32)]">
                 <div className="flex items-center gap-4">
                   <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-orange-100 text-2xl ring-2 ring-white/20">
                     🧭
@@ -504,7 +521,7 @@ ${formData.message}
             <motion.div
               initial={{ opacity: 0, x: 28 }}
               whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: MOTION.duration, ease: MOTION.ease }}
               viewport={{ once: true }}
               className="bg-white p-6 transition-all duration-500 sm:p-8 lg:p-10"
             >
@@ -664,14 +681,14 @@ ${formData.message}
                     required
                     value={formValues.message}
                     onChange={(event) => updateField("message", event.target.value)}
-                    className="mt-2 h-28 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-[#0a4aa6] focus:shadow-md focus:ring-4 focus:ring-blue-100"
+                    className={`mt-2 h-28 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none placeholder:text-slate-400 hover:-translate-y-0.5 hover:shadow-sm focus:-translate-y-0.5 focus:border-[#0a4aa6] focus:shadow-md focus:ring-4 focus:ring-blue-100 ${INTERACTIVE_TRANSITION}`}
                   />
                 </label>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-orange-600 text-lg font-black text-white shadow-xl shadow-orange-600/20 transition hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-orange-600 text-lg font-black text-white shadow-xl shadow-orange-600/20 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Send className="h-5 w-5" />
                   {isSubmitting ? "Submitting..." : "Get My Italy Study Plan"}
@@ -679,7 +696,7 @@ ${formData.message}
 
                 <a
                   href="/appointment?country=Italy"
-                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-orange-300 bg-white text-lg font-black text-orange-600 transition hover:-translate-y-1 hover:bg-orange-50 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-orange-300 bg-white text-lg font-black text-orange-600 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
                 >
                   <CalendarCheck className="h-5 w-5" />
                   Book Free Consultation Instead
@@ -695,7 +712,7 @@ ${formData.message}
                   href={whatsappPreviewLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-green-300 bg-white text-lg font-black text-green-600 transition hover:-translate-y-1 hover:bg-green-50 focus:outline-none focus:ring-4 focus:ring-green-100"
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-green-300 bg-white text-lg font-black text-green-600 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-green-50 focus:outline-none focus-visible:ring-4 focus:ring-green-100"
                 >
                   <MessageCircle className="h-5 w-5" />
                   Chat with Us on WhatsApp
@@ -719,10 +736,10 @@ ${formData.message}
             return (
               <div
                 key={item.label}
-                className="group flex items-center gap-3 rounded-[1.5rem] bg-white px-5 py-4 text-sm font-black text-[#071f50] shadow-[0_14px_40px_rgba(15,23,42,0.06)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.025] hover:shadow-[0_20px_50px_rgba(15,23,42,0.10)]"
+                className="group flex items-center gap-3 rounded-[1.5rem] bg-white px-5 py-4 text-sm font-black text-[#071f50] shadow-[0_14px_40px_rgba(15,23,42,0.06)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5 hover:scale-[1.025] hover:shadow-[0_20px_50px_rgba(15,23,42,0.10)]"
               >
                 <div
-                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-full transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${
+                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 group-hover:rotate-3 ${
                     index % 2 === 0
                       ? "bg-[#071f50] text-white"
                       : "bg-orange-600 text-white"

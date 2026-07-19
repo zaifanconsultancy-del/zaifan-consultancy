@@ -2,7 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { FaBars, FaTimes, FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import logo from "../../../assets/images/brand/logo.png";
+import logo from "../../../assets/images/brand/logo.webp";
+
+const NAV_MOTION = {
+  duration: 0.28,
+  ease: [0.22, 1, 0.36, 1],
+};
+
+const ACCORDION_MOTION = {
+  duration: 0.32,
+  ease: [0.22, 1, 0.36, 1],
+};
 
 const italyLinks = [
   { name: "Italy Guide", path: "/countries/italy", badge: "Live" },
@@ -196,7 +206,7 @@ function Navbar() {
                   >
                     {link.name}
                     <FaChevronDown
-                      className={`text-[10px] transition ${italyOpen ? "rotate-180" : ""}`}
+                      className={`text-[10px] transition-transform duration-300 ${italyOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
@@ -206,7 +216,7 @@ function Navbar() {
                         initial={{ opacity: 0, y: 10, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                        transition={{ duration: 0.18 }}
+                        transition={NAV_MOTION}
                         className="absolute left-1/2 top-[calc(100%+12px)] w-[390px] -translate-x-1/2 rounded-[28px] bg-white p-3 shadow-[0_24px_70px_rgba(120,70,20,0.16)] ring-1 ring-orange-100"
                       >
                         <div className="mb-2 rounded-[22px] bg-[#fff8ec] px-4 py-3 ring-1 ring-orange-100">
@@ -268,7 +278,7 @@ function Navbar() {
                   >
                     {link.name}
                     <FaChevronDown
-                      className={`text-[10px] transition ${servicesOpen ? "rotate-180" : ""}`}
+                      className={`text-[10px] transition-transform duration-300 ${servicesOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
@@ -278,7 +288,7 @@ function Navbar() {
                         initial={{ opacity: 0, y: 10, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                        transition={{ duration: 0.18 }}
+                        transition={NAV_MOTION}
                         className="absolute left-1/2 top-[calc(100%+12px)] w-[370px] -translate-x-1/2 rounded-[28px] bg-white p-3 shadow-[0_24px_70px_rgba(120,70,20,0.16)] ring-1 ring-orange-100"
                       >
                         <div className="mb-2 rounded-[22px] bg-[#fff8ec] px-4 py-3 ring-1 ring-orange-100">
@@ -354,7 +364,7 @@ function Navbar() {
           <Link
             to="/student"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="rounded-full bg-white/72 px-5 py-3 text-sm font-bold text-[#2b1607] shadow-sm ring-1 ring-orange-100/80 transition hover:text-orange-600 hover:ring-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-100"
+            className="rounded-full bg-white/72 px-5 py-3 text-sm font-bold text-[#2b1607] shadow-sm ring-1 ring-orange-100/80 transition duration-300 hover:-translate-y-0.5 hover:text-orange-600 hover:ring-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-100"
           >
             Student Login
           </Link>
@@ -396,7 +406,7 @@ function Navbar() {
               initial={{ opacity: 0, y: -18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -18 }}
-              transition={{ duration: 0.24 }}
+              transition={NAV_MOTION}
               className="relative z-[9998] bg-[#fff8ec]/96 px-4 pb-5 pt-3 shadow-xl backdrop-blur-xl lg:hidden"
             >
               <div className="space-y-2 rounded-[2rem] bg-white/75 p-4 shadow-2xl ring-1 ring-orange-100/80">
@@ -418,7 +428,7 @@ function Navbar() {
                         key={link.name}
                         initial={{ opacity: 0, x: -14 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.22, delay: index * 0.035 }}
+                        transition={{ ...NAV_MOTION, delay: index * 0.035 }}
                         className="rounded-2xl bg-white/55 ring-1 ring-orange-100"
                       >
                         <button
@@ -433,7 +443,7 @@ function Navbar() {
                         >
                           <span>{link.name}</span>
                           <FaChevronDown
-                            className={`text-xs transition ${mobileItalyOpen ? "rotate-180" : ""}`}
+                            className={`text-xs transition-transform duration-300 ${mobileItalyOpen ? "rotate-180" : ""}`}
                           />
                         </button>
 
@@ -443,7 +453,7 @@ function Navbar() {
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.22 }}
+                              transition={ACCORDION_MOTION}
                               className="overflow-hidden"
                             >
                               <div className="space-y-2 px-3 pb-3 pt-2">
@@ -474,7 +484,7 @@ function Navbar() {
                         key={link.name}
                         initial={{ opacity: 0, x: -14 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.22, delay: index * 0.035 }}
+                        transition={{ ...NAV_MOTION, delay: index * 0.035 }}
                         className="rounded-2xl bg-white/55 ring-1 ring-orange-100"
                       >
                         <button
@@ -489,7 +499,7 @@ function Navbar() {
                         >
                           <span>{link.name}</span>
                           <FaChevronDown
-                            className={`text-xs transition ${mobileServicesOpen ? "rotate-180" : ""}`}
+                            className={`text-xs transition-transform duration-300 ${mobileServicesOpen ? "rotate-180" : ""}`}
                           />
                         </button>
 
@@ -499,7 +509,7 @@ function Navbar() {
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.22 }}
+                              transition={ACCORDION_MOTION}
                               className="overflow-hidden"
                             >
                               <div className="space-y-2 px-3 pb-3 pt-2">
@@ -548,7 +558,7 @@ function Navbar() {
                       key={link.name}
                       initial={{ opacity: 0, x: -14 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.22, delay: index * 0.035 }}
+                      transition={{ ...NAV_MOTION, delay: index * 0.035 }}
                     >
                       <button
                         type="button"
@@ -572,7 +582,7 @@ function Navbar() {
                     setMenuOpen(false);
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className="block rounded-2xl bg-white/75 px-4 py-4 text-center font-semibold text-[#2b1607] ring-1 ring-orange-100/80 transition hover:text-orange-600 hover:ring-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="block rounded-2xl bg-white/75 px-4 py-4 text-center font-semibold text-[#2b1607] ring-1 ring-orange-100/80 transition duration-300 hover:-translate-y-0.5 hover:text-orange-600 hover:ring-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-100"
                 >
                   Student Login
                 </Link>
@@ -580,7 +590,7 @@ function Navbar() {
                 <button
                   type="button"
                   onClick={() => goToRoute("/appointment?country=Italy&service=Free Italy Study Plan")}
-                  className="block w-full rounded-2xl bg-orange-500 py-4 text-center font-semibold text-white shadow-[0_12px_26px_rgba(234,88,12,0.24)] transition hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200"
+                  className="block w-full rounded-2xl bg-orange-500 py-4 text-center font-semibold text-white shadow-[0_12px_26px_rgba(234,88,12,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200"
                 >
                   Book Free Consultation
                 </button>

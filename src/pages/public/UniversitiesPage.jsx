@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -31,6 +32,23 @@ import {
 } from "../../data/italianUniversities";
 
 const PAGE_SIZE = 12;
+
+const MOTION = {
+  duration: 0.55,
+  ease: [0.22, 1, 0.36, 1],
+};
+
+const INTERACTIVE_TRANSITION =
+  "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: MOTION.duration, ease: MOTION.ease },
+  },
+};
 
 const preferredFeaturedSlugs = [
   "politecnico-di-milano",
@@ -89,6 +107,7 @@ function normalizeSearch(value) {
 }
 
 function UniversitiesPage() {
+  const prefersReducedMotion = useReducedMotion();
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("All");
   const [program, setProgram] = useState("All");
@@ -321,17 +340,40 @@ function UniversitiesPage() {
       if (!target) return;
 
       const y = target.getBoundingClientRect().top + window.scrollY - 110;
-      window.scrollTo({ top: y, behavior: "smooth" });
+      window.scrollTo({
+        top: y,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
     });
   };
 
   return (
     <>
-      <main className="relative overflow-hidden bg-[#fff7ed] pt-28 text-[#071b3a]">
+      <main
+        id="universities-page"
+        className="relative overflow-hidden bg-[#fff7ed] pt-28 text-[#071b3a]"
+      >
+        <style>{`
+          @media (prefers-reduced-motion: reduce) {
+            #universities-page *,
+            #universities-page *::before,
+            #universities-page *::after {
+              scroll-behavior: auto !important;
+              transition-duration: 0.01ms !important;
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+            }
+          }
+        `}</style>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_8%,rgba(255,91,18,0.14),transparent_27%),radial-gradient(circle_at_90%_12%,rgba(255,184,96,0.16),transparent_24%)]" />
 
         <section className="relative mx-auto max-w-[1500px] px-4 pb-16 sm:px-6 lg:px-10">
-          <div className="text-center">
+          <motion.div
+            initial={prefersReducedMotion ? false : "hidden"}
+            animate="show"
+            variants={fadeUp}
+            className="text-center"
+          >
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm ring-1 ring-orange-100">
               <Sparkles className="h-4 w-4 fill-orange-500" />
               Smart Italy University Finder
@@ -346,7 +388,7 @@ function UniversitiesPage() {
               Search naturally, filter intelligently, and explore universities in
               manageable pages instead of scrolling through fifty cards at once.
             </p>
-          </div>
+          </motion.div>
 
           <div className="mt-10 rounded-[2.3rem] bg-white/94 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
             <div className="grid gap-4 lg:grid-cols-[1.6fr_repeat(5,1fr)_auto]">
@@ -356,7 +398,7 @@ function UniversitiesPage() {
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Try: CS, medicine, scholarship, cheap, Milan..."
-                  className="h-14 w-full rounded-2xl border border-orange-100 bg-[#fff8f1] pl-12 pr-4 text-sm font-bold outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                  className="h-14 w-full rounded-2xl border border-orange-100 bg-[#fff8f1] pl-12 pr-4 text-sm font-bold outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:border-orange-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-orange-100"
                 />
               </div>
 
@@ -374,7 +416,7 @@ function UniversitiesPage() {
                 type="button"
                 onClick={resetFilters}
                 disabled={!hasFilters}
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#071b3a] px-5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#092b72] disabled:cursor-not-allowed disabled:opacity-45"
+                className={`inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#071b3a] px-5 text-sm font-black text-white hover:-translate-y-0.5 hover:bg-[#092b72] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-45 ${INTERACTIVE_TRANSITION}`}
               >
                 <X className="h-4 w-4" />
                 Reset
@@ -387,7 +429,7 @@ function UniversitiesPage() {
                   key={chip.label}
                   type="button"
                   onClick={() => applySmartChip(chip)}
-                  className="rounded-full bg-white px-4 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-50"
+                  className={`rounded-full bg-white px-4 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 hover:-translate-y-0.5 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
                 >
                   {chip.label}
                 </button>
@@ -405,7 +447,7 @@ function UniversitiesPage() {
                     key={item.key}
                     type="button"
                     onClick={item.clear}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#071b3a] px-3 py-2 text-[10px] font-black text-white transition hover:-translate-y-0.5 hover:bg-[#092b72]"
+                    className={`inline-flex items-center gap-2 rounded-full bg-[#071b3a] px-3 py-2 text-[10px] font-black text-white hover:-translate-y-0.5 hover:bg-[#092b72] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
                     aria-label={`Remove ${item.label}`}
                   >
                     {item.label}
@@ -416,7 +458,7 @@ function UniversitiesPage() {
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="ml-auto rounded-full px-3 py-2 text-[10px] font-black text-orange-600 transition hover:bg-orange-50"
+                  className="ml-auto rounded-full px-3 py-2 text-[10px] font-black text-orange-600 transition-colors duration-300 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200"
                 >
                   Clear all
                 </button>
@@ -441,13 +483,13 @@ function UniversitiesPage() {
               </div>
             </div>
 
-            <a
-              href="/appointment?country=Italy&service=University Shortlist"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition hover:-translate-y-1 hover:bg-orange-700"
+            <Link
+              to="/appointment?country=Italy&service=University%20Shortlist"
+              className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
             >
               Get Shortlist Help
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
 
           {/* FEATURED STRIP */}
@@ -499,7 +541,7 @@ function UniversitiesPage() {
                       key={mode.id}
                       type="button"
                       onClick={() => setViewMode(mode.id)}
-                      className={`rounded-full px-4 py-2 text-xs font-black transition ${
+                      className={`rounded-full px-4 py-2 text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${
                         viewMode === mode.id
                           ? "bg-[#071b3a] text-white shadow-md"
                           : "bg-white text-[#071b3a] ring-1 ring-orange-100 hover:bg-orange-50"
@@ -514,7 +556,7 @@ function UniversitiesPage() {
                   value={sortMode}
                   onChange={(event) => setSortMode(event.target.value)}
                   aria-label="Sort universities"
-                  className="h-10 rounded-full border border-orange-100 bg-white px-4 text-xs font-black text-[#071b3a] outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+                  className="h-10 rounded-full border border-orange-100 bg-white px-4 text-xs font-black text-[#071b3a] outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:border-orange-300 focus-visible:ring-4 focus-visible:ring-orange-100"
                 >
                   <option value="recommended">Recommended order</option>
                   <option value="name">Name A–Z</option>
@@ -551,7 +593,7 @@ function UniversitiesPage() {
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="mt-5 rounded-full bg-orange-600 px-7 py-4 text-sm font-black text-white"
+                  className={`mt-5 rounded-full bg-orange-600 px-7 py-4 text-sm font-black text-white hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
                 >
                   Clear Filters
                 </button>
@@ -571,7 +613,7 @@ function FilterSelect({ value, onChange, options }) {
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-14 w-full rounded-2xl border border-orange-100 bg-[#fff8f1] px-4 text-sm font-black text-[#071b3a] outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+      className="h-14 w-full rounded-2xl border border-orange-100 bg-[#fff8f1] px-4 text-sm font-black text-[#071b3a] outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:border-orange-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-orange-100"
     >
       {options.map((option) => (
         <option key={option} value={option}>
@@ -584,7 +626,7 @@ function FilterSelect({ value, onChange, options }) {
 
 function FeaturedUniversityCard({ university }) {
   return (
-    <article className="group overflow-hidden rounded-[1.7rem] bg-white shadow-[0_18px_46px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 transition duration-500 hover:-translate-y-1 hover:shadow-[0_28px_65px_rgba(255,91,18,0.14)]">
+    <article className="group overflow-hidden rounded-[1.7rem] bg-white shadow-[0_18px_46px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_28px_65px_rgba(255,91,18,0.14)]">
       <Link
         to={`/universities/${university.slug}`}
         className="relative block h-48 overflow-hidden bg-orange-50"
@@ -592,7 +634,9 @@ function FeaturedUniversityCard({ university }) {
         <img
           src={university.image}
           alt={`${university.name} Italy university`}
-          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071b3a]/88 via-[#071b3a]/18 to-transparent" />
 
@@ -632,7 +676,7 @@ function FeaturedUniversityCard({ university }) {
 
         <Link
           to={`/universities/${university.slug}`}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-4 py-3 text-xs font-black text-white transition hover:bg-[#092b72]"
+          className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-4 py-3 text-xs font-black text-white hover:-translate-y-0.5 hover:bg-[#092b72] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
         >
           View Details
           <ArrowRight className="h-4 w-4" />
@@ -644,7 +688,7 @@ function FeaturedUniversityCard({ university }) {
 
 function UniversityListCard({ university }) {
   return (
-    <article className="group rounded-[1.55rem] bg-white p-5 shadow-[0_16px_42px_rgba(15,23,42,0.055)] ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:shadow-[0_22px_55px_rgba(255,91,18,0.10)]">
+    <article className="group rounded-[1.55rem] bg-white p-5 shadow-[0_16px_42px_rgba(15,23,42,0.055)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:shadow-[0_22px_55px_rgba(255,91,18,0.10)]">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -703,21 +747,21 @@ function UniversityListCard({ university }) {
       <div className="mt-4 flex gap-2">
         <Link
           to={`/universities/${university.slug}`}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-4 py-3 text-xs font-black text-white transition hover:bg-[#092b72]"
+          className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-4 py-3 text-xs font-black text-white hover:-translate-y-0.5 hover:bg-[#092b72] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
         >
           View University
           <BookOpenCheck className="h-4 w-4" />
         </Link>
 
-        <a
-          href={`/appointment?country=Italy&university=${encodeURIComponent(
+        <Link
+          to={`/appointment?country=Italy&university=${encodeURIComponent(
             university.name
-          )}&service=University Guidance`}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white transition hover:bg-orange-700"
+          )}&service=University%20Guidance`}
+          className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white hover:-translate-y-0.5 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
           aria-label={`Get guidance for ${university.name}`}
         >
           <Star className="h-4 w-4" />
-        </a>
+        </Link>
       </div>
     </article>
   );
@@ -734,7 +778,7 @@ function Pagination({ page, totalPages, onChange }) {
         type="button"
         onClick={() => onChange(Math.max(1, page - 1))}
         disabled={page === 1}
-        className="inline-flex items-center gap-2 rounded-xl bg-[#fff7ed] px-4 py-3 text-xs font-black text-[#071b3a] ring-1 ring-orange-100 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-2 rounded-xl bg-[#fff7ed] px-4 py-3 text-xs font-black text-[#071b3a] ring-1 ring-orange-100 transition-colors duration-300 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <ChevronLeft className="h-4 w-4" />
         Previous
@@ -746,7 +790,7 @@ function Pagination({ page, totalPages, onChange }) {
             key={pageNumber}
             type="button"
             onClick={() => onChange(pageNumber)}
-            className={`grid h-10 min-w-10 place-items-center rounded-xl px-3 text-xs font-black transition ${
+            className={`grid h-10 min-w-10 place-items-center rounded-xl px-3 text-xs font-black transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${
               page === pageNumber
                 ? "bg-orange-600 text-white shadow-lg shadow-orange-600/20"
                 : "bg-[#fff7ed] text-[#071b3a] ring-1 ring-orange-100 hover:bg-orange-50"
@@ -761,7 +805,7 @@ function Pagination({ page, totalPages, onChange }) {
         type="button"
         onClick={() => onChange(Math.min(totalPages, page + 1))}
         disabled={page === totalPages}
-        className="inline-flex items-center gap-2 rounded-xl bg-[#fff7ed] px-4 py-3 text-xs font-black text-[#071b3a] ring-1 ring-orange-100 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-2 rounded-xl bg-[#fff7ed] px-4 py-3 text-xs font-black text-[#071b3a] ring-1 ring-orange-100 transition-colors duration-300 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-40"
       >
         Next
         <ChevronRight className="h-4 w-4" />
