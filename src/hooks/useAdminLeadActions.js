@@ -15,7 +15,7 @@ import {
 
 import { downloadCSVFile } from "../services/crm/csvExportService";
 
-import { getStatusFromAppointmentStage } from "../utils/crm";
+import { getStatusFromAppointmentStage } from "../utils/crm/index";
 import { withTimeout } from "../utils/crm/requestUtils";
 
 export default function useAdminLeadActions({
