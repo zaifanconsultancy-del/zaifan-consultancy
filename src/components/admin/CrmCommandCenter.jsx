@@ -177,33 +177,33 @@ function CrmCommandCenter({
       label: "Total Leads",
       value: totalLeads,
       icon: Target,
-      color: "text-[#D4AF37]",
-      border: "border-[#D4AF37]/20",
-      bg: "bg-[#D4AF37]/10",
+      color: "text-[#B84F0E]",
+      border: "border-[#E9802D]/35",
+      bg: "bg-[#FFF1E3]",
     },
     {
       label: "Hot Leads",
       value: aiInsights.hotLeads.length,
       icon: Flame,
-      color: "text-red-300",
-      border: "border-red-400/20",
-      bg: "bg-red-400/10",
+      color: "text-[#A8342F]",
+      border: "border-[#C2413B]/30",
+      bg: "bg-[#FFF0EE]",
     },
     {
       label: "Overdue Follow-ups",
       value: overdueReminders.length,
       icon: AlertTriangle,
-      color: "text-orange-300",
-      border: "border-orange-400/20",
-      bg: "bg-orange-400/10",
+      color: "text-[#8A5611]",
+      border: "border-[#A36A18]/28",
+      bg: "bg-[#FFF7E8]",
     },
     {
       label: "Unassigned",
       value: unassignedLeads.length,
       icon: Users,
-      color: "text-blue-300",
-      border: "border-blue-400/20",
-      bg: "bg-blue-500/10",
+      color: "text-[#243A60]",
+      border: "border-[#243A60]/24",
+      bg: "bg-[#F3F5F8]",
     },
     {
       label: "Stale Leads",
@@ -211,23 +211,23 @@ function CrmCommandCenter({
       icon: Radar,
       color: "text-yellow-300",
       border: "border-yellow-400/20",
-      bg: "bg-yellow-500/10",
+      bg: "bg-[#FFF7E8]",
     },
     {
       label: "No Reminder",
       value: noReminderLeads.length,
       icon: ShieldCheck,
-      color: "text-purple-300",
-      border: "border-purple-400/20",
-      bg: "bg-purple-500/10",
+      color: "text-[#243A60]",
+      border: "border-[#243A60]/24",
+      bg: "bg-[#F3F5F8]",
     },
     {
       label: "VIP Risk",
       value: vipRiskLeads.length,
       icon: Crown,
-      color: "text-[#D4AF37]",
-      border: "border-[#D4AF37]/20",
-      bg: "bg-[#D4AF37]/10",
+      color: "text-[#B84F0E]",
+      border: "border-[#E9802D]/35",
+      bg: "bg-[#FFF1E3]",
     },
   ];
 
@@ -240,7 +240,7 @@ function CrmCommandCenter({
           ? "Lead quality looks strong. Prioritize quick response."
           : "Lead quality can improve with better qualification and follow-up.",
       icon: Brain,
-      accent: "text-[#D4AF37]",
+      accent: "text-[#B84F0E]",
     },
     {
       title: "Pipeline movement",
@@ -250,7 +250,7 @@ function CrmCommandCenter({
           ? "Automation found pipeline cleanup opportunities."
           : "Pipeline stages look stable right now.",
       icon: Radar,
-      accent: "text-blue-300",
+      accent: "text-[#243A60]",
     },
     {
       title: "Reminder discipline",
@@ -260,7 +260,7 @@ function CrmCommandCenter({
           ? "Overdue follow-ups are hurting CRM discipline."
           : "Reminder workload is under control.",
       icon: ShieldCheck,
-      accent: overdueReminders.length > 0 ? "text-red-300" : "text-green-300",
+      accent: overdueReminders.length > 0 ? "text-[#A8342F]" : "text-[#B84F0E]",
     },
     {
       title: "Assignment coverage",
@@ -270,41 +270,41 @@ function CrmCommandCenter({
           ? "Some leads need ownership assignment to prevent leakage."
           : "All tracked leads currently have assignment coverage.",
       icon: Users,
-      accent: unassignedLeads.length > 0 ? "text-orange-300" : "text-green-300",
+      accent: unassignedLeads.length > 0 ? "text-[#8A5611]" : "text-[#B84F0E]",
     },
   ];
 
   return (
     <section className="space-y-5">
-      <div className="relative overflow-hidden rounded-[2.2rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/15 via-white/[0.04] to-black/40 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:p-7">
+      <div className="relative overflow-hidden rounded-[2.2rem] border border-[#E9802D]/35 bg-gradient-to-br from-[#D4AF37]/15 via-white/[0.04] to-black/40 p-5 shadow-[0_24px_70px_rgba(23,36,61,0.09)] backdrop-blur-2xl sm:p-7">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.18),transparent_38%)]" />
-        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#D4AF37]/10 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#FFF1E3] blur-3xl" />
 
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1.5">
-              <Crown className="h-3.5 w-3.5 text-[#D4AF37]" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E9802D]/40 bg-[#FFF1E3] px-3 py-1.5">
+              <Crown className="h-3.5 w-3.5 text-[#B84F0E]" />
 
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#B84F0E]">
                 CRM Command Center
               </p>
             </div>
 
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl xl:text-5xl">
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-[#17243D] sm:text-4xl xl:text-5xl">
               Executive Operating View
             </h1>
 
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#667085] sm:text-base">
               A top-level control panel showing CRM health, urgent work,
               automation pressure, lead quality, ownership gaps, and the first
               action staff should take today.
             </p>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-black/25 p-5 backdrop-blur-xl xl:min-w-[360px]">
+          <div className="rounded-[2rem] border border-[#243A60]/18 bg-white p-5 backdrop-blur-xl xl:min-w-[360px]">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-500">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8992A1]">
                   Health Score
                 </p>
 
@@ -320,14 +320,14 @@ function CrmCommandCenter({
               </div>
             </div>
 
-            <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/[0.07]">
+            <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#F3F5F8]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-red-400 via-[#D4AF37] to-green-300 transition-all duration-700"
+                className="h-full rounded-full bg-gradient-to-r from-red-400 via-[#E9802D] to-green-300 transition-all duration-700"
                 style={{ width: `${crmHealthScore}%` }}
               />
             </div>
 
-            <p className="mt-4 text-sm leading-relaxed text-gray-400">
+            <p className="mt-4 text-sm leading-relaxed text-[#667085]">
               {health.message}
             </p>
           </div>
@@ -347,7 +347,7 @@ function CrmCommandCenter({
               className={`rounded-[1.7rem] border ${metric.border} ${metric.bg} p-5 backdrop-blur-xl`}
             >
               <div className="flex items-center justify-between gap-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#667085]">
                   {metric.label}
                 </p>
 
@@ -365,20 +365,20 @@ function CrmCommandCenter({
       <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
         <div className={`${cardClass} rounded-[2rem] p-5 sm:p-6`}>
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-red-400/20 bg-red-500/10">
-              <Zap className="h-7 w-7 text-red-300" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#C2413B]/30 bg-[#FFF0EE]">
+              <Zap className="h-7 w-7 text-[#A8342F]" />
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-red-300">
+              <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#A8342F]">
                 First Priority
               </p>
 
-              <h3 className="mt-2 text-2xl font-black text-white">
+              <h3 className="mt-2 text-2xl font-black text-[#17243D]">
                 {priorityAction.title}
               </h3>
 
-              <p className="mt-3 text-sm leading-relaxed text-gray-400">
+              <p className="mt-3 text-sm leading-relaxed text-[#667085]">
                 {priorityAction.message}
               </p>
             </div>
@@ -387,16 +387,16 @@ function CrmCommandCenter({
 
         <div className={`${cardClass} rounded-[2rem] p-5 sm:p-6`}>
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10">
-              <Sparkles className="h-5 w-5 text-[#D4AF37]" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#E9802D]/35 bg-[#FFF1E3]">
+              <Sparkles className="h-5 w-5 text-[#B84F0E]" />
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-500">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8992A1]">
                 Intelligence Summary
               </p>
 
-              <h3 className="text-lg font-black text-white">
+              <h3 className="text-lg font-black text-[#17243D]">
                 What the CRM sees right now
               </h3>
             </div>
@@ -409,14 +409,14 @@ function CrmCommandCenter({
               return (
                 <div
                   key={row.title}
-                  className="rounded-[1.4rem] border border-white/10 bg-black/20 p-4"
+                  className="rounded-[1.4rem] border border-[#243A60]/18 bg-[#FFFDF8] p-4"
                 >
                   <div className="flex items-start gap-3">
                     <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${row.accent}`} />
 
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-black text-white">
+                        <p className="text-sm font-black text-[#17243D]">
                           {row.title}
                         </p>
 
@@ -425,7 +425,7 @@ function CrmCommandCenter({
                         </span>
                       </div>
 
-                      <p className="mt-1 text-sm leading-relaxed text-gray-400">
+                      <p className="mt-1 text-sm leading-relaxed text-[#667085]">
                         {row.text}
                       </p>
                     </div>
@@ -444,9 +444,9 @@ function getHealthConfig(score) {
   if (score >= 80) {
     return {
       label: "Excellent",
-      color: "text-green-300",
-      border: "border-green-400/25",
-      bg: "bg-green-500/10",
+      color: "text-[#B84F0E]",
+      border: "border-[#E9802D]/35",
+      bg: "bg-[#FFF1E3]",
       icon: CheckCircle2,
       message:
         "CRM health looks excellent. Keep response speed high and continue moving leads through the funnel.",
@@ -456,9 +456,9 @@ function getHealthConfig(score) {
   if (score >= 60) {
     return {
       label: "Healthy",
-      color: "text-[#D4AF37]",
-      border: "border-[#D4AF37]/25",
-      bg: "bg-[#D4AF37]/10",
+      color: "text-[#B84F0E]",
+      border: "border-[#E9802D]/40",
+      bg: "bg-[#FFF1E3]",
       icon: TrendingUp,
       message:
         "CRM health is good, but there are still improvement opportunities in reminders, stage movement, assignment coverage, or lead response.",
@@ -468,9 +468,9 @@ function getHealthConfig(score) {
   if (score >= 40) {
     return {
       label: "Needs Attention",
-      color: "text-orange-300",
-      border: "border-orange-400/25",
-      bg: "bg-orange-500/10",
+      color: "text-[#8A5611]",
+      border: "border-[#A36A18]/30",
+      bg: "bg-[#FFF7E8]",
       icon: AlertTriangle,
       message:
         "CRM health needs attention. Prioritize overdue reminders, hot leads, unassigned leads, and stale pipeline stages.",
@@ -479,9 +479,9 @@ function getHealthConfig(score) {
 
   return {
     label: "Critical",
-    color: "text-red-300",
-    border: "border-red-400/25",
-    bg: "bg-red-500/10",
+    color: "text-[#A8342F]",
+    border: "border-[#C2413B]/32",
+    bg: "bg-[#FFF0EE]",
     icon: Flame,
     message:
       "CRM health is under pressure. Clear urgent follow-ups, assign loose leads, and handle hot leads before adding more workload.",

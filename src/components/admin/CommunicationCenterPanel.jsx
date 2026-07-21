@@ -1,3 +1,8 @@
+// CommunicationCenterPanel V2 — Student Engagement Hub
+// Preserves Supabase communication history, WhatsApp/email draft logging,
+// timeline events, parent Student OS refresh, quick-contact links, and child workspaces.
+// Rebuilt as a coherent high-contrast Zaifan Admin OS surface.
+
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import WhatsAppWorkspace from "./WhatsAppWorkspace";
@@ -209,8 +214,8 @@ function CommunicationCenterPanel({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-500/[0.05] p-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">
+      <div className="rounded-[1.8rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-white shadow-[0_16px_40px_rgba(15,35,63,0.14)]">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-300">
           Communication Center
         </p>
 
@@ -218,20 +223,20 @@ function CommunicationCenterPanel({
           Student Engagement Hub
         </h2>
 
-        <p className="mt-2 text-white/60">
+        <p className="mt-2 text-slate-200">
           Manage WhatsApp, email, counselor outreach, saved drafts, and full
           communication history.
         </p>
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
           {error}
         </div>
       ) : null}
 
       {successMessage ? (
-        <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-300">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
           {successMessage}
         </div>
       ) : null}
@@ -279,12 +284,12 @@ function CommunicationCenterPanel({
         }
       />
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="font-bold text-white">Communication History</h3>
+            <h3 className="font-black text-[#10233f]">Communication History</h3>
 
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-slate-600">
               Save manual communication records for counselor tracking.
             </p>
           </div>
@@ -293,7 +298,7 @@ function CommunicationCenterPanel({
             type="button"
             onClick={loadCommunications}
             disabled={loading}
-            className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-white/60 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37] disabled:opacity-50"
+            className="rounded-full border border-orange-300 bg-white px-4 py-2 text-xs font-black text-orange-700 transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-50"
           >
             {loading ? "Loading..." : "Refresh"}
           </button>
@@ -310,7 +315,7 @@ function CommunicationCenterPanel({
                 source: "manual_log_button",
               })
             }
-            className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300 disabled:opacity-50"
+            className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
           >
             {savingType === "whatsapp" ? "Saving..." : "Log WhatsApp Follow-up"}
           </button>
@@ -326,7 +331,7 @@ function CommunicationCenterPanel({
                 source: "manual_log_button",
               })
             }
-            className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] disabled:opacity-50"
+            className="rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700 transition hover:bg-orange-100 disabled:opacity-50"
           >
             {savingType === "email" ? "Saving..." : "Log Email Follow-up"}
           </button>
@@ -334,21 +339,21 @@ function CommunicationCenterPanel({
 
         <div className="mt-5 space-y-3">
           {loading ? (
-            <p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/40">
+            <p className="rounded-xl border border-dashed border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-500">
               Loading communication history...
             </p>
           ) : communications.length ? (
             communications.map((item) => (
               <div
                 key={item.id}
-                className="rounded-xl border border-white/10 bg-black/20 p-4"
+                className="rounded-xl border border-slate-300 bg-[#fffaf2] p-4"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold capitalize text-white">
+                  <p className="font-black capitalize text-[#10233f]">
                     {item.channel || "communication"}
                   </p>
 
-                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/45">
+                  <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-500">
                     {item.created_at
                       ? new Date(item.created_at).toLocaleString()
                       : "Unknown date"}
@@ -356,18 +361,18 @@ function CommunicationCenterPanel({
                 </div>
 
                 {item.subject ? (
-                  <p className="mt-2 text-sm font-semibold text-[#D4AF37]">
+                  <p className="mt-2 text-sm font-black text-orange-700">
                     {item.subject}
                   </p>
                 ) : null}
 
-                <p className="mt-2 whitespace-pre-wrap text-sm text-white/55">
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                   {item.message || "No message saved."}
                 </p>
               </div>
             ))
           ) : (
-            <p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/40">
+            <p className="rounded-xl border border-dashed border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-500">
               No communication history yet.
             </p>
           )}
@@ -382,17 +387,17 @@ function QuickContactCard({ title, value, actionLabel, href, color }) {
 
   return (
     <div
-      className={`rounded-[1.75rem] border p-5 ${
+      className={`rounded-[1.75rem] border p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)] ${
         isGold
-          ? "border-[#D4AF37]/20 bg-[#D4AF37]/[0.04]"
-          : "border-emerald-400/20 bg-emerald-500/[0.04]"
+          ? "border-orange-300 bg-[#fff8ee]"
+          : "border-slate-300 bg-white"
       }`}
     >
-      <p className="text-xs uppercase tracking-[0.2em] text-white/35">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
         {title}
       </p>
 
-      <p className="mt-3 break-words text-sm font-semibold text-white/75">
+      <p className="mt-3 break-words text-sm font-bold text-[#10233f]">
         {value}
       </p>
 
@@ -403,14 +408,14 @@ function QuickContactCard({ title, value, actionLabel, href, color }) {
           rel="noreferrer"
           className={`mt-4 inline-flex rounded-full px-5 py-2 text-sm font-black transition hover:-translate-y-0.5 ${
             isGold
-              ? "bg-[#D4AF37] text-black hover:bg-[#E7C768]"
-              : "bg-emerald-400 text-black hover:bg-emerald-300"
+              ? "bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] hover:bg-orange-600"
+              : "bg-[#102f5c] text-white shadow-[0_8px_18px_rgba(15,35,63,0.16)] hover:bg-[#183f72]"
           }`}
         >
           {actionLabel}
         </a>
       ) : (
-        <p className="mt-4 text-sm text-white/35">Contact detail missing.</p>
+        <p className="mt-4 text-sm text-slate-500">Contact detail missing.</p>
       )}
     </div>
   );

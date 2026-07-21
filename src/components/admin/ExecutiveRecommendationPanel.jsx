@@ -111,44 +111,44 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "critical") {
     return {
-      wrapper: "border-red-400/25 bg-red-500/10",
-      badge: "border-red-400/25 bg-red-500/10 text-red-200",
-      soft: "border-red-400/20 bg-red-500/10 text-red-300",
+      wrapper: "border-[#C2413B]/30 bg-[#FFF0EE]",
+      badge: "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]",
+      soft: "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]",
       dot: "bg-red-300",
     };
   }
 
   if (clean === "executive") {
     return {
-      wrapper: "border-[#D4AF37]/30 bg-[#D4AF37]/10",
-      badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
-      soft: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
-      dot: "bg-[#D4AF37]",
+      wrapper: "border-[#E9802D]/45 bg-[#FFF3E7]",
+      badge: "border-[#E9802D]/40 bg-[#FFF3E7] text-[#B84F0E]",
+      soft: "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]",
+      dot: "bg-[#E9802D]",
     };
   }
 
   if (clean === "high") {
     return {
-      wrapper: "border-orange-400/25 bg-orange-500/10",
-      badge: "border-orange-400/25 bg-orange-500/10 text-orange-200",
-      soft: "border-orange-400/20 bg-orange-500/10 text-orange-300",
+      wrapper: "border-[#A36A18]/30 bg-[#FFF7E8]",
+      badge: "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]",
+      soft: "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]",
       dot: "bg-orange-300",
     };
   }
 
   if (clean === "medium") {
     return {
-      wrapper: "border-blue-400/25 bg-blue-500/10",
-      badge: "border-blue-400/25 bg-blue-500/10 text-blue-200",
-      soft: "border-blue-400/20 bg-blue-500/10 text-blue-300",
+      wrapper: "border-[#243A60]/25 bg-[#F3F5F8]",
+      badge: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
+      soft: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
       dot: "bg-blue-300",
     };
   }
 
   return {
-    wrapper: "border-white/10 bg-white/[0.03]",
-    badge: "border-white/10 bg-black/20 text-white/45",
-    soft: "border-white/10 bg-black/20 text-white/45",
+    wrapper: "border-[#243A60]/20 bg-white",
+    badge: "border-[#243A60]/20 bg-white text-[#7A8392]",
+    soft: "border-[#243A60]/20 bg-white text-[#7A8392]",
     dot: "bg-white/40",
   };
 }
@@ -275,18 +275,18 @@ function ExecutiveRecommendationPanel({
   };
 
   return (
-    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-6">
+    <div className="rounded-[1.75rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_18px_50px_rgba(23,36,61,0.08)] sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#D4AF37]">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B84F0E]">
             Executive Recommendations
           </p>
 
-          <h3 className="mt-2 text-xl font-black text-white">
+          <h3 className="mt-2 text-xl font-black text-[#17243D]">
             Recommended Actions for {studentName}
           </h3>
 
-          <p className="mt-2 text-sm leading-6 text-white/50">
+          <p className="mt-2 text-sm leading-6 text-[#667085]">
             Action guidance generated from Student OS risk, opportunity,
             application, offer, CAS, visa, document, task, and university signals.
           </p>
@@ -369,11 +369,11 @@ function ExecutiveRecommendationPanel({
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-emerald-400/15 bg-emerald-500/[0.04] p-5">
-            <p className="font-bold text-emerald-200">
+          <div className="rounded-2xl border border-[#E9802D]/30 bg-[#FFF3E7] p-5">
+            <p className="font-bold text-[#B84F0E]">
               No urgent executive recommendations.
             </p>
-            <p className="mt-2 text-sm leading-6 text-white/45">
+            <p className="mt-2 text-sm leading-6 text-[#7A8392]">
               This student does not currently show a strong action signal. Keep
               monitoring risk, opportunity, documents, tasks, university plan,
               and journey stage.
@@ -400,49 +400,49 @@ function RecommendationCard({
   const priorityLabel = recommendation.priority || "standard";
 
   return (
-    <div className={`rounded-2xl border p-4 ${style.wrapper}`}>
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style.wrapper}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`h-2.5 w-2.5 rounded-full ${style.dot}`} />
 
-            <p className="font-bold text-white">{recommendation.title}</p>
+            <p className="font-bold text-[#17243D]">{recommendation.title}</p>
 
             <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${style.badge}`}>
               {priorityLabel}
             </span>
 
-            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/45">
+            <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#7A8392]">
               {formatLabel(studentStage)}
             </span>
 
             {requiresApproval ? (
-              <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#D4AF37]">
+              <span className="rounded-full border border-[#E9802D]/40 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
                 Approval Required
               </span>
             ) : template ? (
-              <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">
+              <span className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
                 Ready
               </span>
             ) : (
-              <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/40">
+              <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#7A8392]">
                 Monitor
               </span>
             )}
 
             {executed ? (
-              <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">
+              <span className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
                 Executed
               </span>
             ) : null}
           </div>
 
-          <p className="mt-2 text-sm leading-6 text-white/55">
+          <p className="mt-2 text-sm leading-6 text-[#667085]">
             {recommendation.description}
           </p>
 
           {recommendation.type ? (
-            <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/30">
+            <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#98A0AE]">
               Signal: {formatLabel(recommendation.type)}
             </p>
           ) : null}
@@ -459,7 +459,7 @@ function RecommendationCard({
               <button
                 type="button"
                 onClick={() => setPreviewOpen(!previewOpen)}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white/60 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+                className="rounded-full border border-[#243A60]/20 bg-white px-4 py-2 text-xs font-bold text-[#596579] transition hover:border-[#E9802D]/45 hover:text-[#B84F0E]"
               >
                 {previewOpen ? "Hide Payload" : "Preview Payload"}
               </button>
@@ -468,7 +468,7 @@ function RecommendationCard({
                 type="button"
                 onClick={onExecute}
                 disabled={disabled || executed}
-                className="rounded-full bg-[#D4AF37] px-4 py-2 text-xs font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-[#E9802D] bg-[#E9802D] px-4 py-2 text-xs font-black text-white shadow-[0_8px_18px_rgba(233,128,45,0.16)] transition hover:-translate-y-0.5 hover:bg-[#D96C1F] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {executed ? "Executed" : executing ? "Executing..." : actionLabel}
               </button>
@@ -476,14 +476,14 @@ function RecommendationCard({
           ) : null}
         </div>
 
-        <div className="shrink-0 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+        <div className="shrink-0 rounded-2xl border border-[#243A60]/20 bg-white px-4 py-3 text-right">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
             Action
           </p>
-          <p className="mt-1 text-xs font-black text-white/80">
+          <p className="mt-1 text-xs font-black text-[#243A60]">
             {actionLabel}
           </p>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-white/30">
+          <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-[#98A0AE]">
             {requiresApproval ? "Human approval" : template ? "Prepared" : "Monitor"}
           </p>
         </div>
@@ -501,12 +501,12 @@ function RecommendationCard({
 
 function PayloadCard({ title, template = {} }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-xl border border-[#243A60]/20 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {title}
       </p>
-      <p className="mt-2 font-bold text-white">{template.title || "Untitled"}</p>
-      <p className="mt-2 text-sm leading-6 text-white/50">
+      <p className="mt-2 font-bold text-[#17243D]">{template.title || "Untitled"}</p>
+      <p className="mt-2 text-sm leading-6 text-[#667085]">
         {template.description || "No description."}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -519,11 +519,11 @@ function PayloadCard({ title, template = {} }) {
 
 function PayloadPreview({ title, payload = {} }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-xl border border-[#243A60]/20 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {title}
       </p>
-      <pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-white/55">
+      <pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#667085]">
         {JSON.stringify(payload, null, 2)}
       </pre>
     </div>
@@ -533,16 +533,16 @@ function PayloadPreview({ title, payload = {} }) {
 function SummaryPill({ label, value, tone = "default" }) {
   const className =
     tone === "critical"
-      ? "border-red-400/25 bg-red-500/10 text-red-200"
+      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
       : tone === "executive"
-      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      ? "border-[#E9802D]/40 bg-[#FFF3E7] text-[#B84F0E]"
       : tone === "high"
-      ? "border-orange-400/25 bg-orange-500/10 text-orange-200"
+      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
       : tone === "ready"
-      ? "border-blue-400/25 bg-blue-500/10 text-blue-200"
+      ? "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]"
       : tone === "done"
-      ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
-      : "border-white/10 bg-black/20 text-white/55";
+      ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+      : "border-[#243A60]/20 bg-white text-[#667085]";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${className}`}>
@@ -553,16 +553,16 @@ function SummaryPill({ label, value, tone = "default" }) {
 
 function ContextPill({ label, value }) {
   return (
-    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] font-bold text-white/45">
-      {label}: <span className="text-white/70">{value}</span>
+    <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[11px] font-bold text-[#7A8392]">
+      {label}: <span className="text-[#344054]">{value}</span>
     </span>
   );
 }
 
 function MiniStat({ label, value }) {
   return (
-    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/45">
-      {label}: <span className="text-white/70">{value}</span>
+    <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#7A8392]">
+      {label}: <span className="text-[#344054]">{value}</span>
     </span>
   );
 }
@@ -570,20 +570,20 @@ function MiniStat({ label, value }) {
 function SignalCard({ label, value, helper, tone = "neutral" }) {
   const className =
     tone === "risk"
-      ? "border-red-400/20 bg-red-500/10 text-red-300"
+      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
       : tone === "warning"
-      ? "border-orange-400/20 bg-orange-500/10 text-orange-300"
+      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
       : tone === "good"
-      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
-      : "border-white/10 bg-white/[0.03] text-white/70";
+      ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+      : "border-[#243A60]/20 bg-white text-[#344054]";
 
   return (
-    <div className={`rounded-2xl border p-4 ${className}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${className}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {label}
       </p>
       <p className="mt-2 text-lg font-black">{value}</p>
-      {helper ? <p className="mt-1 text-xs leading-5 text-white/45">{helper}</p> : null}
+      {helper ? <p className="mt-1 text-xs leading-5 text-[#7A8392]">{helper}</p> : null}
     </div>
   );
 }
@@ -591,15 +591,15 @@ function SignalCard({ label, value, helper, tone = "neutral" }) {
 function StatusBox({ tone = "gold", title, description }) {
   const className =
     tone === "red"
-      ? "border-red-400/20 bg-red-500/10 text-red-200"
+      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
       : tone === "green"
-      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-      : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]";
+      ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+      : "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]";
 
   return (
-    <div className={`mt-5 rounded-2xl border p-4 ${className}`}>
+    <div className={`mt-5 rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${className}`}>
       <p className="font-bold">{title}</p>
-      {description ? <p className="mt-2 text-sm text-white/50">{description}</p> : null}
+      {description ? <p className="mt-2 text-sm text-[#667085]">{description}</p> : null}
     </div>
   );
 }

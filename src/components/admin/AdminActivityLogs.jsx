@@ -1,3 +1,8 @@
+// AdminActivityLogs V2 — Audit Trail Command Center
+// Preserves Supabase activity-log loading, timeout protection, search/filtering,
+// summary counts, retry flow, empty/loading states and Framer Motion log cards.
+// Full mature component retained; visual layer aligned with Zaifan Admin OS.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
@@ -119,20 +124,20 @@ function AdminActivityLogs({ cardClass = "" }) {
   };
 
   return (
-    <div className={`${cardClass} p-5 sm:p-7`}>
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+    <div className={`${cardClass} relative overflow-hidden rounded-[1.8rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.045)] sm:p-7`}>
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-60"></div>
 
       <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.35em] text-[#D4AF37]">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-orange-700">
             Audit Trail
           </p>
 
-          <h2 className="mt-3 text-3xl font-black text-white">
+          <h2 className="mt-3 text-3xl font-black text-[#10233f]">
             Admin Activity Logs
           </h2>
 
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400">
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
             Track important CRM actions, role activity, lead updates, assignment
             changes, and admin operations.
           </p>
@@ -141,7 +146,7 @@ function AdminActivityLogs({ cardClass = "" }) {
         <button
           onClick={fetchLogs}
           disabled={loading}
-          className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Refreshing..." : "Refresh"}
         </button>
@@ -158,16 +163,16 @@ function AdminActivityLogs({ cardClass = "" }) {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search action, admin, details, target..."
-          className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
+          className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
         />
 
         <select
           value={targetFilter}
           onChange={(event) => setTargetFilter(event.target.value)}
-          className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
+          className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
         >
           {targetTypes.map((type) => (
-            <option key={type} value={type} className="bg-[#111]">
+            <option key={type} value={type} className="bg-white text-[#10233f]">
               {type === "all" ? "All Targets" : type}
             </option>
           ))}
@@ -175,21 +180,21 @@ function AdminActivityLogs({ cardClass = "" }) {
 
         <button
           onClick={resetFilters}
-          className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-bold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white"
+          className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
         >
           Reset
         </button>
       </div>
 
       {loadError && (
-        <div className="mb-5 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
+        <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>{loadError}</p>
 
             <button
               type="button"
               onClick={fetchLogs}
-              className="rounded-full bg-[#D4AF37] px-5 py-2.5 text-xs font-black text-black transition hover:bg-[#E7C768]"
+              className="rounded-full bg-orange-500 px-5 py-2.5 text-xs font-black text-white transition hover:bg-orange-600"
             >
               Retry
             </button>
@@ -202,15 +207,15 @@ function AdminActivityLogs({ cardClass = "" }) {
       ) : logs.length === 0 ? (
         <EmptyState />
       ) : filteredLogs.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-black/25 p-8 text-center">
-          <h3 className="text-2xl font-black text-white">No Matching Logs</h3>
-          <p className="mt-3 text-sm text-gray-400">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-[#fffaf2] p-8 text-center">
+          <h3 className="text-2xl font-black text-[#10233f]">No Matching Logs</h3>
+          <p className="mt-3 text-sm text-slate-600">
             Try changing the search or target filter.
           </p>
         </div>
       ) : (
         <div className="relative">
-          <div className="absolute left-5 top-3 hidden h-[calc(100%-1.5rem)] w-px bg-gradient-to-b from-[#D4AF37]/50 via-white/10 to-transparent lg:block"></div>
+          <div className="absolute left-5 top-3 hidden h-[calc(100%-1.5rem)] w-px bg-gradient-to-b from-orange-300 via-slate-200 to-transparent lg:block"></div>
 
           <div className="space-y-3">
             {filteredLogs.map((log, index) => (
@@ -231,7 +236,7 @@ function ActivityLogCard({ log, index }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: Math.min(index * 0.025, 0.2) }}
-      className="relative rounded-[1.4rem] border border-white/10 bg-black/25 p-4 transition duration-300 hover:border-[#D4AF37]/25 hover:bg-white/[0.035]"
+      className="relative rounded-[1.4rem] border border-slate-300 bg-[#fffaf2] p-4 transition duration-300 hover:border-orange-300 hover:bg-orange-50"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
@@ -242,31 +247,31 @@ function ActivityLogCard({ log, index }) {
               {actionTone.icon} {log.action || "Activity"}
             </span>
 
-            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-gray-400">
+            <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-600">
               {log.target_type || "crm"}
             </span>
           </div>
 
-          <p className="mt-3 text-xs text-gray-400">
+          <p className="mt-3 text-xs text-slate-600">
             By{" "}
-            <span className="font-bold text-[#D4AF37]">
+            <span className="font-bold text-orange-700">
               {log.admin_name || "Unknown Admin"}
             </span>
           </p>
 
-          <p className="mt-3 break-words text-sm leading-relaxed text-gray-300">
+          <p className="mt-3 break-words text-sm leading-relaxed text-slate-700">
             {log.details || "No details provided."}
           </p>
 
           {log.target_id && (
-            <p className="mt-3 break-all font-mono text-[10px] uppercase tracking-[0.16em] text-gray-500">
+            <p className="mt-3 break-all font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500">
               Target ID: {log.target_id}
             </p>
           )}
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
-          <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[#D4AF37]">
+          <span className="rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-orange-700">
             {formatDate(log.created_at)}
           </span>
         </div>
@@ -277,15 +282,15 @@ function ActivityLogCard({ log, index }) {
 
 function SummaryCard({ label, value, icon }) {
   return (
-    <div className="rounded-[1.3rem] border border-white/10 bg-white/[0.035] p-4">
+    <div className="rounded-[1.3rem] border border-slate-300 bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)]">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
             {label}
           </p>
-          <h3 className="mt-2 text-3xl font-black text-[#D4AF37]">{value}</h3>
+          <h3 className="mt-2 text-3xl font-black text-orange-700">{value}</h3>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-2xl">
+        <div className="rounded-2xl border border-slate-300 bg-white p-3 text-2xl">
           {icon}
         </div>
       </div>
@@ -299,11 +304,11 @@ function LoadingState() {
       {[1, 2, 3, 4].map((item) => (
         <div
           key={item}
-          className="animate-pulse rounded-[1.4rem] border border-white/10 bg-black/25 p-5"
+          className="animate-pulse rounded-[1.4rem] border border-slate-300 bg-[#fffaf2] p-5"
         >
-          <div className="h-4 w-44 rounded-full bg-white/10"></div>
-          <div className="mt-4 h-3 w-full max-w-xl rounded-full bg-white/10"></div>
-          <div className="mt-3 h-3 w-60 rounded-full bg-white/10"></div>
+          <div className="h-4 w-44 rounded-full bg-slate-200"></div>
+          <div className="mt-4 h-3 w-full max-w-xl rounded-full bg-slate-200"></div>
+          <div className="mt-3 h-3 w-60 rounded-full bg-slate-200"></div>
         </div>
       ))}
     </div>
@@ -312,12 +317,12 @@ function LoadingState() {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-dashed border-white/10 bg-black/25 p-8 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-3xl">
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-[#fffaf2] p-8 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-orange-300 bg-orange-50 text-3xl">
         📜
       </div>
-      <h3 className="mt-5 text-2xl font-black text-white">No Activity Yet</h3>
-      <p className="mt-3 text-sm text-gray-400">
+      <h3 className="mt-5 text-2xl font-black text-[#10233f]">No Activity Yet</h3>
+      <p className="mt-3 text-sm text-slate-600">
         Important CRM actions will appear here once admins start working.
       </p>
     </div>
@@ -330,34 +335,34 @@ function getActionTone(action = "") {
   if (lower.includes("delete") || lower.includes("clear")) {
     return {
       icon: "🗑️",
-      className: "border-red-400/25 bg-red-500/10 text-red-300",
+      className: "border-red-300 bg-red-50 text-red-700",
     };
   }
 
   if (lower.includes("assign")) {
     return {
       icon: "📌",
-      className: "border-cyan-400/25 bg-cyan-500/10 text-cyan-300",
+      className: "border-blue-300 bg-blue-50 text-blue-700",
     };
   }
 
   if (lower.includes("priority")) {
     return {
       icon: "🔥",
-      className: "border-purple-400/25 bg-purple-500/10 text-purple-300",
+      className: "border-violet-300 bg-violet-50 text-violet-700",
     };
   }
 
   if (lower.includes("status") || lower.includes("confirm")) {
     return {
       icon: "✅",
-      className: "border-green-400/25 bg-green-500/10 text-green-300",
+      className: "border-emerald-300 bg-emerald-50 text-emerald-700",
     };
   }
 
   return {
     icon: "⚡",
-    className: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
+    className: "border-[#F97316]/25 bg-[#F97316]/10 text-orange-700",
   };
 }
 

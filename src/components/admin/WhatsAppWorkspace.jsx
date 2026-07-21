@@ -1,3 +1,8 @@
+// WhatsAppWorkspace V2 — Student Communication Workspace
+// Preserves template generation, student personalization, WhatsApp deep-link opening,
+// clipboard copy and communication-history draft saving.
+// Visual layer aligned with the approved Zaifan Admin OS.
+
 import { useMemo, useState } from "react";
 
 function WhatsAppWorkspace({ student = {}, saving = false, onSaveDraft = null }) {
@@ -66,32 +71,35 @@ function WhatsAppWorkspace({ student = {}, saving = false, onSaveDraft = null })
   };
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-bold text-white">WhatsApp Workspace</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+            Student Communication
+          </p>
 
-          <p className="mt-2 text-sm text-white/45">
-            Create quick counselor messages, save drafts, and open WhatsApp
-            directly.
+          <h3 className="mt-1 font-black text-[#10233f]">WhatsApp Workspace</h3>
+
+          <p className="mt-2 text-sm text-slate-600">
+            Create quick counselor messages, save drafts, and open WhatsApp directly.
           </p>
         </div>
 
-        <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300">
+        <span className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700">
           {phone || "No phone"}
         </span>
       </div>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {templates.map((template) => (
           <button
             key={template.label}
             type="button"
             onClick={() => setSelectedMessage(template.message)}
-            className={`w-full rounded-xl border p-4 text-left transition ${
+            className={`w-full rounded-xl border p-4 text-left font-black transition ${
               selectedMessage === template.message
-                ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300 hover:border-emerald-400/40"
+                ? "border-orange-500 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.16)]"
+                : "border-slate-300 bg-[#fffaf2] text-[#10233f] hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
             }`}
           >
             {template.label}
@@ -103,14 +111,14 @@ function WhatsAppWorkspace({ student = {}, saving = false, onSaveDraft = null })
         value={selectedMessage}
         onChange={(event) => setSelectedMessage(event.target.value)}
         placeholder="Choose a template or write custom WhatsApp message..."
-        className="mt-5 min-h-[140px] w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-white outline-none placeholder:text-white/25 focus:border-emerald-400/40"
+        className="mt-5 min-h-[140px] w-full rounded-2xl border border-slate-300 bg-white p-4 text-sm leading-6 text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
       />
 
       <div className="mt-4 flex flex-wrap gap-3">
         <button
           type="button"
           onClick={openWhatsApp}
-          className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-emerald-300"
+          className="rounded-full bg-[#102f5c] px-5 py-2 text-sm font-black text-white shadow-[0_8px_18px_rgba(15,35,63,0.16)] transition hover:-translate-y-0.5 hover:bg-[#183f72]"
         >
           Open WhatsApp
         </button>
@@ -119,7 +127,7 @@ function WhatsAppWorkspace({ student = {}, saving = false, onSaveDraft = null })
           type="button"
           onClick={saveDraft}
           disabled={saving}
-          className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-5 py-2 text-sm font-bold text-emerald-300 transition hover:border-emerald-400/45 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-orange-300 bg-orange-50 px-5 py-2 text-sm font-black text-orange-700 transition hover:border-orange-400 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Saving Draft..." : "Save Draft"}
         </button>
@@ -127,7 +135,7 @@ function WhatsAppWorkspace({ student = {}, saving = false, onSaveDraft = null })
         <button
           type="button"
           onClick={copyMessage}
-          className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-bold text-white/70 transition hover:border-emerald-400/35 hover:text-emerald-300"
+          className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-black text-[#10233f] transition hover:border-orange-300 hover:bg-[#fffaf2] hover:text-orange-700"
         >
           Copy Message
         </button>

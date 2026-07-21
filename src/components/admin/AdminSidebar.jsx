@@ -1,4 +1,27 @@
-import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Activity,
+  BarChart3,
+  Bot,
+  CalendarDays,
+  ChevronRight,
+  Crown,
+  ExternalLink,
+  FileClock,
+  Gauge,
+  LogOut,
+  Menu,
+  Search,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  UsersRound,
+  X,
+} from "lucide-react";
+
+const EASE = [0.22, 1, 0.36, 1];
 
 function AdminSidebar({
   activeTab,
@@ -8,6 +31,8 @@ function AdminSidebar({
   adminProfile = null,
   permissions = {},
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const safePermissions = {
     canDelete: false,
     canClearAll: false,
@@ -22,364 +47,509 @@ function AdminSidebar({
   const roleConfig = {
     staff: {
       label: "Staff",
-      icon: "🧑‍💼",
-      badge: "border-blue-400/20 bg-blue-500/10 text-blue-300",
-      description: "Focused lead follow-up",
-      glow: "bg-blue-500/10 shadow-[0_0_35px_rgba(59,130,246,0.08)]",
-      dot: "bg-blue-400",
+      shortLabel: "Staff",
+      icon: UsersRound,
+      description: "Student & lead operations",
+      badge:
+        "border-sky-200 bg-sky-50 text-sky-700",
+      avatar:
+        "border-sky-200 bg-sky-50 text-sky-700",
+      dot: "bg-sky-500",
     },
     admin: {
       label: "Admin",
-      icon: "🛡️",
-      badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
-      description: "Operations access",
-      glow: "bg-[#D4AF37]/10 shadow-[0_0_35px_rgba(212,175,55,0.08)]",
-      dot: "bg-[#D4AF37]",
+      shortLabel: "Admin",
+      icon: ShieldCheck,
+      description: "Operations & CRM control",
+      badge:
+        "border-orange-200 bg-orange-50 text-orange-700",
+      avatar:
+        "border-orange-200 bg-orange-50 text-orange-700",
+      dot: "bg-orange-500",
     },
     super_admin: {
       label: "Super Admin",
-      icon: "👑",
-      badge: "border-purple-400/25 bg-purple-500/10 text-purple-300",
-      description: "Full system control",
-      glow: "bg-purple-500/10 shadow-[0_0_35px_rgba(168,85,247,0.08)]",
-      dot: "bg-purple-400",
+      shortLabel: "Owner",
+      icon: Crown,
+      description: "Full Zaifan OS control",
+      badge:
+        "border-orange-200 bg-orange-50 text-orange-700",
+      avatar:
+        "border-orange-200 bg-orange-50 text-orange-700",
+      dot: "bg-orange-500/100",
     },
   };
 
   const currentRole = roleConfig[role] || roleConfig.staff;
+  const RoleIcon = currentRole.icon;
 
-  const navGroups = [
-    {
-      title: "Workspace",
-      items: [
-  { id: "inquiries", label: "Inquiries", icon: "📩", locked: false },
-  { id: "appointments", label: "Appointments", icon: "📅", locked: false },
-  { id: "my-leads", label: "My Leads", icon: "🎯", locked: false },
-  { id: "followups", label: "Follow-ups", icon: "⏰", locked: false },
-  {
-  id: "automation",
-  label: "Automation",
-  icon: "🤖",
-  locked: false,
-},
-],
-    },
-    {
-      title: "Intelligence",
-      items: [
-        { id: "analytics", label: "Analytics", icon: "📊", locked: false },
-      ],
-    },
-    {
-      title: "System",
-      items: [
-        {
-          id: "admin-management",
-          label: "Admin Management",
-          icon: "👑",
-          locked: !safePermissions.canManageAdmins,
-          lockText: "Only Super Admin can manage admins.",
-        },
-        {
-          id: "activity-logs",
-          label: "Activity Logs",
-          icon: "🧾",
-          locked: !safePermissions.canManageAdmins,
-          lockText: "Only Super Admin can view activity logs.",
-        },
-        {
-          id: "settings",
-          label: "Settings",
-          icon: "⚙️",
-          locked: !safePermissions.canManageAdmins,
-          lockText: "Only Super Admin can open settings.",
-        },
-      ],
-    },
-  ];
+  const navGroups = useMemo(
+    () => [
+      {
+        title: "Workspace",
+        description: "Daily operations",
+        items: [
+          {
+            id: "inquiries",
+            label: "Inquiries",
+            description: "New student leads",
+            icon: Gauge,
+            locked: false,
+          },
+          {
+            id: "appointments",
+            label: "Appointments",
+            description: "Consultation bookings",
+            icon: CalendarDays,
+            locked: false,
+          },
+          {
+            id: "my-leads",
+            label: "My Leads",
+            description: "Assigned pipeline",
+            icon: Target,
+            locked: false,
+          },
+          {
+            id: "followups",
+            label: "Follow-ups",
+            description: "Tasks & reminders",
+            icon: FileClock,
+            locked: false,
+          },
+          {
+            id: "automation",
+            label: "Automation",
+            description: "Rules & workflows",
+            icon: Bot,
+            locked: false,
+          },
+        ],
+      },
+      {
+        title: "Intelligence",
+        description: "AI & performance",
+        items: [
+          {
+            id: "analytics",
+            label: "Intelligence",
+            description: "Analytics & AI center",
+            icon: BarChart3,
+            locked: false,
+          },
+        ],
+      },
+      {
+        title: "System",
+        description: "Administration",
+        items: [
+          {
+            id: "admin-management",
+            label: "Team Access",
+            description: "Admins & permissions",
+            icon: UsersRound,
+            locked: !safePermissions.canManageAdmins,
+            lockText: "Only Super Admin can manage admins.",
+          },
+          {
+            id: "activity-logs",
+            label: "Activity Logs",
+            description: "Audit trail",
+            icon: Activity,
+            locked: !safePermissions.canManageAdmins,
+            lockText: "Only Super Admin can view activity logs.",
+          },
+          {
+            id: "settings",
+            label: "Settings",
+            description: "System preferences",
+            icon: Settings,
+            locked: !safePermissions.canManageAdmins,
+            lockText: "Only Super Admin can open settings.",
+          },
+        ],
+      },
+    ],
+    [safePermissions.canManageAdmins]
+  );
 
   const navItems = navGroups.flatMap((group) => group.items);
-  const activeItem = navItems.find((item) => item.id === activeTab) || navItems[0];
+  const activeItem =
+    navItems.find((item) => item.id === activeTab) || navItems[0];
 
   const handleTabClick = (item) => {
     if (item.locked) {
-      alert(item.lockText || "This section is locked for your role.");
+      window.alert(item.lockText || "This section is locked for your role.");
       return;
     }
 
     setActiveTab(item.id);
+    setMobileOpen(false);
   };
 
   const openWebsite = () => {
-    window.open("/", "_blank");
+    window.open("/", "_blank", "noopener,noreferrer");
   };
 
   return (
     <>
-      <div className="sticky top-0 z-40 border-b border-white/10 bg-[#050505]/95 px-3 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl xl:hidden">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[9px] uppercase tracking-[0.3em] text-[#D4AF37]">
-              Zaifan CRM
+      {/* Mobile top bar */}
+      <div className="sticky top-0 z-50 border-b border-orange-100 bg-[#fffaf5]/96 px-3 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.06)] backdrop-blur-xl xl:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-white text-[#071f50] shadow-sm transition duration-300 hover:border-orange-200 hover:text-orange-600 active:scale-95"
+            aria-label="Open admin navigation"
+          >
+            <Menu size={20} />
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-black uppercase tracking-[0.28em] text-orange-600">
+                Zaifan OS
+              </span>
+              <span className="h-1 w-1 rounded-full bg-slate-300" />
+              <span className="truncate text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                Admin
+              </span>
+            </div>
+
+            <p className="mt-1 truncate text-base font-black text-[#071f50]">
+              {activeItem?.label || "Workspace"}
             </p>
-
-            <h2 className="mt-1 truncate text-xl font-black text-white">
-              {activeItem?.icon} {activeItem?.label || "CRM Panel"}
-            </h2>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <span
-              className={`hidden rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] sm:inline-flex ${currentRole.badge}`}
-            >
-              {currentRole.icon} {currentRole.label}
-            </span>
-
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-400 transition duration-300 hover:bg-red-500/20 active:scale-95"
-            >
-              Logout
-            </button>
+          <div
+            className={`hidden items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] sm:flex ${currentRole.badge}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${currentRole.dot}`} />
+            {currentRole.shortLabel}
           </div>
-        </div>
-
-        <div className="mobile-crm-tabs flex gap-2 overflow-x-auto pb-1">
-          {navItems.map((item) => {
-            const isActive = activeTab === item.id;
-
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleTabClick(item)}
-                className={`whitespace-nowrap rounded-xl px-4 py-3 text-xs font-semibold transition duration-300 active:scale-95 ${
-                  item.locked
-                    ? "border border-white/10 bg-white/[0.02] text-gray-600"
-                    : isActive
-                    ? "bg-[#D4AF37] text-black shadow-[0_0_24px_rgba(212,175,55,0.25)]"
-                    : "border border-white/10 bg-white/[0.04] text-gray-400 hover:border-[#D4AF37]/25 hover:text-white"
-                }`}
-              >
-                {item.icon} {item.label} {item.locked ? "🔒" : ""}
-              </button>
-            );
-          })}
         </div>
       </div>
 
-      <aside className="sticky top-0 hidden h-screen w-[300px] shrink-0 overflow-hidden border-r border-white/10 bg-[#070707]/90 shadow-[25px_0_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl xl:flex xl:flex-col">
-        <div className="pointer-events-none absolute -left-28 top-0 h-72 w-72 rounded-full bg-[#D4AF37]/5 blur-3xl"></div>
-        <div className="pointer-events-none absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-[#D4AF37]/4 blur-3xl"></div>
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.button
+              type="button"
+              aria-label="Close admin navigation"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 z-[70] bg-[#071f50]/20 backdrop-blur-sm xl:hidden"
+            />
 
-        <div className="premium-sidebar-scroll relative flex-1 overflow-y-auto px-5 py-5 scroll-smooth">
-          <motion.div
-            initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-6 rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 backdrop-blur-xl"
-          >
-            <div className="inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.28em] text-[#D4AF37]">
-              Zaifan
-            </div>
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.38, ease: EASE }}
+              className="fixed inset-y-0 left-0 z-[80] flex w-[min(88vw,340px)] flex-col border-r border-orange-100 bg-[#fffaf5] shadow-[32px_0_90px_rgba(121,72,40,0.16)] xl:hidden"
+            >
+              <div className="flex items-center justify-between border-b border-orange-100 px-5 py-4">
+                <BrandBlock compact />
 
-            <h2 className="mt-4 text-4xl font-black tracking-tight text-white">
-              CRM Panel
-            </h2>
-
-            <p className="mt-3 text-sm leading-relaxed text-gray-500">
-              Premium student management workspace.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.05 }}
-            className="mb-6 overflow-hidden rounded-[1.8rem] border border-white/10 bg-black/25 p-5"
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 text-2xl ${currentRole.glow}`}
-              >
-                {currentRole.icon}
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-orange-100 bg-white text-slate-500 transition hover:border-orange-200 hover:text-orange-600"
+                  aria-label="Close navigation"
+                >
+                  <X size={18} />
+                </button>
               </div>
 
-              <div className="min-w-0">
-                <h3 className="truncate text-lg font-black text-white">
-                  {adminProfile?.full_name || "Admin User"}
-                </h3>
+              <div className="flex-1 overflow-y-auto px-4 py-5">
+                <ProfileCard
+                  adminProfile={adminProfile}
+                  currentRole={currentRole}
+                  RoleIcon={RoleIcon}
+                  canManageAdmins={safePermissions.canManageAdmins}
+                />
 
-                <p className="mt-1 truncate text-xs text-gray-500">
-                  {currentRole.description}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <div
-                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] ${currentRole.badge}`}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${currentRole.dot}`}></span>
-                {currentRole.label}
+                <Navigation
+                  navGroups={navGroups}
+                  activeTab={activeTab}
+                  onTabClick={handleTabClick}
+                />
               </div>
 
-              {safePermissions.canManageAdmins && (
-                <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-purple-300">
-                  Owner Tools
-                </span>
-              )}
-            </div>
-          </motion.div>
+              <SidebarFooter openWebsite={openWebsite} logout={logout} />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
-          <div className="space-y-5 pb-6">
-            {navGroups.map((group, groupIndex) => (
-              <div key={group.title}>
-                <div className="mb-2 flex items-center gap-3 px-2">
-                  <div className="h-px flex-1 bg-white/10"></div>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-gray-600">
-                    {group.title}
-                  </p>
-                  <div className="h-px flex-1 bg-white/10"></div>
-                </div>
+      {/* Desktop sidebar */}
+      <aside className="sticky top-0 hidden h-screen w-[304px] shrink-0 border-r border-orange-100 bg-[#fffaf5] text-[#071f50] shadow-[24px_0_70px_rgba(121,72,40,0.12)] xl:flex xl:flex-col">
+        <div className="pointer-events-none absolute left-[-120px] top-[-100px] h-72 w-72 rounded-full bg-orange-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-[-140px] right-[-140px] h-72 w-72 rounded-full bg-sky-200/20 blur-3xl" />
 
-                <div className="space-y-2.5">
-                  {group.items.map((item, index) => {
-                    const isActive = activeTab === item.id;
-                    const delay = groupIndex * 0.08 + index * 0.04;
-
-                    return (
-                      <motion.button
-                        key={item.id}
-                        type="button"
-                        initial={{ opacity: 0, x: -18 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.35, delay }}
-                        onClick={() => handleTabClick(item)}
-                        title={item.locked ? item.lockText : item.label}
-                        className={`group relative flex w-full items-center justify-between overflow-hidden rounded-2xl px-4 py-4 text-left text-sm font-semibold transition duration-300 active:scale-[0.98] ${
-                          item.locked
-                            ? "cursor-not-allowed border border-white/10 bg-white/[0.02] text-gray-600"
-                            : isActive
-                            ? "bg-[#D4AF37] text-black shadow-[0_0_28px_rgba(212,175,55,0.22)]"
-                            : "border border-white/10 bg-white/[0.03] text-gray-400 hover:border-[#D4AF37]/25 hover:bg-white/[0.055] hover:text-white"
-                        }`}
-                      >
-                        {!item.locked && !isActive && (
-                          <span className="absolute inset-y-0 left-0 w-[3px] scale-y-0 bg-[#D4AF37] transition duration-300 group-hover:scale-y-100"></span>
-                        )}
-
-                        <span className="flex min-w-0 items-center gap-3">
-                          <span
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-base transition duration-300 ${
-                              isActive
-                                ? "border-black/10 bg-black/10"
-                                : item.locked
-                                ? "border-white/10 bg-white/[0.02]"
-                                : "border-white/10 bg-black/20 group-hover:border-[#D4AF37]/20"
-                            }`}
-                          >
-                            {item.icon}
-                          </span>
-                          <span className="truncate">{item.label}</span>
-                        </span>
-
-                        <span className="ml-3 shrink-0 text-xs opacity-80">
-                          {item.locked ? "🔒" : isActive ? "●" : "›"}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="relative border-b border-orange-100 px-5 py-5">
+          <BrandBlock />
         </div>
 
-        <div className="relative border-t border-white/10 bg-[#050505]/95 p-5 backdrop-blur-2xl">
-          <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-            <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
-              Current View
-            </p>
-            <p className="mt-2 truncate text-sm font-black text-white">
-              {activeItem?.icon} {activeItem?.label}
-            </p>
-          </div>
+        <div className="zaifan-admin-sidebar-scroll relative flex-1 overflow-y-auto px-4 py-5">
+          <ProfileCard
+            adminProfile={adminProfile}
+            currentRole={currentRole}
+            RoleIcon={RoleIcon}
+            canManageAdmins={safePermissions.canManageAdmins}
+          />
 
-          <div className="grid gap-3">
-            <motion.button
-              type="button"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              onClick={openWebsite}
-              className="w-full rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-5 py-4 text-sm font-semibold text-[#D4AF37] transition duration-300 hover:-translate-y-0.5 hover:bg-[#D4AF37]/15 active:scale-95"
-            >
-              🌐 Open Website
-            </motion.button>
+          <Navigation
+            navGroups={navGroups}
+            activeTab={activeTab}
+            onTabClick={handleTabClick}
+          />
+        </div>
 
-            <motion.button
-              type="button"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.05 }}
-              onClick={logout}
-              className="w-full rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-400 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/20 active:scale-95"
-            >
-              Logout
-            </motion.button>
-          </div>
+        <div className="relative">
+          <SidebarFooter openWebsite={openWebsite} logout={logout} />
         </div>
 
         <style>{`
-          .premium-sidebar-scroll {
+          .zaifan-admin-sidebar-scroll {
             scrollbar-width: thin;
-            scrollbar-color: rgba(212, 175, 55, 0.32) rgba(255, 255, 255, 0.03);
+            scrollbar-color: rgba(249, 115, 22, 0.28) transparent;
           }
 
-          .premium-sidebar-scroll::-webkit-scrollbar {
-            width: 8px;
+          .zaifan-admin-sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
           }
 
-          .premium-sidebar-scroll::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.025);
-            border-radius: 999px;
-            margin: 18px 0;
+          .zaifan-admin-sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
           }
 
-          .premium-sidebar-scroll::-webkit-scrollbar-thumb {
-            min-height: 56px;
-            background: linear-gradient(
-              180deg,
-              rgba(212, 175, 55, 0.18),
-              rgba(212, 175, 55, 0.45),
-              rgba(212, 175, 55, 0.18)
-            );
-            border: 2px solid rgba(5, 5, 5, 0.9);
+          .zaifan-admin-sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(249, 115, 22, 0.22);
             border-radius: 999px;
           }
 
-          .premium-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(
-              180deg,
-              rgba(212, 175, 55, 0.28),
-              rgba(212, 175, 55, 0.65),
-              rgba(212, 175, 55, 0.28)
-            );
-          }
-
-          .mobile-crm-tabs {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-          }
-
-          .mobile-crm-tabs::-webkit-scrollbar {
-            display: none;
+          .zaifan-admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(249, 115, 22, 0.38);
           }
         `}</style>
       </aside>
     </>
+  );
+}
+
+function BrandBlock({ compact = false }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className={`relative flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-[0_10px_28px_rgba(249,115,22,0.22)] ${
+          compact ? "h-10 w-10" : "h-12 w-12"
+        }`}
+      >
+        <Sparkles size={compact ? 18 : 21} strokeWidth={2.3} />
+        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[#fffaf5] bg-emerald-500" />
+      </div>
+
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-xl font-black tracking-tight text-[#071f50]">
+            Zaifan
+          </p>
+          <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-orange-600">
+            OS
+          </span>
+        </div>
+        <p className="mt-0.5 truncate text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+          Operations Console
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ProfileCard({
+  adminProfile,
+  currentRole,
+  RoleIcon,
+  canManageAdmins,
+}) {
+  const name = adminProfile?.full_name || adminProfile?.name || "Admin User";
+  const firstName = name.split(" ")[0] || "Admin";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: EASE }}
+      className="mb-6 overflow-hidden rounded-[1.4rem] border border-orange-100 bg-white p-4 shadow-[0_10px_30px_rgba(121,72,40,0.08)]"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${currentRole.avatar}`}
+        >
+          <RoleIcon size={19} strokeWidth={2.2} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-black text-[#071f50]">
+            {firstName}
+          </p>
+          <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">
+            {currentRole.description}
+          </p>
+        </div>
+
+        <span className={`h-2 w-2 shrink-0 rounded-full ${currentRole.dot}`} />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] ${currentRole.badge}`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${currentRole.dot}`} />
+          {currentRole.label}
+        </span>
+
+        {canManageAdmins && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+            <Crown size={11} />
+            Owner tools
+          </span>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function Navigation({ navGroups, activeTab, onTabClick }) {
+  return (
+    <nav className="space-y-6" aria-label="Admin navigation">
+      {navGroups.map((group) => (
+        <div key={group.title}>
+          <div className="mb-2 px-2">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-500">
+              {group.title}
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            {group.items.map((item) => {
+              const isActive = activeTab === item.id;
+              const ItemIcon = item.icon;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onTabClick(item)}
+                  title={item.locked ? item.lockText : item.label}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 ${
+                    item.locked
+                      ? "cursor-not-allowed bg-white/60 text-slate-400 opacity-70"
+                      : isActive
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_12px_30px_rgba(249,115,22,0.30)]"
+                      : "border border-transparent bg-white text-orange-700 shadow-[0_3px_12px_rgba(121,72,40,0.035)] hover:border-orange-100 hover:bg-[#fff1e7] hover:text-orange-700 hover:shadow-[0_8px_24px_rgba(121,72,40,0.08)]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition duration-300 ${
+                      item.locked
+                        ? "border border-slate-200 bg-slate-50 text-slate-400"
+                        : isActive
+                        ? "bg-white/15 text-white"
+                        : "border border-orange-100 bg-[#fffaf5] text-orange-600 group-hover:border-orange-200 group-hover:bg-white group-hover:text-orange-700"
+                    }`}
+                  >
+                    <ItemIcon size={17} strokeWidth={2.1} />
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={`block truncate text-sm font-extrabold ${
+                        isActive ? "text-white" : item.locked ? "text-slate-400" : "text-orange-700"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                    <span
+                      className={`mt-0.5 block truncate text-[11px] font-semibold ${
+                        item.locked
+                          ? "text-slate-500"
+                          : isActive
+                          ? "text-orange-100"
+                          : "text-[#7c4a2f]"
+                      }`}
+                    >
+                      {item.description}
+                    </span>
+                  </span>
+
+                  <ChevronRight
+                    size={15}
+                    className={`shrink-0 transition duration-300 ${
+                      item.locked
+                        ? "opacity-20"
+                        : isActive
+                        ? "translate-x-0 text-white"
+                        : "-translate-x-1 text-orange-400 opacity-0 group-hover:translate-x-0 group-hover:text-orange-600 group-hover:opacity-100"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function SidebarFooter({ openWebsite, logout }) {
+  return (
+    <div className="relative overflow-hidden border-t border-orange-100 bg-[#fffaf5] p-4 shadow-[0_-10px_28px_rgba(121,72,40,0.06)]">
+      <div className="pointer-events-none absolute -right-16 -top-20 h-40 w-40 rounded-full bg-orange-200/35 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-16 h-36 w-36 rounded-full bg-amber-100/50 blur-3xl" />
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={openWebsite}
+          className="group mb-2 flex w-full items-center justify-between rounded-2xl border border-orange-200 bg-white px-4 py-3 text-left text-sm font-black text-[#071f50] shadow-[0_6px_18px_rgba(121,72,40,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:bg-[#fff3e8] hover:text-orange-700 hover:shadow-[0_10px_24px_rgba(121,72,40,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-[0_6px_16px_rgba(249,115,22,0.22)]">
+              <ExternalLink size={15} />
+            </span>
+            <span>Open public website</span>
+          </span>
+          <ChevronRight
+            size={15}
+            className="text-orange-400 transition duration-300 group-hover:translate-x-0.5 group-hover:text-orange-700"
+          />
+        </button>
+
+        <button
+          type="button"
+          onClick={logout}
+          className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-sm font-black text-[#071f50] transition duration-300 hover:border-orange-200 hover:bg-white hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-orange-100 bg-white text-orange-600 shadow-sm transition group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:text-orange-700">
+            <LogOut size={15} />
+          </span>
+          Sign out
+        </button>
+
+        <div className="mt-3 flex items-center justify-between border-t border-orange-100 px-1 pt-3 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
+          <span>Zaifan Consultancy</span>
+          <span>Internal</span>
+        </div>
+      </div>
+    </div>
   );
 }
 

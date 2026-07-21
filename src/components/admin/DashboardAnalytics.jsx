@@ -137,7 +137,7 @@ function DashboardAnalytics({ cardClass = "", inquiries = [], appointments = [] 
           value={totalLeads}
           icon="🚀"
           helper={`${totalInquiries} inquiries · ${totalAppointments} appointments`}
-          color="text-[#D4AF37]"
+          color="text-[#B84F0E]"
           cardClass={cardClass}
         />
 
@@ -405,19 +405,19 @@ function DashboardAnalytics({ cardClass = "", inquiries = [], appointments = [] 
 
 function AnalyticsCard({ label, value, icon, helper, color, cardClass }) {
   return (
-    <div className={`${cardClass} p-5`}>
+    <div className={`${cardClass} rounded-[1.75rem] border-2 border-[#E9802D]/35 bg-[#FFFDF8] p-5 shadow-[0_18px_45px_rgba(23,36,61,0.08)]`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-[#8992A1]">
             {label}
           </p>
 
           <h3 className={`mt-3 text-3xl font-black ${color}`}>{value}</h3>
 
-          <p className="mt-2 text-xs leading-relaxed text-gray-400">{helper}</p>
+          <p className="mt-2 text-xs leading-relaxed text-[#667085]">{helper}</p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-2xl">
+        <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4 text-2xl">
           {icon}
         </div>
       </div>
@@ -427,22 +427,22 @@ function AnalyticsCard({ label, value, icon, helper, color, cardClass }) {
 
 function ChartPanel({ cardClass, eyebrow, title, description, children }) {
   return (
-    <div className={`${cardClass} p-5`}>
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+    <div className={`${cardClass} rounded-[1.75rem] border-2 border-[#E9802D]/35 bg-[#FFFDF8] p-5 shadow-[0_18px_45px_rgba(23,36,61,0.08)]`}>
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#E9802D] to-transparent opacity-60"></div>
 
       <div className="mb-5">
-        <p className="text-[10px] uppercase tracking-[0.32em] text-gray-500">
+        <p className="text-[10px] uppercase tracking-[0.32em] text-[#8992A1]">
           {eyebrow}
         </p>
 
-        <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
+        <h2 className="mt-2 text-2xl font-bold text-[#17243D]">{title}</h2>
 
-        <p className="mt-2 text-sm leading-relaxed text-gray-400">
+        <p className="mt-2 text-sm leading-relaxed text-[#667085]">
           {description}
         </p>
       </div>
 
-      <div className="min-h-[280px] overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/20 p-3">
+      <div className="min-h-[280px] overflow-hidden rounded-[1.5rem] border border-[#243A60]/18 bg-[#FFFDF8] p-3">
         {children}
       </div>
     </div>
@@ -461,42 +461,42 @@ function InsightPanel({
   const accentClass =
     accent === "cyan"
       ? "border-cyan-400/25 bg-cyan-400/10 text-cyan-300"
-      : "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+      : "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]";
 
-  const barClass = accent === "cyan" ? "bg-cyan-300" : "bg-[#D4AF37]";
+  const barClass = accent === "cyan" ? "bg-cyan-300" : "bg-[#E9802D]";
 
   return (
-    <div className={`${cardClass} p-5`}>
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+    <div className={`${cardClass} rounded-[1.75rem] border-2 border-[#E9802D]/35 bg-[#FFFDF8] p-5 shadow-[0_18px_45px_rgba(23,36,61,0.08)]`}>
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#E9802D] to-transparent opacity-60"></div>
 
-      <p className="text-[10px] uppercase tracking-[0.32em] text-gray-500">
+      <p className="text-[10px] uppercase tracking-[0.32em] text-[#8992A1]">
         {eyebrow}
       </p>
 
-      <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
+      <h2 className="mt-2 text-2xl font-bold text-[#17243D]">{title}</h2>
 
-      <p className="mt-2 text-sm leading-relaxed text-gray-400">
+      <p className="mt-2 text-sm leading-relaxed text-[#667085]">
         {description}
       </p>
 
       <div className="mt-5 space-y-3">
         {data.length === 0 ? (
-          <div className="rounded-[1.2rem] border border-dashed border-white/10 bg-black/20 p-5 text-center">
-            <p className="text-sm text-gray-500">{emptyText}</p>
+          <div className="rounded-[1.2rem] border border-dashed border-[#243A60]/18 bg-[#FFFDF8] p-5 text-center">
+            <p className="text-sm text-[#8992A1]">{emptyText}</p>
           </div>
         ) : (
           data.map((item, index) => (
             <div
               key={item.name}
-              className="rounded-[1.2rem] border border-white/10 bg-white/[0.035] p-4"
+              className="rounded-[1.2rem] border border-[#243A60]/18 bg-white p-4"
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-[#17243D]">
                     #{index + 1} {item.name}
                   </p>
 
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-[#8992A1]">
                     {item.value} lead{item.value === 1 ? "" : "s"}
                   </p>
                 </div>
@@ -528,7 +528,7 @@ function LegendList({ data }) {
       {data.map((item) => (
         <div
           key={item.name}
-          className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2"
+          className="flex items-center justify-between rounded-xl border border-[#243A60]/18 bg-white px-3 py-2"
         >
           <div className="flex items-center gap-2">
             <span
@@ -536,12 +536,12 @@ function LegendList({ data }) {
               style={{ backgroundColor: item.color }}
             ></span>
 
-            <span className="text-xs font-medium text-gray-300">
+            <span className="text-xs font-medium text-[#344054]">
               {item.name}
             </span>
           </div>
 
-          <span className="text-xs font-bold text-white">{item.value}</span>
+          <span className="text-xs font-bold text-[#17243D]">{item.value}</span>
         </div>
       ))}
     </div>
@@ -550,11 +550,11 @@ function LegendList({ data }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-3 text-center">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
+    <div className="rounded-xl border border-[#243A60]/18 bg-white px-3 py-3 text-center">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-[#8992A1]">
         {label}
       </p>
-      <p className="mt-1 text-sm font-black text-white">{value}</p>
+      <p className="mt-1 text-sm font-black text-[#17243D]">{value}</p>
     </div>
   );
 }
@@ -563,13 +563,13 @@ function CustomTooltip({ active, payload, label }) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-[#D4AF37]/25 bg-[#111111] px-4 py-3 text-xs shadow-2xl">
-      {label && <p className="mb-2 font-semibold text-[#D4AF37]">{label}</p>}
+    <div className="rounded-2xl border border-[#E9802D]/40 bg-[#111111] px-4 py-3 text-xs shadow-2xl">
+      {label && <p className="mb-2 font-semibold text-[#B84F0E]">{label}</p>}
 
       <div className="space-y-1">
         {payload.map((item) => (
-          <p key={`${item.name}-${item.value}`} className="text-gray-300">
-            {item.name}: <span className="font-bold text-white">{item.value}</span>
+          <p key={`${item.name}-${item.value}`} className="text-[#344054]">
+            {item.name}: <span className="font-bold text-[#17243D]">{item.value}</span>
           </p>
         ))}
       </div>

@@ -1,3 +1,8 @@
+// VisaTrackerPanel V2 — High Contrast Admin OS Edition
+// Preserves Supabase application/document loading, fallback behavior, visa status saves,
+// application timeline events, parent Student OS refresh, and linked visa source logic.
+// Visual layer aligned with Zaifan cream + white + navy + orange Admin OS.
+
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import VisaStatusTimeline from "./VisaStatusTimeline";
@@ -374,16 +379,16 @@ function VisaTrackerPanel({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[2rem] border border-cyan-400/20 bg-cyan-500/[0.05] p-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+      <div className="rounded-[2rem] border border-orange-200 bg-[#fff8ee] p-6">
+        <p className="text-xs uppercase tracking-[0.25em] text-orange-700">
           Visa Processing
         </p>
 
-        <h2 className="mt-2 text-2xl font-black text-white">
+        <h2 className="mt-2 text-2xl font-black text-[#10233f]">
           Visa Operations Center
         </h2>
 
-        <p className="mt-2 text-white/60">
+        <p className="mt-2 text-slate-600">
           Track visa status, requirements, readiness, and student visa movement.
         </p>
 
@@ -391,7 +396,7 @@ function VisaTrackerPanel({
           type="button"
           onClick={refreshVisaData}
           disabled={loading || saving}
-          className="mt-4 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-300 transition hover:border-cyan-400/45 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 rounded-full border border-orange-300 bg-[#fff8ee] px-4 py-2 text-xs font-bold text-orange-700 transition hover:border-cyan-400/45 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Refreshing..." : "Refresh Visa Data"}
         </button>
@@ -400,35 +405,35 @@ function VisaTrackerPanel({
       <VisaSourceCard application={application} visaStatus={visaStatus} />
 
       {error ? (
-        <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
           {error}
         </div>
       ) : null}
 
       {successMessage ? (
-        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
           {successMessage}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white/50">
+        <div className="rounded-2xl border border-slate-300 bg-white p-5 text-slate-600">
           Refreshing visa data safely...
         </div>
       ) : null}
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/35">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
               Current Visa Status
             </p>
 
-            <h3 className="mt-2 text-xl font-black capitalize text-white">
+            <h3 className="mt-2 text-xl font-black capitalize text-[#10233f]">
               {(visaStatus || "not_started").replaceAll("_", " ")}
             </h3>
 
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-slate-600">
               Application:{" "}
               {application?.application_status?.replaceAll("_", " ") ||
                 "not started"}{" "}
@@ -441,10 +446,10 @@ function VisaTrackerPanel({
             value={visaStatus || "not_started"}
             disabled={saving}
             onChange={(event) => updateVisaStatus(event.target.value)}
-            className="rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {visaOptions.map((item) => (
-              <option key={item} value={item} className="bg-black">
+              <option key={item} value={item} className="bg-white text-[#10233f]">
                 {item.replaceAll("_", " ")}
               </option>
             ))}
@@ -452,7 +457,7 @@ function VisaTrackerPanel({
         </div>
 
         {saving ? (
-          <p className="mt-3 text-sm text-cyan-300">Saving visa status...</p>
+          <p className="mt-3 text-sm text-orange-700">Saving visa status...</p>
         ) : null}
       </div>
 
@@ -477,16 +482,16 @@ function VisaSourceCard({ application = null, visaStatus = "not_started" }) {
 
   if (!application) {
     return (
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-        <p className="text-xs uppercase tracking-[0.22em] text-white/35">
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+        <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
           Visa Source
         </p>
 
-        <h3 className="mt-2 text-lg font-black text-white">
+        <h3 className="mt-2 text-lg font-black text-[#10233f]">
           No Application Linked Yet
         </h3>
 
-        <p className="mt-2 text-sm leading-6 text-white/45">
+        <p className="mt-2 text-sm leading-6 text-slate-600">
           Start or sync an application first. Visa will then read from the linked
           application record.
         </p>
@@ -495,28 +500,28 @@ function VisaSourceCard({ application = null, visaStatus = "not_started" }) {
   }
 
   return (
-    <div className="rounded-[1.75rem] border border-cyan-400/25 bg-cyan-500/10 p-5">
+    <div className="rounded-[1.75rem] border border-orange-300 bg-[#fff8ee] p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-700">
             Visa Source
           </p>
 
-          <h3 className="mt-2 text-xl font-black text-white">
+          <h3 className="mt-2 text-xl font-black text-[#10233f]">
             🔗 Linked Application & University
           </h3>
 
-          <p className="mt-2 text-lg font-bold text-cyan-200">
+          <p className="mt-2 text-lg font-black text-orange-700">
             {sourceUniversityName || "Linked application"}
           </p>
 
-          <p className="mt-2 text-sm leading-6 text-white/55">
+          <p className="mt-2 text-sm leading-6 text-slate-600">
             This visa workflow is powered by the same application record used by
             the University and Application systems.
           </p>
 
           {sourceUniversityId ? (
-            <p className="mt-3 break-all text-xs text-white/30">
+            <p className="mt-3 break-all text-xs text-slate-500">
               Source University ID: {sourceUniversityId}
             </p>
           ) : null}
@@ -543,12 +548,12 @@ function VisaSourceCard({ application = null, visaStatus = "not_started" }) {
 
 function VisaSourceLine({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-300 bg-white px-3 py-2">
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
         {label}
       </span>
 
-      <span className="max-w-[150px] truncate text-right text-xs font-bold capitalize text-cyan-200">
+      <span className="max-w-[150px] truncate text-right text-xs font-bold capitalize text-[#10233f]">
         {String(value || "Not selected").replaceAll("_", " ")}
       </span>
     </div>

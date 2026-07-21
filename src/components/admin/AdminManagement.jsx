@@ -1,3 +1,8 @@
+// AdminManagement V2 — Access Control Command Center
+// Preserves Supabase admin profile CRUD, role permissions, self-protection,
+// last-Super-Admin protection, loading/error states and Framer Motion.
+// Full mature component retained; visual layer aligned with Zaifan Admin OS.
+
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
@@ -37,9 +42,9 @@ function AdminManagement({
   const canManageAdmins = permissions?.canManageAdmins || role === "super_admin";
 
   const roleStyles = {
-    staff: "border-blue-400/20 bg-blue-500/10 text-blue-300",
-    admin: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
-    super_admin: "border-purple-400/25 bg-purple-500/10 text-purple-300",
+    staff: "border-blue-300 bg-blue-50 text-blue-700",
+    admin: "border-orange-300 bg-orange-50 text-orange-700",
+    super_admin: "border-violet-300 bg-violet-50 text-violet-700",
   };
 
   const roleIcons = {
@@ -250,14 +255,14 @@ function AdminManagement({
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28 }}
-      className="space-y-6"
+      className="space-y-6 text-[#10233f]"
     >
-      <div className={`${cardClass} p-5 sm:p-7`}>
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+      <div className={`${cardClass} relative overflow-hidden rounded-[1.8rem] border-2 border-orange-300 bg-[#102f5c] p-5 text-white shadow-[0_16px_40px_rgba(15,35,63,0.14)] sm:p-7`}>
+        <div className="absolute inset-x-0 top-0 h-[4px] bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
 
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.35em] text-[#D4AF37]">
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-orange-300">
               Super Admin Control
             </p>
 
@@ -265,7 +270,7 @@ function AdminManagement({
               Admin Management
             </h2>
 
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-200">
               Create admin profiles, assign roles, promote staff, and protect
               your CRM with role-based access.
             </p>
@@ -274,8 +279,8 @@ function AdminManagement({
           <div
             className={`w-fit rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] ${
               canManageAdmins
-                ? "border-purple-400/25 bg-purple-500/10 text-purple-300"
-                : "border-red-400/25 bg-red-500/10 text-red-300"
+                ? "border-emerald-300/40 bg-emerald-500/15 text-emerald-200"
+                : "border-red-300/40 bg-red-500/15 text-red-200"
             }`}
           >
             {canManageAdmins ? "Access Granted" : "Super Admin Only"}
@@ -291,20 +296,20 @@ function AdminManagement({
       </div>
 
       {!canManageAdmins && (
-        <div className="rounded-[1.5rem] border border-red-400/20 bg-red-500/10 p-5 text-sm leading-relaxed text-red-200">
+        <div className="rounded-[1.5rem] border border-red-200 bg-red-50 p-5 text-sm leading-relaxed text-red-700">
           This panel is view-only for your current role. Only Super Admin can
           create, update, or delete admin profiles.
         </div>
       )}
 
-      <form onSubmit={createAdminProfile} className={`${cardClass} p-5 sm:p-7`}>
+      <form onSubmit={createAdminProfile} className={`${cardClass} rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)] sm:p-7`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-orange-700">
               Create Admin Profile
             </p>
 
-            <h3 className="mt-2 text-2xl font-black text-white">
+            <h3 className="mt-2 text-2xl font-black text-[#10233f]">
               Add Team Access
             </h3>
           </div>
@@ -313,7 +318,7 @@ function AdminManagement({
             type="button"
             onClick={resetForm}
             disabled={!canManageAdmins || saving}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reset
           </button>
@@ -325,7 +330,7 @@ function AdminManagement({
             onChange={(event) => setForm({ ...form, id: event.target.value })}
             disabled={!canManageAdmins || saving}
             placeholder="Paste Supabase Auth User UUID"
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           />
 
           <input
@@ -335,22 +340,22 @@ function AdminManagement({
             }
             disabled={!canManageAdmins || saving}
             placeholder="Full name"
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           />
 
           <select
             value={form.role}
             onChange={(event) => setForm({ ...form, role: event.target.value })}
             disabled={!canManageAdmins || saving}
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option className="bg-[#111]" value="staff">
+            <option className="bg-white text-[#10233f]" value="staff">
               Staff
             </option>
-            <option className="bg-[#111]" value="admin">
+            <option className="bg-white text-[#10233f]" value="admin">
               Admin
             </option>
-            <option className="bg-[#111]" value="super_admin">
+            <option className="bg-white text-[#10233f]" value="super_admin">
               Super Admin
             </option>
           </select>
@@ -358,26 +363,26 @@ function AdminManagement({
           <button
             type="submit"
             disabled={!canManageAdmins || saving}
-            className="rounded-2xl bg-[#D4AF37] px-6 py-3 text-sm font-black text-black transition hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl bg-orange-500 px-6 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "Saving..." : "Create"}
           </button>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/5 p-4 text-xs leading-relaxed text-gray-400">
+        <div className="mt-5 rounded-2xl border border-orange-200 bg-[#fff8ee] p-4 text-xs leading-relaxed text-slate-600">
           First create the user in Supabase Authentication, then paste that user
           UUID here. Do not create duplicate profiles for the same auth user.
         </div>
       </form>
 
-      <div className={`${cardClass} p-5 sm:p-7`}>
+      <div className={`${cardClass} rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)] sm:p-7`}>
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-orange-700">
               Admin Profiles
             </p>
 
-            <h3 className="mt-2 text-2xl font-black text-white">
+            <h3 className="mt-2 text-2xl font-black text-[#10233f]">
               Team Access List
             </h3>
           </div>
@@ -385,20 +390,20 @@ function AdminManagement({
           <button
             onClick={fetchAdmins}
             disabled={loading}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700 transition hover:border-orange-400 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 
         {loadError && (
-          <div className="mb-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p>{loadError}</p>
               <button
                 type="button"
                 onClick={fetchAdmins}
-                className="rounded-full bg-[#D4AF37] px-5 py-2.5 text-xs font-black text-black transition hover:bg-[#E7C768]"
+                className="rounded-full bg-orange-500 px-5 py-2.5 text-xs font-black text-white transition hover:bg-orange-600"
               >
                 Retry
               </button>
@@ -421,12 +426,12 @@ function AdminManagement({
               return (
                 <div
                   key={admin.id}
-                  className="rounded-[1.5rem] border border-white/10 bg-black/25 p-4 transition duration-300 hover:border-[#D4AF37]/25 hover:bg-white/[0.035]"
+                  className="rounded-[1.5rem] border border-slate-300 bg-[#fffaf2] p-4 transition duration-300 hover:border-orange-300 hover:bg-orange-50"
                 >
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-lg font-black text-white">
+                        <h4 className="text-lg font-black text-[#10233f]">
                           {admin.full_name || "Unnamed Admin"}
                         </h4>
 
@@ -439,19 +444,19 @@ function AdminManagement({
                         </span>
 
                         {isCurrentUser && (
-                          <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                          <span className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
                             You
                           </span>
                         )}
 
                         {isLastSuperAdmin && (
-                          <span className="rounded-full border border-purple-400/20 bg-purple-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-purple-300">
+                          <span className="rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-violet-700">
                             Protected
                           </span>
                         )}
                       </div>
 
-                      <p className="mt-2 break-all font-mono text-xs text-gray-500">
+                      <p className="mt-2 break-all font-mono text-xs text-slate-500">
                         {admin.id}
                       </p>
                     </div>
@@ -467,15 +472,15 @@ function AdminManagement({
                           isBusy ||
                           (isCurrentUser && admin.role === "super_admin")
                         }
-                        className="rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <option className="bg-[#111]" value="staff">
+                        <option className="bg-white text-[#10233f]" value="staff">
                           Staff
                         </option>
-                        <option className="bg-[#111]" value="admin">
+                        <option className="bg-white text-[#10233f]" value="admin">
                           Admin
                         </option>
-                        <option className="bg-[#111]" value="super_admin">
+                        <option className="bg-white text-[#10233f]" value="super_admin">
                           Super Admin
                         </option>
                       </select>
@@ -488,7 +493,7 @@ function AdminManagement({
                           isCurrentUser ||
                           isLastSuperAdmin
                         }
-                        className="rounded-xl border border-red-500/30 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {deletingId === admin.id ? "Deleting..." : "Delete"}
                       </button>
@@ -506,15 +511,15 @@ function AdminManagement({
 
 function SummaryCard({ label, value, icon }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/25">
+    <div className="rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition duration-300 hover:-translate-y-1 hover:border-orange-300">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
             {label}
           </p>
-          <h3 className="mt-3 text-3xl font-black text-[#D4AF37]">{value}</h3>
+          <h3 className="mt-3 text-3xl font-black text-[#10233f]">{value}</h3>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-2xl">
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-2xl">
           {icon}
         </div>
       </div>
@@ -528,10 +533,10 @@ function LoadingState() {
       {[1, 2, 3].map((item) => (
         <div
           key={item}
-          className="animate-pulse rounded-[1.5rem] border border-white/10 bg-black/25 p-5"
+          className="animate-pulse rounded-[1.5rem] border border-slate-300 bg-[#fffaf2] p-5"
         >
-          <div className="h-4 w-40 rounded-full bg-white/10"></div>
-          <div className="mt-4 h-3 w-full max-w-lg rounded-full bg-white/10"></div>
+          <div className="h-4 w-40 rounded-full bg-slate-200"></div>
+          <div className="mt-4 h-3 w-full max-w-lg rounded-full bg-slate-200"></div>
         </div>
       ))}
     </div>
@@ -540,14 +545,14 @@ function LoadingState() {
 
 function EmptyState() {
   return (
-    <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-black/25 p-8 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-3xl">
+    <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-[#fffaf2] p-8 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-orange-300 bg-orange-50 text-3xl">
         👥
       </div>
-      <h3 className="mt-5 text-2xl font-black text-white">
+      <h3 className="mt-5 text-2xl font-black text-[#10233f]">
         No Admin Profiles Found
       </h3>
-      <p className="mt-3 text-sm text-gray-400">
+      <p className="mt-3 text-sm text-slate-600">
         Create your first admin profile to start managing CRM access.
       </p>
     </div>

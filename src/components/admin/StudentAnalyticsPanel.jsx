@@ -1,3 +1,8 @@
+// StudentAnalyticsPanel V2 — Student Intelligence Center
+// Preserves independent Supabase loading, application/document/task/university analytics,
+// health score, risk engine, journey stage, readiness metrics and local recommendations.
+// Visual system rebuilt for the approved Zaifan Admin OS: cream, white, navy and orange.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -398,10 +403,10 @@ primaryRiskAction,
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6">
+      <div className="rounded-[1.8rem] border-2 border-orange-300 bg-[#102f5c] p-6 shadow-[0_16px_40px_rgba(15,35,63,0.14)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+            <p className="text-xs uppercase tracking-[0.25em] text-orange-700">
               Student Analytics
             </p>
 
@@ -409,7 +414,7 @@ primaryRiskAction,
               Student Journey Intelligence
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-200">
               Real student analytics with independent safe loading for
               applications, documents, tasks, and universities.
             </p>
@@ -419,7 +424,7 @@ primaryRiskAction,
             type="button"
             onClick={refreshAnalytics}
             disabled={refreshing}
-            className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/45 disabled:opacity-50"
+            className="rounded-full border border-orange-400 bg-orange-500 px-4 py-2 text-xs font-black text-[#10233f] transition hover:bg-orange-600 disabled:opacity-50"
           >
             {refreshing ? "Refreshing..." : "Refresh Analytics"}
           </button>
@@ -427,13 +432,13 @@ primaryRiskAction,
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
           {error}
         </div>
       ) : null}
 
       {isLoading || refreshing ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/45">
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-700">
           Loading analytics safely...
         </div>
       ) : null}
@@ -450,8 +455,8 @@ primaryRiskAction,
         <MetricCard label="Country Leads" value={analytics.similarCountryLeads} />
       </div>
 
-      <div className="rounded-[1.75rem] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
-  <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
+      <div className="rounded-[1.75rem] border border-orange-200 bg-[#fff8ee] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
+  <p className="text-xs uppercase tracking-[0.22em] text-orange-700">
     Student Journey Tracker
   </p>
 
@@ -483,15 +488,15 @@ primaryRiskAction,
           key={stage}
           className={`rounded-2xl border p-4 text-center transition ${
             completed
-              ? "border-[#D4AF37]/35 bg-[#D4AF37]/10"
-              : "border-white/10 bg-white/[0.03]"
+              ? "border-orange-500 bg-orange-500 text-white shadow-[0_6px_16px_rgba(249,115,22,0.16)]"
+              : "border-slate-300 bg-white"
           }`}
         >
           <div
             className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full border text-sm font-black ${
               completed
-                ? "border-[#D4AF37]/35 text-[#D4AF37]"
-                : "border-white/10 text-white/35"
+                ? "border-white/40 bg-white/15 text-white"
+                : "border-slate-300 text-slate-500"
             }`}
           >
             {index + 1}
@@ -499,7 +504,7 @@ primaryRiskAction,
 
           <p
             className={`mt-3 text-xs font-semibold uppercase tracking-[0.14em] ${
-              completed ? "text-[#D4AF37]" : "text-white/35"
+              completed ? "text-white" : "text-slate-500"
             }`}
           >
             {stage}
@@ -509,14 +514,14 @@ primaryRiskAction,
     })}
   </div>
 </div>
-<div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+<div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
     <div>
-      <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
+      <p className="text-xs uppercase tracking-[0.22em] text-orange-700">
         Student Risk Engine
       </p>
 
-      <h3 className="mt-2 text-xl font-black text-white">
+      <h3 className="mt-2 text-xl font-black text-[#10233f]">
         {analytics.riskFactors.length > 0
           ? `${analytics.riskFactors.length} Risk Signal${
               analytics.riskFactors.length > 1 ? "s" : ""
@@ -524,7 +529,7 @@ primaryRiskAction,
           : "No Major Risk Detected"}
       </h3>
 
-      <p className="mt-2 text-sm leading-6 text-white/50">
+      <p className="mt-2 text-sm leading-6 text-slate-600">
         {analytics.primaryRiskAction}
       </p>
     </div>
@@ -534,10 +539,10 @@ primaryRiskAction,
         analytics.riskFactors.some(
           (risk) => risk.severity === "high"
         )
-          ? "border-red-400/25 bg-red-500/10 text-red-300"
+          ? "border-red-300 bg-red-50 text-red-700"
           : analytics.riskFactors.length > 0
-          ? "border-yellow-400/25 bg-yellow-500/10 text-yellow-300"
-          : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
+          ? "border-amber-300 bg-amber-50 text-amber-800"
+          : "border-emerald-300 bg-emerald-50 text-emerald-700"
       }`}
     >
       {analytics.riskFactors.some(
@@ -552,7 +557,7 @@ primaryRiskAction,
 
   <div className="mt-5 grid gap-3 md:grid-cols-2">
     {analytics.riskFactors.length === 0 ? (
-      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
         Student has no major operational risk signals.
       </div>
     ) : (
@@ -561,21 +566,21 @@ primaryRiskAction,
           key={risk.title}
           className={`rounded-2xl border p-4 ${
             risk.severity === "high"
-              ? "border-red-400/25 bg-red-500/10"
-              : "border-yellow-400/25 bg-yellow-500/10"
+              ? "border-red-300 bg-red-50"
+              : "border-amber-300 bg-amber-50"
           }`}
         >
           <p
             className={`font-black ${
               risk.severity === "high"
-                ? "text-red-300"
-                : "text-yellow-300"
+                ? "text-red-700"
+                : "text-amber-800"
             }`}
           >
             {risk.title}
           </p>
 
-          <p className="mt-2 text-sm leading-6 text-white/50">
+          <p className="mt-2 text-sm leading-6 text-slate-600">
             {risk.action}
           </p>
         </div>
@@ -610,12 +615,12 @@ primaryRiskAction,
         <MetricCard label="Overdue Tasks" value={analytics.overdueTasks} danger={analytics.overdueTasks > 0} />
       </div>
 
-      <div className="rounded-[1.75rem] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
-  <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
+      <div className="rounded-[1.75rem] border border-orange-200 bg-[#fff8ee] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
+  <p className="text-xs uppercase tracking-[0.22em] text-orange-700">
     Next Recommended Action
   </p>
 
-  <h3 className="mt-3 text-xl font-black text-white">
+  <h3 className="mt-3 text-xl font-black text-[#10233f]">
     {analytics.documentReadiness < 50
       ? "Collect missing documents first"
       : analytics.applicationReadiness < 60
@@ -627,18 +632,18 @@ primaryRiskAction,
       : "Continue regular follow-up"}
   </h3>
 
-  <p className="mt-3 text-sm leading-6 text-white/50">
+  <p className="mt-3 text-sm leading-6 text-slate-600">
     This recommendation is generated locally from document readiness,
     application readiness, task completion, risk level, and journey stage.
   </p>
 </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-        <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
+        <p className="text-xs uppercase tracking-[0.22em] text-orange-700">
           AI-Ready Summary
         </p>
 
-        <div className="mt-4 grid gap-3 text-sm text-white/55">
+        <div className="mt-4 grid gap-3 text-sm text-slate-600">
           <Insight text={`Student is currently in ${analytics.journeyStage}.`} />
           <Insight text={`Overall journey health is ${analytics.healthScore}%.`} />
           <Insight text={`Document readiness is ${analytics.documentReadiness}%.`} />
@@ -656,17 +661,17 @@ function MetricCard({ label, value, small = false, danger = false }) {
     <div
       className={`rounded-[1.5rem] border p-5 ${
         danger
-          ? "border-red-400/25 bg-red-500/10"
+          ? "border-red-300 bg-red-50"
           : "border-white/10 bg-white/[0.035]"
       }`}
     >
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
       <p
         className={`mt-3 font-black ${
-          danger ? "text-red-300" : "text-[#D4AF37]"
+          danger ? "text-red-700" : "text-[#10233f]"
         } ${small ? "text-xl" : "text-3xl"}`}
       >
         {value}
@@ -680,39 +685,39 @@ function ProgressCard({ title, value, footer, danger = false }) {
     <div
       className={`rounded-[1.75rem] border p-5 ${
         danger
-          ? "border-red-400/25 bg-red-500/10"
-          : "border-white/10 bg-white/[0.03]"
+          ? "border-red-300 bg-red-50"
+          : "border-slate-300 bg-white shadow-[0_6px_18px_rgba(15,35,63,0.035)]"
       }`}
     >
-      <p className="text-xs uppercase tracking-[0.2em] text-white/35">
+      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
         {title}
       </p>
 
       <p
         className={`mt-3 text-3xl font-black ${
-          danger ? "text-red-300" : "text-[#D4AF37]"
+          danger ? "text-red-700" : "text-[#10233f]"
         }`}
       >
         {value}%
       </p>
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
         <div
           className={`h-full rounded-full ${
-            danger ? "bg-red-300" : "bg-[#D4AF37]"
+            danger ? "bg-red-500" : "bg-orange-500"
           }`}
           style={{ width: `${value}%` }}
         />
       </div>
 
-      <p className="mt-3 text-sm leading-6 text-white/45">{footer}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{footer}</p>
     </div>
   );
 }
 
 function Insight({ text }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-slate-700">
       {text}
     </div>
   );

@@ -1,20 +1,25 @@
+// ActivityTimeline V2 — Live CRM Activity Feed
+// Preserves inquiry/appointment merging, priority/status/owner styling,
+// activity sorting, hot/open counts, date formatting and Framer Motion.
+// Full mature component retained; visual layer aligned with Zaifan Admin OS.
+
 import { motion } from "framer-motion";
 
 function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
   const priorityStyles = {
-    vip: "border-purple-400/30 bg-purple-500/10 text-purple-300",
-    high: "border-red-400/30 bg-red-500/10 text-red-300",
-    medium: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
-    low: "border-white/10 bg-white/[0.04] text-gray-400",
+    vip: "border-violet-300 bg-violet-50 text-violet-700",
+    high: "border-red-300 bg-red-50 text-red-700",
+    medium: "border-orange-300 bg-orange-50 text-orange-700",
+    low: "border-slate-300 bg-slate-50 text-slate-600",
   };
 
   const statusStyles = {
-    new: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
-    contacted: "border-green-400/25 bg-green-400/10 text-green-300",
-    pending: "border-orange-400/25 bg-orange-400/10 text-orange-300",
-    confirmed: "border-green-400/25 bg-green-400/10 text-green-300",
-    completed: "border-blue-400/25 bg-blue-400/10 text-blue-300",
-    cancelled: "border-red-400/25 bg-red-400/10 text-red-300",
+    new: "border-orange-300 bg-orange-50 text-orange-700",
+    contacted: "border-emerald-300 bg-emerald-50 text-emerald-700",
+    pending: "border-orange-300 bg-orange-50 text-orange-700",
+    confirmed: "border-emerald-300 bg-emerald-50 text-emerald-700",
+    completed: "border-blue-300 bg-blue-50 text-blue-700",
+    cancelled: "border-red-300 bg-red-50 text-red-700",
   };
 
   const inquiryActivities = inquiries.slice(0, 8).map((inquiry) => {
@@ -33,12 +38,12 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
       owner: inquiry.assigned_admin_name || "Open lead pool",
       date: inquiry.created_at,
       icon: priority === "vip" ? "👑" : priority === "high" ? "🔥" : "📨",
-      style: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
+      style: "border-orange-300 bg-orange-50 text-orange-700",
       priorityStyle: priorityStyles[priority] || priorityStyles.low,
       statusStyle: statusStyles[status] || statusStyles.new,
       ownerStyle: isAssigned
-        ? "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
-        : "border-orange-400/20 bg-orange-400/10 text-orange-300",
+        ? "border-blue-300 bg-blue-50 text-blue-700"
+        : "border-orange-300 bg-orange-50 text-orange-700",
     };
   });
 
@@ -67,12 +72,12 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
           : status === "cancelled"
           ? "🚫"
           : "📅",
-      style: "border-green-500/20 bg-green-500/10 text-green-400",
+      style: "border-emerald-300 bg-emerald-50 text-emerald-700",
       priorityStyle: priorityStyles[priority] || priorityStyles.low,
       statusStyle: statusStyles[status] || statusStyles.pending,
       ownerStyle: isAssigned
-        ? "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
-        : "border-orange-400/20 bg-orange-400/10 text-orange-300",
+        ? "border-blue-300 bg-blue-50 text-blue-700"
+        : "border-orange-300 bg-orange-50 text-orange-700",
     };
   });
 
@@ -98,20 +103,20 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
   };
 
   return (
-    <div className={`${cardClass} mb-5 p-4 sm:p-5 xl:mb-6`}>
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+    <div className={`${cardClass} relative mb-5 overflow-hidden rounded-[1.8rem] border border-slate-300 bg-white p-4 shadow-[0_8px_24px_rgba(15,35,63,0.045)] sm:p-5 xl:mb-6`}>
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-60"></div>
 
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 sm:text-[10px] sm:tracking-[0.32em]">
+          <p className="text-[9px] uppercase tracking-[0.22em] text-slate-500 sm:text-[10px] sm:tracking-[0.32em]">
             Live CRM Feed
           </p>
 
-          <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">
+          <h2 className="mt-2 text-xl font-black text-[#10233f] sm:text-2xl">
             Recent Activity Timeline
           </h2>
 
-          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-gray-400 sm:text-sm">
+          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-600 sm:text-sm">
             Latest student inquiries, booked consultations, ownership movement,
             and priority signals from your CRM.
           </p>
@@ -125,23 +130,23 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
       </div>
 
       {activities.length === 0 ? (
-        <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-center sm:p-8">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-2xl">
+        <div className="rounded-[1.4rem] border border-dashed border-slate-300 bg-[#fffaf2] p-6 text-center sm:p-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-300 bg-orange-50 text-2xl">
             🕒
           </div>
 
-          <h3 className="mt-4 text-lg font-black text-white">
+          <h3 className="mt-4 text-lg font-black text-[#10233f]">
             No CRM activity yet
           </h3>
 
-          <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-gray-400 sm:text-sm">
+          <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-slate-600 sm:text-sm">
             New inquiries and appointments will appear here once students start
             interacting with your website.
           </p>
         </div>
       ) : (
         <div className="relative">
-          <div className="absolute left-5 top-3 hidden h-[calc(100%-1.5rem)] w-px bg-gradient-to-b from-[#D4AF37]/50 via-white/10 to-transparent lg:block"></div>
+          <div className="absolute left-5 top-3 hidden h-[calc(100%-1.5rem)] w-px bg-gradient-to-b from-orange-300 via-slate-200 to-transparent lg:block"></div>
 
           <div className="grid gap-3 xl:grid-cols-2">
             {activities.map((activity, index) => (
@@ -150,10 +155,10 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: index * 0.05 }}
-                className="group relative rounded-[1.2rem] border border-white/10 bg-white/[0.03] p-3 transition duration-500 hover:-translate-y-0.5 hover:border-[#D4AF37]/30 hover:bg-white/[0.05] sm:rounded-[1.4rem] sm:p-4"
+                className="group relative rounded-[1.2rem] border border-slate-300 bg-[#fffaf2] p-3 transition duration-500 hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 sm:rounded-[1.4rem] sm:p-4"
               >
                 <div className="flex gap-3 sm:gap-4">
-                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#050505] text-base shadow-xl transition duration-500 group-hover:border-[#D4AF37]/30 sm:h-11 sm:w-11 sm:rounded-2xl sm:text-lg">
+                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-base shadow-xl transition duration-500 group-hover:border-orange-300 sm:h-11 sm:w-11 sm:rounded-2xl sm:text-lg">
                     {activity.icon}
                   </div>
 
@@ -180,16 +185,16 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
 
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm font-bold text-white sm:text-base">
+                        <h3 className="truncate text-sm font-black text-[#10233f] sm:text-base">
                           {activity.name}
                         </h3>
 
-                        <p className="mt-1 truncate text-xs text-gray-400">
+                        <p className="mt-1 truncate text-xs text-slate-600">
                           {activity.detail}
                         </p>
                       </div>
 
-                      <p className="shrink-0 text-[10px] text-gray-500 sm:text-right sm:text-[11px]">
+                      <p className="shrink-0 text-[10px] text-slate-500 sm:text-right sm:text-[11px]">
                         {formatDate(activity.date)}
                       </p>
                     </div>
@@ -202,7 +207,7 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
                       </span>
 
                       {(activity.priority === "vip" || activity.priority === "high") && (
-                        <span className="rounded-full border border-red-400/20 bg-red-400/10 px-3 py-1 text-[10px] font-bold text-red-300">
+                        <span className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-[10px] font-bold text-red-700">
                           Needs fast follow-up
                         </span>
                       )}
@@ -220,9 +225,9 @@ function ActivityTimeline({ cardClass, inquiries = [], appointments = [] }) {
 
 function TimelineBadge({ label, value, tone = "gold" }) {
   const tones = {
-    gold: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
-    red: "border-red-400/20 bg-red-400/10 text-red-300",
-    cyan: "border-cyan-400/20 bg-cyan-400/10 text-cyan-300",
+    gold: "border-orange-300 bg-orange-50 text-orange-700",
+    red: "border-red-400/20 bg-red-400/10 text-red-700",
+    cyan: "border-blue-300 bg-blue-50 text-blue-700",
   };
 
   return (

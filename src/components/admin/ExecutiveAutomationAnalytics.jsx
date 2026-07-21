@@ -46,47 +46,47 @@ function getCreatedAt(log = {}) {
 function getActionTone(actionType = "") {
   const clean = normalize(actionType);
 
-  if (clean === "create_task") return "border-blue-400/25 bg-blue-500/10 text-blue-200";
-  if (clean === "create_reminder") return "border-purple-400/25 bg-purple-500/10 text-purple-200";
-  if (clean === "schedule_call") return "border-orange-400/25 bg-orange-500/10 text-orange-200";
-  if (clean === "send_email") return "border-cyan-400/25 bg-cyan-500/10 text-cyan-200";
-  if (clean === "send_whatsapp") return "border-emerald-400/25 bg-emerald-500/10 text-emerald-200";
+  if (clean === "create_task") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
+  if (clean === "create_reminder") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
+  if (clean === "schedule_call") return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
+  if (clean === "send_email") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
+  if (clean === "send_whatsapp") return "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
 
-  return "border-white/10 bg-white/[0.04] text-white/45";
+  return "border-[#243A60]/18 bg-white text-[#7A8392]";
 }
 
 function getStatusTone(status = "") {
   const clean = normalize(status);
 
   if (isSuccessStatus(clean)) {
-    return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+    return "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
   }
 
   if (clean === "duplicate_blocked") {
-    return "border-yellow-400/25 bg-yellow-500/10 text-yellow-200";
+    return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
   }
 
   if (isFailureStatus(clean)) {
-    return "border-red-400/25 bg-red-500/10 text-red-300";
+    return "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]";
   }
 
   if (["pending", "queued", "approval_required"].includes(clean)) {
-    return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+    return "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]";
   }
 
-  return "border-white/10 bg-white/[0.04] text-white/45";
+  return "border-[#243A60]/18 bg-white text-[#7A8392]";
 }
 
 function getPriorityTone(priority = "") {
   const clean = normalize(priority);
 
-  if (clean === "critical") return "border-red-400/25 bg-red-500/10 text-red-300";
-  if (clean === "executive") return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
-  if (clean === "high") return "border-orange-400/25 bg-orange-500/10 text-orange-300";
-  if (clean === "medium") return "border-blue-400/25 bg-blue-500/10 text-blue-300";
-  if (clean === "low") return "border-white/10 bg-white/[0.04] text-white/45";
+  if (clean === "critical") return "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]";
+  if (clean === "executive") return "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]";
+  if (clean === "high") return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
+  if (clean === "medium") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
+  if (clean === "low") return "border-[#243A60]/18 bg-white text-[#7A8392]";
 
-  return "border-white/10 bg-white/[0.04] text-white/45";
+  return "border-[#243A60]/18 bg-white text-[#7A8392]";
 }
 
 function buildAnalytics(logs = []) {
@@ -258,18 +258,18 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
+      <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
               Executive Automation Analytics V1
             </p>
 
-            <h2 className="mt-2 text-2xl font-black text-white">
+            <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">
               Execution Logs, Approval History & Automation KPIs
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
               Reads from executive_execution_logs and turns every executed task,
               reminder, call, email draft, WhatsApp draft, duplicate block, and failure
               into a visible operations record.
@@ -280,14 +280,14 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
             type="button"
             onClick={loadLogs}
             disabled={loading}
-            className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-2 text-sm font-bold text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-[#E9802D]/45 bg-[#FFF1E3] px-5 py-2 text-sm font-bold text-[#B84F0E] transition hover:bg-[#E9802D] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Loading..." : "Reload Logs"}
           </button>
         </div>
 
         {error ? (
-          <div className="mt-5 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm leading-6 text-red-200">
+          <div className="mt-5 rounded-2xl border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm leading-6 text-[#A8342F]">
             {error}
             <div className="mt-2 text-xs text-red-100/70">
               Check that the executive_execution_logs table exists and has readable RLS
@@ -341,13 +341,13 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
         <ApprovalHistory logs={approvalLogs} />
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-black/25 p-5">
+      <div className="rounded-[2rem] border border-[#243A60]/18 bg-white p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-white/35">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8992A1]">
               Queue History
             </p>
-            <h3 className="mt-2 text-xl font-black text-white">
+            <h3 className="mt-2 text-xl font-black text-[#17243D]">
               Execution History Feed
             </h3>
           </div>
@@ -357,13 +357,13 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search student, action, status..."
-              className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white outline-none placeholder:text-white/25 focus:border-[#D4AF37]/40"
+              className="rounded-full border border-[#243A60]/18 bg-[#17243D] px-4 py-2 text-sm text-[#F7F3EB] outline-none placeholder:text-[#98A0AE] focus:border-[#E9802D]/50"
             />
 
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white outline-none focus:border-[#D4AF37]/40"
+              className="rounded-full border border-[#243A60]/18 bg-[#17243D] px-4 py-2 text-sm text-[#F7F3EB] outline-none focus:border-[#E9802D]/50"
             >
               <option value="all">All Status</option>
               <option value="success">Success</option>
@@ -375,7 +375,7 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
             <select
               value={actionFilter}
               onChange={(event) => setActionFilter(event.target.value)}
-              className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white outline-none focus:border-[#D4AF37]/40"
+              className="rounded-full border border-[#243A60]/18 bg-[#17243D] px-4 py-2 text-sm text-[#F7F3EB] outline-none focus:border-[#E9802D]/50"
             >
               <option value="all">All Actions</option>
               <option value="create_task">Tasks</option>
@@ -420,11 +420,11 @@ function MetricCard({ label, value, tone = "default", compact = false }) {
   const style = getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-4 ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {label}
       </p>
-      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black text-white`}>
+      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black text-[#17243D]`}>
         {value ?? 0}
       </p>
     </div>
@@ -432,12 +432,12 @@ function MetricCard({ label, value, tone = "default", compact = false }) {
 }
 
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-red-400/25 bg-red-500/10";
-  if (tone === "green") return "border-emerald-400/25 bg-emerald-500/10";
-  if (tone === "gold") return "border-[#D4AF37]/25 bg-[#D4AF37]/10";
-  if (tone === "blue") return "border-blue-400/25 bg-blue-500/10";
-  if (tone === "yellow") return "border-yellow-400/25 bg-yellow-500/10";
-  return "border-white/10 bg-white/[0.03]";
+  if (tone === "red") return "border-[#C2413B]/32 bg-[#FFF0EE]";
+  if (tone === "green") return "border-[#E9802D]/35 bg-[#FFF1E3]";
+  if (tone === "gold") return "border-[#E9802D]/40 bg-[#FFF1E3]";
+  if (tone === "blue") return "border-[#243A60]/25 bg-[#F3F5F8]";
+  if (tone === "yellow") return "border-[#A36A18]/30 bg-[#FFF7E8]";
+  return "border-[#243A60]/18 bg-white";
 }
 
 function DistributionPanel({ title, description, items = {} }) {
@@ -446,26 +446,26 @@ function DistributionPanel({ title, description, items = {} }) {
     .slice(0, 10);
 
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-black/25 p-5">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+    <div className="rounded-[2rem] border border-[#243A60]/18 bg-white p-5">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8992A1]">
         {title}
       </p>
 
-      <p className="mt-2 text-sm leading-6 text-white/45">{description}</p>
+      <p className="mt-2 text-sm leading-6 text-[#7A8392]">{description}</p>
 
       <div className="mt-4 space-y-2">
         {entries.length ? (
           entries.map(([key, value]) => (
             <div
               key={key}
-              className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs"
+              className="flex items-center justify-between gap-3 rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs"
             >
-              <span className="truncate font-bold text-white/60">{formatLabel(key)}</span>
-              <span className="font-black text-white">{value}</span>
+              <span className="truncate font-bold text-[#596579]">{formatLabel(key)}</span>
+              <span className="font-black text-[#17243D]">{value}</span>
             </div>
           ))
         ) : (
-          <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/35">
+          <p className="rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs text-[#8992A1]">
             No data yet.
           </p>
         )}
@@ -478,18 +478,18 @@ function FailureMonitor({ logs = [] }) {
   const visibleLogs = logs.slice(0, 8);
 
   return (
-    <div className="rounded-[2rem] border border-red-400/20 bg-red-500/[0.04] p-5">
+    <div className="rounded-[2rem] border border-[#C2413B]/30 bg-[#FFF0EE] p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-red-300">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#A8342F]">
             Failure Monitor
           </p>
-          <h3 className="mt-2 text-xl font-black text-white">
+          <h3 className="mt-2 text-xl font-black text-[#17243D]">
             Failed + Duplicate Blocked Actions
           </h3>
         </div>
 
-        <span className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1 text-xs font-black text-red-300">
+        <span className="rounded-full border border-[#C2413B]/32 bg-[#FFF0EE] px-3 py-1 text-xs font-black text-[#A8342F]">
           {logs.length}
         </span>
       </div>
@@ -499,22 +499,22 @@ function FailureMonitor({ logs = [] }) {
           visibleLogs.map((log) => (
             <div
               key={log.id || `${log.duplicate_key}-${getCreatedAt(log)}`}
-              className="rounded-2xl border border-red-400/15 bg-black/20 p-4"
+              className="rounded-2xl border border-[#C2413B]/26 bg-white p-4"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Tag text={formatLabel(log.status)} className={getStatusTone(log.status)} />
                 <Tag text={formatLabel(log.action_type)} className={getActionTone(log.action_type)} />
               </div>
 
-              <p className="mt-3 font-bold text-white">
+              <p className="mt-3 font-bold text-[#17243D]">
                 {log.student_name || "Unknown Student"}
               </p>
 
-              <p className="mt-1 text-sm leading-6 text-white/45">
+              <p className="mt-1 text-sm leading-6 text-[#7A8392]">
                 {log.error_message || log.title || "Execution issue recorded."}
               </p>
 
-              <p className="mt-2 text-xs text-white/30">
+              <p className="mt-2 text-xs text-[#98A0AE]">
                 {formatDateTime(getCreatedAt(log))}
               </p>
             </div>
@@ -534,18 +534,18 @@ function ApprovalHistory({ logs = [] }) {
   const visibleLogs = logs.slice(0, 8);
 
   return (
-    <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+    <div className="rounded-[2rem] border border-[#E9802D]/35 bg-[#FFFDF8] p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37]">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#B84F0E]">
             Approval History
           </p>
-          <h3 className="mt-2 text-xl font-black text-white">
+          <h3 className="mt-2 text-xl font-black text-[#17243D]">
             Human-Protected Actions
           </h3>
         </div>
 
-        <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-xs font-black text-[#D4AF37]">
+        <span className="rounded-full border border-[#E9802D]/40 bg-[#FFF1E3] px-3 py-1 text-xs font-black text-[#B84F0E]">
           {logs.length}
         </span>
       </div>
@@ -555,7 +555,7 @@ function ApprovalHistory({ logs = [] }) {
           visibleLogs.map((log) => (
             <div
               key={log.id || `${log.duplicate_key}-${getCreatedAt(log)}`}
-              className="rounded-2xl border border-[#D4AF37]/15 bg-black/20 p-4"
+              className="rounded-2xl border border-[#E9802D]/30 bg-white p-4"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Tag text={formatLabel(log.recommendation_priority)} className={getPriorityTone(log.recommendation_priority)} />
@@ -563,15 +563,15 @@ function ApprovalHistory({ logs = [] }) {
                 <Tag text={formatLabel(log.status)} className={getStatusTone(log.status)} />
               </div>
 
-              <p className="mt-3 font-bold text-white">
+              <p className="mt-3 font-bold text-[#17243D]">
                 {log.student_name || "Unknown Student"}
               </p>
 
-              <p className="mt-1 text-sm text-white/45">
+              <p className="mt-1 text-sm text-[#7A8392]">
                 Executed by: {log.executed_by_name || "Unknown"}
               </p>
 
-              <p className="mt-2 text-xs text-white/30">
+              <p className="mt-2 text-xs text-[#98A0AE]">
                 {formatDateTime(getCreatedAt(log))}
               </p>
             </div>
@@ -591,7 +591,7 @@ function ExecutionLogCard({ log = {} }) {
   const metadata = log.metadata || {};
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -600,22 +600,22 @@ function ExecutionLogCard({ log = {} }) {
             <Tag text={formatLabel(log.recommendation_priority || "medium")} className={getPriorityTone(log.recommendation_priority)} />
 
             {log.approval_required ? (
-              <Tag text="Approval Protected" className="border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]" />
+              <Tag text="Approval Protected" className="border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]" />
             ) : (
-              <Tag text="Auto Ready" className="border-emerald-400/20 bg-emerald-500/10 text-emerald-300" />
+              <Tag text="Auto Ready" className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]" />
             )}
           </div>
 
-          <p className="mt-3 text-lg font-black text-white">
+          <p className="mt-3 text-lg font-black text-[#17243D]">
             {log.title || formatLabel(log.action_type)}
           </p>
 
-          <p className="mt-1 text-sm leading-6 text-white/50">
+          <p className="mt-1 text-sm leading-6 text-[#667085]">
             {log.description || metadata?.created_payload?.description || "No description saved."}
           </p>
 
           {log.error_message ? (
-            <p className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs leading-5 text-red-200">
+            <p className="mt-3 rounded-xl border border-[#C2413B]/30 bg-[#FFF0EE] px-3 py-2 text-xs leading-5 text-[#A8342F]">
               {log.error_message}
             </p>
           ) : null}
@@ -627,16 +627,16 @@ function ExecutionLogCard({ log = {} }) {
           </div>
         </div>
 
-        <div className="shrink-0 rounded-2xl border border-white/10 bg-black/25 p-4 xl:w-72">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+        <div className="shrink-0 rounded-2xl border border-[#243A60]/18 bg-white p-4 xl:w-72">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
             Student / Execution
           </p>
 
-          <p className="mt-2 truncate font-bold text-white">
+          <p className="mt-2 truncate font-bold text-[#17243D]">
             {log.student_name || "Unknown Student"}
           </p>
 
-          <div className="mt-3 grid gap-1 text-xs leading-5 text-white/45">
+          <div className="mt-3 grid gap-1 text-xs leading-5 text-[#7A8392]">
             <p>Student ID: {log.student_id || "Unknown"}</p>
             <p>Type: {formatLabel(log.student_type || "student")}</p>
             <p>By: {log.executed_by_name || "Unknown"}</p>
@@ -652,7 +652,7 @@ function Tag({ text, className = "" }) {
   return (
     <span
       className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
-        className || "border-white/10 bg-black/20 text-white/45"
+        className || "border-[#243A60]/18 bg-white text-[#7A8392]"
       }`}
     >
       {text}
@@ -662,7 +662,7 @@ function Tag({ text, className = "" }) {
 
 function MiniStat({ label, value }) {
   return (
-    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/35">
+    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#8992A1]">
       {label}: {value}
     </span>
   );
@@ -670,9 +670,9 @@ function MiniStat({ label, value }) {
 
 function EmptyState({ title = "No data yet.", text = "" }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <p className="font-semibold text-white/70">{title}</p>
-      {text ? <p className="mt-2 text-sm leading-6 text-white/40">{text}</p> : null}
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
+      <p className="font-semibold text-[#344054]">{title}</p>
+      {text ? <p className="mt-2 text-sm leading-6 text-[#7A8392]">{text}</p> : null}
     </div>
   );
 }

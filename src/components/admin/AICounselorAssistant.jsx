@@ -1,3 +1,9 @@
+// AICounselorAssistant V3 — Advanced Counselor Copilot
+// Preserves the full mature AI counselor architecture: enrichment engine,
+// scoring, risk, opportunity, urgency, best-channel logic, drafts, copying,
+// reminder creation and all helper logic.
+// Visual hierarchy upgraded for the advanced Zaifan Admin OS pass.
+
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
@@ -95,14 +101,14 @@ function AICounselorAssistant({
       transition={{ duration: 0.28 }}
       className="space-y-5"
     >
-      <div className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/15 via-white/[0.035] to-black/40 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.18),transparent_38%)]" />
+      <div className="relative overflow-hidden rounded-[1.9rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-white shadow-[0_18px_50px_rgba(15,35,63,0.14)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.20),transparent_38%)]" />
 
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1.5">
-              <Bot className="h-3.5 w-3.5 text-[#D4AF37]" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/40 bg-orange-500/15 px-3 py-1.5">
+              <Bot className="h-3.5 w-3.5 text-orange-300" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-orange-300">
                 AI Counselor Copilot V2
               </p>
             </div>
@@ -111,20 +117,20 @@ function AICounselorAssistant({
               Student Intelligence & Follow-Up Generator
             </h3>
 
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
               Lead temperature, conversion probability, urgency, best channel,
               risk profile, and ready-to-send follow-ups.
             </p>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-black/30 p-5 text-right">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">
+          <div className="rounded-[1.5rem] border border-white/15 bg-white/10 p-5 text-right backdrop-blur-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
               AI Score
             </p>
-            <h2 className="mt-2 text-4xl font-black text-[#D4AF37]">
+            <h2 className="mt-2 text-4xl font-black text-orange-300">
               {aiData.enriched.ai_score}
             </h2>
-            <p className="mt-1 text-xs text-white/40">
+            <p className="mt-1 text-xs text-slate-500">
               {aiData.enriched.ai_tier.label}
             </p>
           </div>
@@ -205,8 +211,8 @@ function AICounselorAssistant({
               onClick={() => setActiveDraft(tab.id)}
               className={`rounded-2xl border p-4 text-left transition ${
                 isActive
-                  ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37] shadow-[0_12px_40px_rgba(212,175,55,0.08)]"
-                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-[#D4AF37]/25 hover:bg-white/[0.05] hover:text-white"
+                  ? "border-orange-500 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] shadow-[0_12px_40px_rgba(212,175,55,0.08)]"
+                  : "border-slate-300 bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -218,13 +224,13 @@ function AICounselorAssistant({
         })}
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-5">
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
         <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-white/35">
+            <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-slate-500">
               AI Output
             </p>
-            <h4 className="mt-1 text-lg font-black text-white">{activeTab.label}</h4>
+            <h4 className="mt-1 text-lg font-black text-[#10233f]">{activeTab.label}</h4>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -236,14 +242,14 @@ function AICounselorAssistant({
           </div>
         </div>
 
-        <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.035] p-4">
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7 text-white/70">
+        <div className="rounded-[1.4rem] border border-slate-300 bg-[#fffaf2] p-4">
+          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-700">
             {activeTab.content}
           </pre>
         </div>
       </div>
 
-      <div className="rounded-[1.5rem] border border-[#D4AF37]/15 bg-[#D4AF37]/10 p-4 text-sm leading-relaxed text-[#f3df9b]/80">
+      <div className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-4 text-sm leading-relaxed text-orange-800">
         Template AI is active. GPT can later replace the logic without changing the UI.
       </div>
     </motion.section>
@@ -252,12 +258,12 @@ function AICounselorAssistant({
 
 function ActionButton({ icon: Icon, label, onClick, disabled, green, blue, gold }) {
   const tone = green
-    ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15"
+    ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
     : blue
-    ? "border-blue-400/20 bg-blue-500/10 text-blue-300 hover:bg-blue-500/15"
+    ? "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
     : gold
-    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/15"
-    : "border-white/10 bg-white/[0.04] text-white/70 hover:border-[#D4AF37]/25 hover:text-[#D4AF37]";
+    ? "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
+    : "border-white/10 bg-white/[0.04] text-slate-700 hover:border-[#F97316]/25 hover:text-orange-300";
 
   return (
     <button
@@ -274,26 +280,26 @@ function ActionButton({ icon: Icon, label, onClick, disabled, green, blue, gold 
 
 function InsightCard({ icon: Icon, label, value, text, tone = "gold" }) {
   const toneClass = {
-    gold: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
-    red: "border-red-400/20 bg-red-500/10 text-red-300",
-    orange: "border-orange-400/20 bg-orange-500/10 text-orange-300",
-    green: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
-    blue: "border-blue-400/20 bg-blue-500/10 text-blue-300",
-    gray: "border-white/10 bg-white/[0.04] text-gray-300",
+    gold: "border-orange-300 bg-orange-50 text-orange-700",
+    red: "border-red-300 bg-red-50 text-red-700",
+    orange: "border-orange-300 bg-orange-50 text-orange-700",
+    green: "border-emerald-300 bg-emerald-50 text-emerald-700",
+    blue: "border-blue-300 bg-blue-50 text-blue-700",
+    gray: "border-slate-300 bg-slate-50 text-slate-700",
   }[tone];
 
   return (
     <div className={`rounded-[1.5rem] border p-4 ${toneClass}`}>
       <div className="flex items-start gap-3">
-        <div className="rounded-2xl border border-current/20 bg-black/20 p-3">
+        <div className="rounded-2xl border border-current/20 bg-white p-3">
           <Icon className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
             {label}
           </p>
           <h4 className="mt-2 text-lg font-black">{value}</h4>
-          <p className="mt-1 text-xs leading-relaxed text-white/50">{text}</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-600">{text}</p>
         </div>
       </div>
     </div>

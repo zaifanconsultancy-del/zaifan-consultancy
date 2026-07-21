@@ -1,3 +1,9 @@
+// StudentOSMissionControl V5 — High Contrast Mission Control
+// Preserves the complete 1700+ line mission-control analytics architecture:
+// journey, revenue, portal, support, notification, automation, risk, system health,
+// execution logs and connected MissionControlNotificationCenter.
+// Mature file retained; visual hierarchy aligned with Zaifan Admin OS.
+
 import { motion } from "framer-motion";
 import MissionControlNotificationCenter from "./MissionControlNotificationCenter";
 
@@ -148,9 +154,9 @@ const getTrendMax = (items = []) =>
 
 const getUrgencyTone = (value = 0, warning = 1, danger = 5) => {
   const clean = Number(value || 0);
-  if (clean >= danger) return "text-red-300";
-  if (clean >= warning) return "text-orange-300";
-  return "text-green-300";
+  if (clean >= danger) return "text-red-700";
+  if (clean >= warning) return "text-orange-700";
+  return "text-emerald-700";
 };
 
 function StudentOSMissionControl({
@@ -541,40 +547,40 @@ function StudentOSMissionControl({
       value: totalStudents,
       subtitle: "Inquiry + appointment base",
       icon: "🎓",
-      color: "from-[#D4AF37]/30 to-[#D4AF37]/5",
-      text: "text-[#D4AF37]",
+      color: "from-orange-100 to-orange-50",
+      text: "text-orange-700",
     },
     {
       title: "Application",
       value: applicationsCount,
       subtitle: `${submittedApplications} submitted / active`,
       icon: "📝",
-      color: "from-cyan-400/25 to-cyan-400/5",
-      text: "text-cyan-300",
+      color: "from-sky-100 to-sky-50",
+      text: "text-sky-700",
     },
     {
       title: "Offer",
       value: offerCount,
       subtitle: `${offerAcceptedCount} accepted`,
       icon: "🎉",
-      color: "from-green-400/25 to-green-400/5",
-      text: "text-green-300",
+      color: "from-emerald-100 to-emerald-50",
+      text: "text-emerald-700",
     },
     {
       title: "CAS",
       value: casCount,
       subtitle: `${casDelays} delayed`,
       icon: "📄",
-      color: "from-blue-400/25 to-blue-400/5",
-      text: "text-blue-300",
+      color: "from-blue-100 to-blue-50",
+      text: "text-blue-700",
     },
     {
       title: "Visa",
       value: visaCount,
       subtitle: `${visaSubmittedCount} submitted / pending`,
       icon: "✈️",
-      color: "from-emerald-400/25 to-emerald-400/5",
-      text: "text-emerald-300",
+      color: "from-emerald-100 to-emerald-50",
+      text: "text-emerald-700",
     },
   ];
 
@@ -583,56 +589,56 @@ function StudentOSMissionControl({
       title: "Students",
       value: totalStudents,
       icon: "🎓",
-      color: "text-[#D4AF37]",
+      color: "text-orange-700",
       note: "Unified records",
     },
     {
       title: "Applications",
       value: applicationsCount,
       icon: "📝",
-      color: "text-cyan-300",
+      color: "text-sky-700",
       note: `${submittedApplications} active`,
     },
     {
       title: "Offers",
       value: offerCount,
       icon: "🎉",
-      color: "text-green-400",
+      color: "text-emerald-700",
       note: `${offerAcceptedCount} accepted`,
     },
     {
       title: "CAS Issued",
       value: casCount,
       icon: "📄",
-      color: "text-blue-300",
+      color: "text-blue-700",
       note: `${casDelays} CAS delays`,
     },
     {
       title: "Visa Approved",
       value: visaCount,
       icon: "✈️",
-      color: "text-emerald-400",
+      color: "text-emerald-700",
       note: `${visaDelays} visa delays`,
     },
     {
       title: "Documents",
       value: documentsCount,
       icon: "📂",
-      color: "text-purple-300",
+      color: "text-violet-700",
       note: `${pendingDocuments} pending`,
     },
     {
       title: "Pending Tasks",
       value: pendingTasks,
       icon: "⏳",
-      color: "text-orange-300",
+      color: "text-orange-700",
       note: `${overdueTasks} overdue`,
     },
     {
       title: "Automation",
       value: executiveExecutionLogs.length,
       icon: "⚙️",
-      color: "text-cyan-300",
+      color: "text-sky-700",
       note: `${automationSuccessRate}% success`,
     },
   ];
@@ -643,35 +649,35 @@ function StudentOSMissionControl({
       value: highRiskStudents,
       note: `${criticalRiskStudents} critical`,
       icon: "🚨",
-      color: "text-red-300",
+      color: "text-red-700",
     },
     {
       title: "CAS Delays",
       value: casDelays,
       note: "Offer accepted, CAS not issued",
       icon: "📄",
-      color: "text-blue-300",
+      color: "text-blue-700",
     },
     {
       title: "Visa Delays",
       value: visaDelays,
       note: "CAS issued, visa not approved",
       icon: "🛂",
-      color: "text-emerald-300",
+      color: "text-emerald-700",
     },
     {
       title: "Payment Risks",
       value: paymentRisks,
       note: `${unpaidInvoices} unpaid invoices`,
       icon: "💷",
-      color: "text-yellow-300",
+      color: "text-amber-700",
     },
     {
       title: "Automation Pressure",
       value: automationPressure,
       note: `${failedExecutions} failed / ${pendingApprovals} pending`,
       icon: "⚙️",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
   ];
 
@@ -681,28 +687,28 @@ function StudentOSMissionControl({
       value: invoicesCount,
       note: formatMoney(invoiceValue),
       icon: "🧾",
-      color: "text-cyan-300",
+      color: "text-sky-700",
     },
     {
       title: "Payments",
       value: paymentsCount,
       note: formatMoney(paidValue),
       icon: "💳",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
     {
       title: "Outstanding",
       value: formatMoney(outstandingValue),
       note: `${unpaidInvoices} unpaid`,
       icon: "⚠️",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
     {
       title: "Receipts",
       value: allReceipts.length,
       note: `${pendingReceipts} pending / ${approvedReceipts} approved`,
       icon: "📎",
-      color: "text-purple-300",
+      color: "text-violet-700",
     },
   ];
 
@@ -712,42 +718,42 @@ function StudentOSMissionControl({
       value: formatMoney(currentMonthInvoiceValue),
       note: `${formatMoney(recentInvoiceValue)} in last 30 days`,
       icon: "📈",
-      color: "text-cyan-300",
+      color: "text-sky-700",
     },
     {
       title: "This Month Collected",
       value: formatMoney(currentMonthPaidValue),
       note: `${formatMoney(recentPaymentValue)} in last 30 days`,
       icon: "💰",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
     {
       title: "Collection Rate",
       value: `${invoiceCollectionRate}%`,
       note: "Paid value against invoiced value",
       icon: "🎯",
-      color: "text-[#D4AF37]",
+      color: "text-orange-700",
     },
     {
       title: "Receipt Approval",
       value: `${receiptApprovalRate}%`,
       note: `${pendingReceipts} receipts awaiting review`,
       icon: "✅",
-      color: "text-purple-300",
+      color: "text-violet-700",
     },
     {
       title: "Forecast Risk",
       value: formatMoney(outstandingRevenueForecast),
       note: "Outstanding plus receipt pressure",
       icon: "⚠️",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
     {
       title: "Payment Requests",
       value: counselorPaymentRequests.length,
       note: "Counselor payment pressure",
       icon: "🙋",
-      color: "text-blue-300",
+      color: "text-blue-700",
     },
   ];
 
@@ -757,28 +763,28 @@ function StudentOSMissionControl({
       value: `${portalActivationRate}%`,
       note: `${activePortalUsers}/${allPortalAccounts.length} active accounts`,
       icon: "🟢",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
     {
       title: "7-Day Activity",
       value: `${portalRecentActivityRate}%`,
       note: `${recentlyActivePortalUsers} recently active users`,
       icon: "📡",
-      color: "text-cyan-300",
+      color: "text-sky-700",
     },
     {
       title: "30-Day Stale",
       value: stalePortalAccounts,
       note: "Accounts needing engagement",
       icon: "🕒",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
     {
       title: "Password Pressure",
       value: portalPasswordResets,
       note: "Must change password accounts",
       icon: "🔁",
-      color: "text-purple-300",
+      color: "text-violet-700",
     },
   ];
 
@@ -788,28 +794,28 @@ function StudentOSMissionControl({
       value: `${supportResolutionRate}%`,
       note: `${resolvedSupportRequests} resolved requests`,
       icon: "✅",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
     {
       title: "Support Pressure",
       value: supportPressureScore,
       note: "Open + pending + escalated weight",
       icon: "🔥",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
     {
       title: "Response Queue",
       value: pendingSupportResponses,
       note: "Waiting for team response",
       icon: "⏳",
-      color: "text-cyan-300",
+      color: "text-sky-700",
     },
     {
       title: "Escalations",
       value: escalatedSupportRequests,
       note: "Leadership support watch",
       icon: "🚨",
-      color: "text-red-300",
+      color: "text-red-700",
     },
   ];
 
@@ -819,28 +825,28 @@ function StudentOSMissionControl({
       value: allPortalAccounts.length,
       note: "Student login access",
       icon: "🔐",
-      color: "text-cyan-300",
+      color: "text-sky-700",
     },
     {
       title: "Active Users",
       value: activePortalUsers,
       note: `${recentlyActivePortalUsers} active in 7 days`,
       icon: "🟢",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
     {
       title: "Last Login",
       value: `${percent(portalLastLoginCoverage, allPortalAccounts.length)}%`,
       note: `${portalLastLoginCoverage} accounts tracked`,
       icon: "🕒",
-      color: "text-blue-300",
+      color: "text-blue-700",
     },
     {
       title: "Password Resets",
       value: portalPasswordResets,
       note: "Must change password",
       icon: "🔁",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
   ];
 
@@ -850,28 +856,28 @@ function StudentOSMissionControl({
       value: openSupportRequests,
       note: "Student support queue",
       icon: "📬",
-      color: "text-cyan-300",
+      color: "text-sky-700",
     },
     {
       title: "Pending Responses",
       value: pendingSupportResponses,
       note: "Waiting for counselor/admin",
       icon: "⏳",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
     {
       title: "Escalated Requests",
       value: escalatedSupportRequests,
       note: "High priority support",
       icon: "🚨",
-      color: "text-red-300",
+      color: "text-red-700",
     },
     {
       title: "Resolved Requests",
       value: resolvedSupportRequests,
       note: "Closed support history",
       icon: "✅",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
   ];
 
@@ -881,42 +887,42 @@ function StudentOSMissionControl({
       value: executiveExecutionLogs.length,
       note: "Executive automation history",
       icon: "📜",
-      color: "text-cyan-300",
+      color: "text-sky-700",
     },
     {
       title: "Success Rate",
       value: `${automationSuccessRate}%`,
       note: `${successfulExecutions} successful`,
       icon: "✅",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
     {
       title: "Failed Actions",
       value: failedExecutions,
       note: "Needs review",
       icon: "🚨",
-      color: "text-red-300",
+      color: "text-red-700",
     },
     {
       title: "Pending Approval",
       value: pendingApprovals + queuedAutomation,
       note: "Human approval queue",
       icon: "⏳",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
     {
       title: "Human Approved",
       value: humanApprovedExecutions,
       note: "Approved execution flow",
       icon: "🧑‍⚖️",
-      color: "text-purple-300",
+      color: "text-violet-700",
     },
     {
       title: "Duplicates Blocked",
       value: duplicateBlockedExecutions,
       note: "Protection monitor",
       icon: "🛡️",
-      color: "text-blue-300",
+      color: "text-blue-700",
     },
   ];
 
@@ -926,28 +932,28 @@ function StudentOSMissionControl({
       value: universityPlans,
       note: `${dreamUniversities}/${targetUniversities}/${safeUniversities} D/T/S`,
       icon: "🏛️",
-      color: "text-pink-300",
+      color: "text-pink-700",
     },
     {
       title: "Document Readiness",
       value: `${percent(documentsCount - pendingDocuments, documentsCount)}%`,
       note: `${pendingDocuments} pending documents`,
       icon: "📂",
-      color: "text-purple-300",
+      color: "text-violet-700",
     },
     {
       title: "Task Health",
       value: `${percent(studentTasks.length - pendingTasks, studentTasks.length)}%`,
       note: `${overdueTasks} overdue tasks`,
       icon: "✅",
-      color: "text-green-300",
+      color: "text-emerald-700",
     },
     {
       title: "Follow-Up Pressure",
       value: overdueReminders,
       note: "Overdue reminders",
       icon: "📞",
-      color: "text-orange-300",
+      color: "text-orange-700",
     },
   ];
 
@@ -1026,18 +1032,18 @@ function StudentOSMissionControl({
     automationPressure;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-[#10233f]">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className={`${cardClass} relative overflow-hidden p-6`}
+        className={`${cardClass} relative overflow-hidden rounded-[1.9rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-[#10233f] shadow-[0_18px_50px_rgba(15,35,63,0.14)]`}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/10 via-transparent to-cyan-400/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/15 via-transparent to-white/5" />
 
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37]">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-orange-700">
               Executive Operations Center
             </p>
 
@@ -1045,7 +1051,7 @@ function StudentOSMissionControl({
               Student OS Mission Control V4
             </h2>
 
-            <p className="mt-3 max-w-4xl text-sm leading-6 text-gray-400">
+            <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300">
               Unified command layer across Student Journey, Applications, Offers,
               CAS, Visa, Payments, Portal, Support, Executive AI, Automation,
               Execution Logs, Risk, Tasks, Documents, University Planning, Revenue Intelligence, Portal Analytics, and Notification Alerts.
@@ -1053,30 +1059,30 @@ function StudentOSMissionControl({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-[#D4AF37]/30 bg-black/30 p-5 text-center">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500">
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-5 text-center backdrop-blur-sm">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
                 Operating Score
               </p>
 
-              <p className="mt-2 text-5xl font-black text-[#D4AF37]">
+              <p className="mt-2 text-5xl font-black text-orange-700">
                 {operatingScore}%
               </p>
 
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-500">
                 Journey + automation health
               </p>
             </div>
 
-            <div className="rounded-2xl border border-red-400/20 bg-red-400/10 p-5 text-center">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500">
+            <div className="rounded-2xl border border-red-300/30 bg-red-500/15 p-5 text-center">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
                 Executive Pressure
               </p>
 
-              <p className="mt-2 text-5xl font-black text-red-300">
+              <p className="mt-2 text-5xl font-black text-red-700">
                 {executivePressure}
               </p>
 
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-500">
                 Risks needing leadership attention
               </p>
             </div>
@@ -1111,14 +1117,14 @@ function StudentOSMissionControl({
               className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${stage.color} p-5`}
             >
               {index < pipelineStages.length - 1 && (
-                <div className="absolute right-3 top-1/2 hidden -translate-y-1/2 text-2xl text-white/20 xl:block">
+                <div className="absolute right-3 top-1/2 hidden -translate-y-1/2 text-2xl text-slate-300 xl:block">
                   →
                 </div>
               )}
 
               <div className="text-3xl">{stage.icon}</div>
 
-              <p className="mt-4 text-xs uppercase tracking-[0.2em] text-gray-500">
+              <p className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-500">
                 {stage.title}
               </p>
 
@@ -1126,7 +1132,7 @@ function StudentOSMissionControl({
                 {stage.value}
               </p>
 
-              <p className="mt-2 text-xs text-gray-400">
+              <p className="mt-2 text-xs text-slate-500">
                 {stage.subtitle}
               </p>
             </motion.div>
@@ -1373,14 +1379,14 @@ function StudentOSMissionControl({
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: index * 0.03 }}
-              className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+              className="flex items-center justify-between rounded-2xl border border-slate-300 bg-white p-4"
             >
               <div>
-                <p className="text-sm font-bold text-white">
+                <p className="text-sm font-bold text-[#10233f]">
                   {system.title}
                 </p>
 
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500">
                   {system.detail}
                 </p>
               </div>
@@ -1388,8 +1394,8 @@ function StudentOSMissionControl({
               <span
                 className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${
                   system.active
-                    ? "bg-green-400/10 text-green-300"
-                    : "bg-orange-400/10 text-orange-300"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-orange-50 text-orange-700 border border-orange-200"
                 }`}
               >
                 {system.active ? "Live" : "Waiting"}
@@ -1409,17 +1415,17 @@ function OperatingActionCard({ title, value, note, icon }) {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24 }}
-      className="rounded-2xl border border-white/10 bg-white/[0.035] p-5"
+      className="rounded-2xl border border-slate-300 bg-white p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
             {title}
           </p>
-          <p className="mt-3 text-2xl font-black text-white">
+          <p className="mt-3 text-2xl font-black text-[#10233f]">
             {value}
           </p>
-          <p className="mt-2 text-xs leading-5 text-gray-500">
+          <p className="mt-2 text-xs leading-5 text-slate-500">
             {note}
           </p>
         </div>
@@ -1431,18 +1437,18 @@ function OperatingActionCard({ title, value, note, icon }) {
 
 function SectionShell({ cardClass, eyebrow, title, subtitle, children }) {
   return (
-    <div className={`${cardClass} p-6`}>
+    <div className={`${cardClass} rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_8px_24px_rgba(15,35,63,0.045)]`}>
       <div className="mb-5">
-        <p className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37]">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-orange-700">
           {eyebrow}
         </p>
 
-        <h3 className="mt-2 text-xl font-black text-white">
+        <h3 className="mt-2 text-xl font-black text-[#10233f]">
           {title}
         </h3>
 
         {subtitle && (
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-slate-500">
             {subtitle}
           </p>
         )}
@@ -1462,11 +1468,11 @@ function MissionMetricCard({ stat, index, cardClass }) {
         duration: 0.3,
         delay: index * 0.05,
       }}
-      className={`${cardClass} p-5`}
+      className={`${cardClass} rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)]`}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
             {stat.title}
           </p>
 
@@ -1474,7 +1480,7 @@ function MissionMetricCard({ stat, index, cardClass }) {
             {stat.value}
           </h3>
 
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-slate-500">
             {stat.note}
           </p>
         </div>
@@ -1493,11 +1499,11 @@ function CompactMetric({ item, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+      className="rounded-2xl border border-slate-300 bg-white p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-gray-500">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
             {item.title}
           </p>
 
@@ -1511,7 +1517,7 @@ function CompactMetric({ item, index }) {
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-xs text-slate-500">
         {item.note}
       </p>
     </motion.div>
@@ -1531,35 +1537,35 @@ function ExecutionLogRow({ log, index }) {
     status.includes("waiting");
 
   const statusClass = failed
-    ? "border-red-400/20 bg-red-400/10 text-red-300"
+    ? "border-red-400/20 bg-red-400/10 text-red-700"
     : pending
-    ? "border-orange-400/20 bg-orange-400/10 text-orange-300"
-    : "border-green-400/20 bg-green-400/10 text-green-300";
+    ? "border-orange-400/20 bg-orange-50 text-orange-700 border border-orange-200"
+    : "border-green-400/20 bg-emerald-50 text-emerald-700 border border-emerald-200";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, delay: index * 0.03 }}
-      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+      className="rounded-2xl border border-slate-300 bg-white p-4"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="text-sm font-black text-white">
+          <p className="text-sm font-black text-[#10233f]">
             {log.action_type ||
               log.template_key ||
               log.recommendation_type ||
               "Executive Automation Action"}
           </p>
 
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-slate-500">
             {log.student_name || "Unknown student"} •{" "}
             {log.student_type || "student"} •{" "}
             {formatDate(log.executed_at || log.created_at || log.generated_at)}
           </p>
 
           {(log.error_message || log.error || log.failure_reason) && (
-            <p className="mt-2 line-clamp-2 text-xs text-red-300">
+            <p className="mt-2 line-clamp-2 text-xs text-red-700">
               {log.error_message || log.error || log.failure_reason}
             </p>
           )}
@@ -1571,13 +1577,13 @@ function ExecutionLogRow({ log, index }) {
           </span>
 
           {log.duplicate_detected && (
-            <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-300">
+            <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
               Duplicate Protected
             </span>
           )}
 
           {log.priority && (
-            <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#D4AF37]">
+            <span className="rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
               {log.priority}
             </span>
           )}
@@ -1618,15 +1624,15 @@ function RevenueTrendPanel({
   );
 }
 
-function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#D4AF37]" }) {
+function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#F97316]" }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
           {title}
         </p>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-slate-500">
           {formatMoney(items.reduce((sum, item) => sum + Number(item.value || 0), 0))}
         </p>
       </div>
@@ -1639,7 +1645,7 @@ function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#D4AF37]" }) 
             <div key={`${title}-${item.label}`} className="space-y-1">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white/70">{item.label}</span>
-                <span className="text-gray-500">{formatMoney(item.value)}</span>
+                <span className="text-slate-500">{formatMoney(item.value)}</span>
               </div>
 
               <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -1659,13 +1665,13 @@ function AlertMetric({ item, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+      className="relative overflow-hidden rounded-2xl border border-slate-300 bg-white p-5"
     >
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#D4AF37]/70 via-cyan-300/40 to-red-300/50" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 via-orange-300 to-red-400" />
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-gray-500">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
             {item.title}
           </p>
 
@@ -1679,11 +1685,11 @@ function AlertMetric({ item, index }) {
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-xs text-slate-500">
         {item.note}
       </p>
 
-      <p className="mt-4 rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+      <p className="mt-4 rounded-full border border-slate-300 bg-[#fffaf2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
         {item.type} alert
       </p>
     </motion.div>
@@ -1692,7 +1698,7 @@ function AlertMetric({ item, index }) {
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-sm text-gray-500">
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-[#fffaf2] p-6 text-sm text-slate-500">
       {text}
     </div>
   );

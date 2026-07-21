@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import {
   buildPortalSummary,
@@ -33,22 +33,22 @@ function getStatusStyle(value = "") {
   const clean = normalize(value);
 
   if (["approved", "visa_approved", "completed", "complete", "done", "issued"].includes(clean)) {
-    return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
   if (["rejected", "refused", "cancelled", "failed", "missing"].includes(clean)) {
-    return "border-red-400/25 bg-red-500/10 text-red-300";
+    return "border-red-200 bg-red-50 text-red-700";
   }
 
   if (["pending", "under_review", "submitted", "processing", "in_progress"].includes(clean)) {
-    return "border-blue-400/25 bg-blue-500/10 text-blue-300";
+    return "border-blue-200 bg-blue-50 text-blue-700";
   }
 
   if (["offer_received", "cas_issued", "accepted"].includes(clean)) {
-    return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+    return "border-orange-200 bg-orange-50 text-orange-700";
   }
 
-  return "border-white/10 bg-white/[0.04] text-white/55";
+  return "border-slate-200 bg-white text-slate-950/55";
 }
 
 function getNotificationTarget(source = "") {
@@ -1500,6 +1500,7 @@ function StudentPortalDashboard({
 }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [notificationFilter, setNotificationFilter] = useState("all");
+  const deferredNotificationFilter = useDeferredValue(notificationFilter);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -1783,8 +1784,8 @@ function StudentPortalDashboard({
   const warningNotifications = notifications.filter((item) => item.type === "warning").length;
 
   const filteredNotifications = useMemo(
-    () => notifications.filter((item) => notificationMatchesFilter(item, notificationFilter)),
-    [notifications, notificationFilter]
+    () => notifications.filter((item) => notificationMatchesFilter(item, deferredNotificationFilter)),
+    [notifications, deferredNotificationFilter]
   );
 
   const notificationFilters = [
@@ -2207,24 +2208,26 @@ const journeyProgress = roadmap.length
   ];
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[#050505] px-4 py-6 text-white sm:px-6 sm:py-8">
-      <div className="absolute right-[-20%] top-[-15%] h-[420px] w-[420px] rounded-full bg-[#D4AF37]/10 blur-3xl" />
-      <div className="absolute bottom-[-20%] left-[-20%] h-[420px] w-[420px] rounded-full bg-blue-500/10 blur-3xl" />
+    <section className="relative min-h-screen overflow-hidden bg-[#f7f8fa] px-3 py-4 text-slate-950 sm:px-5 sm:py-6 lg:px-6">
+      <div className="pointer-events-none absolute right-[-16%] top-[-12%] h-[460px] w-[460px] rounded-full bg-orange-200/30 blur-3xl" />
+      <div className="absolute bottom-[-20%] left-[-20%] h-[420px] w-[420px] rounded-full bg-blue-50 blur-3xl" />
 
-      <div className="relative mx-auto max-w-7xl">
-        <header className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-5 backdrop-blur-xl sm:p-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="relative mx-auto w-full max-w-[1800px]">
+        <header className="relative overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.07)] sm:p-7">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-orange-200/35 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-amber-100/70 blur-3xl" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-black uppercase tracking-[0.32em] text-[#D4AF37]">
+                <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-600">
                   Zaifan Student Portal
                 </p>
 
-                <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                <span className="rounded-full border border-emerald-400/20 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
                   Live OS Data
                 </span>
 
-                <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37]">
+                <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600">
                   {sessionMode === "account" ? "Account Login" : "Legacy Session"}
                 </span>
 
@@ -2232,7 +2235,7 @@ const journeyProgress = roadmap.length
                   <button
                     type="button"
                     onClick={() => setActiveTab("notifications")}
-                    className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-red-300 transition hover:bg-red-500/20"
+                    className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-red-700 transition hover:bg-red-500/20"
                   >
                     {urgentNotifications} Urgent
                   </button>
@@ -2249,16 +2252,16 @@ const journeyProgress = roadmap.length
                 ) : null}
               </div>
 
-              <h1 className="mt-3 text-3xl font-black text-white sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-black text-slate-950 sm:text-4xl">
                 Welcome, {getStudentDisplayName(student)}
               </h1>
 
-              <p className="mt-2 text-sm text-white/50">
+              <p className="mt-2 text-sm text-slate-950/50">
                 Student Type: {formatStatus(summary.studentType)} · Student ID:{" "}
                 {summary.studentId || "Not available"}
               </p>
 
-              <p className="mt-1 text-xs text-white/35">
+              <p className="mt-1 text-xs text-slate-950/35">
                 Portal Account: {account?.email || "Legacy lookup account"}
               </p>
             </div>
@@ -2268,7 +2271,7 @@ const journeyProgress = roadmap.length
                 type="button"
                 onClick={handleDashboardRefresh}
                 disabled={loadingData}
-                className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-orange-600 transition hover:bg-[#D4AF37]/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loadingData ? "Refreshing..." : "Refresh"}
               </button>
@@ -2276,7 +2279,7 @@ const journeyProgress = roadmap.length
               <button
                 type="button"
                 onClick={onLogout}
-                className="rounded-full border border-white/10 bg-white/[0.035] px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-white/55 transition hover:border-red-400/30 hover:text-red-300"
+                className="rounded-full border border-slate-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-slate-950/55 transition hover:border-red-400/30 hover:text-red-700"
               >
                 Logout
               </button>
@@ -2314,16 +2317,16 @@ const journeyProgress = roadmap.length
   <MetricCard label="Support" value={supportAnalytics.total} warning={supportAnalytics.urgentOpen > 0} />
 </div>
 
-        <div className="mt-5 rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.055] p-5">
+        <div className="mt-5 rounded-[2rem] border border-orange-200 bg-[#D4AF37]/[0.055] p-5">
           <div className="grid gap-5 xl:grid-cols-[1fr_1.2fr]">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#D4AF37]">
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-600">
                 Portal Command Center
               </p>
-              <h2 className="mt-3 text-2xl font-black text-white">
+              <h2 className="mt-3 text-2xl font-black text-slate-950">
                 Continue your student journey from one place
               </h2>
-              <p className="mt-2 text-sm leading-6 text-white/50">
+              <p className="mt-2 text-sm leading-6 text-slate-950/50">
                 Journey Progress {journeyProgress}% ·
 Health {analytics.overallHealth}% ·
 {urgentActions} urgent action(s) ·
@@ -2337,7 +2340,7 @@ Current stage: {successCenter.stageLabel}
                   {supportAnalytics.urgentOpen} high-priority support request(s) are open. Your counselor can see them in Admin Support Requests.
                 </div>
               ) : supportAnalytics.latestResponse ? (
-                <div className="mt-4 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-200">
                   Latest counselor response is available in Support Center.
                 </div>
               ) : null}
@@ -2353,14 +2356,14 @@ Current stage: {successCenter.stageLabel}
                 <button
                   type="button"
                   onClick={() => setActiveTab("deadlines")}
-                  className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white/55 transition hover:text-white"
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/55 transition hover:text-slate-950"
                 >
                   Check Deadlines
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("success")}
-                  className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white/55 transition hover:text-white"
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/55 transition hover:text-slate-950"
                 >
                   Success Center
                 </button>
@@ -2400,7 +2403,7 @@ Current stage: {successCenter.stageLabel}
           </div>
         </div>
 
-        <nav className="mt-6 flex flex-wrap gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-2">
+        <nav className="mt-6 flex flex-wrap gap-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-2">
           {[
             ["overview", "Overview"],
             ["actions", `Action Center${urgentActions ? ` (${urgentActions})` : ""}`],
@@ -2430,7 +2433,7 @@ Current stage: {successCenter.stageLabel}
               className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                 activeTab === id
                   ? "bg-[#D4AF37] text-black"
-                  : "text-white/45 hover:bg-white/[0.05] hover:text-white"
+                  : "text-slate-950/45 hover:bg-white/[0.05] hover:text-slate-950"
               }`}
             >
               {label}
@@ -2445,10 +2448,10 @@ Current stage: {successCenter.stageLabel}
               <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
                 Student Support Center
               </p>
-              <h3 className="mt-2 text-2xl font-black text-white">
+              <h3 className="mt-2 text-2xl font-black text-slate-950">
                 Ask your counselor and track every response
               </h3>
-              <p className="mt-2 text-sm leading-6 text-white/55">
+              <p className="mt-2 text-sm leading-6 text-slate-950/55">
                 Submit callback, document review, application review, visa help, or general counselor questions. Replies from Zaifan appear here automatically.
               </p>
             </div>
@@ -2458,7 +2461,7 @@ Current stage: {successCenter.stageLabel}
                 {supportAnalytics.urgentOpen} high-priority request(s) are still open. Keep an eye on counselor responses.
               </div>
             ) : supportAnalytics.latestResponse ? (
-              <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-200">
                 Latest counselor response: {supportAnalytics.latestResponse.subject || "Support request response"}
               </div>
             ) : null}
@@ -2472,8 +2475,8 @@ Current stage: {successCenter.stageLabel}
             </div>
 
             <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-              <form onSubmit={handleSupportRequestSubmit} className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5">
-                <p className="text-sm font-black text-white">Create Support Request</p>
+              <form onSubmit={handleSupportRequestSubmit} className="rounded-[2rem] border border-slate-200 bg-white p-5">
+                <p className="text-sm font-black text-slate-950">Create Support Request</p>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {SUPPORT_REQUEST_TYPES.map((item) => (
@@ -2484,39 +2487,39 @@ Current stage: {successCenter.stageLabel}
                       className={`rounded-2xl border p-4 text-left transition ${
                         supportForm.requestType === item.id
                           ? "border-cyan-400/40 bg-cyan-500/10 text-cyan-200"
-                          : "border-white/10 bg-black/20 text-white/55 hover:border-cyan-400/25 hover:text-white"
+                          : "border-slate-200 bg-black/20 text-slate-950/55 hover:border-cyan-400/25 hover:text-slate-950"
                       }`}
                     >
-                      <p className="font-black text-white">{item.icon} {item.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-white/45">{item.description}</p>
+                      <p className="font-black text-slate-950">{item.icon} {item.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-950/45">{item.description}</p>
                     </button>
                   ))}
                 </div>
 
                 <label className="mt-4 block space-y-2">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-white/35">Subject</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-slate-950/35">Subject</span>
                   <input
                     value={supportForm.subject}
                     onChange={(event) => setSupportForm((prev) => ({ ...prev, subject: event.target.value }))}
-                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40"
+                    className="w-full rounded-2xl border border-slate-200 bg-black/35 px-4 py-3 text-sm text-slate-950 outline-none focus:border-cyan-400/40"
                   />
                 </label>
 
                 <label className="mt-4 block space-y-2">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-white/35">Message</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-slate-950/35">Message</span>
                   <textarea
                     value={supportForm.message}
                     onChange={(event) => setSupportForm((prev) => ({ ...prev, message: event.target.value }))}
                     rows={5}
                     placeholder="Write what you need help with. Include document, application, university, CAS, or visa details if relevant."
-                    className="w-full resize-none rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-white/25 focus:border-cyan-400/40"
+                    className="w-full resize-none rounded-2xl border border-slate-200 bg-black/35 px-4 py-3 text-sm leading-6 text-slate-950 outline-none placeholder:text-slate-950/25 focus:border-cyan-400/40"
                   />
                 </label>
 
                 {supportSubmitStatus.message ? (
                   <div className={`mt-4 rounded-2xl border p-3 text-sm ${
                     supportSubmitStatus.type === "success"
-                      ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-200"
                       : "border-orange-400/25 bg-orange-500/10 text-orange-200"
                   }`}>
                     {supportSubmitStatus.message}
@@ -2533,15 +2536,15 @@ Current stage: {successCenter.stageLabel}
               </form>
 
               <div className="space-y-4">
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5">
-                  <p className="text-sm font-black text-white">Support Timeline</p>
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-5">
+                  <p className="text-sm font-black text-slate-950">Support Timeline</p>
                   <div className="mt-4 space-y-3">
                     {supportAnalytics.timeline?.length ? (
                       supportAnalytics.timeline.map((event) => (
                         <SupportTimelineCard key={event.id} event={event} />
                       ))
                     ) : (
-                      <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-white/40">
+                      <p className="rounded-2xl border border-dashed border-slate-200 p-5 text-sm text-slate-950/40">
                         No support activity yet.
                       </p>
                     )}
@@ -2550,15 +2553,15 @@ Current stage: {successCenter.stageLabel}
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5">
-              <p className="text-sm font-black text-white">Request History</p>
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-5">
+              <p className="text-sm font-black text-slate-950">Request History</p>
               <div className="mt-4 space-y-3">
                 {supportRequests.length ? (
                   supportRequests.map((request) => (
                     <SupportRequestHistoryCard key={request.id || `${request.request_type}-${request.created_at}`} request={request} />
                   ))
                 ) : (
-                  <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-white/40">
+                  <p className="rounded-2xl border border-dashed border-slate-200 p-5 text-sm text-slate-950/40">
                     No support requests submitted yet.
                   </p>
                 )}
@@ -2569,7 +2572,7 @@ Current stage: {successCenter.stageLabel}
           {activeTab === "payments" ? (
   <Panel title="Payment Center">
     {localPaymentData.loading ? (
-      <div className="mb-4 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3 text-sm font-bold text-[#D4AF37]">
+      <div className="mb-4 rounded-2xl border border-orange-200 bg-orange-50 p-3 text-sm font-bold text-orange-600">
         Syncing latest payment records from Admin Payment Center...
       </div>
     ) : null}
@@ -2588,36 +2591,36 @@ Current stage: {successCenter.stageLabel}
     </div>
 
     <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-        <p className="text-sm font-black text-white">Invoices</p>
+      <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+        <p className="text-sm font-black text-slate-950">Invoices</p>
 
         <div className="mt-4 space-y-3">
           {invoices.length ? (
             invoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm font-black text-white">
+                    <p className="text-sm font-black text-slate-950">
                       {invoice.title || invoice.invoice_title || `Invoice #${invoice.id}`}
                     </p>
 
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-1 text-xs text-slate-950/40">
                       Due: {formatDate(invoice.due_date)} · Created:{" "}
                       {formatDate(invoice.created_at)}
                     </p>
 
                     {invoice.description || invoice.notes ? (
-                      <p className="mt-2 text-sm leading-6 text-white/45">
+                      <p className="mt-2 text-sm leading-6 text-slate-950/45">
                         {invoice.description || invoice.notes}
                       </p>
                     ) : null}
                   </div>
 
                   <div className="text-left sm:text-right">
-                    <p className="text-lg font-black text-[#D4AF37]">
+                    <p className="text-lg font-black text-orange-600">
                       {formatMoney(
                         invoice.total_amount || invoice.amount || invoice.invoice_amount,
                         invoice.currency || "PKR"
@@ -2644,8 +2647,8 @@ Current stage: {successCenter.stageLabel}
       </div>
 
       <div className="space-y-6">
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-          <p className="text-sm font-black text-white">Payment Summary</p>
+        <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+          <p className="text-sm font-black text-slate-950">Payment Summary</p>
 
           <div className="mt-4 space-y-3">
             <InfoRow label="Total Invoice Amount" value={formatMoney(totalInvoiceAmount)} />
@@ -2655,33 +2658,33 @@ Current stage: {successCenter.stageLabel}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-          <p className="text-sm font-black text-white">Recent Payments</p>
+        <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+          <p className="text-sm font-black text-slate-950">Recent Payments</p>
 
           <div className="mt-4 space-y-3">
             {payments.length ? (
               payments.slice(0, 6).map((payment) => (
                 <div
                   key={payment.id}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-black text-white">
+                      <p className="text-sm font-black text-slate-950">
                         {payment.payment_method || payment.method || "Payment"}
                       </p>
-                      <p className="mt-1 text-xs text-white/40">
+                      <p className="mt-1 text-xs text-slate-950/40">
                         {formatDate(payment.payment_date || payment.created_at)}
                       </p>
                     </div>
 
-                    <p className="text-sm font-black text-emerald-300">
+                    <p className="text-sm font-black text-emerald-700">
                       {formatMoney(payment.amount || payment.paid_amount, payment.currency || "PKR")}
                     </p>
                   </div>
 
                   {payment.notes ? (
-                    <p className="mt-2 text-xs leading-5 text-white/40">
+                    <p className="mt-2 text-xs leading-5 text-slate-950/40">
                       {payment.notes}
                     </p>
                   ) : null}
@@ -2693,22 +2696,22 @@ Current stage: {successCenter.stageLabel}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-          <p className="text-sm font-black text-white">Receipts</p>
+        <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+          <p className="text-sm font-black text-slate-950">Receipts</p>
 
           <div className="mt-4 space-y-3">
             {receipts.length ? (
               receipts.slice(0, 6).map((receipt) => (
                 <div
                   key={receipt.id}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-black text-white">
+                      <p className="text-sm font-black text-slate-950">
                         Receipt Upload
                       </p>
-                      <p className="mt-1 text-xs text-white/40">
+                      <p className="mt-1 text-xs text-slate-950/40">
                         {formatDate(receipt.created_at)}
                       </p>
                     </div>
@@ -2727,7 +2730,7 @@ Current stage: {successCenter.stageLabel}
                       href={receipt.receipt_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-3 inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                      className="mt-3 inline-flex rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
                     >
                       View Receipt
                     </a>
@@ -2754,11 +2757,11 @@ Current stage: {successCenter.stageLabel}
                 </div>
 
                 <div className="mt-5 rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37]">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-600">
                     Next Action
                   </p>
 
-                  <p className="mt-2 text-sm leading-6 text-white/55">
+                  <p className="mt-2 text-sm leading-6 text-slate-950/55">
                     {actionCenterItems?.[0]?.title ||
                       pendingTasks?.[0]?.title ||
                       pendingTasks?.[0]?.description ||
@@ -2769,7 +2772,7 @@ Current stage: {successCenter.stageLabel}
                     <button
                       type="button"
                       onClick={() => setActiveTab(actionCenterItems[0].targetTab || "actions")}
-                      className="mt-4 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                      className="mt-4 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
                     >
                       {actionCenterItems[0].action || "Open Action"}
                     </button>
@@ -2822,8 +2825,8 @@ Current stage: {successCenter.stageLabel}
               <div className="mt-5 rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-sm font-black text-[#D4AF37]">What should I do next?</p>
-                    <p className="mt-2 text-sm leading-6 text-white/45">
+                    <p className="text-sm font-black text-orange-600">What should I do next?</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-950/45">
                       This center combines tasks, document status, application gaps, university planning, CAS readiness, visa readiness, and communication activity into one student action list.
                     </p>
                   </div>
@@ -2831,7 +2834,7 @@ Current stage: {successCenter.stageLabel}
                   <button
                     type="button"
                     onClick={() => setActiveTab("analytics")}
-                    className="w-fit rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                    className="w-fit rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
                   >
                     View Analytics
                   </button>
@@ -2839,9 +2842,9 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Readiness Snapshot</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Readiness Snapshot</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     These scores help show whether the student is ready for application, CAS, and visa stages.
                   </p>
 
@@ -2873,18 +2876,18 @@ Current stage: {successCenter.stageLabel}
 
           {activeTab === "roadmap" ? (
             <Panel title="Journey Roadmap">
-              <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4">
+              <div className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 p-4">
   <div className="flex items-center justify-between">
-    <span className="text-sm font-bold text-white">
+    <span className="text-sm font-bold text-slate-950">
       Overall Journey Progress
     </span>
 
-    <span className="text-[#D4AF37] font-black">
+    <span className="text-orange-600 font-black">
       {journeyProgress}%
     </span>
   </div>
 
-  <div className="mt-3 h-3 overflow-hidden rounded-full bg-white/10">
+  <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
     <div
       className="h-full rounded-full bg-[#D4AF37]"
       style={{ width: `${journeyProgress}%` }}
@@ -2898,8 +2901,8 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
-                <p className="text-sm font-black text-[#D4AF37]">Student Journey Path</p>
-                <p className="mt-2 text-sm leading-6 text-white/45">
+                <p className="text-sm font-black text-orange-600">Student Journey Path</p>
+                <p className="mt-2 text-sm leading-6 text-slate-950/45">
                   The roadmap is generated from visible application, offer, CAS, and visa status. Completed steps are marked automatically.
                 </p>
               </div>
@@ -2915,18 +2918,18 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 grid gap-4 xl:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Current Stage</p>
-                  <p className="mt-3 text-2xl font-black text-[#D4AF37]">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Current Stage</p>
+                  <p className="mt-3 text-2xl font-black text-orange-600">
                     {roadmap.find((step) => step.active)?.title || "Journey Complete"}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     {roadmap.find((step) => step.active)?.description || "All visible journey stages are complete."}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Milestones</p>
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Milestones</p>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     {roadmap.map((step) => (
                       <InfoRow
@@ -2945,24 +2948,24 @@ Current stage: {successCenter.stageLabel}
           {activeTab === "success" ? (
             <Panel title="Student Success Center">
               <div className="grid gap-4 xl:grid-cols-3">
-                <div className="rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+                <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
                     Current Journey Stage
                   </p>
-                  <p className="mt-3 text-3xl font-black text-white">{successCenter.stageLabel}</p>
-                  <p className="mt-3 text-sm leading-6 text-white/50">
+                  <p className="mt-3 text-3xl font-black text-slate-950">{successCenter.stageLabel}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-950/50">
                     This stage is inferred from your visible application, offer, CAS, and visa status.
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-950/35">
                     Best Next Step
                   </p>
-                  <p className="mt-3 text-xl font-black text-white">
+                  <p className="mt-3 text-xl font-black text-slate-950">
                     {successCenter.activeAction?.title || "Check your portal regularly"}
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-white/50">
+                  <p className="mt-3 text-sm leading-6 text-slate-950/50">
                     {successCenter.activeAction?.message || "No urgent guidance is currently visible."}
                   </p>
 
@@ -2970,22 +2973,22 @@ Current stage: {successCenter.stageLabel}
                     <button
                       type="button"
                       onClick={() => setActiveTab(successCenter.activeAction.targetTab || "actions")}
-                      className="mt-4 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                      className="mt-4 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
                     >
                       {successCenter.activeAction.action || "Open"}
                     </button>
                   ) : null}
                 </div>
 
-                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
+                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">
                     Portal Health
                   </p>
-                  <p className="mt-3 text-3xl font-black text-white">{analytics.overallHealth}%</p>
+                  <p className="mt-3 text-3xl font-black text-slate-950">{analytics.overallHealth}%</p>
                   <div className="mt-4">
                     <ProgressBar value={analytics.overallHealth} />
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-white/50">
+                  <p className="mt-3 text-sm leading-6 text-slate-950/50">
                     Based on journey progress, documents, tasks, universities, communication, and alerts.
                   </p>
                 </div>
@@ -2993,8 +2996,8 @@ Current stage: {successCenter.stageLabel}
 
               <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_1fr]">
                 <div className="rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
-                  <p className="text-sm font-black text-[#D4AF37]">Smart Guidance</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                  <p className="text-sm font-black text-orange-600">Smart Guidance</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     These tips are generated from your visible Student OS data and readiness scores.
                   </p>
 
@@ -3009,9 +3012,9 @@ Current stage: {successCenter.stageLabel}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Readiness Guide</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Readiness Guide</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     Use these scores to understand what affects application, CAS, and visa progress.
                   </p>
 
@@ -3025,11 +3028,11 @@ Current stage: {successCenter.stageLabel}
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-black/25 p-5">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm font-black text-white">Student Help Library</p>
-                    <p className="mt-2 text-sm leading-6 text-white/45">
+                    <p className="text-sm font-black text-slate-950">Student Help Library</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-950/45">
                       Quick explanations for the most common student journey questions.
                     </p>
                   </div>
@@ -3037,7 +3040,7 @@ Current stage: {successCenter.stageLabel}
                   <button
                     type="button"
                     onClick={() => setActiveTab("actions")}
-                    className="w-fit rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                    className="w-fit rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
                   >
                     Open Action Center
                   </button>
@@ -3054,8 +3057,8 @@ Current stage: {successCenter.stageLabel}
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-5">
-                <p className="text-sm font-black text-white">Common Questions</p>
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-black/25 p-5">
+                <p className="text-sm font-black text-slate-950">Common Questions</p>
                 <div className="mt-5 grid gap-4 xl:grid-cols-2">
                   {successCenter.faqs.map((faq) => (
                     <FAQCard key={faq.question} faq={faq} />
@@ -3077,8 +3080,8 @@ Current stage: {successCenter.stageLabel}
               <div className="mt-5 rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-sm font-black text-[#D4AF37]">Deadline Intelligence</p>
-                    <p className="mt-2 text-sm leading-6 text-white/45">
+                    <p className="text-sm font-black text-orange-600">Deadline Intelligence</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-950/45">
                       This center reads task due dates, document dates, application deadlines, CAS timing, visa timing, and readiness risks from visible Student OS data.
                     </p>
                   </div>
@@ -3086,7 +3089,7 @@ Current stage: {successCenter.stageLabel}
                   <button
                     type="button"
                     onClick={() => setActiveTab("actions")}
-                    className="w-fit rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                    className="w-fit rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
                   >
                     Open Action Center
                   </button>
@@ -3094,9 +3097,9 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Deadline Readiness</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Deadline Readiness</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     Deadlines become risky when readiness is low. Keep documents, tasks, CAS, and visa preparation ahead of time.
                   </p>
 
@@ -3136,8 +3139,8 @@ Current stage: {successCenter.stageLabel}
 
               <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
                 <div className="rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
-                  <p className="text-sm font-black text-[#D4AF37]">Contact Guidance</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                  <p className="text-sm font-black text-orange-600">Contact Guidance</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     Use this section when you need help with rejected documents, urgent deadlines, application status, offer acceptance, CAS, or visa preparation.
                   </p>
 
@@ -3151,33 +3154,33 @@ Current stage: {successCenter.stageLabel}
 
                 <div className="space-y-3">
                   {counselorCenter.guidance.map((item) => (
-                    <div key={item.title} className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                      <p className="font-black text-white">{item.title}</p>
-                      <p className="mt-2 text-sm leading-6 text-white/50">{item.message}</p>
+                    <div key={item.title} className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                      <p className="font-black text-slate-950">{item.title}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-950/50">{item.message}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-black/25 p-4">
+              <div className="mt-5 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-black/25 p-4">
                 <button
                   type="button"
                   onClick={() => setActiveTab("messages")}
-                  className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                  className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
                 >
                   Open Messages
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("timeline")}
-                  className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white/55 transition hover:border-[#D4AF37]/20 hover:text-white"
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/55 transition hover:border-orange-200 hover:text-slate-950"
                 >
                   View Timeline
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("actions")}
-                  className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white/55 transition hover:border-[#D4AF37]/20 hover:text-white"
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/55 transition hover:border-orange-200 hover:text-slate-950"
                 >
                   Check Actions
                 </button>
@@ -3197,8 +3200,8 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 grid gap-5 xl:grid-cols-2">
-                <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Invoices</p>
+                <div className="rounded-[1.5rem] border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Invoices</p>
                   <div className="mt-4 space-y-3">
                     {invoices.length ? invoices.map((invoice) => (
                       <RecordCard
@@ -3216,8 +3219,8 @@ Current stage: {successCenter.stageLabel}
                   </div>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Payments & Receipts</p>
+                <div className="rounded-[1.5rem] border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Payments & Receipts</p>
                   <div className="mt-4 space-y-3">
                     {payments.length ? payments.map((payment) => (
                       <RecordCard
@@ -3254,25 +3257,25 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 grid gap-5 xl:grid-cols-2">
-                <form onSubmit={handleReceiptUploadSubmit} className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
-                  <p className="text-sm font-black text-[#D4AF37]">Upload Payment Receipt</p>
-                  <p className="mt-2 text-sm leading-6 text-white/55">
+                <form onSubmit={handleReceiptUploadSubmit} className="rounded-[1.5rem] border border-orange-200 bg-[#D4AF37]/[0.04] p-5">
+                  <p className="text-sm font-black text-orange-600">Upload Payment Receipt</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/55">
                     Upload your payment proof here. The Zaifan team will review and approve it from Admin Payment Center.
                   </p>
 
                   {receiptUploadStatus.message ? (
-                    <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3 text-sm text-white/65">
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-black/25 p-3 text-sm text-slate-950/65">
                       {receiptUploadStatus.message}
                     </div>
                   ) : null}
 
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Invoice</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-950/35">Invoice</span>
                       <select
                         value={receiptForm.invoiceId}
                         onChange={(event) => setReceiptForm((prev) => ({ ...prev, invoiceId: event.target.value }))}
-                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                        className="w-full rounded-2xl border border-slate-200 bg-black/40 px-4 py-3 text-sm text-slate-950 outline-none focus:border-[#D4AF37]/50"
                       >
                         <option value="">General receipt / no invoice</option>
                         {invoices.map((invoice) => (
@@ -3284,55 +3287,55 @@ Current stage: {successCenter.stageLabel}
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Amount</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-950/35">Amount</span>
                       <input
                         type="number"
                         value={receiptForm.amount}
                         onChange={(event) => setReceiptForm((prev) => ({ ...prev, amount: event.target.value }))}
-                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                        className="w-full rounded-2xl border border-slate-200 bg-black/40 px-4 py-3 text-sm text-slate-950 outline-none focus:border-[#D4AF37]/50"
                       />
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Currency</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-950/35">Currency</span>
                       <input
                         value={receiptForm.currency}
                         onChange={(event) => setReceiptForm((prev) => ({ ...prev, currency: event.target.value }))}
-                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                        className="w-full rounded-2xl border border-slate-200 bg-black/40 px-4 py-3 text-sm text-slate-950 outline-none focus:border-[#D4AF37]/50"
                       />
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Reference Number</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-950/35">Reference Number</span>
                       <input
                         value={receiptForm.reference}
                         onChange={(event) => setReceiptForm((prev) => ({ ...prev, reference: event.target.value }))}
                         placeholder="Transaction ID / bank reference"
-                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                        className="w-full rounded-2xl border border-slate-200 bg-black/40 px-4 py-3 text-sm text-slate-950 outline-none focus:border-[#D4AF37]/50"
                       />
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Receipt File</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-950/35">Receipt File</span>
                       <input
                         type="file"
                         accept="image/*,.pdf"
                         onChange={(event) => setReceiptForm((prev) => ({ ...prev, file: event.target.files?.[0] || null }))}
-                        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                        className="w-full rounded-2xl border border-slate-200 bg-black/40 px-4 py-3 text-sm text-slate-950 outline-none focus:border-[#D4AF37]/50"
                       />
                       {receiptForm.file ? (
-                        <p className="text-xs text-emerald-300">
+                        <p className="text-xs text-emerald-700">
                           Selected: {receiptForm.file.name}
                         </p>
                       ) : null}
                     </label>
 
                     <label className="space-y-2 md:col-span-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Notes / Reference</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-950/35">Notes / Reference</span>
                       <textarea
                         value={receiptForm.notes}
                         onChange={(event) => setReceiptForm((prev) => ({ ...prev, notes: event.target.value }))}
-                        className="min-h-[90px] w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                        className="min-h-[90px] w-full rounded-2xl border border-slate-200 bg-black/40 px-4 py-3 text-sm text-slate-950 outline-none focus:border-[#D4AF37]/50"
                       />
                     </label>
                   </div>
@@ -3346,8 +3349,8 @@ Current stage: {successCenter.stageLabel}
                   </button>
                 </form>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Payment Accounts</p>
+                <div className="rounded-[1.5rem] border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Payment Accounts</p>
                   <div className="mt-4 space-y-3">
                     {paymentAccounts.length ? paymentAccounts.map((account) => (
                       <RecordCard
@@ -3367,8 +3370,8 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               {paymentRequests.length ? (
-                <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Counselor Payment Requests</p>
+                <div className="mt-5 rounded-[1.5rem] border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Counselor Payment Requests</p>
                   <div className="mt-4 grid gap-3 xl:grid-cols-2">
                     {paymentRequests.map((request) => (
                       <RecordCard
@@ -3393,7 +3396,7 @@ Current stage: {successCenter.stageLabel}
     <div className="space-y-6">
 
       <div>
-        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-orange-600">
           Personal Information
         </h3>
 
@@ -3437,7 +3440,7 @@ Current stage: {successCenter.stageLabel}
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-orange-600">
           Journey Status
         </h3>
 
@@ -3465,7 +3468,7 @@ Current stage: {successCenter.stageLabel}
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-orange-600">
           Student OS Progress
         </h3>
 
@@ -3503,7 +3506,7 @@ Current stage: {successCenter.stageLabel}
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-orange-600">
           Portal Information
         </h3>
 
@@ -3731,9 +3734,9 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm font-black text-white">Progress Breakdown</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+                  <p className="text-sm font-black text-slate-950">Progress Breakdown</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     This breakdown uses visible Student OS records only. Admin-only notes and private internal data stay hidden from the student portal.
                   </p>
 
@@ -3749,13 +3752,13 @@ Current stage: {successCenter.stageLabel}
                 <div className="rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-[#D4AF37]">Recommended Focus</p>
-                      <p className="mt-2 text-sm leading-6 text-white/45">
+                      <p className="text-sm font-black text-orange-600">Recommended Focus</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-950/45">
                         Smart student-facing recommendations based on your visible portal data.
                       </p>
                     </div>
 
-                    <span className="w-fit rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37]">
+                    <span className="w-fit rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600">
                       {analytics.notificationPressure} Alert Signals
                     </span>
                   </div>
@@ -3789,18 +3792,18 @@ Current stage: {successCenter.stageLabel}
                     key={item.title}
                     className="rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5"
                   >
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37]">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-600">
                       {item.title}
                     </p>
-                    <p className="mt-3 text-2xl font-black text-white">{item.value}</p>
-                    <p className="mt-2 text-sm leading-6 text-white/45">{item.note}</p>
+                    <p className="mt-3 text-2xl font-black text-slate-950">{item.value}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-950/45">{item.note}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-5">
-                <p className="text-sm font-black text-white">Portal Intelligence Note</p>
-                <p className="mt-2 text-sm leading-6 text-white/45">
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-black/25 p-5">
+                <p className="text-sm font-black text-slate-950">Portal Intelligence Note</p>
+                <p className="mt-2 text-sm leading-6 text-slate-950/45">
                   This tab is the student-facing foundation for Executive AI visibility. Later,
                   Admin OS can choose which insights students are allowed to see.
                 </p>
@@ -3817,7 +3820,7 @@ Current stage: {successCenter.stageLabel}
                 <NotificationStat label="Messages" value={communications.length} />
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-black/25 p-3">
+              <div className="mt-5 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-black/25 p-3">
                 {notificationFilters.map(([id, label, count]) => (
                   <button
                     key={id}
@@ -3826,7 +3829,7 @@ Current stage: {successCenter.stageLabel}
                     className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                       notificationFilter === id
                         ? "bg-[#D4AF37] text-black"
-                        : "border border-white/10 bg-white/[0.035] text-white/45 hover:border-[#D4AF37]/25 hover:text-white"
+                        : "border border-slate-200 bg-white text-slate-950/45 hover:border-orange-200 hover:text-slate-950"
                     }`}
                   >
                     {label} {Number(count) ? `(${count})` : ""}
@@ -3835,8 +3838,8 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
-                <p className="text-sm font-black text-[#D4AF37]">Notification Intelligence</p>
-                <p className="mt-2 text-sm leading-6 text-white/45">
+                <p className="text-sm font-black text-orange-600">Notification Intelligence</p>
+                <p className="mt-2 text-sm leading-6 text-slate-950/45">
                   Showing {filteredNotifications.length} of {notifications.length} notification(s).
                   Use filters to focus on urgent work, documents, tasks, applications, visa updates, and messages.
                 </p>
@@ -3861,49 +3864,49 @@ Current stage: {successCenter.stageLabel}
           {activeTab === "settings" ? (
             <Panel title="Portal Settings">
               <div className="grid gap-4 xl:grid-cols-3">
-                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-5">
+                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-50 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
+                      <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
                         Account Status
                       </p>
-                      <p className="mt-3 text-2xl font-black text-white">
+                      <p className="mt-3 text-2xl font-black text-slate-950">
                         {sessionMode === "account" ? "Secure Login" : "Legacy Access"}
                       </p>
                     </div>
 
-                    <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
                       Active
                     </span>
                   </div>
 
-                  <p className="mt-3 text-sm leading-6 text-white/55">
+                  <p className="mt-3 text-sm leading-6 text-slate-950/55">
                     {sessionMode === "account"
                       ? "This portal session is linked to an active student portal account."
                       : "This portal session is using legacy lookup while account migration continues."}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/[0.06] p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37]">
+                <div className="rounded-2xl border border-orange-200 bg-[#D4AF37]/[0.06] p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-600">
                     Linked Student Record
                   </p>
-                  <p className="mt-3 text-2xl font-black text-white">
+                  <p className="mt-3 text-2xl font-black text-slate-950">
                     {formatStatus(summary.studentType)} #{summary.studentId || "N/A"}
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-white/55">
+                  <p className="mt-3 text-sm leading-6 text-slate-950/55">
                     Your portal reads directly from your Zaifan Student OS record.
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-blue-400/20 bg-blue-500/10 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-300">
+                <div className="rounded-2xl border border-blue-400/20 bg-blue-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-700">
                     Session Status
                   </p>
-                  <p className="mt-3 text-2xl font-black text-white">
+                  <p className="mt-3 text-2xl font-black text-slate-950">
                     {loadingData ? "Syncing" : "Ready"}
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-white/55">
+                  <p className="mt-3 text-sm leading-6 text-slate-950/55">
                     {loadingData
                       ? "Latest Student OS data is currently refreshing."
                       : "Your visible student data has loaded successfully."}
@@ -3912,16 +3915,16 @@ Current stage: {successCenter.stageLabel}
               </div>
 
               <div className="mt-5 grid gap-4 xl:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-white">Account Details</p>
-                      <p className="mt-2 text-sm leading-6 text-white/45">
+                      <p className="text-sm font-black text-slate-950">Account Details</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-950/45">
                         Your access details and linked student identity.
                       </p>
                     </div>
 
-                    <span className="w-fit rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37]">
+                    <span className="w-fit rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600">
                       {sessionMode === "account" ? "Email Login" : "Legacy Mode"}
                     </span>
                   </div>
@@ -3934,16 +3937,16 @@ Current stage: {successCenter.stageLabel}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-white">Portal Visibility</p>
-                      <p className="mt-2 text-sm leading-6 text-white/45">
+                      <p className="text-sm font-black text-slate-950">Portal Visibility</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-950/45">
                         These sections are currently visible from your Student OS record.
                       </p>
                     </div>
 
-                    <span className="w-fit rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                    <span className="w-fit rounded-full border border-emerald-400/20 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
                       Live Data
                     </span>
                   </div>
@@ -3961,8 +3964,8 @@ Current stage: {successCenter.stageLabel}
 
               <div className="mt-5 grid gap-4 xl:grid-cols-3">
                 <div className="rounded-2xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-5">
-                  <p className="text-sm font-black text-[#D4AF37]">Security</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                  <p className="text-sm font-black text-orange-600">Security</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     Portal access is verified before opening student data. Keep your login details private and logout on shared devices.
                   </p>
 
@@ -3972,9 +3975,9 @@ Current stage: {successCenter.stageLabel}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-blue-400/15 bg-blue-500/10 p-5">
-                  <p className="text-sm font-black text-blue-300">Data Permissions</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                <div className="rounded-2xl border border-blue-400/15 bg-blue-50 p-5">
+                  <p className="text-sm font-black text-blue-700">Data Permissions</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     Students can only see portal-safe information connected to their own Student OS journey.
                   </p>
 
@@ -3986,7 +3989,7 @@ Current stage: {successCenter.stageLabel}
 
                 <div className="rounded-2xl border border-orange-400/15 bg-orange-500/10 p-5">
                   <p className="text-sm font-black text-orange-300">Password Change</p>
-                  <p className="mt-2 text-sm leading-6 text-white/45">
+                  <p className="mt-2 text-sm leading-6 text-slate-950/45">
                     Secure password-change UI is ready here. Backend connection is handled through the optional onPasswordChange action from StudentPortalPage.
                   </p>
 
@@ -4001,7 +4004,7 @@ Current stage: {successCenter.stageLabel}
                         }))
                       }
                       placeholder="Current password"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#D4AF37]/40"
+                      className="w-full rounded-2xl border border-slate-200 bg-black/30 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-950/25 focus:border-[#D4AF37]/40"
                     />
 
                     <input
@@ -4014,7 +4017,7 @@ Current stage: {successCenter.stageLabel}
                         }))
                       }
                       placeholder="New password"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#D4AF37]/40"
+                      className="w-full rounded-2xl border border-slate-200 bg-black/30 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-950/25 focus:border-[#D4AF37]/40"
                     />
 
                     <input
@@ -4027,16 +4030,16 @@ Current stage: {successCenter.stageLabel}
                         }))
                       }
                       placeholder="Confirm new password"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#D4AF37]/40"
+                      className="w-full rounded-2xl border border-slate-200 bg-black/30 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-950/25 focus:border-[#D4AF37]/40"
                     />
 
                     {passwordStatus.message ? (
                       <div
                         className={`rounded-2xl border p-3 text-sm ${
                           passwordStatus.type === "success"
-                            ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+                            ? "border-emerald-400/20 bg-emerald-50 text-emerald-200"
                             : passwordStatus.type === "info"
-                              ? "border-blue-400/20 bg-blue-500/10 text-blue-200"
+                              ? "border-blue-400/20 bg-blue-50 text-blue-200"
                               : "border-orange-400/20 bg-orange-500/10 text-orange-200"
                         }`}
                       >
@@ -4053,11 +4056,11 @@ Current stage: {successCenter.stageLabel}
                     </button>
                   </form>
 
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-black/25 p-4">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-950/35">
                       Current Status
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-white/45">
+                    <p className="mt-2 text-sm leading-6 text-slate-950/45">
                       {sessionMode === "account"
                         ? "Account login is active. UI validation is ready; connect backend action for real password updates."
                         : "Legacy lookup remains enabled during migration. Password change unlocks after account login migration."}
@@ -4066,27 +4069,27 @@ Current stage: {successCenter.stageLabel}
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-black/25 p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-sm font-black text-white">Portal Health Summary</p>
-                    <p className="mt-2 text-sm leading-6 text-white/45">
+                    <p className="text-sm font-black text-slate-950">Portal Health Summary</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-950/45">
                       Your portal is connected to applications, documents, tasks, universities, communications, timeline events, and student notifications.
                     </p>
                   </div>
 
                   <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[420px]">
-                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-center">
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">Account</p>
-                      <p className="mt-2 text-sm font-black text-white">Active</p>
+                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-50 p-4 text-center">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">Account</p>
+                      <p className="mt-2 text-sm font-black text-slate-950">Active</p>
                     </div>
-                    <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-center">
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D4AF37]">Notifications</p>
-                      <p className="mt-2 text-sm font-black text-white">{notifications.length}</p>
+                    <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-center">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">Notifications</p>
+                      <p className="mt-2 text-sm font-black text-slate-950">{notifications.length}</p>
                     </div>
-                    <div className="rounded-2xl border border-blue-400/20 bg-blue-500/10 p-4 text-center">
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-300">Refresh</p>
-                      <p className="mt-2 text-sm font-black text-white">{loadingData ? "Syncing" : "Ready"}</p>
+                    <div className="rounded-2xl border border-blue-400/20 bg-blue-50 p-4 text-center">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">Refresh</p>
+                      <p className="mt-2 text-sm font-black text-slate-950">{loadingData ? "Syncing" : "Ready"}</p>
                     </div>
                   </div>
                 </div>
@@ -4105,12 +4108,12 @@ function QuickLaunchCard({ label, value, onOpen = () => {} }) {
     <button
       type="button"
       onClick={onOpen}
-      className="rounded-2xl border border-white/10 bg-black/25 p-4 text-left transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.04]"
+      className="rounded-2xl border border-slate-200 bg-black/25 p-4 text-left transition hover:border-orange-200 hover:bg-[#D4AF37]/[0.04]"
     >
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-950/35">
         {label}
       </p>
-      <p className="mt-2 line-clamp-2 text-sm font-black text-white">
+      <p className="mt-2 line-clamp-2 text-sm font-black text-slate-950">
         {value || "Open"}
       </p>
     </button>
@@ -4132,21 +4135,21 @@ function MetricCard({ label, value, warning = false }) {
       className={`rounded-2xl border p-4 ${
         warning
           ? "border-orange-400/20 bg-orange-500/10"
-          : "border-white/10 bg-white/[0.035]"
+          : "border-slate-200 bg-white"
       }`}
     >
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-950/35">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-white">{value || 0}</p>
+      <p className="mt-2 text-2xl font-black text-slate-950">{value || 0}</p>
     </div>
   );
 }
 
 function Panel({ title, children }) {
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-6">
-      <h2 className="text-xl font-black text-white">{title}</h2>
+    <div className="rounded-[2rem] border border-slate-200 bg-white p-6">
+      <h2 className="text-xl font-black text-slate-950">{title}</h2>
       <div className="mt-5">{children}</div>
     </div>
   );
@@ -4154,11 +4157,11 @@ function Panel({ title, children }) {
 
 function InfoRow({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-2xl border border-slate-200 bg-black/25 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-950/35">
         {label}
       </p>
-      <p className="mt-2 break-words text-sm font-semibold text-white/75">
+      <p className="mt-2 break-words text-sm font-semibold text-slate-950/75">
         {value || "Not added"}
       </p>
     </div>
@@ -4167,7 +4170,7 @@ function InfoRow({ label, value }) {
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 text-sm text-white/40">
+    <div className="rounded-2xl border border-slate-200 bg-black/25 p-5 text-sm text-slate-950/40">
       {text}
     </div>
   );
@@ -4191,10 +4194,10 @@ function RecordGrid({ title, rows = [], empty, render }) {
 
 function RecordCard({ title, description, meta = [] }) {
   return (
-    <div className="h-full rounded-2xl border border-white/10 bg-black/25 p-5">
-      <h3 className="break-words font-black text-white">{title}</h3>
+    <div className="h-full rounded-2xl border border-slate-200 bg-black/25 p-5">
+      <h3 className="break-words font-black text-slate-950">{title}</h3>
 
-      <p className="mt-2 line-clamp-4 text-sm leading-6 text-white/45">
+      <p className="mt-2 line-clamp-4 text-sm leading-6 text-slate-950/45">
         {description || "No extra details."}
       </p>
 
@@ -4204,7 +4207,7 @@ function RecordCard({ title, description, meta = [] }) {
           .map(([label, value]) => (
             <span
               key={`${label}-${value}`}
-              className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[11px] text-white/45"
+              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] text-slate-950/45"
             >
               {label}: {value}
             </span>
@@ -4221,57 +4224,57 @@ function ActionStat({ label, value, urgent = false, warning = false }) {
     <div
       className={`rounded-2xl border p-4 ${
         urgent
-          ? "border-red-400/25 bg-red-500/10"
+          ? "border-red-200 bg-red-50"
           : warning
             ? "border-orange-400/25 bg-orange-500/10"
-            : "border-white/10 bg-black/25"
+            : "border-slate-200 bg-black/25"
       }`}
     >
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-950/35">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-white">{value || 0}</p>
+      <p className="mt-2 text-2xl font-black text-slate-950">{value || 0}</p>
     </div>
   );
 }
 
 function ActionItem({ item, onOpen = () => {} }) {
   const styles = {
-    urgent: "border-red-400/25 bg-red-500/10",
+    urgent: "border-red-200 bg-red-50",
     important: "border-orange-400/25 bg-orange-500/10",
-    normal: "border-blue-400/25 bg-blue-500/10",
-    success: "border-emerald-400/25 bg-emerald-500/10",
+    normal: "border-blue-200 bg-blue-50",
+    success: "border-emerald-200 bg-emerald-50",
   };
 
   const badgeStyles = {
-    urgent: "border-red-400/25 bg-red-500/10 text-red-300",
+    urgent: "border-red-200 bg-red-50 text-red-700",
     important: "border-orange-400/25 bg-orange-500/10 text-orange-300",
-    normal: "border-blue-400/25 bg-blue-500/10 text-blue-300",
-    success: "border-emerald-400/25 bg-emerald-500/10 text-emerald-300",
+    normal: "border-blue-200 bg-blue-50 text-blue-700",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
   };
 
   return (
-    <div className={`rounded-2xl border p-5 ${styles[item.priority] || "border-white/10 bg-black/25"}`}>
+    <div className={`rounded-2xl border p-5 ${styles[item.priority] || "border-slate-200 bg-black/25"}`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${badgeStyles[item.priority] || "border-white/10 bg-white/[0.04] text-white/45"}`}>
+            <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${badgeStyles[item.priority] || "border-slate-200 bg-white text-slate-950/45"}`}>
               {formatStatus(item.priority)}
             </span>
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/45">
               {item.source}
             </span>
           </div>
-          <p className="mt-3 font-black text-white">{item.title}</p>
-          <p className="mt-2 text-sm leading-6 text-white/50">{item.message}</p>
+          <p className="mt-3 font-black text-slate-950">{item.title}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-950/50">{item.message}</p>
         </div>
 
         <div className="flex flex-col gap-2 lg:items-end">
-          <p className="text-xs text-white/35">{formatDate(item.date)}</p>
+          <p className="text-xs text-slate-950/35">{formatDate(item.date)}</p>
           <button
             type="button"
             onClick={onOpen}
-            className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+            className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
           >
             {item.action}
           </button>
@@ -4283,13 +4286,13 @@ function ActionItem({ item, onOpen = () => {} }) {
 
 function ReadinessCard({ title, value }) {
   return (
-    <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/[0.06] p-5">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+    <div className="rounded-2xl border border-orange-200 bg-[#D4AF37]/[0.06] p-5">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
         {title}
       </p>
       <div className="mt-4 flex items-end gap-2">
-        <p className="text-4xl font-black text-white">{clampPercent(value)}</p>
-        <p className="pb-1 text-sm font-black text-white/35">%</p>
+        <p className="text-4xl font-black text-slate-950">{clampPercent(value)}</p>
+        <p className="pb-1 text-sm font-black text-slate-950/35">%</p>
       </div>
       <div className="mt-4">
         <ProgressBar value={value} />
@@ -4305,75 +4308,75 @@ function JourneyStep({ step, onOpen = () => {} }) {
       onClick={onOpen}
       className={`rounded-2xl border p-4 text-left transition ${
         step.complete
-          ? "border-emerald-400/25 bg-emerald-500/10"
+          ? "border-emerald-200 bg-emerald-50"
           : step.active
-            ? "border-[#D4AF37]/30 bg-[#D4AF37]/10"
-            : "border-white/10 bg-black/25 hover:border-[#D4AF37]/20"
+            ? "border-[#D4AF37]/30 bg-orange-50"
+            : "border-slate-200 bg-black/25 hover:border-orange-200"
       }`}
     >
       <div className="flex items-center gap-2">
         <span
           className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-black ${
             step.complete
-              ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : step.active
-                ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
-                : "border-white/10 bg-white/[0.035] text-white/35"
+                ? "border-orange-200 bg-orange-50 text-orange-600"
+                : "border-slate-200 bg-white text-slate-950/35"
           }`}
         >
           {step.complete ? "✓" : step.index + 1}
         </span>
-        <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white/35">
+        <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/35">
           {step.active ? "Current" : step.complete ? "Done" : "Pending"}
         </span>
       </div>
-      <p className="mt-4 text-sm font-black text-white">{step.title}</p>
-      <p className="mt-2 text-xs leading-5 text-white/45">{step.description}</p>
+      <p className="mt-4 text-sm font-black text-slate-950">{step.title}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-950/45">{step.description}</p>
     </button>
   );
 }
 
 function DeadlineItem({ item, onOpen = () => {} }) {
   const styles = {
-    urgent: "border-red-400/25 bg-red-500/10",
+    urgent: "border-red-200 bg-red-50",
     important: "border-orange-400/25 bg-orange-500/10",
-    normal: "border-blue-400/25 bg-blue-500/10",
-    success: "border-emerald-400/25 bg-emerald-500/10",
+    normal: "border-blue-200 bg-blue-50",
+    success: "border-emerald-200 bg-emerald-50",
   };
 
   const badgeStyles = {
-    urgent: "border-red-400/25 bg-red-500/10 text-red-300",
+    urgent: "border-red-200 bg-red-50 text-red-700",
     important: "border-orange-400/25 bg-orange-500/10 text-orange-300",
-    normal: "border-blue-400/25 bg-blue-500/10 text-blue-300",
-    success: "border-emerald-400/25 bg-emerald-500/10 text-emerald-300",
+    normal: "border-blue-200 bg-blue-50 text-blue-700",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
   };
 
   return (
-    <div className={`rounded-2xl border p-5 ${styles[item.priority] || "border-white/10 bg-black/25"}`}>
+    <div className={`rounded-2xl border p-5 ${styles[item.priority] || "border-slate-200 bg-black/25"}`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${badgeStyles[item.priority] || "border-white/10 bg-white/[0.04] text-white/45"}`}>
+            <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${badgeStyles[item.priority] || "border-slate-200 bg-white text-slate-950/45"}`}>
               {formatStatus(item.priority)}
             </span>
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/45">
               {item.source}
             </span>
-            <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37]">
+            <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600">
               {item.label}
             </span>
           </div>
 
-          <p className="mt-3 font-black text-white">{item.title}</p>
-          <p className="mt-2 text-sm leading-6 text-white/50">{item.message}</p>
+          <p className="mt-3 font-black text-slate-950">{item.title}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-950/50">{item.message}</p>
         </div>
 
         <div className="flex flex-col gap-2 lg:items-end">
-          <p className="text-xs text-white/35">{formatDate(item.date)}</p>
+          <p className="text-xs text-slate-950/35">{formatDate(item.date)}</p>
           <button
             type="button"
             onClick={onOpen}
-            className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+            className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
           >
             {item.action}
           </button>
@@ -4385,11 +4388,11 @@ function DeadlineItem({ item, onOpen = () => {} }) {
 
 function CounselorContactCard({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-2xl border border-slate-200 bg-black/25 p-5">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-950/35">
         {label}
       </p>
-      <p className="mt-3 break-words text-xl font-black text-white">{value || "Not added"}</p>
+      <p className="mt-3 break-words text-xl font-black text-slate-950">{value || "Not added"}</p>
     </div>
   );
 }
@@ -4399,28 +4402,28 @@ function AnalyticsCard({ title, value, note, highlight = false }) {
     <div
       className={`rounded-2xl border p-5 ${
         highlight
-          ? "border-[#D4AF37]/25 bg-[#D4AF37]/10"
-          : "border-white/10 bg-black/25"
+          ? "border-orange-200 bg-orange-50"
+          : "border-slate-200 bg-black/25"
       }`}
     >
-      <p className={`text-xs font-black uppercase tracking-[0.18em] ${highlight ? "text-[#D4AF37]" : "text-white/35"}`}>
+      <p className={`text-xs font-black uppercase tracking-[0.18em] ${highlight ? "text-orange-600" : "text-slate-950/35"}`}>
         {title}
       </p>
       <div className="mt-4 flex items-end gap-2">
-        <p className="text-4xl font-black text-white">{value}</p>
-        <p className="pb-1 text-sm font-black text-white/35">%</p>
+        <p className="text-4xl font-black text-slate-950">{value}</p>
+        <p className="pb-1 text-sm font-black text-slate-950/35">%</p>
       </div>
       <div className="mt-4">
         <ProgressBar value={value} />
       </div>
-      <p className="mt-3 text-sm leading-6 text-white/45">{note}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-950/45">{note}</p>
     </div>
   );
 }
 
 function ProgressBar({ value = 0 }) {
   return (
-    <div className="h-2 overflow-hidden rounded-full bg-white/10">
+    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
       <div
         className="h-full rounded-full bg-[#D4AF37] transition-all duration-500"
         style={{ width: `${clampPercent(value)}%` }}
@@ -4433,8 +4436,8 @@ function ProgressRow({ label, value = 0 }) {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-white/45">{label}</p>
-        <p className="text-xs font-black text-[#D4AF37]">{clampPercent(value)}%</p>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-950/45">{label}</p>
+        <p className="text-xs font-black text-orange-600">{clampPercent(value)}%</p>
       </div>
       <ProgressBar value={value} />
     </div>
@@ -4443,24 +4446,24 @@ function ProgressRow({ label, value = 0 }) {
 
 function RecommendationCard({ item, onOpen = () => {} }) {
   const styles = {
-    urgent: "border-red-400/25 bg-red-500/10",
+    urgent: "border-red-200 bg-red-50",
     warning: "border-orange-400/25 bg-orange-500/10",
-    success: "border-emerald-400/25 bg-emerald-500/10",
-    info: "border-blue-400/25 bg-blue-500/10",
+    success: "border-emerald-200 bg-emerald-50",
+    info: "border-blue-200 bg-blue-50",
   };
 
   return (
-    <div className={`rounded-2xl border p-4 ${styles[item.type] || "border-white/10 bg-black/25"}`}>
+    <div className={`rounded-2xl border p-4 ${styles[item.type] || "border-slate-200 bg-black/25"}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="font-black text-white">{item.title}</p>
-          <p className="mt-2 text-sm leading-6 text-white/50">{item.message}</p>
+          <p className="font-black text-slate-950">{item.title}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-950/50">{item.message}</p>
         </div>
 
         <button
           type="button"
           onClick={onOpen}
-          className="w-fit shrink-0 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+          className="w-fit shrink-0 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
         >
           {item.action}
         </button>
@@ -4473,24 +4476,24 @@ function RecommendationCard({ item, onOpen = () => {} }) {
 
 function SuccessTipCard({ item, onOpen = () => {} }) {
   const styles = {
-    urgent: "border-red-400/25 bg-red-500/10",
+    urgent: "border-red-200 bg-red-50",
     warning: "border-orange-400/25 bg-orange-500/10",
-    success: "border-emerald-400/25 bg-emerald-500/10",
-    info: "border-blue-400/25 bg-blue-500/10",
+    success: "border-emerald-200 bg-emerald-50",
+    info: "border-blue-200 bg-blue-50",
   };
 
   return (
-    <div className={`rounded-2xl border p-4 ${styles[item.type] || "border-white/10 bg-black/25"}`}>
+    <div className={`rounded-2xl border p-4 ${styles[item.type] || "border-slate-200 bg-black/25"}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="font-black text-white">{item.title}</p>
-          <p className="mt-2 text-sm leading-6 text-white/50">{item.message}</p>
+          <p className="font-black text-slate-950">{item.title}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-950/50">{item.message}</p>
         </div>
 
         <button
           type="button"
           onClick={onOpen}
-          className="w-fit shrink-0 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+          className="w-fit shrink-0 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
         >
           {item.action}
         </button>
@@ -4501,18 +4504,18 @@ function SuccessTipCard({ item, onOpen = () => {} }) {
 
 function SuccessGuideCard({ guide, onOpen = () => {} }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-      <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37]">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600">
         {guide.category}
       </span>
 
-      <h3 className="mt-4 font-black text-white">{guide.title}</h3>
-      <p className="mt-2 text-sm leading-6 text-white/50">{guide.message}</p>
+      <h3 className="mt-4 font-black text-slate-950">{guide.title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-950/50">{guide.message}</p>
 
       <button
         type="button"
         onClick={onOpen}
-        className="mt-4 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
+        className="mt-4 rounded-full border border-slate-200 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/45 transition hover:border-orange-200 hover:text-orange-600"
       >
         {guide.action}
       </button>
@@ -4522,9 +4525,9 @@ function SuccessGuideCard({ guide, onOpen = () => {} }) {
 
 function FAQCard({ faq }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-      <p className="font-black text-white">{faq.question}</p>
-      <p className="mt-2 text-sm leading-6 text-white/50">{faq.answer}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <p className="font-black text-slate-950">{faq.question}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-950/50">{faq.answer}</p>
     </div>
   );
 }
@@ -4534,35 +4537,35 @@ function NotificationStat({ label, value, urgent = false, warning = false }) {
     <div
       className={`rounded-2xl border p-4 ${
         urgent
-          ? "border-red-400/25 bg-red-500/10"
+          ? "border-red-200 bg-red-50"
           : warning
             ? "border-orange-400/25 bg-orange-500/10"
-            : "border-white/10 bg-black/25"
+            : "border-slate-200 bg-black/25"
       }`}
     >
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-950/35">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-white">{value || 0}</p>
+      <p className="mt-2 text-2xl font-black text-slate-950">{value || 0}</p>
     </div>
   );
 }
 
 function NotificationItem({ item, onOpen = () => {} }) {
   const styles = {
-    urgent: "border-red-400/25 bg-red-500/10",
+    urgent: "border-red-200 bg-red-50",
     warning: "border-orange-400/25 bg-orange-500/10",
-    success: "border-emerald-400/25 bg-emerald-500/10",
-    info: "border-blue-400/25 bg-blue-500/10",
-    neutral: "border-white/10 bg-black/25",
+    success: "border-emerald-200 bg-emerald-50",
+    info: "border-blue-200 bg-blue-50",
+    neutral: "border-slate-200 bg-black/25",
   };
 
   const badgeStyles = {
-    urgent: "border-red-400/25 bg-red-500/10 text-red-300",
+    urgent: "border-red-200 bg-red-50 text-red-700",
     warning: "border-orange-400/25 bg-orange-500/10 text-orange-300",
-    success: "border-emerald-400/25 bg-emerald-500/10 text-emerald-300",
-    info: "border-blue-400/25 bg-blue-500/10 text-blue-300",
-    neutral: "border-white/10 bg-white/[0.04] text-white/45",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    info: "border-blue-200 bg-blue-50 text-blue-700",
+    neutral: "border-slate-200 bg-white text-slate-950/45",
   };
 
   return (
@@ -4574,23 +4577,23 @@ function NotificationItem({ item, onOpen = () => {} }) {
               {formatStatus(item.type)}
             </span>
 
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950/45">
               {item.source}
             </span>
           </div>
 
-          <h3 className="mt-3 font-black text-white">{item.title}</h3>
-          <p className="mt-2 line-clamp-3 text-sm leading-6 text-white/55">
+          <h3 className="mt-3 font-black text-slate-950">{item.title}</h3>
+          <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-950/55">
             {item.message}
           </p>
         </div>
 
         <div className="flex flex-col gap-2 lg:items-end">
-          <p className="text-xs text-white/35">{formatDate(item.date)}</p>
+          <p className="text-xs text-slate-950/35">{formatDate(item.date)}</p>
           <button
             type="button"
             onClick={onOpen}
-            className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+            className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 transition hover:bg-[#D4AF37]/20"
           >
             {item.action}
           </button>
@@ -4602,11 +4605,11 @@ function NotificationItem({ item, onOpen = () => {} }) {
 
 function SupportTimelineCard({ event }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-black/25 p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="font-black text-white">{event.title}</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-white/55">
+          <p className="font-black text-slate-950">{event.title}</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-950/55">
             {event.message || "No extra details."}
           </p>
         </div>
@@ -4614,7 +4617,7 @@ function SupportTimelineCard({ event }) {
           {formatStatus(event.type || event.status)}
         </span>
       </div>
-      <p className="mt-3 text-xs text-white/35">{formatDate(event.date)}</p>
+      <p className="mt-3 text-xs text-slate-950/35">{formatDate(event.date)}</p>
     </div>
   );
 }
@@ -4623,13 +4626,13 @@ function SupportRequestHistoryCard({ request }) {
   const meta = getSupportRequestTypeMeta(request.request_type);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-black/25 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-lg font-black text-white">
+          <p className="text-lg font-black text-slate-950">
             {meta.icon} {request.subject || meta.subject}
           </p>
-          <p className="mt-1 text-sm leading-6 text-white/55">
+          <p className="mt-1 text-sm leading-6 text-slate-950/55">
             {request.message || meta.description}
           </p>
         </div>
@@ -4645,26 +4648,41 @@ function SupportRequestHistoryCard({ request }) {
       </div>
 
       {request.counselor_response ? (
-        <div className="mt-4 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+        <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
             Counselor Response
           </p>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/80">
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-950/80">
             {request.counselor_response}
           </p>
-          <p className="mt-3 text-xs text-white/40">
+          <p className="mt-3 text-xs text-slate-950/40">
             Responded: {formatDate(request.responded_at || request.updated_at)}
           </p>
         </div>
       ) : (
-        <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-500/10 p-4 text-sm text-blue-200">
+        <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-50 p-4 text-sm text-blue-200">
           Waiting for counselor response. Zaifan team can see this request in Admin Support Requests.
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/40">
+      <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-950/40">
         <span>Submitted: {formatDate(request.created_at)}</span>
         {request.resolved_at ? <span>Resolved: {formatDate(request.resolved_at)}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+
+function StudentPortalSectionLoader({ label = "Opening Student OS section..." }) {
+  return (
+    <div className="flex min-h-[260px] items-center justify-center rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+        <p className="mt-4 text-sm font-black text-slate-900">{label}</p>
+        <p className="mt-1 text-xs text-slate-400">
+          Preparing only the student workspace you opened.
+        </p>
       </div>
     </div>
   );

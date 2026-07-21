@@ -1,3 +1,8 @@
+// LeadHealthPanel V2 — Student OS Health Monitor
+// Preserves Student OS health scoring, application funnel, risk heatmap, watchlist,
+// task/document/university/application analysis and team health logic.
+// Full mature component retained; visual system aligned with Zaifan Admin OS.
+
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -111,49 +116,49 @@ const riskHeatmap = {
       label: "Healthy",
       value: healthy.length,
       icon: ShieldCheck,
-      color: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
+      color: "border-emerald-300 bg-emerald-50 text-emerald-700",
       description: "Strong journey progress.",
     },
     {
       label: "Attention",
       value: attention.length,
       icon: HeartPulse,
-      color: "border-yellow-400/20 bg-yellow-500/10 text-yellow-300",
+      color: "border-amber-300 bg-amber-50 text-amber-800",
       description: "Needs counselor monitoring.",
     },
     {
       label: "At Risk",
       value: risk.length,
       icon: AlertTriangle,
-      color: "border-red-400/20 bg-red-500/10 text-red-300",
+      color: "border-red-300 bg-red-50 text-red-700",
       description: "Journey blockers detected.",
     },
     {
        label: "No App Record",
   value: noApplication.length,
       icon: FileCheck2,
-      color: "border-orange-400/20 bg-orange-500/10 text-orange-300",
+      color: "border-orange-300 bg-orange-50 text-orange-700",
       description: "Application not started.",
     },
     {
       label: "Offer Stage",
       value: offerStage.length,
       icon: GraduationCap,
-      color: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
+      color: "border-emerald-300 bg-emerald-50 text-emerald-700",
       description: "Offer received or accepted.",
     },
     {
       label: "Visa Stage",
       value: visaStage.length,
       icon: Plane,
-      color: "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
+      color: "border-blue-300 bg-blue-50 text-blue-700",
       description: "Visa journey active.",
     },
     {
       label: "No University Plan",
       value: noUniversityPlan.length,
       icon: School,
-      color: "border-purple-400/20 bg-purple-500/10 text-purple-300",
+      color: "border-violet-300 bg-violet-50 text-violet-700",
       description: "No shortlist detected.",
     },
     {
@@ -175,25 +180,25 @@ const riskHeatmap = {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      <div className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/12 via-white/[0.035] to-black/40 p-6 backdrop-blur-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.14),transparent_36%)]" />
+      <div className="relative overflow-hidden rounded-[1.9rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-white shadow-[0_16px_40px_rgba(15,35,63,0.14)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.18),transparent_36%)]" />
 
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#D4AF37]">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-orange-700">
               Student Success Intelligence V3
             </p>
             <h2 className="mt-2 text-3xl font-black text-white">
               OS Health Monitor
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-white/50">
+            <p className="mt-2 max-w-2xl text-sm text-slate-200">
               Reads CRM leads plus Student OS data: applications, university planning,
               visa progress, documents, tasks, reminders, and journey risk.
             </p>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-5 text-right">
-            <p className="text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+          <div className="rounded-[1.5rem] border border-[#F97316]/20 bg-[#F97316]/10 p-5 text-right">
+            <p className="text-xs uppercase tracking-[0.25em] text-orange-700">
               OS Health
             </p>
             <h3 className="mt-2 text-4xl font-black text-white">
@@ -224,8 +229,8 @@ const riskHeatmap = {
           );
         })}
       </div>
-<div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-  <h3 className="text-xl font-black text-white">
+<div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
+  <h3 className="text-xl font-black text-[#10233f]">
     Application Funnel
   </h3>
 
@@ -276,8 +281,8 @@ const riskHeatmap = {
     />
   </div>
 </div>
-<div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-  <h3 className="text-xl font-black text-white">
+<div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
+  <h3 className="text-xl font-black text-[#10233f]">
     Student Risk Heatmap
   </h3>
 
@@ -285,25 +290,25 @@ const riskHeatmap = {
     <RiskCard
       label="Critical"
       value={riskHeatmap.critical}
-      color="border-red-400/20 bg-red-500/10 text-red-300"
+      color="border-red-300 bg-red-50 text-red-700"
     />
 
     <RiskCard
       label="High"
       value={riskHeatmap.high}
-      color="border-orange-400/20 bg-orange-500/10 text-orange-300"
+      color="border-orange-300 bg-orange-50 text-orange-700"
     />
 
     <RiskCard
       label="Medium"
       value={riskHeatmap.medium}
-      color="border-yellow-400/20 bg-yellow-500/10 text-yellow-300"
+      color="border-amber-300 bg-amber-50 text-amber-800"
     />
 
     <RiskCard
       label="Healthy"
       value={riskHeatmap.healthy}
-      color="border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
+      color="border-emerald-300 bg-emerald-50 text-emerald-700"
     />
   </div>
 </div>
@@ -331,11 +336,11 @@ const riskHeatmap = {
         </InfoBox>
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-        <h3 className="text-lg font-bold text-white">Student Journey Watchlist</h3>
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
+        <h3 className="text-lg font-black text-[#10233f]">Student Journey Watchlist</h3>
 
         {watchlist.length === 0 ? (
-          <p className="mt-4 text-sm text-white/50">
+          <p className="mt-4 text-sm text-slate-600">
             No major student journey risks detected right now.
           </p>
         ) : (
@@ -343,14 +348,14 @@ const riskHeatmap = {
             {watchlist.map((student) => (
               <div
                 key={`${student.displayType}-${student.id}`}
-                className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 md:flex-row md:items-center md:justify-between"
+                className="flex flex-col gap-3 rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 md:flex-row md:items-center md:justify-between"
               >
                 <div>
-                  <p className="font-semibold text-white">{student.displayName}</p>
-                  <p className="mt-1 text-xs text-white/45">
+                  <p className="font-black text-[#10233f]">{student.displayName}</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     {student.displayType} • {student.journeyStage} • {student.score}/100
                   </p>
-                  <p className="mt-2 text-xs text-white/55">{student.reason}</p>
+                  <p className="mt-2 text-xs text-slate-600">{student.reason}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -610,32 +615,32 @@ function getJourneyStage(application) {
 
 function InfoBox({ icon: Icon, title, children }) {
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
       <div className="flex items-center gap-3">
-        <Icon className="text-[#D4AF37]" size={20} />
-        <h3 className="text-lg font-bold text-white">{title}</h3>
+        <Icon className="text-orange-700" size={20} />
+        <h3 className="text-lg font-black text-[#10233f]">{title}</h3>
       </div>
-      <div className="mt-4 space-y-3 text-sm text-white/60">{children}</div>
+      <div className="mt-4 space-y-3 text-sm text-slate-600">{children}</div>
     </div>
   );
 }
 
 function Badge({ text, red, yellow, blue, purple, green, orange, cyan }) {
   const cls = red
-    ? "border-red-400/20 bg-red-500/10 text-red-300"
+    ? "border-red-300 bg-red-50 text-red-700"
     : yellow
-    ? "border-yellow-400/20 bg-yellow-500/10 text-yellow-300"
+    ? "border-amber-300 bg-amber-50 text-amber-800"
     : blue
-    ? "border-blue-400/20 bg-blue-500/10 text-blue-300"
+    ? "border-blue-400/20 bg-blue-500/10 text-blue-700"
     : purple
-    ? "border-purple-400/20 bg-purple-500/10 text-purple-300"
+    ? "border-violet-300 bg-violet-50 text-violet-700"
     : green
-    ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
+    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
     : orange
-    ? "border-orange-400/20 bg-orange-500/10 text-orange-300"
+    ? "border-orange-300 bg-orange-50 text-orange-700"
     : cyan
-    ? "border-cyan-400/20 bg-cyan-500/10 text-cyan-300"
-    : "border-white/10 bg-white/[0.04] text-white/50";
+    ? "border-blue-300 bg-blue-50 text-blue-700"
+    : "border-white/10 bg-white/[0.04] text-slate-600";
 
   return <span className={`w-fit rounded-full border px-3 py-1 text-xs font-bold ${cls}`}>{text}</span>;
 }
@@ -653,8 +658,8 @@ function getTeamHealth(score) {
     return {
       label: "Excellent",
       text: "Strong Student OS discipline.",
-      textColor: "text-emerald-300",
-      color: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
+      textColor: "text-emerald-700",
+      color: "border-emerald-300 bg-emerald-50 text-emerald-700",
     };
   }
 
@@ -662,8 +667,8 @@ function getTeamHealth(score) {
     return {
       label: "Healthy",
       text: "Stable but can improve.",
-      textColor: "text-[#D4AF37]",
-      color: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
+      textColor: "text-orange-700",
+      color: "border-[#F97316]/20 bg-[#F97316]/10 text-orange-700",
     };
   }
 
@@ -671,16 +676,16 @@ function getTeamHealth(score) {
     return {
       label: "Needs Attention",
       text: "Student journey pressure detected.",
-      textColor: "text-orange-300",
-      color: "border-orange-400/20 bg-orange-500/10 text-orange-300",
+      textColor: "text-orange-700",
+      color: "border-orange-300 bg-orange-50 text-orange-700",
     };
   }
 
   return {
     label: "Critical",
     text: "Immediate cleanup needed.",
-    textColor: "text-red-300",
-    color: "border-red-400/20 bg-red-500/10 text-red-300",
+    textColor: "text-red-700",
+    color: "border-red-300 bg-red-50 text-red-700",
   };
 }
 function RiskCard({ label, value, color }) {
@@ -698,12 +703,12 @@ function RiskCard({ label, value, color }) {
 }
 function MiniFunnel({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-      <p className="text-xs uppercase tracking-[0.15em] text-white/35">
+    <div className="rounded-xl border border-slate-300 bg-[#fffaf2] p-3">
+      <p className="text-xs font-black uppercase tracking-[0.15em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-2 text-2xl font-black text-[#D4AF37]">
+      <p className="mt-2 text-2xl font-black text-[#10233f]">
         {value}
       </p>
     </div>

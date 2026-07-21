@@ -1,3 +1,8 @@
+// TaskCenterPanel V2 — High Contrast Admin OS Edition
+// Preserves all Supabase task CRUD/status logic, suggested-task intelligence,
+// timeline events, shared Student OS refreshes, request timeouts, and form behavior.
+// Visual system rebuilt to match the approved Zaifan Admin OS language.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -441,10 +446,10 @@ function TaskCenterPanel({
 
   const priorityStyle = (priority) => {
     const styles = {
-      urgent: "border-red-400/30 bg-red-500/10 text-red-300",
-      high: "border-orange-400/30 bg-orange-500/10 text-orange-300",
-      medium: "border-blue-400/30 bg-blue-500/10 text-blue-300",
-      low: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
+      urgent: "border-red-200 bg-red-50 text-red-700",
+      high: "border-orange-400/30 bg-orange-500/10 text-orange-700",
+      medium: "border-blue-200 bg-blue-50 text-blue-700",
+      low: "border-emerald-200 bg-emerald-50 text-emerald-700",
     };
 
     return styles[priority] || styles.medium;
@@ -452,10 +457,10 @@ function TaskCenterPanel({
 
   const statusStyle = (status) => {
     const styles = {
-      pending: "border-yellow-400/30 bg-yellow-500/10 text-yellow-300",
-      in_progress: "border-blue-400/30 bg-blue-500/10 text-blue-300",
-      completed: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
-      blocked: "border-red-400/30 bg-red-500/10 text-red-300",
+      pending: "border-amber-200 bg-amber-50 text-amber-700",
+      in_progress: "border-blue-200 bg-blue-50 text-blue-700",
+      completed: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      blocked: "border-red-200 bg-red-50 text-red-700",
     };
 
     return styles[status] || styles.pending;
@@ -467,18 +472,18 @@ function TaskCenterPanel({
   };
 
   return (
-    <div className="rounded-[1.75rem] border border-orange-400/20 bg-orange-500/[0.03] p-6">
+    <div className="rounded-[1.75rem] border border-orange-300 bg-[#fff8ee] p-6 text-[#10233f] shadow-[0_12px_30px_rgba(15,35,63,0.05)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-orange-300">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-orange-700">
             Operations Task Center
           </p>
 
-          <h3 className="mt-2 text-xl font-black text-white">
+          <h3 className="mt-2 text-xl font-black text-[#10233f]">
             Student Task System
           </h3>
 
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
             Create counselor tasks, assign ownership, track deadlines, complete
             work, and keep the student journey moving without freezing the CRM.
           </p>
@@ -488,7 +493,7 @@ function TaskCenterPanel({
           type="button"
           onClick={loadTasksOnly}
           disabled={loading}
-          className="rounded-full border border-orange-400/25 bg-orange-500/10 px-4 py-2 text-xs font-bold text-orange-300 transition hover:border-orange-400/45 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-orange-300 bg-white px-4 py-2 text-xs font-black text-orange-700 transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Refreshing..." : "Refresh Tasks"}
         </button>
@@ -507,26 +512,26 @@ function TaskCenterPanel({
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-300">
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
           {error}
         </div>
       ) : null}
 
       {successMessage ? (
-        <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-300">
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
           {successMessage}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/45">
+        <div className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-700">
           Loading tasks. If Supabase is slow, this will safely stop after a few
           seconds.
         </div>
       ) : null}
 
-      <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+      <div className="mt-6 rounded-2xl border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-700">
           Create Custom Task
         </p>
 
@@ -592,14 +597,14 @@ function TaskCenterPanel({
           type="button"
           onClick={createCustomTask}
           disabled={savingCustom || !taskForm.title.trim()}
-          className="mt-4 rounded-full bg-[#D4AF37] px-5 py-2 text-xs font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 rounded-full bg-orange-500 px-5 py-2.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {savingCustom ? "Creating Task..." : "Create Task"}
         </button>
       </div>
 
       <div className="mt-6 space-y-3">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-300">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-700">
           Suggested Tasks
         </p>
 
@@ -607,17 +612,17 @@ function TaskCenterPanel({
           suggestedTasks.map((task) => (
             <div
               key={task.title}
-              className="rounded-xl border border-orange-400/20 bg-orange-500/10 p-4"
+              className="rounded-xl border border-orange-200 bg-[#fffaf2] p-4"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="font-semibold text-orange-300">{task.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-white/50">
+                  <p className="font-black text-[#10233f]">{task.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
                     {task.description}
                   </p>
 
                   {task.notes ? (
-                    <p className="mt-2 text-xs text-white/35">{task.notes}</p>
+                    <p className="mt-2 text-xs text-slate-500">{task.notes}</p>
                   ) : null}
                 </div>
 
@@ -625,7 +630,7 @@ function TaskCenterPanel({
                   type="button"
                   disabled={savingTitle === task.title}
                   onClick={() => createTask(task, "suggested")}
-                  className="rounded-full border border-orange-400/25 bg-orange-500/10 px-4 py-2 text-xs font-bold text-orange-300 transition hover:border-orange-400/40 disabled:opacity-50"
+                  className="rounded-full border border-orange-300 bg-white px-4 py-2 text-xs font-black text-orange-700 transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-50"
                 >
                   {savingTitle === task.title ? "Saving..." : "Save Task"}
                 </button>
@@ -633,14 +638,14 @@ function TaskCenterPanel({
             </div>
           ))
         ) : (
-          <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
             No urgent suggested tasks.
           </div>
         )}
       </div>
 
       <div className="mt-6 space-y-3">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/35">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
           Saved Tasks
         </p>
 
@@ -650,14 +655,14 @@ function TaskCenterPanel({
               key={task.id}
               className={`rounded-xl border p-4 ${
                 isOverdue(task)
-                  ? "border-red-400/25 bg-red-500/10"
-                  : "border-white/10 bg-white/[0.03]"
+                  ? "border-red-200 bg-red-50"
+                  : "border-slate-300 bg-white"
               }`}
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="break-words font-semibold text-white">
+                    <p className="break-words font-black text-[#10233f]">
                       {task.title}
                     </p>
 
@@ -678,22 +683,22 @@ function TaskCenterPanel({
                     </span>
 
                     {isOverdue(task) ? (
-                      <span className="rounded-full border border-red-400/30 bg-red-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-red-300">
+                      <span className="rounded-full border border-red-400/30 bg-red-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-red-700">
                         Overdue
                       </span>
                     ) : null}
                   </div>
 
                   {task.description ? (
-                    <p className="mt-2 text-sm leading-6 text-white/50">
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
                       {task.description}
                     </p>
                   ) : null}
 
-                  <div className="mt-3 grid gap-2 text-xs text-white/35 md:grid-cols-2">
+                  <div className="mt-3 grid gap-2 text-xs font-semibold text-slate-500 md:grid-cols-2">
                     <p>
                       Assigned:{" "}
-                      <span className="text-white/55">
+                      <span className="text-slate-700">
                         {task.assigned_to || "Unassigned"}
                       </span>
                     </p>
@@ -702,7 +707,7 @@ function TaskCenterPanel({
                       Due:{" "}
                       <span
                         className={
-                          isOverdue(task) ? "text-red-300" : "text-white/55"
+                          isOverdue(task) ? "text-red-700" : "text-slate-700"
                         }
                       >
                         {task.due_date
@@ -719,14 +724,14 @@ function TaskCenterPanel({
 
                     <p>
                       Created By:{" "}
-                      <span className="text-white/55">
+                      <span className="text-slate-700">
                         {task.created_by || "CRM"}
                       </span>
                     </p>
 
                     <p>
                       Completed:{" "}
-                      <span className="text-white/55">
+                      <span className="text-slate-700">
                         {task.completed_at
                           ? new Date(task.completed_at).toLocaleString(
                               "en-GB",
@@ -744,7 +749,7 @@ function TaskCenterPanel({
                   </div>
 
                   {task.notes ? (
-                    <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/45">
+                    <div className="mt-3 rounded-xl border border-slate-300 bg-[#fffaf2] p-3 text-xs leading-5 text-slate-600">
                       {task.notes}
                     </div>
                   ) : null}
@@ -754,18 +759,18 @@ function TaskCenterPanel({
                   value={task.status || "pending"}
                   disabled={statusSavingId === task.id}
                   onChange={(event) => updateTaskStatus(task, event.target.value)}
-                  className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none transition focus:border-[#D4AF37]/40 disabled:opacity-50"
+                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:opacity-50"
                 >
-                  <option className="bg-black" value="pending">
+                  <option className="bg-white text-[#10233f]" value="pending">
                     pending
                   </option>
-                  <option className="bg-black" value="in_progress">
+                  <option className="bg-white text-[#10233f]" value="in_progress">
                     in progress
                   </option>
-                  <option className="bg-black" value="completed">
+                  <option className="bg-white text-[#10233f]" value="completed">
                     completed
                   </option>
-                  <option className="bg-black" value="blocked">
+                  <option className="bg-white text-[#10233f]" value="blocked">
                     blocked
                   </option>
                 </select>
@@ -773,7 +778,7 @@ function TaskCenterPanel({
             </div>
           ))
         ) : (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/45">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
             No saved tasks yet.
           </div>
         )}
@@ -787,19 +792,19 @@ function MiniStat({ label, value, danger = false }) {
     <div
       className={`rounded-2xl border p-4 ${
         danger
-          ? "border-red-400/25 bg-red-500/10"
-          : "border-white/10 bg-white/[0.03]"
+          ? "border-red-200 bg-red-50"
+          : "border-slate-300 bg-white"
       }`}
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
       <p
         className={
           danger
-            ? "mt-2 text-2xl font-black text-red-300"
-            : "mt-2 text-2xl font-black text-[#D4AF37]"
+            ? "mt-2 text-2xl font-black text-red-700"
+            : "mt-2 text-2xl font-black text-[#10233f]"
         }
       >
         {value}
@@ -817,7 +822,7 @@ function InputField({
 }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
@@ -826,7 +831,7 @@ function InputField({
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#D4AF37]/40"
+        className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-[#10233f] outline-none transition placeholder:text-[#10233f]/25 focus:border-[#F97316]/40"
       />
     </div>
   );
@@ -835,17 +840,17 @@ function InputField({
 function SelectField({ label, value, onChange, options = [] }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm capitalize text-white outline-none transition focus:border-[#D4AF37]/40"
+        className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm capitalize text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
       >
         {options.map((item) => (
-          <option key={item} value={item} className="bg-black">
+          <option key={item} value={item} className="bg-white text-[#10233f]">
             {item}
           </option>
         ))}
@@ -857,7 +862,7 @@ function SelectField({ label, value, onChange, options = [] }) {
 function TextAreaField({ label, value, onChange, placeholder = "" }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
@@ -866,7 +871,7 @@ function TextAreaField({ label, value, onChange, placeholder = "" }) {
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         rows={5}
-        className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-white/25 focus:border-[#D4AF37]/40"
+        className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-[#10233f] outline-none transition placeholder:text-[#10233f]/25 focus:border-[#F97316]/40"
       />
     </div>
   );

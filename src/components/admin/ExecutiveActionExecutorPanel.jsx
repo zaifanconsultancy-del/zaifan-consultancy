@@ -183,18 +183,18 @@ function ExecutiveActionExecutorPanel({
   };
 
   return (
-    <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-500/[0.04] p-6">
+    <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-emerald-300">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
             Executive Action Executor
           </p>
 
-          <h2 className="mt-2 text-2xl font-black text-white">
+          <h2 className="mt-2 text-2xl font-black text-[#17243D]">
             Human-Approved Student OS Execution
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
             Convert executive recommendations into tasks, reminders, call tasks,
             email drafts, WhatsApp drafts, and timeline records.
           </p>
@@ -210,13 +210,13 @@ function ExecutiveActionExecutorPanel({
       </div>
 
       {message ? (
-        <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+        <div className="mt-5 rounded-2xl border border-[#E9802D]/32 bg-[#FFF1E3] p-4 text-sm text-[#B84F0E]">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-5 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="mt-5 rounded-2xl border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm text-[#A8342F]">
           {error}
         </div>
       ) : null}
@@ -234,11 +234,11 @@ function ExecutiveActionExecutorPanel({
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-emerald-400/15 bg-emerald-500/[0.04] p-5">
-            <p className="font-semibold text-emerald-200">
+          <div className="rounded-2xl border border-[#E9802D]/28 bg-[#FFF1E3] p-5">
+            <p className="font-semibold text-[#B84F0E]">
               No executive actions ready.
             </p>
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-[#7A8392]">
               Executive AI does not currently see executable tasks, reminders,
               calls, email drafts, or WhatsApp drafts.
             </p>
@@ -254,11 +254,11 @@ function ExecutorCard({ item, executing, executed, disabled, onExecute }) {
   const style = getPriorityStyle(recommendation.priority);
 
   return (
-    <div className={`rounded-2xl border p-4 ${style.wrapper}`}>
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style.wrapper}`}>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-black text-white">{template.title}</p>
+            <p className="font-black text-[#17243D]">{template.title}</p>
 
             <Tag text={recommendation.priority} className={style.badge} />
             <Tag text={formatLabel(template.actionType)} />
@@ -267,28 +267,28 @@ function ExecutorCard({ item, executing, executed, disabled, onExecute }) {
             {requiresApproval ? (
               <Tag
                 text="Approval Required"
-                className="border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+                className="border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
               />
             ) : (
               <Tag
                 text="Ready"
-                className="border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
+                className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
               />
             )}
 
             {executed ? (
               <Tag
                 text="Executed"
-                className="border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
+                className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
               />
             ) : null}
           </div>
 
-          <p className="mt-2 text-sm leading-6 text-white/55">
+          <p className="mt-2 text-sm leading-6 text-[#667085]">
             {template.description}
           </p>
 
-          <p className="mt-3 text-xs leading-5 text-white/40">
+          <p className="mt-3 text-xs leading-5 text-[#7A8392]">
             {template.payload?.summary ||
               recommendation.description ||
               "Executive action generated from student intelligence."}
@@ -301,7 +301,7 @@ function ExecutorCard({ item, executing, executed, disabled, onExecute }) {
             <MiniStat label="Journey" value={formatLabel(studentStage)} />
           </div>
 
-          <p className="mt-3 text-xs text-white/35">
+          <p className="mt-3 text-xs text-[#8992A1]">
             {getStudentName(score)} • {score.student_type || "student"}
           </p>
         </div>
@@ -310,7 +310,7 @@ function ExecutorCard({ item, executing, executed, disabled, onExecute }) {
           type="button"
           onClick={onExecute}
           disabled={disabled || executed}
-          className="shrink-0 rounded-full bg-[#D4AF37] px-5 py-2 text-xs font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-50"
+          className="shrink-0 rounded-full border border-[#E9802D] bg-[#E9802D] px-5 py-2 text-xs font-black text-white shadow-[0_8px_18px_rgba(233,128,45,0.18)] transition hover:-translate-y-0.5 hover:bg-[#D96C1F] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {executed ? "Executed" : executing ? "Executing..." : getExecuteLabel(template.actionType)}
         </button>
@@ -334,7 +334,7 @@ function getExecuteLabel(actionType = "") {
 function Tag({ text, className = "" }) {
   return (
     <span
-      className={`rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/45 ${className}`}
+      className={`rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#7A8392] ${className}`}
     >
       {text}
     </span>
@@ -343,7 +343,7 @@ function Tag({ text, className = "" }) {
 
 function MiniStat({ label, value }) {
   return (
-    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/45">
+    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#7A8392]">
       {label}: {value}
     </span>
   );
@@ -351,12 +351,12 @@ function MiniStat({ label, value }) {
 
 function Badge({ label, danger = false, gold = false, success = false }) {
   const style = danger
-    ? "border-red-400/25 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]"
     : gold
-    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
     : success
-    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-    : "border-white/10 bg-black/20 text-white/45";
+    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
+    : "border-[#243A60]/18 bg-white text-[#7A8392]";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>
@@ -382,35 +382,35 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "critical") {
     return {
-      wrapper: "border-red-400/25 bg-red-500/10",
-      badge: "border-red-400/25 bg-red-500/10 text-red-200",
+      wrapper: "border-[#C2413B]/32 bg-[#FFF0EE]",
+      badge: "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]",
     };
   }
 
   if (clean === "executive") {
     return {
-      wrapper: "border-[#D4AF37]/30 bg-[#D4AF37]/10",
-      badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
+      wrapper: "border-[#E9802D]/45 bg-[#FFF1E3]",
+      badge: "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]",
     };
   }
 
   if (clean === "high") {
     return {
-      wrapper: "border-orange-400/25 bg-orange-500/10",
-      badge: "border-orange-400/25 bg-orange-500/10 text-orange-200",
+      wrapper: "border-[#A36A18]/30 bg-[#FFF7E8]",
+      badge: "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]",
     };
   }
 
   if (clean === "medium") {
     return {
-      wrapper: "border-blue-400/25 bg-blue-500/10",
-      badge: "border-blue-400/25 bg-blue-500/10 text-blue-200",
+      wrapper: "border-[#243A60]/25 bg-[#F3F5F8]",
+      badge: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
     };
   }
 
   return {
-    wrapper: "border-white/10 bg-white/[0.03]",
-    badge: "border-white/10 bg-black/20 text-white/45",
+    wrapper: "border-[#243A60]/18 bg-white",
+    badge: "border-[#243A60]/18 bg-white text-[#7A8392]",
   };
 }
 

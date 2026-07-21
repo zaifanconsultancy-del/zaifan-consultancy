@@ -1,3 +1,8 @@
+// PaymentCenterPanel V2 — High Contrast Admin OS Edition
+// Preserves Supabase invoice/payment/account/receipt logic, reconciliation,
+// CRM timeline events, confirmation flows, deletion, and shared-data refresh.
+// Visual layer aligned with Zaifan cream + white + navy + orange Admin OS.
+
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { addTimelineEvent } from "../../lib/crmTimeline";
@@ -26,15 +31,15 @@ function formatMoney(amount, currency = "PKR") {
 function statusClass(value = "") {
   const clean = normalize(value);
   if (["paid", "confirmed", "approved", "completed", "active"].includes(clean)) {
-    return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+    return "border-emerald-300 bg-emerald-50 text-emerald-700";
   }
   if (["overdue", "rejected", "cancelled", "void", "inactive"].includes(clean)) {
-    return "border-red-400/25 bg-red-500/10 text-red-300";
+    return "border-red-300 bg-red-50 text-red-700";
   }
   if (["pending", "pending_review", "partial", "unpaid"].includes(clean)) {
-    return "border-yellow-400/25 bg-yellow-500/10 text-yellow-300";
+    return "border-amber-300 bg-amber-50 text-amber-700";
   }
-  return "border-white/10 bg-white/[0.04] text-white/55";
+  return "border-slate-300 bg-slate-50 text-slate-700";
 }
 
 function getStudentId(student = {}) {
@@ -698,14 +703,14 @@ async function deletePayment(payment) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+      <div className="rounded-[1.75rem] border border-orange-200 bg-[#fff8ee] p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-700">
           Payment OS Foundation
         </p>
-        <h3 className="mt-2 text-xl font-black text-white">
+        <h3 className="mt-2 text-xl font-black text-[#10233f]">
           Payment Center + Invoices
         </h3>
-        <p className="mt-2 text-sm leading-6 text-white/55">
+        <p className="mt-2 text-sm leading-6 text-slate-600">
           Create invoices, add confirmed payments, review student receipt uploads, manage payment accounts, and keep payment history connected to the student timeline.
         </p>
       </div>
@@ -718,15 +723,15 @@ async function deletePayment(payment) {
       </div>
 
       {message ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-sm text-white/70">
+        <div className="rounded-2xl border border-slate-300 bg-white p-4 text-sm text-slate-700">
           {message}
         </div>
       ) : null}
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <form onSubmit={handleSavePaymentAccount} className="rounded-[1.5rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
-          <p className="text-sm font-black text-white">Payment Accounts</p>
-          <p className="mt-2 text-xs leading-5 text-white/45">
+        <form onSubmit={handleSavePaymentAccount} className="rounded-[1.5rem] border border-orange-200 bg-[#fff8ee] p-5">
+          <p className="text-sm font-black text-[#10233f]">Payment Accounts</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">
             Add bank, JazzCash, Easypaisa, or manual payment details students will use.
           </p>
 
@@ -749,13 +754,13 @@ async function deletePayment(payment) {
             <Input label="IBAN" value={accountForm.iban} onChange={(value) => setAccountForm((prev) => ({ ...prev, iban: value }))} />
             <Input label="Wallet Number" value={accountForm.mobile_wallet_number} onChange={(value) => setAccountForm((prev) => ({ ...prev, mobile_wallet_number: value }))} />
             <label className="space-y-2 md:col-span-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Instructions
               </span>
               <textarea
                 value={accountForm.instructions}
                 onChange={(event) => setAccountForm((prev) => ({ ...prev, instructions: event.target.value }))}
-                className="min-h-[90px] w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                className="min-h-[90px] w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
               />
             </label>
           </div>
@@ -763,7 +768,7 @@ async function deletePayment(payment) {
           <button
             type="submit"
             disabled={accountSaving}
-            className="mt-4 rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50"
+            className="mt-4 rounded-full bg-orange-500 px-5 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition hover:bg-orange-600 disabled:opacity-50"
           >
             {accountSaving ? "Saving..." : "Save Payment Account"}
           </button>
@@ -774,11 +779,11 @@ async function deletePayment(payment) {
           empty="No payment accounts added yet."
           rows={paymentAccounts}
           render={(account) => (
-            <div key={account.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+            <div key={account.id} className="rounded-2xl border border-slate-300 bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)]">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-black text-white">{account.account_title}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/35">
+                  <p className="font-black text-[#10233f]">{account.account_title}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
                     {account.account_type}
                   </p>
                 </div>
@@ -788,7 +793,7 @@ async function deletePayment(payment) {
                 </span>
               </div>
 
-              <div className="mt-3 grid gap-2 text-sm text-white/55 md:grid-cols-2">
+              <div className="mt-3 grid gap-2 text-sm text-slate-600 md:grid-cols-2">
                 {account.bank_name ? <Info label="Bank" value={account.bank_name} /> : null}
                 {account.account_number ? <Info label="Account No" value={account.account_number} /> : null}
                 {account.iban ? <Info label="IBAN" value={account.iban} /> : null}
@@ -796,7 +801,7 @@ async function deletePayment(payment) {
               </div>
 
               {account.instructions ? (
-                <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-sm leading-6 text-white/45">
+                <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
                   {account.instructions}
                 </p>
               ) : null}
@@ -806,7 +811,7 @@ async function deletePayment(payment) {
                   type="button"
                   onClick={() => togglePaymentAccount(account)}
                   disabled={accountSaving}
-                  className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black text-[#D4AF37] disabled:opacity-50"
+                  className="rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700 disabled:opacity-50"
                 >
                   {account.is_active ? "Deactivate" : "Activate"}
                 </button>
@@ -815,7 +820,7 @@ async function deletePayment(payment) {
                   type="button"
                   onClick={() => deletePaymentAccount(account)}
                   disabled={accountSaving}
-                  className="rounded-full border border-red-400/25 bg-red-500/10 px-4 py-2 text-xs font-black text-red-300 disabled:opacity-50"
+                  className="rounded-full border border-red-300 bg-red-50 px-4 py-2 text-xs font-black text-red-700 disabled:opacity-50"
                 >
                   Delete
                 </button>
@@ -826,8 +831,8 @@ async function deletePayment(payment) {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <form onSubmit={handleCreateInvoice} className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5">
-          <p className="text-sm font-black text-white">Create Invoice</p>
+        <form onSubmit={handleCreateInvoice} className="rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+          <p className="text-sm font-black text-[#10233f]">Create Invoice</p>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <Input label="Title" value={invoiceForm.title} onChange={(value) => setInvoiceForm((prev) => ({ ...prev, title: value }))} />
@@ -838,21 +843,21 @@ async function deletePayment(payment) {
             <Input label="Description" value={invoiceForm.description} onChange={(value) => setInvoiceForm((prev) => ({ ...prev, description: value }))} />
           </div>
 
-          <button type="submit" disabled={invoiceSaving} className="mt-4 rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50">
+          <button type="submit" disabled={invoiceSaving} className="mt-4 rounded-full bg-orange-500 px-5 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition hover:bg-orange-600 disabled:opacity-50">
             {invoiceSaving ? "Saving..." : "Create Invoice"}
           </button>
         </form>
 
-        <form onSubmit={handleAddPayment} className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5">
-          <p className="text-sm font-black text-white">Add Payment</p>
+        <form onSubmit={handleAddPayment} className="rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+          <p className="text-sm font-black text-[#10233f]">Add Payment</p>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">Invoice</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Invoice</span>
               <select
                 value={paymentForm.invoice_id}
                 onChange={(event) => setPaymentForm((prev) => ({ ...prev, invoice_id: event.target.value }))}
-                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
               >
                 <option value="">No invoice / general payment</option>
                 {invoices.map((invoice) => (
@@ -870,7 +875,7 @@ async function deletePayment(payment) {
             <Input label="Notes" value={paymentForm.notes} onChange={(value) => setPaymentForm((prev) => ({ ...prev, notes: value }))} />
           </div>
 
-          <button type="submit" disabled={paymentSaving} className="mt-4 rounded-full bg-white px-5 py-3 text-sm font-black text-black disabled:opacity-50">
+          <button type="submit" disabled={paymentSaving} className="mt-4 rounded-full bg-[#10233f] px-5 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(15,35,63,0.16)] transition hover:bg-[#18385f] disabled:opacity-50">
             {paymentSaving ? "Saving..." : "Add Payment"}
           </button>
         </form>
@@ -897,7 +902,7 @@ async function deletePayment(payment) {
                 type="button"
                 onClick={() => deleteInvoice(invoice)}
                 disabled={Boolean(deleteSavingId)}
-                className="rounded-full border border-red-400/25 bg-red-500/10 px-4 py-2 text-xs font-black text-red-300 disabled:opacity-50"
+                className="rounded-full border border-red-300 bg-red-50 px-4 py-2 text-xs font-black text-red-700 disabled:opacity-50"
               >
                 {deleteSavingId === invoice.id ? "Deleting..." : "Delete Wrong Invoice"}
               </button>
@@ -925,7 +930,7 @@ async function deletePayment(payment) {
         type="button"
         onClick={() => deletePayment(payment)}
         disabled={Boolean(deleteSavingId) || paymentSaving}
-        className="rounded-full border border-red-400/25 bg-red-500/10 px-4 py-2 text-xs font-black text-red-300 disabled:opacity-50"
+        className="rounded-full border border-red-300 bg-red-50 px-4 py-2 text-xs font-black text-red-700 disabled:opacity-50"
       >
         {deleteSavingId === payment.id ? "Deleting..." : "Delete Wrong Payment"}
       </button>
@@ -939,12 +944,12 @@ async function deletePayment(payment) {
         empty="No receipt uploads waiting."
         rows={receipts}
         render={(receipt) => (
-          <div key={receipt.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+          <div key={receipt.id} className="rounded-2xl border border-slate-300 bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)]">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="font-black text-white">{receipt.receipt_url ? "Receipt Uploaded" : "Receipt Submitted"}</p>
-                <p className="mt-1 text-sm text-white/45">{receipt.notes || "No receipt notes."}</p>
-                <div className="mt-3 grid gap-2 text-sm text-white/55 md:grid-cols-3">
+                <p className="font-black text-[#10233f]">{receipt.receipt_url ? "Receipt Uploaded" : "Receipt Submitted"}</p>
+                <p className="mt-1 text-sm text-slate-600">{receipt.notes || "No receipt notes."}</p>
+                <div className="mt-3 grid gap-2 text-sm text-slate-600 md:grid-cols-3">
                   <span>{formatMoney(receipt.amount, receipt.currency || "PKR")}</span>
                   <span>{formatDate(receipt.submitted_at || receipt.created_at)}</span>
                   <span className={`w-fit rounded-full border px-3 py-1 text-xs font-bold ${statusClass(receipt.status)}`}>
@@ -952,7 +957,7 @@ async function deletePayment(payment) {
                   </span>
                 </div>
                 {receipt.receipt_url ? (
-                  <a href={receipt.receipt_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-bold text-[#D4AF37]">
+                  <a href={receipt.receipt_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-bold text-orange-700">
                     Open Receipt
                   </a>
                 ) : null}
@@ -962,13 +967,13 @@ async function deletePayment(payment) {
                 <button type="button" onClick={() => updateReceiptStatus(receipt, "approved")} disabled={
   receiptSaving ||
   ["approved", "rejected"].includes(normalize(receipt.status))
-} className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-xs font-black text-emerald-300 disabled:opacity-50">
+} className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700 disabled:opacity-50">
                   Approve
                 </button>
                 <button type="button" onClick={() => updateReceiptStatus(receipt, "rejected")} disabled={
   receiptSaving ||
   ["approved", "rejected"].includes(normalize(receipt.status))
-} className="rounded-full border border-red-400/30 bg-red-500/10 px-4 py-2 text-xs font-black text-red-300 disabled:opacity-50">
+} className="rounded-full border border-red-300 bg-red-50 px-4 py-2 text-xs font-black text-red-700 disabled:opacity-50">
                   Reject
                 </button>
               </div>
@@ -1000,9 +1005,9 @@ async function deletePayment(payment) {
 
 function SummaryCard({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/35">{label}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+    <div className="rounded-2xl border border-slate-300 bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
@@ -1010,7 +1015,7 @@ function SummaryCard({ label, value }) {
 function Info({ label, value }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{label}</p>
       <p className="mt-1 break-words">{value}</p>
     </div>
   );
@@ -1019,12 +1024,12 @@ function Info({ label, value }) {
 function Input({ label, value, onChange, type = "text" }) {
   return (
     <label className="space-y-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
       />
     </label>
   );
@@ -1033,11 +1038,11 @@ function Input({ label, value, onChange, type = "text" }) {
 function Select({ label, value, onChange, options = [] }) {
   return (
     <label className="space-y-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/50"
+        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
       >
         {options.map(([optionValue, labelText]) => (
           <option key={optionValue} value={optionValue}>
@@ -1051,10 +1056,10 @@ function Select({ label, value, onChange, options = [] }) {
 
 function Section({ title, rows = [], empty = "No records.", render }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5">
-      <p className="text-sm font-black text-white">{title}</p>
+    <div className="rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+      <p className="text-sm font-black text-[#10233f]">{title}</p>
       <div className="mt-4 space-y-3">
-        {rows.length ? rows.map(render) : <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-white/40">{empty}</p>}
+        {rows.length ? rows.map(render) : <p className="rounded-2xl border border-dashed border-slate-300 bg-[#fffaf2] p-5 text-sm text-slate-500">{empty}</p>}
       </div>
     </div>
   );
@@ -1062,12 +1067,12 @@ function Section({ title, rows = [], empty = "No records.", render }) {
 
 function PaymentCard({ title, status, lines = [] }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-2xl border border-slate-300 bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)]">
       <div className="flex items-start justify-between gap-3">
-        <p className="font-black text-white">{title}</p>
+        <p className="font-black text-[#10233f]">{title}</p>
         <span className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass(status)}`}>{status}</span>
       </div>
-      <div className="mt-3 grid gap-2 text-sm text-white/55 md:grid-cols-3">
+      <div className="mt-3 grid gap-2 text-sm text-slate-600 md:grid-cols-3">
         {lines.map(([label, value]) => (
           <Info key={label} label={label} value={value} />
         ))}

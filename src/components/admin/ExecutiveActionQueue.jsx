@@ -657,18 +657,18 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-6">
+      <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
               Executive Action Queue V4
             </p>
 
-            <h2 className="mt-2 text-2xl font-black text-white">
+            <h2 className="mt-2 text-2xl font-black text-[#17243D]">
               Human-Approved Student OS Decision Queue
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
               Converts Executive AI recommendations into controlled actions with approval,
               duplicate protection, bulk execution, queue health, SLA tracking, recovery,
               and batch history.
@@ -749,11 +749,11 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-emerald-400/15 bg-emerald-500/[0.04] p-5">
-            <p className="font-semibold text-emerald-200">
+          <div className="rounded-2xl border border-[#E9802D]/28 bg-[#FFF1E3] p-5">
+            <p className="font-semibold text-[#B84F0E]">
               No executive actions found for this filter.
             </p>
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-[#7A8392]">
               Executive AI does not currently see matching tasks, reminders, calls, emails,
               or WhatsApp drafts.
             </p>
@@ -782,11 +782,11 @@ function ActionQueueCard({
   const canExecute = !executing && !executed && !rejected && (!requiresApproval || approved);
 
   return (
-    <div className={`rounded-2xl border p-4 ${style.wrapper}`}>
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style.wrapper}`}>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-black text-white">{recommendation.title || template.title}</p>
+            <p className="font-black text-[#17243D]">{recommendation.title || template.title}</p>
 
             <Tag text={recommendation.priority || "medium"} className={style.badge} />
             <Tag text={formatLabel(studentStage)} />
@@ -795,24 +795,24 @@ function ActionQueueCard({
 
             {requiresApproval ? (
               approved ? (
-                <Tag text="Approved" className="border-emerald-400/25 bg-emerald-500/10 text-emerald-300" />
+                <Tag text="Approved" className="border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]" />
               ) : (
-                <Tag text="Approval Required" className="border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]" />
+                <Tag text="Approval Required" className="border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]" />
               )
             ) : (
-              <Tag text="Auto Ready" className="border-emerald-400/20 bg-emerald-500/10 text-emerald-300" />
+              <Tag text="Auto Ready" className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]" />
             )}
 
-            {rejected ? <Tag text="Rejected" className="border-red-400/25 bg-red-500/10 text-red-300" /> : null}
-            {failed ? <Tag text="Failed" className="border-red-400/25 bg-red-500/10 text-red-300" /> : null}
-            {executed ? <Tag text="Executed" className="border-emerald-400/25 bg-emerald-500/10 text-emerald-300" /> : null}
+            {rejected ? <Tag text="Rejected" className="border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]" /> : null}
+            {failed ? <Tag text="Failed" className="border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]" /> : null}
+            {executed ? <Tag text="Executed" className="border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]" /> : null}
           </div>
 
-          <p className="mt-2 text-sm leading-6 text-white/55">
+          <p className="mt-2 text-sm leading-6 text-[#667085]">
             {recommendation.description || template.description}
           </p>
 
-          <p className="mt-3 text-xs leading-5 text-white/40">{reason}</p>
+          <p className="mt-3 text-xs leading-5 text-[#7A8392]">{reason}</p>
 
           <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
             <MiniStat label="Risk" value={score.risk_score || 0} />
@@ -824,14 +824,14 @@ function ActionQueueCard({
           <div className="mt-4 grid gap-3 xl:grid-cols-2">
             <PayloadSummary payload={template.payload || {}} />
 
-            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+            <div className="rounded-xl border border-[#243A60]/18 bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
                 Student
               </p>
 
-              <p className="mt-2 font-bold text-white">{getStudentName(score)}</p>
+              <p className="mt-2 font-bold text-[#17243D]">{getStudentName(score)}</p>
 
-              <div className="mt-3 grid gap-1 text-xs leading-5 text-white/45">
+              <div className="mt-3 grid gap-1 text-xs leading-5 text-[#7A8392]">
                 <p>Type: {formatLabel(getStudentType(score))}</p>
                 <p>Stage: {formatLabel(studentStage)}</p>
                 <p>Action: {formatLabel(actionType)}</p>
@@ -841,13 +841,13 @@ function ActionQueueCard({
           </div>
 
           {error ? (
-            <p className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            <p className="mt-3 rounded-xl border border-[#C2413B]/30 bg-[#FFF0EE] px-3 py-2 text-xs text-[#A8342F]">
               {error}
             </p>
           ) : null}
 
           {executed ? (
-            <p className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+            <p className="mt-3 rounded-xl border border-[#E9802D]/32 bg-[#FFF1E3] px-3 py-2 text-xs text-[#B84F0E]">
               Action marked as executed. Refresh analytics/tasks if needed.
             </p>
           ) : null}
@@ -860,7 +860,7 @@ function ActionQueueCard({
                 type="button"
                 onClick={onApprove}
                 disabled={executed || executing}
-                className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full border border-[#E9802D]/35 bg-[#FFF1E3] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#B84F0E] transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Approve
               </button>
@@ -869,7 +869,7 @@ function ActionQueueCard({
                 type="button"
                 onClick={onReject}
                 disabled={executed || executing}
-                className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full border border-[#C2413B]/32 bg-[#FFF0EE] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#A8342F] transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Reject
               </button>
@@ -880,7 +880,7 @@ function ActionQueueCard({
             type="button"
             onClick={onExecute}
             disabled={!canExecute}
-            className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-[#E9802D]/45 bg-[#FFF1E3] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#B84F0E] transition hover:bg-[#E9802D]/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {executed ? "Executed" : executing ? "Executing..." : "Execute"}
           </button>
@@ -892,17 +892,17 @@ function ActionQueueCard({
 
 function BatchHistoryPanel({ batchHistory = [] }) {
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D4AF37]">
+    <div className="rounded-[1.75rem] border shadow-[0_12px_28px_rgba(23,36,61,0.05)] border-[#243A60]/18 bg-white p-5">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#B84F0E]">
         Batch Execution History
       </p>
       <div className="mt-4 grid gap-3">
         {batchHistory.slice(0, 4).map((batch) => (
-          <div key={batch.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+          <div key={batch.id} className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="font-black text-white">{formatLabel(batch.scope)} Batch</p>
-                <p className="mt-1 text-xs text-white/40">{new Date(batch.executedAt).toLocaleString()}</p>
+                <p className="font-black text-[#17243D]">{formatLabel(batch.scope)} Batch</p>
+                <p className="mt-1 text-xs text-[#7A8392]">{new Date(batch.executedAt).toLocaleString()}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge label={`${batch.summary?.successful || 0} Success`} success />
@@ -920,12 +920,12 @@ function BatchHistoryPanel({ batchHistory = [] }) {
 
 function PayloadSummary({ payload = {} }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-xl border border-[#243A60]/18 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         Prepared Payload
       </p>
 
-      <div className="mt-3 grid gap-1 text-xs leading-5 text-white/45">
+      <div className="mt-3 grid gap-1 text-xs leading-5 text-[#7A8392]">
         <p>Student: {payload.student_name || "Unknown"}</p>
         <p>Journey: {formatLabel(payload.journey_stage || "not_started")}</p>
         <p>Recommendation: {formatLabel(payload.recommendation_type || "unknown")}</p>
@@ -939,16 +939,16 @@ function PayloadSummary({ payload = {} }) {
 function QueueMetric({ label, value, tone = "default" }) {
   const toneClass =
     tone === "red"
-      ? "border-red-400/20 bg-red-500/10 text-red-200"
+      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
       : tone === "gold"
-      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
       : tone === "green"
-      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-      : "border-white/10 bg-black/20 text-white";
+      ? "border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
+      : "border-[#243A60]/18 bg-white text-[#17243D]";
 
   return (
-    <div className={`rounded-2xl border p-4 ${toneClass}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${toneClass}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {label}
       </p>
       <p className="mt-2 text-2xl font-black">{value}</p>
@@ -958,12 +958,12 @@ function QueueMetric({ label, value, tone = "default" }) {
 
 function BulkButton({ label, onClick, loading = false, danger = false, gold = false, success = false }) {
   const style = danger
-    ? "border-red-400/25 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+    ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F] hover:bg-red-500/20"
     : gold
-    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20"
+    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E] hover:bg-[#E9802D]/20"
     : success
-    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
-    : "border-white/10 bg-black/20 text-white/55 hover:border-white/25 hover:text-white";
+    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E] hover:bg-emerald-500/20"
+    : "border-[#243A60]/18 bg-white text-[#667085] hover:border-white/25 hover:text-[#17243D]";
 
   return (
     <button
@@ -984,8 +984,8 @@ function FilterButton({ active = false, onClick, children }) {
       onClick={onClick}
       className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
         active
-          ? "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]"
-          : "border-white/10 bg-black/20 text-white/45 hover:border-white/20 hover:text-white/70"
+          ? "border-[#E9802D]/45 bg-[#FFF1E3] text-[#B84F0E]"
+          : "border-[#243A60]/18 bg-white text-[#7A8392] hover:border-white/20 hover:text-[#344054]"
       }`}
     >
       {children}
@@ -995,7 +995,7 @@ function FilterButton({ active = false, onClick, children }) {
 
 function MiniStat({ label, value }) {
   return (
-    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-white/35">
+    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[#8992A1]">
       {label}: {value}
     </span>
   );
@@ -1003,12 +1003,12 @@ function MiniStat({ label, value }) {
 
 function Badge({ label, danger = false, gold = false, success = false }) {
   const style = danger
-    ? "border-red-400/25 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]"
     : gold
-    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
     : success
-    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-    : "border-white/10 bg-black/20 text-white/45";
+    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
+    : "border-[#243A60]/18 bg-white text-[#7A8392]";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>
@@ -1021,7 +1021,7 @@ function Tag({ text, className = "" }) {
   return (
     <span
       className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
-        className || "border-white/10 bg-black/20 text-white/45"
+        className || "border-[#243A60]/18 bg-white text-[#7A8392]"
       }`}
     >
       {text}
@@ -1034,35 +1034,35 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "critical" || clean === "urgent") {
     return {
-      wrapper: "border-red-400/25 bg-red-500/10",
-      badge: "border-red-400/25 bg-red-500/10 text-red-200",
+      wrapper: "border-[#C2413B]/32 bg-[#FFF0EE]",
+      badge: "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]",
     };
   }
 
   if (clean === "executive") {
     return {
-      wrapper: "border-[#D4AF37]/30 bg-[#D4AF37]/10",
-      badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
+      wrapper: "border-[#E9802D]/45 bg-[#FFF1E3]",
+      badge: "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]",
     };
   }
 
   if (clean === "high") {
     return {
-      wrapper: "border-orange-400/25 bg-orange-500/10",
-      badge: "border-orange-400/25 bg-orange-500/10 text-orange-200",
+      wrapper: "border-[#A36A18]/30 bg-[#FFF7E8]",
+      badge: "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]",
     };
   }
 
   if (clean === "medium") {
     return {
-      wrapper: "border-blue-400/25 bg-blue-500/10",
-      badge: "border-blue-400/25 bg-blue-500/10 text-blue-200",
+      wrapper: "border-[#243A60]/25 bg-[#F3F5F8]",
+      badge: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
     };
   }
 
   return {
-    wrapper: "border-white/10 bg-white/[0.03]",
-    badge: "border-white/10 bg-black/20 text-white/45",
+    wrapper: "border-[#243A60]/18 bg-white",
+    badge: "border-[#243A60]/18 bg-white text-[#7A8392]",
   };
 }
 

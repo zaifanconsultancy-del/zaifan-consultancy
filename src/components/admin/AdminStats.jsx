@@ -1,15 +1,40 @@
+import { useEffect } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import {
+  Activity,
+  AlertTriangle,
+  CalendarCheck2,
+  CircleDollarSign,
+  ClipboardCheck,
+  FolderOpen,
+  Gauge,
+  GraduationCap,
+  Headphones,
+  Landmark,
+  LayoutDashboard,
+  LockKeyhole,
+  ReceiptText,
+  ShieldAlert,
+  Sparkles,
+  Target,
+  UserCheck,
+  UsersRound,
+  WalletCards,
+} from "lucide-react";
 
 function AnimatedNumber({ value }) {
-  const motionValue = useMotionValue(0);
+  const motionValue = useMotionValue(Number(value || 0));
   const springValue = useSpring(motionValue, {
-    duration: 1200,
-    bounce: 0,
+    stiffness: 110,
+    damping: 20,
+    mass: 0.7,
   });
 
   const rounded = useTransform(springValue, (latest) => Math.round(latest));
 
-  motionValue.set(Number(value || 0));
+  useEffect(() => {
+    motionValue.set(Number(value || 0));
+  }, [motionValue, value]);
 
   return <motion.span>{rounded}</motion.span>;
 }
@@ -219,13 +244,16 @@ function AdminStats({
     studentDocuments.length === 0
       ? 0
       : Math.round(
-          ((studentDocuments.length - pendingDocuments) / studentDocuments.length) * 100
+          ((studentDocuments.length - pendingDocuments) / studentDocuments.length) *
+            100
         );
 
   const taskHealthRate =
     studentTasks.length === 0
       ? 0
-      : Math.round(((studentTasks.length - pendingTasks.length) / studentTasks.length) * 100);
+      : Math.round(
+          ((studentTasks.length - pendingTasks.length) / studentTasks.length) * 100
+        );
 
   const revenueHealthRate =
     studentInvoices.length === 0
@@ -243,287 +271,446 @@ function AdminStats({
     supportRequests.length === 0
       ? 100
       : Math.round(
-          ((supportRequests.length - openSupportRequests) / supportRequests.length) * 100
+          ((supportRequests.length - openSupportRequests) / supportRequests.length) *
+            100
         );
 
-  const crmStats = [
+  const executiveHealth = Math.round(
+    (
+      contactRate +
+      ownershipRate +
+      documentReadyRate +
+      taskHealthRate +
+      revenueHealthRate +
+      portalActivationRate +
+      supportHealthRate
+    ) / 7
+  );
+
+  const criticalActions =
+    openPoolLeads +
+    urgentLeads +
+    overdueTasks +
+    highRiskStudents +
+    pendingReceipts +
+    escalatedSupportRequests;
+
+  const crmMetrics = [
     {
       label: "Total Inquiries",
       value: totalInquiries,
-      icon: "📨",
-      color: "text-[#D4AF37]",
-      description: `${inquiryNewCount} new · ${inquiryContactedCount} contacted`,
+      icon: UsersRound,
+      detail: `${inquiryNewCount} new · ${inquiryContactedCount} contacted`,
       progress: contactRate,
       progressLabel: "Contact rate",
-      tone: "gold",
+      tone: "orange",
     },
     {
       label: "Appointments",
       value: totalAppointments,
-      icon: "📅",
-      color: "text-green-400",
-      description: `${appointmentPendingCount} pending · ${appointmentConfirmedCount} confirmed`,
-      progress: pendingRatio,
-      progressLabel: "Pending ratio",
-      tone: "green",
+      icon: CalendarCheck2,
+      detail: `${appointmentPendingCount} pending · ${appointmentConfirmedCount} confirmed`,
+      progress: confirmRate,
+      progressLabel: "Confirmation rate",
+      tone: "blue",
     },
     {
       label: "Lead Ownership",
       value: assignedLeads,
-      icon: "📌",
-      color: "text-cyan-300",
-      description: `${openPoolLeads} leads still in open pool`,
+      icon: UserCheck,
+      detail: `${openPoolLeads} leads remain in the open pool`,
       progress: ownershipRate,
       progressLabel: "Assigned rate",
-      tone: "cyan",
+      tone: "emerald",
     },
     {
-      label: "Urgent Leads",
+      label: "Priority Pressure",
       value: urgentLeads,
-      icon: "🔥",
-      color: "text-red-300",
-      description: `${vipLeads} VIP · ${highLeads} high priority`,
+      icon: ShieldAlert,
+      detail: `${vipLeads} VIP · ${highLeads} high priority`,
       progress: urgentRate,
-      progressLabel: "Urgency ratio",
-      tone: "red",
-    },
-    {
-      label: "Confirmed",
-      value: appointmentConfirmedCount,
-      icon: "✅",
-      color: "text-green-400",
-      description: "Ready for consultation",
-      progress: confirmRate,
-      progressLabel: "Confirm rate",
-      tone: "green",
-    },
-    {
-      label: "Completed",
-      value: appointmentCompletedCount,
-      icon: "🎯",
-      color: "text-blue-300",
-      description: `${appointmentCancelledCount} cancelled appointments`,
-      progress: completionRate,
-      progressLabel: "Completion rate",
-      tone: "blue",
+      progressLabel: "Urgent lead ratio",
+      tone: urgentLeads ? "red" : "emerald",
     },
   ];
 
-  const studentOsStats = [
+  const journeyMetrics = [
     {
       label: "Applications",
       value: applicationsCount,
-      icon: "📝",
-      color: "text-cyan-300",
-      description: `${offerCount} offers · ${casIssuedCount} CAS · ${visaApprovedCount} visa approved`,
+      icon: GraduationCap,
+      detail: `${offerCount} offers · ${casIssuedCount} CAS · ${visaApprovedCount} visa approved`,
       progress: studentJourneyRate,
-      progressLabel: "Journey progress",
-      tone: "cyan",
-    },
-    {
-      label: "Documents",
-      value: studentDocuments.length,
-      icon: "📂",
-      color: "text-purple-300",
-      description: `${pendingDocuments} pending review`,
-      progress: documentReadyRate,
-      progressLabel: "Readiness rate",
-      tone: "purple",
-    },
-    {
-      label: "Tasks",
-      value: pendingTasks.length,
-      icon: "⏳",
-      color: "text-orange-300",
-      description: `${overdueTasks} overdue tasks`,
-      progress: taskHealthRate,
-      progressLabel: "Task health",
-      tone: "orange",
-    },
-    {
-      label: "Universities",
-      value: studentUniversities.length,
-      icon: "🏛️",
-      color: "text-pink-300",
-      description: "Dream / target / safe planning",
-      progress: studentUniversities.length ? 100 : 0,
-      progressLabel: "Plan coverage",
-      tone: "pink",
-    },
-    {
-      label: "Risk Students",
-      value: highRiskStudents,
-      icon: "🚨",
-      color: "text-red-300",
-      description: "Executive AI high-risk queue",
-      progress: studentRiskScores.length
-        ? Math.round((highRiskStudents / studentRiskScores.length) * 100)
-        : 0,
-      progressLabel: "Risk pressure",
-      tone: "red",
-    },
-    {
-      label: "Revenue",
-      value: studentInvoices.length,
-      icon: "💷",
-      color: "text-[#D4AF37]",
-      description: `${unpaidInvoices} unpaid · £${Math.round(outstandingAmount).toLocaleString()} outstanding`,
-      progress: revenueHealthRate,
-      progressLabel: "Revenue health",
-      tone: "gold",
-    },
-    {
-      label: "Receipts",
-      value: studentReceipts.length,
-      icon: "📎",
-      color: "text-blue-300",
-      description: `${pendingReceipts} pending approval`,
-      progress: studentReceipts.length
-        ? Math.round(
-            ((studentReceipts.length - pendingReceipts) / studentReceipts.length) * 100
-          )
-        : 0,
-      progressLabel: "Receipt processing",
+      progressLabel: "Journey maturity",
       tone: "blue",
     },
     {
-      label: "Portal Accounts",
-      value: studentPortalAccounts.length,
-      icon: "🔐",
-      color: "text-green-300",
-      description: `${activePortalAccounts} active · ${portalResetCount} password resets`,
-      progress: portalActivationRate,
-      progressLabel: "Portal activation",
-      tone: "green",
+      label: "Document Readiness",
+      value: studentDocuments.length,
+      icon: FolderOpen,
+      detail: `${pendingDocuments} documents pending review`,
+      progress: documentReadyRate,
+      progressLabel: "Readiness rate",
+      tone: pendingDocuments ? "amber" : "emerald",
     },
     {
-      label: "Support",
-      value: openSupportRequests,
-      icon: "🎧",
-      color: "text-orange-300",
-      description: `${escalatedSupportRequests} escalated requests`,
-      progress: supportHealthRate,
-      progressLabel: "Support health",
+      label: "Task Operations",
+      value: pendingTasks.length,
+      icon: ClipboardCheck,
+      detail: `${overdueTasks} overdue tasks`,
+      progress: taskHealthRate,
+      progressLabel: "Task health",
+      tone: overdueTasks ? "red" : "emerald",
+    },
+    {
+      label: "University Planning",
+      value: studentUniversities.length,
+      icon: Landmark,
+      detail: "Dream / target / safe planning coverage",
+      progress: studentUniversities.length ? 100 : 0,
+      progressLabel: "Plan coverage",
       tone: "orange",
+    },
+  ];
+
+  const operationsMetrics = [
+    {
+      label: "High-Risk Students",
+      value: highRiskStudents,
+      icon: AlertTriangle,
+      detail: "Executive AI risk queue requiring attention",
+      tone: highRiskStudents ? "red" : "emerald",
+    },
+    {
+      label: "Outstanding Invoices",
+      value: unpaidInvoices,
+      icon: CircleDollarSign,
+      detail: `£${Math.round(outstandingAmount).toLocaleString()} outstanding`,
+      tone: unpaidInvoices ? "amber" : "emerald",
+    },
+    {
+      label: "Receipt Approvals",
+      value: pendingReceipts,
+      icon: ReceiptText,
+      detail: `${studentReceipts.length} total student receipts`,
+      tone: pendingReceipts ? "amber" : "emerald",
+    },
+    {
+      label: "Portal Access",
+      value: activePortalAccounts,
+      icon: LockKeyhole,
+      detail: `${portalResetCount} password resets required`,
+      tone: portalResetCount ? "amber" : "emerald",
+    },
+    {
+      label: "Support Queue",
+      value: openSupportRequests,
+      icon: Headphones,
+      detail: `${escalatedSupportRequests} escalated requests`,
+      tone: escalatedSupportRequests ? "red" : "blue",
     },
     {
       label: "Payment Requests",
       value: counselorPaymentRequests.length,
-      icon: "🧾",
-      color: "text-cyan-300",
-      description: "Counselor payment request queue",
-      progress: counselorPaymentRequests.length ? 50 : 100,
-      progressLabel: "Queue pressure",
-      tone: "cyan",
+      icon: WalletCards,
+      detail: "Counselor payment request queue",
+      tone: counselorPaymentRequests.length ? "blue" : "slate",
     },
   ];
 
-  const stats = [...crmStats, ...studentOsStats];
+  return (
+    <section className="mb-6 space-y-4">
+      <div className="relative overflow-hidden rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white via-[#fffaf5] to-[#fff1e7] p-6 text-[#071f50] shadow-[0_24px_70px_rgba(121,72,40,0.10)] sm:p-7">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-orange-300/24 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-[#ffcdb4]/30 blur-3xl" />
+
+        <div className="relative grid gap-5 xl:grid-cols-[1fr_auto] xl:items-start">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/20 bg-orange-500/10 px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-[0.15em] text-orange-700">
+              <LayoutDashboard size={12} />
+              Executive Operating Snapshot
+            </div>
+
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-[#071f50] sm:text-4xl">
+              CRM + Student OS Health
+            </h2>
+
+            <p className="mt-2 max-w-3xl text-[15px] font-medium leading-7 text-slate-600">
+              One decision layer for lead conversion, appointments, student journey readiness,
+              risk, finance, portal access and support operations.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <ExecutiveMetric
+              label="Operating health"
+              value={`${executiveHealth}%`}
+              icon={Gauge}
+              tone={executiveHealth >= 75 ? "emerald" : executiveHealth >= 50 ? "amber" : "red"}
+            />
+            <ExecutiveMetric
+              label="Critical actions"
+              value={criticalActions}
+              icon={AlertTriangle}
+              tone={criticalActions ? "red" : "emerald"}
+            />
+            <ExecutiveMetric
+              label="Active students"
+              value={Math.max(studentPortalAccounts.length, studentApplications.length, studentUniversities.length)}
+              icon={UsersRound}
+              tone="blue"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 2xl:grid-cols-[1.1fr_0.9fr]">
+        <MetricSection
+          eyebrow="CRM Command"
+          title="Lead & Appointment Health"
+          description="Conversion pressure, lead ownership and consultation readiness."
+          icon={Target}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {crmMetrics.map((stat, index) => (
+              <PerformanceCard
+                key={stat.label}
+                stat={stat}
+                index={index}
+                cardClass={cardClass}
+              />
+            ))}
+          </div>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <CompactHealth
+              label="Appointment completion"
+              value={`${completionRate}%`}
+              detail={`${appointmentCompletedCount} completed · ${appointmentCancelledCount} cancelled`}
+              tone={completionRate >= 70 ? "emerald" : "blue"}
+            />
+            <CompactHealth
+              label="Pending appointment pressure"
+              value={`${pendingRatio}%`}
+              detail={`${appointmentPendingCount} appointments still pending`}
+              tone={pendingRatio > 40 ? "amber" : "emerald"}
+            />
+          </div>
+        </MetricSection>
+
+        <MetricSection
+          eyebrow="Priority Center"
+          title="Operational Attention"
+          description="Queues that need staff action before they become student or revenue problems."
+          icon={Activity}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {operationsMetrics.map((stat, index) => (
+              <OperationalCard
+                key={stat.label}
+                stat={stat}
+                index={index}
+              />
+            ))}
+          </div>
+        </MetricSection>
+      </div>
+
+      <MetricSection
+        eyebrow="Student OS"
+        title="Journey Readiness"
+        description="Application, document, task and university-planning maturity across active students."
+        icon={Sparkles}
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {journeyMetrics.map((stat, index) => (
+            <PerformanceCard
+              key={stat.label}
+              stat={stat}
+              index={index}
+              cardClass={cardClass}
+            />
+          ))}
+        </div>
+      </MetricSection>
+    </section>
+  );
+}
+
+function MetricSection({ eyebrow, title, description, icon: Icon, children }) {
+  return (
+    <section className="rounded-[1.9rem] border border-white/10 bg-[#071f50] p-5 text-white shadow-[0_18px_48px_rgba(7,31,80,0.18)] sm:p-6">
+      <div className="mb-4 flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-orange-400 shadow-sm">
+          <Icon size={18} />
+        </div>
+
+        <div>
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-orange-600">
+            {eyebrow}
+          </p>
+          <h3 className="mt-1 text-xl font-black tracking-tight text-white sm:text-2xl">{title}</h3>
+          <p className="mt-1 text-sm font-medium leading-6 text-blue-100/80">{description}</p>
+        </div>
+      </div>
+
+      {children}
+    </section>
+  );
+}
+
+function ExecutiveMetric({ label, value, icon: Icon, tone = "slate" }) {
+  const tones = {
+    slate: "border-orange-100 bg-white text-[#071f50]",
+    blue: "border-white/10 bg-white/10 text-white",
+    emerald: "border-white/10 bg-white/10 text-white",
+    amber: "border-white/10 bg-white/10 text-white",
+    red: "border-white/10 bg-white/10 text-white",
+  };
 
   return (
-    <div className="mb-5 space-y-4 xl:mb-6">
-      <div className="flex flex-col gap-2">
-        <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
-          Executive Dashboard KPIs
-        </p>
-
-        <h2 className="text-xl font-black text-white">
-          CRM + Student OS Operating Snapshot
-        </h2>
-
-        <p className="max-w-4xl text-sm text-gray-500">
-          Classic CRM performance remains active while Student OS, Revenue,
-          Portal, Support, Risk, Documents, Tasks, Universities, CAS, and Visa
-          intelligence are now visible from the main admin dashboard.
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:gap-4 2xl:grid-cols-4">
-        {stats.map((stat, index) => (
-          <StatCard
-            key={stat.label}
-            stat={stat}
-            index={index}
-            cardClass={cardClass}
-          />
-        ))}
-      </div>
+    <div className={`min-w-[130px] rounded-2xl border border-orange-100 bg-white p-3 shadow-sm ${tones[tone] || tones.slate}`}>
+      <Icon size={15} />
+      <p className="mt-2 text-[8px] font-black uppercase tracking-[0.12em] opacity-65">{label}</p>
+      <p className="mt-1 text-2xl font-black text-[#071f50]">{value}</p>
     </div>
   );
 }
 
-function StatCard({ stat, index, cardClass }) {
-  const toneClasses = {
-    gold: "from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent",
-    green: "from-green-400/15 via-green-400/5 to-transparent",
-    cyan: "from-cyan-400/15 via-cyan-400/5 to-transparent",
-    red: "from-red-400/15 via-red-400/5 to-transparent",
-    blue: "from-blue-400/15 via-blue-400/5 to-transparent",
-    purple: "from-purple-400/15 via-purple-400/5 to-transparent",
-    orange: "from-orange-400/15 via-orange-400/5 to-transparent",
-    pink: "from-pink-400/15 via-pink-400/5 to-transparent",
-  };
+function PerformanceCard({ stat, index, cardClass = "" }) {
+  const Icon = stat.icon;
+  const tone = getTone(stat.tone);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.035 }}
-      className={`${cardClass} p-4 sm:p-5`}
+      transition={{ duration: 0.28, delay: Math.min(index * 0.025, 0.12) }}
+      className={`relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-white/10 p-5 text-white shadow-[0_10px_28px_rgba(7,31,80,0.18)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-400/40 hover:bg-white/14 hover:shadow-[0_16px_38px_rgba(7,31,80,0.24)]`}
     >
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
-
-      <div
-        className={`pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-gradient-to-br ${
-          toneClasses[stat.tone] || toneClasses.gold
-        } blur-3xl transition duration-500 group-hover:opacity-100`}
-      ></div>
-
-      <div className="relative flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500 sm:text-[10px] sm:tracking-[0.28em]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-blue-100/70">
             {stat.label}
           </p>
 
-          <h2
-            className={`mt-2 text-3xl font-black leading-none sm:mt-3 sm:text-4xl ${stat.color}`}
-          >
+          <p className="mt-2 text-4xl font-black leading-none tracking-[-0.04em] text-white">
             <AnimatedNumber value={stat.value} />
-          </h2>
+          </p>
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xl sm:rounded-2xl sm:text-2xl">
-            {stat.icon}
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-1.5 text-[11px] text-gray-400 sm:rounded-2xl sm:px-3 sm:py-2 sm:text-xs">
-            {stat.progress}%
-          </div>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${tone.icon}`}>
+          <Icon size={18} />
         </div>
       </div>
 
-      <p className="relative mt-2 text-xs leading-relaxed text-gray-400 sm:mt-3 sm:text-sm">
-        {stat.description}
-      </p>
+      <p className="mt-3 text-sm font-medium leading-6 text-blue-100/80">{stat.detail}</p>
 
-      <div className="relative mt-3 sm:mt-4">
-        <div className="mb-1.5 flex items-center justify-between text-[10px] text-gray-500 sm:mb-2 sm:text-[11px]">
+      <div className="mt-4">
+        <div className="mb-1.5 flex items-center justify-between text-[10px] font-bold text-blue-100/70">
           <span>{stat.progressLabel}</span>
           <span>{stat.progress}%</span>
         </div>
 
-        <div className="h-1.5 overflow-hidden rounded-full bg-white/10 sm:h-2">
+        <div className="h-2 overflow-hidden rounded-full bg-white/10">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(Math.max(stat.progress, 0), 100)}%` }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="h-full rounded-full bg-[#D4AF37]"
-          ></motion.div>
+            transition={{ duration: 0.65, delay: 0.08 }}
+            className={`h-full rounded-full ${tone.bar}`}
+          />
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
+}
+
+function OperationalCard({ stat, index }) {
+  const Icon = stat.icon;
+  const tone = getTone(stat.tone);
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.1) }}
+      className={`rounded-[1.35rem] border border-white/10 bg-white/10 p-4 text-blue-50 shadow-[0_8px_22px_rgba(7,31,80,0.16)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-400/35 hover:bg-white/14 ${tone.card}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.13em] opacity-65">
+            {stat.label}
+          </p>
+          <p className="mt-1.5 text-2xl font-black text-white">
+            <AnimatedNumber value={stat.value} />
+          </p>
+        </div>
+
+        <Icon size={18} />
+      </div>
+
+      <p className="mt-2 text-xs leading-5 opacity-75">{stat.detail}</p>
+    </motion.article>
+  );
+}
+
+function CompactHealth({ label, value, detail, tone = "blue" }) {
+  const toneMap = {
+    blue: "border-white/10 bg-white/10 text-white",
+    emerald: "border-white/10 bg-white/10 text-white",
+    amber: "border-white/10 bg-white/10 text-white",
+    red: "border-white/10 bg-white/10 text-white",
+  };
+
+  return (
+    <div className={`rounded-[1.2rem] border p-3.5 ${toneMap[tone] || toneMap.blue}`}>
+      <p className="text-[9px] font-black uppercase tracking-[0.13em] opacity-65">{label}</p>
+      <p className="mt-1 text-xl font-black text-white">{value}</p>
+      <p className="mt-1 text-[11px] leading-4 opacity-75">{detail}</p>
+    </div>
+  );
+}
+
+function getTone(tone = "slate") {
+  const tones = {
+    orange: {
+      icon: "border-orange-200 bg-orange-50 text-orange-700",
+      bar: "bg-orange-500",
+      card: "border-l-4 border-l-orange-500",
+    },
+    blue: {
+      icon: "border-blue-300/20 bg-blue-400/10 text-blue-200",
+      bar: "bg-blue-500",
+      card: "border-l-4 border-l-blue-500",
+    },
+    emerald: {
+      icon: "border-emerald-300/20 bg-emerald-400/10 text-emerald-200",
+      bar: "bg-emerald-500",
+      card: "border-l-4 border-l-emerald-500",
+    },
+    amber: {
+      icon: "border-amber-300/20 bg-amber-400/10 text-amber-200",
+      bar: "bg-amber-500",
+      card: "border-l-4 border-l-amber-500",
+    },
+    red: {
+      icon: "border-red-300/20 bg-red-400/10 text-red-200",
+      bar: "bg-red-500",
+      card: "border-l-4 border-l-red-500",
+    },
+    orange: {
+      icon: "border-orange-200 bg-orange-50 text-orange-700",
+      bar: "bg-orange-500",
+      card: "border-l-4 border-l-orange-500",
+    },
+    slate: {
+      icon: "border-white/10 bg-white/[0.06] text-blue-100",
+      bar: "bg-slate-500",
+      card: "border-l-4 border-l-slate-400",
+    },
+  };
+
+  return tones[tone] || tones.slate;
 }
 
 export default AdminStats;

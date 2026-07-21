@@ -45,20 +45,23 @@ function VisaStatusTimeline({ status = "not_started" }) {
   const isRejected = status === "rejected";
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-bold text-white">Visa Timeline</h3>
-          <p className="mt-2 text-sm text-white/45">
-            Track every visa milestone from preparation to decision.
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+            Visa Progress
+          </p>
+          <h3 className="mt-1 font-black text-[#10233f]">Visa Timeline</h3>
+          <p className="mt-2 text-sm text-slate-600">
+            Track every visa milestone from preparation to final decision.
           </p>
         </div>
 
         <span
-          className={`rounded-full border px-4 py-2 text-xs font-black ${
+          className={`rounded-full border px-4 py-2 text-xs font-black capitalize ${
             isRejected
-              ? "border-red-400/25 bg-red-500/10 text-red-300"
-              : "border-cyan-400/25 bg-cyan-500/10 text-cyan-300"
+              ? "border-red-300 bg-red-50 text-red-700"
+              : "border-orange-300 bg-orange-50 text-orange-700"
           }`}
         >
           {status.replaceAll("_", " ")}
@@ -74,12 +77,12 @@ function VisaStatusTimeline({ status = "not_started" }) {
           return (
             <div
               key={stage.id}
-              className={`rounded-xl border p-4 ${
+              className={`rounded-xl border p-4 transition ${
                 active
                   ? isRejected
-                    ? "border-red-400/30 bg-red-500/10"
-                    : "border-cyan-400/30 bg-cyan-500/10"
-                  : "border-white/10 bg-white/[0.02]"
+                    ? "border-red-300 bg-red-50"
+                    : "border-orange-300 bg-[#fff8ee]"
+                  : "border-slate-300 bg-[#fffdf9]"
               }`}
             >
               <div className="flex items-start gap-4">
@@ -87,17 +90,17 @@ function VisaStatusTimeline({ status = "not_started" }) {
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-black ${
                     active
                       ? isRejected
-                        ? "border-red-400/30 text-red-300"
-                        : "border-cyan-400/30 text-cyan-300"
-                      : "border-white/10 text-white/30"
+                        ? "border-red-400 bg-red-600 text-white"
+                        : "border-orange-500 bg-orange-500 text-white"
+                      : "border-slate-300 bg-white text-slate-500"
                   }`}
                 >
                   {index + 1}
                 </span>
 
                 <div>
-                  <p className="font-semibold text-white">{stage.label}</p>
-                  <p className="mt-1 text-sm text-white/45">
+                  <p className="font-black text-[#10233f]">{stage.label}</p>
+                  <p className="mt-1 text-sm text-slate-600">
                     {stage.description}
                   </p>
                 </div>

@@ -1,3 +1,8 @@
+// UniversityManagementPanel V2 — High Contrast Admin OS Edition
+// Preserves university CRUD, Dream/Target/Safe workflow, application sync,
+// timeline events, shared Student OS refresh, UniversitySelector and ProgramTracker.
+// Visual layer aligned with Zaifan cream + white + navy + orange Admin OS.
+
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import UniversitySelector from "./UniversitySelector";
@@ -515,23 +520,23 @@ const moveUniversityCategory = async (
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+      <div className="rounded-[2rem] border border-orange-200 bg-[#fff8ee] p-6">
+        <p className="text-xs uppercase tracking-[0.25em] text-orange-700">
           University Operating System
         </p>
 
-        <h2 className="mt-2 text-2xl font-black text-white">
+        <h2 className="mt-2 text-2xl font-black text-[#10233f]">
           Dream / Target / Safe University Workflow
         </h2>
 
-        <p className="mt-2 text-sm leading-6 text-white/60">
+        <p className="mt-2 text-sm leading-6 text-slate-600">
           Build a real consultancy shortlist, track application status, manage
           intakes, requirements, tuition, deadlines, offers, and final decisions.
         </p>
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
           {error}
         </div>
       ) : null}
@@ -552,8 +557,8 @@ const moveUniversityCategory = async (
         <MetricCard label="Loading" value={loading ? "Yes" : "No"} />
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
-        <h3 className="font-bold text-white">Add University Option</h3>
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+        <h3 className="font-bold text-[#10233f]">Add University Option</h3>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <Input
@@ -634,7 +639,7 @@ const moveUniversityCategory = async (
           type="button"
           onClick={saveUniversity}
           disabled={saving || !form.university.trim()}
-          className="mt-5 rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768] disabled:opacity-50"
+          className="mt-5 rounded-full bg-orange-500 px-6 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Add University"}
         </button>
@@ -677,17 +682,17 @@ function UniversityColumn({
   onStartApplication,
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
       <div className="mb-5">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="font-black text-white">{category.label}</h3>
+          <h3 className="font-black text-[#10233f]">{category.label}</h3>
 
-          <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs font-black text-[#D4AF37]">
+          <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black text-orange-700">
             {items.length}
           </span>
         </div>
 
-        <p className="mt-1 text-sm text-white/40">{category.description}</p>
+        <p className="mt-1 text-sm text-slate-500">{category.description}</p>
       </div>
 
       <div className="space-y-3">
@@ -708,7 +713,7 @@ function UniversityColumn({
             />
           ))
         ) : (
-          <p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/35">
+          <p className="rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-500">
             No {category.label.toLowerCase()} universities yet.
           </p>
         )}
@@ -737,29 +742,29 @@ function UniversityCard({
     <div
       className={`rounded-xl border p-4 ${
         isLinkedToApplication
-          ? "border-emerald-400/30 bg-emerald-500/10"
-          : "border-white/10 bg-black/25"
+          ? "border-emerald-300 bg-emerald-50"
+          : "border-slate-300 bg-white"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="break-words font-semibold text-white">
+            <p className="break-words font-semibold text-[#10233f]">
               {item.university}
             </p>
 
             {isLinkedToApplication ? (
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">
+              <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">
                 🔗 Linked
               </span>
             ) : null}
           </div>
 
-          <p className="mt-1 text-sm text-white/50">
+          <p className="mt-1 text-sm text-slate-600">
             {item.country || "No country"} • {item.program || "No program"}
           </p>
 
-          <p className="mt-1 text-xs text-white/35">
+          <p className="mt-1 text-xs text-slate-500">
             Intake: {item.intake || "Not selected"}
           </p>
         </div>
@@ -768,14 +773,14 @@ function UniversityCard({
           type="button"
           onClick={() => onDelete(item.id)}
           disabled={isStartingApplication || isSyncingStatus}
-          className="rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300 transition hover:border-red-400/40 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold text-red-700 transition hover:border-red-400 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Delete
         </button>
       </div>
 
       {isLinkedToApplication ? (
-        <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-200">
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-700">
           This university is the active source for the application record.
         </div>
       ) : null}
@@ -803,10 +808,10 @@ function UniversityCard({
           disabled={isStartingApplication || isSyncingStatus}
           className={`rounded-xl border px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
             isLinkedToApplication
-              ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300 hover:border-emerald-400/45"
+              ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-100"
               : alreadyApplied
-              ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300 hover:border-emerald-400/45"
-              : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37] hover:border-[#D4AF37]/40"
+              ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-100"
+              : "border-orange-300 bg-orange-50 text-orange-700 hover:border-orange-400 hover:bg-orange-100"
           }`}
         >
           {isStartingApplication
@@ -821,7 +826,7 @@ function UniversityCard({
         </button>
       </div>
 
-      <div className="mt-4 grid gap-2 text-sm text-white/45">
+      <div className="mt-4 grid gap-2 text-sm text-slate-600">
         {item.deadline ? <InfoLine label="Deadline" value={item.deadline} /> : null}
         {item.tuition ? <InfoLine label="Tuition" value={item.tuition} /> : null}
         {item.requirements ? (
@@ -835,24 +840,24 @@ function UniversityCard({
 
 function PlanningCard({ label, value }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.035)]">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-3 break-words text-lg font-black text-white">{value}</p>
+      <p className="mt-3 break-words text-lg font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
 
 function MetricCard({ label, value }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.035)]">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-3 text-3xl font-black text-[#D4AF37]">{value}</p>
+      <p className="mt-3 text-3xl font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
@@ -860,7 +865,7 @@ function MetricCard({ label, value }) {
 function InfoLine({ label, value }) {
   return (
     <p>
-      <span className="font-semibold text-white/65">{label}:</span>{" "}
+      <span className="font-semibold text-slate-700">{label}:</span>{" "}
       <span>{value}</span>
     </p>
   );
@@ -869,7 +874,7 @@ function InfoLine({ label, value }) {
 function Input({ label, value, onChange, placeholder = "" }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
@@ -877,7 +882,7 @@ function Input({ label, value, onChange, placeholder = "" }) {
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder || `Enter ${label}`}
-        className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-[#D4AF37]/40"
+        className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none placeholder:text-[#10233f]/25 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
       />
     </div>
   );
@@ -886,7 +891,7 @@ function Input({ label, value, onChange, placeholder = "" }) {
 function Textarea({ label, value, onChange, placeholder = "" }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
@@ -894,7 +899,7 @@ function Textarea({ label, value, onChange, placeholder = "" }) {
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="mt-2 min-h-[100px] w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-[#D4AF37]/40"
+        className="mt-2 min-h-[100px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none placeholder:text-[#10233f]/25 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
       />
     </div>
   );
@@ -903,7 +908,7 @@ function Textarea({ label, value, onChange, placeholder = "" }) {
 function Select({ label, value, options = [], onChange, disabled = false }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
@@ -911,10 +916,10 @@ function Select({ label, value, options = [], onChange, disabled = false }) {
         value={value || ""}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm capitalize text-white outline-none focus:border-[#D4AF37]/40 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm capitalize text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {options.map((option) => (
-          <option key={option} value={option} className="bg-black">
+          <option key={option} value={option} className="bg-white text-[#10233f]">
             {String(option).replaceAll("_", " ")}
           </option>
         ))}

@@ -1,3 +1,8 @@
+// StudentDocumentsPanel V2 — Document Operations Center
+// Preserves Supabase document CRUD, storage upload/replacement/deletion,
+// public URLs, timeline events, optimistic local updates, timeouts and parent refresh.
+// Full mature file retained; visual layer aligned with Zaifan Admin OS.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -161,13 +166,13 @@ const createTimelineEvent = async ({
   const getStatusStyle = (status) => {
     switch (status) {
       case "verified":
-        return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+        return "border-emerald-300 bg-emerald-50 text-emerald-700";
       case "received":
-        return "border-blue-400/25 bg-blue-500/10 text-blue-300";
+        return "border-blue-300 bg-blue-50 text-blue-700";
       case "rejected":
-        return "border-red-400/25 bg-red-500/10 text-red-300";
+        return "border-red-300 bg-red-50 text-red-700";
       default:
-        return "border-yellow-400/25 bg-yellow-500/10 text-yellow-300";
+        return "border-amber-300 bg-amber-50 text-amber-800";
     }
   };
 
@@ -481,8 +486,8 @@ await notifyParent();
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+      <div className="rounded-[1.8rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-white shadow-[0_16px_40px_rgba(15,35,63,0.14)]">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-300">
           Student Documents
         </p>
 
@@ -490,19 +495,19 @@ await notifyParent();
           Application Readiness Center
         </h2>
 
-        <p className="mt-2 text-white/60">
+        <p className="mt-2 text-slate-200">
           Upload, open, download, replace, delete, verify, reject, and track all
           student application documents.
         </p>
 
-        <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+        <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/15">
           <div
-            className="h-full rounded-full bg-[#D4AF37] transition-all duration-500"
+            className="h-full rounded-full bg-orange-500 transition-all duration-500"
             style={{ width: `${completion || 0}%` }}
           />
         </div>
 
-        <p className="mt-2 text-sm text-white/50">
+        <p className="mt-2 text-sm text-slate-200">
           {completion || 0}% verified • {receivedCount}/
           {requiredDocuments.length} received
         </p>
@@ -511,26 +516,26 @@ await notifyParent();
           type="button"
           onClick={loadDocuments}
           disabled={loading || Boolean(savingKey)}
-          className="mt-4 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/45 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 rounded-full border border-orange-400/50 bg-orange-500 px-4 py-2 text-xs font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Refreshing..." : "Refresh Documents"}
         </button>
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
           {error}
         </div>
       ) : null}
 
       {successMessage ? (
-        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
           {successMessage}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white/50">
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-blue-700">
           Loading documents...
         </div>
       ) : null}
@@ -545,10 +550,10 @@ await notifyParent();
           return (
             <div
               key={doc}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+              className="rounded-2xl border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)]"
             >
               <div className="flex items-center justify-between gap-3">
-                <h3 className="font-semibold text-white">{doc}</h3>
+                <h3 className="font-black text-[#10233f]">{doc}</h3>
 
                 <span
                   className={`rounded-full border px-3 py-1 text-xs font-bold capitalize ${getStatusStyle(
@@ -559,17 +564,17 @@ await notifyParent();
                 </span>
               </div>
 
-              <p className="mt-3 min-h-[40px] text-sm text-white/50">
+              <p className="mt-3 min-h-[40px] text-sm text-slate-600">
                 {existing?.notes || "No notes available."}
               </p>
 
               {hasFile ? (
-                <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+                <div className="mt-4 rounded-2xl border border-slate-300 bg-[#fffaf2] p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
                     Uploaded File
                   </p>
 
-                  <p className="mt-2 break-all text-sm font-semibold text-white/75">
+                  <p className="mt-2 break-all text-sm font-black text-[#10233f]/75">
                     {getFileName(existing)}
                   </p>
 
@@ -578,7 +583,7 @@ await notifyParent();
                       type="button"
                       onClick={() => openDocument(existing)}
                       disabled={Boolean(savingKey)}
-                      className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1.5 text-xs font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/45 disabled:opacity-50"
+                      className="rounded-full border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-black text-orange-700 transition hover:border-[#D4AF37]/45 disabled:opacity-50"
                     >
                       Open
                     </button>
@@ -587,7 +592,7 @@ await notifyParent();
                       type="button"
                       onClick={() => downloadDocument(existing)}
                       disabled={Boolean(savingKey)}
-                      className="rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1.5 text-xs font-bold text-blue-300 transition hover:border-blue-400/45 disabled:opacity-50"
+                      className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700 transition hover:border-blue-400/45 disabled:opacity-50"
                     >
                       Download
                     </button>
@@ -596,7 +601,7 @@ await notifyParent();
                       type="button"
                       onClick={() => deleteDocumentFile(doc)}
                       disabled={Boolean(savingKey)}
-                      className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-300 transition hover:border-red-400/45 disabled:opacity-50"
+                      className="rounded-full border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-black text-red-700 transition hover:border-red-400/45 disabled:opacity-50"
                     >
                       Delete File
                     </button>
@@ -605,7 +610,7 @@ await notifyParent();
               ) : null}
 
               <div className="mt-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+                <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-slate-500">
                   {hasFile ? "Replace File" : "Upload File"}
                 </p>
 
@@ -616,7 +621,7 @@ await notifyParent();
                     uploadDocument(doc, event.target.files?.[0]);
                     event.target.value = "";
                   }}
-                  className="block w-full text-xs text-white/50 file:mr-3 file:rounded-full file:border-0 file:bg-[#D4AF37] file:px-4 file:py-2 file:text-xs file:font-bold file:text-black disabled:opacity-50"
+                  className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-orange-500 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white disabled:opacity-50"
                 />
               </div>
 
@@ -639,7 +644,7 @@ await notifyParent();
                       className={`rounded-full border px-3 py-1.5 text-xs font-bold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
                         status === statusOption
                           ? getStatusStyle(statusOption)
-                          : "border-white/10 bg-white/[0.03] text-white/45 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+                          : "border-slate-300 bg-white text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
                       }`}
                     >
                       {statusOption}

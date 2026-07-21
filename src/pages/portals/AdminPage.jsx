@@ -1,20 +1,36 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
 import AdminLogin from "../../components/admin/AdminLogin";
 import AdminHeader from "../../components/admin/AdminHeader";
-import AdminStats from "../../components/admin/AdminStats";
-import NotificationCenter from "../../components/admin/NotificationCenter";
+const AdminStats = lazy(() => import("../../components/admin/AdminStats"));
+const NotificationCenter = lazy(() => import("../../components/admin/NotificationCenter"));
 import AdminSidebar from "../../components/admin/AdminSidebar";
-import CommandPalette from "../../components/admin/CommandPalette";
+const CommandPalette = lazy(() => import("../../components/admin/CommandPalette"));
 
-import AnalyticsPage from "../../components/admin/pages/AnalyticsPage";
-import FollowUpsPage from "../../components/admin/pages/FollowUpsPage";
-import AutomationPage from "../../components/admin/pages/AutomationPage";
-import MyLeadsPage from "../../components/admin/pages/MyLeadsPage";
-import ActivityLogsPage from "../../components/admin/pages/ActivityLogsPage";
-import AdminManagementPage from "../../components/admin/pages/AdminManagementPage";
-import SettingsPage from "../../components/admin/pages/SettingsPage";
-import PipelinePage from "../../components/admin/pages/PipelinePage";
+const AnalyticsPage = lazy(() =>
+  import("../../components/admin/pages/AnalyticsPage")
+);
+const FollowUpsPage = lazy(() =>
+  import("../../components/admin/pages/FollowUpsPage")
+);
+const AutomationPage = lazy(() =>
+  import("../../components/admin/pages/AutomationPage")
+);
+const MyLeadsPage = lazy(() =>
+  import("../../components/admin/pages/MyLeadsPage")
+);
+const ActivityLogsPage = lazy(() =>
+  import("../../components/admin/pages/ActivityLogsPage")
+);
+const AdminManagementPage = lazy(() =>
+  import("../../components/admin/pages/AdminManagementPage")
+);
+const SettingsPage = lazy(() =>
+  import("../../components/admin/pages/SettingsPage")
+);
+const PipelinePage = lazy(() =>
+  import("../../components/admin/pages/PipelinePage")
+);
 
 import useAdminAuth from "../../hooks/useAdminAuth";
 import useAdminDashboardData from "../../hooks/useAdminDashboardData";
@@ -97,10 +113,10 @@ function AdminPage() {
   }, []);
 
   const cardClass =
-    "group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/35 hover:bg-white/[0.055] sm:rounded-[2rem] sm:p-6";
+    "group relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white p-5 text-[#0b2a57] shadow-[0_12px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_46px_rgba(15,23,42,0.10)] sm:p-6";
 
   const inputClass =
-    "w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]";
+    "w-full rounded-xl border border-slate-300 bg-white px-5 py-4 text-[15px] font-semibold text-[#0b2a57] outline-none placeholder:text-slate-400 transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
 
   const auth = useAdminAuth();
 
@@ -527,22 +543,52 @@ function AdminPage() {
 
   const statusOptions = getStatusOptions(activeTab);
 
+  const adminCommandMetrics = useMemo(() => {
+    const openSupport = supportRequests.filter(
+      (item) => !["resolved", "closed"].includes(String(item.status || "").toLowerCase())
+    ).length;
+
+    const pendingTasks = studentTasks.filter(
+      (item) => !["completed", "done"].includes(String(item.status || "").toLowerCase())
+    ).length;
+
+    const activePortalAccounts = studentPortalAccounts.filter(
+      (item) => item.is_active !== false
+    ).length;
+
+    return {
+      totalLeads: allLeads.length,
+      pendingAppointments: appointmentPendingCount,
+      pendingTasks,
+      openSupport,
+      activePortalAccounts,
+      gptCoverage: aiCoverageStats.percent,
+    };
+  }, [
+    allLeads.length,
+    appointmentPendingCount,
+    studentTasks,
+    supportRequests,
+    studentPortalAccounts,
+    aiCoverageStats.percent,
+  ]);
+
   if (!sessionChecked || (profileLoading && !adminProfile)) {
     return (
-      <section className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-white">
-        <div className={`${cardClass} max-w-md text-center`}>
-          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent"></div>
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#fff7ef] px-6 text-[#0b2a57]">
+        <div className="relative z-10 w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_30px_100px_rgba(15,23,42,0.12)]">
+          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
 
-          <h1 className="text-2xl font-black text-white">
+          <h1 className="text-2xl font-black text-[#0b2a57]">
             Checking Admin Role
           </h1>
 
-          <p className="mt-3 text-sm text-gray-400">
+          <p className="mt-3 text-sm text-slate-500">
             Please wait while Zaifan CRM verifies your permissions.
           </p>
 
           {profileRetryCount > 0 && (
-            <p className="mt-3 text-xs text-[#D4AF37]">
+            <p className="mt-3 text-xs text-orange-600">
               Profile check attempt {profileRetryCount}/{PROFILE_RETRY_LIMIT}
             </p>
           )}
@@ -566,8 +612,8 @@ function AdminPage() {
 
   if (sessionChecked && isLoggedIn && !profileLoading && !adminProfile) {
     return (
-      <section className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-white">
-        <div className={`${cardClass} max-w-lg text-center`}>
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#fff7ef] px-6 text-[#0b2a57]">
+        <div className="relative z-10 w-full max-w-lg rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_30px_100px_rgba(15,23,42,0.12)]">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[1.5rem] border border-red-400/20 bg-red-500/10 text-3xl">
             🔒
           </div>
@@ -576,25 +622,25 @@ function AdminPage() {
             Access Check Paused
           </p>
 
-          <h1 className="mt-3 text-3xl font-black text-white">
+          <h1 className="mt-3 text-3xl font-black text-[#0b2a57]">
             Admin Profile Not Verified Yet
           </h1>
 
-          <p className="mt-4 text-sm leading-relaxed text-gray-400">
+          <p className="mt-4 text-sm leading-relaxed text-slate-500">
             Your login session is active, but Zaifan CRM could not verify your
             admin profile after several attempts. This can happen during Vite hot
             reload or temporary Supabase delay.
           </p>
 
           {profileError && (
-            <div className="mt-5 rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4 text-left text-xs leading-relaxed text-orange-200">
+            <div className="mt-5 rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4 text-left text-xs leading-relaxed text-orange-700">
               {profileError}
             </div>
           )}
 
-          <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4 text-left text-xs text-gray-300">
-            <p className="text-gray-500">Your user ID:</p>
-            <p className="mt-1 break-all font-mono text-[#D4AF37]">
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left text-xs text-slate-600">
+            <p className="text-slate-400">Your user ID:</p>
+            <p className="mt-1 break-all font-mono text-orange-600">
               {adminUser?.id || "No user ID found"}
             </p>
           </div>
@@ -603,7 +649,7 @@ function AdminPage() {
             <button
               type="button"
               onClick={() => loadAdminProfile(adminUser?.id, { force: true })}
-              className="rounded-full bg-[#D4AF37] px-7 py-3 text-sm font-black text-black transition hover:bg-[#f1cf65]"
+              className="rounded-full bg-orange-500 px-7 py-3 text-sm font-black text-white shadow-sm transition hover:bg-orange-600"
             >
               Retry Profile Check
             </button>
@@ -611,7 +657,7 @@ function AdminPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-7 py-3 text-sm font-bold text-white transition hover:border-red-400/30 hover:bg-red-500/10"
+              className="rounded-full border border-slate-200 bg-white px-7 py-3 text-sm font-bold text-slate-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
             >
               Logout
             </button>
@@ -622,11 +668,13 @@ function AdminPage() {
   }
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[#050505] text-white">
-      <div className="absolute right-[-35%] top-[-12%] h-[320px] w-[320px] rounded-full bg-[#D4AF37]/10 blur-3xl sm:right-[-12%] sm:top-[-18%] sm:h-[520px] sm:w-[520px]"></div>
-      <div className="absolute bottom-[-18%] left-[-35%] h-[320px] w-[320px] rounded-full bg-[#D4AF37]/5 blur-3xl sm:bottom-[-25%] sm:left-[-12%] sm:h-[520px] sm:w-[520px]"></div>
+    <section className="relative min-h-screen bg-[#fff7ef] text-[#0b2a57]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute right-[-12%] top-[-18%] h-[520px] w-[520px] rounded-full bg-orange-300/20 blur-3xl" />
+        <div className="absolute bottom-[-24%] left-[18%] h-[460px] w-[460px] rounded-full bg-[#ffd9c4]/30 blur-3xl" />
+      </div>
 
-      <div className="relative flex flex-col xl:flex-row">
+      <div className="relative flex min-h-screen flex-col xl:flex-row">
         <AdminSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -636,206 +684,127 @@ function AdminPage() {
           permissions={currentPermissions}
         />
 
-        <CommandPalette
+        <Suspense fallback={null}>
+          <CommandPalette
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           inquiries={inquiries}
           appointments={appointments}
           followUpReminders={followUpReminders}
           permissions={currentPermissions}
-        />
+          />
+        </Suspense>
 
-        <main className="min-w-0 flex-1 overflow-hidden px-3 py-4 sm:px-6 sm:py-6 xl:px-10">
-          <div className="mb-5 flex flex-col gap-3 rounded-[1.5rem] border border-[#D4AF37]/15 bg-[#D4AF37]/5 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.35em] text-[#D4AF37]">
-                Role System Active
-              </p>
+        <main className="min-w-0 flex-1 overflow-hidden px-3 py-4 sm:px-5 sm:py-5 xl:px-7 2xl:px-9">
+          <div className="mx-auto w-full max-w-[1800px]">
+            <div className="relative mb-6 overflow-hidden rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white via-[#fffaf5] to-[#fff1e7] p-5 text-[#0b2a57] shadow-[0_24px_70px_rgba(121,72,40,0.10)] sm:p-7">
+              <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-orange-300/25 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-[#ffcdb4]/28 blur-3xl" />
+              <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    System online
+                  </span>
 
-              <h2 className="mt-1 text-xl font-black text-white">
-                {adminProfile.full_name || "Admin User"}
-              </h2>
+                  <span className="rounded-full border border-orange-400/20 bg-orange-500/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-orange-700">
+                    GPT Coverage {aiCoverageStats.percent}%
+                  </span>
+                </div>
 
-              <p className="mt-1 text-xs text-gray-400">
-                Logged in as{" "}
-                <span className="font-bold text-[#D4AF37]">
-                  {roleLabels[role] || role}
-                </span>
-              </p>
-            </div>
+                <h2 className="mt-3 truncate text-3xl font-black tracking-[-0.035em] text-[#0b2a57] sm:text-4xl">
+                  Welcome back, {adminProfile.full_name || "Admin User"}
+                </h2>
 
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs text-gray-300">
-                Delete: {currentPermissions.canDelete ? "Yes" : "No"}
-              </span>
+                <p className="mt-2 text-[15px] font-medium text-slate-600">
+                  Operating as{" "}
+                  <span className="font-extrabold text-orange-400">
+                    {roleLabels[role] || role}
+                  </span>
+                  . Your workspace is ready.
+                </p>
+              </div>
 
-              <span className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs text-gray-300">
-                Export: {currentPermissions.canExport ? "Yes" : "No"}
-              </span>
+              <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+                <PermissionPill
+                  label="Delete"
+                  enabled={currentPermissions.canDelete}
+                />
+                <PermissionPill
+                  label="Export"
+                  enabled={currentPermissions.canExport}
+                />
+                <PermissionPill
+                  label="Clear all"
+                  enabled={currentPermissions.canClearAll}
+                />
+              </div>
 
-              <span className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs text-gray-300">
-                Clear All: {currentPermissions.canClearAll ? "Yes" : "No"}
-              </span>
+              </div>
 
-              <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37]">
-                GPT Coverage: {aiCoverageStats.percent}%
-              </span>
-            </div>
-          </div>
-
-          {aiReanalysisState.message && (
-            <div className="mb-5 rounded-[1.5rem] border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-              {aiReanalysisState.message}
-            </div>
-          )}
-
-          {aiReanalysisState.error && (
-            <div className="mb-5 rounded-[1.5rem] border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
-              {aiReanalysisState.error}
-            </div>
-          )}
-
-          {profileError && adminProfile && (
-            <div className="mb-5 rounded-[1.5rem] border border-orange-400/20 bg-orange-500/10 p-4 text-sm text-orange-200">
-              {profileError}
-            </div>
-          )}
-
-          {loadError && (
-            <div className="mb-5 rounded-[1.5rem] border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p>{loadError}</p>
-
-                <button
-                  type="button"
-                  onClick={() => fetchAllData()}
-                  className="rounded-full bg-[#D4AF37] px-5 py-2.5 text-xs font-black text-black transition hover:bg-[#E7C768]"
-                >
-                  Retry Refresh
-                </button>
+              <div className="relative mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+                <AdminCommandMetric label="Student leads" value={adminCommandMetrics.totalLeads} detail="Unified inquiry + appointment portfolio" />
+                <AdminCommandMetric label="Pending appointments" value={adminCommandMetrics.pendingAppointments} detail="Consultations awaiting action" tone="orange" />
+                <AdminCommandMetric label="Open tasks" value={adminCommandMetrics.pendingTasks} detail="Student operations still active" tone="blue" />
+                <AdminCommandMetric label="Support queue" value={adminCommandMetrics.openSupport} detail="Unresolved student requests" tone={adminCommandMetrics.openSupport ? "red" : "green"} />
+                <AdminCommandMetric label="Portal accounts" value={adminCommandMetrics.activePortalAccounts} detail="Active Student OS access" tone="green" />
+                <AdminCommandMetric label="GPT coverage" value={`${adminCommandMetrics.gptCoverage}%`} detail="Leads with stored GPT intelligence" tone="orange" />
               </div>
             </div>
-          )}
 
-          <AdminHeader
-            inquiries={inquiries}
-            appointments={appointments}
-            appointmentPendingCount={appointmentPendingCount}
-            fetchAllData={fetchAllData}
-            activeTab={activeTab}
-            exportInquiriesToCSV={exportInquiriesToCSV}
-            exportAppointmentsToCSV={exportAppointmentsToCSV}
-            logout={handleLogout}
-            clearInquiries={clearInquiries}
-            clearAppointments={clearAppointments}
-            role={role}
-            adminProfile={adminProfile}
-            permissions={currentPermissions}
-            studentApplications={studentApplications}
-            studentDocuments={studentDocuments}
-            studentTasks={studentTasks}
-            studentUniversities={studentUniversities}
-            studentRiskScores={studentRiskScores}
-            studentInvoices={studentInvoices}
-            studentPayments={studentPayments}
-            studentReceipts={studentReceipts}
-            studentPortalAccounts={studentPortalAccounts}
-            supportRequests={supportRequests}
-            counselorPaymentRequests={counselorPaymentRequests}
-            executiveExecutionLogs={executiveExecutionLogs}
-            setActiveTab={setActiveTab}
-            setActiveAnalyticsSection={setActiveAnalyticsSection}
-          />
+            {aiReanalysisState.message && (
+              <SystemNotice tone="success">
+                {aiReanalysisState.message}
+              </SystemNotice>
+            )}
 
-          {shouldShowStats(activeTab) && (
-            <>
-              <NotificationCenter
-                cardClass={cardClass}
-                inquiryNewCount={inquiryNewCount}
-                appointmentPendingCount={appointmentPendingCount}
-                appointmentConfirmedCount={appointmentConfirmedCount}
-                role={role}
-                permissions={currentPermissions}
-                studentApplications={studentApplications}
-                studentDocuments={studentDocuments}
-                studentTasks={studentTasks}
-                studentUniversities={studentUniversities}
-                studentRiskScores={studentRiskScores}
-                studentInvoices={studentInvoices}
-                studentPayments={studentPayments}
-                studentReceipts={studentReceipts}
-                studentPortalAccounts={studentPortalAccounts}
-                supportRequests={supportRequests}
-                counselorPaymentRequests={counselorPaymentRequests}
-                executiveExecutionLogs={executiveExecutionLogs}
-              />
+            {aiReanalysisState.error && (
+              <SystemNotice tone="error">
+                {aiReanalysisState.error}
+              </SystemNotice>
+            )}
 
-              <AdminStats
-                cardClass={cardClass}
-                inquiries={inquiries}
-                inquiryNewCount={inquiryNewCount}
-                inquiryContactedCount={inquiryContactedCount}
-                appointments={appointments}
-                appointmentPendingCount={appointmentPendingCount}
-                appointmentConfirmedCount={appointmentConfirmedCount}
-                appointmentCompletedCount={appointmentCompletedCount}
-                appointmentCancelledCount={appointmentCancelledCount}
-                studentApplications={studentApplications}
-                studentDocuments={studentDocuments}
-                studentTasks={studentTasks}
-                studentUniversities={studentUniversities}
-                studentRiskScores={studentRiskScores}
-                studentInvoices={studentInvoices}
-                studentPayments={studentPayments}
-                studentReceipts={studentReceipts}
-                studentPortalAccounts={studentPortalAccounts}
-                supportRequests={supportRequests}
-                counselorPaymentRequests={counselorPaymentRequests}
-                executiveExecutionLogs={executiveExecutionLogs}
-              />
-            </>
-          )}
+            {profileError && adminProfile && (
+              <SystemNotice tone="warning">{profileError}</SystemNotice>
+            )}
 
-          {activeTab === "followups" ? (
-            <FollowUpsPage cardClass={cardClass} />
-          ) : activeTab === "automation" ? (
-            <AutomationPage
-              cardClass={cardClass}
+            {loadError && (
+              <div className="mb-5 rounded-[1.4rem] border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p>{loadError}</p>
+
+                  <button
+                    type="button"
+                    onClick={() => fetchAllData()}
+                    className="rounded-xl bg-red-600 px-5 py-2.5 text-xs font-black text-white transition duration-300 hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
+                  >
+                    Retry refresh
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="zaifan-admin-embedded-dark mb-6 overflow-hidden rounded-[1.9rem] border border-orange-100 bg-white shadow-[0_18px_50px_rgba(121,72,40,0.09)]">
+              <AdminHeader
               inquiries={inquiries}
               appointments={appointments}
-            />
-          ) : activeTab === "my-leads" ? (
-            <MyLeadsPage cardClass={cardClass} adminProfile={adminProfile} />
-          ) : activeTab === "activity-logs" ? (
-            <ActivityLogsPage cardClass={cardClass} />
-          ) : activeTab === "admin-management" ? (
-            <AdminManagementPage
-              cardClass={cardClass}
+              appointmentPendingCount={appointmentPendingCount}
+              fetchAllData={fetchAllData}
+              activeTab={activeTab}
+              exportInquiriesToCSV={exportInquiriesToCSV}
+              exportAppointmentsToCSV={exportAppointmentsToCSV}
+              logout={handleLogout}
+              clearInquiries={clearInquiries}
+              clearAppointments={clearAppointments}
               role={role}
               adminProfile={adminProfile}
               permissions={currentPermissions}
-            />
-          ) : activeTab === "analytics" ? (
-            <AnalyticsPage
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-              followUpReminders={followUpReminders}
               studentApplications={studentApplications}
               studentDocuments={studentDocuments}
               studentTasks={studentTasks}
               studentUniversities={studentUniversities}
               studentRiskScores={studentRiskScores}
-              activeAnalyticsSection={activeAnalyticsSection}
-              setActiveAnalyticsSection={setActiveAnalyticsSection}
-              toggleInquiryStatus={toggleInquiryStatus}
-              updateAppointmentStage={updateAppointmentStage}
-              updateAppointmentStatus={updateAppointmentStatus}
-              setActiveTab={setActiveTab}
-              todayInquiriesCount={todayInquiriesCount}
-              todayAppointmentsCount={todayAppointmentsCount}
-              latestInquiry={latestInquiry}
-              latestAppointment={latestAppointment}
               studentInvoices={studentInvoices}
               studentPayments={studentPayments}
               studentReceipts={studentReceipts}
@@ -843,44 +812,259 @@ function AdminPage() {
               supportRequests={supportRequests}
               counselorPaymentRequests={counselorPaymentRequests}
               executiveExecutionLogs={executiveExecutionLogs}
+              setActiveTab={setActiveTab}
+              setActiveAnalyticsSection={setActiveAnalyticsSection}
             />
-          ) : activeTab === "settings" ? (
-            <SettingsPage
-              cardClass={cardClass}
-              currentPermissions={currentPermissions}
-            />
-          ) : (
-            <PipelinePage
-              activeTab={activeTab}
-              search={search}
-              setSearch={setSearch}
-              statusOptions={statusOptions}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              loading={loading}
-              inquiries={inquiries}
-              filteredInquiries={filteredInquiries}
-              appointments={appointments}
-              filteredAppointments={filteredAppointments}
-              cardClass={cardClass}
-              toggleInquiryStatus={toggleInquiryStatus}
-              updateInquiryPriority={updateInquiryPriority}
-              updateAppointmentPriority={updateAppointmentPriority}
-              deleteInquiry={deleteInquiry}
-              updateAppointmentStatus={updateAppointmentStatus}
-              updateAppointmentStage={updateAppointmentStage}
-              deleteAppointment={deleteAppointment}
-              role={role}
-              adminProfile={adminProfile}
-              permissions={currentPermissions}
-              reanalyzeLeadWithGpt={reanalyzeLeadWithGpt}
-              aiReanalysisState={aiReanalysisState}
-              allLeads={allLeads}
-            />
-          )}
+            </div>
+
+            {shouldShowStats(activeTab) && (
+              <div className="mb-4 flex flex-col gap-1 px-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-orange-600">Live operating picture</p>
+                  <h2 className="mt-1 text-2xl font-black tracking-tight text-[#0b2a57] sm:text-3xl">What needs attention right now</h2>
+                </div>
+                <p className="max-w-xl text-sm font-medium leading-6 text-slate-600">A focused view of CRM pressure, student readiness, finance, access and support signals.</p>
+              </div>
+            )}
+
+            {shouldShowStats(activeTab) && (
+              <Suspense fallback={<AdminInsightLoader />}>
+                <>
+                <div className="zaifan-admin-embedded-dark mb-4">
+                <NotificationCenter
+                  cardClass={cardClass}
+                  inquiryNewCount={inquiryNewCount}
+                  appointmentPendingCount={appointmentPendingCount}
+                  appointmentConfirmedCount={appointmentConfirmedCount}
+                  role={role}
+                  permissions={currentPermissions}
+                  studentApplications={studentApplications}
+                  studentDocuments={studentDocuments}
+                  studentTasks={studentTasks}
+                  studentUniversities={studentUniversities}
+                  studentRiskScores={studentRiskScores}
+                  studentInvoices={studentInvoices}
+                  studentPayments={studentPayments}
+                  studentReceipts={studentReceipts}
+                  studentPortalAccounts={studentPortalAccounts}
+                  supportRequests={supportRequests}
+                  counselorPaymentRequests={counselorPaymentRequests}
+                  executiveExecutionLogs={executiveExecutionLogs}
+                />
+                </div>
+
+                <AdminStats
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  inquiryNewCount={inquiryNewCount}
+                  inquiryContactedCount={inquiryContactedCount}
+                  appointments={appointments}
+                  appointmentPendingCount={appointmentPendingCount}
+                  appointmentConfirmedCount={appointmentConfirmedCount}
+                  appointmentCompletedCount={appointmentCompletedCount}
+                  appointmentCancelledCount={appointmentCancelledCount}
+                  studentApplications={studentApplications}
+                  studentDocuments={studentDocuments}
+                  studentTasks={studentTasks}
+                  studentUniversities={studentUniversities}
+                  studentRiskScores={studentRiskScores}
+                  studentInvoices={studentInvoices}
+                  studentPayments={studentPayments}
+                  studentReceipts={studentReceipts}
+                  studentPortalAccounts={studentPortalAccounts}
+                  supportRequests={supportRequests}
+                  counselorPaymentRequests={counselorPaymentRequests}
+                  executiveExecutionLogs={executiveExecutionLogs}
+                />
+                </>
+              </Suspense>
+            )}
+
+            <Suspense fallback={<AdminModuleLoader />}>
+              {activeTab === "followups" ? (
+                <FollowUpsPage cardClass={cardClass} />
+              ) : activeTab === "automation" ? (
+                <AutomationPage
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                />
+              ) : activeTab === "my-leads" ? (
+                <MyLeadsPage
+                  cardClass={cardClass}
+                  adminProfile={adminProfile}
+                />
+              ) : activeTab === "activity-logs" ? (
+                <ActivityLogsPage cardClass={cardClass} />
+              ) : activeTab === "admin-management" ? (
+                <AdminManagementPage
+                  cardClass={cardClass}
+                  role={role}
+                  adminProfile={adminProfile}
+                  permissions={currentPermissions}
+                />
+              ) : activeTab === "analytics" ? (
+                <AnalyticsPage
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                  followUpReminders={followUpReminders}
+                  studentApplications={studentApplications}
+                  studentDocuments={studentDocuments}
+                  studentTasks={studentTasks}
+                  studentUniversities={studentUniversities}
+                  studentRiskScores={studentRiskScores}
+                  activeAnalyticsSection={activeAnalyticsSection}
+                  setActiveAnalyticsSection={setActiveAnalyticsSection}
+                  toggleInquiryStatus={toggleInquiryStatus}
+                  updateAppointmentStage={updateAppointmentStage}
+                  updateAppointmentStatus={updateAppointmentStatus}
+                  setActiveTab={setActiveTab}
+                  todayInquiriesCount={todayInquiriesCount}
+                  todayAppointmentsCount={todayAppointmentsCount}
+                  latestInquiry={latestInquiry}
+                  latestAppointment={latestAppointment}
+                  studentInvoices={studentInvoices}
+                  studentPayments={studentPayments}
+                  studentReceipts={studentReceipts}
+                  studentPortalAccounts={studentPortalAccounts}
+                  supportRequests={supportRequests}
+                  counselorPaymentRequests={counselorPaymentRequests}
+                  executiveExecutionLogs={executiveExecutionLogs}
+                />
+              ) : activeTab === "settings" ? (
+                <SettingsPage
+                  cardClass={cardClass}
+                  currentPermissions={currentPermissions}
+                />
+              ) : (
+                <PipelinePage
+                  activeTab={activeTab}
+                  search={search}
+                  setSearch={setSearch}
+                  statusOptions={statusOptions}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  loading={loading}
+                  inquiries={inquiries}
+                  filteredInquiries={filteredInquiries}
+                  appointments={appointments}
+                  filteredAppointments={filteredAppointments}
+                  cardClass={cardClass}
+                  toggleInquiryStatus={toggleInquiryStatus}
+                  updateInquiryPriority={updateInquiryPriority}
+                  updateAppointmentPriority={updateAppointmentPriority}
+                  deleteInquiry={deleteInquiry}
+                  updateAppointmentStatus={updateAppointmentStatus}
+                  updateAppointmentStage={updateAppointmentStage}
+                  deleteAppointment={deleteAppointment}
+                  role={role}
+                  adminProfile={adminProfile}
+                  permissions={currentPermissions}
+                  reanalyzeLeadWithGpt={reanalyzeLeadWithGpt}
+                  aiReanalysisState={aiReanalysisState}
+                  allLeads={allLeads}
+                />
+              )}
+            </Suspense>
+          </div>
         </main>
       </div>
     </section>
+  );
+}
+
+
+
+function AdminCommandMetric({ label, value, detail, tone = "slate" }) {
+  const tones = {
+    slate: "border-slate-200 bg-white/90",
+    orange: "border-orange-400/20 bg-orange-500/10/90",
+    blue: "border-blue-200 bg-blue-50/90",
+    red: "border-red-200 bg-red-50/90",
+    green: "border-emerald-400/20 bg-emerald-500/10/90",
+    orange: "border-orange-200 bg-orange-50/90",
+  };
+
+  const values = {
+    slate: "text-[#0b2a57]",
+    orange: "text-orange-700",
+    blue: "text-blue-700",
+    red: "text-red-700",
+    green: "text-emerald-700",
+    orange: "text-orange-700",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-3.5 shadow-sm ${tones[tone] || tones.slate}`}>
+      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+        {label}
+      </p>
+      <p className={`mt-1.5 text-xl font-black ${values[tone] || values.slate}`}>
+        {value}
+      </p>
+      <p className="mt-1 text-[11px] leading-4 text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function AdminInsightLoader() {
+  return (
+    <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {[0, 1, 2, 3].map((item) => (
+        <div
+          key={item}
+          className="h-28 animate-pulse rounded-[1.4rem] border border-slate-200 bg-white shadow-sm"
+        />
+      ))}
+    </div>
+  );
+}
+
+function PermissionPill({ label, enabled }) {
+  return (
+    <div
+      className={`rounded-xl border px-3 py-2 text-center text-[11px] font-extrabold uppercase tracking-[0.1em] ${
+        enabled
+          ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-700"
+          : "border-slate-200 bg-slate-50 text-slate-400"
+      }`}
+    >
+      {label}: {enabled ? "Yes" : "No"}
+    </div>
+  );
+}
+
+function SystemNotice({ tone = "success", children }) {
+  const toneClass =
+    tone === "error"
+      ? "border-red-400/20 bg-red-500/10 text-red-300"
+      : tone === "warning"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : "border-emerald-400/20 bg-emerald-500/10 text-emerald-700";
+
+  return (
+    <div
+      className={`mb-5 rounded-[1.4rem] border p-4 text-sm shadow-sm ${toneClass}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function AdminModuleLoader() {
+  return (
+    <div className="flex min-h-[320px] items-center justify-center rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.04)]">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+        <p className="mt-4 text-sm font-black text-slate-800">
+          Opening workspace
+        </p>
+        <p className="mt-1 text-xs text-slate-400">
+          Loading only the module you need.
+        </p>
+      </div>
+    </div>
   );
 }
 

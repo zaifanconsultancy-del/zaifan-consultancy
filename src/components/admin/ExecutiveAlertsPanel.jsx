@@ -196,18 +196,18 @@ function ExecutiveAlertsPanel({ scores: externalScores = null }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-red-400/20 bg-red-500/[0.04] p-6">
+      <div className="rounded-[2rem] border border-[#C2413B]/30 bg-[#FFF0EE] p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-red-300">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#A8342F]">
               Executive Alerts
             </p>
 
-            <h2 className="mt-2 text-2xl font-black text-white">
+            <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">
               Student OS Decision Queue
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
               Critical risks, attention cases, conversion-ready students, CAS/visa
               watchlist, and success outcomes from Executive AI.
             </p>
@@ -224,7 +224,7 @@ function ExecutiveAlertsPanel({ scores: externalScores = null }) {
                 type="button"
                 onClick={loadScores}
                 disabled={loading}
-                className="rounded-full border border-red-400/25 bg-red-500/10 px-5 py-2 text-sm font-bold text-red-300 transition hover:border-red-400/45 disabled:opacity-50"
+                className="rounded-full border border-[#C2413B]/32 bg-[#FFF0EE] px-5 py-2 text-sm font-bold text-[#A8342F] transition hover:border-red-400/45 disabled:opacity-50"
               >
                 {loading ? "Loading..." : "Refresh Alerts"}
               </button>
@@ -235,7 +235,7 @@ function ExecutiveAlertsPanel({ scores: externalScores = null }) {
         </div>
 
         {error ? (
-          <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">
+          <div className="mt-4 rounded-2xl border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm text-[#A8342F]">
             {error}
           </div>
         ) : null}
@@ -324,14 +324,14 @@ function AlertList({
   const toneClass = getToneClass(tone);
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+    <div className="rounded-[1.75rem] border shadow-[0_12px_28px_rgba(23,36,61,0.05)] border-[#243A60]/18 bg-white p-5">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#8992A1]">
             {eyebrow}
           </p>
 
-          <h3 className="mt-2 text-xl font-black text-white">{title}</h3>
+          <h3 className="mt-2 text-xl font-black text-[#17243D]">{title}</h3>
         </div>
 
         <span className={`rounded-2xl border p-3 text-xl ${toneClass}`}>
@@ -351,7 +351,7 @@ function AlertList({
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/40">
+        <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5 text-sm text-[#7A8392]">
           {emptyText}
         </div>
       )}
@@ -363,14 +363,14 @@ function AlertCard({ item, scoreKey, toneClass }) {
   const journeyStage = getJourneyStage(item);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-white">
+          <p className="truncate font-semibold text-[#17243D]">
             {item.student_name || "Unknown Student"}
           </p>
 
-          <p className="mt-1 text-xs capitalize text-white/40">
+          <p className="mt-1 text-xs capitalize text-[#7A8392]">
             {item.student_type || "student"} •{" "}
             {item.executive_category || item.priority_level || "Standard"} •{" "}
             {formatLabel(journeyStage)}
@@ -384,7 +384,7 @@ function AlertCard({ item, scoreKey, toneClass }) {
         </span>
       </div>
 
-      <p className="mt-3 line-clamp-3 text-sm leading-6 text-white/50">
+      <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#667085]">
         {item.summary || "No executive summary available."}
       </p>
 
@@ -412,12 +412,12 @@ function AlertCard({ item, scoreKey, toneClass }) {
 
 function Badge({ label, danger = false, gold = false, success = false }) {
   const style = danger
-    ? "border-red-400/25 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]"
     : gold
-    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
     : success
-    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-    : "border-white/10 bg-black/20 text-white/45";
+    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
+    : "border-[#243A60]/18 bg-white text-[#7A8392]";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>
@@ -428,7 +428,7 @@ function Badge({ label, danger = false, gold = false, success = false }) {
 
 function MiniBadge({ text }) {
   return (
-    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
+    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8992A1]">
       {text}
     </span>
   );
@@ -438,10 +438,10 @@ function MiniBadge({ text }) {
 function CommandAlertCard({ label, value, detail, tone = "gold" }) {
   const style = getToneClass(tone);
   return (
-    <div className={`rounded-[1.5rem] border p-5 ${style}`}>
+    <div className={`rounded-[1.5rem] border shadow-[0_10px_24px_rgba(23,36,61,0.05)] p-5 ${style}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">{label}</p>
-      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
-      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+      <p className="mt-3 text-3xl font-black tracking-[-0.025em] text-[#17243D]">{value || 0}</p>
+      <p className="mt-2 text-xs leading-5 text-[#7A8392]">{detail}</p>
     </div>
   );
 }
@@ -449,35 +449,35 @@ function CommandAlertCard({ label, value, detail, tone = "gold" }) {
 function ExecutiveMiniQueue({ title, items = [], scoreKey, tone = "gold" }) {
   const toneClass = getToneClass(tone);
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
-      <h3 className="font-black text-white">{title}</h3>
+    <div className="rounded-[1.75rem] border shadow-[0_12px_28px_rgba(23,36,61,0.05)] border-[#243A60]/18 bg-white p-5">
+      <h3 className="font-black text-[#17243D]">{title}</h3>
       <div className="mt-4 space-y-3">
         {items.length ? items.map((item, index) => (
-          <div key={`${title}-${item.student_id || item.id || index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+          <div key={`${title}-${item.student_id || item.id || index}`} className="rounded-xl border border-[#243A60]/18 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-semibold text-white">{item.student_name || item.full_name || item.name || "Unknown Student"}</p>
-                <p className="mt-1 text-xs text-white/40">{formatLabel(getJourneyStage(item))} • {item.executive_category || "Standard"}</p>
+                <p className="truncate font-semibold text-[#17243D]">{item.student_name || item.full_name || item.name || "Unknown Student"}</p>
+                <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(getJourneyStage(item))} • {item.executive_category || "Standard"}</p>
               </div>
               <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${toneClass}`}>
                 {number(item[scoreKey])}
               </span>
             </div>
-            <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{item.summary || "No alert summary available."}</p>
+            <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#7A8392]">{item.summary || "No alert summary available."}</p>
           </div>
-        )) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
+        )) : <p className="rounded-xl border border-[#243A60]/18 bg-white p-4 text-sm text-[#7A8392]">No records.</p>}
       </div>
     </div>
   );
 }
 
 function getToneClass(tone = "") {
-  if (tone === "red") return "border-red-400/25 bg-red-500/10 text-red-300";
-  if (tone === "orange") return "border-orange-400/25 bg-orange-500/10 text-orange-300";
-  if (tone === "green") return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
-  if (tone === "blue") return "border-blue-400/25 bg-blue-500/10 text-blue-300";
+  if (tone === "red") return "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]";
+  if (tone === "orange") return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
+  if (tone === "green") return "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
+  if (tone === "blue") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
 
-  return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+  return "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]";
 }
 
 function formatLabel(value = "") {

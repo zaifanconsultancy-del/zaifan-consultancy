@@ -1,3 +1,8 @@
+// SmartActionsPanel V2 — Counselor Intelligence Actions
+// Preserves live Student OS action generation, document/task/university/application checks,
+// WhatsApp launching and Gmail compose actions.
+// Visual layer aligned with the approved Zaifan Admin OS.
+
 import { useMemo } from "react";
 
 function SmartActionsPanel({ student = {} }) {
@@ -139,17 +144,21 @@ function SmartActionsPanel({ student = {} }) {
   };
 
   return (
-    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.03] p-6">
+    <div className="rounded-[1.8rem] border-2 border-orange-300 bg-white p-6 shadow-[0_12px_30px_rgba(15,35,63,0.05)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-bold text-white">AI Smart Actions</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+            Counselor Intelligence
+          </p>
 
-          <p className="mt-2 text-sm text-white/50">
+          <h3 className="mt-1 font-black text-[#10233f]">AI Smart Actions</h3>
+
+          <p className="mt-2 text-sm text-slate-600">
             Dynamic counselor actions generated from live Student OS data.
           </p>
         </div>
 
-        <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black text-[#D4AF37]">
+        <span className="rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700">
           {actions.length} Actions
         </span>
       </div>
@@ -158,19 +167,19 @@ function SmartActionsPanel({ student = {} }) {
         {actions.map((action) => (
           <div
             key={`${action.label}-${action.badge}`}
-            className={`rounded-xl border p-4 ${getActionStyle(
+            className={`rounded-xl border p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${getActionStyle(
               action.priority
             )}`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-semibold text-white">{action.label}</p>
+              <p className="font-black text-[#10233f]">{action.label}</p>
 
-              <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/45">
+              <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600">
                 {action.badge}
               </span>
             </div>
 
-            <p className="mt-2 text-sm leading-6 text-white/55">
+            <p className="mt-2 text-sm leading-6 text-slate-700">
               {action.message}
             </p>
 
@@ -178,7 +187,7 @@ function SmartActionsPanel({ student = {} }) {
               <button
                 type="button"
                 onClick={() => openWhatsApp(action.message)}
-                className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300 transition hover:border-emerald-400/40"
+                className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-100"
               >
                 WhatsApp
               </button>
@@ -186,7 +195,7 @@ function SmartActionsPanel({ student = {} }) {
               <button
                 type="button"
                 onClick={() => openEmail(action.message)}
-                className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/40"
+                className="rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700 transition hover:border-orange-400 hover:bg-orange-100"
               >
                 Email
               </button>
@@ -200,18 +209,18 @@ function SmartActionsPanel({ student = {} }) {
 
 function getActionStyle(priority = "") {
   if (priority === "urgent") {
-    return "border-red-400/25 bg-red-500/10";
+    return "border-red-300 bg-red-50";
   }
 
   if (priority === "high") {
-    return "border-orange-400/25 bg-orange-500/10";
+    return "border-orange-300 bg-orange-50";
   }
 
   if (priority === "medium") {
-    return "border-blue-400/25 bg-blue-500/10";
+    return "border-blue-300 bg-blue-50";
   }
 
-  return "border-[#D4AF37]/20 bg-[#D4AF37]/10";
+  return "border-slate-300 bg-[#fffaf2]";
 }
 
 export default SmartActionsPanel;

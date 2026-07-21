@@ -185,10 +185,10 @@ function GPTIntelligencePanel({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
+        <div className="flex flex-col gap-4 border-b border-orange-200 bg-[#102f5c] p-6 text-white lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-300">
               Real GPT Counselor Intelligence
             </p>
 
@@ -196,7 +196,7 @@ function GPTIntelligencePanel({
               Multi-Module AI Operating System
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/60">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-200">
               Run separate OpenAI modules for analysis, risk, university
               recommendations, counselor copilot, email drafts, and WhatsApp
               drafts. Each module saves its own history.
@@ -208,7 +208,7 @@ function GPTIntelligencePanel({
               type="button"
               onClick={() => loadAIAnalysis(activeModule)}
               disabled={loadingAnalysis || Boolean(runningType)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-bold text-white/70 transition hover:border-[#D4AF37]/35 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-black text-[#10233f] transition hover:border-orange-300 hover:bg-white/15 hover:text-[#10233f] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loadingAnalysis ? "Loading..." : "Reload"}
             </button>
@@ -217,7 +217,7 @@ function GPTIntelligencePanel({
               type="button"
               onClick={() => handleRunAnalysis(activeModule)}
               disabled={Boolean(runningType) || loadingAnalysis}
-              className="rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full bg-orange-500 px-5 py-2 text-sm font-black text-[#10233f] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isRunning
                 ? "Analyzing..."
@@ -240,10 +240,10 @@ function GPTIntelligencePanel({
               type="button"
               onClick={() => handleModuleChange(module.id)}
               disabled={Boolean(runningType) || loadingAnalysis}
-              className={`rounded-[1.5rem] border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`rounded-[1.5rem] border-2 p-4 text-left shadow-[0_5px_16px_rgba(15,35,63,0.035)] transition disabled:cursor-not-allowed disabled:opacity-60 ${
                 isActive
-                  ? "border-[#D4AF37]/35 bg-[#D4AF37]/10"
-                  : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.045]"
+                  ? "border-orange-500 bg-orange-500 text-[#10233f] shadow-[0_8px_18px_rgba(249,115,22,0.16)]"
+                  : "border-slate-300 bg-white hover:border-orange-300 hover:bg-orange-50"
               }`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -251,7 +251,7 @@ function GPTIntelligencePanel({
                   <p className="text-lg">{module.icon}</p>
                   <h3
                     className={`mt-2 text-sm font-black ${
-                      isActive ? "text-[#D4AF37]" : "text-white"
+                      isActive ? "text-[#10233f]" : "text-[#10233f]"
                     }`}
                   >
                     {module.label}
@@ -259,13 +259,13 @@ function GPTIntelligencePanel({
                 </div>
 
                 {isModuleRunning ? (
-                  <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">
+                  <span className="rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-orange-700">
                     Running
                   </span>
                 ) : null}
               </div>
 
-              <p className="mt-2 text-xs leading-5 text-white/45">
+              <p className="mt-2 text-xs leading-5 text-slate-600">
                 {module.description}
               </p>
             </button>
@@ -274,17 +274,17 @@ function GPTIntelligencePanel({
       </div>
 
       {error ? (
-        <div className="rounded-[1.5rem] border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-200">
+        <div className="rounded-[1.5rem] border border-red-300 bg-red-50 p-4 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
       {!hasGPT && !loadingAnalysis ? (
-        <div className="rounded-[1.75rem] border border-yellow-400/20 bg-yellow-500/10 p-5">
-          <p className="font-bold text-yellow-300">
+        <div className="rounded-[1.75rem] border border-amber-300 bg-amber-50 p-5">
+          <p className="font-bold text-amber-800">
             No {selectedModule.label.toLowerCase()} saved yet.
           </p>
-          <p className="mt-2 text-sm text-white/55">
+          <p className="mt-2 text-sm text-slate-600">
             Run this module to generate real OpenAI output for {studentName}.
           </p>
         </div>
@@ -299,16 +299,16 @@ function GPTIntelligencePanel({
 
       <InsightBlock title={`${selectedModule.label} Summary`} content={summary} />
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
+      <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
         <div
           className={`inline-flex rounded-full border px-4 py-2 text-xs font-bold ${riskStyle}`}
         >
           Risk Level: {risk}
         </div>
 
-        <p className="mt-4 text-sm leading-7 text-white/55">
+        <p className="mt-4 text-sm leading-7 text-slate-600">
           Module type:{" "}
-          <span className="font-semibold text-[#D4AF37]">{activeModule}</span>
+          <span className="font-semibold text-orange-700">{activeModule}</span>
         </p>
       </div>
 
@@ -365,8 +365,8 @@ function GPTIntelligencePanel({
         />
       ) : null}
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
-        <h3 className="font-bold text-white">AI Metadata</h3>
+      <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+        <h3 className="font-bold text-[#10233f]">AI Metadata</h3>
 
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           <MetaCard label="Last Analysis" value={analyzedAt} />
@@ -375,11 +375,11 @@ function GPTIntelligencePanel({
         </div>
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
+      <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="font-bold text-white">Module History</h3>
-            <p className="mt-1 text-sm text-white/45">
+            <h3 className="font-bold text-[#10233f]">Module History</h3>
+            <p className="mt-1 text-sm text-slate-600">
               Every run creates a new saved row for this module.
             </p>
           </div>
@@ -387,7 +387,7 @@ function GPTIntelligencePanel({
           <button
             type="button"
             onClick={onOpenWorkspace}
-            className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-5 py-2 text-sm font-bold text-[#D4AF37] transition hover:border-[#D4AF37]/45"
+            className="rounded-full border border-orange-300 bg-orange-50 px-5 py-2 text-sm font-bold text-orange-700 transition hover:border-[#D4AF37]/45"
           >
             Open GPT Workspace
           </button>
@@ -398,23 +398,23 @@ function GPTIntelligencePanel({
             analysisHistory.slice(0, 5).map((item) => (
               <div
                 key={item.id}
-                className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-bold text-white">
+                  <p className="text-sm font-bold text-[#10233f]">
                     {item?.parsed?.riskLevel ||
                       item?.risk_level ||
                       selectedModule.label}
                   </p>
 
-                  <p className="text-xs text-white/35">
+                  <p className="text-xs text-slate-500">
                     {item.created_at
                       ? new Date(item.created_at).toLocaleString()
                       : "Unknown date"}
                   </p>
                 </div>
 
-                <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/50">
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
                   {item?.parsed?.summary ||
                     item?.analysis ||
                     "Saved AI analysis"}
@@ -422,7 +422,7 @@ function GPTIntelligencePanel({
               </div>
             ))
           ) : (
-            <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/45">
+            <p className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-600">
               No history for this module yet.
             </p>
           )}
@@ -446,7 +446,7 @@ function RiskAnalysisView({ parsed }) {
       {riskCards.map(([title, risk]) => (
         <div
           key={title}
-          className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6"
+          className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6"
         >
           <div
             className={`inline-flex rounded-full border px-4 py-2 text-xs font-bold ${getRiskStyle(
@@ -456,7 +456,7 @@ function RiskAnalysisView({ parsed }) {
             {title}: {risk?.level || "Not analyzed"}
           </div>
 
-          <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-white/60">
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">
             {risk?.reason || "No reason generated yet."}
           </p>
 
@@ -567,25 +567,25 @@ function UniversityList({ title, items = [] }) {
   const safeItems = Array.isArray(items) ? items : [];
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
-      <h3 className="font-bold text-white">{title}</h3>
+    <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+      <h3 className="font-bold text-[#10233f]">{title}</h3>
 
       <div className="mt-4 space-y-3">
         {safeItems.length ? (
           safeItems.map((item, index) => (
             <div
               key={`${title}-${index}`}
-              className="rounded-2xl border border-white/10 bg-black/20 p-4"
+              className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]"
             >
-              <p className="font-bold text-white">
+              <p className="font-bold text-[#10233f]">
                 {item?.university || item?.name || `Option ${index + 1}`}
               </p>
 
-              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#D4AF37]">
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-orange-700">
                 {item?.country || "Country not specified"}
               </p>
 
-              <p className="mt-3 text-sm leading-6 text-white/55">
+              <p className="mt-3 text-sm leading-6 text-slate-600">
                 {item?.reason || item?.description || "No reason generated."}
               </p>
 
@@ -599,7 +599,7 @@ function UniversityList({ title, items = [] }) {
                 </span>
 
                 {item?.requiredNextStep ? (
-                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] text-white/50">
+                  <span className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-[11px] text-slate-600">
                     {item.requiredNextStep}
                   </span>
                 ) : null}
@@ -607,7 +607,7 @@ function UniversityList({ title, items = [] }) {
             </div>
           ))
         ) : (
-          <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/40">
+          <p className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-500">
             No recommendations generated yet.
           </p>
         )}
@@ -618,10 +618,10 @@ function UniversityList({ title, items = [] }) {
 
 function InsightBlock({ title, content }) {
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
-      <h3 className="font-bold text-white">{title}</h3>
+    <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+      <h3 className="font-bold text-[#10233f]">{title}</h3>
 
-      <p className="mt-3 whitespace-pre-wrap text-white/65 leading-7">
+      <p className="mt-3 whitespace-pre-wrap text-slate-700 leading-7">
         {content}
       </p>
     </div>
@@ -636,23 +636,23 @@ function ListBlock({ title, items = [], emptyText = "", compact = false }) {
       className={
         compact
           ? "mt-5"
-          : "rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6"
+          : "rounded-[1.75rem] border-2 border-slate-300 bg-white p-6"
       }
     >
-      <h3 className="font-bold text-white">{title}</h3>
+      <h3 className="font-bold text-[#10233f]">{title}</h3>
 
       <div className="mt-4 space-y-3">
         {safeItems.length > 0 ? (
           safeItems.map((item, index) => (
             <div
               key={`${title}-${index}`}
-              className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/60"
+              className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm leading-6 text-slate-700"
             >
               {formatListItem(item)}
             </div>
           ))
         ) : (
-          <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/40">
+          <p className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-500">
             {emptyText}
           </p>
         )}
@@ -684,12 +684,12 @@ function formatListItem(item) {
 
 function MetaCard({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-white/70">
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-slate-700">
         {value}
       </p>
     </div>
@@ -700,13 +700,13 @@ function StatCard({ label, value }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+      className="rounded-2xl border-2 border-slate-300 bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.03)]"
     >
-      <p className="text-xs uppercase tracking-[0.18em] text-white/40">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-3 break-words text-2xl font-black text-white">
+      <p className="mt-3 break-words text-2xl font-black text-[#10233f]">
         {value}
       </p>
     </motion.div>
@@ -717,22 +717,22 @@ function getRiskStyle(value = "") {
   const normalized = String(value || "").toLowerCase();
 
   if (normalized.includes("critical")) {
-    return "text-red-200 border-red-400/40 bg-red-500/15";
+    return "text-red-700 border-red-400/40 bg-red-500/15";
   }
 
   if (normalized.includes("high")) {
-    return "text-red-300 border-red-400/30 bg-red-500/10";
+    return "text-red-700 border-red-400/30 bg-red-500/10";
   }
 
   if (normalized.includes("medium")) {
-    return "text-yellow-300 border-yellow-400/30 bg-yellow-500/10";
+    return "text-amber-800 border-amber-300 bg-amber-50";
   }
 
   if (normalized.includes("low")) {
-    return "text-emerald-300 border-emerald-400/30 bg-emerald-500/10";
+    return "text-emerald-700 border-emerald-300 bg-emerald-50";
   }
 
-  return "text-white/70 border-white/10 bg-white/[0.04]";
+  return "text-slate-700 border-slate-300 bg-slate-50";
 }
 
 export default GPTIntelligencePanel;

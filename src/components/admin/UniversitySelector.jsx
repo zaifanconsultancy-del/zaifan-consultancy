@@ -1,3 +1,7 @@
+// UniversitySelector V2 — University Intelligence Shortlist
+// Preserves destination-based university matching and fallback shortlist behavior.
+// Visual layer aligned with the approved Zaifan Admin OS.
+
 const universities = [
   {
     name: "University of Toronto",
@@ -49,17 +53,21 @@ function UniversitySelector({ student = {} }) {
     : universities;
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-bold text-white">University Shortlist</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+            University Intelligence
+          </p>
 
-          <p className="mt-2 text-sm text-white/45">
-            Suggested destination options based on student profile.
+          <h3 className="mt-1 font-black text-[#10233f]">University Shortlist</h3>
+
+          <p className="mt-2 text-sm text-slate-600">
+            Suggested destination options based on the student's country preference.
           </p>
         </div>
 
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white/50">
+        <span className="rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700">
           {targetCountry || "Global"} Match
         </span>
       </div>
@@ -68,20 +76,20 @@ function UniversitySelector({ student = {} }) {
         {finalUniversities.map((uni) => (
           <div
             key={uni.name}
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-4 transition hover:border-[#D4AF37]/25 hover:bg-white/[0.04]"
+            className="rounded-xl border border-slate-300 bg-[#fffaf2] p-4 transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="font-semibold text-white">{uni.name}</p>
+                <p className="font-black text-[#10233f]">{uni.name}</p>
 
-                <p className="mt-1 text-sm text-white/50">{uni.country}</p>
+                <p className="mt-1 text-sm font-semibold text-slate-600">{uni.country}</p>
 
-                <p className="mt-2 text-sm text-white/40">
+                <p className="mt-2 text-sm text-slate-500">
                   Strength: {uni.strength}
                 </p>
               </div>
 
-              <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs font-bold text-[#D4AF37]">
+              <span className="rounded-full border border-orange-300 bg-white px-3 py-1 text-xs font-black text-orange-700">
                 {uni.fit} Fit
               </span>
             </div>

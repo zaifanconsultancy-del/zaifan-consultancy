@@ -93,38 +93,6 @@ function LoadingScreen() {
   );
 }
 
-function RouteLoadingFallback() {
-  return (
-    <div className="flex min-h-[55vh] items-center justify-center bg-[#fff4e8] px-6 text-[#071d43]">
-      <div className="flex flex-col items-center text-center">
-        <img
-          src={loadingLogo}
-          alt=""
-          aria-hidden="true"
-          className="h-20 w-20 object-contain"
-        />
-
-        <div className="mt-5 h-2 w-44 overflow-hidden rounded-full bg-orange-100">
-          <motion.div
-            className="h-full rounded-full bg-orange-500"
-            initial={{ x: "-100%", width: "45%" }}
-            animate={{ x: "230%" }}
-            transition={{
-              duration: 1.1,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        </div>
-
-        <p className="mt-4 text-xs font-black uppercase tracking-[0.26em] text-slate-500">
-          Loading page
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function PageTransition({ children }) {
   return (
     <motion.div
@@ -197,7 +165,7 @@ function App() {
           {!isPortalRoute && <Navbar />}
           {!isPortalRoute && <FloatingConsultationCTA />}
 
-          <Suspense fallback={<RouteLoadingFallback />}>
+          <Suspense fallback={null}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={routeKey}>
                 <Route

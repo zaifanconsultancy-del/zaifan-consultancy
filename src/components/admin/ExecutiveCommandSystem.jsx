@@ -1,22 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import ExecutiveScoreGeneratorPanel from "./ExecutiveScoreGeneratorPanel";
-import ExecutiveAlertsPanel from "./ExecutiveAlertsPanel";
-import ExecutiveActionQueue from "./ExecutiveActionQueue";
-import ExecutiveAutomationEngine from "./ExecutiveAutomationEngine";
-import ExecutiveActionExecutorPanel from "./ExecutiveActionExecutorPanel";
-import ExecutivePortfolioSummary from "./ExecutivePortfolioSummary";
-import ExecutiveAutomationAnalytics from "./ExecutiveAutomationAnalytics";
-import ExecutiveAutomationControlCenter from "./ExecutiveAutomationControlCenter";
-import ExecutiveAIDashboard from "./ExecutiveAIDashboard";
-import MissionControlNotificationCenter from "./MissionControlNotificationCenter";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+const ExecutiveScoreGeneratorPanel = lazy(() => import("./ExecutiveScoreGeneratorPanel"));
+const ExecutiveAlertsPanel = lazy(() => import("./ExecutiveAlertsPanel"));
+const ExecutiveActionQueue = lazy(() => import("./ExecutiveActionQueue"));
+const ExecutiveAutomationEngine = lazy(() => import("./ExecutiveAutomationEngine"));
+const ExecutiveActionExecutorPanel = lazy(() => import("./ExecutiveActionExecutorPanel"));
+const ExecutivePortfolioSummary = lazy(() => import("./ExecutivePortfolioSummary"));
+const ExecutiveAutomationAnalytics = lazy(() => import("./ExecutiveAutomationAnalytics"));
+const ExecutiveAutomationControlCenter = lazy(() => import("./ExecutiveAutomationControlCenter"));
+const ExecutiveAIDashboard = lazy(() => import("./ExecutiveAIDashboard"));
+const MissionControlNotificationCenter = lazy(() => import("./MissionControlNotificationCenter"));
 import { getExecutiveScoreSummary } from "../../lib/executivePortfolioGenerator";
-import ExecutiveBulkOperationsPanel from "./ExecutiveBulkOperationsPanel";
-import FounderGrowthDashboard from "./FounderGrowthDashboard";
-import AnalyticsOSDashboard from "./analytics/AnalyticsOSDashboard";
-import KnowledgeOSDashboard from "./knowledge/KnowledgeOSDashboard";
-import CommunicationOSDashboard from "./communication/CommunicationOSDashboard";
-import PartnerOSDashboard from "./partner/PartnerOSDashboard";
-import AICommandCenter from "./ai-command/AICommandCenter";
+const ExecutiveBulkOperationsPanel = lazy(() => import("./ExecutiveBulkOperationsPanel"));
+const FounderGrowthDashboard = lazy(() => import("./FounderGrowthDashboard"));
+const AnalyticsOSDashboard = lazy(() => import("./analytics/AnalyticsOSDashboard"));
+const KnowledgeOSDashboard = lazy(() => import("./knowledge/KnowledgeOSDashboard"));
+const CommunicationOSDashboard = lazy(() => import("./communication/CommunicationOSDashboard"));
+const PartnerOSDashboard = lazy(() => import("./partner/PartnerOSDashboard"));
+const AICommandCenter = lazy(() => import("./ai-command/AICommandCenter"));
 import {
   buildExecutiveVerificationSnapshot,
   buildBrokenWorkflowScannerSnapshot,
@@ -571,19 +571,21 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div className="space-y-6 rounded-[2rem] bg-[#f7f8fa] p-1 text-slate-950 sm:p-2">
+      <div className="relative overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.07)] sm:p-7">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-orange-200/35 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-amber-100/70 blur-3xl" />
+        <div className="relative flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
               Executive Operations Center
             </p>
 
-            <h2 className="mt-2 text-3xl font-black text-white">
+            <h2 className="mt-2 text-3xl font-black text-slate-950">
               Student OS Admin Command Layer
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
               Unified command view for student journey movement, executive watchlists,
               counselor actions, revenue pressure, automation readiness, and operational health.
             </p>
@@ -594,7 +596,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
               type="button"
               onClick={loadExecutiveScores}
               disabled={loadingScores}
-              className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-2 text-sm font-bold text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-orange-200 bg-orange-50 px-5 py-2 text-sm font-bold text-orange-600 transition hover:bg-orange-500 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loadingScores ? "Loading..." : "Reload Scores"}
             </button>
@@ -602,7 +604,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
             <button
               type="button"
               onClick={() => setShowDeveloperTools((prev) => !prev)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-bold text-white/55 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+              className="rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-500 transition hover:border-orange-300 hover:text-orange-700"
             >
               {showDeveloperTools ? "Hide Tools" : "Developer Tools"}
             </button>
@@ -610,7 +612,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
         </div>
 
         {error ? (
-          <div className="mt-5 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-300">
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         ) : null}
@@ -736,6 +738,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
         />
       ) : null}
 
+      <Suspense fallback={<CommandModuleLoader label="Opening executive command module..." />}>
       {activeView === "founder-growth" ? (
         <FounderGrowthDashboard
           snapshot={{
@@ -849,17 +852,19 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
       {activeView === "automation" ? (
         <ExecutiveAutomationAnalytics adminProfile={adminProfile} />
       ) : null}
+      </Suspense>
 
       {showDeveloperTools ? (
-        <div className="space-y-6 rounded-[2rem] border border-white/10 bg-black/30 p-5">
+        <Suspense fallback={<CommandModuleLoader label="Loading developer tools..." />}>
+        <div className="space-y-6 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-white/35">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">
               Developer Tools
             </p>
-            <h3 className="mt-2 text-xl font-black text-white">
+            <h3 className="mt-2 text-xl font-black text-slate-950">
               Hidden Executive AI Tools
             </h3>
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-slate-500">
               Useful for generating scores, inspecting automation payloads, and
               executing approved actions. Keep hidden during normal CEO/dashboard use.
             </p>
@@ -875,6 +880,7 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
             onActionExecuted={handleActionExecuted}
           />
         </div>
+        </Suspense>
       ) : null}
     </div>
   );
@@ -905,16 +911,16 @@ function ExecutiveSnapshotV2({
     0;
 
   return (
-    <div className="mt-6 space-y-5 rounded-[2rem] border border-white/10 bg-black/25 p-5">
+    <div className="mt-6 space-y-5 rounded-[2rem] border border-slate-200 bg-white p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
             Executive Snapshot V2
           </p>
-          <h3 className="mt-2 text-2xl font-black text-white">
+          <h3 className="mt-2 text-2xl font-black text-slate-950">
             Unified Enterprise Health Wall
           </h3>
-          <p className="mt-2 max-w-4xl text-sm leading-6 text-white/45">
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
             One view across students, applications, CAS, visa, revenue, tasks, communication, partners,
             analytics, AI, automation, and verification. This is the new top-level snapshot before full verification.
           </p>
@@ -956,13 +962,13 @@ function ExecutiveSnapshotV2({
         <button
           type="button"
           onClick={() => setActiveView?.("verification")}
-          className="rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-left transition hover:-translate-y-0.5 hover:bg-[#D4AF37] hover:text-black"
+          className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-left transition hover:-translate-y-0.5 hover:bg-orange-500 hover:text-slate-950"
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
             Verification Center
           </p>
-          <p className="mt-3 text-2xl font-black text-white">Open</p>
-          <p className="mt-2 text-xs leading-5 text-white/45">
+          <p className="mt-3 text-2xl font-black text-slate-950">Open</p>
+          <p className="mt-2 text-xs leading-5 text-slate-500">
             Full workflow scanner and launch readiness report
           </p>
         </button>
@@ -975,18 +981,18 @@ function ExecutiveSnapshotV2({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.025] p-4">
+        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
                 System Coverage
               </p>
-              <h4 className="mt-1 font-black text-white">Enterprise OS connection status</h4>
+              <h4 className="mt-1 font-black text-slate-950">Enterprise OS connection status</h4>
             </div>
             <button
               type="button"
               onClick={() => setActiveView?.("ai-command")}
-              className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black"
+              className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-black text-orange-600 transition hover:bg-orange-500 hover:text-slate-950"
             >
               Open AI Command
             </button>
@@ -999,11 +1005,11 @@ function ExecutiveSnapshotV2({
           </div>
         </div>
 
-        <div className="rounded-[1.5rem] border border-red-400/20 bg-red-500/[0.035] p-4">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-red-300/80">
+        <div className="rounded-[1.5rem] border border-red-200 bg-red-50 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700/80">
             Executive Risk Feed
           </p>
-          <h4 className="mt-1 font-black text-white">What needs attention first</h4>
+          <h4 className="mt-1 font-black text-slate-950">What needs attention first</h4>
 
           <div className="mt-4 space-y-3">
             {riskFeed.map((item) => (
@@ -1019,8 +1025,8 @@ function ExecutiveSnapshotV2({
 function MiniSnapshotMetric({ label, value, tone = "default" }) {
   return (
     <div className={`rounded-2xl border p-3 ${getToneStyle(tone)}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/35">{label}</p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-1 text-xl font-black text-slate-950">{value}</p>
     </div>
   );
 }
@@ -1028,9 +1034,9 @@ function MiniSnapshotMetric({ label, value, tone = "default" }) {
 function SnapshotTile({ label, value, detail, tone = "default", compact = false }) {
   return (
     <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">{label}</p>
-      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black text-white`}>{value}</p>
-      <p className="mt-2 text-xs leading-5 text-white/40">{detail}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black text-slate-950`}>{value}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-400">{detail}</p>
     </div>
   );
 }
@@ -1039,10 +1045,10 @@ function SnapshotRiskRow({ label, value, detail, tone = "default" }) {
   return (
     <div className={`flex items-start justify-between gap-3 rounded-2xl border p-4 ${getToneStyle(tone)}`}>
       <div>
-        <p className="font-black text-white">{label}</p>
-        <p className="mt-1 text-xs leading-5 text-white/40">{detail}</p>
+        <p className="font-black text-slate-950">{label}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-400">{detail}</p>
       </div>
-      <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-sm font-black text-white">
+      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-950">
         {value}
       </span>
     </div>
@@ -1062,14 +1068,14 @@ function ExecutiveOperationsCenter({ operations, totalStudents = 0 }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+      <div className="rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
           CEO / Counselor Command Screen
         </p>
-        <h3 className="mt-2 text-2xl font-black text-white">
+        <h3 className="mt-2 text-2xl font-black text-slate-950">
           Executive Operations Center
         </h3>
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-white/55">
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
           This screen turns Executive AI scores into a day-to-day operating map:
           where students are, what is blocked, what needs action today, and where
           revenue or visa movement may be at risk.
@@ -1083,7 +1089,7 @@ function ExecutiveOperationsCenter({ operations, totalStudents = 0 }) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[1.75rem] border border-red-400/20 bg-red-500/[0.04] p-5">
+        <div className="rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
           <SectionHeader
             eyebrow="Executive Watchlist"
             title="Students that need leadership attention"
@@ -1139,14 +1145,14 @@ function ExecutiveVerificationReadinessPanel({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+      <div className="rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
           Platform Verification V4
         </p>
-        <h3 className="mt-2 text-2xl font-black text-white">
+        <h3 className="mt-2 text-2xl font-black text-slate-950">
           Workflow Integrity & Production Readiness
         </h3>
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-white/55">
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
           Final launch-readiness layer across broken workflows, recovery actions,
           stage integrity, platform health, and executive blockers.
         </p>
@@ -1182,7 +1188,7 @@ function ExecutiveVerificationReadinessPanel({
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5">
             <SectionHeader
               eyebrow="Integrity Score"
               title="Workflow integrity breakdown"
@@ -1199,7 +1205,7 @@ function ExecutiveVerificationReadinessPanel({
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-red-400/20 bg-red-500/[0.04] p-5">
+          <div className="rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
             <SectionHeader
               eyebrow="Launch Blockers"
               title="Issues blocking clean launch"
@@ -1224,7 +1230,7 @@ function ExecutiveVerificationReadinessPanel({
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-orange-400/20 bg-orange-500/[0.04] p-5">
+          <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50 p-5">
             <SectionHeader
               eyebrow="Broken Workflow Scanner"
               title="Detected workflow breaks"
@@ -1256,7 +1262,7 @@ function ExecutiveVerificationReadinessPanel({
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+          <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50/70 p-5">
             <SectionHeader
               eyebrow="Executive Recovery"
               title="Next recovery actions"
@@ -1280,7 +1286,7 @@ function ExecutiveVerificationReadinessPanel({
           </div>
 
           {criticalIssues.length ? (
-            <div className="rounded-[1.75rem] border border-red-400/20 bg-red-500/[0.04] p-5">
+            <div className="rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
               <SectionHeader
                 eyebrow="Critical Issues"
                 title="Executive intervention required"
@@ -1319,10 +1325,10 @@ function ReadinessIssueRow({ title, detail, severity = "medium" }) {
     <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-black text-white">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-white/45">{detail}</p>
+          <p className="font-black text-slate-950">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
         </div>
-        <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/55">
+        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
           {formatLabel(severity)}
         </span>
       </div>
@@ -1342,7 +1348,7 @@ function TodayActionsPanel({ today }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+    <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50/70 p-5">
       <SectionHeader
         eyebrow="Today's Actions"
         title="Counselor workload map"
@@ -1367,7 +1373,7 @@ function RevenueCenterPanel({ revenue }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-500/[0.04] p-5">
+    <div className="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 p-5">
       <SectionHeader
         eyebrow="Revenue Center"
         title="Revenue and conversion pressure"
@@ -1393,7 +1399,7 @@ function OperationsHealthPanel({ health }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+    <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5">
       <SectionHeader
         eyebrow="Operations Health"
         title="Student OS module readiness"
@@ -1434,7 +1440,7 @@ function CommandTabs({ activeView, setActiveView }) {
 ];
 
   return (
-    <div className="flex flex-wrap gap-2 rounded-[1.5rem] border border-white/10 bg-black/20 p-2">
+    <div className="sticky top-3 z-20 flex flex-wrap gap-2 rounded-[1.5rem] border border-slate-200 bg-white/95 p-2 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       {tabs.map((tab) => {
         const active = activeView === tab.key;
 
@@ -1445,8 +1451,8 @@ function CommandTabs({ activeView, setActiveView }) {
             onClick={() => setActiveView(tab.key)}
             className={`rounded-full px-5 py-2 text-sm font-bold transition ${
               active
-                ? "bg-[#D4AF37] text-black"
-                : "border border-white/10 bg-white/[0.03] text-white/45 hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
+                ? "bg-orange-500 text-slate-950 shadow-sm"
+                : "border border-slate-200 bg-slate-50 text-slate-500 hover:border-orange-300 hover:text-orange-700"
             }`}
           >
             {tab.label}
@@ -1463,13 +1469,13 @@ function CommandLaunchCard({ title, value, detail, tone = "default", onClick }) 
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-[1.5rem] border p-4 text-left transition hover:-translate-y-0.5 hover:border-[#D4AF37]/40 ${getToneStyle(tone)}`}
+      className={`rounded-[1.5rem] border p-4 text-left transition hover:-translate-y-0.5 hover:border-orange-300 ${getToneStyle(tone)}`}
     >
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
         {title}
       </p>
-      <p className="mt-3 text-3xl font-black text-white">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+      <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
     </button>
   );
 }
@@ -1479,11 +1485,11 @@ function SummaryCard({ label, value, tone = "default" }) {
 
   return (
     <div className={`rounded-2xl border p-4 ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
         {label}
       </p>
 
-      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
+      <p className="mt-3 text-3xl font-black text-slate-950">{value || 0}</p>
     </div>
   );
 }
@@ -1492,13 +1498,13 @@ function JourneyStageCard({ label, value, total, detail }) {
   const percentage = total ? Math.round((Number(value || 0) / total) * 100) : 0;
 
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{label}</p>
-      <p className="mt-3 text-3xl font-black text-[#D4AF37]">{value}</p>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-[#D4AF37]" style={{ width: `${percentage}%` }} />
+    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-3 text-3xl font-black text-orange-600">{value}</p>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full rounded-full bg-orange-500" style={{ width: `${percentage}%` }} />
       </div>
-      <p className="mt-3 text-xs leading-5 text-white/40">{detail}</p>
+      <p className="mt-3 text-xs leading-5 text-slate-400">{detail}</p>
     </div>
   );
 }
@@ -1506,9 +1512,9 @@ function JourneyStageCard({ label, value, total, detail }) {
 function SectionHeader({ eyebrow, title, description }) {
   return (
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D4AF37]/80">{eyebrow}</p>
-      <h3 className="mt-1 text-xl font-black text-white">{title}</h3>
-      {description ? <p className="mt-1 text-sm leading-6 text-white/45">{description}</p> : null}
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-600">{eyebrow}</p>
+      <h3 className="mt-1 text-xl font-black text-slate-950">{title}</h3>
+      {description ? <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p> : null}
     </div>
   );
 }
@@ -1516,34 +1522,34 @@ function SectionHeader({ eyebrow, title, description }) {
 function WatchMetric({ label, value, tone = "default" }) {
   return (
     <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">{label}</p>
-      <p className="mt-2 text-3xl font-black text-white">{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
     </div>
   );
 }
 
 function WatchStudentRow({ score = {} }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-black text-white">{getStudentName(score)}</p>
-          <p className="mt-1 text-xs text-white/45">
+          <p className="truncate font-black text-slate-950">{getStudentName(score)}</p>
+          <p className="mt-1 text-xs text-slate-500">
             {formatLabel(getJourneyStage(score))} • {score.executive_category || "Standard"}
           </p>
         </div>
 
         <div className="flex gap-2">
-          <span className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1 text-xs font-black text-red-300">
+          <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-black text-red-700">
             Risk {number(score.risk_score)}
           </span>
-          <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-xs font-black text-[#D4AF37]">
+          <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black text-orange-600">
             Opp {number(score.opportunity_score)}
           </span>
         </div>
       </div>
 
-      <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">
+      <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">
         {score.summary || score.gpt_summary || "No summary available."}
       </p>
     </div>
@@ -1552,12 +1558,12 @@ function WatchStudentRow({ score = {} }) {
 
 function ActionRow({ label, value, detail }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4">
       <div>
-        <p className="font-semibold text-white">{label}</p>
-        <p className="mt-1 text-xs leading-5 text-white/40">{detail}</p>
+        <p className="font-semibold text-slate-950">{label}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-400">{detail}</p>
       </div>
-      <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-sm font-black text-[#D4AF37]">
+      <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-sm font-black text-orange-600">
         {value}
       </span>
     </div>
@@ -1566,9 +1572,9 @@ function ActionRow({ label, value, detail }) {
 
 function SmallMetric({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">{label}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
     </div>
   );
 }
@@ -1577,13 +1583,13 @@ function HealthProgress({ label, value }) {
   const clean = Math.max(0, Math.min(100, Number(value || 0)));
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-white">{label}</span>
-        <span className="font-black text-[#D4AF37]">{clean}%</span>
+        <span className="font-semibold text-slate-950">{label}</span>
+        <span className="font-black text-orange-600">{clean}%</span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-[#D4AF37]" style={{ width: `${clean}%` }} />
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full rounded-full bg-orange-500" style={{ width: `${clean}%` }} />
       </div>
     </div>
   );
@@ -1591,20 +1597,35 @@ function HealthProgress({ label, value }) {
 
 function EmptyState({ text }) {
   return (
-    <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] p-5 text-sm text-white/40">
+    <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-400">
       {text}
     </p>
   );
 }
 
+
+function CommandModuleLoader({ label = "Loading command module..." }) {
+  return (
+    <div className="flex min-h-[260px] items-center justify-center rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+        <p className="mt-4 text-sm font-black text-slate-900">{label}</p>
+        <p className="mt-1 text-xs text-slate-400">
+          Zaifan OS is loading only the intelligence layer you requested.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-red-400/25 bg-red-500/10";
-  if (tone === "orange") return "border-orange-400/25 bg-orange-500/10";
-  if (tone === "yellow") return "border-yellow-400/25 bg-yellow-500/10";
-  if (tone === "green") return "border-emerald-400/25 bg-emerald-500/10";
-  if (tone === "gold") return "border-[#D4AF37]/25 bg-[#D4AF37]/10";
-  if (tone === "blue") return "border-blue-400/25 bg-blue-500/10";
-  return "border-white/10 bg-white/[0.03]";
+  if (tone === "red") return "border-red-200 bg-red-50";
+  if (tone === "orange") return "border-orange-200 bg-orange-50";
+  if (tone === "yellow") return "border-amber-200 bg-amber-50";
+  if (tone === "green") return "border-emerald-200 bg-emerald-50";
+  if (tone === "gold") return "border-orange-200 bg-orange-50";
+  if (tone === "blue") return "border-blue-200 bg-blue-50";
+  return "border-slate-200 bg-white";
 }
 
 export default ExecutiveCommandSystem;

@@ -121,51 +121,51 @@ const classifyPriority = (value, warning = 1, danger = 5) => {
 
 const toneClasses = {
   critical: {
-    border: "border-red-400/25",
-    bg: "bg-red-500/10",
-    text: "text-red-300",
+    border: "border-red-300",
+    bg: "bg-red-50",
+    text: "text-red-700",
     pill: "border-red-400/25 bg-red-500/10 text-red-300",
     glow: "shadow-[0_0_35px_rgba(248,113,113,0.12)]",
   },
   warning: {
-    border: "border-orange-400/25",
-    bg: "bg-orange-500/10",
-    text: "text-orange-300",
+    border: "border-orange-300",
+    bg: "bg-orange-50",
+    text: "text-orange-700",
     pill: "border-orange-400/25 bg-orange-500/10 text-orange-300",
     glow: "shadow-[0_0_35px_rgba(251,146,60,0.10)]",
   },
   success: {
-    border: "border-emerald-400/25",
-    bg: "bg-emerald-500/10",
-    text: "text-emerald-300",
+    border: "border-emerald-300",
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
     pill: "border-emerald-400/25 bg-emerald-500/10 text-emerald-300",
     glow: "shadow-[0_0_35px_rgba(52,211,153,0.08)]",
   },
   stable: {
-    border: "border-white/10",
-    bg: "bg-white/[0.035]",
-    text: "text-white",
-    pill: "border-white/10 bg-white/[0.04] text-white/45",
+    border: "border-slate-300",
+    bg: "bg-white",
+    text: "text-[#10233f]",
+    pill: "border-white/10 bg-white/[0.04] text-slate-600",
     glow: "",
   },
   gold: {
-    border: "border-[#D4AF37]/25",
-    bg: "bg-[#D4AF37]/10",
-    text: "text-[#D4AF37]",
+    border: "border-orange-300",
+    bg: "bg-orange-50",
+    text: "text-orange-700",
     pill: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
     glow: "shadow-[0_0_35px_rgba(212,175,55,0.10)]",
   },
   blue: {
-    border: "border-blue-400/25",
-    bg: "bg-blue-500/10",
-    text: "text-blue-300",
+    border: "border-blue-300",
+    bg: "bg-blue-50",
+    text: "text-blue-700",
     pill: "border-blue-400/25 bg-blue-500/10 text-blue-300",
     glow: "shadow-[0_0_35px_rgba(96,165,250,0.08)]",
   },
   purple: {
-    border: "border-purple-400/25",
-    bg: "bg-purple-500/10",
-    text: "text-purple-300",
+    border: "border-violet-300",
+    bg: "bg-violet-50",
+    text: "text-violet-700",
     pill: "border-purple-400/25 bg-purple-500/10 text-purple-300",
     glow: "shadow-[0_0_35px_rgba(192,132,252,0.08)]",
   },
@@ -290,22 +290,22 @@ function buildAlertSystem({
     return status.includes("approved");
   });
 
-  const activePortalAccounts = portalAccounts.filter((account) => {
+  const activePortalAccounts = mergedPortalAccounts.filter((account) => {
     const active = account.is_active ?? account.active ?? account.status;
     if (typeof active === "boolean") return active;
     return !["inactive", "disabled", "blocked", "false"].includes(toLower(active));
   });
 
-  const passwordResetAccounts = portalAccounts.filter(
+  const passwordResetAccounts = mergedPortalAccounts.filter(
     (account) => account.must_change_password || account.force_password_change
   );
 
-  const stalePortalAccounts = portalAccounts.filter((account) => {
+  const stalePortalAccounts = mergedPortalAccounts.filter((account) => {
     const lastLogin = account.last_login_at || account.last_login || account.last_seen_at;
     return !lastLogin || !isWithinDays(lastLogin, 30);
   });
 
-  const recentlyActivePortalAccounts = portalAccounts.filter((account) => {
+  const recentlyActivePortalAccounts = mergedPortalAccounts.filter((account) => {
     const lastLogin = account.last_login_at || account.last_login || account.last_seen_at;
     return isWithinDays(lastLogin, 7);
   });
@@ -360,9 +360,9 @@ function buildAlertSystem({
   const receiptApprovalRate =
     revenueMetrics?.receiptApprovalRate ?? percent(approvedReceipts.length, receipts.length);
   const portalActivationRate =
-    portalUsageMetrics?.activationRate ?? percent(activePortalAccounts.length, portalAccounts.length);
+    portalUsageMetrics?.activationRate ?? percent(activePortalAccounts.length, mergedPortalAccounts.length);
   const portalRecentActivityRate =
-    portalUsageMetrics?.recentActivityRate ?? percent(recentlyActivePortalAccounts.length, portalAccounts.length);
+    portalUsageMetrics?.recentActivityRate ?? percent(recentlyActivePortalAccounts.length, mergedPortalAccounts.length);
   const automationSuccessRate = percent(successfulExecutions.length, successfulExecutions.length + failedExecutions.length);
 
   const alertGroups = [
@@ -596,9 +596,9 @@ function MissionControlNotificationCenter(props) {
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.28 }}
-        className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6"
+        className="relative overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-white shadow-[0_16px_40px_rgba(15,35,63,0.14)]"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/10 via-transparent to-red-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/15 via-transparent to-red-500/10" />
 
         <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
@@ -610,7 +610,7 @@ function MissionControlNotificationCenter(props) {
               Executive Alert Command Center
             </h2>
 
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-white/55">
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-200">
               Centralized alert intelligence for executive risk, payments, visa,
               portal access, support requests, automation failures, approvals,
               duplicate protection, and operational recovery.
@@ -701,8 +701,8 @@ function HeroKpi({ label, value, tone = "stable" }) {
   const style = toneClasses[tone] || toneClasses.stable;
 
   return (
-    <div className={`rounded-2xl border ${style.border} ${style.bg} p-4 text-center ${style.glow}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className={`rounded-2xl border-2 ${style.border} ${style.bg} p-4 text-center ${style.glow}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
       <p className={`mt-2 text-3xl font-black ${style.text}`}>{value}</p>
@@ -718,7 +718,7 @@ function AlertCommandCard({ group, index }) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, delay: index * 0.035 }}
-      className={`rounded-[1.75rem] border ${style.border} ${style.bg} p-5 ${style.glow}`}
+      className={`rounded-[1.75rem] border-2 ${style.border} ${style.bg} p-5 shadow-[0_7px_20px_rgba(15,35,63,0.04)] ${style.glow}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="text-3xl">{group.icon}</div>
@@ -727,7 +727,7 @@ function AlertCommandCard({ group, index }) {
         </span>
       </div>
 
-      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
         {group.title}
       </p>
 
@@ -735,8 +735,8 @@ function AlertCommandCard({ group, index }) {
         {group.count}
       </p>
 
-      <p className="mt-2 text-xs leading-5 text-white/45">{group.summary}</p>
-      <p className="mt-3 text-xs leading-5 text-white/35">{group.description}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-600">{group.summary}</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">{group.description}</p>
     </motion.div>
   );
 }
@@ -756,8 +756,8 @@ function ResolutionRow({ item, index }) {
           <p className="font-black text-white">
             {item.groupIcon} {item.title}
           </p>
-          <p className="mt-1 text-xs text-white/40">{item.group} • {item.meta}</p>
-          <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{item.body}</p>
+          <p className="mt-1 text-xs text-slate-500">{item.group} • {item.meta}</p>
+          <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">{item.body}</p>
         </div>
 
         <span className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${style.pill}`}>
@@ -782,7 +782,7 @@ function FeedRow({ item, index }) {
         <span className="text-2xl">{item.icon}</span>
         <div className="min-w-0">
           <p className="truncate text-sm font-bold text-white">{item.title}</p>
-          <p className="truncate text-xs text-white/40">{item.meta}</p>
+          <p className="truncate text-xs text-slate-500">{item.meta}</p>
         </div>
       </div>
 
@@ -804,8 +804,8 @@ function HealthBar({ label, value }) {
         <span className="font-semibold text-white">{label}</span>
         <span className={`font-black ${style.text}`}>{clean}%</span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-        <div className={`h-full rounded-full ${tone === "success" ? "bg-emerald-400" : tone === "warning" ? "bg-orange-400" : "bg-red-400"}`} style={{ width: `${clean}%` }} />
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+        <div className={`h-full rounded-full ${tone === "success" ? "bg-emerald-500" : tone === "warning" ? "bg-orange-500" : "bg-red-500"}`} style={{ width: `${clean}%` }} />
       </div>
     </div>
   );
@@ -816,7 +816,7 @@ function MiniKpi({ label, value, icon }) {
     <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{label}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
           <p className="mt-2 text-2xl font-black text-white">{value}</p>
         </div>
         <span className="text-3xl">{icon}</span>
@@ -828,16 +828,16 @@ function MiniKpi({ label, value, icon }) {
 function SectionHeader({ eyebrow, title, subtitle }) {
   return (
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D4AF37]/80">{eyebrow}</p>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-700">{eyebrow}</p>
       <h3 className="mt-1 text-xl font-black text-white">{title}</h3>
-      {subtitle ? <p className="mt-1 text-sm leading-6 text-white/45">{subtitle}</p> : null}
+      {subtitle ? <p className="mt-1 text-sm leading-6 text-slate-600">{subtitle}</p> : null}
     </div>
   );
 }
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] p-5 text-sm text-white/40">
+    <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] p-5 text-sm text-slate-500">
       {text}
     </div>
   );

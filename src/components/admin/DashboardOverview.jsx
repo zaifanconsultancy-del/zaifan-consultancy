@@ -79,39 +79,39 @@ function DashboardOverview({
           transition={{ duration: 0.45 }}
           className={`${cardClass} p-4 sm:p-5`}
         >
-          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#E9802D] to-transparent opacity-60"></div>
 
           <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 sm:text-[11px] sm:tracking-[0.35em]">
+              <p className="text-[9px] uppercase tracking-[0.22em] text-[#8992A1] sm:text-[11px] sm:tracking-[0.35em]">
                 Daily Operations
               </p>
 
-              <h2 className="mt-2 text-2xl font-black text-white sm:mt-3 sm:text-3xl">
+              <h2 className="mt-2 text-2xl font-black text-[#17243D] sm:mt-3 sm:text-3xl">
                 Today&apos;s CRM Pulse
               </h2>
 
-              <p className="mt-1.5 text-xs leading-relaxed text-gray-400 sm:mt-2 sm:text-sm">
+              <p className="mt-1.5 text-xs leading-relaxed text-[#667085] sm:mt-2 sm:text-sm">
                 Real-time overview of today&apos;s student activity from inquiries and consultation bookings.
               </p>
             </div>
 
-            <div className="shrink-0 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-2 text-xs font-bold text-[#D4AF37] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm">
+            <div className="shrink-0 rounded-xl border border-[#E9802D]/35 bg-[#FFF1E3] px-3 py-2 text-xs font-bold text-[#B84F0E] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm">
               {totalToday} Today
             </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-            <div className="rounded-[1.5rem] border border-[#D4AF37]/15 bg-[#D4AF37]/5 p-5">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
+            <div className="rounded-[1.5rem] border border-[#D4AF37]/15 bg-[#E9802D]/5 p-5">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#B84F0E]">
                 Activity Count
               </p>
 
-              <h3 className="mt-3 text-5xl font-black text-[#D4AF37]">
+              <h3 className="mt-3 text-5xl font-black text-[#B84F0E]">
                 {totalToday}
               </h3>
 
-              <p className="mt-3 text-sm leading-relaxed text-gray-400">
+              <p className="mt-3 text-sm leading-relaxed text-[#667085]">
                 {totalToday === 0
                   ? "No new CRM activity today yet."
                   : `${todayInquiriesCount} inquiries and ${todayAppointmentsCount} appointments logged today.`}
@@ -120,7 +120,7 @@ function DashboardOverview({
               <div className="mt-5 space-y-4">
                 {todayBars.map((bar) => (
                   <div key={bar.label}>
-                    <div className="mb-2 flex items-center justify-between text-xs text-gray-400">
+                    <div className="mb-2 flex items-center justify-between text-xs text-[#667085]">
                       <span>
                         {bar.icon} {bar.label}
                       </span>
@@ -134,7 +134,7 @@ function DashboardOverview({
                         initial={{ width: 0 }}
                         animate={{ width: `${bar.value}%` }}
                         transition={{ duration: 0.8, delay: 0.15 }}
-                        className="h-full rounded-full bg-[#D4AF37]"
+                        className="h-full rounded-full bg-[#E9802D]"
                       ></motion.div>
                     </div>
                   </div>
@@ -142,13 +142,13 @@ function DashboardOverview({
               </div>
             </div>
 
-            <div className="flex h-64 items-end gap-2 rounded-[1.5rem] border border-white/10 bg-black/20 p-4 sm:gap-3 sm:p-5">
+            <div className="flex h-64 items-end gap-2 rounded-[1.5rem] border border-[#243A60]/18 bg-[#FFFDF8] p-4 sm:gap-3 sm:p-5">
               {pulseBars.map((bar, index) => (
                 <div
                   key={bar.label}
                   className="flex flex-1 flex-col items-center gap-2 sm:gap-3"
                 >
-                  <div className="flex h-40 w-full items-end rounded-full bg-white/[0.04] p-1">
+                  <div className="flex h-40 w-full items-end rounded-full bg-white p-1">
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: `${bar.value}%` }}
@@ -161,7 +161,7 @@ function DashboardOverview({
                     ></motion.div>
                   </div>
 
-                  <span className="text-[10px] text-gray-500 sm:text-[11px]">
+                  <span className="text-[10px] text-[#8992A1] sm:text-[11px]">
                     {bar.label}
                   </span>
                 </div>
@@ -244,26 +244,26 @@ function AIExecutiveBriefing({ cardClass, aiInsights }) {
       transition={{ duration: 0.4 }}
       className={`${cardClass} overflow-hidden p-4 sm:p-5`}
     >
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-80" />
-      <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#D4AF37]/10 blur-3xl" />
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#E9802D] to-transparent opacity-80" />
+      <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#FFF1E3] blur-3xl" />
       <div className="pointer-events-none absolute -left-24 bottom-0 h-52 w-52 rounded-full bg-cyan-400/5 blur-3xl" />
 
       <div className="relative grid gap-5 2xl:grid-cols-[1.1fr_1fr]">
         <div>
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#D4AF37]">
+            <span className="rounded-full border border-[#D4AF37]/30 bg-[#FFF1E3] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#B84F0E]">
               Real Student OS Intelligence
             </span>
-            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
+            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#17243D]/45">
               No Auto GPT Cost
             </span>
           </div>
 
-          <h2 className="text-2xl font-black text-white sm:text-3xl">
+          <h2 className="text-2xl font-black text-[#17243D] sm:text-3xl">
             AI Executive Briefing
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/50">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#17243D]/50">
             This briefing uses your Student OS data and local AI scoring engine. Real GPT remains available inside the student workspace when a counselor needs generated messages, summaries, scripts, or strategy.
           </p>
 
@@ -271,7 +271,7 @@ function AIExecutiveBriefing({ cardClass, aiInsights }) {
             {briefingLines.map((line) => (
               <div
                 key={line}
-                className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm leading-6 text-white/70"
+                className="rounded-2xl border border-[#243A60]/18 bg-[#FFFDF8] px-4 py-3 text-sm leading-6 text-[#17243D]/70"
               >
                 {line}
               </div>
@@ -295,7 +295,7 @@ function AIStatCard({ stat }) {
       ? "border-red-400/20 bg-red-500/10 text-red-300"
       : stat.tone === "orange"
       ? "border-orange-400/20 bg-orange-500/10 text-orange-300"
-      : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]";
+      : "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
 
   return (
     <div className={`rounded-[1.5rem] border p-4 ${toneClass}`}>
@@ -306,9 +306,9 @@ function AIStatCard({ stat }) {
         <span className="text-xl">{stat.icon}</span>
       </div>
 
-      <p className="mt-4 text-4xl font-black text-white">
+      <p className="mt-4 text-4xl font-black text-[#17243D]">
         {stat.value}
-        <span className="text-base text-white/35">{stat.suffix}</span>
+        <span className="text-base text-[#17243D]/35">{stat.suffix}</span>
       </p>
     </div>
   );
@@ -328,7 +328,7 @@ function LatestLeadCard({ card, cardClass, index }) {
   const accentClass =
     card.accent === "green"
       ? "border-green-400/20 bg-green-400/10 text-green-300"
-      : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]";
+      : "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
 
   return (
     <motion.div
@@ -337,19 +337,19 @@ function LatestLeadCard({ card, cardClass, index }) {
       transition={{ duration: 0.45, delay: index * 0.08 }}
       className={`${cardClass} group relative p-4 sm:p-5`}
     >
-      <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition duration-500 group-hover:scale-x-100"></div>
+      <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#E9802D] to-transparent transition duration-500 group-hover:scale-x-100"></div>
 
       <div className="flex items-start justify-between gap-3 sm:gap-5">
         <div className="min-w-0">
-          <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 sm:text-[10px] sm:tracking-[0.3em]">
+          <p className="text-[9px] uppercase tracking-[0.22em] text-[#8992A1] sm:text-[10px] sm:tracking-[0.3em]">
             {card.title}
           </p>
 
-          <h2 className="mt-2 break-words text-xl font-black leading-tight text-white sm:mt-3 sm:text-2xl">
+          <h2 className="mt-2 break-words text-xl font-black leading-tight text-[#17243D] sm:mt-3 sm:text-2xl">
             {hasLead ? card.lead.full_name || "Unnamed Student" : card.fallbackTitle}
           </h2>
 
-          <p className="mt-1.5 text-xs leading-relaxed text-gray-400 sm:mt-2 sm:text-sm">
+          <p className="mt-1.5 text-xs leading-relaxed text-[#667085] sm:mt-2 sm:text-sm">
             {hasLead ? card.detail || "No detail available" : card.fallbackText}
           </p>
         </div>
@@ -368,11 +368,11 @@ function LatestLeadCard({ card, cardClass, index }) {
 
         {hasLead && (
           <>
-            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-300">
+            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#344054]">
               {priority}
             </span>
 
-            <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+            <span className="rounded-full border border-[#243A60]/18 bg-[#FFFDF8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#667085]">
               {status}
             </span>
 
@@ -401,11 +401,11 @@ function LatestLeadCard({ card, cardClass, index }) {
 
 function MiniInfo({ label, value }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500">
+    <div className="min-w-0 rounded-2xl border border-[#243A60]/18 bg-[#FFFDF8] px-3 py-2">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-[#8992A1]">
         {label}
       </p>
-      <p className="mt-1 truncate text-xs font-semibold text-gray-300">
+      <p className="mt-1 truncate text-xs font-semibold text-[#344054]">
         {value || "-"}
       </p>
     </div>

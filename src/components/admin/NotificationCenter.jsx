@@ -321,7 +321,7 @@ function NotificationCenter({
       value: inquiryNewCount,
       text: inquiryNewCount === 1 ? "Needs immediate follow-up" : "Need immediate follow-up",
       icon: Bell,
-      color: "text-[#D4AF37]",
+      color: "text-orange-700",
       tone: "gold",
       status: inquiryNewCount > 0 ? "Attention Required" : "Stable",
       active: inquiryNewCount > 0,
@@ -331,7 +331,7 @@ function NotificationCenter({
       value: appointmentPendingCount,
       text: appointmentPendingCount === 1 ? "Needs confirmation" : "Need confirmation",
       icon: Clock3,
-      color: "text-orange-300",
+      color: "text-orange-700",
       tone: "orange",
       status: appointmentPendingCount > 0 ? "Pending Review" : "Stable",
       active: appointmentPendingCount > 0,
@@ -341,7 +341,7 @@ function NotificationCenter({
       value: appointmentConfirmedCount,
       text: appointmentConfirmedCount === 1 ? "Consultation ready" : "Consultations ready",
       icon: CheckCircle2,
-      color: "text-green-400",
+      color: "text-emerald-700",
       tone: "green",
       status: "Operational",
       active: false,
@@ -351,7 +351,7 @@ function NotificationCenter({
       value: urgentPriorityCount,
       text: urgentPriorityCount === 1 ? "VIP/high lead waiting" : "VIP/high leads waiting",
       icon: Crown,
-      color: "text-purple-300",
+      color: "text-violet-700",
       tone: "purple",
       status: urgentPriorityCount > 0 ? "High Value Opportunity" : "Stable",
       active: urgentPriorityCount > 0,
@@ -361,7 +361,7 @@ function NotificationCenter({
       value: assignedLeadsCount,
       text: "Owned by team members",
       icon: Briefcase,
-      color: "text-green-300",
+      color: "text-emerald-700",
       tone: "green",
       status: "Ownership",
       active: false,
@@ -371,7 +371,7 @@ function NotificationCenter({
       value: unassignedLeadsCount,
       text: unassignedLeadsCount === 1 ? "Lead still unassigned" : "Leads still unassigned",
       icon: Briefcase,
-      color: "text-cyan-300",
+      color: "text-blue-700",
       tone: "cyan",
       status: unassignedLeadsCount > 0 ? "Assignment Needed" : "Stable",
       active: unassignedLeadsCount > 0,
@@ -381,7 +381,7 @@ function NotificationCenter({
       value: todayActivityCount,
       text: todayActivityCount === 1 ? "New CRM activity" : "New CRM activities",
       icon: Activity,
-      color: "text-blue-300",
+      color: "text-blue-700",
       tone: "blue",
       status: "Live Tracking",
       active: false,
@@ -394,7 +394,7 @@ function NotificationCenter({
       value: pendingApplications,
       text: "Applications needing movement",
       icon: GraduationCap,
-      color: "text-cyan-300",
+      color: "text-blue-700",
       tone: "cyan",
       status: pendingApplications > 0 ? "Application Pressure" : "Stable",
       active: pendingApplications > 0,
@@ -404,7 +404,7 @@ function NotificationCenter({
       value: offerReceived,
       text: "Offer decisions to manage",
       icon: CheckCircle2,
-      color: "text-green-300",
+      color: "text-emerald-700",
       tone: "green",
       status: offerReceived > 0 ? "Opportunity" : "Stable",
       active: false,
@@ -414,7 +414,7 @@ function NotificationCenter({
       value: casDelayed,
       text: "Offer accepted but CAS not issued",
       icon: FileText,
-      color: "text-blue-300",
+      color: "text-blue-700",
       tone: "blue",
       status: casDelayed > 0 ? "CAS Risk" : "Stable",
       active: casDelayed > 0,
@@ -424,7 +424,7 @@ function NotificationCenter({
       value: visaDelayed,
       text: "CAS issued but visa not approved",
       icon: Plane,
-      color: "text-emerald-300",
+      color: "text-emerald-700",
       tone: "green",
       status: visaDelayed > 0 ? "Visa Risk" : "Stable",
       active: visaDelayed > 0,
@@ -434,7 +434,7 @@ function NotificationCenter({
       value: pendingDocuments,
       text: "Documents waiting review",
       icon: FileText,
-      color: "text-purple-300",
+      color: "text-violet-700",
       tone: "purple",
       status: pendingDocuments > 0 ? "Document Gap" : "Stable",
       active: pendingDocuments > 0,
@@ -444,7 +444,7 @@ function NotificationCenter({
       value: pendingTasks,
       text: "Tasks still open",
       icon: Clock3,
-      color: "text-orange-300",
+      color: "text-orange-700",
       tone: "orange",
       status: pendingTasks > 0 ? "Task Pressure" : "Stable",
       active: pendingTasks > 0,
@@ -457,7 +457,7 @@ function NotificationCenter({
       value: revenueMetrics?.unpaidInvoicesCount ?? unpaidInvoices,
       text: "Invoices still outstanding",
       icon: CreditCard,
-      color: "text-[#D4AF37]",
+      color: "text-orange-700",
       tone: "gold",
       status: unpaidInvoices > 0 ? "Revenue Risk" : "Stable",
       active: unpaidInvoices > 0,
@@ -467,7 +467,7 @@ function NotificationCenter({
       value: formatMoney(revenueMetrics?.outstandingValue ?? outstandingValue),
       text: "Open balance",
       icon: WalletCards,
-      color: "text-orange-300",
+      color: "text-orange-700",
       tone: "orange",
       status: outstandingValue > 0 ? "Collection Needed" : "Stable",
       active: outstandingValue > 0,
@@ -477,7 +477,7 @@ function NotificationCenter({
       value: `${collectionRate}%`,
       text: "Paid against invoiced",
       icon: BarChart3,
-      color: collectionRate >= 70 ? "text-green-300" : "text-orange-300",
+      color: collectionRate >= 70 ? "text-emerald-700" : "text-orange-700",
       tone: collectionRate >= 70 ? "green" : "orange",
       status: collectionRate >= 70 ? "Healthy" : "Needs Focus",
       active: collectionRate < 70 && invoiceValue > 0,
@@ -487,7 +487,7 @@ function NotificationCenter({
       value: revenueMetrics?.pendingReceiptsCount ?? pendingReceipts,
       text: "Receipts waiting approval",
       icon: Receipt,
-      color: "text-blue-300",
+      color: "text-blue-700",
       tone: "blue",
       status: pendingReceipts > 0 ? "Approval Needed" : "Stable",
       active: pendingReceipts > 0,
@@ -497,7 +497,7 @@ function NotificationCenter({
       value: `${receiptApprovalRate}%`,
       text: "Receipt workflow health",
       icon: CheckCircle2,
-      color: receiptApprovalRate >= 70 ? "text-green-300" : "text-purple-300",
+      color: receiptApprovalRate >= 70 ? "text-emerald-700" : "text-violet-700",
       tone: receiptApprovalRate >= 70 ? "green" : "purple",
       status: receiptApprovalRate >= 70 ? "Healthy" : "Pending Review",
       active: receiptApprovalRate < 70 && studentReceipts.length > 0,
@@ -507,7 +507,7 @@ function NotificationCenter({
       value: counselorPaymentRequests.length,
       text: "Counselor payment requests",
       icon: CreditCard,
-      color: "text-cyan-300",
+      color: "text-blue-700",
       tone: "cyan",
       status: counselorPaymentRequests.length > 0 ? "Queue Active" : "Stable",
       active: counselorPaymentRequests.length > 0,
@@ -520,7 +520,7 @@ function NotificationCenter({
       value: `${portalActivationRate}%`,
       text: "Active student accounts",
       icon: Radio,
-      color: portalActivationRate >= 70 ? "text-green-300" : "text-orange-300",
+      color: portalActivationRate >= 70 ? "text-emerald-700" : "text-orange-700",
       tone: portalActivationRate >= 70 ? "green" : "orange",
       status: portalActivationRate >= 70 ? "Healthy" : "Access Gap",
       active: portalActivationRate < 70 && studentPortalAccounts.length > 0,
@@ -530,7 +530,7 @@ function NotificationCenter({
       value: `${portalActivityRate}%`,
       text: "Recently active users",
       icon: Activity,
-      color: portalActivityRate >= 40 ? "text-cyan-300" : "text-orange-300",
+      color: portalActivityRate >= 40 ? "text-blue-700" : "text-orange-700",
       tone: portalActivityRate >= 40 ? "cyan" : "orange",
       status: portalActivityRate >= 40 ? "Engaged" : "Low Activity",
       active: portalActivityRate < 40 && studentPortalAccounts.length > 0,
@@ -540,7 +540,7 @@ function NotificationCenter({
       value: passwordResetRequired,
       text: "Students must change password",
       icon: LockKeyhole,
-      color: "text-orange-300",
+      color: "text-orange-700",
       tone: "orange",
       status: passwordResetRequired > 0 ? "Portal Action" : "Stable",
       active: passwordResetRequired > 0,
@@ -550,7 +550,7 @@ function NotificationCenter({
       value: stalePortalAccounts,
       text: "No login in 30 days",
       icon: LockKeyhole,
-      color: "text-red-300",
+      color: "text-red-700",
       tone: "red",
       status: stalePortalAccounts > 0 ? "Engagement Risk" : "Stable",
       active: stalePortalAccounts > 0,
@@ -560,7 +560,7 @@ function NotificationCenter({
       value: openSupportRequests,
       text: "Student support queue",
       icon: Headphones,
-      color: "text-cyan-300",
+      color: "text-blue-700",
       tone: "cyan",
       status: openSupportRequests > 0 ? "Support Queue" : "Stable",
       active: openSupportRequests > 0,
@@ -570,7 +570,7 @@ function NotificationCenter({
       value: escalatedSupportRequests,
       text: "Urgent support cases",
       icon: ShieldAlert,
-      color: "text-red-300",
+      color: "text-red-700",
       tone: "red",
       status: escalatedSupportRequests > 0 ? "Escalated" : "Stable",
       active: escalatedSupportRequests > 0,
@@ -580,7 +580,7 @@ function NotificationCenter({
       value: `${supportResolutionRate}%`,
       text: "Resolved support history",
       icon: CheckCircle2,
-      color: supportResolutionRate >= 70 ? "text-green-300" : "text-orange-300",
+      color: supportResolutionRate >= 70 ? "text-emerald-700" : "text-orange-700",
       tone: supportResolutionRate >= 70 ? "green" : "orange",
       status: supportResolutionRate >= 70 ? "Healthy" : "Response Needed",
       active: supportResolutionRate < 70 && supportRequests.length > 0,
@@ -593,7 +593,7 @@ function NotificationCenter({
       value: executiveExecutionLogs.length,
       text: "Automation history",
       icon: Zap,
-      color: "text-cyan-300",
+      color: "text-blue-700",
       tone: "cyan",
       status: "Live",
       active: false,
@@ -603,7 +603,7 @@ function NotificationCenter({
       value: `${automationSuccessRate}%`,
       text: "Successful execution rate",
       icon: CheckCircle2,
-      color: automationSuccessRate >= 70 ? "text-green-300" : "text-orange-300",
+      color: automationSuccessRate >= 70 ? "text-emerald-700" : "text-orange-700",
       tone: automationSuccessRate >= 70 ? "green" : "orange",
       status: automationSuccessRate >= 70 ? "Healthy" : "Needs Recovery",
       active: automationSuccessRate < 70 && executiveExecutionLogs.length > 0,
@@ -613,7 +613,7 @@ function NotificationCenter({
       value: failedExecutions,
       text: "Needs investigation",
       icon: AlertTriangle,
-      color: "text-red-300",
+      color: "text-red-700",
       tone: "red",
       status: failedExecutions > 0 ? "Recovery Needed" : "Stable",
       active: failedExecutions > 0,
@@ -623,7 +623,7 @@ function NotificationCenter({
       value: pendingAutomationApprovals,
       text: "Human approval queue",
       icon: Clock3,
-      color: "text-orange-300",
+      color: "text-orange-700",
       tone: "orange",
       status: pendingAutomationApprovals > 0 ? "Approval Queue" : "Stable",
       active: pendingAutomationApprovals > 0,
@@ -633,7 +633,7 @@ function NotificationCenter({
       value: duplicateBlockedExecutions,
       text: "Protection monitor",
       icon: ShieldAlert,
-      color: "text-blue-300",
+      color: "text-blue-700",
       tone: "blue",
       status: duplicateBlockedExecutions > 0 ? "Protected" : "Stable",
       active: false,
@@ -646,7 +646,7 @@ function NotificationCenter({
       value: highRiskStudents,
       text: "Executive AI risk queue",
       icon: AlertTriangle,
-      color: "text-red-300",
+      color: "text-red-700",
       tone: "red",
       status: highRiskStudents > 0 ? "Executive Risk" : "Stable",
       active: highRiskStudents > 0,
@@ -656,7 +656,7 @@ function NotificationCenter({
       value: criticalRiskStudents,
       text: "Immediate intervention needed",
       icon: ShieldAlert,
-      color: "text-red-300",
+      color: "text-red-700",
       tone: "red",
       status: criticalRiskStudents > 0 ? "Critical" : "Stable",
       active: criticalRiskStudents > 0,
@@ -666,7 +666,7 @@ function NotificationCenter({
       value: studentUniversities.length,
       text: "Dream / target / safe planning",
       icon: GraduationCap,
-      color: "text-pink-300",
+      color: "text-pink-700",
       tone: "purple",
       status: studentUniversities.length > 0 ? "Operational" : "Waiting",
       active: false,
@@ -680,7 +680,7 @@ function NotificationCenter({
         studentUniversities.length,
       text: "Connected operating records",
       icon: Activity,
-      color: "text-[#D4AF37]",
+      color: "text-orange-700",
       tone: "gold",
       status: "Live System",
       active: false,
@@ -758,24 +758,24 @@ function NotificationCenter({
 
   return (
     <div className="mb-5 space-y-5 xl:mb-6">
-      <div className="relative overflow-hidden rounded-[1.7rem] border border-[#D4AF37]/15 bg-gradient-to-br from-[#D4AF37]/10 via-black/40 to-black/30 p-5 backdrop-blur-2xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.12),transparent_35%)]" />
+      <div className="relative overflow-hidden rounded-[1.7rem] border-2 border-orange-300 bg-gradient-to-br from-[#fff8ee] via-white to-orange-50 p-5 backdrop-blur-2xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_35%)]" />
 
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1">
-              <span className="h-2 w-2 rounded-full bg-[#D4AF37]" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-300 bg-orange-50 px-3 py-1">
+              <span className="h-2 w-2 rounded-full bg-orange-500" />
 
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-orange-700">
                 Executive Notification Center V2
               </p>
             </div>
 
-            <h2 className="mt-3 text-xl font-black tracking-tight text-white sm:text-2xl">
+            <h2 className="mt-3 text-xl font-black tracking-tight text-[#10233f] sm:text-2xl">
               CRM + Student OS Alert Command Center
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-400">
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
               Live alert intelligence across inquiries, appointments, applications, CAS,
               visa, payments, receipts, portal accounts, support requests, documents,
               tasks, Executive AI risk, and automation execution health.
@@ -861,14 +861,14 @@ function AlertSection({ title, eyebrow, alerts, cardClass, compact = false }) {
     <div className="space-y-3">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37]">
+          <p className="text-[10px] uppercase tracking-[0.25em] text-orange-700">
             {eyebrow}
           </p>
 
-          <h3 className="text-lg font-black text-white">{title}</h3>
+          <h3 className="text-lg font-black text-[#10233f]">{title}</h3>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-slate-500">
           {alerts.filter((item) => item.active).length} requiring attention
         </p>
       </div>
@@ -902,11 +902,11 @@ function CommandSummaryCard({ item, index, cardClass }) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className={`${cardClass} rounded-[1.5rem] border ${tone.border} ${tone.bg} p-4`}
+      className={`${cardClass} rounded-[1.5rem] border-2 ${tone.border} ${tone.bg} p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)]`}
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
             {item.title}
           </p>
 
@@ -935,9 +935,9 @@ function NotificationCard({ item, index, cardClass }) {
         duration: 0.35,
         delay: index * 0.04,
       }}
-      className={`${cardClass} ${tone.glow} group relative overflow-hidden rounded-[1.8rem] border ${tone.border} ${tone.bg} p-5 transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/30`}
+      className={`${cardClass} ${tone.glow} group relative overflow-hidden rounded-[1.8rem] border-2 ${tone.border} ${tone.bg} p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)] transition duration-500 hover:-translate-y-1 hover:border-orange-400`}
     >
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
 
       <div className="flex items-start justify-between gap-4">
         <div
@@ -954,13 +954,13 @@ function NotificationCard({ item, index, cardClass }) {
           <Icon className={`h-6 w-6 ${item.color}`} />
         </div>
 
-        <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.22em] text-gray-400">
+        <div className="rounded-full border border-slate-300 bg-[#fffaf2] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.22em] text-slate-600">
           {item.status}
         </div>
       </div>
 
       <div className="mt-5">
-        <p className="text-[10px] uppercase tracking-[0.26em] text-gray-500">
+        <p className="text-[10px] uppercase tracking-[0.26em] text-slate-500">
           {item.title}
         </p>
 
@@ -969,14 +969,14 @@ function NotificationCard({ item, index, cardClass }) {
             {item.value}
           </h3>
 
-          <p className="pb-1 text-sm text-gray-400">{item.text}</p>
+          <p className="pb-1 text-sm text-slate-600">{item.text}</p>
         </div>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37] transition duration-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/15"
+          className="inline-flex items-center gap-2 rounded-xl border border-orange-300 bg-orange-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-orange-700 transition duration-300 hover:border-[#D4AF37]/40 hover:bg-orange-500/15"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           Open
@@ -984,7 +984,7 @@ function NotificationCard({ item, index, cardClass }) {
 
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300 transition duration-300 hover:border-green-400/30 hover:bg-green-400/10 hover:text-green-300"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-700 transition duration-300 hover:border-green-400/30 hover:bg-green-400/10 hover:text-emerald-700"
         >
           <Plus className="h-3.5 w-3.5" />
           Follow-up
@@ -992,7 +992,7 @@ function NotificationCard({ item, index, cardClass }) {
 
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 transition duration-300 hover:border-blue-400/30 hover:bg-blue-400/10 hover:text-blue-300"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 transition duration-300 hover:border-blue-400/30 hover:bg-blue-400/10 hover:text-blue-700"
         >
           <CheckCircle2 className="h-3.5 w-3.5" />
           Read
@@ -1000,7 +1000,7 @@ function NotificationCard({ item, index, cardClass }) {
 
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500 transition duration-300 hover:border-red-400/30 hover:bg-red-400/10 hover:text-red-300"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 transition duration-300 hover:border-red-400/30 hover:bg-red-400/10 hover:text-red-700"
         >
           <X className="h-3.5 w-3.5" />
           Dismiss
@@ -1008,11 +1008,11 @@ function NotificationCard({ item, index, cardClass }) {
       </div>
 
       {item.active && (
-        <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-3 backdrop-blur-xl">
+        <div className="mt-5 rounded-2xl border border-slate-300 bg-[#fffaf2] p-3 backdrop-blur-xl">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-[#D4AF37]" />
+            <AlertTriangle className="h-4 w-4 text-orange-700" />
 
-            <p className="text-xs font-medium leading-relaxed text-gray-300">
+            <p className="text-xs font-medium leading-relaxed text-slate-700">
               Executive system detected active operational attention required in
               this category.
             </p>
@@ -1026,12 +1026,12 @@ function NotificationCard({ item, index, cardClass }) {
 function Badge({ children, tone = "default" }) {
   const toneClass =
     tone === "red"
-      ? "border-red-400/20 bg-red-400/10 text-red-300"
+      ? "border-red-300 bg-red-50 text-red-700"
       : tone === "green"
-      ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
       : tone === "purple"
-      ? "border-purple-400/20 bg-purple-400/10 text-purple-300"
-      : "border-white/10 bg-white/[0.04] text-gray-300";
+      ? "border-violet-300 bg-violet-50 text-violet-700"
+      : "border-slate-300 bg-white text-slate-700";
 
   return (
     <div
@@ -1045,46 +1045,46 @@ function Badge({ children, tone = "default" }) {
 function getToneClass(tone = "gold", active = false) {
   const toneMap = {
     gold: {
-      border: active ? "border-[#D4AF37]/30" : "border-white/10",
-      bg: active ? "bg-[#D4AF37]/10" : "bg-white/[0.04]",
-      glow: active ? "shadow-[0_0_35px_rgba(212,175,55,0.12)]" : "",
-      text: "text-[#D4AF37]",
+      border: active ? "border-orange-400" : "border-slate-300",
+      bg: active ? "bg-orange-500/10" : "bg-white",
+      glow: active ? "shadow-[0_0_35px_rgba(249,115,22,0.14)]" : "",
+      text: "text-orange-700",
     },
     orange: {
-      border: active ? "border-orange-400/30" : "border-white/10",
-      bg: active ? "bg-orange-400/10" : "bg-white/[0.04]",
+      border: active ? "border-orange-300" : "border-slate-300",
+      bg: active ? "bg-orange-50" : "bg-white",
       glow: active ? "shadow-[0_0_35px_rgba(251,146,60,0.12)]" : "",
-      text: "text-orange-300",
+      text: "text-orange-700",
     },
     green: {
-      border: active ? "border-green-400/30" : "border-white/10",
-      bg: active ? "bg-green-400/10" : "bg-white/[0.04]",
+      border: active ? "border-emerald-300" : "border-slate-300",
+      bg: active ? "bg-emerald-50" : "bg-white",
       glow: active ? "shadow-[0_0_35px_rgba(74,222,128,0.10)]" : "",
-      text: "text-green-300",
+      text: "text-emerald-700",
     },
     red: {
-      border: active ? "border-red-400/30" : "border-white/10",
-      bg: active ? "bg-red-400/10" : "bg-white/[0.04]",
+      border: active ? "border-red-300" : "border-slate-300",
+      bg: active ? "bg-red-50" : "bg-white",
       glow: active ? "shadow-[0_0_35px_rgba(248,113,113,0.14)]" : "",
-      text: "text-red-300",
+      text: "text-red-700",
     },
     purple: {
-      border: active ? "border-purple-400/30" : "border-white/10",
-      bg: active ? "bg-purple-400/10" : "bg-white/[0.04]",
+      border: active ? "border-violet-300" : "border-slate-300",
+      bg: active ? "bg-violet-50" : "bg-white",
       glow: active ? "shadow-[0_0_35px_rgba(192,132,252,0.12)]" : "",
-      text: "text-purple-300",
+      text: "text-violet-700",
     },
     cyan: {
-      border: active ? "border-cyan-400/30" : "border-white/10",
-      bg: active ? "bg-cyan-400/10" : "bg-white/[0.04]",
+      border: active ? "border-blue-300" : "border-slate-300",
+      bg: active ? "bg-blue-50" : "bg-white",
       glow: active ? "shadow-[0_0_35px_rgba(34,211,238,0.12)]" : "",
-      text: "text-cyan-300",
+      text: "text-blue-700",
     },
     blue: {
-      border: active ? "border-blue-400/30" : "border-white/10",
-      bg: active ? "bg-blue-400/10" : "bg-white/[0.04]",
+      border: active ? "border-blue-300" : "border-slate-300",
+      bg: active ? "bg-blue-50" : "bg-white",
       glow: active ? "shadow-[0_0_35px_rgba(96,165,250,0.12)]" : "",
-      text: "text-blue-300",
+      text: "text-blue-700",
     },
   };
 

@@ -215,7 +215,7 @@ function CommandPalette({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37] px-5 py-3 text-xs font-black text-black shadow-2xl shadow-[#D4AF37]/20 transition hover:bg-[#f1cf65]"
+        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border-2 border-orange-600 bg-orange-500 px-5 py-3 text-xs font-black text-[#10233f] shadow-2xl shadow-orange-500/20 transition hover:bg-orange-600"
       >
         <span>⌘ / Ctrl K</span>
       </button>
@@ -223,7 +223,7 @@ function CommandPalette({
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-start justify-center bg-black/75 px-3 pt-20 backdrop-blur-xl sm:px-4 sm:pt-24"
+            className="fixed inset-0 z-50 flex items-start justify-center bg-[#10233f]/70 px-3 pt-20 backdrop-blur-xl sm:px-4 sm:pt-24"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -238,10 +238,10 @@ function CommandPalette({
               exit={{ opacity: 0, y: 16, scale: 0.97 }}
               transition={{ duration: 0.18 }}
               onClick={(event) => event.stopPropagation()}
-              className="w-full max-w-3xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808] shadow-2xl shadow-black/60"
+              className="w-full max-w-3xl overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-[#fffaf2] shadow-2xl shadow-black/60"
             >
-              <div className="border-b border-white/10 p-4">
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3">
+              <div className="border-b border-orange-200 p-4">
+                <div className="flex items-center gap-3 rounded-2xl border-2 border-slate-300 bg-white px-4 py-3">
                   <span className="text-lg">🔎</span>
 
                   <input
@@ -249,14 +249,14 @@ function CommandPalette({
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search pages, analytics, AI, reminders..."
-                    className="w-full bg-transparent text-base font-bold text-white outline-none placeholder:text-gray-600 sm:text-lg"
+                    className="w-full bg-transparent text-base font-bold text-[#10233f] outline-none placeholder:text-slate-400 sm:text-lg"
                   />
 
                   {query ? (
                     <button
                       type="button"
                       onClick={() => setQuery("")}
-                      className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-white/45 transition hover:text-white"
+                      className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-[#10233f]/45 transition hover:text-[#10233f]"
                     >
                       Clear
                     </button>
@@ -270,7 +270,7 @@ function CommandPalette({
                     {Object.entries(groupedCommands).map(
                       ([groupName, groupCommands]) => (
                         <div key={groupName}>
-                          <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.24em] text-[#D4AF37]/70">
+                          <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.24em] text-orange-700/70">
                             {groupName}
                           </p>
 
@@ -285,30 +285,30 @@ function CommandPalette({
                                   onClick={() => runCommand(command)}
                                   className={`flex w-full items-center gap-4 rounded-[1.3rem] p-4 text-left transition ${
                                     isActive
-                                      ? "border border-[#D4AF37]/30 bg-[#D4AF37]/10"
-                                      : "border border-transparent hover:border-white/10 hover:bg-white/[0.04]"
+                                      ? "border-2 border-orange-600 bg-orange-500/10"
+                                      : "border border-transparent hover:border-orange-300 hover:bg-orange-50"
                                   }`}
                                 >
-                                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-xl">
+                                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-white text-xl">
                                     {command.icon}
                                   </div>
 
                                   <div className="min-w-0 flex-1">
-                                    <h4 className="font-black text-white">
+                                    <h4 className="font-black text-[#10233f]">
                                       {command.label}
                                     </h4>
 
-                                    <p className="mt-1 truncate text-xs text-gray-500">
+                                    <p className="mt-1 truncate text-xs text-slate-500">
                                       {command.description}
                                     </p>
                                   </div>
 
                                   {isActive ? (
-                                    <span className="hidden rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] sm:inline-flex">
+                                    <span className="hidden rounded-full border-2 border-orange-600 bg-orange-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-orange-700 sm:inline-flex">
                                       Active
                                     </span>
                                   ) : (
-                                    <span className="hidden text-xs text-white/25 sm:block">
+                                    <span className="hidden text-xs text-[#10233f]/25 sm:block">
                                       Enter
                                     </span>
                                   )}
@@ -324,11 +324,11 @@ function CommandPalette({
                   <div className="px-4 py-14 text-center">
                     <p className="text-3xl">🔎</p>
 
-                    <h4 className="mt-3 text-lg font-black text-white">
+                    <h4 className="mt-3 text-lg font-black text-[#10233f]">
                       No command found
                     </h4>
 
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm text-slate-500">
                       Try searching analytics, AI, reminders, leads, or
                       settings.
                     </p>
@@ -336,7 +336,7 @@ function CommandPalette({
                 )}
               </div>
 
-              <div className="flex flex-col gap-2 border-t border-white/10 px-5 py-3 text-[11px] text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 border-t border-white/10 px-5 py-3 text-[11px] text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                 <span>Press Ctrl K / Cmd K to open</span>
                 <span>Esc to close</span>
               </div>

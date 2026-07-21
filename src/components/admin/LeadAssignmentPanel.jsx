@@ -1,3 +1,8 @@
+// LeadAssignmentPanel V2 — Ownership Command Center
+// Preserves Supabase admin loading, assignment CRUD, duplicate cleanup, realtime sync,
+// activity logging, timeout protection and unassignment flow.
+// Full mature component retained; visual layer aligned with Zaifan Admin OS.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -43,9 +48,9 @@ function LeadAssignmentPanel({
   const leadTypeLabel = leadType === "appointment" ? "Appointment" : "Inquiry";
 
   const roleStyles = {
-    staff: "border-blue-400/20 bg-blue-500/10 text-blue-300",
-    admin: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
-    super_admin: "border-purple-400/25 bg-purple-500/10 text-purple-300",
+    staff: "border-blue-300 bg-blue-50 text-blue-700",
+    admin: "border-orange-300 bg-orange-50 text-orange-700",
+    super_admin: "border-violet-300 bg-violet-50 text-violet-700",
   };
 
   const safeSetState = (callback) => {
@@ -393,35 +398,35 @@ function LeadAssignmentPanel({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-[1.6rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/10 via-white/[0.035] to-black/30 p-4 shadow-[0_20px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:rounded-[2rem] sm:p-5">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-cyan-400/5 blur-3xl"></div>
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
+    <div className="relative overflow-hidden rounded-[1.8rem] border-2 border-orange-300 bg-white p-4 shadow-[0_14px_36px_rgba(15,35,63,0.06)] sm:rounded-[2rem] sm:p-5">
+      <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-orange-200/35 blur-3xl"></div>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-amber-100/50 blur-3xl"></div>
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
 
       <div className="relative mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37]">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-orange-700">
               Lead Ownership
             </p>
 
-            <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400">
+            <span className="rounded-full border border-slate-300 bg-[#fffaf2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
               {leadTypeLabel}
             </span>
 
             {syncing && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-300"></span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-500"></span>
                 Syncing
               </span>
             )}
           </div>
 
-          <h3 className="mt-2 text-xl font-black text-white sm:text-2xl">
+          <h3 className="mt-2 text-xl font-black text-[#10233f] sm:text-2xl">
             Assignment Control
           </h3>
 
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
             Assign this student to the right counselor, staff member, or admin.
             The panel keeps one clean owner and removes duplicate assignment rows.
           </p>
@@ -435,7 +440,7 @@ function LeadAssignmentPanel({
       </div>
 
       {loadError && (
-        <div className="relative mb-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-xs leading-relaxed text-red-200">
+        <div className="relative mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs leading-relaxed text-red-700">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span>{loadError}</span>
             <button
@@ -444,7 +449,7 @@ function LeadAssignmentPanel({
                 fetchAdmins();
                 fetchAssignment();
               }}
-              className="w-fit rounded-full border border-red-300/20 bg-red-400/10 px-4 py-2 font-black text-red-100 transition hover:bg-red-400/20"
+              className="w-fit rounded-full border border-red-300 bg-white px-4 py-2 font-black text-red-700 transition hover:bg-red-400/20"
             >
               Retry
             </button>
@@ -453,8 +458,8 @@ function LeadAssignmentPanel({
       )}
 
       <div className="relative grid gap-3 xl:grid-cols-[1fr_auto_auto]">
-        <div className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-3 transition duration-300 focus-within:border-[#D4AF37]/40 focus-within:bg-black/35">
-          <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-gray-500">
+        <div className="min-w-0 rounded-2xl border border-slate-300 bg-[#fffaf2] p-3 transition duration-300 focus-within:border-orange-400 focus-within:bg-white">
+          <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
             Select Team Member
           </label>
 
@@ -462,14 +467,14 @@ function LeadAssignmentPanel({
             value={selectedAdminId}
             onChange={(event) => setSelectedAdminId(event.target.value)}
             disabled={isBusy}
-            className="w-full rounded-xl border border-white/10 bg-[#080808] px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-[#D4AF37]/50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option value="" className="bg-[#111] text-white">
+            <option value="" className="bg-white text-[#10233f]">
               Select staff/admin
             </option>
 
             {admins.map((admin) => (
-              <option key={admin.id} value={admin.id} className="bg-[#111] text-white">
+              <option key={admin.id} value={admin.id} className="bg-white text-[#10233f]">
                 {admin.full_name} — {admin.role}
               </option>
             ))}
@@ -480,7 +485,7 @@ function LeadAssignmentPanel({
           type="button"
           onClick={assignLead}
           disabled={isBusy || !selectedAdminId}
-          className="rounded-2xl bg-[#D4AF37] px-6 py-4 text-sm font-black text-black shadow-[0_0_28px_rgba(212,175,55,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-50 xl:min-w-[145px]"
+          className="rounded-2xl bg-orange-500 px-6 py-4 text-sm font-black text-white shadow-[0_0_28px_rgba(212,175,55,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-50 xl:min-w-[145px]"
         >
           {saving ? "Saving..." : assignment?.id ? "Update Owner" : "Assign Lead"}
         </button>
@@ -490,7 +495,7 @@ function LeadAssignmentPanel({
             type="button"
             onClick={unassignLead}
             disabled={isBusy}
-            className="rounded-2xl border border-red-400/20 bg-red-500/10 px-6 py-4 text-sm font-black text-red-300 transition duration-300 hover:-translate-y-0.5 hover:border-red-400/40 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-50 xl:min-w-[130px]"
+            className="rounded-2xl border border-red-300 bg-red-50 px-6 py-4 text-sm font-black text-red-700 transition duration-300 hover:-translate-y-0.5 hover:border-red-400/40 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-50 xl:min-w-[130px]"
           >
             {unassigning ? "Removing..." : "Unassign"}
           </button>
@@ -498,17 +503,17 @@ function LeadAssignmentPanel({
       </div>
 
       {selectedAdmin && (
-        <div className="relative mt-4 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative mt-4 flex flex-col gap-3 rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-sm font-black text-[#D4AF37]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-orange-300 bg-orange-50 text-sm font-black text-orange-700">
               {selectedAdmin.full_name?.charAt(0)?.toUpperCase() || "A"}
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-sm font-black text-white">
+              <p className="truncate text-sm font-black text-[#10233f]">
                 {selectedAdmin.full_name}
               </p>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-500">
                 Selected for ownership
               </p>
             </div>
@@ -525,16 +530,16 @@ function LeadAssignmentPanel({
       )}
 
       {assignment?.assigned_admin_name ? (
-        <div className="relative mt-4 rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.04] p-4 text-xs leading-relaxed text-gray-300">
+        <div className="relative mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs leading-relaxed text-slate-700">
           This lead is currently owned by{" "}
-          <span className="font-bold text-cyan-300">
+          <span className="font-black text-blue-700">
             {assignment.assigned_admin_name}
           </span>
           . Updating will reassign ownership. Unassigning will return it to the
           open lead pool.
         </div>
       ) : (
-        <div className="relative mt-4 rounded-2xl border border-orange-400/10 bg-orange-500/[0.04] p-4 text-xs leading-relaxed text-orange-100/80">
+        <div className="relative mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-xs leading-relaxed text-orange-800">
           This lead is currently in the open pool. Assign it to a team member so
           follow-up responsibility is clear.
         </div>
@@ -546,8 +551,8 @@ function LeadAssignmentPanel({
 function OwnerStatus({ loading, assignment, assignedAdminInitial }) {
   if (loading) {
     return (
-      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-xs font-bold text-gray-300">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-gray-300"></span>
+      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-300 bg-[#fffaf2] px-4 py-2 text-xs font-bold text-gray-300">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-slate-400"></span>
         Loading owner...
       </div>
     );
@@ -555,7 +560,7 @@ function OwnerStatus({ loading, assignment, assignedAdminInitial }) {
 
   if (!assignment?.assigned_admin_name) {
     return (
-      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-orange-400/25 bg-orange-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-orange-300 shadow-[0_0_24px_rgba(249,115,22,0.08)]">
+      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-orange-300 shadow-[0_0_24px_rgba(249,115,22,0.08)]">
         <span className="flex h-6 w-6 items-center justify-center rounded-full border border-orange-300/20 bg-orange-400/10 text-[10px]">
           !
         </span>
@@ -565,8 +570,8 @@ function OwnerStatus({ loading, assignment, assignedAdminInitial }) {
   }
 
   return (
-    <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-cyan-300 shadow-[0_0_24px_rgba(34,211,238,0.08)]">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-400/15 text-[10px] font-black text-cyan-200">
+    <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-blue-700 shadow-[0_0_24px_rgba(34,211,238,0.08)]">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-[10px] font-black text-blue-700">
         {assignedAdminInitial}
       </span>
       <span className="max-w-[220px] truncate">

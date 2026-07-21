@@ -1,13 +1,13 @@
+// AiLeadIntelligenceFeed V3 — Advanced Live CRM Signals
+// Preserves VIP, unassigned, stale and conversion signal generation.
+// Rebuilt as a higher-contrast AI intelligence surface.
+
 import { motion } from "framer-motion";
 import {
-  AlertTriangle,
   Brain,
   Crown,
   Flame,
-  Lightbulb,
   Radar,
-  ShieldAlert,
-  Sparkles,
   Target,
   Users,
 } from "lucide-react";
@@ -91,26 +91,26 @@ function AiLeadIntelligenceFeed({
   });
 
   const toneMap = {
-    gold: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
-    blue: "border-blue-400/20 bg-blue-500/10 text-blue-300",
-    orange: "border-orange-400/20 bg-orange-500/10 text-orange-300",
-    green: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
-    purple: "border-purple-400/20 bg-purple-500/10 text-purple-300",
+    gold: "border-orange-300 bg-orange-50 text-orange-700",
+    blue: "border-blue-300 bg-blue-50 text-blue-700",
+    orange: "border-orange-300 bg-[#fff7ed] text-orange-700",
+    green: "border-emerald-300 bg-emerald-50 text-emerald-700",
+    purple: "border-violet-300 bg-violet-50 text-violet-700",
   };
 
   return (
     <motion.section
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6"
+      className="overflow-hidden rounded-[1.85rem] border-2 border-orange-300 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.05)]"
     >
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3">
-          <Radar className="h-5 w-5 text-[#D4AF37]" />
+      <div className="flex items-center gap-3 bg-[#102f5c] p-6 text-white">
+        <div className="rounded-2xl border border-orange-400/40 bg-orange-500/15 p-3">
+          <Radar className="h-5 w-5 text-orange-300" />
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-[#D4AF37]">
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-orange-300">
             AI Intelligence Feed
           </p>
 
@@ -120,7 +120,7 @@ function AiLeadIntelligenceFeed({
         </div>
       </div>
 
-      <div className="mt-6 space-y-4">
+      <div className="space-y-4 bg-[#fff8ee] p-6">
         {insights.map((item, index) => {
           const Icon = item.icon;
 
@@ -130,17 +130,17 @@ function AiLeadIntelligenceFeed({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`rounded-[1.5rem] border p-4 ${toneMap[item.tone]}`}
+              className={`rounded-[1.5rem] border p-4 shadow-[0_5px_16px_rgba(15,35,63,0.03)] ${toneMap[item.tone]}`}
             >
               <div className="flex gap-3">
-                <Icon className="mt-1 h-5 w-5" />
+                <Icon className="mt-1 h-5 w-5 shrink-0" />
 
                 <div>
-                  <h4 className="font-bold">
+                  <h4 className="font-black text-[#10233f]">
                     {item.title}
                   </h4>
 
-                  <p className="mt-1 text-sm opacity-80">
+                  <p className="mt-1 text-sm leading-6 text-slate-700">
                     {item.description}
                   </p>
                 </div>

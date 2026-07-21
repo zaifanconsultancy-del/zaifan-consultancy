@@ -117,18 +117,18 @@ function ExecutivePortfolioSummary({ students = [] }) {
 
 
   return (
-    <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-6">
+    <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
             Executive Portfolio Intelligence
           </p>
 
-          <h2 className="mt-2 text-2xl font-black text-white">
+          <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">
             Student Success Portfolio
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
             Executive visibility across risk, opportunity, applications, offers,
             CAS, visa, documents, tasks, and university planning.
           </p>
@@ -268,10 +268,10 @@ function ExecutivePortfolioSummary({ students = [] }) {
 function BoardCard({ label, value, detail, tone = "default" }) {
   const style = getToneStyle(tone);
   return (
-    <div className={`rounded-2xl border p-4 ${style}`}>
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-75">{label}</p>
-      <p className="mt-3 text-3xl font-black text-white">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+      <p className="mt-3 text-3xl font-black tracking-[-0.025em] text-[#17243D]">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-[#7A8392]">{detail}</p>
     </div>
   );
 }
@@ -279,26 +279,26 @@ function BoardCard({ label, value, detail, tone = "default" }) {
 function BoardList({ title, items = [], scoreKey, tone = "gold" }) {
   const style = getToneStyle(tone);
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <h3 className="font-black text-white">{title}</h3>
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
+      <h3 className="font-black text-[#17243D]">{title}</h3>
       <div className="mt-4 space-y-3">
         {items.length ? items.map((item, index) => {
           const student = item.student || {};
           const executive = item.executive || {};
           const name = getStudentName(student, executive);
           return (
-            <div key={`${title}-${name}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+            <div key={`${title}-${name}-${index}`} className="rounded-xl border border-[#243A60]/18 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-white">{name}</p>
-                  <p className="mt-1 text-xs text-white/40">{formatLabel(executive.journey_stage || "not_started")} • {executive.executive_category || "Standard"}</p>
+                  <p className="truncate font-semibold text-[#17243D]">{name}</p>
+                  <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(executive.journey_stage || "not_started")} • {executive.executive_category || "Standard"}</p>
                 </div>
                 <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${style}`}>{executive[scoreKey] || 0}</span>
               </div>
-              <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{executive.summary || "No portfolio summary."}</p>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#7A8392]">{executive.summary || "No portfolio summary."}</p>
             </div>
           );
-        }) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
+        }) : <p className="rounded-xl border border-[#243A60]/18 bg-white p-4 text-sm text-[#7A8392]">No records.</p>}
       </div>
     </div>
   );
@@ -308,20 +308,20 @@ function MetricCard({ label, value, tone = "default" }) {
   const style = getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-4 ${style}`}>
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-75">
         {label}
       </p>
 
-      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
+      <p className="mt-3 text-3xl font-black tracking-[-0.025em] text-[#17243D]">{value || 0}</p>
     </div>
   );
 }
 
 function HealthBlock({ title, total = 0, rows = [] }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <h3 className="font-black text-white">{title}</h3>
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
+      <h3 className="font-black text-[#17243D]">{title}</h3>
 
       <div className="mt-4 space-y-3">
         {rows.map(([label, value, tone]) => (
@@ -342,9 +342,9 @@ function HealthRow({ label, value, percent, tone = "default" }) {
   const style = getToneText(tone);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+    <div className="rounded-xl border border-[#243A60]/18 bg-white p-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold text-white/55">{label}</p>
+        <p className="text-xs font-bold text-[#667085]">{label}</p>
         <p className={`text-xs font-black ${style}`}>
           {value || 0} • {percent}
         </p>
@@ -370,8 +370,8 @@ function PortfolioList({
   const style = getToneStyle(tone);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <h3 className="font-black text-white">{title}</h3>
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
+      <h3 className="font-black text-[#17243D]">{title}</h3>
 
       <div className="mt-4 space-y-3">
         {items.length ? (
@@ -383,13 +383,13 @@ function PortfolioList({
             return (
               <div
                 key={`${name}-${index}`}
-                className="rounded-xl border border-white/10 bg-white/[0.035] p-4"
+                className="rounded-xl border border-[#243A60]/18 bg-white p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-white">{name}</p>
+                    <p className="truncate font-semibold text-[#17243D]">{name}</p>
 
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-1 text-xs text-[#7A8392]">
                       {executive.executive_category || "Standard"} •{" "}
                       {executive.priority_level || "Standard"} •{" "}
                       {formatLabel(executive.journey_stage || "not_started")}
@@ -403,11 +403,11 @@ function PortfolioList({
                   </span>
                 </div>
 
-                <p className="mt-3 line-clamp-2 text-xs leading-5 text-white/45">
+                <p className="mt-3 line-clamp-2 text-xs leading-5 text-[#7A8392]">
                   {executive.summary || "No executive summary."}
                 </p>
 
-                <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-white/35">
+                <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#8992A1]">
                   <span>Docs {executive.diagnostics?.document_readiness_percent || 0}%</span>
                   <span>Tasks {executive.diagnostics?.task_completion_percent || 0}%</span>
                   <span>Universities {executive.diagnostics?.university_plan_count || 0}</span>
@@ -416,7 +416,7 @@ function PortfolioList({
             );
           })
         ) : (
-          <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">
+          <p className="rounded-xl border border-[#243A60]/18 bg-white p-4 text-sm text-[#7A8392]">
             {emptyText}
           </p>
         )}
@@ -427,12 +427,12 @@ function PortfolioList({
 
 function Badge({ label, danger = false, gold = false, success = false }) {
   const style = danger
-    ? "border-red-400/25 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]"
     : gold
-    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
     : success
-    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-    : "border-white/10 bg-black/20 text-white/45";
+    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
+    : "border-[#243A60]/18 bg-white text-[#7A8392]";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>
@@ -442,29 +442,29 @@ function Badge({ label, danger = false, gold = false, success = false }) {
 }
 
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-red-400/25 bg-red-500/10 text-red-300";
-  if (tone === "orange") return "border-orange-400/25 bg-orange-500/10 text-orange-300";
-  if (tone === "gold") return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
-  if (tone === "green") return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
-  if (tone === "blue") return "border-blue-400/25 bg-blue-500/10 text-blue-300";
+  if (tone === "red") return "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]";
+  if (tone === "orange") return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
+  if (tone === "gold") return "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]";
+  if (tone === "green") return "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
+  if (tone === "blue") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
 
-  return "border-white/10 bg-white/[0.03] text-white/60";
+  return "border-[#243A60]/18 bg-white text-[#596579]";
 }
 
 function getToneText(tone = "") {
-  if (tone === "red") return "text-red-300";
-  if (tone === "orange") return "text-orange-300";
-  if (tone === "gold") return "text-[#D4AF37]";
-  if (tone === "green") return "text-emerald-300";
-  if (tone === "blue") return "text-blue-300";
+  if (tone === "red") return "text-[#A8342F]";
+  if (tone === "orange") return "text-[#8A5611]";
+  if (tone === "gold") return "text-[#B84F0E]";
+  if (tone === "green") return "text-[#B84F0E]";
+  if (tone === "blue") return "text-[#243A60]";
 
-  return "text-white/50";
+  return "text-[#667085]";
 }
 
 function getToneBar(tone = "") {
   if (tone === "red") return "bg-red-400";
   if (tone === "orange") return "bg-orange-400";
-  if (tone === "gold") return "bg-[#D4AF37]";
+  if (tone === "gold") return "bg-[#E9802D]";
   if (tone === "green") return "bg-emerald-400";
   if (tone === "blue") return "bg-blue-400";
 

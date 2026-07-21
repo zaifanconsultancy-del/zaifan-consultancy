@@ -309,18 +309,18 @@ function ExecutiveAutomationEngine({ scores = [] }) {
   const topTemplates = automationTemplates.slice(0, 15);
 
   return (
-    <div className="rounded-[2rem] border border-purple-400/20 bg-purple-500/[0.04] p-6">
+    <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
             Executive Automation Engine V2
           </p>
 
-          <h2 className="mt-2 text-2xl font-black text-white">
+          <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">
             Student OS Automation Templates
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
             Executive AI converts student journey intelligence into prepared actions with
             duplicate protection, approval intelligence, action analytics, and automation
             health scoring.
@@ -385,11 +385,11 @@ function ExecutiveAutomationEngine({ scores = [] }) {
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-emerald-400/15 bg-emerald-500/[0.04] p-5">
-            <p className="font-semibold text-emerald-200">
+          <div className="rounded-2xl border border-[#E9802D]/28 bg-[#FFF1E3] p-5">
+            <p className="font-semibold text-[#B84F0E]">
               No automation templates generated yet.
             </p>
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-[#7A8392]">
               Executive AI does not currently see action templates that need task,
               reminder, call, email, or WhatsApp preparation.
             </p>
@@ -407,11 +407,11 @@ function AutomationTemplateCard({ item }) {
   const actionType = normalize(template.actionType);
 
   return (
-    <div className={`rounded-2xl border p-4 ${priorityStyle.wrapper}`}>
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${priorityStyle.wrapper}`}>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-black text-white">{template.title}</p>
+            <p className="font-black text-[#17243D]">{template.title}</p>
 
             <Tag text={recommendation.priority || "medium"} className={priorityStyle.badge} />
             <Tag text={formatLabel(template.actionType)} />
@@ -421,17 +421,17 @@ function AutomationTemplateCard({ item }) {
             {approvalRequired ? (
               <Tag
                 text="Approval Required"
-                className="border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+                className="border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
               />
             ) : (
               <Tag
                 text="Ready"
-                className="border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
+                className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
               />
             )}
           </div>
 
-          <p className="mt-2 text-sm leading-6 text-white/55">
+          <p className="mt-2 text-sm leading-6 text-[#667085]">
             {template.description}
           </p>
 
@@ -448,16 +448,16 @@ function AutomationTemplateCard({ item }) {
           </div>
         </div>
 
-        <div className="shrink-0 rounded-2xl border border-white/10 bg-black/20 p-4 xl:w-64">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+        <div className="shrink-0 rounded-2xl border border-[#243A60]/18 bg-white p-4 xl:w-64">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8992A1]">
             Student
           </p>
 
-          <p className="mt-2 truncate font-bold text-white">
+          <p className="mt-2 truncate font-bold text-[#17243D]">
             {getStudentName(score)}
           </p>
 
-          <div className="mt-4 grid gap-2 text-xs text-white/45">
+          <div className="mt-4 grid gap-2 text-xs text-[#7A8392]">
             <p>Type: {formatLabel(getStudentType(score))}</p>
             <p>Risk: {score.risk_score || 0}</p>
             <p>Opportunity: {score.opportunity_score || 0}</p>
@@ -474,30 +474,30 @@ function AutomationTemplateCard({ item }) {
 function AutomationHealthPanel({ analytics }) {
   const readinessTone =
     analytics.healthScore >= 70
-      ? "border-emerald-400/20 bg-emerald-500/[0.04] text-emerald-300"
+      ? "border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
       : analytics.healthScore >= 40
-      ? "border-orange-400/20 bg-orange-500/[0.04] text-orange-300"
-      : "border-red-400/20 bg-red-500/[0.04] text-red-300";
+      ? "border-[#A36A18]/28 bg-[#FFF7E8] text-[#8A5611]"
+      : "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
 
   return (
-    <div className={`mt-6 rounded-2xl border p-5 ${readinessTone}`}>
+    <div className={`mt-6 rounded-2xl border p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${readinessTone}`}>
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">
             Automation Health
           </p>
 
-          <h3 className="mt-2 text-xl font-black text-white">
+          <h3 className="mt-2 text-xl font-black text-[#17243D]">
             {analytics.healthScore}% Ready Without Extra Approval
           </h3>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/50">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
             This score shows how much of the generated automation queue can move quickly.
             Executive and communication-heavy actions still stay protected behind human approval.
           </p>
         </div>
 
-        <div className="grid gap-2 text-xs text-white/50 xl:w-72">
+        <div className="grid gap-2 text-xs text-[#667085] xl:w-72">
           <p>Approval Required: {analytics.approvalRequired}</p>
           <p>Ready To Execute: {analytics.readyToExecute}</p>
           <p>Conversion Ready Actions: {analytics.conversionReady}</p>
@@ -514,12 +514,12 @@ function DistributionPanel({ title, description, items = {} }) {
   const entries = Object.entries(items).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {title}
       </p>
 
-      <p className="mt-2 text-sm leading-6 text-white/45">
+      <p className="mt-2 text-sm leading-6 text-[#7A8392]">
         {description}
       </p>
 
@@ -528,14 +528,14 @@ function DistributionPanel({ title, description, items = {} }) {
           entries.map(([key, value]) => (
             <div
               key={key}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs"
+              className="flex items-center justify-between rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs"
             >
-              <span className="font-bold text-white/55">{formatLabel(key)}</span>
-              <span className="font-black text-white">{value}</span>
+              <span className="font-bold text-[#667085]">{formatLabel(key)}</span>
+              <span className="font-black text-[#17243D]">{value}</span>
             </div>
           ))
         ) : (
-          <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/35">
+          <p className="rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs text-[#8992A1]">
             No data yet.
           </p>
         )}
@@ -546,12 +546,12 @@ function DistributionPanel({ title, description, items = {} }) {
 
 function PayloadSummary({ payload = {}, actionType = "" }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-xl border border-[#243A60]/18 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         Execution Summary
       </p>
 
-      <div className="mt-3 grid gap-2 text-xs leading-5 text-white/50">
+      <div className="mt-3 grid gap-2 text-xs leading-5 text-[#667085]">
         <p>Student: {payload.student_name || "Unknown"}</p>
         <p>Journey: {formatLabel(payload.journey_stage || "not_started")}</p>
         <p>Recommendation: {formatLabel(payload.recommendation_type || "unknown")}</p>
@@ -565,12 +565,12 @@ function PayloadSummary({ payload = {}, actionType = "" }) {
 
 function PayloadPreview({ title, payload }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-xl border border-[#243A60]/18 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {title}
       </p>
 
-      <pre className="mt-3 max-h-44 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-white/55">
+      <pre className="mt-3 max-h-44 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#667085]">
         {JSON.stringify(payload, null, 2)}
       </pre>
     </div>
@@ -579,12 +579,12 @@ function PayloadPreview({ title, payload }) {
 
 function MetricCard({ label, value, compact = false }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {label}
       </p>
 
-      <p className={`${compact ? "text-2xl" : "text-3xl"} mt-2 font-black text-white`}>
+      <p className={`${compact ? "text-2xl" : "text-3xl"} mt-2 font-black text-[#17243D]`}>
         {value}
       </p>
     </div>
@@ -595,7 +595,7 @@ function Tag({ text, className = "" }) {
   return (
     <span
       className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
-        className || "border-white/10 bg-black/20 text-white/45"
+        className || "border-[#243A60]/18 bg-white text-[#7A8392]"
       }`}
     >
       {text}
@@ -605,7 +605,7 @@ function Tag({ text, className = "" }) {
 
 function MiniStat({ label, value }) {
   return (
-    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/45">
+    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#7A8392]">
       {label}: {value}
     </span>
   );
@@ -613,12 +613,12 @@ function MiniStat({ label, value }) {
 
 function Badge({ label, danger = false, gold = false, success = false }) {
   const style = danger
-    ? "border-red-400/25 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]"
     : gold
-    ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
     : success
-    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-    : "border-purple-400/25 bg-purple-500/10 text-purple-300";
+    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
+    : "border-purple-400/25 bg-purple-500/10 text-[#B84F0E]";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>
@@ -632,35 +632,35 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "critical") {
     return {
-      wrapper: "border-red-400/25 bg-red-500/10",
-      badge: "border-red-400/25 bg-red-500/10 text-red-200",
+      wrapper: "border-[#C2413B]/32 bg-[#FFF0EE]",
+      badge: "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]",
     };
   }
 
   if (clean === "executive") {
     return {
-      wrapper: "border-[#D4AF37]/30 bg-[#D4AF37]/10",
-      badge: "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]",
+      wrapper: "border-[#E9802D]/45 bg-[#FFF1E3]",
+      badge: "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]",
     };
   }
 
   if (clean === "high") {
     return {
-      wrapper: "border-orange-400/25 bg-orange-500/10",
-      badge: "border-orange-400/25 bg-orange-500/10 text-orange-200",
+      wrapper: "border-[#A36A18]/30 bg-[#FFF7E8]",
+      badge: "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]",
     };
   }
 
   if (clean === "medium") {
     return {
-      wrapper: "border-blue-400/25 bg-blue-500/10",
-      badge: "border-blue-400/25 bg-blue-500/10 text-blue-200",
+      wrapper: "border-[#243A60]/25 bg-[#F3F5F8]",
+      badge: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
     };
   }
 
   return {
-    wrapper: "border-white/10 bg-white/[0.03]",
-    badge: "border-white/10 bg-black/20 text-white/45",
+    wrapper: "border-[#243A60]/18 bg-white",
+    badge: "border-[#243A60]/18 bg-white text-[#7A8392]",
   };
 }
 

@@ -1,3 +1,7 @@
+// AnimatedSection V2 — Standardized Zaifan Motion
+// Preserves the same reusable entrance/exit wrapper while aligning easing
+// with the smoother shared Zaifan Admin OS motion language.
+
 import { motion } from "framer-motion";
 
 function AnimatedSection({
@@ -12,7 +16,11 @@ function AnimatedSection({
       initial={{ opacity: 0, y }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -y }}
-      transition={{ duration, delay, ease: "easeOut" }}
+      transition={{
+        duration,
+        delay,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className={className}
     >
       {children}

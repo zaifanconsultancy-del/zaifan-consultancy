@@ -1,3 +1,8 @@
+// StudentExecutiveRiskCard V2 — Executive Student Intelligence
+// Preserves executive risk calculation, Supabase persistence, timeline alerts,
+// parent Student OS refresh and recommendation integration.
+// Visual system aligned with the approved Zaifan Admin OS.
+
 import { useMemo, useState } from "react";
 import {
   calculateExecutiveRisk,
@@ -122,87 +127,91 @@ function StudentExecutiveRiskCard({ student = {}, onSharedDataChange = null }) {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
-              Executive Student Intelligence
+    <div className="space-y-5 text-[#10233f]">
+      <div className="overflow-hidden rounded-[1.8rem] border-2 border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
+        <div className="bg-[#102f5c] p-6 text-white">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-300">
+                Executive Student Intelligence
+              </p>
+
+              <h3 className="mt-2 text-2xl font-black text-white">
+                Student Risk & Opportunity Score
+              </h3>
+
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-200">
+                Local executive scoring based on priority, status, GPT signals,
+                application movement, visa status, and student risk markers.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveScore}
+              disabled={saving}
+              className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.22)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Executive Score"}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-5 bg-[#fff8ee] p-5 sm:p-6">
+          {message ? (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-700">
+              {message}
+            </div>
+          ) : null}
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <ScoreCard
+              label="Risk Score"
+              value={executiveScore.risk_score}
+              badge={executiveScore.risk_level}
+              tone={getRiskTone(executiveScore.risk_score)}
+            />
+
+            <ScoreCard
+              label="Opportunity Score"
+              value={executiveScore.opportunity_score}
+              badge="Opportunity"
+              tone="gold"
+            />
+
+            <ScoreCard
+              label="Priority Level"
+              value={executiveScore.priority_level}
+              badge="Executive"
+              tone="blue"
+            />
+          </div>
+
+          <div className="rounded-2xl border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-700">
+              Executive Summary
             </p>
 
-            <h3 className="mt-2 text-2xl font-black text-white">
-              Student Risk & Opportunity Score
-            </h3>
-
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
-              Local executive scoring based on priority, status, GPT signals,
-              application movement, visa status, and student risk markers.
+            <p className="mt-3 text-sm leading-7 text-slate-700">
+              {executiveScore.summary}
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={saveScore}
-            disabled={saving}
-            className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-2 text-sm font-bold text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Executive Score"}
-          </button>
-        </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ReasonList
+              title="Risk Reasons"
+              items={executiveScore.risk_reasons}
+              emptyText="No major risk signals detected."
+              tone="red"
+            />
 
-        {message ? (
-          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/60">
-            {message}
+            <ReasonList
+              title="Opportunity Reasons"
+              items={executiveScore.opportunity_reasons}
+              emptyText="No major opportunity signals detected."
+              tone="gold"
+            />
           </div>
-        ) : null}
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <ScoreCard
-            label="Risk Score"
-            value={executiveScore.risk_score}
-            badge={executiveScore.risk_level}
-            tone={getRiskTone(executiveScore.risk_score)}
-          />
-
-          <ScoreCard
-            label="Opportunity Score"
-            value={executiveScore.opportunity_score}
-            badge="Opportunity"
-            tone="gold"
-          />
-
-          <ScoreCard
-            label="Priority Level"
-            value={executiveScore.priority_level}
-            badge="Executive"
-            tone="blue"
-          />
-        </div>
-
-        <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
-            Executive Summary
-          </p>
-
-          <p className="mt-3 text-sm leading-7 text-white/60">
-            {executiveScore.summary}
-          </p>
-        </div>
-
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <ReasonList
-            title="Risk Reasons"
-            items={executiveScore.risk_reasons}
-            emptyText="No major risk signals detected."
-            tone="red"
-          />
-
-          <ReasonList
-            title="Opportunity Reasons"
-            items={executiveScore.opportunity_reasons}
-            emptyText="No major opportunity signals detected."
-            tone="gold"
-          />
         </div>
       </div>
 
@@ -215,16 +224,16 @@ function ScoreCard({ label, value, badge, tone }) {
   const style = getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-5 ${style}`}>
+    <div className={`rounded-2xl border p-5 shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${style}`}>
       <p className="text-xs font-black uppercase tracking-[0.18em] opacity-80">
         {label}
       </p>
 
-      <p className="mt-3 break-words text-3xl font-black text-white">
+      <p className="mt-3 break-words text-3xl font-black text-[#10233f]">
         {value}
       </p>
 
-      <span className="mt-3 inline-flex rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-white/50">
+      <span className="mt-3 inline-flex rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-black text-slate-700">
         {badge}
       </span>
     </div>
@@ -234,25 +243,25 @@ function ScoreCard({ label, value, badge, tone }) {
 function ReasonList({ title, items = [], emptyText, tone }) {
   const style =
     tone === "red"
-      ? "border-red-400/20 bg-red-500/10 text-red-300"
-      : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]";
+      ? "border-red-200 bg-red-50 text-red-700"
+      : "border-orange-200 bg-orange-50 text-orange-700";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <p className="font-bold text-white">{title}</p>
+    <div className="rounded-2xl border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+      <p className="font-black text-[#10233f]">{title}</p>
 
       <div className="mt-4 space-y-2">
         {items.length ? (
           items.map((item, index) => (
             <div
               key={`${title}-${index}`}
-              className={`rounded-xl border px-4 py-3 text-sm ${style}`}
+              className={`rounded-xl border px-4 py-3 text-sm font-semibold ${style}`}
             >
               {item}
             </div>
           ))
         ) : (
-          <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/40">
+          <p className="rounded-xl border border-dashed border-slate-300 bg-[#fffaf2] px-4 py-3 text-sm text-slate-500">
             {emptyText}
           </p>
         )}
@@ -273,22 +282,22 @@ function getRiskTone(score) {
 
 function getToneStyle(tone = "") {
   if (tone === "red") {
-    return "border-red-400/25 bg-red-500/10 text-red-300";
+    return "border-red-300 bg-red-50 text-red-700";
   }
 
   if (tone === "orange") {
-    return "border-orange-400/25 bg-orange-500/10 text-orange-300";
+    return "border-orange-300 bg-orange-50 text-orange-700";
   }
 
   if (tone === "gold") {
-    return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+    return "border-orange-300 bg-[#fff8ee] text-orange-700";
   }
 
   if (tone === "green") {
-    return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+    return "border-emerald-300 bg-emerald-50 text-emerald-700";
   }
 
-  return "border-blue-400/25 bg-blue-500/10 text-blue-300";
+  return "border-blue-300 bg-blue-50 text-blue-700";
 }
 
 export default StudentExecutiveRiskCard;

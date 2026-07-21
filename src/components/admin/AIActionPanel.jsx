@@ -1,3 +1,8 @@
+// AIActionPanel V3 — Advanced AI Execution Layer
+// Preserves Supabase task creation, reminder creation, communication logging,
+// clipboard actions, CRM timeline events, timeouts and human-approved execution.
+// Rebuilt as a more mature Admin OS action surface.
+
 import { useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { createFollowUpReminder } from "../../lib/followUpReminders";
@@ -228,76 +233,84 @@ function AIActionPanel({
   };
 
   return (
-    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">
-            AI Actions Layer
-          </p>
+    <div className="overflow-hidden rounded-[1.85rem] border-2 border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.07)]">
+      <div className="bg-[#102f5c] p-6 text-white">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-300">
+              AI Actions Layer
+            </p>
 
-          <h3 className="mt-2 text-xl font-black text-white">
-            Turn GPT recommendation into CRM action
-          </h3>
+            <h3 className="mt-2 text-xl font-black text-white">
+              Turn GPT recommendation into CRM action
+            </h3>
 
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
-            Human-approved actions only. GPT suggests, admin clicks, CRM
-            executes.
-          </p>
-        </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
+              Human-approved execution layer. GPT suggests, admin reviews, CRM executes.
+            </p>
+          </div>
 
-        <div className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-bold text-white/45">
-          {activeModule || "AI Module"}
+          <div className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-slate-100">
+            {activeModule || "AI Module"}
+          </div>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <ActionButton
-          label="Create Task"
-          icon="✅"
-          loading={busyAction === "task"}
-          disabled={Boolean(busyAction)}
-          onClick={() => runAction("task", createTask)}
-        />
+      <div className="space-y-5 bg-[#fff8ee] p-6">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ActionButton
+            label="Create Task"
+            icon="✅"
+            loading={busyAction === "task"}
+            disabled={Boolean(busyAction)}
+            onClick={() => runAction("task", createTask)}
+          />
 
-        <ActionButton
-          label="Create Reminder"
-          icon="⏰"
-          loading={busyAction === "reminder"}
-          disabled={Boolean(busyAction)}
-          onClick={() => runAction("reminder", createReminder)}
-        />
+          <ActionButton
+            label="Create Reminder"
+            icon="⏰"
+            loading={busyAction === "reminder"}
+            disabled={Boolean(busyAction)}
+            onClick={() => runAction("reminder", createReminder)}
+          />
 
-        <ActionButton
-          label="Copy Email"
-          icon="✉️"
-          loading={busyAction === "email"}
-          disabled={Boolean(busyAction)}
-          onClick={() => runAction("email", copyEmail)}
-        />
+          <ActionButton
+            label="Copy Email"
+            icon="✉️"
+            loading={busyAction === "email"}
+            disabled={Boolean(busyAction)}
+            onClick={() => runAction("email", copyEmail)}
+          />
 
-        <ActionButton
-          label="Copy WhatsApp"
-          icon="💬"
-          loading={busyAction === "whatsapp"}
-          disabled={Boolean(busyAction)}
-          onClick={() => runAction("whatsapp", copyWhatsApp)}
-        />
-      </div>
+          <ActionButton
+            label="Copy WhatsApp"
+            icon="💬"
+            loading={busyAction === "whatsapp"}
+            disabled={Boolean(busyAction)}
+            onClick={() => runAction("whatsapp", copyWhatsApp)}
+          />
+        </div>
 
-      {message ? (
-        <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/60">
-          {message}
-        </p>
-      ) : null}
+        {message ? (
+          <p className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-700">
+            {message}
+          </p>
+        ) : null}
 
-      <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-        <p className="text-xs uppercase tracking-[0.18em] text-white/35">
-          Action Source
-        </p>
+        <div className="rounded-2xl border border-slate-300 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)]">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">
+              Action Source
+            </p>
+            <span className="rounded-full border border-slate-300 bg-[#fffaf2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+              Human Review Required
+            </span>
+          </div>
 
-        <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-white/55">
-          {recommendedText}
-        </p>
+          <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+            {recommendedText}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -309,17 +322,17 @@ function ActionButton({ label, icon, loading, disabled, onClick }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="group rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#D4AF37]/35 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-55"
+      className="group rounded-2xl border border-slate-300 bg-white p-4 text-left shadow-[0_5px_16px_rgba(15,35,63,0.035)] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-55"
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-2xl">{icon}</span>
 
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/35 group-hover:text-[#D4AF37]">
+        <span className="rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
           AI
         </span>
       </div>
 
-      <p className="mt-3 font-black text-white">
+      <p className="mt-3 font-black text-[#10233f]">
         {loading ? "Working..." : label}
       </p>
     </button>

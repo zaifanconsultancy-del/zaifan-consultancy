@@ -1,5 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import CounselorPortalDashboard from "../../components/counselor/CounselorPortalDashboard";
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const CounselorPortalDashboard = lazy(() =>
+  import("../../components/counselor/CounselorPortalDashboard")
+);
 import {
   buildCounselorExecutiveBrief,
   buildCounselorPerformanceAnalytics,
@@ -126,7 +129,7 @@ function buildPortalHealth(snapshot, metrics, workload, performance, error) {
   if (error) {
     return {
       label: "Needs attention",
-      tone: "border-rose-400/30 bg-rose-500/10 text-rose-100",
+      tone: "border-rose-200 bg-rose-50 text-rose-700",
       detail: "Backend load failed or RLS blocked the query.",
     };
   }
@@ -134,7 +137,7 @@ function buildPortalHealth(snapshot, metrics, workload, performance, error) {
   if (assignedTotal > 0) {
     return {
       label: "Live Supabase",
-      tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
+      tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
       detail: `${assignedTotal} assigned records loaded. ${workload?.pressureLabel || "Workload calculated."}`,
     };
   }
@@ -142,7 +145,7 @@ function buildPortalHealth(snapshot, metrics, workload, performance, error) {
   if (rawTotal > 0) {
     return {
       label: "Backend reachable",
-      tone: "border-amber-400/30 bg-amber-500/10 text-amber-100",
+      tone: "border-amber-200 bg-amber-50 text-amber-700",
       detail: "Raw records found, but counselor assignment filtering returned empty.",
     };
   }
@@ -150,16 +153,76 @@ function buildPortalHealth(snapshot, metrics, workload, performance, error) {
   if (metrics?.assignedStudents === 0 && performance?.studentsManaged === 0) {
     return {
       label: "No assigned data",
-      tone: "border-slate-400/20 bg-white/[0.04] text-slate-200",
+      tone: "border-slate-200 bg-slate-50 text-slate-600",
       detail: "Portal is connected, but no assigned counselor records were found.",
     };
   }
 
   return {
     label: "Operational",
-    tone: "border-cyan-400/30 bg-cyan-500/10 text-cyan-100",
+    tone: "border-cyan-200 bg-cyan-50 text-cyan-700",
     detail: "Counselor workspace is ready.",
   };
+}
+
+
+function CommandPill({ label, value }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[11px] text-slate-600 shadow-sm">
+      <span className="font-black text-slate-400">{label}</span>
+      <span className="max-w-[190px] truncate font-bold text-slate-800">{value || "—"}</span>
+    </span>
+  );
+}
+
+function CounselorMetric({ label, value, detail, tone = "slate" }) {
+  const tones = {
+    slate: "border-slate-200 bg-white/90",
+    orange: "border-orange-200 bg-orange-50/90",
+    blue: "border-blue-200 bg-blue-50/90",
+    violet: "border-violet-200 bg-violet-50/90",
+    amber: "border-amber-200 bg-amber-50/90",
+    red: "border-rose-200 bg-rose-50/90",
+    green: "border-emerald-200 bg-emerald-50/90",
+  };
+
+  const values = {
+    slate: "text-slate-950",
+    orange: "text-orange-700",
+    blue: "text-blue-700",
+    violet: "text-violet-700",
+    amber: "text-amber-700",
+    red: "text-rose-700",
+    green: "text-emerald-700",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-3.5 shadow-sm ${tones[tone] || tones.slate}`}>
+      <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+        {label}
+      </p>
+      <p className={`mt-1.5 text-xl font-black ${values[tone] || values.slate}`}>
+        {value}
+      </p>
+      <p className="mt-1 text-[11px] leading-4 text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function CounselorWorkspaceLoader() {
+  return (
+    <div className="flex min-h-[440px] items-center justify-center rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+        <p className="mt-4 text-sm font-black text-slate-900">
+          Opening Counselor Command Workspace
+        </p>
+        <p className="mt-1 text-xs text-slate-400">
+          Loading the counselor operating system only when required.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function CounselorPortalPage({ counselorProfile = FALLBACK_COUNSELOR }) {
@@ -254,6 +317,52 @@ export default function CounselorPortalPage({ counselorProfile = FALLBACK_COUNSE
     [safeSnapshot, metrics, workload, performance, error]
   );
 
+  const commandMetrics = useMemo(() => {
+    const tasks = safeArray(safeSnapshot.tasks);
+    const support = safeArray(safeSnapshot.support);
+    const documents = safeArray(safeSnapshot.documents);
+    const applications = safeArray(safeSnapshot.applications);
+    const appointments = safeArray(safeSnapshot.appointments);
+
+    const openTasks = tasks.filter(
+      (item) => !["completed", "done"].includes(String(item.status || "").toLowerCase())
+    ).length;
+
+    const openSupport = support.filter(
+      (item) => !["resolved", "closed"].includes(String(item.status || "").toLowerCase())
+    ).length;
+
+    const pendingDocuments = documents.filter(
+      (item) =>
+        !["verified", "approved"].includes(
+          String(item.status || item.verification_status || "").toLowerCase()
+        )
+    ).length;
+
+    const activeApplications = applications.filter(
+      (item) =>
+        !["completed", "rejected", "withdrawn"].includes(
+          String(item.status || "").toLowerCase()
+        )
+    ).length;
+
+    const upcomingAppointments = appointments.filter(
+      (item) =>
+        !["completed", "cancelled", "canceled"].includes(
+          String(item.status || "").toLowerCase()
+        )
+    ).length;
+
+    return {
+      students: safeArray(safeSnapshot.students).length,
+      activeApplications,
+      pendingDocuments,
+      openTasks,
+      openSupport,
+      upcomingAppointments,
+    };
+  }, [safeSnapshot]);
+
   const handleRefresh = useCallback(() => {
     loadPortal({ silent: true, preserveCurrent: true });
   }, [loadPortal]);
@@ -265,119 +374,151 @@ export default function CounselorPortalPage({ counselorProfile = FALLBACK_COUNSE
   }, [loadPortal]);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute right-0 top-24 h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl" />
+        <div className="absolute -left-28 top-0 h-80 w-80 rounded-full bg-orange-200/25 blur-3xl" />
+        <div className="absolute right-0 top-20 h-96 w-96 rounded-full bg-amber-100/45 blur-3xl" />
       </div>
 
-      <section className="relative border-b border-white/10 bg-slate-950/90 px-6 py-5 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
-              Zaifan Counselor Portal OS
-            </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight md:text-5xl">
-              Counselor Command Workspace
-            </h1>
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-300">
-              Assigned student execution, application movement, document readiness, university planning,
-              support response, communication history, appointments, performance intelligence, and workload control.
-            </p>
+      <section className="relative border-b border-slate-200/80 bg-white/90 px-4 py-5 backdrop-blur-xl sm:px-6">
+        <div className="mx-auto max-w-[1800px]">
+          <div className="relative overflow-hidden rounded-[2rem] border border-orange-200/80 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.07)] sm:p-7">
+            <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-orange-200/40 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-amber-100/80 blur-3xl" />
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className={`rounded-full border px-3 py-1 text-xs font-bold ${portalHealth.tone}`}>
-                {portalHealth.label}
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300">
-                Scope: {safeSnapshot.assignmentScope}
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300">
-                Loads: {loadCount}
-              </span>
-              {lastLoadedAt && (
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300">
-                  Last sync: {new Date(lastLoadedAt).toLocaleTimeString()}
-                </span>
-              )}
+            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+              <div className="max-w-4xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-orange-200 bg-orange-100/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+                    Zaifan Counselor OS
+                  </span>
+                  <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${portalHealth.tone}`}>
+                    {portalHealth.label}
+                  </span>
+                </div>
+
+                <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+                  Counselor Command Workspace
+                </h1>
+
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
+                  One operating workspace for assigned students, applications, documents,
+                  appointments, support, communication, follow-ups, workload and counselor intelligence.
+                </p>
+
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <CommandPill label="Counselor" value={counselor.displayName} />
+                  <CommandPill label="Scope" value={safeSnapshot.assignmentScope} />
+                  <CommandPill label="Syncs" value={loadCount} />
+                  {lastLoadedAt ? (
+                    <CommandPill
+                      label="Last sync"
+                      value={new Date(lastLoadedAt).toLocaleTimeString()}
+                    />
+                  ) : null}
+                </div>
+
+                <p className="mt-3 text-xs leading-5 text-slate-500">{portalHealth.detail}</p>
+              </div>
+
+              <div className="grid w-full gap-3 sm:grid-cols-2 xl:max-w-[590px]">
+                <div className="rounded-[1.4rem] border border-slate-200 bg-white/90 p-4 shadow-sm">
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    Signed in as
+                  </p>
+                  <p className="mt-2 text-lg font-black text-slate-950">
+                    {counselor.displayName}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-slate-500">
+                    {counselor.email || counselor.role}
+                  </p>
+                </div>
+
+                <div className="rounded-[1.4rem] border border-emerald-200 bg-emerald-50/90 p-4 shadow-sm">
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-600">
+                    Executive focus
+                  </p>
+                  <p className="mt-2 line-clamp-1 text-lg font-black text-slate-950">
+                    {executiveBrief.focus || "Pipeline nurturing"}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-emerald-700/75">
+                    {executiveBrief.headline || "Healthy workload"}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={refreshing || loading}
+                  className="rounded-xl bg-orange-500 px-4 py-3 text-sm font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {refreshing ? "Refreshing counselor data..." : "Refresh Counselor Data"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleHardReload}
+                  disabled={refreshing || loading}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition duration-300 hover:-translate-y-0.5 hover:border-orange-200 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Hard Reload Snapshot
+                </button>
+              </div>
             </div>
 
-            <p className="mt-2 text-xs text-slate-400">{portalHealth.detail}</p>
+            <div className="relative mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+              <CounselorMetric label="Assigned students" value={commandMetrics.students} detail="Students in your active portfolio" tone="orange" />
+              <CounselorMetric label="Applications" value={commandMetrics.activeApplications} detail="Active application workflows" tone="blue" />
+              <CounselorMetric label="Documents" value={commandMetrics.pendingDocuments} detail="Files still needing readiness" tone="violet" />
+              <CounselorMetric label="Open tasks" value={commandMetrics.openTasks} detail="Operational actions remaining" tone="amber" />
+              <CounselorMetric label="Support queue" value={commandMetrics.openSupport} detail="Student requests awaiting closure" tone={commandMetrics.openSupport ? "red" : "green"} />
+              <CounselorMetric label="Appointments" value={commandMetrics.upcomingAppointments} detail="Active consultation workload" tone="green" />
+            </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[500px]">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-cyan-950/30">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Signed in as</p>
-              <p className="mt-1 text-lg font-bold">{counselor.displayName}</p>
-              <p className="truncate text-xs text-slate-400">{counselor.email || counselor.role}</p>
+          {error ? (
+            <div className="mt-4 rounded-[1.4rem] border border-rose-200 bg-rose-50 p-4 shadow-sm">
+              <p className="text-sm font-black text-rose-700">{error}</p>
+              {lastErrorDetail ? (
+                <p className="mt-1 text-xs leading-5 text-rose-600">{lastErrorDetail}</p>
+              ) : null}
             </div>
+          ) : null}
 
-            <div className="rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-emerald-200">Executive focus</p>
-              <p className="mt-1 line-clamp-1 text-lg font-black text-white">
-                {executiveBrief.focus || "Pipeline nurturing"}
+          {!error && booted && safeArray(safeSnapshot.students).length === 0 ? (
+            <div className="mt-4 rounded-[1.4rem] border border-amber-200 bg-amber-50 p-4 shadow-sm">
+              <p className="text-sm font-black text-amber-800">
+                No assigned students loaded for this counselor yet.
               </p>
-              <p className="line-clamp-2 text-xs text-emerald-100/70">
-                {executiveBrief.headline || "Healthy workload"}
+              <p className="mt-1 text-xs leading-5 text-amber-700">
+                The backend appears reachable, but assignment mapping may need to match
+                assigned_counselor_id, assigned_counselor_email, assigned_to, counselor_id,
+                or owner_id.
               </p>
             </div>
-
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={refreshing || loading}
-              className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {refreshing ? "Refreshing..." : "Refresh Counselor Data"}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleHardReload}
-              disabled={refreshing || loading}
-              className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Hard Reload Snapshot
-            </button>
-          </div>
+          ) : null}
         </div>
-
-        {error && (
-          <div className="mx-auto mt-4 max-w-7xl rounded-3xl border border-rose-400/25 bg-rose-500/10 p-4">
-            <p className="text-sm font-bold text-rose-100">{error}</p>
-            {lastErrorDetail && <p className="mt-1 text-xs text-rose-100/70">{lastErrorDetail}</p>}
-          </div>
-        )}
-
-        {!error && booted && safeArray(safeSnapshot.students).length === 0 && (
-          <div className="mx-auto mt-4 max-w-7xl rounded-3xl border border-amber-400/20 bg-amber-500/10 p-4">
-            <p className="text-sm font-bold text-amber-100">
-              No assigned students loaded for this counselor yet.
-            </p>
-            <p className="mt-1 text-xs text-amber-100/70">
-              Backend is probably reachable, but assignment fields may need counselor ID/email mapping:
-              assigned_counselor_id, assigned_counselor_email, assigned_to, counselor_id, or owner_id.
-            </p>
-          </div>
-        )}
       </section>
 
-      <CounselorPortalDashboard
-        counselor={counselor}
-        snapshot={safeSnapshot}
-        metrics={metrics}
-        workload={workload}
-        performance={performance}
-        executiveBrief={executiveBrief}
-        loading={loading}
-        refreshing={refreshing}
-        error={error}
-        errorDetail={lastErrorDetail}
-        onRefresh={handleRefresh}
-        onHardReload={handleHardReload}
-        onSilentRefresh={() => loadPortal({ silent: true, preserveCurrent: true })}
-      />
+      <section className="relative mx-auto w-full max-w-[1800px] px-3 py-4 sm:px-6 sm:py-6 xl:px-8">
+        <Suspense fallback={<CounselorWorkspaceLoader />}>
+          <CounselorPortalDashboard
+            counselor={counselor}
+            snapshot={safeSnapshot}
+            metrics={metrics}
+            workload={workload}
+            performance={performance}
+            executiveBrief={executiveBrief}
+            loading={loading}
+            refreshing={refreshing}
+            error={error}
+            errorDetail={lastErrorDetail}
+            onRefresh={handleRefresh}
+            onHardReload={handleHardReload}
+            onSilentRefresh={() => loadPortal({ silent: true, preserveCurrent: true })}
+          />
+        </Suspense>
+      </section>
     </main>
   );
 }

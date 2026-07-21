@@ -35,10 +35,15 @@ function OverdueEscalationPanel({ cardClass = "" }) {
   const overdueItems = useMemo(
     () =>
       reminders
-        .filter((item) => item.due_date && String(item.due_date).slice(0, 10) < todayKey)
+        .filter(
+          (item) =>
+            item.due_date &&
+            String(item.due_date).slice(0, 10) < todayKey
+        )
         .map((item) => {
           const due = new Date(item.due_date);
           const now = new Date();
+
           const daysLate = Math.max(
             1,
             Math.ceil((now - due) / (1000 * 60 * 60 * 24))
@@ -48,7 +53,11 @@ function OverdueEscalationPanel({ cardClass = "" }) {
             ...item,
             daysLate,
             escalation:
-              daysLate >= 7 ? "Critical" : daysLate >= 3 ? "High" : "Medium",
+              daysLate >= 7
+                ? "Critical"
+                : daysLate >= 3
+                ? "High"
+                : "Medium",
           };
         }),
     [reminders, todayKey]
@@ -60,11 +69,11 @@ function OverdueEscalationPanel({ cardClass = "" }) {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className={`${cardClass} p-6 sm:p-8`}
+      className={`${cardClass} overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]`}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-orange-200 bg-[#102f5c] p-6 text-white sm:flex-row sm:items-start sm:justify-between sm:p-8">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-[#D4AF37]">
+          <p className="text-[11px] font-black uppercase tracking-[0.35em] text-orange-300">
             Escalation Intelligence
           </p>
 
@@ -72,8 +81,8 @@ function OverdueEscalationPanel({ cardClass = "" }) {
             Smart Overdue Alerts
           </h2>
 
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400">
-            Detects overdue reminders and ranks them by urgency so staff can
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-200">
+            Detect overdue reminders and rank them by urgency so staff can
             rescue important leads before they go cold.
           </p>
         </div>
@@ -82,97 +91,118 @@ function OverdueEscalationPanel({ cardClass = "" }) {
           type="button"
           onClick={fetchReminders}
           disabled={loading}
-          className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 disabled:opacity-50"
+          className="rounded-full border-2 border-orange-300 bg-orange-500 px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:opacity-50"
         >
           {loading ? "Checking..." : "Refresh Alerts"}
         </button>
       </div>
 
-      <div className="mt-7 grid gap-3 sm:grid-cols-3">
-        <EscalationStat
-          label="Overdue"
-          value={overdueItems.length}
-          tone="text-red-300"
-        />
-        <EscalationStat
-          label="Critical"
-          value={overdueItems.filter((item) => item.escalation === "Critical").length}
-          tone="text-red-400"
-        />
-        <EscalationStat
-          label="High Risk"
-          value={overdueItems.filter((item) => item.escalation === "High").length}
-          tone="text-orange-300"
-        />
-      </div>
+      <div className="bg-[#fff8ee] p-6 sm:p-8">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <EscalationStat
+            label="Overdue"
+            value={overdueItems.length}
+            tone="red"
+          />
 
-      <div className="mt-7 space-y-3">
-        {overdueItems.length ? (
-          overdueItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: index * 0.03 }}
-              className="rounded-[1.5rem] border border-red-400/15 bg-red-500/5 p-5"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-red-300">
-                      {item.escalation}
-                    </span>
+          <EscalationStat
+            label="Critical"
+            value={
+              overdueItems.filter(
+                (item) => item.escalation === "Critical"
+              ).length
+            }
+            tone="critical"
+          />
 
-                    <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
-                      {item.daysLate} day{item.daysLate > 1 ? "s" : ""} late
-                    </span>
+          <EscalationStat
+            label="High Risk"
+            value={
+              overdueItems.filter(
+                (item) => item.escalation === "High"
+              ).length
+            }
+            tone="orange"
+          />
+        </div>
+
+        <div className="mt-7 space-y-3">
+          {overdueItems.length ? (
+            overdueItems.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.03 }}
+                className="rounded-[1.5rem] border-2 border-red-300 bg-red-50 p-5 shadow-[0_5px_16px_rgba(15,35,63,0.035)]"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-full border border-red-300 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-red-700">
+                        {item.escalation}
+                      </span>
+
+                      <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
+                        {item.daysLate} day{item.daysLate > 1 ? "s" : ""} late
+                      </span>
+                    </div>
+
+                    <h3 className="mt-3 text-lg font-black text-[#10233f]">
+                      {item.title || "Overdue follow-up"}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                      {item.note ||
+                        "This student follow-up is overdue and needs action."}
+                    </p>
                   </div>
 
-                  <h3 className="mt-3 text-lg font-black text-white">
-                    {item.title || "Overdue follow-up"}
-                  </h3>
-
-                  <p className="mt-2 text-sm leading-relaxed text-gray-400">
-                    {item.note || "This student follow-up is overdue and needs action."}
-                  </p>
+                  <div className="rounded-2xl border border-red-300 bg-white px-4 py-3 text-xs text-slate-600">
+                    Due Date
+                    <p className="mt-1 font-mono font-black text-red-700">
+                      {String(item.due_date).slice(0, 10)}
+                    </p>
+                  </div>
                 </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-xs text-gray-400">
-                  Due Date
-                  <p className="mt-1 font-mono text-red-300">
-                    {String(item.due_date).slice(0, 10)}
-                  </p>
-                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="rounded-[1.5rem] border-2 border-emerald-300 bg-emerald-50 p-8 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-emerald-300 bg-white text-3xl">
+                ✅
               </div>
-            </motion.div>
-          ))
-        ) : (
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-8 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-green-400/20 bg-green-500/10 text-3xl">
-              ✅
+
+              <h3 className="mt-4 text-xl font-black text-[#10233f]">
+                No overdue escalations
+              </h3>
+
+              <p className="mt-2 text-sm text-slate-600">
+                Your follow-up queue is currently under control.
+              </p>
             </div>
-
-            <h3 className="mt-4 text-xl font-black text-white">
-              No overdue escalations
-            </h3>
-
-            <p className="mt-2 text-sm text-gray-400">
-              Your follow-up queue is currently under control.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </motion.section>
   );
 }
 
 function EscalationStat({ label, value, tone }) {
+  const styles = {
+    red: "border-red-300 bg-red-50 text-red-700",
+    critical: "border-red-400 bg-red-100 text-red-800",
+    orange: "border-orange-300 bg-orange-50 text-orange-700",
+  };
+
   return (
-    <div className="rounded-[1.4rem] border border-white/10 bg-black/25 p-5">
-      <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
+    <div
+      className={`rounded-[1.4rem] border-2 p-5 shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${styles[tone]}`}
+    >
+      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
         {label}
       </p>
-      <h3 className={`mt-3 text-3xl font-black ${tone}`}>{value}</h3>
+      <h3 className="mt-3 text-3xl font-black text-[#10233f]">{value}</h3>
     </div>
   );
 }

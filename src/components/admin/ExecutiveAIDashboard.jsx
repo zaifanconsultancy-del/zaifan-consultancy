@@ -1,6 +1,12 @@
-import { useMemo } from "react";
-import RiskMonitoringPanel from "./RiskMonitoringPanel";
-import OpportunityFeedPanel from "./OpportunityFeedPanel";
+// ExecutiveAIDashboard V2 — Zaifan Command Intelligence
+// Preserves all executive metrics, journey analysis, automation pressure,
+// verification, workflow scanning, recovery engine, production hardening,
+// and lazy-loaded risk/opportunity intelligence.
+// Visual hierarchy aligned with the approved Zaifan Admin OS cream + navy + orange system.
+
+import { lazy, Suspense, useMemo } from "react";
+const RiskMonitoringPanel = lazy(() => import("./RiskMonitoringPanel"));
+const OpportunityFeedPanel = lazy(() => import("./OpportunityFeedPanel"));
 import {
   verifyEntireStudentJourney,
   generatePlatformHealthReport,
@@ -522,17 +528,19 @@ const recoveryEngine = useMemo(
 );
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+    <div className="space-y-6 rounded-[2rem] bg-[#fffaf3] p-1 text-slate-950 sm:p-2">
+      <div className="relative overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-gradient-to-br from-[#fff7ed] via-white to-[#fff3df] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-7">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-orange-200/35 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-amber-100/60 blur-3xl" />
+        <p className="relative text-xs font-black uppercase tracking-[0.25em] text-orange-600">
           Executive Intelligence
         </p>
 
-        <h2 className="mt-2 text-2xl font-black text-white">
+        <h2 className="relative mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
           Student OS Command Dashboard
         </h2>
 
-        <p className="mt-2 max-w-4xl text-white/60">
+        <p className="relative mt-2 max-w-4xl text-sm leading-6 text-slate-500 sm:text-base">
           Executive-level intelligence across applications, offers, CAS, visa,
           university planning, tasks, documents, student risk, and automation pressure.
         </p>
@@ -555,13 +563,20 @@ const recoveryEngine = useMemo(
           />
         </div>
 
-        <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
             Leadership Priority
           </p>
-          <p className="mt-2 text-lg font-black text-white">
+          <p className="mt-2 text-lg font-black text-slate-950">
             {executiveIntelligence.leadershipPriority}
           </p>
+        </div>
+
+        <div className="relative mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ExecutiveSignal label="Students in command" value={metrics.total} detail="Current executive portfolio" />
+          <ExecutiveSignal label="Immediate rescue" value={executiveIntelligence.rescueCases} detail="High-value cases under pressure" tone="risk" />
+          <ExecutiveSignal label="Likely wins" value={executiveIntelligence.likelyWins} detail="Strong conversion potential" tone="good" />
+          <ExecutiveSignal label="Workflow breaks" value={workflowScanner.totalIssues || 0} detail="Cross-system failures detected" tone={workflowScanner.totalIssues ? "warning" : "good"} />
         </div>
       </div>
 
@@ -744,8 +759,12 @@ const recoveryEngine = useMemo(
         automationPressure={automationPressure}
       />
 
-      <RiskMonitoringPanel students={students} />
-      <OpportunityFeedPanel students={students} />
+      <Suspense fallback={<IntelligenceFeedLoader label="Loading risk intelligence..." />}>
+        <RiskMonitoringPanel students={students} />
+      </Suspense>
+      <Suspense fallback={<IntelligenceFeedLoader label="Loading opportunity intelligence..." />}>
+        <OpportunityFeedPanel students={students} />
+      </Suspense>
     </div>
   );
 }
@@ -753,11 +772,11 @@ const recoveryEngine = useMemo(
 function SectionTitle({ eyebrow, title, description }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">
+      <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
         {eyebrow}
       </p>
-      <h3 className="mt-1 text-xl font-black text-white">{title}</h3>
-      {description ? <p className="mt-1 text-sm text-white/45">{description}</p> : null}
+      <h3 className="mt-1 text-xl font-black text-slate-950">{title}</h3>
+      {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
     </div>
   );
 }
@@ -765,12 +784,12 @@ function SectionTitle({ eyebrow, title, description }) {
 function CommandPill({ label, value, tone = "neutral" }) {
   const toneClass =
     tone === "risk"
-      ? "border-red-400/20 bg-red-500/10 text-red-200"
+      ? "border-red-200 bg-red-50 text-red-700"
       : tone === "warning"
-      ? "border-yellow-400/20 bg-yellow-500/10 text-yellow-100"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
       : tone === "good"
-      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
-      : "border-white/10 bg-white/[0.04] text-white/80";
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-slate-200 bg-slate-50 text-slate-700";
 
   return (
     <div className={`rounded-2xl border px-4 py-3 ${toneClass}`}>
@@ -783,18 +802,18 @@ function CommandPill({ label, value, tone = "neutral" }) {
 function MetricCard({ label, value, tone = "default" }) {
   const valueClass =
     tone === "risk"
-      ? "text-red-300"
+      ? "text-red-600"
       : tone === "warning"
-      ? "text-yellow-200"
+      ? "text-amber-700"
       : tone === "good"
-      ? "text-emerald-300"
+      ? "text-emerald-600"
       : tone === "gold"
-      ? "text-[#D4AF37]"
-      : "text-[#D4AF37]";
+      ? "text-orange-600"
+      : "text-orange-600";
 
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">{label}</p>
+    <div className="rounded-[1.5rem] border border-slate-300 bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)] p-5">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
       <p className={`mt-3 text-3xl font-black ${valueClass}`}>{value}</p>
     </div>
   );
@@ -803,17 +822,17 @@ function MetricCard({ label, value, tone = "default" }) {
 function HealthCard({ label, value, detail, tone = "default" }) {
   const badgeClass =
     tone === "risk"
-      ? "border-red-400/20 bg-red-500/10 text-red-200"
+      ? "border-red-200 bg-red-50 text-red-700"
       : tone === "warning"
-      ? "border-yellow-400/20 bg-yellow-500/10 text-yellow-100"
-      : "border-white/10 bg-white/[0.04] text-white/70";
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : "border-slate-200 bg-slate-50 text-slate-600";
 
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5">
+    <div className="rounded-[1.5rem] border border-slate-300 bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)] p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-white/35">{label}</p>
-          <p className="mt-3 text-3xl font-black text-white">{value}</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
+          <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
         </div>
 
         <span
@@ -823,7 +842,7 @@ function HealthCard({ label, value, detail, tone = "default" }) {
         </span>
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-white/45">{detail}</p>
+      <p className="mt-3 text-sm leading-relaxed text-slate-500">{detail}</p>
     </div>
   );
 }
@@ -831,22 +850,22 @@ function HealthCard({ label, value, detail, tone = "default" }) {
 function ForecastCard({ label, value, detail, tone = "default" }) {
   const style =
     tone === "risk"
-      ? "border-red-400/25 bg-red-500/10 text-red-200"
+      ? "border-red-200 bg-red-50 text-red-700"
       : tone === "warning"
-      ? "border-orange-400/25 bg-orange-500/10 text-orange-200"
+      ? "border-orange-200 bg-orange-50 text-orange-700"
       : tone === "good"
-      ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : tone === "gold"
-      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
-      : "border-white/10 bg-white/[0.035] text-white/70";
+      ? "border-orange-200 bg-orange-50 text-orange-700"
+      : "border-slate-200 bg-white shadow-sm text-slate-600";
 
   return (
     <div className={`rounded-[1.5rem] border p-5 ${style}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
         {label}
       </p>
-      <p className="mt-3 text-3xl font-black text-white">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+      <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
     </div>
   );
 }
@@ -862,11 +881,11 @@ function JourneyProgressPanel({ metrics }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
-      <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)] p-5">
+      <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
         Journey Conversion Map
       </p>
-      <h3 className="mt-1 text-xl font-black text-white">
+      <h3 className="mt-1 text-xl font-black text-slate-950">
         Student OS Movement Funnel
       </h3>
 
@@ -881,27 +900,27 @@ function JourneyProgressPanel({ metrics }) {
 
 function AutomationPressurePanel({ automationPressure }) {
   return (
-    <div className="rounded-[1.75rem] border border-purple-400/20 bg-purple-500/[0.04] p-5">
+    <div className="rounded-[1.75rem] border border-orange-300 bg-[#fff7ed] p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-purple-300">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
             Automation Pressure
           </p>
-          <h3 className="mt-1 text-xl font-black text-white">
+          <h3 className="mt-1 text-xl font-black text-slate-950">
             {automationPressure.estimatedWorkload} Workload
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
             Executive AI sees {automationPressure.automationCandidates} student(s) that can
             generate prepared counselor actions. {automationPressure.approvalLikely} likely need
             approval before execution.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
             Pressure Score
           </p>
-          <p className="mt-2 text-3xl font-black text-purple-200">
+          <p className="mt-2 text-3xl font-black text-orange-700">
             {automationPressure.pressureScore}/100
           </p>
         </div>
@@ -932,17 +951,17 @@ function ExecutiveRadar({ metrics }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)] p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
             Executive Health Radar
           </p>
-          <h3 className="mt-1 text-xl font-black text-white">
+          <h3 className="mt-1 text-xl font-black text-slate-950">
             Operating System Coverage
           </h3>
         </div>
-        <p className="text-sm text-white/40">
+        <p className="text-sm text-slate-400">
           Positive bars show progress; weak bars reveal operational pressure.
         </p>
       </div>
@@ -959,14 +978,14 @@ function ExecutiveRadar({ metrics }) {
 function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
   const scoreClass =
     tone === "risk"
-      ? "border-red-400/25 bg-red-500/10 text-red-300"
+      ? "border-red-200 bg-red-50 text-red-600"
       : tone === "warning"
-      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
-      : "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+      ? "border-orange-200 bg-orange-50 text-orange-600"
+      : "border-orange-200 bg-orange-50 text-orange-700";
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
-      <h3 className="font-black text-white">{title}</h3>
+    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+      <h3 className="font-black text-slate-950">{title}</h3>
 
       <div className="mt-4 space-y-3">
         {items.length ? (
@@ -975,12 +994,12 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
             return (
               <div
                 key={`${title}-${student?.id || student?.student_id || index}`}
-                className="rounded-xl border border-white/10 bg-white/[0.035] p-4"
+                className="rounded-xl border border-slate-200 bg-white shadow-sm p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-white">{name}</p>
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="truncate font-semibold text-slate-950">{name}</p>
+                    <p className="mt-1 text-xs text-slate-400">
                       {formatLabel(getJourneyStage(student))} •{" "}
                       {student?.executive_category || "Standard"}
                     </p>
@@ -993,14 +1012,14 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
                   </span>
                 </div>
 
-                <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">
                   {student?.summary || student?.gpt_summary || "No executive summary available."}
                 </p>
               </div>
             );
           })
         ) : (
-          <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">
+          <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-400">
             No records yet.
           </p>
         )}
@@ -1011,13 +1030,13 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
 
 function ProgressBar({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <div className="flex items-center justify-between text-xs font-bold text-white/50">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center justify-between text-xs font-bold text-slate-500">
         <span>{label}</span>
         <span>{value}%</span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-[#D4AF37]" style={{ width: `${value}%` }} />
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full rounded-full bg-orange-500" style={{ width: `${value}%` }} />
       </div>
     </div>
   );
@@ -1025,9 +1044,9 @@ function ProgressBar({ label, value }) {
 
 function SmallInfo({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
     </div>
   );
 }
@@ -1055,26 +1074,26 @@ function ExecutiveOperationsExpansion({ metrics, executiveIntelligence, automati
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+    <div className="rounded-[1.75rem] border border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-amber-50/70 p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
             Admin Operations Extension
           </p>
-          <h3 className="mt-1 text-xl font-black text-white">
+          <h3 className="mt-1 text-xl font-black text-slate-950">
             Command Readiness Snapshot
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
             This connects Executive AI intelligence to daily admin operations. Use it
             with the new Operations Center tab for one-screen CEO/Counselor visibility.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
             Operating Score
           </p>
-          <p className="mt-2 text-3xl font-black text-[#D4AF37]">
+          <p className="mt-2 text-3xl font-black text-orange-600">
             {operatingScore}/100
           </p>
         </div>
@@ -1082,12 +1101,12 @@ function ExecutiveOperationsExpansion({ metrics, executiveIntelligence, automati
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {commandRows.map(([label, value, detail]) => (
-          <div key={label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+          <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
               {label}
             </p>
-            <p className="mt-2 text-3xl font-black text-white">{value}</p>
-            <p className="mt-2 text-xs leading-5 text-white/40">{detail}</p>
+            <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-400">{detail}</p>
           </div>
         ))}
       </div>
@@ -1118,16 +1137,16 @@ function PlatformVerificationCenter({
   brokenWorkflows,
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-cyan-400/20 bg-cyan-500/[0.04] p-5">
-      <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
+    <div className="rounded-[1.75rem] border border-blue-300 bg-blue-50 p-5">
+      <p className="text-xs uppercase tracking-[0.22em] text-blue-700">
         Platform Verification
       </p>
 
-      <h3 className="mt-1 text-xl font-black text-white">
+      <h3 className="mt-1 text-xl font-black text-slate-950">
         End-to-End Workflow Validation
       </h3>
 
-      <p className="mt-2 text-sm text-white/45">
+      <p className="mt-2 text-sm text-slate-500">
         Verifies Inquiry → University →
         Application → Offer → CAS →
         Visa → Payment → Portal →
@@ -1166,16 +1185,16 @@ function PlatformVerificationCenter({
         />
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-        <p className="text-sm font-black text-white">
+      <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm font-black text-slate-950">
           Broken Workflow Records
         </p>
 
-        <p className="mt-2 text-3xl font-black text-cyan-300">
+        <p className="mt-2 text-3xl font-black text-blue-700">
           {brokenWorkflows.length}
         </p>
 
-        <p className="mt-2 text-xs text-white/45">
+        <p className="mt-2 text-xs text-slate-500">
           Students with one or more
           workflow failures detected.
         </p>
@@ -1205,25 +1224,25 @@ function RecoveryIntelligenceCenter({ workflowScanner = {}, recoveryEngine = {} 
       : "Healthy";
 
   return (
-    <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04] p-5">
+    <div className="rounded-[1.75rem] border border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-amber-50/70 p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
             Recovery Intelligence
           </p>
-          <h3 className="mt-1 text-xl font-black text-white">
+          <h3 className="mt-1 text-xl font-black text-slate-950">
             Automatic Recovery Workflow Center
           </h3>
-          <p className="mt-2 max-w-4xl text-sm leading-6 text-white/45">
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
             Converts broken verification signals into executive recovery queues for CAS, visa, payment, portal, timeline, documents, and task execution.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
             Recovery Status
           </p>
-          <p className="mt-2 text-2xl font-black text-[#D4AF37]">
+          <p className="mt-2 text-2xl font-black text-orange-600">
             {healthLabel}
           </p>
         </div>
@@ -1275,22 +1294,22 @@ function WorkflowFailureHeatmap({ workflowScanner = {} }) {
   const maxValue = Math.max(1, ...stages.map((stage) => asNumber(byStage[stage])));
 
   return (
-    <div className="rounded-[1.75rem] border border-red-400/15 bg-red-500/[0.035] p-5">
+    <div className="rounded-[1.75rem] border border-red-300 bg-red-50 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-red-300">
+          <p className="text-xs uppercase tracking-[0.22em] text-red-600">
             Workflow Failure Heatmap
           </p>
-          <h3 className="mt-1 text-xl font-black text-white">
+          <h3 className="mt-1 text-xl font-black text-slate-950">
             Stage-Level Break Detection
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
             Shows where student journeys are breaking across Inquiry → University → Application → Offer → CAS → Visa → Payment → Portal → Executive → Automation.
           </p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Total Breaks</p>
-          <p className="mt-2 text-3xl font-black text-red-200">{asNumber(workflowScanner.totalIssues)}</p>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Total Breaks</p>
+          <p className="mt-2 text-3xl font-black text-red-700">{asNumber(workflowScanner.totalIssues)}</p>
         </div>
       </div>
 
@@ -1299,16 +1318,16 @@ function WorkflowFailureHeatmap({ workflowScanner = {} }) {
           const value = asNumber(byStage[stage]);
           const width = Math.round((value / maxValue) * 100);
           return (
-            <div key={stage} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div key={stage} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-white/50">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
                   {formatLabel(stage)}
                 </p>
-                <p className={`text-xl font-black ${value ? "text-red-200" : "text-emerald-300"}`}>
+                <p className={`text-xl font-black ${value ? "text-red-700" : "text-emerald-600"}`}>
                   {value}
                 </p>
               </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
                 <div
                   className={`h-full rounded-full ${value ? "bg-red-300" : "bg-emerald-300"}`}
                   style={{ width: `${value ? width : 8}%` }}
@@ -1328,22 +1347,22 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
     .slice(0, 10);
 
   return (
-    <div className="rounded-[1.75rem] border border-orange-400/20 bg-orange-500/[0.04] p-5">
+    <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50/70 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-orange-300">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
             Executive Recovery Queue
           </p>
-          <h3 className="mt-1 text-xl font-black text-white">
+          <h3 className="mt-1 text-xl font-black text-slate-950">
             Highest Priority Workflow Repairs
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
             Prioritized list of broken workflows and recommended recovery actions generated by the recovery engine.
           </p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Generated Actions</p>
-          <p className="mt-2 text-3xl font-black text-orange-200">{asNumber(recoveryEngine.totalActions)}</p>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Generated Actions</p>
+          <p className="mt-2 text-3xl font-black text-orange-700">{asNumber(recoveryEngine.totalActions)}</p>
         </div>
       </div>
 
@@ -1352,7 +1371,7 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
           rows.map((issue, index) => (
             <div
               key={issue.id || `${issue.student_id}-${issue.issue_type}-${index}`}
-              className="rounded-2xl border border-white/10 bg-black/25 p-4"
+              className="rounded-2xl border border-slate-200 bg-white p-4"
             >
               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
@@ -1360,29 +1379,29 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
                     <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getSeverityBadgeClass(issue.severity)}`}>
                       {formatLabel(issue.severity)}
                     </span>
-                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
                       {formatLabel(issue.stage)}
                     </span>
                   </div>
-                  <p className="mt-3 truncate text-lg font-black text-white">
+                  <p className="mt-3 truncate text-lg font-black text-slate-950">
                     {issue.student_name || "Unknown Student"}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-orange-100">
+                  <p className="mt-1 text-sm font-bold text-orange-700">
                     {issue.title || formatLabel(issue.issue_type)}
                   </p>
-                  <p className="mt-1 max-w-4xl text-xs leading-5 text-white/45">
+                  <p className="mt-1 max-w-4xl text-xs leading-5 text-slate-500">
                     {issue.recommendation || issue.description || "Review and recover this workflow."}
                   </p>
                 </div>
 
-                <div className="min-w-[220px] rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">
+                <div className="min-w-[220px] rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
                     Recovery Action
                   </p>
-                  <p className="mt-2 text-sm font-black text-white">
+                  <p className="mt-2 text-sm font-black text-slate-950">
                     {formatLabel(issue.recovery_action || issue.recovery_type)}
                   </p>
-                  <p className="mt-2 text-xs text-white/35">
+                  <p className="mt-2 text-xs text-slate-400">
                     Priority {asNumber(issue.priority_score)}
                   </p>
                 </div>
@@ -1390,7 +1409,7 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
             </div>
           ))
         ) : (
-          <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-5 text-sm text-white/40">
+          <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-400">
             No recovery issues detected from the current student dataset.
           </p>
         )}
@@ -1427,22 +1446,22 @@ function ProductionHardeningMonitor({
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-500/[0.035] p-5">
+    <div className="rounded-[1.75rem] border border-emerald-300 bg-emerald-50 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-emerald-300">
+          <p className="text-xs uppercase tracking-[0.22em] text-emerald-600">
             Production Hardening
           </p>
-          <h3 className="mt-1 text-xl font-black text-white">
+          <h3 className="mt-1 text-xl font-black text-slate-950">
             Final Readiness Monitor
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/45">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
             Final operating layer for deciding whether Zaifan Student OS is ready for full workflow testing, production hardening, and main website handoff.
           </p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Platform Gate</p>
-          <p className={`mt-2 text-3xl font-black ${workflowScanner.totalIssues ? "text-orange-200" : "text-emerald-300"}`}>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Platform Gate</p>
+          <p className={`mt-2 text-3xl font-black ${workflowScanner.totalIssues ? "text-orange-700" : "text-emerald-600"}`}>
             {workflowScanner.totalIssues ? "Harden" : "Ready"}
           </p>
         </div>
@@ -1451,11 +1470,11 @@ function ProductionHardeningMonitor({
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {rows.map(([label, value, detail, tone]) => (
           <div key={label} className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
               {label}
             </p>
-            <p className="mt-2 text-3xl font-black text-white">{value}</p>
-            <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+            <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
           </div>
         ))}
       </div>
@@ -1466,10 +1485,10 @@ function ProductionHardeningMonitor({
 function RecoveryMetric({ label, value, tone = "default" }) {
   return (
     <div className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-black text-white">{value}</p>
+      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
     </div>
   );
 }
@@ -1479,28 +1498,28 @@ function RecoveryQueuePreview({ title, items = [], tone = "default" }) {
     <div className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
             {title}
           </p>
-          <p className="mt-2 text-3xl font-black text-white">{items.length}</p>
+          <p className="mt-2 text-3xl font-black text-slate-950">{items.length}</p>
         </div>
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
           Queue
         </span>
       </div>
       <div className="mt-4 space-y-2">
         {items.slice(0, 3).map((item, index) => (
-          <div key={item.id || `${title}-${index}`} className="rounded-xl border border-white/10 bg-black/20 p-3">
-            <p className="truncate text-xs font-black text-white">
+          <div key={item.id || `${title}-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="truncate text-xs font-black text-slate-950">
               {item.student_name || "Unknown Student"}
             </p>
-            <p className="mt-1 truncate text-[11px] text-white/40">
+            <p className="mt-1 truncate text-[11px] text-slate-400">
               {item.title || formatLabel(item.issue_type)}
             </p>
           </div>
         ))}
         {!items.length ? (
-          <p className="rounded-xl border border-dashed border-white/10 bg-black/10 p-3 text-xs text-white/35">
+          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs text-slate-400">
             Clear
           </p>
         ) : null}
@@ -1511,19 +1530,62 @@ function RecoveryQueuePreview({ title, items = [], tone = "default" }) {
 
 function getSeverityBadgeClass(severity = "") {
   const key = normalize(severity);
-  if (key === "critical") return "border-red-400/25 bg-red-500/10 text-red-300";
-  if (key === "high") return "border-orange-400/25 bg-orange-500/10 text-orange-300";
-  if (key === "executive") return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
-  if (key === "medium") return "border-yellow-400/25 bg-yellow-500/10 text-yellow-100";
-  return "border-white/10 bg-white/[0.04] text-white/50";
+  if (key === "critical") return "border-red-200 bg-red-50 text-red-600";
+  if (key === "high") return "border-orange-200 bg-orange-50 text-orange-600";
+  if (key === "executive") return "border-orange-200 bg-orange-50 text-orange-700";
+  if (key === "medium") return "border-yellow-400/25 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-slate-50 text-slate-600";
 }
 
 function getHardeningCardClass(tone = "default") {
-  if (tone === "risk") return "border-red-400/20 bg-red-500/[0.06]";
-  if (tone === "warning") return "border-orange-400/20 bg-orange-500/[0.06]";
-  if (tone === "good") return "border-emerald-400/20 bg-emerald-500/[0.06]";
-  if (tone === "gold") return "border-[#D4AF37]/20 bg-[#D4AF37]/[0.06]";
-  return "border-white/10 bg-white/[0.035]";
+  if (tone === "risk") return "border-red-200 bg-red-50";
+  if (tone === "warning") return "border-orange-200 bg-orange-50";
+  if (tone === "good") return "border-emerald-200 bg-emerald-50";
+  if (tone === "gold") return "border-orange-200 bg-orange-50";
+  return "border-slate-200 bg-white shadow-sm";
+}
+
+
+function ExecutiveSignal({ label, value, detail, tone = "default" }) {
+  const toneClass =
+    tone === "risk"
+      ? "border-red-200 bg-red-50"
+      : tone === "warning"
+      ? "border-orange-200 bg-orange-50"
+      : tone === "good"
+      ? "border-emerald-200 bg-emerald-50"
+      : "border-slate-200 bg-white/90";
+
+  const valueClass =
+    tone === "risk"
+      ? "text-red-700"
+      : tone === "warning"
+      ? "text-orange-700"
+      : tone === "good"
+      ? "text-emerald-700"
+      : "text-slate-950";
+
+  return (
+    <div className={`rounded-2xl border p-4 shadow-sm ${toneClass}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+        {label}
+      </p>
+      <p className={`mt-2 text-2xl font-black ${valueClass}`}>{value}</p>
+      <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function IntelligenceFeedLoader({ label }) {
+  return (
+    <div className="flex min-h-[180px] items-center justify-center rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+      <div className="text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-orange-500" />
+        <p className="mt-3 text-sm font-black text-slate-800">{label}</p>
+        <p className="mt-1 text-xs text-slate-400">Loading this intelligence layer only when required.</p>
+      </div>
+    </div>
+  );
 }
 
 export default ExecutiveAIDashboard;

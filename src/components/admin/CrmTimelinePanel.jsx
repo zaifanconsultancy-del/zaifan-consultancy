@@ -239,18 +239,18 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
   }
 
   return {
-    dot: "bg-[#D4AF37]",
+    dot: "bg-[#E9802D]",
     badge:
-      "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
+      "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]",
   };
 };
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+      <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-[#FFFDF8] p-5">
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-white">Add Timeline Note</h3>
-          <p className="text-sm text-white/45">
+          <h3 className="text-lg font-semibold text-[#17243D]">Add Timeline Note</h3>
+          <p className="text-sm text-[#17243D]/45">
             Save internal staff notes, follow-up comments, and student updates.
           </p>
         </div>
@@ -259,14 +259,14 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
           value={note}
           onChange={(event) => setNote(event.target.value)}
           placeholder="Example: Called student. He is interested in UK January intake and will send documents tomorrow."
-          className="min-h-[110px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#D4AF37]/40"
+          className="min-h-[110px] w-full resize-none rounded-2xl border border-[#243A60]/18 bg-white p-4 text-sm text-[#17243D] outline-none transition placeholder:text-[#17243D]/25 focus:border-[#D4AF37]/40"
         />
 
         <div className="mt-3 flex justify-end">
           <button
             onClick={addManualNote}
             disabled={!note.trim() || savingNote}
-            className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-2 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/15 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-[#D4AF37]/30 bg-[#FFF1E3] px-5 py-2 text-sm font-semibold text-[#B84F0E] transition hover:bg-[#E9802D]/15 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {savingNote ? "Saving..." : "Add Note"}
           </button>
@@ -280,13 +280,13 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
         <MiniStat label="Visa Events" value={timelineStats.visa} />
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+      <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-[#FFFDF8] p-5">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-[#17243D]">
               Unified Student Journey Timeline
             </h3>
-            <p className="text-sm text-white/45">
+            <p className="text-sm text-[#17243D]/45">
               CRM notes, application movement, university sync, offer history,
               and visa changes in one timeline.
             </p>
@@ -294,7 +294,7 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
 
           <button
             onClick={loadTimeline}
-            className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-white/60 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+            className="rounded-full border border-[#243A60]/18 px-4 py-2 text-xs font-semibold text-[#17243D]/60 transition hover:border-[#D4AF37]/40 hover:text-[#B84F0E]"
           >
             Refresh
           </button>
@@ -307,11 +307,11 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
         ) : null}
 
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/50">
+          <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4 text-sm text-[#17243D]/50">
             Loading unified timeline...
           </div>
         ) : combinedEvents.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-white/45">
+          <div className="rounded-2xl border border-dashed border-[#243A60]/18 bg-white p-5 text-sm text-[#17243D]/45">
             No timeline history yet.
           </div>
         ) : (
@@ -330,15 +330,15 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
                     {getEventIcon(event.type)}
                   </span>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                  <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-[#17243D]">
                           {event.title}
                         </p>
 
                         {event.description ? (
-                          <p className="mt-1 whitespace-pre-wrap text-sm text-white/50">
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-[#17243D]/50">
                             {event.description}
                           </p>
                         ) : null}
@@ -352,18 +352,18 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
                     </div>
 
                     {(event.oldValue || event.newValue) && (
-                      <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/45">
+                      <div className="mt-3 rounded-xl border border-[#243A60]/18 bg-[#FFFDF8] px-3 py-2 text-xs text-[#17243D]/45">
                         {event.oldValue ? <span>{event.oldValue}</span> : null}
                         {event.oldValue && event.newValue ? (
-                          <span className="mx-2 text-[#D4AF37]">→</span>
+                          <span className="mx-2 text-[#B84F0E]">→</span>
                         ) : null}
                         {event.newValue ? (
-                          <span className="text-white/70">{event.newValue}</span>
+                          <span className="text-[#17243D]/70">{event.newValue}</span>
                         ) : null}
                       </div>
                     )}
 
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/35">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#17243D]/35">
                       <span>
                         {event.source === "application"
                           ? "Application System"
@@ -384,12 +384,12 @@ function CrmTimelinePanel({ studentId, studentType, adminProfile = null }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
+      <p className="text-xs uppercase tracking-[0.18em] text-[#17243D]/35">
         {label}
       </p>
 
-      <p className="mt-2 text-2xl font-black text-[#D4AF37]">{value}</p>
+      <p className="mt-2 text-2xl font-black text-[#B84F0E]">{value}</p>
     </div>
   );
 }

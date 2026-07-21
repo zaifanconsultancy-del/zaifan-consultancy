@@ -3,9 +3,7 @@ import {
   AlertTriangle,
   Crown,
   Flame,
-  PhoneCall,
   Radar,
-  Target,
   Users,
   Zap,
 } from "lucide-react";
@@ -15,7 +13,11 @@ function CounselorCommandCenter({
   appointments = [],
   reminders = [],
 }) {
-  const allLeads = [...inquiries, ...appointments];
+  const safeInquiries = Array.isArray(inquiries) ? inquiries : [];
+  const safeAppointments = Array.isArray(appointments) ? appointments : [];
+  const safeReminders = Array.isArray(reminders) ? reminders : [];
+
+  const allLeads = [...safeInquiries, ...safeAppointments];
 
   const getName = (lead) =>
     lead.full_name || lead.name || lead.student_name || "Unnamed Lead";
@@ -27,11 +29,15 @@ function CounselorCommandCenter({
       .replaceAll("_", " ")
       .toLowerCase();
 
-  const getPriority = (lead) => String(lead.priority || "medium").toLowerCase();
+  const getPriority = (lead) =>
+    String(lead.priority || "medium").toLowerCase();
 
   const getCreatedDate = (lead) => {
     const raw =
-      lead.created_at || lead.submitted_at || lead.appointment_date || lead.date;
+      lead.created_at ||
+      lead.submitted_at ||
+      lead.appointment_date ||
+      lead.date;
 
     const date = raw ? new Date(raw) : new Date();
     return Number.isNaN(date.getTime()) ? new Date() : date;
@@ -44,14 +50,14 @@ function CounselorCommandCenter({
     );
 
   const hasReminder = (lead) =>
-    reminders.some(
+    safeReminders.some(
       (reminder) =>
         String(reminder.student_id || reminder.lead_id || "") ===
         String(lead.id || "")
     );
 
   const isOverdue = (lead) =>
-    reminders.some((reminder) => {
+    safeReminders.some((reminder) => {
       const sameLead =
         String(reminder.student_id || reminder.lead_id || "") ===
         String(lead.id || "");
@@ -61,7 +67,10 @@ function CounselorCommandCenter({
       const dueDate = reminder.due_date ? new Date(reminder.due_date) : null;
       if (!dueDate || Number.isNaN(dueDate.getTime())) return false;
 
-      return String(reminder.status || "").toLowerCase() !== "completed" && dueDate < new Date();
+      return (
+        String(reminder.status || "").toLowerCase() !== "completed" &&
+        dueDate < new Date()
+      );
     });
 
   const enriched = allLeads.map((lead) => {
@@ -90,7 +99,11 @@ function CounselorCommandCenter({
 
     if (overdue) score += 25;
     if (!reminderExists) score += 10;
-    if (ageDays >= 7 && (status.includes("new") || status.includes("pending"))) {
+
+    if (
+      ageDays >= 7 &&
+      (status.includes("new") || status.includes("pending"))
+    ) {
       score += 25;
     }
 
@@ -105,7 +118,10 @@ function CounselorCommandCenter({
       hasReminder: reminderExists,
       overdue,
       score,
-      type: lead.appointment_date || lead.appointment_time ? "Appointment" : "Inquiry",
+      type:
+        lead.appointment_date || lead.appointment_time
+          ? "Appointment"
+          : "Inquiry",
     };
   });
 
@@ -137,25 +153,25 @@ function CounselorCommandCenter({
       label: "Hot Leads",
       value: hotLeads.length,
       icon: Flame,
-      tone: "text-orange-300 border-orange-400/20 bg-orange-500/10",
+      tone: "orange",
     },
     {
       label: "Urgent Follow-Ups",
       value: urgentFollowUps.length,
       icon: Zap,
-      tone: "text-red-300 border-red-400/20 bg-red-500/10",
+      tone: "red",
     },
     {
       label: "Unassigned",
       value: unassignedLeads.length,
       icon: Users,
-      tone: "text-blue-300 border-blue-400/20 bg-blue-500/10",
+      tone: "navy",
     },
     {
       label: "VIP Risk",
       value: vipRisks.length,
       icon: Crown,
-      tone: "text-[#D4AF37] border-[#D4AF37]/20 bg-[#D4AF37]/10",
+      tone: "orange",
     },
   ];
 
@@ -163,61 +179,99 @@ function CounselorCommandCenter({
     <motion.section
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
       className="space-y-5"
     >
-      <div className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/10 via-white/[0.035] to-black/30 p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.16),transparent_38%)]" />
+      <div className="relative overflow-hidden rounded-[2rem] border-2 border-[#E9802D]/45 bg-[#FFFDF8] p-6 shadow-[0_18px_50px_rgba(23,36,61,0.08)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#E9802D] via-[#F2A766] to-[#E9802D]" />
+        <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#E9802D]/10 blur-3xl" />
 
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1.5">
-              <Radar className="h-4 w-4 text-[#D4AF37]" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1.5">
+              <Radar className="h-4 w-4 text-[#D96C1F]" />
+
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#B84F0E]">
                 Counselor Command Center
               </p>
             </div>
 
-            <h2 className="mt-3 text-3xl font-black text-white">
+            <h2 className="mt-3 text-3xl font-black text-[#17243D]">
               Today’s Priority Intelligence
             </h2>
 
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-              Focus counselors on hot leads, overdue follow-ups, VIP risks, and
-              unassigned opportunities.
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#667085]">
+              Focus counselors on hot leads, overdue follow-ups, VIP risks,
+              and unassigned opportunities.
             </p>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/30 p-5 text-right">
-            <p className="text-xs uppercase tracking-[0.25em] text-white/40">
+          <div className="rounded-[1.5rem] border border-[#243A60]/25 bg-white p-5 text-right shadow-[0_10px_24px_rgba(23,36,61,0.05)]">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#667085]">
               Tracked Leads
             </p>
-            <h3 className="mt-2 text-4xl font-black text-white">
+
+            <h3 className="mt-2 text-4xl font-black text-[#17243D]">
               {allLeads.length}
             </h3>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        {stats.map((item) => {
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {stats.map((item, index) => {
           const Icon = item.icon;
+          const danger = item.tone === "red";
+          const navy = item.tone === "navy";
 
           return (
-            <div
+            <motion.div
               key={item.label}
-              className={`rounded-[1.5rem] border p-5 ${item.tone}`}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              className={`rounded-[1.5rem] border p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${
+                danger
+                  ? "border-[#C2413B]/30 bg-[#FFF0EE]"
+                  : navy
+                  ? "border-[#243A60]/30 bg-[#F3F5F8]"
+                  : "border-[#E9802D]/35 bg-[#FFF3E7]"
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] opacity-75">
+                  <p
+                    className={`text-xs font-black uppercase tracking-[0.22em] ${
+                      danger
+                        ? "text-[#A8342F]"
+                        : navy
+                        ? "text-[#243A60]"
+                        : "text-[#B84F0E]"
+                    }`}
+                  >
                     {item.label}
                   </p>
-                  <h3 className="mt-3 text-4xl font-black">{item.value}</h3>
+
+                  <h3
+                    className={`mt-3 text-4xl font-black ${
+                      danger ? "text-[#A8342F]" : "text-[#17243D]"
+                    }`}
+                  >
+                    {item.value}
+                  </h3>
                 </div>
 
-                <Icon className="h-7 w-7" />
+                <Icon
+                  className={`h-7 w-7 ${
+                    danger
+                      ? "text-[#C2413B]"
+                      : navy
+                      ? "text-[#243A60]"
+                      : "text-[#D96C1F]"
+                  }`}
+                />
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -247,7 +301,7 @@ function CounselorCommandCenter({
           leads={unassignedLeads}
           empty="All leads are currently assigned."
           badge="Assign"
-          tone="blue"
+          tone="navy"
         />
 
         <LeadList
@@ -256,7 +310,7 @@ function CounselorCommandCenter({
           leads={vipRisks}
           empty="No VIP risk leads right now."
           badge="VIP"
-          tone="gold"
+          tone="orange"
         />
       </div>
     </motion.section>
@@ -265,45 +319,50 @@ function CounselorCommandCenter({
 
 function LeadList({ title, icon: Icon, leads, empty, badge, tone }) {
   const toneClass = {
-    orange: "border-orange-400/20 bg-orange-500/10 text-orange-300",
-    red: "border-red-400/20 bg-red-500/10 text-red-300",
-    blue: "border-blue-400/20 bg-blue-500/10 text-blue-300",
-    gold: "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]",
+    orange: "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]",
+    red: "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]",
+    navy: "border-[#243A60]/30 bg-[#F3F5F8] text-[#243A60]",
   }[tone];
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+    <div className="rounded-[1.75rem] border-2 border-[#243A60]/30 bg-[#FFFDF8] p-5 shadow-[0_14px_34px_rgba(23,36,61,0.06)]">
       <div className="flex items-center gap-3">
         <div className={`rounded-2xl border p-3 ${toneClass}`}>
           <Icon className="h-5 w-5" />
         </div>
 
-        <h3 className="text-lg font-black text-white">{title}</h3>
+        <h3 className="text-lg font-black text-[#17243D]">{title}</h3>
       </div>
 
       {leads.length === 0 ? (
-        <p className="mt-5 text-sm text-white/45">{empty}</p>
+        <div className="mt-5 rounded-2xl border border-dashed border-[#243A60]/20 bg-[#F7F3EB] p-4">
+          <p className="text-sm text-[#667085]">{empty}</p>
+        </div>
       ) : (
         <div className="mt-5 space-y-3">
           {leads.map((lead) => (
             <div
               key={`${lead.type}-${lead.id}-${title}`}
-              className="rounded-2xl border border-white/10 bg-black/25 p-4"
+              className="rounded-2xl border border-[#243A60]/22 bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:border-[#E9802D]/50 hover:shadow-[0_10px_22px_rgba(23,36,61,0.06)]"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="font-bold text-white">{lead.displayName}</p>
+                  <p className="font-black text-[#17243D]">
+                    {lead.displayName}
+                  </p>
 
-                  <p className="mt-1 text-xs text-white/45">
+                  <p className="mt-1 text-xs font-medium text-[#747D8D]">
                     {lead.type} • {lead.displayStatus} • {lead.ageDays} days old
                   </p>
 
-                  <p className="mt-2 text-xs text-white/50">
+                  <p className="mt-2 text-xs font-semibold text-[#596579]">
                     Score: {lead.score}/100 • Priority: {lead.priority}
                   </p>
                 </div>
 
-                <span className={`w-fit rounded-full border px-3 py-1 text-xs font-black ${toneClass}`}>
+                <span
+                  className={`w-fit rounded-full border px-3 py-1 text-xs font-black ${toneClass}`}
+                >
                   {badge}
                 </span>
               </div>
@@ -311,7 +370,10 @@ function LeadList({ title, icon: Icon, leads, empty, badge, tone }) {
               <div className="mt-3 flex flex-wrap gap-2">
                 <MiniBadge active={lead.hasReminder} text="Reminder" />
                 <MiniBadge active={lead.overdue} text="Overdue" danger />
-                <MiniBadge active={Boolean(lead.assigned_admin_id)} text="Assigned" />
+                <MiniBadge
+                  active={Boolean(lead.assigned_admin_id)}
+                  text="Assigned"
+                />
               </div>
             </div>
           ))}
@@ -327,9 +389,9 @@ function MiniBadge({ active, text, danger = false }) {
       className={`rounded-full border px-3 py-1 text-[11px] font-bold ${
         active
           ? danger
-            ? "border-red-400/20 bg-red-500/10 text-red-300"
-            : "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
-          : "border-white/10 bg-white/[0.04] text-white/35"
+            ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
+            : "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+          : "border-[#243A60]/18 bg-[#F3F5F8] text-[#7A8392]"
       }`}
     >
       {text}: {active ? "Yes" : "No"}

@@ -42,31 +42,34 @@ function VisaRequirementsCard({ student = {} }) {
 
   const getStatusClass = (status) => {
     if (status === "verified") {
-      return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+      return "border-emerald-300 bg-emerald-50 text-emerald-700";
     }
 
     if (status === "received") {
-      return "border-blue-400/25 bg-blue-500/10 text-blue-300";
+      return "border-blue-300 bg-blue-50 text-blue-700";
     }
 
     if (status === "rejected") {
-      return "border-red-400/25 bg-red-500/10 text-red-300";
+      return "border-red-300 bg-red-50 text-red-700";
     }
 
-    return "border-yellow-400/25 bg-yellow-500/10 text-yellow-300";
+    return "border-amber-300 bg-amber-50 text-amber-800";
   };
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-bold text-white">Visa Requirements</h3>
-          <p className="mt-2 text-sm text-white/45">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+            Visa Readiness
+          </p>
+          <h3 className="mt-1 font-black text-[#10233f]">Visa Requirements</h3>
+          <p className="mt-2 text-sm text-slate-600">
             Visa readiness checklist based on available student documents.
           </p>
         </div>
 
-        <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-xs font-black text-cyan-300">
+        <span className="rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700">
           Checklist
         </span>
       </div>
@@ -78,13 +81,13 @@ function VisaRequirementsCard({ student = {} }) {
           return (
             <div
               key={item.name}
-              className="rounded-xl border border-white/10 bg-white/[0.02] p-4"
+              className="rounded-xl border border-slate-300 bg-[#fffaf2] p-4"
             >
               <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-white/80">{item.name}</p>
+                <p className="font-black text-[#10233f]">{item.name}</p>
 
                 <span
-                  className={`rounded-full border px-3 py-1 text-xs font-bold capitalize ${getStatusClass(
+                  className={`rounded-full border px-3 py-1 text-xs font-black capitalize ${getStatusClass(
                     status
                   )}`}
                 >

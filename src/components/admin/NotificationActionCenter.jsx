@@ -78,15 +78,15 @@ function NotificationActionCenter({
       label: "Smart Actions",
       value: actions.length,
       icon: BellRing,
-      color: "text-[#D4AF37]",
-      border: "border-[#D4AF37]/20",
-      bg: "bg-[#D4AF37]/10",
+      color: "text-[#ff4b12]",
+      border: "border-[#ff4b12]/20",
+      bg: "bg-[#ff4b12]/10",
     },
     {
       label: "Urgent",
       value: urgentActions.length,
       icon: Flame,
-      color: "text-red-300",
+      color: "text-red-700",
       border: "border-red-400/20",
       bg: "bg-red-400/10",
     },
@@ -94,7 +94,7 @@ function NotificationActionCenter({
       label: "Lead Actions",
       value: inquiryActions.length,
       icon: UserCheck,
-      color: "text-blue-300",
+      color: "text-blue-700",
       border: "border-blue-400/20",
       bg: "bg-blue-400/10",
     },
@@ -102,7 +102,7 @@ function NotificationActionCenter({
       label: "Appointment Actions",
       value: appointmentActions.length,
       icon: CalendarCheck,
-      color: "text-green-300",
+      color: "text-emerald-700",
       border: "border-green-400/20",
       bg: "bg-green-400/10",
     },
@@ -110,24 +110,24 @@ function NotificationActionCenter({
 
   return (
     <section className="space-y-5">
-      <div className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/15 bg-gradient-to-br from-[#D4AF37]/10 via-white/[0.035] to-black/30 p-5 backdrop-blur-2xl sm:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.13),transparent_36%)]" />
+      <div className="relative overflow-hidden rounded-[2rem] border border-[#ff4b12]/15 bg-gradient-to-br from-[#ff4b12]/10 via-white/[0.035] to-black/30 p-5 backdrop-blur-2xl sm:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,75,18,0.13),transparent_36%)]" />
 
         <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-[#D4AF37]" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#ff4b12]/20 bg-[#ff4b12]/10 px-3 py-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-[#ff4b12]" />
 
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#ff4b12]">
                 Notification Action Center
               </p>
             </div>
 
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-[#071f50] sm:text-3xl">
               Smart CRM Action Queue
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-400">
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#526178]">
               Converts CRM alerts into action buttons for faster response,
               appointment confirmation, follow-up handling, and lead pipeline
               movement.
@@ -144,7 +144,7 @@ function NotificationActionCenter({
                   className={`rounded-2xl border ${metric.border} ${metric.bg} p-4 backdrop-blur-xl`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#526178]">
                       {metric.label}
                     </p>
 
@@ -164,14 +164,14 @@ function NotificationActionCenter({
       {topActions.length === 0 ? (
         <div className={`${cardClass} rounded-[2rem] p-8 text-center`}>
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-green-400/20 bg-green-500/10">
-            <CheckCircle2 className="h-8 w-8 text-green-300" />
+            <CheckCircle2 className="h-8 w-8 text-emerald-700" />
           </div>
 
-          <h3 className="mt-4 text-xl font-black text-white">
+          <h3 className="mt-4 text-xl font-black text-[#071f50]">
             No urgent actions right now
           </h3>
 
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-gray-400">
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-[#526178]">
             Your CRM notification queue is clean. New leads, pending
             appointments, and overdue follow-ups will appear here.
           </p>
@@ -187,9 +187,9 @@ function NotificationActionCenter({
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: index * 0.05 }}
-                className={`${cardClass} group relative overflow-hidden rounded-[2rem] p-5 transition duration-500 hover:-translate-y-0.5 hover:border-[#D4AF37]/30 sm:p-6`}
+                className={`${cardClass} group relative overflow-hidden rounded-[2rem] p-5 transition duration-300 ease-out hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_22px_55px_rgba(7,31,80,0.10)] sm:p-6`}
               >
-                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#ff4b12] to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
 
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex min-w-0 flex-1 items-start gap-4">
@@ -211,24 +211,24 @@ function NotificationActionCenter({
                           {action.priority}
                         </span>
 
-                        <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-blue-300">
+                        <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-blue-700">
                           {action.type}
                         </span>
 
-                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400">
+                        <span className="rounded-full border border-orange-100 bg-[#fffaf5] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-[#526178]">
                           {action.category}
                         </span>
                       </div>
 
-                      <h3 className="mt-3 text-xl font-black text-white">
+                      <h3 className="mt-3 text-xl font-black text-[#071f50]">
                         {action.title}
                       </h3>
 
-                      <p className="mt-1 text-sm font-semibold text-gray-300">
+                      <p className="mt-1 text-sm font-semibold text-[#526178]">
                         {action.name}
                       </p>
 
-                      <p className="mt-3 max-w-4xl text-sm leading-relaxed text-gray-400">
+                      <p className="mt-3 max-w-4xl text-sm leading-relaxed text-[#526178]">
                         {action.description}
                       </p>
                     </div>
@@ -238,7 +238,7 @@ function NotificationActionCenter({
                     <button
                       type="button"
                       onClick={() => runAction(action)}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-black transition duration-300 hover:-translate-y-0.5 hover:bg-[#E7C768]"
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ff4b12] px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_30px_rgba(255,75,18,0.20)] transition duration-300 ease-out hover:-translate-y-1 hover:bg-[#ff642f]"
                     >
                       <Zap className="h-4 w-4" />
                       {action.buttonLabel}
@@ -247,7 +247,7 @@ function NotificationActionCenter({
                     <button
                       type="button"
                       onClick={() => openTab(action.type === "appointment" ? "appointments" : action.type === "reminder" ? "followups" : "inquiries")}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-xs font-bold uppercase tracking-[0.16em] text-gray-300 transition duration-300 hover:border-[#D4AF37]/30 hover:text-white"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-orange-100 bg-white px-5 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#071f50] transition duration-300 ease-out hover:-translate-y-1 hover:border-orange-200 hover:bg-[#fff1ea] hover:text-[#ff4b12]"
                     >
                       <ExternalLink className="h-4 w-4" />
                       Open Section
@@ -380,26 +380,26 @@ function buildNotificationActions({ inquiries = [], appointments = [], followUpR
 
 function getPriorityStyle(priority) {
   if (priority === "urgent") {
-    return "border-red-400/25 bg-red-500/10 text-red-300";
+    return "border-red-200 bg-red-50 text-red-700";
   }
 
   if (priority === "medium") {
-    return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+    return "border-orange-200 bg-[#fff1ea] text-[#ff4b12]";
   }
 
-  return "border-green-400/25 bg-green-500/10 text-green-300";
+  return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
 function getPriorityBadge(priority) {
   if (priority === "urgent") {
-    return "border-red-400/25 bg-red-500/10 text-red-300";
+    return "border-red-200 bg-red-50 text-red-700";
   }
 
   if (priority === "medium") {
-    return "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]";
+    return "border-orange-200 bg-[#fff1ea] text-[#ff4b12]";
   }
 
-  return "border-green-400/25 bg-green-500/10 text-green-300";
+  return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
 export default NotificationActionCenter;

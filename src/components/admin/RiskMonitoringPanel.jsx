@@ -1,3 +1,8 @@
+// RiskMonitoringPanel V2 — Executive Risk Command Center
+// Preserves the full risk-signal engine, severity sorting, rescue/document/task/planning
+// command boards, journey-stage detection, risk/opportunity scoring, and recommendations.
+// Visual system rebuilt for the approved Zaifan Admin OS: cream, white, navy and orange.
+
 import { useMemo } from "react";
 
 function normalize(value = "") {
@@ -399,16 +404,16 @@ function RiskMonitoringPanel({ students = [] }) {
 
 
   return (
-    <div className="rounded-[1.75rem] border border-red-400/20 bg-red-500/[0.03] p-6">
+    <div className="rounded-[1.85rem] border-2 border-orange-300 bg-[#fff8ee] p-6 shadow-[0_14px_36px_rgba(15,35,63,0.07)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-red-300/80">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-700">
             Executive Risk
           </p>
 
-          <h3 className="mt-1 font-bold text-white">Student Risk Monitoring</h3>
+          <h3 className="mt-1 font-black text-[#10233f]">Student Risk Monitoring</h3>
 
-          <p className="mt-2 max-w-3xl text-sm text-white/45">
+          <p className="mt-2 max-w-3xl text-sm text-slate-600">
             Students needing counselor attention across applications, CAS, visa,
             overdue tasks, documents, inactivity, and university planning.
           </p>
@@ -454,29 +459,29 @@ function RiskMonitoringPanel({ students = [] }) {
             return (
               <div
                 key={student.id || name}
-                className="rounded-xl border border-red-400/20 bg-red-500/10 p-4"
+                className="rounded-2xl border border-red-200 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate font-semibold text-white">{name}</p>
+                      <p className="truncate font-black text-[#10233f]">{name}</p>
 
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
+                      <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">
                         {formatStage(journeyStage)}
                       </span>
                     </div>
 
-                    <p className="mt-2 text-sm font-semibold text-red-300">
+                    <p className="mt-2 text-sm font-semibold text-red-700">
                       {getRiskBadge(student)}
                     </p>
 
-                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">
                       {getRiskReason(student)}
                     </p>
 
-                    <p className="mt-2 rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-xs leading-5 text-white/55">
+                    <p className="mt-2 rounded-xl border border-slate-300 bg-[#fffaf2] px-3 py-2 text-xs leading-5 text-slate-600">
                       Next action:{" "}
-                      <span className="font-semibold text-white/80">
+                      <span className="font-black text-[#10233f]/80">
                         {getRecommendedAction(student)}
                       </span>
                     </p>
@@ -486,7 +491,7 @@ function RiskMonitoringPanel({ students = [] }) {
                         {topSignals.map((signal) => (
                           <span
                             key={`${student.id || name}-${signal.type}`}
-                            className="rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-red-200/80"
+                            className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-red-700"
                           >
                             {signal.label}
                           </span>
@@ -494,7 +499,7 @@ function RiskMonitoringPanel({ students = [] }) {
                       </div>
                     ) : null}
 
-                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-white/45">
+                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
                       <span>Docs {documentReadiness}%</span>
                       <span>Tasks {taskCompletion}%</span>
                       <span>Pending {pendingTasks}</span>
@@ -504,11 +509,11 @@ function RiskMonitoringPanel({ students = [] }) {
                   </div>
 
                   <div className="flex shrink-0 flex-row gap-2 sm:flex-col sm:items-end">
-                    <span className="rounded-full border border-red-400/25 bg-black/20 px-3 py-1 text-xs font-black text-red-200">
+                    <span className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs font-black text-red-700">
                       Risk {riskScore}
                     </span>
 
-                    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-black text-white/50">
+                    <span className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-black text-slate-700">
                       Severity {severity}
                     </span>
                   </div>
@@ -517,11 +522,11 @@ function RiskMonitoringPanel({ students = [] }) {
             );
           })
         ) : (
-          <div className="rounded-xl border border-emerald-400/15 bg-emerald-500/[0.04] p-5">
-            <p className="font-semibold text-emerald-200">
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+            <p className="font-semibold text-emerald-800">
               No major student risks detected.
             </p>
-            <p className="mt-2 text-sm text-white/45">
+            <p className="mt-2 text-sm text-slate-600">
               Executive AI does not currently see urgent risk across applications,
               CAS, visa, documents, tasks, activity, or university planning.
             </p>
@@ -536,18 +541,18 @@ function RiskMonitoringPanel({ students = [] }) {
 function RiskCommandCard({ label, value, detail, tone = "red" }) {
   const style =
     tone === "gold"
-      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      ? "border-orange-300 bg-orange-50 text-orange-700"
       : tone === "orange"
-      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      ? "border-orange-300 bg-[#fff7ed] text-orange-700"
       : tone === "blue"
-      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
-      : "border-red-400/25 bg-red-500/10 text-red-300";
+      ? "border-blue-300 bg-blue-50 text-blue-700"
+      : "border-red-300 bg-red-50 text-red-700";
 
   return (
     <div className={`rounded-2xl border p-4 ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">{label}</p>
-      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
-      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-3 text-3xl font-black text-[#10233f]">{value || 0}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-600">{detail}</p>
     </div>
   );
 }
@@ -555,32 +560,32 @@ function RiskCommandCard({ label, value, detail, tone = "red" }) {
 function RiskMiniBoard({ title, items = [], tone = "red" }) {
   const scoreClass =
     tone === "gold"
-      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      ? "border-orange-300 bg-orange-50 text-orange-700"
       : tone === "orange"
-      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      ? "border-orange-300 bg-[#fff7ed] text-orange-700"
       : tone === "blue"
-      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
-      : "border-red-400/25 bg-red-500/10 text-red-300";
+      ? "border-blue-300 bg-blue-50 text-blue-700"
+      : "border-red-300 bg-red-50 text-red-700";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <h3 className="font-black text-white">{title}</h3>
+    <div className="rounded-2xl border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+      <h3 className="font-black text-[#10233f]">{title}</h3>
       <div className="mt-4 space-y-3">
         {items.length ? items.map(({ student, severity, riskScore }, index) => {
           const name = getStudentName(student);
           return (
-            <div key={`${title}-${student?.id || name}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+            <div key={`${title}-${student?.id || name}-${index}`} className="rounded-xl border border-slate-300 bg-[#fffaf2] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-white">{name}</p>
-                  <p className="mt-1 text-xs text-white/40">{formatStage(getJourneyStage(student))} • Opp {getOpportunityScore(student)}</p>
+                  <p className="truncate font-black text-[#10233f]">{name}</p>
+                  <p className="mt-1 text-xs text-slate-500">{formatStage(getJourneyStage(student))} • Opp {getOpportunityScore(student)}</p>
                 </div>
                 <span className={`rounded-full border px-3 py-1 text-xs font-black ${scoreClass}`}>{Math.max(severity, riskScore)}</span>
               </div>
-              <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{getRiskReason(student)}</p>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">{getRiskReason(student)}</p>
             </div>
           );
-        }) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
+        }) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-500">No records.</p>}
       </div>
     </div>
   );
@@ -589,8 +594,8 @@ function RiskMiniBoard({ title, items = [], tone = "red" }) {
 function SummaryBadge({ label, value, tone = "default" }) {
   const className =
     tone === "critical"
-      ? "border-red-400/25 bg-red-500/10 text-red-200"
-      : "border-red-400/20 bg-red-500/10 text-red-300";
+      ? "border-red-300 bg-red-50 text-red-700"
+      : "border-orange-300 bg-white text-orange-700";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${className}`}>

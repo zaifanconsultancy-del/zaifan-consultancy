@@ -244,29 +244,29 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
 
   return (
     <div className="space-y-6">
-      <div className={`${cardClass} p-5 sm:p-7`}>
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+      <div className={`${cardClass} relative overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-white p-5 shadow-[0_12px_32px_rgba(15,35,63,0.05)] sm:p-7`}>
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-60"></div>
 
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.35em] text-[#D4AF37]">
+            <p className="text-[10px] uppercase tracking-[0.35em] text-orange-700">
               Assigned Work
             </p>
 
-            <h2 className="mt-3 text-3xl font-black text-white">My Leads</h2>
+            <h2 className="mt-3 text-3xl font-black text-[#10233f]">My Leads</h2>
 
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-400">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
               A focused workspace for the inquiries and appointments assigned to
               your admin profile.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
+              <span className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
                 {adminProfile?.full_name || "Current Admin"}
               </span>
 
               {lastSyncedAt && (
-                <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+                <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
                   Synced {formatTime(lastSyncedAt)}
                 </span>
               )}
@@ -276,7 +276,7 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
           <button
             onClick={() => fetchMyLeads()}
             disabled={loading}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Refreshing..." : "Refresh"}
           </button>
@@ -292,27 +292,27 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
-        <div className={`${cardClass} p-4`}>
+        <div className={`${cardClass} rounded-[1.6rem] border border-slate-300 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)]`}>
           <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search my leads by name, email, country, service..."
-              className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none placeholder:text-slate-500 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             />
 
             <select
               value={activeView}
               onChange={(event) => setActiveView(event.target.value)}
-              className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             >
-              <option value="all" className="bg-[#111]">
+              <option value="all" className="bg-white text-[#10233f]">
                 All Leads
               </option>
-              <option value="inquiry" className="bg-[#111]">
+              <option value="inquiry" className="bg-white text-[#10233f]">
                 Inquiries
               </option>
-              <option value="appointment" className="bg-[#111]">
+              <option value="appointment" className="bg-white text-[#10233f]">
                 Appointments
               </option>
             </select>
@@ -320,21 +320,21 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
             <select
               value={priorityFilter}
               onChange={(event) => setPriorityFilter(event.target.value)}
-              className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#10233f] outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             >
-              <option value="all" className="bg-[#111]">
+              <option value="all" className="bg-white text-[#10233f]">
                 All Priorities
               </option>
-              <option value="vip" className="bg-[#111]">
+              <option value="vip" className="bg-white text-[#10233f]">
                 VIP
               </option>
-              <option value="high" className="bg-[#111]">
+              <option value="high" className="bg-white text-[#10233f]">
                 High
               </option>
-              <option value="medium" className="bg-[#111]">
+              <option value="medium" className="bg-white text-[#10233f]">
                 Medium
               </option>
-              <option value="low" className="bg-[#111]">
+              <option value="low" className="bg-white text-[#10233f]">
                 Low
               </option>
             </select>
@@ -343,20 +343,20 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
 
         <button
           onClick={clearFilters}
-          className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-bold text-gray-300 transition hover:border-[#D4AF37]/30 hover:text-white"
+          className="rounded-[1.5rem] border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
         >
           Clear Filters
         </button>
       </div>
 
       {loadError && (
-        <div className={`${cardClass} p-6 text-sm text-red-200`}>
+        <div className={`${cardClass} rounded-[1.5rem] border border-red-300 bg-red-50 p-6 text-sm text-red-700`}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>{loadError}</p>
             <button
               type="button"
               onClick={() => fetchMyLeads()}
-              className="rounded-full bg-[#D4AF37] px-5 py-2.5 text-xs font-black text-black transition hover:bg-[#E7C768]"
+              className="rounded-full bg-orange-500 px-5 py-2.5 text-xs font-black text-white transition hover:bg-orange-600"
             >
               Retry
             </button>
@@ -369,14 +369,14 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
       ) : assignments.length === 0 ? (
         <EmptyState cardClass={cardClass} />
       ) : filteredLeads.length === 0 ? (
-        <div className={`${cardClass} p-8 text-center`}>
-          <h3 className="text-2xl font-black text-white">No matching leads</h3>
-          <p className="mt-3 text-sm text-gray-400">
+        <div className={`${cardClass} rounded-[1.7rem] border-2 border-orange-300 bg-white p-8 text-center shadow-[0_8px_24px_rgba(15,35,63,0.04)]`}>
+          <h3 className="text-2xl font-black text-[#10233f]">No matching leads</h3>
+          <p className="mt-3 text-sm text-slate-600">
             Try changing your search or filters.
           </p>
           <button
             onClick={clearFilters}
-            className="mt-5 rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-black text-black transition hover:bg-[#E7C768]"
+            className="mt-5 rounded-full bg-orange-500 px-6 py-3 text-sm font-black text-white transition hover:bg-orange-600"
           >
             Reset Filters
           </button>
@@ -409,23 +409,23 @@ function MyLeadsPanel({ cardClass = "", adminProfile = null }) {
 
 function StatCard({ label, value, icon, tone = "gold" }) {
   const toneClass = {
-    gold: "text-[#D4AF37]",
-    danger: "text-red-300",
-    orange: "text-orange-300",
+    gold: "text-orange-700",
+    danger: "text-red-700",
+    orange: "text-orange-700",
   }[tone];
 
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/30">
+    <div className="rounded-[1.5rem] border border-slate-300 bg-white p-5 backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/30">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-gray-500">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
             {label}
           </p>
 
           <h3 className={`mt-3 text-3xl font-black ${toneClass}`}>{value}</h3>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-2xl">
+        <div className="rounded-2xl border border-slate-300 bg-white p-4 text-2xl">
           {icon}
         </div>
       </div>
@@ -439,15 +439,15 @@ function LeadCard({ lead, index }) {
   const status = lead.status || (isAppointment ? "pending" : "new");
 
   const priorityStyles = {
-    vip: "border-purple-400/30 bg-purple-500/10 text-purple-300",
-    high: "border-red-400/30 bg-red-500/10 text-red-300",
-    medium: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]",
-    low: "border-white/10 bg-white/[0.04] text-gray-400",
+    vip: "border-violet-300 bg-violet-50 text-violet-700",
+    high: "border-red-300 bg-red-50 text-red-700",
+    medium: "border-[#D4AF37]/30 bg-orange-500/10 text-orange-700",
+    low: "border-slate-300 bg-slate-50 text-slate-600",
   };
 
   const typeStyle = isAppointment
-    ? "border-green-400/20 bg-green-400/10 text-green-300"
-    : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]";
+    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+    : "border-[#D4AF37]/20 bg-orange-500/10 text-orange-700";
 
   const mainDetail = isAppointment
     ? lead.country_interest || lead.consultation_type || "Appointment lead"
@@ -461,7 +461,7 @@ function LeadCard({ lead, index }) {
 
   return (
     <div
-      className="rounded-[1.6rem] border border-white/10 bg-white/[0.035] p-5 transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/30 hover:bg-white/[0.055]"
+      className="rounded-[1.6rem] border-2 border-slate-300 bg-white p-5 shadow-[0_7px_20px_rgba(15,35,63,0.04)] transition duration-500 hover:-translate-y-1 hover:border-[#D4AF37]/30 hover:bg-white/[0.055]"
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -479,24 +479,24 @@ function LeadCard({ lead, index }) {
             >
               {priority}
             </span>
-            <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+            <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
               {status}
             </span>
           </div>
 
-          <h4 className="truncate text-lg font-black text-white">
+          <h4 className="truncate text-lg font-black text-[#10233f]">
             {lead.full_name || "Unnamed Student"}
           </h4>
 
-          <p className="mt-1 text-sm text-gray-400">{mainDetail}</p>
+          <p className="mt-1 text-sm text-slate-600">{mainDetail}</p>
         </div>
 
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-2xl">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-white text-2xl">
           {isAppointment ? "📅" : priority === "vip" ? "👑" : "📨"}
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 text-sm text-gray-400 sm:grid-cols-2">
+      <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
         <InfoLine label="Email" value={lead.email || "No email"} />
         <InfoLine label="Phone" value={lead.phone || "No phone"} />
         <InfoLine label="Schedule" value={schedule} />
@@ -504,8 +504,8 @@ function LeadCard({ lead, index }) {
       </div>
 
       {lead.message && (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="line-clamp-3 text-sm leading-relaxed text-gray-400">
+        <div className="mt-4 rounded-2xl border border-slate-300 bg-[#fffaf2] p-4">
+          <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
             {lead.message}
           </p>
         </div>
@@ -516,25 +516,25 @@ function LeadCard({ lead, index }) {
 
 function InfoLine({ label, value }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500">
+    <div className="min-w-0 rounded-2xl border border-slate-300 bg-[#fffaf2] px-3 py-2">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-slate-500">
         {label}
       </p>
-      <p className="mt-1 truncate text-xs font-semibold text-gray-300">{value}</p>
+      <p className="mt-1 truncate text-xs font-semibold text-slate-700">{value}</p>
     </div>
   );
 }
 
 function MiniSummary({ title, icon, text }) {
   return (
-    <div className="rounded-[1.5rem] border border-[#D4AF37]/15 bg-[#D4AF37]/5 p-5 backdrop-blur-xl">
+    <div className="rounded-[1.5rem] border border-[#D4AF37]/15 bg-orange-500/5 p-5 backdrop-blur-xl">
       <div className="flex items-start gap-4">
-        <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-2xl">
+        <div className="rounded-2xl border border-[#D4AF37]/20 bg-orange-500/10 p-4 text-2xl">
           {icon}
         </div>
         <div>
-          <h3 className="text-lg font-black text-white">{title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-gray-400">{text}</p>
+          <h3 className="text-lg font-black text-[#10233f]">{title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">{text}</p>
         </div>
       </div>
     </div>
@@ -543,7 +543,7 @@ function MiniSummary({ title, icon, text }) {
 
 function LoadingState({ cardClass }) {
   return (
-    <div className={`${cardClass} p-6 text-sm text-gray-400`}>
+    <div className={`${cardClass} p-6 text-sm text-slate-600`}>
       <div className="flex items-center gap-3">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent"></div>
         Loading assigned leads...
@@ -554,16 +554,16 @@ function LoadingState({ cardClass }) {
 
 function EmptyState({ cardClass }) {
   return (
-    <div className={`${cardClass} p-8 text-center`}>
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-3xl">
+    <div className={`${cardClass} rounded-[1.7rem] border-2 border-orange-300 bg-white p-8 text-center shadow-[0_8px_24px_rgba(15,35,63,0.04)]`}>
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-orange-500/10 text-3xl">
         ✨
       </div>
 
-      <h3 className="mt-5 text-2xl font-black text-white">
+      <h3 className="mt-5 text-2xl font-black text-[#10233f]">
         No Assigned Leads Yet
       </h3>
 
-      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gray-400">
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
         Once leads are assigned to you, they will appear here as your personal
         follow-up workspace.
       </p>

@@ -305,34 +305,34 @@ function buildFounderGrowthData(rawSnapshot = {}) {
 
 function FounderMetricCard({ label, value, helper, tone = "cyan" }) {
   const tones = {
-    cyan: "border-cyan-400/20 bg-cyan-500/10",
-    emerald: "border-emerald-400/20 bg-emerald-500/10",
-    amber: "border-amber-400/20 bg-amber-500/10",
-    rose: "border-rose-400/20 bg-rose-500/10",
-    violet: "border-violet-400/20 bg-violet-500/10",
-    slate: "border-white/10 bg-white/[0.04]",
+    cyan: "border-[#E9802D]/35 bg-[#FFF3E7]",
+    emerald: "border-[#E9802D]/35 bg-[#FFF3E7]",
+    amber: "border-[#A36A18]/30 bg-[#FFF7E8]",
+    rose: "border-[#C2413B]/30 bg-[#FFF0EE]",
+    violet: "border-[#243A60]/25 bg-[#F3F5F8]",
+    slate: "border-[#243A60]/20 bg-white",
   };
 
   return (
-    <div className={`rounded-3xl border p-5 ${tones[tone] || tones.cyan}`}>
-      <p className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">{label}</p>
-      <p className="mt-3 text-3xl font-black text-white">{value}</p>
-      {helper ? <p className="mt-2 text-sm text-slate-400">{helper}</p> : null}
+    <div className={`rounded-3xl border p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${tones[tone] || tones.cyan}`}>
+      <p className="text-xs font-black uppercase tracking-[0.24em] text-[#667085]">{label}</p>
+      <p className="mt-3 text-3xl font-black text-[#17243D]">{value}</p>
+      {helper ? <p className="mt-2 text-sm text-[#667085]">{helper}</p> : null}
     </div>
   );
 }
 
 function FounderRecommendationCard({ title, detail, tone = "cyan" }) {
   const tones = {
-    cyan: "border-cyan-400/20 bg-cyan-500/10 text-cyan-100",
-    emerald: "border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
-    amber: "border-amber-400/20 bg-amber-500/10 text-amber-100",
-    rose: "border-rose-400/20 bg-rose-500/10 text-rose-100",
-    violet: "border-violet-400/20 bg-violet-500/10 text-violet-100",
+    cyan: "border-cyan-400/20 bg-cyan-500/10 text-[#B84F0E]",
+    emerald: "border-emerald-400/20 bg-emerald-500/10 text-[#B84F0E]",
+    amber: "border-amber-400/20 bg-amber-500/10 text-[#8A5611]",
+    rose: "border-rose-400/20 bg-rose-500/10 text-[#A8342F]",
+    violet: "border-violet-400/20 bg-violet-500/10 text-[#243A60]",
   };
 
   return (
-    <div className={`rounded-3xl border p-4 ${tones[tone] || tones.cyan}`}>
+    <div className={`rounded-3xl border p-4 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${tones[tone] || tones.cyan}`}>
       <p className="text-sm font-black">{title}</p>
       <p className="mt-2 text-sm leading-6 opacity-80">{detail}</p>
     </div>
@@ -408,16 +408,16 @@ export default function FounderGrowthDashboard({
   ];
 
   return (
-    <div className="space-y-6 rounded-[2rem] border border-white/10 bg-slate-950/60 p-5 text-white shadow-2xl shadow-slate-950/30">
+    <div className="space-y-6 rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 text-[#17243D] shadow-[0_20px_55px_rgba(23,36,61,0.08)]">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">Founder Growth OS</p>
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-[#B84F0E]">Founder Growth OS</p>
           <h1 className="mt-3 text-3xl font-black tracking-tight">Business Intelligence Command</h1>
-          <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-[#667085]">
             Growth, revenue, counselor productivity, market demand, conversion funnel, and 30/60/90 day forecast built from the
             existing Zaifan Student OS data layer.
           </p>
-          {adminProfile?.email ? <p className="mt-2 text-xs text-slate-500">Founder view for {adminProfile.email}</p> : null}
+          {adminProfile?.email ? <p className="mt-2 text-xs text-[#7A8392]">Founder view for {adminProfile.email}</p> : null}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -428,8 +428,8 @@ export default function FounderGrowthDashboard({
               onClick={() => setActiveView(view.key)}
               className={`rounded-2xl px-4 py-2 text-xs font-black ${
                 activeView === view.key
-                  ? "bg-white text-slate-950"
-                  : "border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                  ? "bg-[#E9802D] text-[#17243D] shadow-[0_8px_18px_rgba(233,128,45,0.20)]"
+                  : "border border-[#243A60]/20 bg-white text-[#596579] hover:border-[#E9802D]/40 hover:text-[#B84F0E]"
               }`}
             >
               {view.label}
@@ -440,7 +440,7 @@ export default function FounderGrowthDashboard({
             <button
               type="button"
               onClick={onRefresh}
-              className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-xs font-black text-cyan-100 hover:bg-cyan-400/20"
+              className="rounded-2xl border border-[#E9802D]/40 bg-[#FFF3E7] px-4 py-2 text-xs font-black text-[#B84F0E] hover:bg-[#FFE8D3]"
             >
               Refresh
             </button>

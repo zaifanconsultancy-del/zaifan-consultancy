@@ -6,9 +6,16 @@ function ProgramTracker({ student = {} }) {
     student?.study_field ||
     "Not Assigned";
 
-  const intake = student?.intake || student?.preferred_intake || "Not Assigned";
+  const intake =
+    student?.intake ||
+    student?.preferred_intake ||
+    "Not Assigned";
+
   const scholarship = student?.scholarship || "Pending";
-  const tuition = student?.tuition || student?.tuition_fee || "Not Available";
+  const tuition =
+    student?.tuition ||
+    student?.tuition_fee ||
+    "Not Available";
 
   const readinessItems = [
     {
@@ -33,54 +40,62 @@ function ProgramTracker({ student = {} }) {
   const readiness = Math.round((completed / readinessItems.length) * 100);
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="overflow-hidden rounded-[1.75rem] border-2 border-orange-300 bg-white shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
+      <div className="flex flex-col gap-3 border-b border-orange-200 bg-[#102f5c] p-6 text-white sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-bold text-white">Program Information</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
+            Academic Planning
+          </p>
 
-          <p className="mt-2 text-sm text-white/45">
+          <h3 className="mt-1 font-black text-white">Program Information</h3>
+
+          <p className="mt-2 text-sm text-slate-200">
             Track program, intake, scholarship, and tuition readiness.
           </p>
         </div>
 
-        <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black text-[#D4AF37]">
+        <span className="rounded-full border-2 border-orange-300 bg-orange-500 px-4 py-2 text-xs font-black text-white">
           {readiness}% Ready
         </span>
       </div>
 
-      <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-[#D4AF37]"
-          style={{ width: `${readiness}%` }}
-        />
-      </div>
-
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <InfoCard label="Program" value={program} />
-        <InfoCard label="Intake" value={intake} />
-        <InfoCard label="Scholarship" value={scholarship} />
-        <InfoCard label="Tuition" value={tuition} />
-      </div>
-
-      <div className="mt-5 grid gap-3 md:grid-cols-2">
-        {readinessItems.map((item) => (
+      <div className="bg-[#fff8ee] p-6">
+        <div className="h-2 overflow-hidden rounded-full border border-slate-300 bg-white">
           <div
-            key={item.label}
-            className={`rounded-xl border p-4 ${
-              item.complete
-                ? "border-emerald-400/20 bg-emerald-500/10"
-                : "border-yellow-400/20 bg-yellow-500/10"
-            }`}
-          >
-            <p
-              className={`text-sm font-semibold ${
-                item.complete ? "text-emerald-300" : "text-yellow-300"
+            className="h-full rounded-full bg-orange-500 transition-all duration-500"
+            style={{ width: `${readiness}%` }}
+          />
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <InfoCard label="Program" value={program} />
+          <InfoCard label="Intake" value={intake} />
+          <InfoCard label="Scholarship" value={scholarship} />
+          <InfoCard label="Tuition" value={tuition} />
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          {readinessItems.map((item) => (
+            <div
+              key={item.label}
+              className={`rounded-xl border-2 p-4 ${
+                item.complete
+                  ? "border-emerald-300 bg-emerald-50"
+                  : "border-amber-300 bg-amber-50"
               }`}
             >
-              {item.complete ? "Ready" : "Pending"} — {item.label}
-            </p>
-          </div>
-        ))}
+              <p
+                className={`text-sm font-black ${
+                  item.complete
+                    ? "text-emerald-700"
+                    : "text-amber-800"
+                }`}
+              >
+                {item.complete ? "Ready" : "Pending"} — {item.label}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -88,12 +103,12 @@ function ProgramTracker({ student = {} }) {
 
 function InfoCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-[0_4px_14px_rgba(15,35,63,0.03)]">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-2 break-words font-semibold text-white">{value}</p>
+      <p className="mt-2 break-words font-black text-[#10233f]">{value}</p>
     </div>
   );
 }

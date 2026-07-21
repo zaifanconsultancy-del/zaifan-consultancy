@@ -388,12 +388,12 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6">
+      <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-6 shadow-[0_20px_55px_rgba(23,36,61,0.08)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">Executive Operations Center V4</p>
-            <h2 className="mt-2 text-3xl font-black text-white">Verification + Recovery Automation Command Layer</h2>
-            <p className="mt-2 max-w-5xl text-sm leading-6 text-white/50">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">Executive Operations Center V4</p>
+            <h2 className="mt-2 text-3xl font-black text-[#17243D]">Verification + Recovery Automation Command Layer</h2>
+            <p className="mt-2 max-w-5xl text-sm leading-6 text-[#667085]">
               Batch execution, broken workflow scanning, CAS/Visa/Payment/Portal recovery queues, approval pressure, duplicate protection, and production-hardening visibility for Student OS.
             </p>
           </div>
@@ -402,7 +402,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
               type="button"
               onClick={loadLogs}
               disabled={executing}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-bold text-white/60 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37] disabled:opacity-50"
+              className="rounded-full border border-[#243A60]/18 bg-white px-5 py-2 text-sm font-bold text-[#596579] transition hover:border-[#D4AF37]/30 hover:text-[#B84F0E] disabled:opacity-50"
             >
               Refresh Queue
             </button>
@@ -410,7 +410,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
               type="button"
               onClick={() => executeBulk("recovery")}
               disabled={executing || !recoveryModel.recovery.totalActions}
-              className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-5 py-2 text-sm font-black text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black disabled:opacity-50"
+              className="rounded-full border border-[#E9802D]/40 bg-[#FFF1E3] px-5 py-2 text-sm font-black text-[#B84F0E] transition hover:bg-[#D4AF37] hover:text-white disabled:opacity-50"
             >
               Execute Recovery
             </button>
@@ -440,7 +440,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       </div>
 
       {message ? (
-        <div className="rounded-[1.5rem] border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm font-bold text-[#D4AF37]">
+        <div className="rounded-[1.5rem] border border-[#E9802D]/40 bg-[#FFF1E3] p-4 text-sm font-bold text-[#B84F0E]">
           {message}
         </div>
       ) : null}
@@ -467,7 +467,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.035] p-5">
+        <div className="rounded-[1.75rem] border border-[#E9802D]/30 bg-[#FFF8F1] p-5">
           <SectionHeader eyebrow="Recovery Queues" title="CAS / Visa / Payment / Portal" description="Generated from the scanner and ready for executive approval/execution." />
           <div className="mt-4 flex flex-wrap gap-2">
             {["all", "cas", "visa", "payment", "portal"].map((queue) => (
@@ -475,7 +475,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
                 key={queue}
                 type="button"
                 onClick={() => setActiveRecoveryQueue(queue)}
-                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeRecoveryQueue === queue ? "bg-[#D4AF37] text-black" : "border border-white/10 bg-white/[0.03] text-white/45 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"}`}
+                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeRecoveryQueue === queue ? "bg-[#D4AF37] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#D4AF37]/30 hover:text-[#B84F0E]"}`}
               >
                 {formatLabel(queue)}
               </button>
@@ -491,7 +491,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5">
+        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white/[0.035] p-5">
           <SectionHeader eyebrow="Queue Health" title="Automation operating condition" description="Live pressure from pending, failed, duplicate-blocked, and completed execution logs." />
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <SmallMetric label="Pending" value={queueHealth.pendingCount} />
@@ -503,7 +503,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-5">
+        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
           <SectionHeader eyebrow="Batch Execution History" title="Recent automation execution feed" description="Latest completion, failure, and duplicate-protection events." />
           <div className="mt-5 space-y-3">
             {logs.slice(0, 8).map((log, index) => (
@@ -515,7 +515,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[1.75rem] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.035] p-5">
+        <div className="rounded-[1.75rem] border border-[#E9802D]/30 bg-[#FFF8F1] p-5">
           <SectionHeader eyebrow="Selected Queue" title={`${activeMode === "recovery" ? formatLabel(activeRecoveryQueue) : formatLabel(activeMode)} queue preview`} description="Switch between queues before executing a batch command." />
           <div className="mt-4 flex flex-wrap gap-2">
             {["critical", "executive", "conversion", "approval", "failed", "recovery"].map((mode) => (
@@ -523,7 +523,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
                 key={mode}
                 type="button"
                 onClick={() => setActiveMode(mode)}
-                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeMode === mode ? "bg-[#D4AF37] text-black" : "border border-white/10 bg-white/[0.03] text-white/45 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"}`}
+                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeMode === mode ? "bg-[#D4AF37] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#D4AF37]/30 hover:text-[#B84F0E]"}`}
               >
                 {formatLabel(mode)}
               </button>
@@ -554,7 +554,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
         </div>
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+      <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
         <SectionHeader eyebrow="Workflow Failure Heatmap" title="Stage-level recovery pressure" description="Broken stage counts from the generated workflow report." />
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {Object.entries(recoveryModel.report.heatmap || {}).map(([stage, count]) => (
@@ -565,7 +565,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       </div>
 
       {result ? (
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
+        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
           <SectionHeader eyebrow="Last Batch Result" title="Execution summary" description="Compact result from the last bulk operation." />
           <div className="mt-4 grid gap-3 md:grid-cols-4">
             <SmallMetric label="Total" value={result.total || 0} />
@@ -582,17 +582,17 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
 function MetricCard({ label, value, tone = "default" }) {
   return (
     <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <p className="text-xs uppercase tracking-wider text-white/40">{label}</p>
-      <p className="mt-2 text-3xl font-black text-white">{value}</p>
+      <p className="text-xs uppercase tracking-wider text-[#7A8392]">{label}</p>
+      <p className="mt-2 text-3xl font-black text-[#17243D]">{value}</p>
     </div>
   );
 }
 
 function SmallMetric({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">{label}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8992A1]">{label}</p>
+      <p className="mt-2 text-2xl font-black text-[#17243D]">{value}</p>
     </div>
   );
 }
@@ -605,8 +605,8 @@ function ActionButton({ title, description, onClick, executing, tone = "default"
       disabled={executing}
       className={`rounded-[1.5rem] border p-5 text-left transition hover:-translate-y-0.5 hover:border-[#D4AF37]/50 disabled:cursor-not-allowed disabled:opacity-50 ${getToneStyle(tone)}`}
     >
-      <h3 className="font-black text-white">{executing ? "Processing..." : title}</h3>
-      <p className="mt-2 text-sm leading-6 text-white/45">{description}</p>
+      <h3 className="font-black text-[#17243D]">{executing ? "Processing..." : title}</h3>
+      <p className="mt-2 text-sm leading-6 text-[#7A8392]">{description}</p>
     </button>
   );
 }
@@ -614,9 +614,9 @@ function ActionButton({ title, description, onClick, executing, tone = "default"
 function SectionHeader({ eyebrow, title, description }) {
   return (
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D4AF37]/80">{eyebrow}</p>
-      <h3 className="mt-1 text-xl font-black text-white">{title}</h3>
-      {description ? <p className="mt-1 text-sm leading-6 text-white/45">{description}</p> : null}
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#B84F0E]/80">{eyebrow}</p>
+      <h3 className="mt-1 text-xl font-black text-[#17243D]">{title}</h3>
+      {description ? <p className="mt-1 text-sm leading-6 text-[#7A8392]">{description}</p> : null}
     </div>
   );
 }
@@ -624,13 +624,13 @@ function SectionHeader({ eyebrow, title, description }) {
 function LogRow({ log = {} }) {
   const status = normalize(log.status);
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-black text-white">{log.student_name || log.metadata?.title || "Executive Action"}</p>
-          <p className="mt-1 text-xs text-white/40">{formatLabel(log.action_type)} • {formatLabel(log.priority)} • {log.executed_at ? new Date(log.executed_at).toLocaleString() : "No time"}</p>
+          <p className="truncate font-black text-[#17243D]">{log.student_name || log.metadata?.title || "Executive Action"}</p>
+          <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(log.action_type)} • {formatLabel(log.priority)} • {log.executed_at ? new Date(log.executed_at).toLocaleString() : "No time"}</p>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${status === "failed" ? "border-red-400/25 bg-red-500/10 text-red-300" : status === "duplicate_blocked" ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"}`}>
+        <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${status === "failed" ? "border-red-400/25 bg-red-500/10 text-red-300" : status === "duplicate_blocked" ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]" : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"}`}>
           {formatLabel(status)}
         </span>
       </div>
@@ -643,11 +643,11 @@ function StudentRow({ item = {}, mode = "critical" }) {
   if (mode === "failed") return <LogRow log={item} />;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-black text-white">{getStudentName(item)}</p>
-          <p className="mt-1 text-xs text-white/45">{formatLabel(getJourneyStage(item))} • {item.executive_category || "Standard"}</p>
+          <p className="truncate font-black text-[#17243D]">{getStudentName(item)}</p>
+          <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(getJourneyStage(item))} • {item.executive_category || "Standard"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge label={`Risk ${number(item.risk_score)}`} tone={number(item.risk_score) >= 85 ? "red" : "default"} />
@@ -663,9 +663,9 @@ function IssueRow({ issue = {} }) {
     <div className="rounded-2xl border border-red-400/15 bg-red-500/[0.04] p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-black text-white">{issue.title || "Workflow Issue"}</p>
-          <p className="mt-1 text-xs text-white/45">{issue.student_name || "Unknown Student"} • {formatLabel(issue.stage)} • {formatLabel(issue.issue_type)}</p>
-          <p className="mt-2 text-xs leading-5 text-white/45">{issue.recommendation || issue.description}</p>
+          <p className="truncate font-black text-[#17243D]">{issue.title || "Workflow Issue"}</p>
+          <p className="mt-1 text-xs text-[#7A8392]">{issue.student_name || "Unknown Student"} • {formatLabel(issue.stage)} • {formatLabel(issue.issue_type)}</p>
+          <p className="mt-2 text-xs leading-5 text-[#7A8392]">{issue.recommendation || issue.description}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge label={formatLabel(issue.severity)} tone={issue.severity === "critical" ? "red" : "default"} />
@@ -681,10 +681,10 @@ function RecoveryRow({ title, value, detail, tone = "default" }) {
     <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-black text-white">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-white/45">{detail}</p>
+          <p className="font-black text-[#17243D]">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-[#7A8392]">{detail}</p>
         </div>
-        <p className="text-2xl font-black text-white">{value}</p>
+        <p className="text-2xl font-black text-[#17243D]">{value}</p>
       </div>
     </div>
   );
@@ -695,21 +695,21 @@ function Badge({ label, tone = "default" }) {
 }
 
 function EmptyState({ text }) {
-  return <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-5 text-sm text-white/35">{text}</div>;
+  return <div className="rounded-2xl border border-dashed border-[#243A60]/18 bg-white/[0.02] p-5 text-sm text-[#8992A1]">{text}</div>;
 }
 
 function getToneStyle(tone = "default") {
   if (tone === "red") return "border-red-400/20 bg-red-500/[0.05]";
   if (tone === "green") return "border-emerald-400/20 bg-emerald-500/[0.05]";
-  if (tone === "gold") return "border-[#D4AF37]/20 bg-[#D4AF37]/[0.05]";
+  if (tone === "gold") return "border-[#E9802D]/35 bg-[#FFFDF8]";
   if (tone === "orange") return "border-orange-400/20 bg-orange-500/[0.05]";
-  return "border-white/10 bg-white/[0.03]";
+  return "border-[#243A60]/18 bg-white";
 }
 
 function getBadgeStyle(tone = "default") {
   if (tone === "red") return "border-red-400/25 bg-red-500/10 text-red-300";
   if (tone === "green") return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
-  return "border-white/10 bg-white/[0.04] text-white/50";
+  return "border-[#243A60]/18 bg-white text-[#667085]";
 }
 
 export default ExecutiveOperationsCenter;

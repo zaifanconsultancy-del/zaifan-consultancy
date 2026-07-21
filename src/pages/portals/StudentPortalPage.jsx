@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import StudentPortalAuth from "../../components/student/StudentPortalAuth";
-import StudentPortalDashboard from "../../components/student/StudentPortalDashboard";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const StudentPortalAuth = lazy(() => import("../../components/student/StudentPortalAuth"));
+const StudentPortalDashboard = lazy(() =>
+  import("../../components/student/StudentPortalDashboard")
+);
 import { supabase } from "../../lib/supabaseClient";
 import {
   fetchStudentPortalAccountForStudent,
@@ -232,6 +235,31 @@ function mergePortalData(previous = EMPTY_PORTAL_DATA, next = EMPTY_PORTAL_DATA)
     Number(merged.counts.supportRequests || merged.supportRequests.length || 0);
 
   return merged;
+}
+
+function PortalRestoreStep({ label }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+      {label}
+    </div>
+  );
+}
+
+function StudentPortalSurfaceLoader({ label = "Loading Student OS" }) {
+  return (
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f7f8fa] px-5">
+      <div className="pointer-events-none absolute -left-28 top-0 h-80 w-80 rounded-full bg-orange-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 top-24 h-96 w-96 rounded-full bg-amber-100/60 blur-3xl" />
+
+      <div className="relative w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
+        <div className="mx-auto h-11 w-11 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+        <p className="mt-5 text-base font-black text-slate-950">{label}</p>
+        <p className="mt-2 text-xs leading-5 text-slate-400">
+          Loading only the portal experience required for this session.
+        </p>
+      </div>
+    </section>
+  );
 }
 
 function StudentPortalPage() {
@@ -696,27 +724,38 @@ async function handleRefresh(options = {}) {
 
   if (restoringSession) {
     return (
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050505] px-5 py-20 text-white">
-        <div className="absolute left-[-10%] top-[-15%] h-[420px] w-[420px] rounded-full bg-[#D4AF37]/10 blur-3xl" />
-        <div className="absolute bottom-[-20%] right-[-10%] h-[420px] w-[420px] rounded-full bg-blue-500/10 blur-3xl" />
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f7f8fa] px-5 py-20 text-slate-950">
+        <div className="pointer-events-none absolute -left-28 -top-28 h-[420px] w-[420px] rounded-full bg-orange-200/35 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 right-[-8%] h-[460px] w-[460px] rounded-full bg-amber-100/70 blur-3xl" />
 
-        <div className="relative w-full max-w-xl rounded-[2rem] border border-[#D4AF37]/20 bg-white/[0.035] p-8 text-center shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-3xl">
+        <div className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-orange-200/80 bg-white/95 p-8 text-center shadow-[0_30px_100px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-orange-100 blur-3xl" />
+
+          <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 text-3xl shadow-sm">
             🎓
           </div>
 
-          <p className="mt-6 text-xs font-black uppercase tracking-[0.32em] text-[#D4AF37]">
-            Zaifan Student Portal
+          <p className="relative mt-6 text-xs font-black uppercase tracking-[0.32em] text-orange-600">
+            Zaifan Student OS
           </p>
 
-          <h1 className="mt-3 text-3xl font-black text-white">Restoring Portal Session</h1>
+          <h1 className="relative mt-3 text-3xl font-black tracking-tight text-slate-950">
+            Restoring Your Student Workspace
+          </h1>
 
-          <p className="mt-3 text-sm leading-6 text-white/45">
-            Checking saved student session and loading the latest Student OS data.
+          <p className="relative mt-3 text-sm leading-6 text-slate-500">
+            Reconnecting your secure portal session and preparing your latest applications,
+            documents, tasks, payments, support and study journey.
           </p>
 
-          <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full w-1/2 animate-pulse rounded-full bg-[#D4AF37]" />
+          <div className="relative mt-7 overflow-hidden rounded-full bg-slate-100 p-1">
+            <div className="h-2 w-1/2 animate-pulse rounded-full bg-gradient-to-r from-orange-400 to-orange-600" />
+          </div>
+
+          <div className="relative mt-5 grid grid-cols-3 gap-2">
+            <PortalRestoreStep label="Session" />
+            <PortalRestoreStep label="Student data" />
+            <PortalRestoreStep label="Workspace" />
           </div>
         </div>
       </section>
@@ -725,36 +764,40 @@ async function handleRefresh(options = {}) {
 
   if (!hasStudent) {
     return (
-      <StudentPortalAuth
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-        identifier={identifier}
-        setIdentifier={setIdentifier}
-        loading={loading}
-        legacyLoading={legacyLoading}
-        error={error}
-        matches={matchingStudents}
-        onSelectMatch={handleSelectMatch}
-        onSubmit={handleAccountLogin}
-        onLegacySubmit={handleLegacyLookup}
-      />
+      <Suspense fallback={<StudentPortalSurfaceLoader label="Opening secure student access" />}>
+        <StudentPortalAuth
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          identifier={identifier}
+          setIdentifier={setIdentifier}
+          loading={loading}
+          legacyLoading={legacyLoading}
+          error={error}
+          matches={matchingStudents}
+          onSelectMatch={handleSelectMatch}
+          onSubmit={handleAccountLogin}
+          onLegacySubmit={handleLegacyLookup}
+        />
+      </Suspense>
     );
   }
 
   return (
-    <StudentPortalDashboard
-      account={account}
-      student={student}
-      portalData={portalData}
-      loadingData={loadingData}
-      error={error}
-      sessionMode={sessionMode}
-      onRefresh={handleRefresh}
-      onLogout={handleLogout}
-      onPasswordChange={handlePasswordChange}
-    />
+    <Suspense fallback={<StudentPortalSurfaceLoader label="Opening your Student OS" />}>
+      <StudentPortalDashboard
+        account={account}
+        student={student}
+        portalData={portalData}
+        loadingData={loadingData}
+        error={error}
+        sessionMode={sessionMode}
+        onRefresh={handleRefresh}
+        onLogout={handleLogout}
+        onPasswordChange={handlePasswordChange}
+      />
+    </Suspense>
   );
 }
 

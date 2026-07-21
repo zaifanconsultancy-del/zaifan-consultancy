@@ -38,24 +38,24 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
   }, []);
 
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  const run = async () => {
-    if (!mounted) return;
+    const run = async () => {
+      if (!mounted) return;
 
-    setReminders([]);
-    setErrorMessage("");
-    setSuccessMessage("");
+      setReminders([]);
+      setErrorMessage("");
+      setSuccessMessage("");
 
-    await loadReminders();
-  };
+      await loadReminders();
+    };
 
-  run();
+    run();
 
-  return () => {
-    mounted = false;
-  };
-}, [studentId, studentType]);
+    return () => {
+      mounted = false;
+    };
+  }, [studentId, studentType]);
 
   const loadReminders = async () => {
     const requestId = Date.now();
@@ -83,10 +83,7 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
       );
 
       if (requestRef.current !== requestId) return;
-
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       safeSet(() => {
         setReminders(data || []);
@@ -133,9 +130,7 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
         adminProfile,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       await addTimelineEvent({
         studentId,
@@ -204,9 +199,7 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
     try {
       const { error } = await updateFollowUpReminderStatus(id, status);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       await addTimelineEvent({
         studentId,
@@ -266,9 +259,7 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
     try {
       const { error } = await deleteFollowUpReminder(id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       await addTimelineEvent({
         studentId,
@@ -300,40 +291,33 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
 
   const getDueBadge = (reminder) => {
     if ((reminder.status || "pending") !== "pending") return null;
-
-    if (reminder.due_date < today) {
-      return "Overdue";
-    }
-
-    if (reminder.due_date === today) {
-      return "Due Today";
-    }
-
+    if (reminder.due_date < today) return "Overdue";
+    if (reminder.due_date === today) return "Due Today";
     return "Upcoming";
   };
 
   const getBadgeStyle = (badge) => {
     if (badge === "Overdue") {
-      return "border-red-400/25 bg-red-500/10 text-red-300";
+      return "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
     }
 
     if (badge === "Due Today") {
-      return "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]";
+      return "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]";
     }
 
-    return "border-blue-400/25 bg-blue-500/10 text-blue-300";
+    return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
   };
 
   const getStatusStyle = (status) => {
     if (status === "done") {
-      return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+      return "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]";
     }
 
     if (status === "cancelled") {
-      return "border-red-400/25 bg-red-500/10 text-red-300";
+      return "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
     }
 
-    return "border-white/10 bg-black/20 text-white/50";
+    return "border-[#243A60]/20 bg-[#F3F5F8] text-[#596579]";
   };
 
   const formatDate = (value) => {
@@ -343,11 +327,12 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
-        <h3 className="text-lg font-semibold text-white">
+      <div className="rounded-[1.75rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_14px_34px_rgba(23,36,61,0.06)]">
+        <h3 className="text-lg font-black text-[#17243D]">
           Add Follow-up Reminder
         </h3>
-        <p className="mt-1 text-sm text-white/45">
+
+        <p className="mt-1 text-sm leading-6 text-[#667085]">
           Schedule a future follow-up for this student.
         </p>
 
@@ -356,22 +341,23 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Reminder title"
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-[#D4AF37]/40"
+            className="rounded-2xl border border-[#243A60]/22 bg-white px-4 py-3 text-sm font-semibold text-[#17243D] outline-none placeholder:text-[#98A0AE] focus:border-[#E9802D]/55 focus:ring-4 focus:ring-[#E9802D]/10"
           />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
               type="date"
               value={dueDate}
+              min={today}
               onChange={(event) => setDueDate(event.target.value)}
-              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/40"
+              className="rounded-2xl border border-[#243A60]/22 bg-white px-4 py-3 text-sm font-semibold text-[#17243D] outline-none focus:border-[#E9802D]/55 focus:ring-4 focus:ring-[#E9802D]/10"
             />
 
             <input
               type="time"
               value={dueTime}
               onChange={(event) => setDueTime(event.target.value)}
-              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/40"
+              className="rounded-2xl border border-[#243A60]/22 bg-white px-4 py-3 text-sm font-semibold text-[#17243D] outline-none focus:border-[#E9802D]/55 focus:ring-4 focus:ring-[#E9802D]/10"
             />
           </div>
         </div>
@@ -380,14 +366,15 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Reminder notes"
-          className="mt-3 min-h-[90px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white outline-none placeholder:text-white/25 focus:border-[#D4AF37]/40"
+          className="mt-3 min-h-[90px] w-full resize-none rounded-2xl border border-[#243A60]/22 bg-white p-4 text-sm font-semibold text-[#17243D] outline-none placeholder:text-[#98A0AE] focus:border-[#E9802D]/55 focus:ring-4 focus:ring-[#E9802D]/10"
         />
 
         <div className="mt-3 flex justify-end">
           <button
+            type="button"
             onClick={addReminder}
             disabled={!title.trim() || !dueDate || saving}
-            className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-2 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/15 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-[#E9802D] bg-[#E9802D] px-5 py-2.5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#D96C1F] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {saving ? "Saving..." : "Add Reminder"}
           </button>
@@ -395,43 +382,45 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
       </div>
 
       {errorMessage ? (
-        <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="rounded-2xl border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm font-semibold text-[#A8342F]">
           {errorMessage}
         </div>
       ) : null}
 
       {successMessage ? (
-        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+        <div className="rounded-2xl border border-[#E9802D]/35 bg-[#FFF3E7] p-4 text-sm font-semibold text-[#B84F0E]">
           {successMessage}
         </div>
       ) : null}
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="rounded-[1.75rem] border-2 border-[#243A60]/28 bg-[#FFFDF8] p-5 shadow-[0_14px_34px_rgba(23,36,61,0.06)]">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-black text-[#17243D]">
               Follow-up Reminders
             </h3>
-            <p className="text-sm text-white/45">
+
+            <p className="text-sm leading-6 text-[#667085]">
               Pending future actions for this student.
             </p>
           </div>
 
           <button
+            type="button"
             onClick={loadReminders}
             disabled={loading}
-            className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-white/60 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-[#243A60]/22 bg-white px-4 py-2 text-xs font-black text-[#596579] transition hover:border-[#E9802D]/40 hover:text-[#B84F0E] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Loading..." : "Refresh"}
           </button>
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/50">
+          <div className="rounded-2xl border border-[#243A60]/20 bg-white p-4 text-sm font-semibold text-[#667085]">
             Loading reminders. If Supabase is slow, this will safely stop.
           </div>
         ) : reminders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-white/45">
+          <div className="rounded-2xl border border-dashed border-[#243A60]/25 bg-[#F7F3EB] p-5 text-sm font-semibold text-[#667085]">
             No follow-up reminders yet.
           </div>
         ) : (
@@ -444,18 +433,18 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
               return (
                 <div
                   key={reminder.id}
-                  className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"
+                  className="rounded-2xl border border-[#243A60]/22 bg-white p-4 transition duration-300 hover:border-[#E9802D]/40 hover:shadow-[0_10px_24px_rgba(23,36,61,0.06)]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-black text-[#17243D]">
                           {reminder.title}
                         </p>
 
                         {dueBadge ? (
                           <span
-                            className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${getBadgeStyle(
+                            className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${getBadgeStyle(
                               dueBadge
                             )}`}
                           >
@@ -465,14 +454,14 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
                       </div>
 
                       {reminder.notes ? (
-                        <p className="mt-1 whitespace-pre-wrap text-sm text-white/45">
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#667085]">
                           {reminder.notes}
                         </p>
                       ) : null}
                     </div>
 
                     <span
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
+                      className={`rounded-full border px-3 py-1 text-xs font-black capitalize ${getStatusStyle(
                         reminder.status
                       )}`}
                     >
@@ -480,7 +469,7 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
                     </span>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/35">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-[#7A8392]">
                     <span>
                       Due: {formatDate(reminder.due_date)}
                       {reminder.due_time ? ` · ${reminder.due_time}` : ""}
@@ -491,9 +480,10 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {reminder.status !== "done" ? (
                       <button
+                        type="button"
                         onClick={() => updateStatus(reminder.id, "done")}
                         disabled={Boolean(statusSavingId || deletingId)}
-                        className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 disabled:opacity-50"
+                        className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1.5 text-xs font-black text-[#B84F0E] disabled:opacity-50"
                       >
                         {isStatusSaving ? "Saving..." : "Mark Done"}
                       </button>
@@ -501,18 +491,20 @@ function FollowUpReminderPanel({ studentId, studentType, adminProfile = null }) 
 
                     {reminder.status !== "cancelled" ? (
                       <button
+                        type="button"
                         onClick={() => updateStatus(reminder.id, "cancelled")}
                         disabled={Boolean(statusSavingId || deletingId)}
-                        className="rounded-full border border-yellow-400/25 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-300 disabled:opacity-50"
+                        className="rounded-full border border-[#A36A18]/30 bg-[#FFF7E8] px-3 py-1.5 text-xs font-black text-[#8A5611] disabled:opacity-50"
                       >
                         {isStatusSaving ? "Saving..." : "Cancel"}
                       </button>
                     ) : null}
 
                     <button
+                      type="button"
                       onClick={() => removeReminder(reminder.id)}
                       disabled={Boolean(statusSavingId || deletingId)}
-                      className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 disabled:opacity-50"
+                      className="rounded-full border border-[#C2413B]/30 bg-[#FFF0EE] px-3 py-1.5 text-xs font-black text-[#A8342F] disabled:opacity-50"
                     >
                       {isDeleting ? "Deleting..." : "Delete"}
                     </button>

@@ -169,18 +169,18 @@ function ExecutiveScoreGeneratorPanel({ onGenerated = () => {} }) {
   };
 
   return (
-    <div className="rounded-[2rem] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.045] p-6">
+    <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_18px_50px_rgba(23,36,61,0.08)] sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
             Executive Score Generator
           </p>
 
-          <h2 className="mt-2 text-2xl font-black text-white">
+          <h2 className="mt-2 text-2xl font-black text-[#17243D]">
             Generate Student OS Intelligence
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
             Scan inquiries, appointments, applications, documents, tasks,
             universities, visa signals, and previous risk records, then save
             executive AI scores into the Student OS intelligence database.
@@ -198,7 +198,7 @@ function ExecutiveScoreGeneratorPanel({ onGenerated = () => {} }) {
           type="button"
           onClick={runGenerator}
           disabled={running}
-          className="rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#E7C768] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-[#E9802D] bg-[#E9802D] px-6 py-3 text-sm font-black text-white shadow-[0_10px_22px_rgba(233,128,45,0.18)] transition hover:-translate-y-0.5 hover:bg-[#D96C1F] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {running ? "Generating..." : "Generate Executive Scores"}
         </button>
@@ -244,11 +244,11 @@ function ExecutiveScoreGeneratorPanel({ onGenerated = () => {} }) {
             <ResultCard label="Visa Approved" value={portfolio.visaHealth?.approved || journeyStats.visaApproved || 0} success />
           </div>
 
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D4AF37]">
+          <div className="rounded-[1.75rem] border border-[#243A60]/20 bg-white p-5">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#B84F0E]">
               Journey Distribution
             </p>
-            <p className="mt-2 text-sm leading-6 text-white/45">
+            <p className="mt-2 text-sm leading-6 text-[#7A8392]">
               Quick breakdown of generated student stages from the current scan.
             </p>
 
@@ -342,7 +342,7 @@ function ExecutiveScoreGeneratorPanel({ onGenerated = () => {} }) {
             open={expanded.payload}
             onToggle={() => toggleExpanded("payload")}
           >
-            <pre className="max-h-96 overflow-auto rounded-2xl border border-white/10 bg-black/30 p-4 text-xs leading-5 text-white/55">
+            <pre className="max-h-96 overflow-auto rounded-2xl border border-[#243A60]/20 bg-[#17243D] p-4 text-xs leading-5 text-[#F7F3EB]">
               {JSON.stringify(result, null, 2)}
             </pre>
           </DetailSection>
@@ -354,8 +354,8 @@ function ExecutiveScoreGeneratorPanel({ onGenerated = () => {} }) {
 
 function InfoPill({ label, value }) {
   return (
-    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] font-bold text-white/45">
-      {label}: <span className="text-white/70">{value}</span>
+    <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[11px] font-bold text-[#7A8392]">
+      {label}: <span className="text-[#344054]">{value}</span>
     </span>
   );
 }
@@ -363,17 +363,17 @@ function InfoPill({ label, value }) {
 function StatusBox({ tone = "gold", title, description }) {
   const style =
     tone === "red"
-      ? "border-red-400/20 bg-red-500/10 text-red-200"
+      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
       : tone === "orange"
-      ? "border-orange-400/20 bg-orange-500/10 text-orange-200"
+      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
       : tone === "green"
-      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-      : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]";
+      ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+      : "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]";
 
   return (
-    <div className={`mt-5 rounded-2xl border p-4 ${style}`}>
+    <div className={`mt-5 rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
       <p className="font-bold">{title}</p>
-      {description ? <p className="mt-2 text-sm text-white/50">{description}</p> : null}
+      {description ? <p className="mt-2 text-sm text-[#667085]">{description}</p> : null}
     </div>
   );
 }
@@ -386,39 +386,39 @@ function ResultCard({
   success = false,
 }) {
   const style = danger
-    ? "border-red-400/25 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
     : warning
-    ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+    ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
     : success
-    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"
-    : "border-white/10 bg-black/20 text-[#D4AF37]";
+    ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+    : "border-[#243A60]/20 bg-white text-[#B84F0E]";
 
   return (
-    <div className={`rounded-2xl border p-4 ${style}`}>
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {label}
       </p>
 
-      <p className="mt-3 break-words text-3xl font-black text-white">{value}</p>
+      <p className="mt-3 break-words text-3xl font-black text-[#17243D]">{value}</p>
     </div>
   );
 }
 
 function MiniJourney({ label, value, danger = false, warning = false, success = false }) {
   const style = danger
-    ? "border-red-400/20 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
     : warning
-    ? "border-orange-400/20 bg-orange-500/10 text-orange-300"
+    ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
     : success
-    ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
-    : "border-white/10 bg-black/20 text-white/65";
+    ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+    : "border-[#243A60]/20 bg-white text-[#596579]";
 
   return (
-    <div className={`rounded-2xl border p-4 ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/35">
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8992A1]">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+      <p className="mt-2 text-2xl font-black text-[#17243D]">{value}</p>
     </div>
   );
 }
@@ -433,25 +433,25 @@ function DetailSection({
 }) {
   const style =
     tone === "red"
-      ? "border-red-400/20 bg-red-500/10"
+      ? "border-[#C2413B]/30 bg-[#FFF0EE]"
       : tone === "orange"
-      ? "border-orange-400/20 bg-orange-500/10"
+      ? "border-[#A36A18]/30 bg-[#FFF7E8]"
       : tone === "green"
-      ? "border-emerald-400/20 bg-emerald-500/10"
-      : "border-white/10 bg-white/[0.03]";
+      ? "border-[#E9802D]/35 bg-[#FFF3E7]"
+      : "border-[#243A60]/20 bg-white";
 
   return (
-    <div className={`rounded-[1.75rem] border p-5 ${style}`}>
+    <div className={`rounded-[1.75rem] border p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${style}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="font-black text-white">{title}</p>
-          {description ? <p className="mt-1 text-sm leading-6 text-white/45">{description}</p> : null}
+          <p className="font-black text-[#17243D]">{title}</p>
+          {description ? <p className="mt-1 text-sm leading-6 text-[#7A8392]">{description}</p> : null}
         </div>
 
         <button
           type="button"
           onClick={onToggle}
-          className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-bold text-white/60 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+          className="rounded-full border border-[#243A60]/20 bg-white px-4 py-2 text-xs font-bold text-[#596579] transition hover:border-[#E9802D]/45 hover:text-[#B84F0E]"
         >
           {open ? "Hide" : "Show"}
         </button>
@@ -465,13 +465,13 @@ function DetailSection({
 function IssueCard({ title, description, tone = "red" }) {
   const style =
     tone === "orange"
-      ? "border-orange-400/20 bg-orange-500/10 text-orange-200"
-      : "border-red-400/20 bg-red-500/10 text-red-200";
+      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
+      : "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
 
   return (
-    <div className={`rounded-2xl border p-4 ${style}`}>
+    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
       <p className="font-bold">{title}</p>
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm text-white/55">
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm text-[#667085]">
         {description}
       </p>
     </div>
@@ -486,16 +486,16 @@ function SavedScoreCard({ item = {} }) {
   const opportunity = number(executive.opportunity_score || student.opportunity_score);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="rounded-2xl border border-[#243A60]/20 bg-white p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="break-words font-bold text-white">{name}</p>
-          <p className="mt-1 text-xs text-white/35">
+          <p className="break-words font-bold text-[#17243D]">{name}</p>
+          <p className="mt-1 text-xs text-[#8992A1]">
             {student.student_type || executive.student_type || "student"} • {formatLabel(executive.journey_stage || student.journey_stage || "not_started")}
           </p>
         </div>
 
-        <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#D4AF37]">
+        <span className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#B84F0E]">
           {executive.executive_category || student.executive_category || "Generated"}
         </span>
       </div>
@@ -510,15 +510,15 @@ function SavedScoreCard({ item = {} }) {
 
 function SmallMetric({ label, value, danger = false, success = false }) {
   const style = danger
-    ? "border-red-400/20 bg-red-500/10 text-red-300"
+    ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
     : success
-    ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
-    : "border-white/10 bg-white/[0.03] text-white/60";
+    ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
+    : "border-[#243A60]/20 bg-white text-[#596579]";
 
   return (
     <div className={`rounded-xl border px-3 py-2 ${style}`}>
-      <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">{label}</p>
-      <p className="mt-1 font-black text-white">{value}</p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[#8992A1]">{label}</p>
+      <p className="mt-1 font-black text-[#17243D]">{value}</p>
     </div>
   );
 }

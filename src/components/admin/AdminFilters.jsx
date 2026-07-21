@@ -1,3 +1,7 @@
+// AdminFilters V2 — High Contrast Admin OS
+// Preserves active-tab switching and Framer Motion layout animation.
+// Visual layer aligned with the approved Zaifan Admin OS.
+
 import { motion } from "framer-motion";
 
 function AdminFilters({ activeTab, setActiveTab }) {
@@ -18,7 +22,7 @@ function AdminFilters({ activeTab, setActiveTab }) {
 
   return (
     <div className="mb-6">
-      <div className="flex w-full flex-col gap-2 rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-2 backdrop-blur-xl sm:inline-flex sm:w-auto sm:flex-row">
+      <div className="flex w-full flex-col gap-2 rounded-[1.6rem] border border-slate-300 bg-[#fffaf2] p-2 shadow-[0_6px_18px_rgba(15,35,63,0.04)] sm:inline-flex sm:w-auto sm:flex-row">
         {tabs.map((tab) => {
           const active = activeTab === tab.id;
 
@@ -30,14 +34,14 @@ function AdminFilters({ activeTab, setActiveTab }) {
               whileTap={{ scale: 0.97 }}
               className={`relative overflow-hidden rounded-[1.2rem] px-5 py-3 text-left transition duration-300 sm:min-w-[190px] ${
                 active
-                  ? "bg-[#D4AF37] text-black shadow-[0_0_30px_rgba(212,175,55,0.22)]"
-                  : "border border-white/10 bg-black/20 text-gray-400 hover:border-[#D4AF37]/25 hover:text-white"
+                  ? "text-white shadow-[0_8px_20px_rgba(249,115,22,0.18)]"
+                  : "border border-slate-300 bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
               }`}
             >
               {active && (
                 <motion.div
                   layoutId="active-admin-tab"
-                  className="absolute inset-0 bg-[#D4AF37]"
+                  className="absolute inset-0 bg-orange-500"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                 />
               )}
@@ -48,8 +52,8 @@ function AdminFilters({ activeTab, setActiveTab }) {
                   <span>
                     <span className="block text-sm font-black">{tab.label}</span>
                     <span
-                      className={`mt-0.5 block text-[10px] uppercase tracking-[0.18em] ${
-                        active ? "text-black/60" : "text-gray-600"
+                      className={`mt-0.5 block text-[10px] font-bold uppercase tracking-[0.18em] ${
+                        active ? "text-orange-100" : "text-slate-500"
                       }`}
                     >
                       {tab.helper}

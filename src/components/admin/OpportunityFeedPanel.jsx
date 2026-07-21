@@ -1,3 +1,8 @@
+// OpportunityFeedPanel V2 — Executive Opportunity Command Center
+// Preserves opportunity signals, strength ranking, conversion/success/planning counts,
+// hot/clean/risky/visa-ready command boards, journey-stage logic and recommendations.
+// Visual system rebuilt for the approved Zaifan Admin OS: cream, white, navy and orange.
+
 import { useMemo } from "react";
 
 function normalize(value = "") {
@@ -334,18 +339,17 @@ function OpportunityFeedPanel({ students = [] }) {
     return { hot, visaReady, cleanWins, riskyWins };
   }, [opportunities]);
 
-
   return (
-    <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-500/[0.03] p-6">
+    <div className="rounded-[1.85rem] border-2 border-orange-300 bg-[#fff8ee] p-6 shadow-[0_14px_36px_rgba(15,35,63,0.07)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-emerald-300/80">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-700">
             Executive Opportunity
           </p>
 
-          <h3 className="mt-1 font-bold text-white">Student Opportunity Feed</h3>
+          <h3 className="mt-1 font-black text-[#10233f]">Student Opportunity Feed</h3>
 
-          <p className="mt-2 max-w-3xl text-sm text-white/45">
+          <p className="mt-2 max-w-3xl text-sm text-slate-600">
             High-value students across readiness, offers, CAS, visa progress,
             conversion potential, and success outcomes.
           </p>
@@ -358,8 +362,6 @@ function OpportunityFeedPanel({ students = [] }) {
           <SummaryBadge label="Planning" value={planningCount} />
         </div>
       </div>
-
-
 
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <OpportunityCommandCard label="Hot Opportunities" value={opportunityCommand.hot.length} detail="Highest strength or opportunity scores." tone="gold" />
@@ -388,29 +390,29 @@ function OpportunityFeedPanel({ students = [] }) {
             return (
               <div
                 key={student.id || name}
-                className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4"
+                className="rounded-2xl border border-emerald-200 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate font-semibold text-white">{name}</p>
+                      <p className="truncate font-black text-[#10233f]">{name}</p>
 
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
+                      <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">
                         {formatStage(journeyStage)}
                       </span>
                     </div>
 
-                    <p className="mt-2 text-sm font-semibold text-emerald-300">
+                    <p className="mt-2 text-sm font-black text-emerald-700">
                       {getOpportunityBadge(student)}
                     </p>
 
-                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">
                       {getOpportunityReason(student)}
                     </p>
 
-                    <p className="mt-2 rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-xs leading-5 text-white/55">
+                    <p className="mt-2 rounded-xl border border-slate-300 bg-[#fffaf2] px-3 py-2 text-xs leading-5 text-slate-600">
                       Next action:{" "}
-                      <span className="font-semibold text-white/80">
+                      <span className="font-black text-[#10233f]">
                         {getRecommendedAction(student)}
                       </span>
                     </p>
@@ -420,7 +422,7 @@ function OpportunityFeedPanel({ students = [] }) {
                         {topSignals.map((signal) => (
                           <span
                             key={`${student.id || name}-${signal.type}`}
-                            className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/80"
+                            className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700"
                           >
                             {signal.label}
                           </span>
@@ -428,7 +430,7 @@ function OpportunityFeedPanel({ students = [] }) {
                       </div>
                     ) : null}
 
-                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-white/45">
+                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-500">
                       <span>Docs {documentReadiness}%</span>
                       <span>Tasks {taskCompletion}%</span>
                       <span>Universities {universityPlanCount}</span>
@@ -437,11 +439,11 @@ function OpportunityFeedPanel({ students = [] }) {
                   </div>
 
                   <div className="flex shrink-0 flex-row gap-2 sm:flex-col sm:items-end">
-                    <span className="rounded-full border border-emerald-400/25 bg-black/20 px-3 py-1 text-xs font-black text-emerald-200">
+                    <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
                       Opp {opportunityScore}
                     </span>
 
-                    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-black text-white/50">
+                    <span className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-black text-slate-700">
                       Strength {strength}
                     </span>
                   </div>
@@ -450,9 +452,9 @@ function OpportunityFeedPanel({ students = [] }) {
             );
           })
         ) : (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="font-semibold text-white">No major opportunities detected.</p>
-            <p className="mt-2 text-sm text-white/45">
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
+            <p className="font-black text-[#10233f]">No major opportunities detected.</p>
+            <p className="mt-2 text-sm text-slate-600">
               Executive AI does not currently see strong conversion, CAS, visa,
               readiness, or success signals.
             </p>
@@ -463,22 +465,21 @@ function OpportunityFeedPanel({ students = [] }) {
   );
 }
 
-
 function OpportunityCommandCard({ label, value, detail, tone = "green" }) {
   const style =
     tone === "gold"
-      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
+      ? "border-orange-300 bg-orange-50 text-orange-700"
       : tone === "orange"
-      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      ? "border-orange-300 bg-[#fff7ed] text-orange-700"
       : tone === "blue"
-      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
-      : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+      ? "border-blue-300 bg-blue-50 text-blue-700"
+      : "border-emerald-300 bg-emerald-50 text-emerald-700";
 
   return (
     <div className={`rounded-2xl border p-4 ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">{label}</p>
-      <p className="mt-3 text-3xl font-black text-white">{value || 0}</p>
-      <p className="mt-2 text-xs leading-5 text-white/45">{detail}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-3 text-3xl font-black text-[#10233f]">{value || 0}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-600">{detail}</p>
     </div>
   );
 }
@@ -486,30 +487,30 @@ function OpportunityCommandCard({ label, value, detail, tone = "green" }) {
 function OpportunityMiniBoard({ title, items = [], tone = "green" }) {
   const scoreClass =
     tone === "orange"
-      ? "border-orange-400/25 bg-orange-500/10 text-orange-300"
+      ? "border-orange-300 bg-orange-50 text-orange-700"
       : tone === "blue"
-      ? "border-blue-400/25 bg-blue-500/10 text-blue-300"
-      : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+      ? "border-blue-300 bg-blue-50 text-blue-700"
+      : "border-emerald-300 bg-emerald-50 text-emerald-700";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <h3 className="font-black text-white">{title}</h3>
+    <div className="rounded-2xl border border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+      <h3 className="font-black text-[#10233f]">{title}</h3>
       <div className="mt-4 space-y-3">
         {items.length ? items.map(({ student, strength, opportunityScore }, index) => {
           const name = getStudentName(student);
           return (
-            <div key={`${title}-${student?.id || name}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+            <div key={`${title}-${student?.id || name}-${index}`} className="rounded-xl border border-slate-300 bg-[#fffaf2] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-white">{name}</p>
-                  <p className="mt-1 text-xs text-white/40">{formatStage(getJourneyStage(student))} • Risk {getRiskScore(student)}</p>
+                  <p className="truncate font-black text-[#10233f]">{name}</p>
+                  <p className="mt-1 text-xs text-slate-500">{formatStage(getJourneyStage(student))} • Risk {getRiskScore(student)}</p>
                 </div>
                 <span className={`rounded-full border px-3 py-1 text-xs font-black ${scoreClass}`}>{Math.max(strength, opportunityScore)}</span>
               </div>
-              <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{getOpportunityReason(student)}</p>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">{getOpportunityReason(student)}</p>
             </div>
           );
-        }) : <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/40">No records.</p>}
+        }) : <p className="rounded-xl border border-dashed border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-500">No records.</p>}
       </div>
     </div>
   );
@@ -518,11 +519,11 @@ function OpportunityMiniBoard({ title, items = [], tone = "green" }) {
 function SummaryBadge({ label, value, tone = "default" }) {
   const className =
     tone === "gold"
-      ? "border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]"
-      : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+      ? "border-orange-300 bg-orange-50 text-orange-700"
+      : "border-emerald-300 bg-emerald-50 text-emerald-700";
 
   return (
-    <span className={`rounded-full border px-4 py-2 text-xs font-bold ${className}`}>
+    <span className={`rounded-full border px-4 py-2 text-xs font-black ${className}`}>
       {value} {label}
     </span>
   );
