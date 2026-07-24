@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import useRealtimeCRM from "./useRealtimeCRM";
 import { supabase } from "../lib/supabaseClient";
@@ -19,6 +19,36 @@ const toLower = (value) => String(value || "").toLowerCase().trim();
 const number = (value, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const getErrorCode = (error) => String(error?.code || "").trim();
+
+const isMissingTableError = (error) => {
+  const code = getErrorCode(error);
+  const message = toLower(error?.message);
+
+  return (
+    code === "PGRST205" ||
+    message.includes("could not find the table") ||
+    message.includes("schema cache")
+  );
+};
+
+const isMissingColumnError = (error) => {
+  const code = getErrorCode(error);
+  const message = toLower(error?.message);
+
+  return (
+    code === "42703" ||
+    message.includes("column") && message.includes("does not exist")
+  );
+};
+
+const formatFetchError = (label, error) => {
+  const code = getErrorCode(error);
+  const message = error?.message || "Unknown Supabase error.";
+
+  return code ? `${label}: ${code} — ${message}` : `${label}: ${message}`;
 };
 
 const isDone = (status) =>
@@ -998,37 +1028,69 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
     };
   }, []);
 
-  const safeFetchTable = async ({
+  const safeFetchTable = useCallback(async ({
     table,
     label,
     setter,
     orderBy = "created_at",
     ascending = false,
+    optional = false,
   }) => {
-    try {
+    const commitRows = (rows = []) => {
+      const safeRows = Array.isArray(rows) ? rows : [];
+      safeSetState(() => setter(safeRows));
+      return safeRows;
+    };
+
+    const runQuery = async (column = orderBy) => {
       let query = supabase.from(table).select("*");
 
-      if (orderBy) {
-        query = query.order(orderBy, { ascending });
+      if (column) {
+        query = query.order(column, { ascending });
       }
 
-      const { data, error } = await withTimeout(query, `${label} fetch`);
+      return withTimeout(query, `${label} fetch`);
+    };
 
-      if (error) {
-        console.error(`${label} fetch error:`, error);
-        safeSetState(() => setter([]));
-        return [];
+    try {
+      let response = await runQuery(orderBy);
+
+      // A missing sort column should never kill the whole Admin OS.
+      // Retry the same table without ordering so the feature can remain usable.
+      if (response?.error && orderBy && isMissingColumnError(response.error)) {
+        console.warn(
+          `${label}: column "${orderBy}" is unavailable; retrying without ordering.`,
+          response.error
+        );
+
+        response = await runQuery(null);
       }
 
-      const rows = data || [];
-      safeSetState(() => setter(rows));
-      return rows;
+      if (response?.error) {
+        if (optional && isMissingTableError(response.error)) {
+          console.warn(
+            `${label}: optional table "${table}" is not present in this Supabase schema. Feature disabled safely.`
+          );
+          return commitRows([]);
+        }
+
+        console.error(formatFetchError(label, response.error), response.error);
+        return commitRows([]);
+      }
+
+      return commitRows(response?.data || []);
     } catch (error) {
+      if (optional && isMissingTableError(error)) {
+        console.warn(
+          `${label}: optional table "${table}" is not present in this Supabase schema. Feature disabled safely.`
+        );
+        return commitRows([]);
+      }
+
       console.error(`${label} fetch timeout/error:`, error);
-      safeSetState(() => setter([]));
-      return [];
+      return commitRows([]);
     }
-  };
+  }, []);
 
   const fetchAssignmentsForLeadType = async (leadType, ids = []) => {
     if (!ids.length) return [];
@@ -1139,7 +1201,10 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
       table: "student_applications",
       label: "Student applications",
       setter: setStudentApplications,
-      orderBy: "generated_at",
+      // Do not assume generated_at exists. Most application rows already
+      // expose created_at/updated_at, and safeFetchTable will retry without
+      // ordering if the selected sort column is unavailable.
+      orderBy: "created_at",
     });
 
   const fetchStudentDocuments = async () =>
@@ -1230,24 +1295,23 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
       orderBy: "executed_at",
     });
 
-  const fetchAutomationQueue = async () =>
-    safeFetchTable({
-      table: "executive_action_queue",
-      label: "Executive action queue",
-      setter: setExecutiveActionQueue,
-      orderBy: "created_at",
-    });
+  const fetchAutomationQueue = async () => {
+    // Current Supabase schema does not contain public.executive_action_queue.
+    // Preserve the public hook shape for downstream components without
+    // repeatedly firing a guaranteed 404/PGRST205 request.
+    safeSetState(() => setExecutiveActionQueue([]));
+    return [];
+  };
 
-  const fetchLegacyAutomationQueue = async () =>
-    safeFetchTable({
-      table: "automation_queue",
-      label: "Automation queue",
-      setter: setAutomationQueue,
-      orderBy: "created_at",
-    });
+  const fetchLegacyAutomationQueue = async () => {
+    // Legacy public.automation_queue is not part of the current Zaifan schema.
+    // Keep this compatibility array empty until a real queue table is introduced.
+    safeSetState(() => setAutomationQueue([]));
+    return [];
+  };
 
-  const fetchAllData = async ({ silent = false } = {}) => {
-    if (loadingRef.current && !silent) return;
+  const fetchAllData = useCallback(async ({ silent = false } = {}) => {
+    if (loadingRef.current) return;
 
     loadingRef.current = true;
 
@@ -1287,7 +1351,7 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
 
         safeSetState(() => {
           setLoadError(
-            "Some admin data could not load. Check your internet and refresh."
+            "Some core admin data could not load. The Admin OS is still running with the data that succeeded."
           );
         });
       } else {
@@ -1303,15 +1367,15 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
       loadingRef.current = false;
       safeSetState(() => setLoading(false));
     }
-  };
+  }, []);
 
-  const queueRealtimeRefresh = () => {
+  const queueRealtimeRefresh = useCallback(() => {
     clearTimeout(realtimeTimeoutRef.current);
 
     realtimeTimeoutRef.current = setTimeout(() => {
-      fetchAllData({ silent: true });
+      void fetchAllData({ silent: true });
     }, 800);
-  };
+  }, [fetchAllData]);
 
   useRealtimeCRM({
     enabled: isLoggedIn && !!adminProfile,
@@ -1324,9 +1388,9 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
 
   useEffect(() => {
     if (isLoggedIn && adminProfile) {
-      fetchAllData();
+      void fetchAllData();
     }
-  }, [isLoggedIn, adminProfile?.id]);
+  }, [isLoggedIn, adminProfile?.id, fetchAllData]);
 
   useEffect(() => {
     return () => {
@@ -1530,6 +1594,13 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
 
     automationQueue,
     executiveActionQueue,
+
+    schemaCapabilities: {
+      studentApplications: true,
+      automationQueue: false,
+      executiveActionQueue: false,
+      automationSource: "executive_execution_logs",
+    },
 
     revenueMetrics,
     portalUsageMetrics,

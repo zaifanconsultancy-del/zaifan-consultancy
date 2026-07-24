@@ -1,4 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  CopyCheck,
+  FileClock,
+  Mail,
+  MessageCircle,
+  PhoneCall,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  UserCheck,
+  XCircle,
+} from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
 const LOG_LIMIT = 250;
@@ -50,7 +70,7 @@ function getActionTone(actionType = "") {
   if (clean === "create_reminder") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
   if (clean === "schedule_call") return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
   if (clean === "send_email") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
-  if (clean === "send_whatsapp") return "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
+  if (clean === "send_whatsapp") return "border-[#D85F0B]/50 bg-[#FFF1E3] text-[#B84F0E]";
 
   return "border-[#243A60]/18 bg-white text-[#7A8392]";
 }
@@ -59,7 +79,7 @@ function getStatusTone(status = "") {
   const clean = normalize(status);
 
   if (isSuccessStatus(clean)) {
-    return "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
+    return "border-[#D85F0B]/50 bg-[#FFF1E3] text-[#B84F0E]";
   }
 
   if (clean === "duplicate_blocked") {
@@ -164,6 +184,7 @@ function buildAnalytics(logs = []) {
 }
 
 function ExecutiveAutomationAnalytics({ adminProfile = null }) {
+  const [lastLoadedAt, setLastLoadedAt] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -171,8 +192,12 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [actionFilter, setActionFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFailures, setShowFailures] = useState(true);
+  const [showApprovals, setShowApprovals] = useState(true);
+  const [showHistory, setShowHistory] = useState(true);
+  const [showSecondaryDistributions, setShowSecondaryDistributions] = useState(false);
 
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -190,17 +215,18 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
       }
 
       setLogs(Array.isArray(data) ? data : []);
+      setLastLoadedAt(new Date());
     } catch (err) {
       setError(err.message || "Executive automation analytics crashed while loading.");
       setLogs([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadLogs();
-  }, []);
+    void loadLogs();
+  }, [loadLogs]);
 
   const analytics = useMemo(() => buildAnalytics(logs), [logs]);
 
@@ -258,45 +284,94 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
-              Executive Automation Analytics V1
-            </p>
+      <div className="overflow-hidden rounded-[2rem] border-[3px] border-[#D85F0B]/65 bg-[#FFFDF8] shadow-[0_20px_55px_rgba(23,36,61,0.08)]">
+        <div className="grid xl:grid-cols-[1.35fr_0.65fr]">
+          <div className="bg-[#173A67] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+                <BarChart3 size={14} /> Executive Automation
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+                <ShieldCheck size={14} /> Audit Trail
+              </span>
+            </div>
 
-            <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">
-              Execution Logs, Approval History & Automation KPIs
+            <h2 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
+              Automation Control & Execution Intelligence
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
-              Reads from executive_execution_logs and turns every executed task,
-              reminder, call, email draft, WhatsApp draft, duplicate block, and failure
-              into a visible operations record.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+              Live operational visibility across executed tasks, reminders, calls,
+              communication drafts, approval-protected actions, duplicate prevention,
+              failures, executors, and Student OS sources.
             </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <CommandMetric label="Logs" value={analytics.total} />
+              <CommandMetric label="Success" value={`${analytics.successRate}%`} />
+              <CommandMetric label="Failures" value={analytics.failed} />
+              <CommandMetric label="Today" value={analytics.today} />
+            </div>
+          </div>
+
+          <div className="bg-[#D85F0B] p-5 text-white sm:p-6">
+            <div className="flex items-center gap-2">
+              <Activity size={18} />
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white">
+                Automation Health
+              </p>
+            </div>
+            <p className="mt-3 text-5xl font-black text-white">{analytics.successRate}%</p>
+            <p className="mt-1 text-sm font-black uppercase text-white">
+              {analytics.failureRate > 20 ? "Needs Attention" : analytics.failureRate > 0 ? "Operational" : "Clean Run"}
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeMetric label="Approval" value={analytics.approvalRequired} />
+              <OrangeMetric label="Duplicates" value={analytics.duplicateBlocked} />
+              <OrangeMetric label="Actions" value={Object.keys(analytics.byAction).length} />
+              <OrangeMetric label="Executors" value={Object.keys(analytics.byExecutor).length} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t-[3px] border-[#D85F0B]/50 bg-[#FFFDF8] p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#667085]">
+            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1.5">
+              Limit: {LOG_LIMIT} records
+            </span>
+            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1.5">
+              {lastLoadedAt ? `Updated ${lastLoadedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Not loaded yet"}
+            </span>
+            {adminProfile?.full_name || adminProfile?.name ? (
+              <span className="rounded-full border border-[#D85F0B]/50 bg-[#FFF1E3] px-3 py-1.5 text-[#B84F0E]">
+                Viewer: {adminProfile.full_name || adminProfile.name}
+              </span>
+            ) : null}
           </div>
 
           <button
             type="button"
-            onClick={loadLogs}
+            onClick={() => void loadLogs()}
             disabled={loading}
-            className="rounded-full border border-[#E9802D]/45 bg-[#FFF1E3] px-5 py-2 text-sm font-bold text-[#B84F0E] transition hover:bg-[#E9802D] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#D85F0B] bg-[#D85F0B] px-4 py-2.5 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:-translate-y-0.5 hover:bg-[#B94B08] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Reload Logs"}
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh Logs"}
           </button>
         </div>
 
         {error ? (
           <div className="mt-5 rounded-2xl border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm leading-6 text-[#A8342F]">
             {error}
-            <div className="mt-2 text-xs text-red-100/70">
-              Check that the executive_execution_logs table exists and has readable RLS
-              policy for the logged-in admin.
+            <div className="mt-2 text-xs font-semibold text-[#A8342F]">
+              Check that executive_execution_logs exists and that the logged-in admin
+              has a readable RLS policy.
             </div>
           </div>
         ) : null}
 
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-8">
+        <div className="mx-4 mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8 sm:mx-6">
           <MetricCard label="Total Logs" value={analytics.total} />
           <MetricCard label="Success Rate" value={`${analytics.successRate}%`} tone="green" />
           <MetricCard label="Failure Rate" value={`${analytics.failureRate}%`} tone="red" />
@@ -307,7 +382,7 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
           <MetricCard label="Failed" value={analytics.failed} tone="red" />
         </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mx-4 mb-6 mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5 sm:mx-6">
           <MetricCard label="Tasks Created" value={analytics.tasks} compact />
           <MetricCard label="Reminders Created" value={analytics.reminders} compact />
           <MetricCard label="Calls Scheduled" value={analytics.calls} compact />
@@ -337,11 +412,35 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <FailureMonitor logs={failureLogs} />
-        <ApprovalHistory logs={approvalLogs} />
+        <CollapsibleSection
+          title="Failure & duplicate monitor"
+          count={failureLogs.length}
+          open={showFailures}
+          onToggle={() => setShowFailures((value) => !value)}
+          tone="red"
+        >
+          <FailureMonitor logs={failureLogs} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Human approval history"
+          count={approvalLogs.length}
+          open={showApprovals}
+          onToggle={() => setShowApprovals((value) => !value)}
+          tone="orange"
+        >
+          <ApprovalHistory logs={approvalLogs} />
+        </CollapsibleSection>
       </div>
 
-      <div className="rounded-[2rem] border border-[#243A60]/18 bg-white p-5">
+      <CollapsibleSection
+        title="Execution history feed"
+        count={filteredLogs.length}
+        open={showHistory}
+        onToggle={() => setShowHistory((value) => !value)}
+        tone="navy"
+      >
+        <div className="rounded-[2rem] border-[3px] border-[#173A67] bg-[#FFFDF8] p-5 shadow-[0_16px_40px_rgba(23,58,103,0.08)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8992A1]">
@@ -353,12 +452,16 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <input
+            <label className="relative">
+              <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white" />
+              <span className="sr-only">Search execution history</span>
+              <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search student, action, status..."
-              className="rounded-full border border-[#243A60]/18 bg-[#17243D] px-4 py-2 text-sm text-[#F7F3EB] outline-none placeholder:text-[#98A0AE] focus:border-[#E9802D]/50"
+              className="w-full rounded-full border border-[#243A60]/18 bg-[#17243D] py-2 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/70 focus:border-[#E9802D]/70 sm:w-[260px]"
             />
+            </label>
 
             <select
               value={statusFilter}
@@ -388,7 +491,12 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
         </div>
 
         <div className="mt-5 space-y-3">
-          {recentLogs.length ? (
+          {loading && logs.length === 0 ? (
+            <EmptyState
+              title="Loading execution intelligence..."
+              text="Reading the latest Executive Automation audit records."
+            />
+          ) : recentLogs.length ? (
             recentLogs.map((log) => <ExecutionLogCard key={log.id || log.duplicate_key || `${log.student_id}-${getCreatedAt(log)}`} log={log} />)
           ) : (
             <EmptyState
@@ -399,19 +507,78 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <DistributionPanel
-          title="Executor Distribution"
-          description="Which admin/counselor executed automation actions."
-          items={analytics.byExecutor}
-        />
+      </CollapsibleSection>
+      <CollapsibleSection
+        title="Secondary analytics"
+        count={Object.keys(analytics.byExecutor).length + Object.keys(analytics.byStudentType).length}
+        open={showSecondaryDistributions}
+        onToggle={() => setShowSecondaryDistributions((value) => !value)}
+        tone="navy"
+      >
+        <div className="grid gap-6 xl:grid-cols-2">
+          <DistributionPanel
+            title="Executor Distribution"
+            description="Which admin/counselor executed automation actions."
+            items={analytics.byExecutor}
+          />
+          <DistributionPanel
+            title="Student Type Distribution"
+            description="Inquiry, appointment, student, or other Student OS source type."
+            items={analytics.byStudentType}
+          />
+        </div>
+      </CollapsibleSection>
+    </div>
+  );
+}
 
-        <DistributionPanel
-          title="Student Type Distribution"
-          description="Inquiry, appointment, student, or other Student OS source type."
-          items={analytics.byStudentType}
-        />
-      </div>
+function CollapsibleSection({ title, count = 0, open, onToggle, tone = "navy", children }) {
+  const toneClass =
+    tone === "red"
+      ? "border-red-300 bg-red-50 text-red-800"
+      : tone === "orange"
+      ? "border-[#E56A12] bg-[#FFF0E2] text-[#A94308]"
+      : "border-[#173A67]/30 bg-[#EEF4FA] text-[#173A67]";
+
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`mb-3 flex w-full items-center justify-between gap-4 rounded-[1.15rem] border-2 px-4 py-3 text-left transition hover:-translate-y-0.5 ${toneClass}`}
+      >
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] opacity-70">
+            Workspace Section
+          </p>
+          <p className="mt-0.5 font-black">{title}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="rounded-lg border border-current/20 bg-white/70 px-2.5 py-1 text-xs font-black">
+            {count}
+          </span>
+          <ChevronDown size={18} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+      {open ? children : null}
+    </section>
+  );
+}
+
+function CommandMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">{label}</p>
+      <p className="mt-1 text-xl font-black text-white">{value ?? 0}</p>
+    </div>
+  );
+}
+
+function OrangeMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">{label}</p>
+      <p className="mt-1 text-lg font-black text-white">{value ?? 0}</p>
     </div>
   );
 }
@@ -420,11 +587,12 @@ function MetricCard({ label, value, tone = "default", compact = false }) {
   const style = getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
+    <div className={`group relative overflow-hidden rounded-[1.35rem] border-2 p-4 shadow-[0_10px_26px_rgba(23,36,61,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(23,36,61,0.10)] ${style}`}>
+      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-60" />
+      <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#596579]">
         {label}
       </p>
-      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black text-[#17243D]`}>
+      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black leading-none text-[#10233F]`}>
         {value ?? 0}
       </p>
     </div>
@@ -432,40 +600,55 @@ function MetricCard({ label, value, tone = "default", compact = false }) {
 }
 
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-[#C2413B]/32 bg-[#FFF0EE]";
-  if (tone === "green") return "border-[#E9802D]/35 bg-[#FFF1E3]";
-  if (tone === "gold") return "border-[#E9802D]/40 bg-[#FFF1E3]";
-  if (tone === "blue") return "border-[#243A60]/25 bg-[#F3F5F8]";
-  if (tone === "yellow") return "border-[#A36A18]/30 bg-[#FFF7E8]";
-  return "border-[#243A60]/18 bg-white";
+  if (tone === "red") return "border-red-400 bg-red-50 text-red-700";
+  if (tone === "green") return "border-emerald-400 bg-emerald-50 text-emerald-700";
+  if (tone === "gold") return "border-[#E56A12] bg-[#FFF0E2] text-[#B84A08]";
+  if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-700";
+  if (tone === "yellow") return "border-amber-400 bg-amber-50 text-amber-700";
+  return "border-[#173A67] bg-[#F4F8FC] text-[#173A67]";
 }
 
 function DistributionPanel({ title, description, items = {} }) {
   const entries = Object.entries(items)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
+  const max = Math.max(1, ...entries.map(([, value]) => Number(value) || 0));
 
   return (
-    <div className="rounded-[2rem] border border-[#243A60]/18 bg-white p-5">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8992A1]">
-        {title}
-      </p>
+    <div className="overflow-hidden rounded-[1.75rem] border-2 border-[#173A67] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,58,103,0.07)]">
+      <div className="border-b-2 border-[#E56A12] bg-[#173A67] px-5 py-4 text-white">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+          Intelligence Breakdown
+        </p>
+        <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
+        <p className="mt-1 text-xs font-semibold leading-5 text-white/80">{description}</p>
+      </div>
 
-      <p className="mt-2 text-sm leading-6 text-[#7A8392]">{description}</p>
-
-      <div className="mt-4 space-y-2">
+      <div className="space-y-2.5 p-4">
         {entries.length ? (
-          entries.map(([key, value]) => (
+          entries.map(([key, value], index) => (
             <div
               key={key}
-              className="flex items-center justify-between gap-3 rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs"
+              className="rounded-[1rem] border-2 border-slate-200 bg-white px-3.5 py-3 transition hover:border-orange-300"
             >
-              <span className="truncate font-bold text-[#596579]">{formatLabel(key)}</span>
-              <span className="font-black text-[#17243D]">{value}</span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="min-w-0 break-words text-xs font-black text-[#243A60]">
+                  {formatLabel(key)}
+                </span>
+                <span className="shrink-0 rounded-lg bg-[#173A67] px-2.5 py-1 text-xs font-black text-white">
+                  {value}
+                </span>
+              </div>
+              <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className={`h-full rounded-full ${index === 0 ? "bg-[#D85F0B]" : "bg-[#315B88]"}`}
+                  style={{ width: `${Math.max(5, ((Number(value) || 0) / max) * 100)}%` }}
+                />
+              </div>
             </div>
           ))
         ) : (
-          <p className="rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs text-[#8992A1]">
+          <p className="rounded-xl border-2 border-dashed border-slate-300 bg-[#F8FAFC] px-3 py-5 text-center text-xs font-bold text-slate-500">
             No data yet.
           </p>
         )}
@@ -478,7 +661,7 @@ function FailureMonitor({ logs = [] }) {
   const visibleLogs = logs.slice(0, 8);
 
   return (
-    <div className="rounded-[2rem] border border-[#C2413B]/30 bg-[#FFF0EE] p-5">
+    <div className="rounded-[1.8rem] border-[3px] border-red-400 bg-[#FFF7F5] p-5 shadow-[0_14px_34px_rgba(194,65,59,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#A8342F]">
@@ -499,7 +682,7 @@ function FailureMonitor({ logs = [] }) {
           visibleLogs.map((log) => (
             <div
               key={log.id || `${log.duplicate_key}-${getCreatedAt(log)}`}
-              className="rounded-2xl border border-[#C2413B]/26 bg-white p-4"
+              className="rounded-[1.25rem] border-2 border-red-300 bg-white p-4 shadow-[0_7px_18px_rgba(194,65,59,0.05)]"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Tag text={formatLabel(log.status)} className={getStatusTone(log.status)} />
@@ -534,7 +717,7 @@ function ApprovalHistory({ logs = [] }) {
   const visibleLogs = logs.slice(0, 8);
 
   return (
-    <div className="rounded-[2rem] border border-[#E9802D]/35 bg-[#FFFDF8] p-5">
+    <div className="rounded-[1.8rem] border-[3px] border-[#E56A12] bg-[#FFF7EC] p-5 shadow-[0_14px_34px_rgba(233,128,45,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#B84F0E]">
@@ -555,7 +738,7 @@ function ApprovalHistory({ logs = [] }) {
           visibleLogs.map((log) => (
             <div
               key={log.id || `${log.duplicate_key}-${getCreatedAt(log)}`}
-              className="rounded-2xl border border-[#E9802D]/30 bg-white p-4"
+              className="rounded-[1.25rem] border-2 border-orange-300 bg-white p-4 shadow-[0_7px_18px_rgba(233,128,45,0.05)]"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Tag text={formatLabel(log.recommendation_priority)} className={getPriorityTone(log.recommendation_priority)} />
@@ -589,9 +772,17 @@ function ApprovalHistory({ logs = [] }) {
 
 function ExecutionLogCard({ log = {} }) {
   const metadata = log.metadata || {};
+  const status = normalize(log.status);
+  const cardTone = status === "duplicate_blocked"
+    ? "border-amber-400 bg-amber-50/35"
+    : isFailureStatus(status)
+    ? "border-red-400 bg-red-50/30"
+    : isSuccessStatus(status)
+    ? "border-emerald-400 bg-emerald-50/25"
+    : "border-blue-300 bg-blue-50/25";
 
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
+    <div className={`rounded-[1.5rem] border-[3px] p-4 shadow-[0_10px_26px_rgba(23,36,61,0.055)] transition hover:-translate-y-0.5 ${cardTone}`}>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -627,12 +818,12 @@ function ExecutionLogCard({ log = {} }) {
           </div>
         </div>
 
-        <div className="shrink-0 rounded-2xl border border-[#243A60]/18 bg-white p-4 xl:w-72">
+        <div className="shrink-0 rounded-[1.2rem] border-2 border-[#173A67]/25 bg-white p-4 xl:w-72">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
             Student / Execution
           </p>
 
-          <p className="mt-2 truncate font-bold text-[#17243D]">
+          <p className="mt-2 break-words font-black text-[#17243D]">
             {log.student_name || "Unknown Student"}
           </p>
 
@@ -662,8 +853,8 @@ function Tag({ text, className = "" }) {
 
 function MiniStat({ label, value }) {
   return (
-    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#8992A1]">
-      {label}: {value}
+    <span className="max-w-full break-all rounded-lg border-2 border-[#243A60]/15 bg-[#F8FAFC] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-[#596579]">
+      <span className="text-orange-700">{label}</span>: {value}
     </span>
   );
 }

@@ -1,20 +1,53 @@
-// LeadAssignmentPanel V2 — Ownership Command Center
-// Preserves Supabase admin loading, assignment CRUD, duplicate cleanup, realtime sync,
-// activity logging, timeout protection and unassignment flow.
-// Full mature component retained; visual layer aligned with Zaifan Admin OS.
+// LeadAssignmentPanel V3 — Zaifan Ownership & Accountability OS
+// Full replacement for: src/components/admin/LeadAssignmentPanel.jsx
+//
+// Keeps the existing database contract:
+// public.lead_assignments
+//   id, lead_type, lead_id, assigned_admin_id, assigned_admin_name, created_at
+//
+// Major upgrades:
+// - preserves assignment / reassignment / unassignment
+// - preserves duplicate cleanup
+// - preserves realtime sync + activity logs
+// - adds workload visibility per team member
+// - adds "Assign to Me"
+// - replaces most browser alerts with inline feedback
+// - safer optimistic UX and retry states
+// - avoids remounting parent Student OS
+// - stronger navy + orange Admin OS hierarchy
+// - no database migration required
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  RefreshCw,
+  RotateCcw,
+  ShieldCheck,
+  UserCheck,
+  UserMinus,
+  UserPlus,
+  UsersRound,
+} from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 12000;
 
 function withTimeout(promise, label = "Request") {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out.`)), REQUEST_TIMEOUT_MS)
+      window.setTimeout(
+        () => reject(new Error(`${label} timed out.`)),
+        REQUEST_TIMEOUT_MS
+      )
     ),
   ]);
+}
+
+function normalize(value = "") {
+  return String(value || "").trim().toLowerCase();
 }
 
 function LeadAssignmentPanel({
@@ -26,62 +59,117 @@ function LeadAssignmentPanel({
   const [admins, setAdmins] = useState([]);
   const [assignment, setAssignment] = useState(null);
   const [selectedAdminId, setSelectedAdminId] = useState("");
+  const [workloads, setWorkloads] = useState({});
+
   const [loading, setLoading] = useState(false);
+  const [adminsLoading, setAdminsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [unassigning, setUnassigning] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [loadError, setLoadError] = useState("");
+
+  const [feedback, setFeedback] = useState(null);
 
   const mountedRef = useRef(true);
+  const refreshTimerRef = useRef(null);
+
   const leadId = lead?.id ? String(lead.id) : "";
-  const isBusy = loading || saving || unassigning;
+  const isBusy =
+    loading || adminsLoading || saving || unassigning || syncing;
 
   const selectedAdmin = useMemo(
     () => admins.find((admin) => admin.id === selectedAdminId) || null,
     [admins, selectedAdminId]
   );
 
+  const currentOwner = useMemo(() => {
+    if (!assignment?.assigned_admin_id) return null;
+
+    return (
+      admins.find(
+        (admin) => String(admin.id) === String(assignment.assigned_admin_id)
+      ) || {
+        id: assignment.assigned_admin_id,
+        full_name: assignment.assigned_admin_name || "Assigned staff",
+        role: "staff",
+      }
+    );
+  }, [admins, assignment]);
+
   const assignedAdminInitial = assignment?.assigned_admin_name
     ? assignment.assigned_admin_name.trim().charAt(0).toUpperCase()
     : "?";
 
-  const leadTypeLabel = leadType === "appointment" ? "Appointment" : "Inquiry";
+  const leadTypeLabel =
+    leadType === "appointment" ? "Appointment" : "Inquiry";
+
+  const currentAdminCanSelfAssign =
+    currentAdmin?.id &&
+    admins.some((admin) => String(admin.id) === String(currentAdmin.id));
 
   const roleStyles = {
-    staff: "border-blue-300 bg-blue-50 text-blue-700",
-    admin: "border-orange-300 bg-orange-50 text-orange-700",
-    super_admin: "border-violet-300 bg-violet-50 text-violet-700",
+    staff: "border-blue-300 bg-blue-50 text-blue-800",
+    admin: "border-orange-300 bg-orange-50 text-orange-800",
+    super_admin: "border-violet-300 bg-violet-50 text-violet-800",
   };
 
   const safeSetState = (callback) => {
     if (mountedRef.current) callback();
   };
 
+  const showFeedback = (type, message) => {
+    safeSetState(() => setFeedback({ type, message }));
+  };
+
   const fetchAdmins = async () => {
+    safeSetState(() => setAdminsLoading(true));
+
     try {
       const { data, error } = await withTimeout(
         supabase
           .from("admin_profiles")
           .select("id, full_name, role")
           .order("full_name", { ascending: true }),
-        "Admins fetch"
+        "Team member fetch"
       );
 
-      if (error) {
-        console.error("Admins error:", error);
-        safeSetState(() => setLoadError("Failed to load staff/admin list."));
-        return;
-      }
+      if (error) throw error;
 
       safeSetState(() => {
         setAdmins(data || []);
-        setLoadError("");
       });
     } catch (error) {
-      console.error("Admins crash:", error);
-      safeSetState(() =>
-        setLoadError("Admin list request timed out. Refresh and try again.")
+      console.error("Admins fetch failed:", error);
+      showFeedback(
+        "error",
+        error?.message || "Could not load staff/admin list."
       );
+    } finally {
+      safeSetState(() => setAdminsLoading(false));
+    }
+  };
+
+  const fetchWorkloads = async () => {
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("lead_assignments")
+          .select("assigned_admin_id"),
+        "Ownership workload fetch"
+      );
+
+      if (error) throw error;
+
+      const counts = (data || []).reduce((acc, row) => {
+        if (!row.assigned_admin_id) return acc;
+
+        const key = String(row.assigned_admin_id);
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+
+      safeSetState(() => setWorkloads(counts));
+    } catch (error) {
+      console.warn("Ownership workload fetch skipped:", error);
     }
   };
 
@@ -100,15 +188,16 @@ function LeadAssignmentPanel({
     if (duplicateIds.length > 0) {
       try {
         const { error } = await withTimeout(
-          supabase.from("lead_assignments").delete().in("id", duplicateIds),
-          "Duplicate cleanup"
+          supabase
+            .from("lead_assignments")
+            .delete()
+            .in("id", duplicateIds),
+          "Duplicate ownership cleanup"
         );
 
-        if (error) {
-          console.error("Duplicate cleanup error:", error);
-        }
+        if (error) throw error;
       } catch (error) {
-        console.error("Duplicate cleanup timeout:", error);
+        console.warn("Duplicate ownership cleanup skipped:", error);
       }
     }
 
@@ -127,7 +216,6 @@ function LeadAssignmentPanel({
     }
 
     safeSetState(() => {
-      setLoadError("");
       if (!silent) setLoading(true);
       if (silent) setSyncing(true);
     });
@@ -140,31 +228,23 @@ function LeadAssignmentPanel({
           .eq("lead_type", leadType)
           .eq("lead_id", leadId)
           .order("created_at", { ascending: false }),
-        "Assignment fetch"
+        "Ownership fetch"
       );
 
-      if (error) {
-        console.error("Assignment error:", error);
-        safeSetState(() => {
-          setAssignment(null);
-          setSelectedAdminId("");
-          setLoadError("Failed to load assignment.");
-        });
-        return;
-      }
+      if (error) throw error;
 
       const mainAssignment = await cleanDuplicateAssignments(data || []);
 
       safeSetState(() => {
         setAssignment(mainAssignment);
         setSelectedAdminId(mainAssignment?.assigned_admin_id || "");
-        setLoadError("");
       });
     } catch (error) {
-      console.error("Assignment crash:", error);
-      safeSetState(() => {
-        setLoadError("Assignment request timed out. Refresh and try again.");
-      });
+      console.error("Ownership fetch failed:", error);
+      showFeedback(
+        "error",
+        error?.message || "Could not load lead ownership."
+      );
     } finally {
       safeSetState(() => {
         setLoading(false);
@@ -173,410 +253,920 @@ function LeadAssignmentPanel({
     }
   };
 
+  const refreshAll = async ({ silent = false } = {}) => {
+    if (!silent) {
+      safeSetState(() => setFeedback(null));
+    }
+
+    await Promise.all([
+      fetchAdmins(),
+      fetchAssignment({ silent }),
+      fetchWorkloads(),
+    ]);
+  };
+
   useEffect(() => {
     mountedRef.current = true;
-    fetchAdmins();
+
+    void fetchAdmins();
+    void fetchWorkloads();
 
     return () => {
       mountedRef.current = false;
+
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
     };
   }, []);
 
   useEffect(() => {
-    fetchAssignment();
+    safeSetState(() => setFeedback(null));
+    void fetchAssignment();
   }, [leadId, leadType]);
 
   useEffect(() => {
-    if (!leadId) return;
-
-    let refreshTimeout;
+    if (!leadId) return undefined;
 
     const channel = supabase
-      .channel(`lead-assignment-modal-${leadType}-${leadId}`)
+      .channel(`lead-assignment-v3-${leadType}-${leadId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "lead_assignments",
-          filter: `lead_type=eq.${leadType}`,
+          filter: `lead_id=eq.${leadId}`,
         },
         (payload) => {
           const changedLeadId = String(
             payload.new?.lead_id || payload.old?.lead_id || ""
           );
 
-          if (changedLeadId === leadId) {
-            clearTimeout(refreshTimeout);
-            refreshTimeout = setTimeout(() => {
-              fetchAssignment({ silent: true });
-              onAssigned();
-            }, 200);
+          const changedLeadType =
+            payload.new?.lead_type || payload.old?.lead_type || "";
+
+          if (
+            changedLeadId === leadId &&
+            normalize(changedLeadType) === normalize(leadType)
+          ) {
+            if (refreshTimerRef.current) {
+              clearTimeout(refreshTimerRef.current);
+            }
+
+            refreshTimerRef.current = window.setTimeout(() => {
+              void fetchAssignment({ silent: true });
+              void fetchWorkloads();
+              onAssigned({ source: "assignment_realtime" });
+            }, 250);
           }
         }
       )
       .subscribe();
 
     return () => {
-      clearTimeout(refreshTimeout);
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
       supabase.removeChannel(channel);
     };
-  }, [leadId, leadType]);
+  }, [leadId, leadType, onAssigned]);
 
-  const assignLead = async () => {
-    if (!leadId) return;
-
-    if (!selectedAdminId) {
-      alert("Please select an admin or staff member.");
-      return;
-    }
-
-    const selectedAdmin = admins.find((admin) => admin.id === selectedAdminId);
-
-    if (!selectedAdmin) {
-      alert("Selected admin not found.");
-      return;
-    }
-
-    setSaving(true);
-
+  const logActivity = async ({
+    action,
+    details,
+  }) => {
     try {
-      const { data: existingRows, error: checkError } = await withTimeout(
-        supabase
-          .from("lead_assignments")
-          .select("*")
-          .eq("lead_type", leadType)
-          .eq("lead_id", leadId)
-          .order("created_at", { ascending: false }),
-        "Assignment check"
-      );
-
-      if (checkError) {
-        console.error("Check error:", checkError);
-        alert("Failed to check assignment.");
-        return;
-      }
-
-      const existingAssignment = await cleanDuplicateAssignments(existingRows || []);
-
-      if (existingAssignment?.id) {
-        const { error } = await withTimeout(
-          supabase
-            .from("lead_assignments")
-            .update({
-              assigned_admin_id: selectedAdmin.id,
-              assigned_admin_name: selectedAdmin.full_name,
-            })
-            .eq("id", existingAssignment.id),
-          "Assignment update"
-        );
-
-        if (error) {
-          console.error("Update error:", error);
-          alert("Failed to update assignment.");
-          return;
-        }
-      } else {
-        const { error } = await withTimeout(
-          supabase.from("lead_assignments").insert({
-            lead_type: leadType,
-            lead_id: leadId,
-            assigned_admin_id: selectedAdmin.id,
-            assigned_admin_name: selectedAdmin.full_name,
-          }),
-          "Assignment insert"
-        );
-
-        if (error) {
-          console.error("Insert error:", error);
-          alert("Failed to assign lead.");
-          return;
-        }
-      }
-
       await withTimeout(
         supabase.from("activity_logs").insert({
           admin_id: currentAdmin?.id || null,
-          admin_name: currentAdmin?.full_name || "Unknown Admin",
-          action: existingAssignment?.id ? "Updated lead assignment" : "Assigned lead",
+          admin_name:
+            currentAdmin?.full_name ||
+            currentAdmin?.name ||
+            "Unknown Admin",
+          action,
           target_type: leadType,
           target_id: leadId,
-          details: `Assigned ${leadType} to ${selectedAdmin.full_name}.`,
+          details,
         }),
-        "Activity log insert"
-      ).catch((error) => console.error("Activity log timeout/error:", error));
-
-      await fetchAssignment({ silent: true });
-      onAssigned();
-      alert("Lead assigned successfully.");
+        "Ownership activity log"
+      );
     } catch (error) {
-      console.error("Assign crash:", error);
-      alert("Assignment request timed out or failed. Check your internet and try again.");
+      console.warn("Ownership activity log skipped:", error);
+    }
+  };
+
+  const assignLead = async (targetAdminId = selectedAdminId) => {
+    if (!leadId || saving || unassigning) return;
+
+    if (!targetAdminId) {
+      showFeedback("warning", "Select a team member first.");
+      return;
+    }
+
+    const targetAdmin = admins.find(
+      (admin) => String(admin.id) === String(targetAdminId)
+    );
+
+    if (!targetAdmin) {
+      showFeedback("error", "Selected team member is no longer available.");
+      return;
+    }
+
+    const previousAssignment = assignment
+      ? { ...assignment }
+      : null;
+
+    safeSetState(() => {
+      setSaving(true);
+      setFeedback(null);
+
+      setAssignment((current) => ({
+        ...(current || {}),
+        assigned_admin_id: targetAdmin.id,
+        assigned_admin_name: targetAdmin.full_name,
+      }));
+
+      setSelectedAdminId(targetAdmin.id);
+    });
+
+    try {
+      const { data: existingRows, error: checkError } =
+        await withTimeout(
+          supabase
+            .from("lead_assignments")
+            .select("*")
+            .eq("lead_type", leadType)
+            .eq("lead_id", leadId)
+            .order("created_at", { ascending: false }),
+          "Ownership check"
+        );
+
+      if (checkError) throw checkError;
+
+      const existingAssignment =
+        await cleanDuplicateAssignments(existingRows || []);
+
+      let savedAssignment = null;
+
+      if (existingAssignment?.id) {
+        const { data, error } = await withTimeout(
+          supabase
+            .from("lead_assignments")
+            .update({
+              assigned_admin_id: targetAdmin.id,
+              assigned_admin_name: targetAdmin.full_name,
+            })
+            .eq("id", existingAssignment.id)
+            .select("*")
+            .single(),
+          "Ownership update"
+        );
+
+        if (error) throw error;
+        savedAssignment = data;
+      } else {
+        const { data, error } = await withTimeout(
+          supabase
+            .from("lead_assignments")
+            .insert({
+              lead_type: leadType,
+              lead_id: leadId,
+              assigned_admin_id: targetAdmin.id,
+              assigned_admin_name: targetAdmin.full_name,
+            })
+            .select("*")
+            .single(),
+          "Ownership insert"
+        );
+
+        if (error) throw error;
+        savedAssignment = data;
+      }
+
+      safeSetState(() => {
+        setAssignment(savedAssignment);
+        setSelectedAdminId(savedAssignment?.assigned_admin_id || "");
+      });
+
+      void logActivity({
+        action: existingAssignment?.id
+          ? "Updated lead assignment"
+          : "Assigned lead",
+        details: `${leadTypeLabel} assigned to ${targetAdmin.full_name}.`,
+      });
+
+      await fetchWorkloads();
+
+      try {
+        await Promise.resolve(
+          onAssigned({
+            source: existingAssignment?.id
+              ? "ownership_updated"
+              : "ownership_created",
+            assignment: savedAssignment,
+          })
+        );
+      } catch (parentError) {
+        console.warn(
+          "Ownership saved; parent refresh delayed:",
+          parentError
+        );
+      }
+
+      showFeedback(
+        "success",
+        existingAssignment?.id
+          ? `Ownership moved to ${targetAdmin.full_name}.`
+          : `${targetAdmin.full_name} now owns this ${leadTypeLabel.toLowerCase()}.`
+      );
+    } catch (error) {
+      console.error("Ownership save failed:", error);
+
+      safeSetState(() => {
+        setAssignment(previousAssignment);
+        setSelectedAdminId(
+          previousAssignment?.assigned_admin_id || ""
+        );
+      });
+
+      showFeedback(
+        "error",
+        error?.message ||
+          "Ownership could not be saved. Nothing was changed."
+      );
     } finally {
       safeSetState(() => setSaving(false));
     }
   };
 
   const unassignLead = async () => {
-    if (!leadId || !assignment?.id) return;
+    if (!leadId || !assignment?.id || unassigning || saving) return;
 
-    const confirmUnassign = confirm(
-      `Remove assignment from ${assignment.assigned_admin_name || "this lead"}?`
+    const confirmed = window.confirm(
+      `Return this ${leadTypeLabel.toLowerCase()} to the open pool?\n\nCurrent owner: ${
+        assignment.assigned_admin_name || "Unknown"
+      }`
     );
 
-    if (!confirmUnassign) return;
+    if (!confirmed) return;
 
-    setUnassigning(true);
+    const previousAssignment = { ...assignment };
+
+    safeSetState(() => {
+      setUnassigning(true);
+      setFeedback(null);
+      setAssignment(null);
+      setSelectedAdminId("");
+    });
 
     try {
-      const previousAdminName = assignment.assigned_admin_name || "Unknown Admin";
+      const { data: existingRows, error: checkError } =
+        await withTimeout(
+          supabase
+            .from("lead_assignments")
+            .select("*")
+            .eq("lead_type", leadType)
+            .eq("lead_id", leadId)
+            .order("created_at", { ascending: false }),
+          "Unassign check"
+        );
 
-      const { data: existingRows, error: checkError } = await withTimeout(
-        supabase
-          .from("lead_assignments")
-          .select("*")
-          .eq("lead_type", leadType)
-          .eq("lead_id", leadId)
-          .order("created_at", { ascending: false }),
-        "Unassign check"
+      if (checkError) throw checkError;
+
+      const existingAssignment =
+        await cleanDuplicateAssignments(existingRows || []);
+
+      if (existingAssignment?.id) {
+        const { error } = await withTimeout(
+          supabase
+            .from("lead_assignments")
+            .delete()
+            .eq("id", existingAssignment.id),
+          "Ownership removal"
+        );
+
+        if (error) throw error;
+      }
+
+      void logActivity({
+        action: "Unassigned lead",
+        details: `Removed ${leadTypeLabel.toLowerCase()} ownership from ${
+          previousAssignment.assigned_admin_name || "Unknown"
+        }.`,
+      });
+
+      await fetchWorkloads();
+
+      try {
+        await Promise.resolve(
+          onAssigned({
+            source: "ownership_removed",
+            assignment: null,
+          })
+        );
+      } catch (parentError) {
+        console.warn(
+          "Ownership removed; parent refresh delayed:",
+          parentError
+        );
+      }
+
+      showFeedback(
+        "success",
+        `${leadTypeLabel} returned to the open pool.`
       );
-
-      if (checkError) {
-        console.error("Unassign check error:", checkError);
-        alert("Failed to check current assignment.");
-        return;
-      }
-
-      const existingAssignment = await cleanDuplicateAssignments(existingRows || []);
-
-      if (!existingAssignment?.id) {
-        safeSetState(() => {
-          setAssignment(null);
-          setSelectedAdminId("");
-        });
-        onAssigned();
-        alert("This lead is already unassigned.");
-        return;
-      }
-
-      const { error } = await withTimeout(
-        supabase.from("lead_assignments").delete().eq("id", existingAssignment.id),
-        "Unassign delete"
-      );
-
-      if (error) {
-        console.error("Unassign error:", error);
-        alert("Failed to unassign lead.");
-        return;
-      }
-
-      await withTimeout(
-        supabase.from("activity_logs").insert({
-          admin_id: currentAdmin?.id || null,
-          admin_name: currentAdmin?.full_name || "Unknown Admin",
-          action: "Unassigned lead",
-          target_type: leadType,
-          target_id: leadId,
-          details: `Removed ${leadType} assignment from ${previousAdminName}.`,
-        }),
-        "Activity log insert"
-      ).catch((error) => console.error("Activity log timeout/error:", error));
+    } catch (error) {
+      console.error("Unassign failed:", error);
 
       safeSetState(() => {
-        setAssignment(null);
-        setSelectedAdminId("");
+        setAssignment(previousAssignment);
+        setSelectedAdminId(
+          previousAssignment.assigned_admin_id || ""
+        );
       });
-      await fetchAssignment({ silent: true });
-      onAssigned();
-      alert("Lead unassigned successfully.");
-    } catch (error) {
-      console.error("Unassign crash:", error);
-      alert("Unassign request timed out or failed. Check your internet and try again.");
+
+      showFeedback(
+        "error",
+        error?.message ||
+          "Ownership could not be removed. Previous owner was restored."
+      );
     } finally {
       safeSetState(() => setUnassigning(false));
     }
   };
 
-  return (
-    <div className="relative overflow-hidden rounded-[1.8rem] border-2 border-orange-300 bg-white p-4 shadow-[0_14px_36px_rgba(15,35,63,0.06)] sm:rounded-[2rem] sm:p-5">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-orange-200/35 blur-3xl"></div>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-amber-100/50 blur-3xl"></div>
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+  const selectedWorkload =
+    selectedAdmin?.id
+      ? workloads[String(selectedAdmin.id)] || 0
+      : 0;
 
-      <div className="relative mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-orange-700">
-              Lead Ownership
+  const currentOwnerWorkload =
+    currentOwner?.id
+      ? workloads[String(currentOwner.id)] || 0
+      : 0;
+
+  const teamWorkloadValues = admins
+    .map((admin) => workloads[String(admin.id)] || 0)
+    .filter((value) => Number.isFinite(value));
+
+  const averageWorkload = teamWorkloadValues.length
+    ? Math.round(
+        teamWorkloadValues.reduce((sum, value) => sum + value, 0) /
+          teamWorkloadValues.length
+      )
+    : 0;
+
+  const totalAssignedLeads = teamWorkloadValues.reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
+  const busiestAdmin = useMemo(() => {
+    if (!admins.length) return null;
+
+    return [...admins]
+      .map((admin) => ({
+        ...admin,
+        workload: workloads[String(admin.id)] || 0,
+      }))
+      .sort((a, b) => b.workload - a.workload)[0];
+  }, [admins, workloads]);
+
+  const lightestAdmin = useMemo(() => {
+    if (!admins.length) return null;
+
+    return [...admins]
+      .map((admin) => ({
+        ...admin,
+        workload: workloads[String(admin.id)] || 0,
+      }))
+      .sort((a, b) => a.workload - b.workload)[0];
+  }, [admins, workloads]);
+
+  const ownershipHealth = assignment?.assigned_admin_id
+    ? currentOwnerWorkload > averageWorkload + 3
+      ? "Owner above team average"
+      : "Ownership healthy"
+    : "Needs owner";
+
+  if (!leadId) {
+    return (
+      <div className="rounded-[1.7rem] border-2 border-dashed border-orange-300 bg-[#fffaf4] p-6 text-center">
+        <AlertTriangle className="mx-auto h-8 w-8 text-orange-600" />
+        <h3 className="mt-3 text-lg font-black text-[#10233f]">
+          Ownership unavailable
+        </h3>
+        <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+          This workspace needs a saved lead ID before assignment controls can
+          safely write to lead_assignments.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 text-[#10233f]">
+      <section className="overflow-hidden rounded-[1.85rem] border-[3px] border-orange-400 bg-white shadow-[0_16px_45px_rgba(15,35,63,0.08)]">
+        <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-orange-300/30 bg-orange-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
+                Ownership OS
+              </span>
+
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-slate-200">
+                {leadTypeLabel}
+              </span>
+
+              {syncing ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-blue-300/25 bg-blue-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-blue-100">
+                  <RefreshCw size={10} className="animate-spin" />
+                  Syncing
+                </span>
+              ) : null}
+            </div>
+
+            <h3 className="mt-3 text-2xl font-black text-white">
+              Ownership & Accountability
+            </h3>
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
+              Give every student one clear owner. Reassign safely, return cases
+              to the open pool, and see team workload before handing off work.
             </p>
 
-            <span className="rounded-full border border-slate-300 bg-[#fffaf2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
-              {leadTypeLabel}
-            </span>
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              <HeroStat
+                label="Current Owner"
+                value={
+                  assignment?.assigned_admin_name || "Open Pool"
+                }
+              />
 
-            {syncing && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-500"></span>
-                Syncing
-              </span>
-            )}
+              <HeroStat
+                label="Owner Workload"
+                value={
+                  currentOwner
+                    ? `${currentOwnerWorkload} lead${
+                        currentOwnerWorkload === 1 ? "" : "s"
+                      }`
+                    : "—"
+                }
+              />
+
+              <HeroStat
+                label="Team Average"
+                value={`${averageWorkload} lead${
+                  averageWorkload === 1 ? "" : "s"
+                }`}
+              />
+            </div>
           </div>
 
-          <h3 className="mt-2 text-xl font-black text-[#10233f] sm:text-2xl">
-            Assignment Control
-          </h3>
+          <div className="bg-orange-500 p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-100">
+              Ownership Status
+            </p>
 
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
-            Assign this student to the right counselor, staff member, or admin.
-            The panel keeps one clean owner and removes duplicate assignment rows.
-          </p>
-        </div>
+            <div className="mt-3">
+              <OwnerStatus
+                loading={loading}
+                assignment={assignment}
+                assignedAdminInitial={assignedAdminInitial}
+              />
+            </div>
 
-        <OwnerStatus
-          loading={loading}
-          assignment={assignment}
-          assignedAdminInitial={assignedAdminInitial}
-        />
-      </div>
+            <p className="mt-4 text-sm leading-6 text-orange-50">
+              {assignment?.assigned_admin_name
+                ? "Responsibility is currently assigned. Reassignment changes the active owner without creating a second assignment."
+                : "This case is in the open pool. Assign it so follow-up responsibility is explicit."}
+            </p>
 
-      {loadError && (
-        <div className="relative mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs leading-relaxed text-red-700">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span>{loadError}</span>
             <button
               type="button"
-              onClick={() => {
-                fetchAdmins();
-                fetchAssignment();
-              }}
-              className="w-fit rounded-full border border-red-300 bg-white px-4 py-2 font-black text-red-700 transition hover:bg-red-400/20"
+              onClick={() => refreshAll()}
+              disabled={isBusy}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 py-2.5 text-xs font-black text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 disabled:opacity-50"
             >
-              Retry
+              <RefreshCw
+                size={14}
+                className={isBusy ? "animate-spin" : ""}
+              />
+              Refresh Ownership
             </button>
           </div>
         </div>
-      )}
+      </section>
 
-      <div className="relative grid gap-3 xl:grid-cols-[1fr_auto_auto]">
-        <div className="min-w-0 rounded-2xl border border-slate-300 bg-[#fffaf2] p-3 transition duration-300 focus-within:border-orange-400 focus-within:bg-white">
-          <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-            Select Team Member
-          </label>
+      {feedback ? (
+        <Feedback
+          type={feedback.type}
+          message={feedback.message}
+          onClose={() => setFeedback(null)}
+        />
+      ) : null}
 
-          <select
-            value={selectedAdminId}
-            onChange={(event) => setSelectedAdminId(event.target.value)}
-            disabled={isBusy}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="" className="bg-white text-[#10233f]">
-              Select staff/admin
-            </option>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <OperationalStat
+          label="Ownership Health"
+          value={ownershipHealth}
+          helper={
+            assignment?.assigned_admin_id
+              ? "Compares current owner workload with the live team average."
+              : "Open-pool cases should be assigned when responsibility is known."
+          }
+          tone={assignment?.assigned_admin_id ? "orange" : "red"}
+        />
 
-            {admins.map((admin) => (
-              <option key={admin.id} value={admin.id} className="bg-white text-[#10233f]">
-                {admin.full_name} — {admin.role}
-              </option>
-            ))}
-          </select>
-        </div>
+        <OperationalStat
+          label="Team Load"
+          value={`${totalAssignedLeads} active`}
+          helper={`${admins.length} team member${admins.length === 1 ? "" : "s"} visible in admin_profiles.`}
+          tone="navy"
+        />
 
-        <button
-          type="button"
-          onClick={assignLead}
-          disabled={isBusy || !selectedAdminId}
-          className="rounded-2xl bg-orange-500 px-6 py-4 text-sm font-black text-white shadow-[0_0_28px_rgba(212,175,55,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-50 xl:min-w-[145px]"
-        >
-          {saving ? "Saving..." : assignment?.id ? "Update Owner" : "Assign Lead"}
-        </button>
+        <OperationalStat
+          label="Highest Load"
+          value={
+            busiestAdmin
+              ? `${busiestAdmin.full_name} · ${busiestAdmin.workload}`
+              : "No team data"
+          }
+          helper="Useful as a warning against accidental overload."
+          tone="amber"
+        />
 
-        {assignment?.id && (
-          <button
-            type="button"
-            onClick={unassignLead}
-            disabled={isBusy}
-            className="rounded-2xl border border-red-300 bg-red-50 px-6 py-4 text-sm font-black text-red-700 transition duration-300 hover:-translate-y-0.5 hover:border-red-400/40 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-50 xl:min-w-[130px]"
-          >
-            {unassigning ? "Removing..." : "Unassign"}
-          </button>
-        )}
-      </div>
+        <OperationalStat
+          label="Available Capacity"
+          value={
+            lightestAdmin
+              ? `${lightestAdmin.full_name} · ${lightestAdmin.workload}`
+              : "No team data"
+          }
+          helper="A workload signal only; expertise and continuity still matter."
+          tone="green"
+        />
+      </section>
 
-      {selectedAdmin && (
-        <div className="relative mt-4 flex flex-col gap-3 rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-orange-300 bg-orange-50 text-sm font-black text-orange-700">
-              {selectedAdmin.full_name?.charAt(0)?.toUpperCase() || "A"}
-            </div>
+      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-4 sm:p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
+              Assignment Control
+            </p>
 
-            <div className="min-w-0">
-              <p className="truncate text-sm font-black text-[#10233f]">
-                {selectedAdmin.full_name}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Selected for ownership
-              </p>
-            </div>
+            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+              Select the responsible team member
+            </h3>
+
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Workload figures are based on current rows in
+              <span className="font-bold"> lead_assignments</span>.
+            </p>
           </div>
 
-          <span
-            className={`w-fit rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${
-              roleStyles[selectedAdmin.role] || roleStyles.staff
-            }`}
-          >
-            {selectedAdmin.role || "staff"}
-          </span>
+          {currentAdminCanSelfAssign ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedAdminId(currentAdmin.id);
+                void assignLead(currentAdmin.id);
+              }}
+              disabled={
+                isBusy ||
+                String(assignment?.assigned_admin_id || "") ===
+                  String(currentAdmin.id)
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-40"
+            >
+              <UserCheck size={14} />
+              {String(assignment?.assigned_admin_id || "") ===
+              String(currentAdmin.id)
+                ? "Already Mine"
+                : "Assign to Me"}
+            </button>
+          ) : null}
         </div>
-      )}
 
-      {assignment?.assigned_admin_name ? (
-        <div className="relative mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs leading-relaxed text-slate-700">
-          This lead is currently owned by{" "}
-          <span className="font-black text-blue-700">
-            {assignment.assigned_admin_name}
-          </span>
-          . Updating will reassign ownership. Unassigning will return it to the
-          open lead pool.
+        <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_210px_auto_auto]">
+          <label className="rounded-2xl border-2 border-slate-300 bg-[#fffaf4] p-3 focus-within:border-orange-400">
+            <span className="block text-[9px] font-black uppercase tracking-[0.15em] text-slate-500">
+              Team Member
+            </span>
+
+            <select
+              value={selectedAdminId}
+              onChange={(event) =>
+                setSelectedAdminId(event.target.value)
+              }
+              disabled={isBusy}
+              className="mt-2 w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm font-bold text-[#10233f] outline-none transition focus:border-orange-400 disabled:opacity-50"
+            >
+              <option value="">Select staff/admin</option>
+
+              {admins.map((admin) => {
+                const workload =
+                  workloads[String(admin.id)] || 0;
+
+                return (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.full_name} — {admin.role} — {workload} active
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+
+          <SelectedWorkload
+            admin={selectedAdmin}
+            workload={selectedWorkload}
+            averageWorkload={averageWorkload}
+          />
+
+          <button
+            type="button"
+            onClick={() => assignLead()}
+            disabled={isBusy || !selectedAdminId}
+            className="inline-flex min-h-[74px] items-center justify-center gap-2 rounded-2xl border-2 border-orange-700 bg-orange-500 px-5 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md disabled:opacity-45"
+          >
+            <UserPlus size={16} />
+            {saving
+              ? "Saving..."
+              : assignment?.id
+              ? "Update Owner"
+              : "Assign"}
+          </button>
+
+          {assignment?.id ? (
+            <button
+              type="button"
+              onClick={unassignLead}
+              disabled={isBusy}
+              className="inline-flex min-h-[74px] items-center justify-center gap-2 rounded-2xl border-2 border-red-300 bg-red-50 px-5 text-sm font-black text-red-800 transition hover:-translate-y-0.5 hover:border-red-500 hover:bg-red-100 disabled:opacity-45"
+            >
+              <UserMinus size={16} />
+              {unassigning ? "Removing..." : "Unassign"}
+            </button>
+          ) : null}
         </div>
-      ) : (
-        <div className="relative mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-xs leading-relaxed text-orange-800">
-          This lead is currently in the open pool. Assign it to a team member so
-          follow-up responsibility is clear.
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[1.6rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={16} className="text-orange-300" />
+
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+              Current Accountability
+            </p>
+          </div>
+
+          {currentOwner ? (
+            <>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-lg font-black">
+                  {currentOwner.full_name?.charAt(0)?.toUpperCase() || "A"}
+                </div>
+
+                <div>
+                  <p className="text-lg font-black text-white">
+                    {currentOwner.full_name}
+                  </p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-300">
+                    {currentOwner.role || "staff"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <DarkInfo
+                  label="Owned Leads"
+                  value={currentOwnerWorkload}
+                />
+                <DarkInfo
+                  label="Assigned"
+                  value={
+                    assignment?.created_at
+                      ? new Date(
+                          assignment.created_at
+                        ).toLocaleDateString()
+                      : "Unknown"
+                  }
+                />
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm font-semibold leading-6 text-slate-200">
+              No owner is currently accountable for this case.
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="rounded-[1.6rem] border-[3px] border-orange-400 bg-orange-500 p-5 text-white">
+          <div className="flex items-center gap-2">
+            <UsersRound size={16} />
+
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-100">
+              Handoff Guidance
+            </p>
+          </div>
+
+          <h3 className="mt-3 text-lg font-black text-white">
+            {selectedAdmin
+              ? `${selectedAdmin.full_name} has ${selectedWorkload} assigned lead${
+                  selectedWorkload === 1 ? "" : "s"
+                }.`
+              : "Select a team member to inspect workload."}
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-orange-50">
+            {selectedAdmin
+              ? selectedWorkload > averageWorkload + 3
+                ? "This person is above the current team average. Consider another owner unless expertise or continuity makes this assignment intentional."
+                : selectedWorkload < Math.max(averageWorkload - 2, 0)
+                ? "This person is below the current team average and may have useful capacity."
+                : "This workload is close to the current team average."
+              : "Use workload as one signal, not the only signal. Student fit, counselor expertise and continuity still matter."}
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
 
-function OwnerStatus({ loading, assignment, assignedAdminInitial }) {
+function OperationalStat({ label, value, helper, tone = "orange" }) {
+  const tones = {
+    orange: "border-orange-300 bg-orange-50",
+    navy: "border-[#123865] bg-[#123865] text-white",
+    amber: "border-amber-300 bg-amber-50",
+    green: "border-emerald-300 bg-emerald-50",
+    red: "border-red-300 bg-red-50",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <div
+      className={`rounded-[1.4rem] border-2 p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)] ${
+        tones[tone] || tones.orange
+      }`}
+    >
+      <p
+        className={`text-[9px] font-black uppercase tracking-[0.16em] ${
+          dark ? "text-orange-300" : "text-slate-500"
+        }`}
+      >
+        {label}
+      </p>
+      <p
+        className={`mt-2 break-words text-lg font-black ${
+          dark ? "text-white" : "text-[#10233f]"
+        }`}
+      >
+        {value}
+      </p>
+      <p
+        className={`mt-2 text-xs font-semibold leading-5 ${
+          dark ? "text-slate-200" : "text-slate-600"
+        }`}
+      >
+        {helper}
+      </p>
+    </div>
+  );
+}
+
+function HeroStat({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.14em] text-slate-300">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function DarkInfo({ label, value }) {
+  return (
+    <div className="rounded-xl border border-white/15 bg-white/10 p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-300">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function SelectedWorkload({
+  admin,
+  workload,
+  averageWorkload,
+}) {
+  if (!admin) {
+    return (
+      <div className="flex min-h-[74px] items-center rounded-2xl border-2 border-slate-300 bg-slate-50 px-4 text-xs font-bold text-slate-500">
+        Select an owner to inspect workload.
+      </div>
+    );
+  }
+
+  const above = workload > averageWorkload + 3;
+  const below = workload < Math.max(averageWorkload - 2, 0);
+
+  const tone = above
+    ? "border-red-300 bg-red-50 text-red-800"
+    : below
+    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+    : "border-blue-300 bg-blue-50 text-blue-800";
+
+  return (
+    <div
+      className={`flex min-h-[74px] items-center gap-3 rounded-2xl border-2 px-4 ${tone}`}
+    >
+      <Clock3 size={16} />
+
+      <div>
+        <p className="text-lg font-black">{workload}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.1em]">
+          Assigned Leads
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function OwnerStatus({
+  loading,
+  assignment,
+  assignedAdminInitial,
+}) {
   if (loading) {
     return (
-      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-300 bg-[#fffaf2] px-4 py-2 text-xs font-bold text-gray-300">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-slate-400"></span>
-        Loading owner...
+      <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white">
+        <RefreshCw size={13} className="animate-spin" />
+        Loading owner…
       </div>
     );
   }
 
   if (!assignment?.assigned_admin_name) {
     return (
-      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-orange-300 shadow-[0_0_24px_rgba(249,115,22,0.08)]">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full border border-orange-300/20 bg-orange-400/10 text-[10px]">
-          !
-        </span>
+      <div className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 py-2.5 text-xs font-black text-orange-700">
+        <AlertTriangle size={14} />
         Unassigned
       </div>
     );
   }
 
   return (
-    <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-blue-700 shadow-[0_0_24px_rgba(34,211,238,0.08)]">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-[10px] font-black text-blue-700">
+    <div className="inline-flex max-w-full items-center gap-2 rounded-xl border-2 border-white/30 bg-white px-3 py-2.5 text-xs font-black text-[#123865]">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#123865] text-[10px] font-black text-white">
         {assignedAdminInitial}
       </span>
-      <span className="max-w-[220px] truncate">
+
+      <span className="max-w-[240px] truncate">
         {assignment.assigned_admin_name}
       </span>
+    </div>
+  );
+}
+
+function Feedback({ type, message, onClose }) {
+  const style =
+    type === "success"
+      ? "border-emerald-400 bg-emerald-50 text-emerald-900"
+      : type === "warning"
+      ? "border-orange-400 bg-orange-50 text-orange-900"
+      : "border-red-400 bg-red-50 text-red-900";
+
+  const Icon =
+    type === "success"
+      ? CheckCircle2
+      : AlertTriangle;
+
+  return (
+    <div
+      className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${style}`}
+    >
+      <Icon size={17} className="mt-0.5 shrink-0" />
+
+      <div className="min-w-0 flex-1">{message}</div>
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="font-black"
+        aria-label="Dismiss message"
+      >
+        ×
+      </button>
     </div>
   );
 }

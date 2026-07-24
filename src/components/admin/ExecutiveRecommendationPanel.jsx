@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Crown, ShieldCheck, Target, Workflow } from "lucide-react";
 import { buildExecutiveRecommendations } from "../../lib/executiveRecommendations";
 import { buildExecutiveActionTemplate } from "../../lib/executiveActionTemplates";
 import { executeExecutiveActionTemplate } from "../../lib/executiveActionExecutor";
@@ -201,6 +203,10 @@ function ExecutiveRecommendationPanel({
   const [executionMessage, setExecutionMessage] = useState("");
   const [executionError, setExecutionError] = useState("");
   const [previewKey, setPreviewKey] = useState("");
+  const [confirmKey, setConfirmKey] = useState("");
+  const [lastExecuted, setLastExecuted] = useState(null);
+  const executionTokenRef = useRef(0);
+  const reduceMotion = useReducedMotion();
 
   const rows = useMemo(() => buildRecommendationRows(score), [score]);
   const studentName = getStudentName(score);
@@ -228,13 +234,22 @@ function ExecutiveRecommendationPanel({
   const executeRecommendation = async (item) => {
     if (!item?.template || executingKey || executedKeys[item.key]) return;
 
-    const confirmed = window.confirm(
-      `Execute this executive recommendation?\n\n${item.template.title}`
-    );
+    // Critical/executive actions use an in-panel confirmation state instead of
+    // a blocking browser confirm. Lower-risk prepared actions can execute directly.
+    if (item.requiresApproval && confirmKey !== item.key) {
+      setConfirmKey(item.key);
+      setPreviewKey(item.key);
+      setExecutionMessage("");
+      setExecutionError("");
+      return;
+    }
 
-    if (!confirmed) return;
+    const executionToken = executionTokenRef.current + 1;
+    executionTokenRef.current = executionToken;
 
     setExecutingKey(item.key);
+    setConfirmKey("");
+    setExecutionMessage("");
     setExecutionMessage("");
     setExecutionError("");
 
@@ -259,7 +274,15 @@ function ExecutiveRecommendationPanel({
         return;
       }
 
+      if (executionTokenRef.current !== executionToken) return;
+
       setExecutedKeys((prev) => ({ ...prev, [item.key]: true }));
+      setLastExecuted({
+        key: item.key,
+        title: item.template.title,
+        action: getActionLabel(item.recommendation.action || item.template.actionType),
+        at: new Date().toISOString(),
+      });
       setExecutionMessage(`Executed: ${item.template.title}`);
 
       try {
@@ -274,24 +297,78 @@ function ExecutiveRecommendationPanel({
     }
   };
 
-  return (
-    <div className="rounded-[1.75rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_18px_50px_rgba(23,36,61,0.08)] sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B84F0E]">
-            Executive Recommendations
-          </p>
+  const actionableRows = rows.filter((item) => item.template && !executedKeys[item.key]);
+  const approvalRows = actionableRows.filter((item) => item.requiresApproval);
+  const highestImpact = rows.reduce((max, item) => Math.max(max, number(item.impactScore)), 0);
+  const executionProgress = summary.executable
+    ? Math.round((summary.executed / summary.executable) * 100)
+    : 0;
 
-          <h3 className="mt-2 text-xl font-black text-[#17243D]">
+  return (
+    <motion.section
+      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.25 }}
+      className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#FFFDF8] shadow-[0_18px_50px_rgba(23,36,61,0.08)]"
+    >
+      <div className="grid xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="bg-[#123865] p-5 text-white sm:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+              <Crown size={11} /> Executive Recommendations
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+              <Workflow size={11} /> Action Engine
+            </span>
+          </div>
+
+          <h3 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white">
             Recommended Actions for {studentName}
           </h3>
-
-          <p className="mt-2 text-sm leading-6 text-[#667085]">
-            Action guidance generated from Student OS risk, opportunity,
-            application, offer, CAS, visa, document, task, and university signals.
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+            Student OS guidance generated from risk, opportunity, application,
+            offer, CAS, visa, document, task, and university signals.
           </p>
+
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <CommandMetric label="Actions" value={summary.total} />
+            <CommandMetric label="Ready" value={actionableRows.length} />
+            <CommandMetric label="Approval" value={approvalRows.length} />
+            <CommandMetric label="Highest Impact" value={highestImpact} />
+          </div>
         </div>
 
+        <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="flex items-center gap-2">
+            <Target size={17} />
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
+              Execution Progress
+            </p>
+          </div>
+          <p className="mt-3 text-5xl font-black text-white">{executionProgress}%</p>
+          <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
+            {summary.executed} of {summary.executable} executable actions completed
+          </p>
+          <div className="mt-4 h-3 overflow-hidden rounded-full border border-white/25 bg-white/10">
+            <div
+              className="h-full rounded-full bg-white transition-all duration-500"
+              style={{ width: `${executionProgress}%` }}
+            />
+          </div>
+          {lastExecuted ? (
+            <p className="mt-4 text-xs font-semibold leading-5 text-white">
+              Last action: {lastExecuted.action} · {lastExecuted.title}
+            </p>
+          ) : (
+            <p className="mt-4 text-xs font-semibold leading-5 text-white">
+              No recommendation has been executed in this session yet.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-wrap gap-2">
           <SummaryPill label="Total" value={summary.total} />
           <SummaryPill label="Critical" value={summary.critical} tone="critical" />
@@ -365,6 +442,8 @@ function ExecutiveRecommendationPanel({
               executing={executingKey === item.key}
               executed={executedKeys[item.key]}
               disabled={Boolean(executingKey)}
+              confirmationOpen={confirmKey === item.key}
+              onCancelConfirmation={() => setConfirmKey("")}
               onExecute={() => executeRecommendation(item)}
             />
           ))
@@ -381,6 +460,16 @@ function ExecutiveRecommendationPanel({
           </div>
         )}
       </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function CommandMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">{label}</p>
+      <p className="mt-1 text-xl font-black text-white">{value ?? 0}</p>
     </div>
   );
 }
@@ -392,6 +481,8 @@ function RecommendationCard({
   executing = false,
   executed = false,
   disabled = false,
+  confirmationOpen = false,
+  onCancelConfirmation = () => {},
   onExecute = () => {},
 }) {
   const { recommendation, template, studentStage, requiresApproval, impactScore } = item;
@@ -400,7 +491,7 @@ function RecommendationCard({
   const priorityLabel = recommendation.priority || "standard";
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style.wrapper}`}>
+    <div className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style.wrapper}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -488,6 +579,39 @@ function RecommendationCard({
           </p>
         </div>
       </div>
+
+      {confirmationOpen && template ? (
+        <div className="mt-4 rounded-xl border-[3px] border-orange-300 bg-orange-50 p-4">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-0.5 shrink-0 text-orange-700" size={19} />
+            <div className="min-w-0 flex-1">
+              <p className="font-black text-[#17243D]">Human approval required</p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-[#667085]">
+                Review the prepared payload before executing this critical or executive action.
+                Execution can create real CRM records through the existing action executor.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={onExecute}
+                  disabled={disabled || executed}
+                  className="rounded-full border border-orange-600 bg-orange-600 px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {executing ? "Executing..." : "Approve & Execute"}
+                </button>
+                <button
+                  type="button"
+                  onClick={onCancelConfirmation}
+                  disabled={executing}
+                  className="rounded-full border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#344054] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {previewOpen && template ? (
         <div className="mt-4 grid gap-3 lg:grid-cols-2">

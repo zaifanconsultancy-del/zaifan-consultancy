@@ -1,10 +1,14 @@
-// AIWorkspacePanel V2 — High Contrast Admin OS Edition
+// AIWorkspacePanel V4 MAXIMUM — Counselor Intelligence Command Workspace
+// Maximum production pass: local CRM intelligence + intentional GPT generation,
+// counselor qualification, explainable signals, safe copy actions, responsive Admin OS UI.
 // Preserves all existing AI lead scoring, GPT context, copy actions, CRM intelligence,
 // and child component integrations while rebuilding the visual system to match the
 // approved Zaifan InquiryCard / AppointmentCard design language.
 
 import { motion } from "framer-motion";
+import { useMemo, useRef, useState } from "react";
 import {
+  AlertCircle,
   AlertTriangle,
   Brain,
   CheckCircle2,
@@ -20,6 +24,8 @@ import {
   Target,
   TrendingUp,
   UserCheck,
+  RefreshCcw,
+  Clock3,
   Zap,
 } from "lucide-react";
 import AICounselorAssistant from "./AICounselorAssistant";
@@ -27,6 +33,10 @@ import { enrichLeadWithAi } from "../../services/aiLeadEngine";
 import GPTCopilotPanel from "./GPTCopilotPanel";
 
 function AIWorkspacePanel({ student, studentType = "inquiry", adminProfile }) {
+  const [copyStatus, setCopyStatus] = useState("");
+  const [copyTone, setCopyTone] = useState("success");
+  const copyTimerRef = useRef(null);
+
   if (!student) return null;
 
   const aiLead = enrichLeadWithAi(student, studentType);
@@ -81,7 +91,11 @@ function AIWorkspacePanel({ student, studentType = "inquiry", adminProfile }) {
   ].filter(Boolean);
 
   const riskSignals = [
-    status === "documents_pending" ? "Documents are pending" : null,
+    ["documents_pending", "documents pending"].includes(
+      String(status || "").toLowerCase().replace(/_/g, " ")
+    )
+      ? "Documents are pending"
+      : null,
     !phone ? "No phone number available" : null,
     !email ? "No email available" : null,
     !hasNotes ? "No meaningful notes yet" : null,
@@ -96,7 +110,11 @@ function AIWorkspacePanel({ student, studentType = "inquiry", adminProfile }) {
     email ? "Email contact available" : null,
     aiLead.ai_score >= 70 ? "Strong AI lead score" : null,
     priority === "vip" || priority === "high" ? "Priority lead" : null,
-    status === "documents_pending" ? "Ready for document collection push" : null,
+    ["documents_pending", "documents pending"].includes(
+      String(status || "").toLowerCase().replace(/_/g, " ")
+    )
+      ? "Ready for document collection push"
+      : null,
   ].filter(Boolean);
 
   const qualificationChecks = [
@@ -115,6 +133,10 @@ function AIWorkspacePanel({ student, studentType = "inquiry", adminProfile }) {
   const qualificationPercent = Math.round(
     (completedChecks / qualificationChecks.length) * 100
   );
+
+  const profileGapCount = missingItems.length;
+  const riskCount = riskSignals.length;
+  const opportunityCount = opportunitySignals.length;
 
   const opportunityStars = getOpportunityStars(aiLead.ai_score);
 
@@ -179,16 +201,47 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
     },
   };
 
-  const copyText = async (text) => {
-    await navigator.clipboard.writeText(text);
-    alert("Copied.");
+  const copyText = async (text, label = "Content") => {
+    const value = String(text || "").trim();
+
+    if (!value) {
+      setCopyTone("error");
+      setCopyStatus(`${label} is empty.`);
+      return;
+    }
+
+    try {
+      if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        if (!copied) throw new Error("Clipboard access is unavailable.");
+      }
+
+      setCopyTone("success");
+      setCopyStatus(`${label} copied.`);
+      copyTimerRef.current = window.setTimeout(() => setCopyStatus(""), 2200);
+    } catch (error) {
+      console.error("Copy failed:", error);
+      setCopyTone("error");
+      setCopyStatus(error?.message || "Copy failed.");
+      copyTimerRef.current = window.setTimeout(() => setCopyStatus(""), 3200);
+    }
   };
 
   return (
     <section className="space-y-5 text-[#10233f]">
-      <div className="relative overflow-hidden rounded-[1.8rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-white shadow-[0_16px_40px_rgba(15,35,63,0.14)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.20),transparent_38%)]" />
-        <div className="pointer-events-none absolute -left-24 bottom-0 h-60 w-60 rounded-full bg-orange-400/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#123865] p-6 shadow-[0_16px_40px_rgba(15,35,63,0.14)]" style={{ color: "#ffffff" }}>
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
@@ -196,7 +249,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
               <span className="rounded-full border border-orange-400/45 bg-orange-500/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
                 AI Workspace V3
               </span>
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-200">
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-white">
                 Real GPT + CRM Intelligence
               </span>
             </div>
@@ -205,7 +258,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
               Counselor Operating Desk
             </h2>
 
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white">
               This workspace combines local CRM intelligence with real GPT generation. Local AI handles scores and signals instantly. GPT is used only when the counselor manually generates a real output.
             </p>
           </div>
@@ -229,13 +282,81 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         </div>
       </div>
 
-      <GPTCopilotPanel
-        student={student}
-        studentType={studentType}
-        adminProfile={adminProfile}
-        aiLead={aiLead}
-        crmContext={crmContext}
-      />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <WorkspaceModeCard
+          label="Local AI"
+          value="Always On"
+          detail="Scores, urgency, qualification and rule-based signals."
+          tone="navy"
+        />
+        <WorkspaceModeCard
+          label="GPT"
+          value="Manual"
+          detail="Runs only when a counselor intentionally generates an output."
+          tone="orange"
+        />
+        <WorkspaceModeCard
+          label="CRM Context"
+          value="Connected"
+          detail="Student profile and local AI signals are passed into the workspace."
+          tone="cream"
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <OperationalSignal
+          icon={CheckCircle2}
+          label="Qualification"
+          value={`${qualificationPercent}%`}
+          detail={`${completedChecks}/${qualificationChecks.length} core checks complete`}
+          tone={qualificationPercent >= 70 ? "green" : "orange"}
+        />
+        <OperationalSignal
+          icon={TrendingUp}
+          label="Opportunities"
+          value={opportunityCount}
+          detail="Positive CRM signals available"
+          tone="blue"
+        />
+        <OperationalSignal
+          icon={ShieldAlert}
+          label="Risk Signals"
+          value={riskCount}
+          detail={riskCount ? "Review before counselor action" : "No major risk detected"}
+          tone={riskCount ? "red" : "green"}
+        />
+        <OperationalSignal
+          icon={AlertCircle}
+          label="Profile Gaps"
+          value={profileGapCount}
+          detail={profileGapCount ? "Missing data reduces counseling quality" : "Core profile data is present"}
+          tone={profileGapCount >= 5 ? "red" : profileGapCount ? "orange" : "green"}
+        />
+      </div>
+
+      <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.06)]">
+        <div className="bg-orange-500 px-5 py-4 text-white sm:px-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white">
+            Real GPT Generation
+          </p>
+          <h3 className="mt-1 text-xl font-black text-white">
+            Counselor GPT Copilot
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-white">
+            Use GPT only when a counselor intentionally needs generated reasoning, messaging, summaries, scripts, or case guidance.
+          </p>
+        </div>
+
+        <div className="bg-[#fff8ee] p-4 sm:p-5">
+          <GPTCopilotPanel
+            student={student}
+            studentType={studentType}
+            adminProfile={adminProfile}
+            aiLead={aiLead}
+            crmContext={crmContext}
+          />
+        </div>
+      </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Metric icon={Brain} label="Temperature" value={aiLead.ai_tier.label} />
@@ -294,10 +415,10 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         />
       </div>
 
-      <div className="rounded-[1.6rem] border border-orange-300 bg-[#fff8ee] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
+      <div className="rounded-[1.6rem] border-2 border-orange-300 bg-[#fff8ee] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
         <div className="flex items-start gap-4">
           <div className="rounded-2xl bg-[#102f5c] p-3">
-            <UserCheck className="h-5 w-5 text-orange-300" />
+            <UserCheck className="h-5 w-5 text-white" />
           </div>
 
           <div>
@@ -307,42 +428,56 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
             <h3 className="mt-2 text-xl font-black text-[#10233f]">
               {aiLead.ai_recommended_action}
             </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-[#36506f]">
               This recommendation is generated by the local AI lead engine and does not use GPT credits.
             </p>
           </div>
         </div>
       </div>
 
+      {copyStatus ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`rounded-2xl border-2 px-4 py-3 text-sm font-black ${
+            copyTone === "error"
+              ? "border-red-300 bg-red-50 text-red-800"
+              : "border-emerald-300 bg-emerald-50 text-emerald-800"
+          }`}
+        >
+          {copyStatus}
+        </div>
+      ) : null}
+
       <div className="grid gap-3 md:grid-cols-3">
         <QuickAction
           icon={FileText}
           title="Copy Summary"
           text="Copy AI summary for internal notes."
-          onClick={() => copyText(quickSummary)}
+          onClick={() => copyText(quickSummary, "AI summary")}
         />
         <QuickAction
           icon={MessageCircle}
           title="Copy WhatsApp"
           text="Copy credit-free WhatsApp follow-up."
-          onClick={() => copyText(quickWhatsApp)}
+          onClick={() => copyText(quickWhatsApp, "WhatsApp draft")}
         />
         <QuickAction
           icon={Mail}
           title="Copy Email"
           text="Copy credit-free email draft."
-          onClick={() => copyText(quickEmail)}
+          onClick={() => copyText(quickEmail, "Email draft")}
         />
       </div>
 
-      <div className="rounded-[1.8rem] border border-slate-300 bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.05)]">
+      <div className="rounded-[1.8rem] border-2 border-[#b8c5d3] bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.05)]">
         <div className="mb-5 flex items-center gap-3">
           <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3">
-            <Sparkles className="h-5 w-5 text-orange-300" />
+            <Sparkles className="h-5 w-5 text-orange-700" />
           </div>
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-700">
-              Rule-Based Copilot
+              Local Rule-Based Copilot
             </p>
             <h3 className="text-xl font-black text-[#10233f]">
               AI Counselor Assistant
@@ -362,27 +497,27 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
 
 function HeroScoreCard({ icon: Icon, label, value, suffix, detail }) {
   return (
-    <div className="rounded-[1.4rem] border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
+    <div className="rounded-[1.4rem] border border-white/20 bg-white/10 p-5 backdrop-blur-sm" style={{ color: "#ffffff" }}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-300">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-white">
           {label}
         </p>
         <Icon className="h-5 w-5 text-orange-300" />
       </div>
       <h3 className="mt-3 text-4xl font-black text-white">
         {value}
-        <span className="text-base text-slate-300">{suffix}</span>
+        <span className="text-base text-white">{suffix}</span>
       </h3>
-      <p className="mt-1 text-xs text-slate-300">{detail}</p>
+      <p className="mt-1 text-xs text-white">{detail}</p>
     </div>
   );
 }
 
 function Metric({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-[1.4rem] border border-slate-300 bg-white p-5 text-[#10233f] shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
+    <div className="rounded-[1.4rem] border-2 border-[#b8c5d3] bg-white p-5 text-[#10233f] shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{label}</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#4d6380]">{label}</p>
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><Icon size={18} /></span>
       </div>
       <h3 className="mt-3 text-2xl font-black">{value}</h3>
@@ -418,7 +553,7 @@ function StudentIntelligenceSnapshot({
   ];
 
   return (
-    <div className="rounded-[1.8rem] border border-slate-300 bg-white p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
+    <div className="rounded-[1.8rem] border-2 border-[#b8c5d3] bg-white p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700">
@@ -429,7 +564,7 @@ function StudentIntelligenceSnapshot({
           </h3>
         </div>
 
-        <div className="rounded-2xl border border-orange-300 bg-orange-50 px-4 py-3 text-orange-700">
+        <div className="rounded-2xl border-2 border-orange-300 bg-orange-50 px-4 py-3 text-orange-700">
           <div className="flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, index) => (
               <Star
@@ -450,9 +585,9 @@ function StudentIntelligenceSnapshot({
         {rows.map(([label, value]) => (
           <div
             key={label}
-            className="min-w-0 rounded-2xl border border-slate-300 bg-[#fffaf2] px-4 py-3"
+            className="min-w-0 rounded-2xl border-2 border-[#b8c5d3] bg-[#fff8ee] px-4 py-3"
           >
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#4d6380]">
               {label}
             </p>
             <p className="mt-1 truncate text-sm font-bold text-[#10233f]">
@@ -471,7 +606,7 @@ function CounselorChecklist({
   qualificationPercent = 0,
 }) {
   return (
-    <div className="rounded-[1.8rem] border border-slate-300 bg-white p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
+    <div className="rounded-[1.8rem] border-2 border-[#b8c5d3] bg-white p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700">
@@ -488,7 +623,7 @@ function CounselorChecklist({
       </div>
 
       <div className="mb-5">
-        <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="mb-2 flex items-center justify-between text-xs font-bold text-[#4d6380]">
           <span>Profile readiness</span>
           <span>{qualificationPercent}%</span>
         </div>
@@ -510,11 +645,11 @@ function CounselorChecklist({
                 : "border-red-200 bg-red-50"
             }`}
           >
-            <CheckCircle2
-              className={`h-4 w-4 shrink-0 ${
-                item.passed ? "text-emerald-700" : "text-red-600 opacity-70"
-              }`}
-            />
+            {item.passed ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-700" />
+            ) : (
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-700" />
+            )}
             <span className="text-sm font-semibold text-[#10233f]">{item.label}</span>
           </div>
         ))}
@@ -555,11 +690,11 @@ function InsightCard({
           items.map((item) => (
             <div key={item} className="flex items-start gap-2 text-sm">
               <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${iconClass}`} />
-              <span className="text-slate-700">{item}</span>
+              <span className="text-[#243b5a]">{item}</span>
             </div>
           ))
         ) : (
-          <p className="text-sm text-slate-500">{emptyText}</p>
+          <p className="text-sm text-[#4d6380]">{emptyText}</p>
         )}
       </div>
     </div>
@@ -572,22 +707,87 @@ function QuickAction({ icon: Icon, title, text, onClick }) {
       type="button"
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className="rounded-[1.5rem] border border-slate-300 bg-white p-5 text-left shadow-[0_8px_20px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-[#fffaf2]"
+      className="rounded-[1.5rem] border-2 border-[#b8c5d3] bg-white p-5 text-left shadow-[0_8px_20px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-[#fff8ee]"
     >
       <div className="flex items-start gap-3">
         <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3">
-          <Icon className="h-5 w-5 text-orange-300" />
+          <Icon className="h-5 w-5 text-orange-700" />
         </div>
         <div>
           <h3 className="font-black text-[#10233f]">{title}</h3>
-          <p className="mt-1 text-sm text-slate-600">{text}</p>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-xs font-black text-orange-700">
+          <p className="mt-1 text-sm text-[#36506f]">{text}</p>
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-xs font-black text-orange-700">
             <Copy size={13} />
             Copy
           </div>
         </div>
       </div>
     </motion.button>
+  );
+}
+
+
+function OperationalSignal({ icon: Icon, label, value, detail, tone = "blue" }) {
+  const tones = {
+    blue: "border-blue-300 bg-blue-50 text-blue-800",
+    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    red: "border-red-300 bg-red-50 text-red-800",
+  };
+
+  return (
+    <div className={`rounded-[1.35rem] border-2 p-4 ${tones[tone] || tones.blue}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.14em]">
+            {label}
+          </p>
+          <p className="mt-1 text-2xl font-black">{value}</p>
+        </div>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-white/70">
+          <Icon size={17} />
+        </span>
+      </div>
+      <p className="mt-2 text-xs font-semibold leading-5">{detail}</p>
+    </div>
+  );
+}
+
+
+function WorkspaceModeCard({ label, value, detail, tone = "cream" }) {
+  const isDark = tone === "navy" || tone === "orange";
+
+  const style =
+    tone === "navy"
+      ? "border-[#123865] bg-[#123865]"
+      : tone === "orange"
+        ? "border-orange-500 bg-orange-500"
+        : "border-orange-300 bg-white";
+
+  return (
+    <div
+      className={`rounded-[1.35rem] border-[3px] p-4 ${style}`}
+      style={{ color: isDark ? "#ffffff" : "#10233f" }}
+    >
+      <p
+        className="text-[9px] font-black uppercase tracking-[0.14em]"
+        style={{ color: isDark ? "#ffffff" : "#4d6380" }}
+      >
+        {label}
+      </p>
+      <p
+        className="mt-1 text-xl font-black"
+        style={{ color: isDark ? "#ffffff" : "#10233f" }}
+      >
+        {value}
+      </p>
+      <p
+        className="mt-1 text-xs font-semibold leading-5"
+        style={{ color: isDark ? "#ffffff" : "#4d6380" }}
+      >
+        {detail}
+      </p>
+    </div>
   );
 }
 

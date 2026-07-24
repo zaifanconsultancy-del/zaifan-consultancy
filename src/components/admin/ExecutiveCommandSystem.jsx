@@ -1,4 +1,41 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+// ExecutiveCommandSystem V3 — Architecture Hardening Pass
+// Parent orchestrator only: loads executive scores, computes command snapshots,
+// routes into specialized Executive/Enterprise OS modules, and keeps developer
+// execution tools hidden from normal operations.
+//
+// V3 changes:
+// - grouped command navigation instead of a 16-pill wall
+// - truthful module labels ("Open" instead of hardcoded "Live")
+// - stronger navy/orange Admin OS hierarchy and text contrast
+// - removes "Success Stories" wording from executive KPI UI
+// - preserves all existing engines, lazy modules, verification logic and handlers
+// - does NOT merge/remove child engines yet; child audits happen separately
+
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Activity,
+  ArrowUpRight,
+  BarChart3,
+  BellRing,
+  BookOpenCheck,
+  Boxes,
+  BrainCircuit,
+  BriefcaseBusiness,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  Gauge,
+  Handshake,
+  MessageSquareText,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Wrench,
+  Workflow,
+  Zap,
+} from "lucide-react";
 const ExecutiveScoreGeneratorPanel = lazy(() => import("./ExecutiveScoreGeneratorPanel"));
 const ExecutiveAlertsPanel = lazy(() => import("./ExecutiveAlertsPanel"));
 const ExecutiveActionQueue = lazy(() => import("./ExecutiveActionQueue"));
@@ -24,6 +61,48 @@ import {
   generateProductionReadinessReport,
   buildExecutiveRecoveryActions,
 } from "../../lib/platformVerificationEngine";
+
+const EXECUTIVE_VIEW_STORAGE_KEY = "zaifan-executive-command-active-view";
+
+const VALID_EXECUTIVE_VIEWS = new Set([
+  "operations",
+  "intelligence",
+  "notification-center",
+  "verification",
+  "actions",
+  "bulk-operations",
+  "automation-control",
+  "automation",
+  "alerts",
+  "portfolio",
+  "founder-growth",
+  "ai-command",
+  "analytics-os",
+  "knowledge-os",
+  "communication-os",
+  "partner-os",
+]);
+
+function getStoredExecutiveView() {
+  if (typeof window === "undefined") return "operations";
+
+  try {
+    const saved = window.localStorage.getItem(EXECUTIVE_VIEW_STORAGE_KEY);
+    return VALID_EXECUTIVE_VIEWS.has(saved) ? saved : "operations";
+  } catch {
+    return "operations";
+  }
+}
+
+function persistExecutiveView(view) {
+  if (typeof window === "undefined" || !VALID_EXECUTIVE_VIEWS.has(view)) return;
+
+  try {
+    window.localStorage.setItem(EXECUTIVE_VIEW_STORAGE_KEY, view);
+  } catch {
+    // Navigation persistence is optional and must never break Executive OS.
+  }
+}
 
 function normalize(value = "") {
   return String(value || "")
@@ -264,7 +343,7 @@ function buildCommandMetrics(scores = []) {
     ["cas_pending", "cas_issued", "visa_pending", "visa_rejected"].includes(getJourneyStage(score))
   ).length;
 
-  const successStories = scores.filter(
+  const verifiedOutcomes = scores.filter(
     (score) =>
       normalize(score.executive_category) === "success_story" ||
       getJourneyStage(score) === "visa_approved" ||
@@ -285,7 +364,7 @@ function buildCommandMetrics(scores = []) {
     executivePriority,
     conversionReady,
     visaWatch,
-    successStories,
+    verifiedOutcomes,
     averageRisk,
     averageOpportunity,
   };
@@ -461,11 +540,11 @@ function buildExecutiveSnapshotV2(scores = [], operations = {}, commandMetrics =
       { label: "Application OS", value: applications, detail: "Active application movement", tone: "blue" },
       { label: "Visa OS", value: visas, detail: `${alertSnapshot?.visa || 0} visa watch`, tone: "orange" },
       { label: "Payment OS", value: collectionRisk, detail: "Payment risk watch", tone: collectionRisk > 0 ? "orange" : "green" },
-      { label: "Analytics OS", value: "Live", detail: "Executive reporting connected", tone: "gold" },
-      { label: "Knowledge OS", value: "Live", detail: "SOP, training, policy layer", tone: "gold" },
+      { label: "Analytics OS", value: "Available", detail: "Executive reporting module available", tone: "gold" },
+      { label: "Knowledge OS", value: "Available", detail: "SOP, training, policy module available", tone: "gold" },
       { label: "Communication OS", value: staleStudents, detail: "Students needing follow-up", tone: staleStudents > 0 ? "orange" : "green" },
-      { label: "Partner OS", value: "Live", detail: "Agent and university partner layer", tone: "gold" },
-      { label: "AI Command", value: "Live", detail: "Prediction and intelligence layer", tone: "gold" },
+      { label: "Partner OS", value: "Available", detail: "Agent and university partner module available", tone: "gold" },
+      { label: "AI Command", value: "Available", detail: "Prediction and intelligence module available", tone: "gold" },
       { label: "Verification", value: `${verificationHealth}%`, detail: "Readiness estimate", tone: verificationHealth >= 85 ? "green" : "orange" },
     ],
     riskFeed: [
@@ -483,36 +562,44 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
   const [loadingScores, setLoadingScores] = useState(false);
   const [error, setError] = useState("");
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
-  const [activeView, setActiveView] = useState("operations");
+  const [activeView, setActiveView] = useState(() => getStoredExecutiveView());
+  const [lastLoadedAt, setLastLoadedAt] = useState(null);
+  const [showExecutiveSnapshot, setShowExecutiveSnapshot] = useState(true);
+  const [showLaunchers, setShowLaunchers] = useState(true);
 
-  const loadExecutiveScores = async () => {
+  const loadExecutiveScores = useCallback(async () => {
     setLoadingScores(true);
     setError("");
 
     try {
       const result = await getExecutiveScoreSummary();
 
-      if (result.error) {
-        setError(result.error.message || "Executive scores failed to load.");
-        setScores([]);
-        setSummary(null);
-        return;
+      if (result?.error) {
+        throw result.error;
       }
 
-      setScores(result.scores || []);
-      setSummary(result);
+      const nextScores = safeArray(result?.scores).filter(Boolean);
+
+      setScores(nextScores);
+      setSummary(result && typeof result === "object" ? result : null);
+      setLastLoadedAt(new Date());
     } catch (err) {
-      setError(err.message || "Executive scores crashed while loading.");
+      console.error("Executive score loading failed:", err);
+      setError(err?.message || "Executive scores crashed while loading.");
       setScores([]);
       setSummary(null);
     } finally {
       setLoadingScores(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadExecutiveScores();
-  }, []);
+    void loadExecutiveScores();
+  }, [loadExecutiveScores]);
+
+  useEffect(() => {
+    persistExecutiveView(activeView);
+  }, [activeView]);
 
   const commandMetrics = useMemo(() => buildCommandMetrics(scores), [scores]);
   const operations = useMemo(() => buildOperationsCenter(scores), [scores]);
@@ -554,13 +641,21 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
     [scores]
   );
 
-  const executiveRecoveryActions = useMemo(
-    () =>
-      normalizeExecutiveRecoveryActions(
-        runVerificationBuilder(buildExecutiveRecoveryActions, scores, { immediateActions: [], executiveActions: [], counselorActions: [] })
-      ),
-    [scores]
-  );
+  const executiveRecoveryActions = useMemo(() => {
+    const recoverySource = brokenWorkflowScanner.brokenWorkflows || [];
+
+    return normalizeExecutiveRecoveryActions(
+      runVerificationBuilder(
+        buildExecutiveRecoveryActions,
+        recoverySource,
+        {
+          immediateActions: [],
+          executiveActions: [],
+          counselorActions: [],
+        }
+      )
+    );
+  }, [brokenWorkflowScanner]);
 
   const handleGenerated = async () => {
     await loadExecutiveScores();
@@ -570,111 +665,219 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
     await loadExecutiveScores();
   };
 
+  const changeActiveView = (view) => {
+    setActiveView(VALID_EXECUTIVE_VIEWS.has(view) ? view : "operations");
+  };
+
   return (
-    <div className="space-y-6 rounded-[2rem] bg-[#f7f8fa] p-1 text-slate-950 sm:p-2">
-      <div className="relative overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.07)] sm:p-7">
-        <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-orange-200/35 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-amber-100/70 blur-3xl" />
-        <div className="relative flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
-              Executive Operations Center
-            </p>
+    <div className="space-y-6 rounded-[2rem] bg-[#fff8ee] p-1 text-[#10233f] sm:p-2">
+      <div className="relative rounded-[2rem] border-[3px] border-orange-400 bg-[#FFF8EE] p-3 shadow-[0_20px_70px_rgba(15,35,63,0.08)] sm:p-4">
+        <div className="grid overflow-hidden rounded-[1.65rem] border-2 border-[#123865] xl:grid-cols-[1.25fr_0.75fr]">
+          <div className="flex min-h-[310px] flex-col bg-[#123865] p-6 text-white sm:p-7">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-300">
+                Executive Operations Center
+              </p>
 
-            <h2 className="mt-2 text-3xl font-black text-slate-950">
-              Student OS Admin Command Layer
-            </h2>
+              <h2 className="mt-2 max-w-3xl text-3xl font-black text-white">
+                Zaifan Executive Command System
+              </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-              Unified command view for student journey movement, executive watchlists,
-              counselor actions, revenue pressure, automation readiness, and operational health.
-            </p>
+              <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/90">
+                One command layer for student movement, executive watchlists,
+                counselor workload, workflow integrity, automation and recovery.
+              </p>
+            </div>
+
+            <div className="mt-auto flex flex-wrap justify-start gap-2 pt-8 lg:justify-end">
+              <button
+                type="button"
+                onClick={() => void loadExecutiveScores()}
+                disabled={loadingScores}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-[0_8px_18px_rgba(0,0,0,0.08)] transition hover:-translate-y-0.5 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={loadingScores ? "animate-spin" : ""} />
+                {loadingScores ? "Reloading..." : "Reload Scores"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDeveloperTools((prev) => !prev)}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-300/70 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/20"
+              >
+                <Wrench size={14} />
+                {showDeveloperTools ? "Hide Developer Tools" : "Developer Tools"}
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={loadExecutiveScores}
-              disabled={loadingScores}
-              className="rounded-full border border-orange-200 bg-orange-50 px-5 py-2 text-sm font-bold text-orange-600 transition hover:bg-orange-500 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loadingScores ? "Loading..." : "Reload Scores"}
-            </button>
+          <div className="border-t-2 border-orange-300 bg-orange-500 p-6 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+              Command State
+            </p>
+            <p className="mt-3 text-4xl font-black text-white">
+              {commandMetrics.total}
+            </p>
+            <p className="mt-1 text-sm font-black text-white">
+              students in executive portfolio
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl border border-white/25 bg-white/10 p-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">Critical</p>
+                <p className="mt-1 text-xl font-black text-white">{commandMetrics.critical}</p>
+              </div>
+              <div className="rounded-2xl border border-white/25 bg-white/10 p-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">Ready</p>
+                <p className="mt-1 text-xl font-black text-white">{commandMetrics.conversionReady}</p>
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => setShowDeveloperTools((prev) => !prev)}
-              className="rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-500 transition hover:border-orange-300 hover:text-orange-700"
-            >
-              {showDeveloperTools ? "Hide Tools" : "Developer Tools"}
-            </button>
+            <div className="mt-3 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Data Freshness
+              </p>
+              <p className="mt-1 text-xs font-black text-white">
+                {lastLoadedAt
+                  ? `Updated ${lastLoadedAt.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`
+                  : loadingScores
+                  ? "Loading executive portfolio..."
+                  : "Not loaded yet"}
+              </p>
+            </div>
           </div>
         </div>
 
+        <div className="mt-3 rounded-[1.5rem] border-2 border-orange-200 bg-[#FFFDF8] p-5 sm:p-6">
+
         {error ? (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="mt-5 rounded-[1.25rem] border-[3px] border-red-400 bg-red-50 p-4 text-sm font-semibold text-red-700">
             {error}
           </div>
         ) : null}
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-10">
-          <SummaryCard label="Students Scored" value={summary?.total || commandMetrics.total} />
-          <SummaryCard label="Critical Risk" value={summary?.criticalRisk || summary?.critical || commandMetrics.critical} tone="red" />
-          <SummaryCard label="Executive Priority" value={commandMetrics.executivePriority} tone="gold" />
-          <SummaryCard label="Conversion Ready" value={summary?.conversionReady || commandMetrics.conversionReady} tone="gold" />
-          <SummaryCard label="Visa/CAS Watch" value={commandMetrics.visaWatch} tone="blue" />
-          <SummaryCard label="Success Stories" value={summary?.successStories || commandMetrics.successStories} tone="green" />
-          <SummaryCard label="Avg Risk" value={summary?.averageRisk || commandMetrics.averageRisk} tone="orange" />
-          <SummaryCard label="Avg Opportunity" value={summary?.averageOpportunity || commandMetrics.averageOpportunity} tone="green" />
-          <SummaryCard label="Workflow Integrity" value={`${workflowIntegrity.overallIntegrity || 0}%`} tone={(workflowIntegrity.overallIntegrity || 0) >= 75 ? "green" : "orange"} />
-          <SummaryCard label="Production Ready" value={`${productionReadiness.readinessScore || 0}%`} tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)} />
-        </div>
+        {!loadingScores && !error && scores.length === 0 ? (
+          <div className="mt-5 rounded-[1.4rem] border-[3px] border-dashed border-slate-300 bg-white p-6 text-center">
+            <p className="font-black text-[#10233f]">No executive score records yet</p>
+            <p className="mx-auto mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+              Generate or load Student OS executive scores before using portfolio,
+              verification, automation, and recovery intelligence.
+            </p>
+          </div>
+        ) : null}
 
-        <ExecutiveSnapshotV2
-          snapshot={executiveSnapshotV2}
-          setActiveView={setActiveView}
-          verificationSnapshot={platformVerificationSnapshot}
-          workflowScanner={brokenWorkflowScanner}
-          workflowIntegrity={workflowIntegrity}
-          productionReadiness={productionReadiness}
-          executiveRecoveryActions={executiveRecoveryActions}
-        />
+        <section className="mt-6 overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(15,35,63,0.06)]">
+          <div className="flex flex-col gap-2 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-300">
+                Executive Signal Wall
+              </p>
+              <h3 className="mt-1 text-lg font-black text-white">
+                Portfolio pressure & readiness
+              </h3>
+              <p className="mt-1 text-xs font-semibold text-white/80">
+                Read-only executive metrics derived from the currently loaded score portfolio.
+              </p>
+            </div>
+            <span className="w-fit rounded-xl border-2 border-white/25 bg-white/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+              {commandMetrics.total} scored records
+            </span>
+          </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:p-5">
+            <SummaryCard label="Students Scored" value={summary?.total ?? commandMetrics.total} tone="navy" />
+            <SummaryCard label="Critical Risk" value={summary?.criticalRisk ?? summary?.critical ?? commandMetrics.critical} tone="red" />
+            <SummaryCard label="Executive Priority" value={commandMetrics.executivePriority} tone="orange" />
+            <SummaryCard label="Conversion Ready" value={summary?.conversionReady ?? commandMetrics.conversionReady} tone="green" />
+            <SummaryCard label="Visa/CAS Watch" value={commandMetrics.visaWatch} tone="blue" />
+            <SummaryCard label="Verified Outcomes" value={summary?.verifiedOutcomes ?? summary?.successStories ?? commandMetrics.verifiedOutcomes} tone="green" />
+            <SummaryCard label="Avg Risk" value={summary?.averageRisk ?? commandMetrics.averageRisk} tone="red" />
+            <SummaryCard label="Avg Opportunity" value={summary?.averageOpportunity ?? commandMetrics.averageOpportunity} tone="green" />
+            <SummaryCard label="Workflow Integrity" value={`${workflowIntegrity.overallIntegrity || 0}%`} tone={(workflowIntegrity.overallIntegrity || 0) >= 75 ? "green" : "orange"} />
+            <SummaryCard label="Production Ready" value={`${productionReadiness.readinessScore || 0}%`} tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)} />
+          </div>
+        </section>
+
+        <CommandDisclosure
+          eyebrow="Executive Intelligence"
+          title="Unified Enterprise Health Wall"
+          description="Portfolio, workflow, system coverage and executive risk intelligence."
+          open={showExecutiveSnapshot}
+          onToggle={() => setShowExecutiveSnapshot((current) => !current)}
+          icon={Gauge}
+        >
+          <ExecutiveSnapshotV2
+            snapshot={executiveSnapshotV2}
+            setActiveView={changeActiveView}
+            verificationSnapshot={platformVerificationSnapshot}
+            workflowScanner={brokenWorkflowScanner}
+            workflowIntegrity={workflowIntegrity}
+            productionReadiness={productionReadiness}
+            executiveRecoveryActions={executiveRecoveryActions}
+          />
+        </CommandDisclosure>
+
+        <section className="mt-6 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_12px_34px_rgba(15,35,63,0.06)]">
+          <button
+            type="button"
+            onClick={() => setShowLaunchers((current) => !current)}
+            aria-expanded={showLaunchers}
+            className="flex w-full flex-col gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0F3158] sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-300">
+                Interactive Command Launchers
+              </p>
+              <h3 className="mt-1 text-lg font-black text-white">
+                Open an Executive OS workspace
+              </h3>
+              <p className="mt-1 text-xs font-semibold text-white/80">
+                Core Executive workspaces are active now. Enterprise OS template modules remain available but are deferred for their dedicated rebuild phase.
+              </p>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
+              {showLaunchers ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </span>
+          </button>
+
+          {showLaunchers ? (
+          <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 sm:p-5">
           <CommandLaunchCard
             title="Notification Center"
             value={alertSnapshot.total}
             detail={`${alertSnapshot.critical} critical • ${alertSnapshot.visa} visa watch`}
             tone={alertSnapshot.total > 0 ? "red" : "green"}
-            onClick={() => setActiveView("notification-center")}
+            onClick={() => changeActiveView("notification-center")}
           />
           <CommandLaunchCard
             title="Automation Control"
-            value="Live"
-            detail="Approval queue, failures, duplicate protection"
+            value="Open"
+            detail="Open approval, failure and duplicate-protection controls"
             tone="gold"
-            onClick={() => setActiveView("automation-control")}
+            onClick={() => changeActiveView("automation-control")}
           />
           <CommandLaunchCard
             title="Revenue Intelligence"
             value={operations.revenue.conversionReady}
             detail={`${operations.revenue.offerAccepted} offer accepted • ${operations.revenue.visaReadySoon} visa ready`}
             tone="green"
-            onClick={() => setActiveView("operations")}
+            onClick={() => changeActiveView("operations")}
           />
           <CommandLaunchCard
             title="Operations Health"
             value={`${operations.health.applications || 0}%`}
             detail="Applications, documents, tasks, visa, automation"
             tone="blue"
-            onClick={() => setActiveView("operations")}
+            onClick={() => changeActiveView("operations")}
           />
           <CommandLaunchCard
             title="Verification Readiness"
             value={`${productionReadiness.readinessScore || 0}%`}
             detail={`${brokenWorkflowScanner.totalBrokenWorkflows || 0} broken workflows • ${workflowIntegrity.overallIntegrity || 0}% integrity`}
             tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)}
-            onClick={() => setActiveView("verification")}
+            onClick={() => changeActiveView("verification")}
           />
 
           <CommandLaunchCard
@@ -682,47 +885,50 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
             value={`${commandMetrics.conversionReady || 0}`}
             detail="Funnel, revenue, market demand, counselor performance"
             tone="gold"
-            onClick={() => setActiveView("founder-growth")}
+            onClick={() => changeActiveView("founder-growth")}
           />
           <CommandLaunchCard
             title="Analytics OS"
-            value="Live"
-            detail="KPI command, BI, forecasts, trends, reports"
+            value="Open"
+            detail="Open KPI, BI, forecast, trend and reporting module"
             tone="blue"
-            onClick={() => setActiveView("analytics-os")}
+            onClick={() => changeActiveView("analytics-os")}
           />
           <CommandLaunchCard
             title="Knowledge OS"
-            value="Live"
-            detail="SOP, training, university, visa, policy hub"
+            value="Open"
+            detail="Open SOP, training, university, visa and policy module"
             tone="gold"
-            onClick={() => setActiveView("knowledge-os")}
+            onClick={() => changeActiveView("knowledge-os")}
           />
           <CommandLaunchCard
             title="Communication OS"
             value={operations.today.communicationFollowups}
             detail="Email, WhatsApp, calls, meetings, follow-ups"
             tone="blue"
-            onClick={() => setActiveView("communication-os")}
+            onClick={() => changeActiveView("communication-os")}
           />
           <CommandLaunchCard
             title="Partner OS"
-            value="Live"
-            detail="Agents, universities, commissions, partner analytics"
+            value="Open"
+            detail="Open agents, universities, commissions and partner analytics"
             tone="green"
-            onClick={() => setActiveView("partner-os")}
+            onClick={() => changeActiveView("partner-os")}
           />
           <CommandLaunchCard
             title="AI Command OS"
-            value="Live"
-            detail="Copilot, forecasts, workflow, cross-system intelligence"
+            value="Open"
+            detail="Open copilot, forecasts, workflow and cross-system intelligence"
             tone="gold"
-            onClick={() => setActiveView("ai-command")}
+            onClick={() => changeActiveView("ai-command")}
           />
+          </div>
+          ) : null}
+        </section>
         </div>
       </div>
 
-      <CommandTabs activeView={activeView} setActiveView={setActiveView} />
+      <CommandTabs activeView={activeView} setActiveView={changeActiveView} />
 
       {activeView === "operations" ? (
         <ExecutiveOperationsCenter operations={operations} totalStudents={scores.length} />
@@ -856,17 +1062,16 @@ function ExecutiveCommandSystem({ adminProfile = null }) {
 
       {showDeveloperTools ? (
         <Suspense fallback={<CommandModuleLoader label="Loading developer tools..." />}>
-        <div className="space-y-6 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="space-y-6 rounded-[2rem] border-[3px] border-slate-300 bg-white p-5 shadow-sm">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">
-              Developer Tools
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+              Advanced Developer Tools
             </p>
-            <h3 className="mt-2 text-xl font-black text-slate-950">
-              Hidden Executive AI Tools
+            <h3 className="mt-2 text-xl font-black text-[#10233f]">
+              Controlled Executive AI Tools
             </h3>
             <p className="mt-2 text-sm text-slate-500">
-              Useful for generating scores, inspecting automation payloads, and
-              executing approved actions. Keep hidden during normal CEO/dashboard use.
+              Use for score generation, automation-template inspection, and approved execution testing. Keep this area closed during normal counselor and executive operations.
             </p>
           </div>
 
@@ -911,13 +1116,13 @@ function ExecutiveSnapshotV2({
     0;
 
   return (
-    <div className="mt-6 space-y-5 rounded-[2rem] border border-slate-200 bg-white p-5">
+    <div className="space-y-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
             Executive Snapshot V2
           </p>
-          <h3 className="mt-2 text-2xl font-black text-slate-950">
+          <h3 className="mt-2 text-2xl font-black text-[#10233f]">
             Unified Enterprise Health Wall
           </h3>
           <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
@@ -962,14 +1167,23 @@ function ExecutiveSnapshotV2({
         <button
           type="button"
           onClick={() => setActiveView?.("verification")}
-          className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-left transition hover:-translate-y-0.5 hover:bg-orange-500 hover:text-slate-950"
+          className="group rounded-2xl border-[3px] border-orange-400 bg-orange-50 p-4 text-left shadow-[0_8px_20px_rgba(249,115,22,0.08)] transition hover:-translate-y-0.5 hover:border-orange-500 hover:bg-orange-100"
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
-            Verification Center
-          </p>
-          <p className="mt-3 text-2xl font-black text-slate-950">Open</p>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            Full workflow scanner and launch readiness report
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
+                Verification Center
+              </p>
+              <p className="mt-2 text-lg font-black text-[#10233f]">
+                Launch readiness workspace
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border-2 border-orange-400 bg-white px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-orange-700 transition group-hover:bg-orange-500 group-hover:text-white">
+              Open →
+            </span>
+          </div>
+          <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+            Full workflow scanner, integrity checks, blockers and recovery actions.
           </p>
         </button>
       </div>
@@ -981,18 +1195,18 @@ function ExecutiveSnapshotV2({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+        <div className="rounded-[1.5rem] border-[3px] border-[#B8CBE0] bg-[#F5F8FC] p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
                 System Coverage
               </p>
-              <h4 className="mt-1 font-black text-slate-950">Enterprise OS connection status</h4>
+              <h4 className="mt-1 font-black text-[#10233f]">Enterprise OS connection status</h4>
             </div>
             <button
               type="button"
               onClick={() => setActiveView?.("ai-command")}
-              className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-black text-orange-600 transition hover:bg-orange-500 hover:text-slate-950"
+              className="rounded-full border-2 border-orange-300 bg-orange-50 px-4 py-2 text-xs font-black text-orange-700 transition hover:border-orange-500 hover:bg-orange-100"
             >
               Open AI Command
             </button>
@@ -1005,11 +1219,11 @@ function ExecutiveSnapshotV2({
           </div>
         </div>
 
-        <div className="rounded-[1.5rem] border border-red-200 bg-red-50 p-4">
+        <div className="rounded-[1.5rem] border-[3px] border-red-300 bg-red-50 p-4">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700/80">
             Executive Risk Feed
           </p>
-          <h4 className="mt-1 font-black text-slate-950">What needs attention first</h4>
+          <h4 className="mt-1 font-black text-[#10233f]">What needs attention first</h4>
 
           <div className="mt-4 space-y-3">
             {riskFeed.map((item) => (
@@ -1025,18 +1239,24 @@ function ExecutiveSnapshotV2({
 function MiniSnapshotMetric({ label, value, tone = "default" }) {
   return (
     <div className={`rounded-2xl border p-3 ${getToneStyle(tone)}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className="mt-1 text-xl font-black text-slate-950">{value}</p>
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-1 text-xl font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
 
 function SnapshotTile({ label, value, detail, tone = "default", compact = false }) {
   return (
-    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black text-slate-950`}>{value}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-400">{detail}</p>
+    <div className={`min-w-0 rounded-2xl border p-4 ${getToneStyle(tone)}`}>
+      <p className="break-words text-[10px] font-black uppercase leading-4 tracking-[0.12em] text-slate-500">
+        {label}
+      </p>
+      <p
+        className={`${compact ? "mt-2 text-xl sm:text-2xl" : "mt-3 text-2xl sm:text-3xl"} break-words font-black leading-tight text-[#10233f]`}
+      >
+        {value}
+      </p>
+      <p className="mt-2 break-words text-xs leading-5 text-slate-500">{detail}</p>
     </div>
   );
 }
@@ -1045,10 +1265,10 @@ function SnapshotRiskRow({ label, value, detail, tone = "default" }) {
   return (
     <div className={`flex items-start justify-between gap-3 rounded-2xl border p-4 ${getToneStyle(tone)}`}>
       <div>
-        <p className="font-black text-slate-950">{label}</p>
-        <p className="mt-1 text-xs leading-5 text-slate-400">{detail}</p>
+        <p className="font-black text-[#10233f]">{label}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
       </div>
-      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-950">
+      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-[#10233f]">
         {value}
       </span>
     </div>
@@ -1072,7 +1292,7 @@ function ExecutiveOperationsCenter({ operations, totalStudents = 0 }) {
         <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
           CEO / Counselor Command Screen
         </p>
-        <h3 className="mt-2 text-2xl font-black text-slate-950">
+        <h3 className="mt-2 text-2xl font-black text-[#10233f]">
           Executive Operations Center
         </h3>
         <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
@@ -1149,7 +1369,7 @@ function ExecutiveVerificationReadinessPanel({
         <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
           Platform Verification V4
         </p>
-        <h3 className="mt-2 text-2xl font-black text-slate-950">
+        <h3 className="mt-2 text-2xl font-black text-[#10233f]">
           Workflow Integrity & Production Readiness
         </h3>
         <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
@@ -1188,7 +1408,7 @@ function ExecutiveVerificationReadinessPanel({
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5">
+          <div className="rounded-[1.75rem] border-[3px] border-slate-300 bg-white p-5">
             <SectionHeader
               eyebrow="Integrity Score"
               title="Workflow integrity breakdown"
@@ -1325,7 +1545,7 @@ function ReadinessIssueRow({ title, detail, severity = "medium" }) {
     <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-black text-slate-950">{title}</p>
+          <p className="font-black text-[#10233f]">{title}</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
         </div>
         <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
@@ -1399,7 +1619,7 @@ function OperationsHealthPanel({ health }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5">
+    <div className="rounded-[1.75rem] border-[3px] border-slate-300 bg-white p-5">
       <SectionHeader
         eyebrow="Operations Health"
         title="Student OS module readiness"
@@ -1415,81 +1635,287 @@ function OperationsHealthPanel({ health }) {
   );
 }
 
-function CommandTabs({ activeView, setActiveView }) {
-  const tabs = [
-  { key: "operations", label: "Operations Center" },
-  { key: "intelligence", label: "Intelligence" },
-  { key: "alerts", label: "Alerts" },
-  { key: "notification-center", label: "Notification Center" },
-  { key: "portfolio", label: "Portfolio" },
-  { key: "actions", label: "Actions" },
-
-  { key: "bulk-operations", label: "Bulk Operations" },
-  { key: "verification", label: "Verification Readiness" },
-
-  { key: "founder-growth", label: "Founder Growth" },
-
-  { key: "analytics-os", label: "Analytics OS" },
-  { key: "knowledge-os", label: "Knowledge OS" },
-  { key: "communication-os", label: "Communication OS" },
-  { key: "partner-os", label: "Partner OS" },
-  { key: "ai-command", label: "AI Command OS" },
-
-  { key: "automation-control", label: "Automation Control" },
-  { key: "automation", label: "Automation Analytics" },
-];
-
+function CommandDisclosure({
+  eyebrow,
+  title,
+  description,
+  open,
+  onToggle,
+  icon: Icon = Gauge,
+  children,
+}) {
   return (
-    <div className="sticky top-3 z-20 flex flex-wrap gap-2 rounded-[1.5rem] border border-slate-200 bg-white/95 p-2 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      {tabs.map((tab) => {
-        const active = activeView === tab.key;
+    <section className="mt-6 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_12px_34px_rgba(15,35,63,0.06)]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0F3158]"
+      >
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300/60 bg-white/10 text-white">
+            <Icon size={18} />
+          </span>
 
-        return (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setActiveView(tab.key)}
-            className={`rounded-full px-5 py-2 text-sm font-bold transition ${
-              active
-                ? "bg-orange-500 text-slate-950 shadow-sm"
-                : "border border-slate-200 bg-slate-50 text-slate-500 hover:border-orange-300 hover:text-orange-700"
-            }`}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-300">
+              {eyebrow}
+            </p>
+            <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
+            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-white/80">
+              {description}
+            </p>
+          </div>
+        </div>
+
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
+          {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </span>
+      </button>
+
+      {open ? <div className="p-4 sm:p-5">{children}</div> : null}
+    </section>
   );
 }
 
+function CommandTabs({ activeView, setActiveView }) {
+  const groups = [
+    {
+      label: "Core Command",
+      eyebrow: "Live Operations",
+      icon: Gauge,
+      tone: "navy",
+      tabs: [
+        { key: "operations", label: "Operations", icon: Activity },
+        { key: "intelligence", label: "Intelligence", icon: BrainCircuit },
+        { key: "notification-center", label: "Notifications", icon: BellRing },
+        { key: "verification", label: "Verification", icon: ShieldCheck },
+      ],
+    },
+    {
+      label: "Execution",
+      eyebrow: "Controlled Actions",
+      icon: Zap,
+      tone: "orange",
+      tabs: [
+        { key: "actions", label: "Actions", icon: Target },
+        { key: "bulk-operations", label: "Bulk Ops", icon: Boxes },
+        { key: "automation-control", label: "Automation Control", icon: Workflow },
+        { key: "automation", label: "Automation Analytics", icon: BarChart3 },
+      ],
+    },
+    {
+      label: "Executive",
+      eyebrow: "Leadership Intelligence",
+      icon: BriefcaseBusiness,
+      tone: "navy",
+      tabs: [
+        { key: "alerts", label: "Alerts", icon: BellRing },
+        { key: "portfolio", label: "Portfolio", icon: ClipboardList },
+        { key: "founder-growth", label: "Founder Growth", icon: Sparkles },
+        { key: "ai-command", label: "AI Command", icon: BrainCircuit },
+      ],
+    },
+    {
+      label: "Enterprise OS",
+      eyebrow: "Template Layer · Later Phase",
+      icon: Boxes,
+      tone: "template",
+      tabs: [
+        { key: "analytics-os", label: "Analytics", icon: BarChart3 },
+        { key: "knowledge-os", label: "Knowledge", icon: BookOpenCheck },
+        { key: "communication-os", label: "Communication", icon: MessageSquareText },
+        { key: "partner-os", label: "Partners", icon: Handshake },
+      ],
+    },
+  ];
 
-function CommandLaunchCard({ title, value, detail, tone = "default", onClick }) {
+  const allTabs = groups.flatMap((group) => group.tabs);
+  const activeTab =
+    allTabs.find((tab) => tab.key === activeView) || allTabs[0];
+  const activeGroup =
+    groups.find((group) => group.tabs.some((tab) => tab.key === activeView)) || groups[0];
+
+  return (
+    <section className="sticky top-3 z-20 overflow-hidden rounded-[1.8rem] border-[3px] border-[#123865] bg-[#FFF8EE] shadow-[0_14px_38px_rgba(15,35,63,0.12)]">
+      <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white lg:hidden">
+        <div className="min-w-0">
+          <p className="text-[8px] font-black uppercase tracking-[0.15em] text-orange-300">
+            {activeGroup.label}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-black text-white">
+            {activeTab.label}
+          </p>
+        </div>
+
+        <select
+          value={activeView}
+          onChange={(event) => setActiveView(event.target.value)}
+          className="max-w-[205px] rounded-xl border-2 border-white/25 bg-white px-3 py-2 text-xs font-black text-[#10233F] outline-none focus:border-orange-400"
+        >
+          {groups.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {group.tabs.map((tab) => (
+                <option key={tab.key} value={tab.key}>
+                  {tab.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
+      <div className="hidden gap-3 p-3 lg:grid xl:grid-cols-4">
+        {groups.map((group) => {
+          const GroupIcon = group.icon;
+          const groupActive = group.tabs.some((tab) => tab.key === activeView);
+          const isTemplate = group.tone === "template";
+
+          return (
+            <div
+              key={group.label}
+              className={`min-w-0 rounded-[1.35rem] border-[3px] p-3 transition ${
+                groupActive
+                  ? "border-orange-400 bg-orange-50 shadow-[0_8px_22px_rgba(249,115,22,0.08)]"
+                  : isTemplate
+                  ? "border-slate-300 bg-[#F7F4EF]"
+                  : "border-[#C8D5E4] bg-white"
+              }`}
+            >
+              <div className="flex items-start gap-2.5">
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+                    groupActive
+                      ? "border-orange-400 bg-orange-500 text-white"
+                      : isTemplate
+                      ? "border-slate-300 bg-white text-slate-500"
+                      : "border-[#AFC7E4] bg-[#EEF4FA] text-[#123865]"
+                  }`}
+                >
+                  <GroupIcon size={15} />
+                </span>
+
+                <div className="min-w-0">
+                  <p className="text-[8px] font-black uppercase tracking-[0.13em] text-slate-500">
+                    {group.eyebrow}
+                  </p>
+                  <p className="mt-0.5 text-sm font-black text-[#10233F]">
+                    {group.label}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-2">
+                {group.tabs.map((tab) => {
+                  const active = activeView === tab.key;
+                  const Icon = tab.icon;
+
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setActiveView(tab.key)}
+                      className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[11px] font-black transition ${
+                        active
+                          ? "border-orange-600 bg-orange-500 text-white shadow-[0_6px_14px_rgba(249,115,22,0.16)]"
+                          : isTemplate
+                          ? "border-slate-300 bg-white text-[#53657D] hover:border-orange-300 hover:bg-orange-50"
+                          : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                      }`}
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Icon size={14} className="shrink-0" />
+                        <span className="break-words">{tab.label}</span>
+                      </span>
+
+                      <ArrowUpRight
+                        size={13}
+                        className={`shrink-0 ${active ? "text-white" : "text-slate-400"}`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {isTemplate ? (
+                <p className="mt-3 rounded-xl border-2 border-dashed border-slate-300 bg-white px-3 py-2 text-[9px] font-bold leading-4 text-slate-500">
+                  Template ecosystem retained for the later dedicated Enterprise OS rebuild.
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function CommandLaunchCard({ title, value, detail, tone = "navy", onClick }) {
+  const isLauncherWord = String(value || "").trim().toLowerCase() === "open";
+  const style = getToneStyle(tone);
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-[1.5rem] border p-4 text-left transition hover:-translate-y-0.5 hover:border-orange-300 ${getToneStyle(tone)}`}
+      className={`group relative min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] text-left shadow-[0_8px_22px_rgba(15,35,63,0.055)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(15,35,63,0.11)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${style}`}
     >
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-        {title}
-      </p>
-      <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
+
+      <div className="flex items-start justify-between gap-3 px-4 pt-5">
+        <div className="min-w-0">
+          <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.12em] text-[#10233F]">
+            {title}
+          </p>
+
+          <p className="mt-2 break-words text-2xl font-black leading-tight text-[#10233F]">
+            {isLauncherWord ? "Workspace" : value}
+          </p>
+        </div>
+
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/20 bg-white/80 text-[#123865] transition group-hover:border-orange-500 group-hover:bg-orange-500 group-hover:text-white">
+          <ArrowUpRight size={17} />
+        </span>
+      </div>
+
+      <div className="px-4 pb-4 pt-3">
+        <p className="min-h-[40px] break-words text-xs font-semibold leading-5 text-slate-600">
+          {detail}
+        </p>
+
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2.5 text-white transition group-hover:bg-[#0E2F55]">
+          <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
+            Open workspace
+          </span>
+          <ArrowUpRight
+            size={14}
+            className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          />
+        </div>
+      </div>
     </button>
   );
 }
 
-function SummaryCard({ label, value, tone = "default" }) {
+function SummaryCard({ label, value, tone = "navy" }) {
   const style = getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-4 ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+    <div className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_20px_rgba(15,35,63,0.045)] ${style}`}>
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-65" />
+
+      <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.12em] text-[#53657D]">
         {label}
       </p>
 
-      <p className="mt-3 text-3xl font-black text-slate-950">{value || 0}</p>
+      <p className="mt-3 break-words text-3xl font-black leading-none text-[#10233F]">
+        {value ?? 0}
+      </p>
+
+      <p className="mt-3 text-[8px] font-black uppercase tracking-[0.1em] opacity-65">
+        Read-only command signal
+      </p>
     </div>
   );
 }
@@ -1498,13 +1924,13 @@ function JourneyStageCard({ label, value, total, detail }) {
   const percentage = total ? Math.round((Number(value || 0) / total) * 100) : 0;
 
   return (
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
-      <p className="mt-3 text-3xl font-black text-orange-600">{value}</p>
+    <div className="rounded-[1.5rem] border-[3px] border-[#B8CBE0] bg-[#F8FAFD] p-4 shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
+      <p className="break-words text-[10px] font-black uppercase leading-4 tracking-[0.12em] text-slate-500">{label}</p>
+      <p className="mt-3 text-3xl font-black text-[#10233F]">{value}</p>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
         <div className="h-full rounded-full bg-orange-500" style={{ width: `${percentage}%` }} />
       </div>
-      <p className="mt-3 text-xs leading-5 text-slate-400">{detail}</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">{detail}</p>
     </div>
   );
 }
@@ -1513,27 +1939,30 @@ function SectionHeader({ eyebrow, title, description }) {
   return (
     <div>
       <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-600">{eyebrow}</p>
-      <h3 className="mt-1 text-xl font-black text-slate-950">{title}</h3>
+      <h3 className="mt-1 text-xl font-black text-[#10233f]">{title}</h3>
       {description ? <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p> : null}
     </div>
   );
 }
 
-function WatchMetric({ label, value, tone = "default" }) {
+function WatchMetric({ label, value, tone = "navy" }) {
   return (
-    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+    <div className={`relative overflow-hidden rounded-[1.2rem] border-[3px] p-4 ${getToneStyle(tone)}`}>
+      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-65" />
+      <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#53657D]">
+        {label}
+      </p>
+      <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
     </div>
   );
 }
 
 function WatchStudentRow({ score = {} }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="rounded-[1.2rem] border-[3px] border-[#C8D5E4] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-black text-slate-950">{getStudentName(score)}</p>
+          <p className="break-words font-black leading-5 text-[#10233f]">{getStudentName(score)}</p>
           <p className="mt-1 text-xs text-slate-500">
             {formatLabel(getJourneyStage(score))} • {score.executive_category || "Standard"}
           </p>
@@ -1558,10 +1987,10 @@ function WatchStudentRow({ score = {} }) {
 
 function ActionRow({ label, value, detail }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="flex items-start justify-between gap-4 rounded-[1.2rem] border-[3px] border-[#C8D5E4] bg-white p-4">
       <div>
-        <p className="font-semibold text-slate-950">{label}</p>
-        <p className="mt-1 text-xs leading-5 text-slate-400">{detail}</p>
+        <p className="font-semibold text-[#10233f]">{label}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
       </div>
       <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-sm font-black text-orange-600">
         {value}
@@ -1572,9 +2001,9 @@ function ActionRow({ label, value, detail }) {
 
 function SmallMetric({ label, value }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
+    <div className="rounded-[1.2rem] border-[3px] border-emerald-300 bg-emerald-50 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
@@ -1583,9 +2012,9 @@ function HealthProgress({ label, value }) {
   const clean = Math.max(0, Math.min(100, Number(value || 0)));
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="rounded-[1.2rem] border-[3px] border-[#B8CBE0] bg-[#F8FAFD] p-4">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-slate-950">{label}</span>
+        <span className="font-semibold text-[#10233f]">{label}</span>
         <span className="font-black text-orange-600">{clean}%</span>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
@@ -1597,7 +2026,7 @@ function HealthProgress({ label, value }) {
 
 function EmptyState({ text }) {
   return (
-    <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-400">
+    <p className="rounded-[1.2rem] border-[3px] border-dashed border-[#B8CBE0] bg-[#F8FAFD] p-5 text-sm font-semibold text-slate-500">
       {text}
     </p>
   );
@@ -1606,12 +2035,12 @@ function EmptyState({ text }) {
 
 function CommandModuleLoader({ label = "Loading command module..." }) {
   return (
-    <div className="flex min-h-[260px] items-center justify-center rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+    <div className="flex min-h-[260px] items-center justify-center rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_12px_32px_rgba(15,35,63,0.05)]">
       <div className="text-center">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
-        <p className="mt-4 text-sm font-black text-slate-900">{label}</p>
-        <p className="mt-1 text-xs text-slate-400">
-          Zaifan OS is loading only the intelligence layer you requested.
+        <p className="mt-4 text-sm font-black text-[#10233f]">{label}</p>
+        <p className="mt-1 text-xs font-semibold text-slate-500">
+          Zaifan OS is lazy-loading only the selected command module.
         </p>
       </div>
     </div>
@@ -1619,13 +2048,15 @@ function CommandModuleLoader({ label = "Loading command module..." }) {
 }
 
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-red-200 bg-red-50";
-  if (tone === "orange") return "border-orange-200 bg-orange-50";
-  if (tone === "yellow") return "border-amber-200 bg-amber-50";
-  if (tone === "green") return "border-emerald-200 bg-emerald-50";
-  if (tone === "gold") return "border-orange-200 bg-orange-50";
-  if (tone === "blue") return "border-blue-200 bg-blue-50";
-  return "border-slate-200 bg-white";
+  if (tone === "red") return "border-red-400 bg-red-50 text-red-800";
+  if (tone === "orange") return "border-orange-400 bg-orange-50 text-orange-800";
+  if (tone === "yellow") return "border-amber-400 bg-amber-50 text-amber-800";
+  if (tone === "green") return "border-emerald-400 bg-emerald-50 text-emerald-800";
+  if (tone === "gold") return "border-orange-400 bg-orange-50 text-orange-800";
+  if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-800";
+  if (tone === "navy") return "border-[#234E78] bg-[#EEF4FA] text-[#123865]";
+  return "border-[#C8D5E4] bg-[#F8FAFD] text-[#123865]";
 }
+
 
 export default ExecutiveCommandSystem;

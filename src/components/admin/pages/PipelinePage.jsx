@@ -171,7 +171,7 @@ function PipelinePage({
     <div className="space-y-5">
       <motion.section
         {...motionProps}
-        className="relative overflow-hidden rounded-[1.6rem] border border-slate-200/80 bg-white p-5 shadow-[0_14px_45px_rgba(15,23,42,0.055)] sm:p-6 xl:p-7"
+        className="relative overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-[#fff8ef] p-5 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-6 xl:p-7"
       >
         <div className="pointer-events-none absolute right-[-90px] top-[-90px] h-64 w-64 rounded-full bg-orange-100/70 blur-3xl" />
         <div className="pointer-events-none absolute bottom-[-120px] left-[22%] h-56 w-56 rounded-full bg-amber-50 blur-3xl" />
@@ -292,7 +292,7 @@ function PipelinePage({
             ? undefined
             : { duration: 0.45, delay: 0.04, ease: EASE }
         }
-        className="rounded-[1.5rem] border border-slate-200/80 bg-white p-4 shadow-[0_10px_35px_rgba(15,23,42,0.045)] sm:p-5"
+        className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-300 bg-[#fff8ef] p-4 shadow-[0_12px_32px_rgba(15,35,63,0.07)] sm:p-5"
       >
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -342,7 +342,7 @@ function PipelinePage({
         />
       </motion.section>
 
-      <div className="flex flex-col gap-2 rounded-[1.3rem] border border-slate-200/70 bg-slate-50/80 px-4 py-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 rounded-[1.3rem] border-2 border-[#c8d8e8] bg-[#edf4fb] px-4 py-3 text-xs text-[#35506f] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Bot size={15} className="text-orange-500" />
           <span>
@@ -415,7 +415,7 @@ function WorkspaceSignal({
 
   return (
     <div
-      className={`rounded-2xl border p-3.5 ${toneClass} ${
+      className={`rounded-[1.2rem] border-2 p-3.5 shadow-[0_5px_14px_rgba(15,35,63,0.04)] ${toneClass} ${
         active ? "animate-pulse" : ""
       }`}
     >
@@ -443,11 +443,11 @@ function MetricCard({ icon: Icon, label, value, detail, tone = "slate" }) {
       ? "border-orange-100 bg-orange-50/80 text-orange-700"
       : tone === "emerald"
       ? "border-emerald-100 bg-emerald-50/70 text-emerald-700"
-      : "border-slate-200 bg-slate-50 text-slate-700";
+      : "border-orange-200 bg-[#fff3e5] text-slate-700";
 
   return (
     <div
-      className={`rounded-[1.25rem] border p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-sm ${toneClass}`}
+      className={`rounded-[1.35rem] border-2 p-4 shadow-[0_6px_16px_rgba(15,35,63,0.04)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md ${toneClass}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm">

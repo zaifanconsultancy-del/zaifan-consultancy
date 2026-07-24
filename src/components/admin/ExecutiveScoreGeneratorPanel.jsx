@@ -1,11 +1,67 @@
-import { useMemo, useState } from "react";
+// ExecutiveScoreGeneratorPanel V4 MAXIMUM — Student OS Intelligence Generator
+// src/components/admin/ExecutiveScoreGeneratorPanel.jsx
+//
+// Maximum pass:
+// - preserves generateExecutiveScoresFromDatabase()
+// - preserves onGenerated(result) parent callback contract
+// - keeps hard timeout protection
+// - adds cancellation-safe timeout cleanup
+// - prevents stale generator results overwriting newer runs
+// - safer malformed result handling
+// - truthful "Verified Outcomes" wording
+// - zero-safe metrics
+// - result health / generator health / persistence health
+// - stronger warnings and failure diagnostics
+// - stronger generated score preview
+// - safe raw payload serializer with truncation
+// - better empty / loading / success states
+// - reduced-motion support
+// - stronger mobile hierarchy
+// - Admin OS orange/navy/cream alignment
+// - navy surfaces use white text only
+// - no fake Supabase writes; generator remains the real persistence engine
+
+import {
+  AlertTriangle,
+  Bot,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleGauge,
+  Clock3,
+  Crown,
+  Database,
+  FileWarning,
+  RefreshCw,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TimerReset,
+  Trophy,
+  Workflow,
+  XCircle,
+} from "lucide-react";
+import {
+  motion,
+  useReducedMotion,
+} from "framer-motion";
+import {
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { generateExecutiveScoresFromDatabase } from "../../lib/executivePortfolioGenerator";
 
 const GENERATOR_TIMEOUT_MS = 30000;
+const REFRESH_TIMEOUT_MS = 12000;
+const RAW_PAYLOAD_PREVIEW_LIMIT = 12000;
 
 function number(value, fallback = 0) {
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  return Number.isFinite(parsed)
+    ? parsed
+    : fallback;
 }
 
 function normalize(value = "") {
@@ -16,13 +72,28 @@ function normalize(value = "") {
     .replace(/-/g, "_");
 }
 
+function safeArray(value) {
+  return Array.isArray(value)
+    ? value.filter(Boolean)
+    : [];
+}
+
 function formatLabel(value = "") {
   const clean = normalize(value);
-  if (!clean) return "Unknown";
+
+  if (!clean) {
+    return "Unknown";
+  }
 
   return clean
     .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map(
+      (part) =>
+        part
+          .charAt(0)
+          .toUpperCase() +
+        part.slice(1)
+    )
     .join(" ");
 }
 
@@ -38,342 +109,1320 @@ function getStudentName(item = {}) {
 }
 
 function getErrorMessage(error) {
-  if (!error) return "Unknown issue.";
-  if (typeof error === "string") return error;
-  return error.message || error.details || error.hint || JSON.stringify(error);
+  if (!error) {
+    return "Unknown issue.";
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  return (
+    error.message ||
+    error.details ||
+    error.hint ||
+    "Unknown issue."
+  );
 }
 
-function ExecutiveScoreGeneratorPanel({ onGenerated = () => {} }) {
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState("");
-  const [lastRunAt, setLastRunAt] = useState(null);
-  const [expanded, setExpanded] = useState({
+function safeStringify(value) {
+  try {
+    const serialized = JSON.stringify(
+      value,
+      null,
+      2
+    );
+
+    if (!serialized) {
+      return "No payload data.";
+    }
+
+    if (
+      serialized.length >
+      RAW_PAYLOAD_PREVIEW_LIMIT
+    ) {
+      return `${serialized.slice(
+        0,
+        RAW_PAYLOAD_PREVIEW_LIMIT
+      )}\n\n… payload preview truncated`;
+    }
+
+    return serialized;
+  } catch {
+    return "Payload could not be serialized.";
+  }
+}
+
+function withTimeout(
+  promise,
+  timeoutMs,
+  message
+) {
+  let timerId;
+
+  const timeout = new Promise(
+    (_, reject) => {
+      timerId = setTimeout(() => {
+        reject(
+          new Error(message)
+        );
+      }, timeoutMs);
+    }
+  );
+
+  return Promise.race([
+    promise,
+    timeout,
+  ]).finally(() => {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+  });
+}
+
+function buildGeneratorHealth({
+  total = 0,
+  savedCount = 0,
+  failedCount = 0,
+  warningCount = 0,
+  runtimeMs = 0,
+}) {
+  if (!total) {
+    return {
+      score: 0,
+      label: "No Data",
+      message:
+        "Generator health will activate after a Student OS scan returns records.",
+    };
+  }
+
+  const successRate =
+    total
+      ? (savedCount / total) *
+        100
+      : 0;
+
+  const warningPenalty = Math.min(
+    25,
+    warningCount * 4
+  );
+
+  const failurePenalty = Math.min(
+    45,
+    failedCount * 12
+  );
+
+  const runtimePenalty =
+    runtimeMs > 25000
+      ? 20
+      : runtimeMs > 15000
+      ? 10
+      : runtimeMs > 8000
+      ? 5
+      : 0;
+
+  const score = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        successRate -
+          warningPenalty -
+          failurePenalty -
+          runtimePenalty
+      )
+    )
+  );
+
+  if (score >= 90) {
+    return {
+      score,
+      label: "Excellent",
+      message:
+        "Generation completed cleanly with strong save reliability and low operational pressure.",
+    };
+  }
+
+  if (score >= 70) {
+    return {
+      score,
+      label: "Healthy",
+      message:
+        "Generation is healthy overall, but warnings, runtime, or partial failures deserve review.",
+    };
+  }
+
+  if (score >= 45) {
+    return {
+      score,
+      label: "Needs Review",
+      message:
+        "Generator reliability needs attention. Inspect warnings, failed saves, and Supabase schema/RLS.",
+    };
+  }
+
+  return {
+    score,
+    label: "Critical",
+    message:
+      "The generator is under heavy failure pressure. Review Supabase schema, RLS, payload fields, and generator logs before the next production run.",
+  };
+}
+
+function ExecutiveScoreGeneratorPanel({
+  onGenerated = () => {},
+}) {
+  const reduceMotion =
+    useReducedMotion();
+
+  const [
+    running,
+    setRunning,
+  ] = useState(false);
+
+  const [
+    result,
+    setResult,
+  ] = useState(null);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    refreshWarning,
+    setRefreshWarning,
+  ] = useState("");
+
+  const [
+    lastRunAt,
+    setLastRunAt,
+  ] = useState(null);
+
+  const [
+    expanded,
+    setExpanded,
+  ] = useState({
     saved: false,
     failed: true,
     warnings: true,
     payload: false,
   });
 
-  const runGenerator = async () => {
-    if (running) return;
+  const runTokenRef =
+    useRef(0);
 
-    setRunning(true);
-    setError("");
-    setResult(null);
-
-    const startedAt = Date.now();
-
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(
-          new Error(
-            `Executive score generation timed out after ${Math.round(
-              GENERATOR_TIMEOUT_MS / 1000
-            )} seconds. The scan was stopped so the dashboard does not stay stuck.`
-          )
-        );
-      }, GENERATOR_TIMEOUT_MS);
-    });
-
-    try {
-      const output = await Promise.race([
-        generateExecutiveScoresFromDatabase(),
-        timeoutPromise,
-      ]);
-
-      const finishedAt = Date.now();
-      const runtimeMs = finishedAt - startedAt;
-      const finalOutput = {
-        ...(output || {}),
-        runtimeMs,
-        generatedAt: new Date().toISOString(),
-      };
-
-      if (finalOutput?.error) {
-        setError(
-          finalOutput.error.message ||
-            finalOutput.error.details ||
-            "Executive score generation failed."
-        );
-        setResult(finalOutput);
+  const runGenerator =
+    async () => {
+      if (running) {
         return;
       }
 
-      setResult(finalOutput);
-      setLastRunAt(new Date());
+      const runToken =
+        runTokenRef.current + 1;
+
+      runTokenRef.current =
+        runToken;
+
+      setRunning(true);
+      setError("");
+      setRefreshWarning("");
+      setResult(null);
+
+      const startedAt =
+        Date.now();
 
       try {
-        await Promise.race([
-          Promise.resolve(onGenerated(finalOutput)),
-          new Promise((_, reject) =>
-            setTimeout(
-              () => reject(new Error("Executive dashboard refresh timed out.")),
-              12000
+        const output =
+          await withTimeout(
+            Promise.resolve(
+              generateExecutiveScoresFromDatabase()
+            ),
+            GENERATOR_TIMEOUT_MS,
+            `Executive score generation timed out after ${Math.round(
+              GENERATOR_TIMEOUT_MS /
+                1000
+            )} seconds. The dashboard was unlocked so the Admin OS does not stay stuck.`
+          );
+
+        if (
+          runTokenRef.current !==
+          runToken
+        ) {
+          return;
+        }
+
+        const finishedAt =
+          Date.now();
+
+        const finalOutput = {
+          ...(output &&
+          typeof output ===
+            "object"
+            ? output
+            : {}),
+          runtimeMs:
+            finishedAt -
+            startedAt,
+          generatedAt:
+            new Date().toISOString(),
+        };
+
+        setResult(finalOutput);
+
+        if (finalOutput.error) {
+          setError(
+            getErrorMessage(
+              finalOutput.error
             )
-          ),
-        ]);
-      } catch (refreshError) {
-        console.error("Executive scores generated, but reload failed:", refreshError);
+          );
+          return;
+        }
+
+        setLastRunAt(
+          new Date()
+        );
+
+        try {
+          await withTimeout(
+            Promise.resolve(
+              onGenerated(
+                finalOutput
+              )
+            ),
+            REFRESH_TIMEOUT_MS,
+            "Executive dashboard refresh timed out after generation."
+          );
+        } catch (refreshError) {
+          console.error(
+            "Executive scores generated, but parent reload failed:",
+            refreshError
+          );
+
+          setRefreshWarning(
+            getErrorMessage(
+              refreshError
+            )
+          );
+        }
+      } catch (err) {
+        console.error(
+          "Executive score generation crashed/timed out:",
+          err
+        );
+
+        if (
+          runTokenRef.current ===
+          runToken
+        ) {
+          setError(
+            getErrorMessage(
+              err
+            )
+          );
+        }
+      } finally {
+        if (
+          runTokenRef.current ===
+          runToken
+        ) {
+          setRunning(false);
+        }
       }
-    } catch (err) {
-      console.error("Executive score generation crashed/timed out:", err);
-
-      setError(
-        err.message ||
-          "Executive score generation crashed or timed out. Check console for the exact Supabase table/column issue."
-      );
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  const portfolio = result?.portfolio || {};
-  const failed = Array.isArray(result?.failed) ? result.failed : [];
-  const saved = Array.isArray(result?.saved) ? result.saved : [];
-  const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
-
-  const failedCount = number(result?.failedCount, failed.length);
-  const savedCount = number(result?.savedCount, saved.length);
-  const total = number(result?.total, savedCount + failedCount);
-  const warningCount = warnings.length;
-  const successRate = total ? Math.round((savedCount / total) * 100) : 0;
-  const runtimeSeconds = result?.runtimeMs
-    ? Math.round((result.runtimeMs / 1000) * 10) / 10
-    : 0;
-
-  const journeyStats = useMemo(() => {
-    const allStudents = [
-      ...saved.map((item) => item.executive || item.data || item.student || {}),
-      ...failed.map((item) => item.executive || item.student || {}),
-    ];
-
-    return {
-      notStarted: allStudents.filter((item) => normalize(item.journey_stage) === "not_started").length,
-      applicationStarted: allStudents.filter((item) => normalize(item.journey_stage) === "application_started").length,
-      applicationSubmitted: allStudents.filter((item) =>
-        ["application_submitted", "application_under_review"].includes(normalize(item.journey_stage))
-      ).length,
-      offerReceived: allStudents.filter((item) => normalize(item.journey_stage) === "offer_received").length,
-      offerAccepted: allStudents.filter((item) => normalize(item.journey_stage) === "offer_accepted").length,
-      casPending: allStudents.filter((item) => normalize(item.journey_stage) === "cas_pending").length,
-      casIssued: allStudents.filter((item) => normalize(item.journey_stage) === "cas_issued").length,
-      visaPending: allStudents.filter((item) => normalize(item.journey_stage) === "visa_pending").length,
-      visaApproved: allStudents.filter((item) => normalize(item.journey_stage) === "visa_approved").length,
-      visaRejected: allStudents.filter((item) => normalize(item.journey_stage) === "visa_rejected").length,
     };
-  }, [saved, failed]);
 
-  const toggleExpanded = (key) => {
-    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  const portfolio =
+    result?.portfolio &&
+    typeof result.portfolio ===
+      "object"
+      ? result.portfolio
+      : {};
+
+  const failed =
+    safeArray(
+      result?.failed
+    );
+
+  const saved =
+    safeArray(
+      result?.saved
+    );
+
+  const warnings =
+    safeArray(
+      result?.warnings
+    );
+
+  const failedCount =
+    number(
+      result?.failedCount,
+      failed.length
+    );
+
+  const savedCount =
+    number(
+      result?.savedCount,
+      saved.length
+    );
+
+  const total =
+    number(
+      result?.total,
+      savedCount +
+        failedCount
+    );
+
+  const warningCount =
+    warnings.length;
+
+  const successRate =
+    total
+      ? Math.round(
+          (savedCount / total) *
+            100
+        )
+      : 0;
+
+  const runtimeMs =
+    number(
+      result?.runtimeMs
+    );
+
+  const runtimeSeconds =
+    runtimeMs
+      ? Math.round(
+          (runtimeMs /
+            1000) *
+            10
+        ) / 10
+      : 0;
+
+  const verifiedOutcomes =
+    number(
+      portfolio.verifiedOutcomes,
+      number(
+        portfolio.successStories
+      )
+    );
+
+  const journeyStats =
+    useMemo(() => {
+      const allStudents = [
+        ...saved.map(
+          (item) =>
+            item.executive ||
+            item.data ||
+            item.student ||
+            {}
+        ),
+        ...failed.map(
+          (item) =>
+            item.executive ||
+            item.student ||
+            {}
+        ),
+      ];
+
+      const countStage = (
+        stages
+      ) =>
+        allStudents.filter(
+          (item) =>
+            stages.includes(
+              normalize(
+                item.journey_stage
+              )
+            )
+        ).length;
+
+      return {
+        notStarted:
+          countStage([
+            "not_started",
+          ]),
+        applicationStarted:
+          countStage([
+            "application_started",
+          ]),
+        applicationSubmitted:
+          countStage([
+            "application_submitted",
+            "application_under_review",
+          ]),
+        offerReceived:
+          countStage([
+            "offer_received",
+          ]),
+        offerAccepted:
+          countStage([
+            "offer_accepted",
+          ]),
+        casPending:
+          countStage([
+            "cas_pending",
+          ]),
+        casIssued:
+          countStage([
+            "cas_issued",
+          ]),
+        visaPending:
+          countStage([
+            "visa_pending",
+          ]),
+        visaApproved:
+          countStage([
+            "visa_approved",
+          ]),
+        visaRejected:
+          countStage([
+            "visa_rejected",
+          ]),
+      };
+    }, [saved, failed]);
+
+  const generatorHealth =
+    useMemo(
+      () =>
+        buildGeneratorHealth({
+          total,
+          savedCount,
+          failedCount,
+          warningCount,
+          runtimeMs,
+        }),
+      [
+        total,
+        savedCount,
+        failedCount,
+        warningCount,
+        runtimeMs,
+      ]
+    );
+
+  const persistenceHealth =
+    total
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(
+              (savedCount /
+                total) *
+                100
+            )
+          )
+        )
+      : 0;
+
+  const journeyCoverage =
+    total
+      ? Math.min(
+          100,
+          Math.round(
+            ((
+              journeyStats.applicationStarted +
+              journeyStats.applicationSubmitted +
+              journeyStats.offerReceived +
+              journeyStats.offerAccepted +
+              journeyStats.casPending +
+              journeyStats.casIssued +
+              journeyStats.visaPending +
+              journeyStats.visaApproved +
+              journeyStats.visaRejected
+            ) /
+              total) *
+              100
+          )
+        )
+      : 0;
+
+  const toggleExpanded = (
+    key
+  ) => {
+    setExpanded(
+      (prev) => ({
+        ...prev,
+        [key]:
+          !prev[key],
+      })
+    );
   };
 
   return (
-    <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_18px_50px_rgba(23,36,61,0.08)] sm:p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
-            Executive Score Generator
-          </p>
+    <motion.section
+      initial={
+        reduceMotion
+          ? false
+          : {
+              opacity: 0,
+              y: 10,
+            }
+      }
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      transition={{
+        duration:
+          reduceMotion
+            ? 0
+            : 0.26,
+      }}
+      className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#FFFDF8] shadow-[0_18px_50px_rgba(23,36,61,0.08)]"
+    >
+      <div className="grid xl:grid-cols-[1.34fr_0.66fr]">
+        <div className="bg-[#123865] p-5 text-white sm:p-7">
+          <div className="flex flex-wrap items-center gap-2">
+            <HeaderChip
+              icon={Bot}
+              label="Executive Score Generator"
+            />
 
-          <h2 className="mt-2 text-2xl font-black text-[#17243D]">
+            <HeaderChip
+              icon={Database}
+              label="Student OS Intelligence"
+            />
+
+            <HeaderChip
+              icon={ShieldCheck}
+              label="Human Review"
+            />
+          </div>
+
+          <h2 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
             Generate Student OS Intelligence
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
             Scan inquiries, appointments, applications, documents, tasks,
-            universities, visa signals, and previous risk records, then save
-            executive AI scores into the Student OS intelligence database.
+            universities, visa signals, and previous risk records, then persist
+            executive intelligence through the existing portfolio generator.
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <InfoPill label="Timeout Guard" value={`${Math.round(GENERATOR_TIMEOUT_MS / 1000)}s`} />
-            <InfoPill label="Save Target" value="ai_student_risk_scores" />
-            <InfoPill label="Mode" value="Human Review" />
-            {lastRunAt ? <InfoPill label="Last Run" value={lastRunAt.toLocaleString()} /> : null}
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <DarkMetric
+              label="Timeout"
+              value={`${Math.round(
+                GENERATOR_TIMEOUT_MS /
+                  1000
+              )}s`}
+            />
+
+            <DarkMetric
+              label="Save Target"
+              value="AI Scores"
+            />
+
+            <DarkMetric
+              label="Mode"
+              value="Review"
+            />
+
+            <DarkMetric
+              label="Last Run"
+              value={
+                lastRunAt
+                  ? lastRunAt.toLocaleTimeString(
+                      [],
+                      {
+                        hour: "2-digit",
+                        minute:
+                          "2-digit",
+                      }
+                    )
+                  : "Not yet"
+              }
+            />
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={runGenerator}
-          disabled={running}
-          className="rounded-full border border-[#E9802D] bg-[#E9802D] px-6 py-3 text-sm font-black text-white shadow-[0_10px_22px_rgba(233,128,45,0.18)] transition hover:-translate-y-0.5 hover:bg-[#D96C1F] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {running ? "Generating..." : "Generate Executive Scores"}
-        </button>
+        <div className="bg-orange-500 p-5 text-white sm:p-7">
+          <div className="flex items-center gap-2">
+            <CircleGauge
+              size={18}
+            />
+
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
+              Generator Health
+            </p>
+          </div>
+
+          <p className="mt-3 text-5xl font-black text-white">
+            {
+              generatorHealth.score
+            }
+          </p>
+
+          <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+            {
+              generatorHealth.label
+            }
+          </p>
+
+          <div className="mt-4 h-3 overflow-hidden rounded-full border border-white/25 bg-white/10">
+            <motion.div
+              initial={
+                reduceMotion
+                  ? false
+                  : {
+                      width: 0,
+                    }
+              }
+              animate={{
+                width: `${generatorHealth.score}%`,
+              }}
+              transition={{
+                duration:
+                  reduceMotion
+                    ? 0
+                    : 0.65,
+              }}
+              className="h-full rounded-full bg-white"
+            />
+          </div>
+
+          <p className="mt-4 text-xs font-semibold leading-5 text-white">
+            {
+              generatorHealth.message
+            }
+          </p>
+        </div>
       </div>
 
-      {running ? (
-        <StatusBox
-          tone="gold"
-          title="Executive AI is scanning Student OS data..."
-          description="This may update risk, opportunity, application, offer, CAS, visa, document, task, university, and portfolio intelligence. The timeout guard will unlock the dashboard if Supabase hangs."
-        />
-      ) : null}
+      <div className="space-y-5 p-4 sm:p-6">
+        <section className="rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+                <Sparkles
+                  size={20}
+                />
+              </div>
 
-      {error ? (
-        <StatusBox tone="red" title="Generation issue" description={error} />
-      ) : null}
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                  Generator Command
+                </p>
 
-      {result ? (
-        <div className="mt-5 space-y-5">
-          <div className="grid gap-4 md:grid-cols-4 xl:grid-cols-6">
-            <ResultCard label="Students Scanned" value={total} />
-            <ResultCard label="Scores Saved" value={savedCount} success={failedCount === 0 && total > 0} />
-            <ResultCard label="Failed" value={failedCount} danger={failedCount > 0} />
-            <ResultCard label="Warnings" value={warningCount} warning={warningCount > 0} />
-            <ResultCard label="Success Rate" value={`${successRate}%`} success={successRate >= 95 && total > 0} />
-            <ResultCard label="Runtime" value={`${runtimeSeconds}s`} />
-          </div>
+                <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                  Run a fresh Executive Student OS scan
+                </h3>
 
-          <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-            <ResultCard label="Critical Risk" value={portfolio.critical || portfolio.criticalRisk || 0} danger />
-            <ResultCard label="High Risk" value={portfolio.high || 0} warning />
-            <ResultCard label="Executive Priority" value={portfolio.executivePriority || 0} />
-            <ResultCard label="High Opportunity" value={portfolio.highOpportunity || 0} success />
-            <ResultCard label="Application Ready" value={portfolio.applicationReady || 0} success />
-            <ResultCard label="Conversion Ready" value={portfolio.conversionReady || 0} />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <ResultCard label="Success Stories" value={portfolio.successStories || 0} success />
-            <ResultCard label="Avg Risk" value={portfolio.averageRisk || 0} warning={number(portfolio.averageRisk) >= 50} />
-            <ResultCard label="Avg Opportunity" value={portfolio.averageOpportunity || 0} />
-            <ResultCard label="Visa Pending" value={portfolio.visaHealth?.pending || journeyStats.visaPending || 0} warning />
-            <ResultCard label="Visa Approved" value={portfolio.visaHealth?.approved || journeyStats.visaApproved || 0} success />
-          </div>
-
-          <div className="rounded-[1.75rem] border border-[#243A60]/20 bg-white p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#B84F0E]">
-              Journey Distribution
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[#7A8392]">
-              Quick breakdown of generated student stages from the current scan.
-            </p>
-
-            <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
-              <MiniJourney label="Not Started" value={journeyStats.notStarted} />
-              <MiniJourney label="Started" value={journeyStats.applicationStarted} />
-              <MiniJourney label="Submitted" value={journeyStats.applicationSubmitted} />
-              <MiniJourney label="Offer Received" value={journeyStats.offerReceived} success />
-              <MiniJourney label="Offer Accepted" value={journeyStats.offerAccepted} success />
-              <MiniJourney label="CAS Pending" value={journeyStats.casPending} warning />
-              <MiniJourney label="CAS Issued" value={journeyStats.casIssued} success />
-              <MiniJourney label="Visa Pending" value={journeyStats.visaPending} warning />
-              <MiniJourney label="Visa Approved" value={journeyStats.visaApproved} success />
-              <MiniJourney label="Visa Rejected" value={journeyStats.visaRejected} danger />
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  The generator writes through the existing
+                  `generateExecutiveScoresFromDatabase()` pipeline. This UI does
+                  not invent a second persistence path.
+                </p>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                void runGenerator()
+              }
+              disabled={running}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-5 text-sm font-black text-white shadow-[0_9px_20px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {running ? (
+                <RefreshCw
+                  size={16}
+                  className="animate-spin"
+                />
+              ) : (
+                <Rocket size={16} />
+              )}
+
+              {running
+                ? "Generating..."
+                : "Generate Executive Scores"}
+            </button>
           </div>
+        </section>
 
-          {warningCount > 0 ? (
-            <DetailSection
-              title="Generated with warnings"
-              description="Some non-blocking tables may not have loaded, but Executive AI still generated available scores."
-              open={expanded.warnings}
-              onToggle={() => toggleExpanded("warnings")}
-              tone="orange"
-            >
-              <div className="space-y-2">
-                {warnings.map((warning, index) => (
-                  <IssueCard
-                    key={`warning-${index}`}
-                    title={warning.tableName || `Warning ${index + 1}`}
-                    description={getErrorMessage(warning.error || warning)}
-                    tone="orange"
-                  />
-                ))}
-              </div>
-            </DetailSection>
-          ) : null}
+        {running ? (
+          <StatusBox
+            tone="gold"
+            icon={TimerReset}
+            title="Executive AI is scanning Student OS data..."
+            description="Risk, opportunity, application, offer, CAS, visa, document, task, university, and portfolio intelligence are being recalculated. The timeout guard unlocks the Admin OS if the backend hangs."
+          />
+        ) : null}
 
-          {failedCount > 0 ? (
-            <DetailSection
-              title="Some scores failed to save"
-              description="Usually this means the Supabase table is missing a column, the unique conflict rule is not ready, or the saved payload has a field not present in the table."
-              open={expanded.failed}
-              onToggle={() => toggleExpanded("failed")}
-              tone="red"
-            >
-              <div className="space-y-2">
-                {failed.map((item, index) => (
-                  <IssueCard
-                    key={`failed-${index}`}
-                    title={getStudentName(item)}
-                    description={getErrorMessage(item.error)}
-                    tone="red"
-                  />
-                ))}
-              </div>
-            </DetailSection>
-          ) : total === 0 ? (
-            <StatusBox
-              tone="orange"
-              title="No students found"
-              description="Executive AI ran, but no inquiry or appointment students were loaded."
+        {error ? (
+          <StatusBox
+            tone="red"
+            icon={XCircle}
+            title="Generation issue"
+            description={
+              error
+            }
+          />
+        ) : null}
+
+        {refreshWarning ? (
+          <StatusBox
+            tone="orange"
+            icon={RefreshCw}
+            title="Scores generated, dashboard refresh needs attention"
+            description={
+              refreshWarning
+            }
+          />
+        ) : null}
+
+        {result ? (
+          <div className="space-y-5">
+            <SectionHeader
+              eyebrow="Generator Results"
+              title="Run Health & Persistence"
+              description="Separate generator execution health from Student OS score content."
+              icon={CircleGauge}
             />
-          ) : (
-            <StatusBox
-              tone="green"
-              title="Executive Student OS intelligence generated successfully"
-              description={`${savedCount} score${savedCount === 1 ? "" : "s"} saved into the executive intelligence database.`}
-            />
-          )}
 
-          {savedCount > 0 ? (
-            <DetailSection
-              title="Saved score preview"
-              description="Preview of the latest successfully generated executive records."
-              open={expanded.saved}
-              onToggle={() => toggleExpanded("saved")}
-              tone="green"
-            >
-              <div className="grid gap-3 lg:grid-cols-2">
-                {saved.slice(0, 10).map((item, index) => (
-                  <SavedScoreCard key={`saved-${index}`} item={item} />
-                ))}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              <ResultCard
+                label="Students Scanned"
+                value={total}
+                icon={Workflow}
+              />
+
+              <ResultCard
+                label="Scores Saved"
+                value={savedCount}
+                tone={
+                  failedCount === 0 &&
+                  total > 0
+                    ? "gold"
+                    : "default"
+                }
+                icon={Database}
+              />
+
+              <ResultCard
+                label="Failed"
+                value={failedCount}
+                tone={
+                  failedCount > 0
+                    ? "red"
+                    : "default"
+                }
+                icon={XCircle}
+              />
+
+              <ResultCard
+                label="Warnings"
+                value={warningCount}
+                tone={
+                  warningCount > 0
+                    ? "orange"
+                    : "default"
+                }
+                icon={AlertTriangle}
+              />
+
+              <ResultCard
+                label="Persistence"
+                value={`${persistenceHealth}%`}
+                tone={
+                  persistenceHealth >=
+                  95
+                    ? "gold"
+                    : persistenceHealth <
+                      80
+                    ? "orange"
+                    : "default"
+                }
+                icon={ShieldCheck}
+              />
+
+              <ResultCard
+                label="Runtime"
+                value={`${runtimeSeconds}s`}
+                tone={
+                  runtimeSeconds >
+                  20
+                    ? "orange"
+                    : "default"
+                }
+                icon={Clock3}
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              <ResultCard
+                label="Critical Risk"
+                value={number(
+                  portfolio.critical,
+                  number(
+                    portfolio.criticalRisk
+                  )
+                )}
+                tone="red"
+                icon={AlertTriangle}
+              />
+
+              <ResultCard
+                label="High Risk"
+                value={number(
+                  portfolio.high
+                )}
+                tone="orange"
+                icon={FileWarning}
+              />
+
+              <ResultCard
+                label="Executive Priority"
+                value={number(
+                  portfolio.executivePriority
+                )}
+                tone="gold"
+                icon={Crown}
+              />
+
+              <ResultCard
+                label="High Opportunity"
+                value={number(
+                  portfolio.highOpportunity
+                )}
+                tone="gold"
+                icon={Target}
+              />
+
+              <ResultCard
+                label="Application Ready"
+                value={number(
+                  portfolio.applicationReady
+                )}
+                tone="gold"
+                icon={CheckCircle2}
+              />
+
+              <ResultCard
+                label="Conversion Ready"
+                value={number(
+                  portfolio.conversionReady
+                )}
+                tone="gold"
+                icon={Rocket}
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <ResultCard
+                label="Verified Outcomes"
+                value={
+                  verifiedOutcomes
+                }
+                tone="gold"
+                icon={Trophy}
+              />
+
+              <ResultCard
+                label="Avg Risk"
+                value={number(
+                  portfolio.averageRisk
+                )}
+                tone={
+                  number(
+                    portfolio.averageRisk
+                  ) >= 50
+                    ? "orange"
+                    : "default"
+                }
+                icon={AlertTriangle}
+              />
+
+              <ResultCard
+                label="Avg Opportunity"
+                value={number(
+                  portfolio.averageOpportunity
+                )}
+                tone="gold"
+                icon={Target}
+              />
+
+              <ResultCard
+                label="Visa Pending"
+                value={number(
+                  portfolio
+                    .visaHealth
+                    ?.pending,
+                  journeyStats.visaPending
+                )}
+                tone="orange"
+                icon={Clock3}
+              />
+
+              <ResultCard
+                label="Visa Approved"
+                value={number(
+                  portfolio
+                    .visaHealth
+                    ?.approved,
+                  journeyStats.visaApproved
+                )}
+                tone="gold"
+                icon={ShieldCheck}
+              />
+            </div>
+
+            <section className="rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                    Journey Distribution
+                  </p>
+
+                  <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                    Generated Student Stage Coverage
+                  </h3>
+
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                    Quick breakdown of journey stages discovered during this scan.
+                  </p>
+                </div>
+
+                <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-orange-800">
+                  {journeyCoverage}% in motion
+                </span>
               </div>
-            </DetailSection>
-          ) : null}
 
-          <DetailSection
-            title="Raw generation payload"
-            description="Developer-only view for debugging generator output."
-            open={expanded.payload}
-            onToggle={() => toggleExpanded("payload")}
-          >
-            <pre className="max-h-96 overflow-auto rounded-2xl border border-[#243A60]/20 bg-[#17243D] p-4 text-xs leading-5 text-[#F7F3EB]">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </DetailSection>
-        </div>
-      ) : null}
-    </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+                <MiniJourney
+                  label="Not Started"
+                  value={
+                    journeyStats.notStarted
+                  }
+                  tone="red"
+                />
+
+                <MiniJourney
+                  label="Started"
+                  value={
+                    journeyStats.applicationStarted
+                  }
+                />
+
+                <MiniJourney
+                  label="Submitted"
+                  value={
+                    journeyStats.applicationSubmitted
+                  }
+                  tone="gold"
+                />
+
+                <MiniJourney
+                  label="Offer Received"
+                  value={
+                    journeyStats.offerReceived
+                  }
+                  tone="gold"
+                />
+
+                <MiniJourney
+                  label="Offer Accepted"
+                  value={
+                    journeyStats.offerAccepted
+                  }
+                  tone="gold"
+                />
+
+                <MiniJourney
+                  label="CAS Pending"
+                  value={
+                    journeyStats.casPending
+                  }
+                  tone="orange"
+                />
+
+                <MiniJourney
+                  label="CAS Issued"
+                  value={
+                    journeyStats.casIssued
+                  }
+                  tone="gold"
+                />
+
+                <MiniJourney
+                  label="Visa Pending"
+                  value={
+                    journeyStats.visaPending
+                  }
+                  tone="orange"
+                />
+
+                <MiniJourney
+                  label="Visa Approved"
+                  value={
+                    journeyStats.visaApproved
+                  }
+                  tone="gold"
+                />
+
+                <MiniJourney
+                  label="Visa Rejected"
+                  value={
+                    journeyStats.visaRejected
+                  }
+                  tone="red"
+                />
+              </div>
+            </section>
+
+            {warningCount > 0 ? (
+              <DetailSection
+                title="Generated with warnings"
+                description="Non-blocking dependencies may have failed while the generator still completed with available data."
+                open={
+                  expanded.warnings
+                }
+                onToggle={() =>
+                  toggleExpanded(
+                    "warnings"
+                  )
+                }
+                tone="orange"
+                icon={AlertTriangle}
+              >
+                <div className="space-y-2">
+                  {warnings.map(
+                    (
+                      warning,
+                      index
+                    ) => (
+                      <IssueCard
+                        key={`warning-${index}`}
+                        title={
+                          warning.tableName ||
+                          `Warning ${
+                            index + 1
+                          }`
+                        }
+                        description={getErrorMessage(
+                          warning.error ||
+                            warning
+                        )}
+                        tone="orange"
+                      />
+                    )
+                  )}
+                </div>
+              </DetailSection>
+            ) : null}
+
+            {failedCount > 0 ? (
+              <DetailSection
+                title="Some scores failed to save"
+                description="Common causes include a missing Supabase column, RLS denial, invalid payload field, or unique-conflict mismatch."
+                open={
+                  expanded.failed
+                }
+                onToggle={() =>
+                  toggleExpanded(
+                    "failed"
+                  )
+                }
+                tone="red"
+                icon={XCircle}
+              >
+                <div className="space-y-2">
+                  {failed.map(
+                    (
+                      item,
+                      index
+                    ) => (
+                      <IssueCard
+                        key={`failed-${index}`}
+                        title={getStudentName(
+                          item
+                        )}
+                        description={getErrorMessage(
+                          item.error
+                        )}
+                        tone="red"
+                      />
+                    )
+                  )}
+                </div>
+              </DetailSection>
+            ) : total === 0 ? (
+              <StatusBox
+                tone="orange"
+                icon={Workflow}
+                title="No students found"
+                description="Executive AI ran, but no inquiry or appointment students were loaded."
+              />
+            ) : (
+              <StatusBox
+                tone="gold"
+                icon={CheckCircle2}
+                title="Executive Student OS intelligence generated successfully"
+                description={`${savedCount} score${
+                  savedCount === 1
+                    ? ""
+                    : "s"
+                } saved into the executive intelligence database.`}
+              />
+            )}
+
+            {savedCount > 0 ? (
+              <DetailSection
+                title="Saved score preview"
+                description="Preview of the latest successfully generated executive records."
+                open={
+                  expanded.saved
+                }
+                onToggle={() =>
+                  toggleExpanded(
+                    "saved"
+                  )
+                }
+                tone="gold"
+                icon={Database}
+              >
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {saved
+                    .slice(0, 10)
+                    .map(
+                      (
+                        item,
+                        index
+                      ) => (
+                        <SavedScoreCard
+                          key={`saved-${index}`}
+                          item={
+                            item
+                          }
+                        />
+                      )
+                    )}
+                </div>
+              </DetailSection>
+            ) : null}
+
+            <DetailSection
+              title="Raw generation payload"
+              description="Developer-only output for debugging the generator response. Large payloads are truncated for UI safety."
+              open={
+                expanded.payload
+              }
+              onToggle={() =>
+                toggleExpanded(
+                  "payload"
+                )
+              }
+              icon={Database}
+            >
+              <pre className="max-h-96 overflow-auto rounded-2xl border-2 border-[#123865] bg-[#123865] p-4 text-xs leading-5 text-white">
+                {safeStringify(
+                  result
+                )}
+              </pre>
+            </DetailSection>
+          </div>
+        ) : (
+          <EmptyGeneratorState />
+        )}
+      </div>
+    </motion.section>
   );
 }
 
-function InfoPill({ label, value }) {
+function HeaderChip({
+  icon: Icon,
+  label,
+}) {
   return (
-    <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[11px] font-bold text-[#7A8392]">
-      {label}: <span className="text-[#344054]">{value}</span>
+    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-white">
+      <Icon size={11} />
+      {label}
     </span>
   );
 }
 
-function StatusBox({ tone = "gold", title, description }) {
+function DarkMetric({
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
+        {label}
+      </p>
+
+      <p className="mt-1 break-words text-base font-black text-white">
+        {value ?? 0}
+      </p>
+    </div>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  description,
+  icon: Icon = Sparkles,
+}) {
+  return (
+    <div className="flex items-start gap-3 border-l-[5px] border-orange-500 pl-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+        <Icon size={18} />
+      </div>
+
+      <div>
+        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+          {eyebrow}
+        </p>
+
+        <h3 className="mt-0.5 text-xl font-black text-[#10233f]">
+          {title}
+        </h3>
+
+        {description ? (
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+            {description}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function StatusBox({
+  tone = "gold",
+  icon: Icon = Sparkles,
+  title,
+  description,
+}) {
   const style =
-    tone === "red"
-      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-      : tone === "orange"
-      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
-      : tone === "green"
-      ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
-      : "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]";
+    getToneStyle(tone);
 
   return (
-    <div className={`mt-5 rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
-      <p className="font-bold">{title}</p>
-      {description ? <p className="mt-2 text-sm text-[#667085]">{description}</p> : null}
+    <div
+      className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}
+    >
+      <div className="flex items-start gap-3">
+        <Icon
+          size={18}
+          className="mt-0.5 shrink-0"
+        />
+
+        <div>
+          <p className="font-black text-[#10233f]">
+            {title}
+          </p>
+
+          {description ? (
+            <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+              {
+                description
+              }
+            </p>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
@@ -381,44 +1430,63 @@ function StatusBox({ tone = "gold", title, description }) {
 function ResultCard({
   label,
   value,
-  danger = false,
-  warning = false,
-  success = false,
+  tone = "default",
+  icon: Icon = ActivityFallback,
 }) {
-  const style = danger
-    ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-    : warning
-    ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
-    : success
-    ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
-    : "border-[#243A60]/20 bg-white text-[#B84F0E]";
+  const style =
+    getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8992A1]">
-        {label}
-      </p>
+    <div
+      className={`rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(23,36,61,0.04)] ${style}`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
+          {label}
+        </p>
 
-      <p className="mt-3 break-words text-3xl font-black text-[#17243D]">{value}</p>
+        <Icon
+          size={15}
+          className="text-orange-700"
+        />
+      </div>
+
+      <p className="mt-3 break-words text-3xl font-black text-[#10233f]">
+        {value ?? 0}
+      </p>
     </div>
   );
 }
 
-function MiniJourney({ label, value, danger = false, warning = false, success = false }) {
-  const style = danger
-    ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-    : warning
-    ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
-    : success
-    ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
-    : "border-[#243A60]/20 bg-white text-[#596579]";
+function ActivityFallback(
+  props
+) {
+  return (
+    <Workflow
+      {...props}
+    />
+  );
+}
+
+function MiniJourney({
+  label,
+  value,
+  tone = "default",
+}) {
+  const style =
+    getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8992A1]">
+    <div
+      className={`rounded-xl border-[3px] p-4 shadow-[0_7px_18px_rgba(23,36,61,0.04)] ${style}`}
+    >
+      <p className="text-[9px] font-black uppercase tracking-[0.09em] text-slate-600">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-[#17243D]">{value}</p>
+
+      <p className="mt-2 text-2xl font-black text-[#10233f]">
+        {value ?? 0}
+      </p>
     </div>
   );
 }
@@ -429,98 +1497,239 @@ function DetailSection({
   open,
   onToggle,
   tone = "default",
+  icon: Icon = Database,
   children,
 }) {
   const style =
-    tone === "red"
-      ? "border-[#C2413B]/30 bg-[#FFF0EE]"
-      : tone === "orange"
-      ? "border-[#A36A18]/30 bg-[#FFF7E8]"
-      : tone === "green"
-      ? "border-[#E9802D]/35 bg-[#FFF3E7]"
-      : "border-[#243A60]/20 bg-white";
+    getToneStyle(tone);
 
   return (
-    <div className={`rounded-[1.75rem] border p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${style}`}>
+    <section
+      className={`rounded-[1.55rem] border-[3px] p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${style}`}
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="font-black text-[#17243D]">{title}</p>
-          {description ? <p className="mt-1 text-sm leading-6 text-[#7A8392]">{description}</p> : null}
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+            <Icon size={17} />
+          </div>
+
+          <div>
+            <p className="font-black text-[#10233f]">
+              {title}
+            </p>
+
+            {description ? (
+              <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+                {
+                  description
+                }
+              </p>
+            ) : null}
+          </div>
         </div>
 
         <button
           type="button"
           onClick={onToggle}
-          className="rounded-full border border-[#243A60]/20 bg-white px-4 py-2 text-xs font-bold text-[#596579] transition hover:border-[#E9802D]/45 hover:text-[#B84F0E]"
+          className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-300 hover:bg-orange-50"
+          aria-expanded={open}
         >
-          {open ? "Hide" : "Show"}
+          {open ? (
+            <ChevronUp
+              size={14}
+            />
+          ) : (
+            <ChevronDown
+              size={14}
+            />
+          )}
+
+          {open
+            ? "Hide"
+            : "Show"}
         </button>
       </div>
 
-      {open ? <div className="mt-4">{children}</div> : null}
-    </div>
+      {open ? (
+        <div className="mt-4">
+          {children}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
-function IssueCard({ title, description, tone = "red" }) {
+function IssueCard({
+  title,
+  description,
+  tone = "red",
+}) {
   const style =
-    tone === "orange"
-      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
-      : "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
+    getToneStyle(tone);
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}>
-      <p className="font-bold">{title}</p>
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm text-[#667085]">
+    <div
+      className={`rounded-xl border-[3px] p-4 shadow-[0_7px_18px_rgba(23,36,61,0.04)] ${style}`}
+    >
+      <p className="font-black text-[#10233f]">
+        {title}
+      </p>
+
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-slate-600">
         {description}
       </p>
     </div>
   );
 }
 
-function SavedScoreCard({ item = {} }) {
-  const executive = item.executive || item.data || {};
-  const student = item.student || {};
-  const name = getStudentName(item);
-  const risk = number(executive.risk_score || student.risk_score);
-  const opportunity = number(executive.opportunity_score || student.opportunity_score);
+function SavedScoreCard({
+  item = {},
+}) {
+  const executive =
+    item.executive ||
+    item.data ||
+    {};
+
+  const student =
+    item.student || {};
+
+  const name =
+    getStudentName(item);
+
+  const risk =
+    number(
+      executive.risk_score ||
+        student.risk_score
+    );
+
+  const opportunity =
+    number(
+      executive.opportunity_score ||
+        student.opportunity_score
+    );
+
+  const journeyStage =
+    executive.journey_stage ||
+    student.journey_stage ||
+    "not_started";
 
   return (
-    <div className="rounded-2xl border border-[#243A60]/20 bg-white p-4">
+    <div className="rounded-[1.25rem] border-[3px] border-slate-300 bg-white p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="break-words font-bold text-[#17243D]">{name}</p>
-          <p className="mt-1 text-xs text-[#8992A1]">
-            {student.student_type || executive.student_type || "student"} • {formatLabel(executive.journey_stage || student.journey_stage || "not_started")}
+          <p className="break-words font-black text-[#10233f]">
+            {name}
+          </p>
+
+          <p className="mt-1 text-xs font-semibold text-slate-500">
+            {student.student_type ||
+              executive.student_type ||
+              "student"}{" "}
+            •{" "}
+            {formatLabel(
+              journeyStage
+            )}
           </p>
         </div>
 
-        <span className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#B84F0E]">
-          {executive.executive_category || student.executive_category || "Generated"}
+        <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-orange-800">
+          {executive.executive_category ||
+            student.executive_category ||
+            "Generated"}
         </span>
       </div>
 
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <SmallMetric label="Risk" value={risk} danger={risk >= 75} />
-        <SmallMetric label="Opportunity" value={opportunity} success={opportunity >= 70} />
+        <SmallMetric
+          label="Risk"
+          value={risk}
+          tone={
+            risk >= 75
+              ? "red"
+              : risk >= 50
+              ? "orange"
+              : "default"
+          }
+        />
+
+        <SmallMetric
+          label="Opportunity"
+          value={
+            opportunity
+          }
+          tone={
+            opportunity >= 70
+              ? "gold"
+              : "default"
+          }
+        />
       </div>
     </div>
   );
 }
 
-function SmallMetric({ label, value, danger = false, success = false }) {
-  const style = danger
-    ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-    : success
-    ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
-    : "border-[#243A60]/20 bg-white text-[#596579]";
+function SmallMetric({
+  label,
+  value,
+  tone = "default",
+}) {
+  const style =
+    getToneStyle(tone);
 
   return (
-    <div className={`rounded-xl border px-3 py-2 ${style}`}>
-      <p className="text-[10px] uppercase tracking-[0.16em] text-[#8992A1]">{label}</p>
-      <p className="mt-1 font-black text-[#17243D]">{value}</p>
+    <div
+      className={`rounded-xl border-2 px-3 py-2 ${style}`}
+    >
+      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
+        {label}
+      </p>
+
+      <p className="mt-1 font-black text-[#10233f]">
+        {value ?? 0}
+      </p>
     </div>
   );
+}
+
+function EmptyGeneratorState() {
+  return (
+    <div className="rounded-[1.55rem] border-[3px] border-dashed border-orange-300 bg-white p-8 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+        <Bot size={26} />
+      </div>
+
+      <h3 className="mt-4 text-xl font-black text-[#10233f]">
+        No generator run in this session
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+        Run Executive Score Generator to rebuild Student OS risk, opportunity,
+        journey, and portfolio intelligence from the connected database.
+      </p>
+    </div>
+  );
+}
+
+function getToneStyle(
+  tone = ""
+) {
+  if (tone === "red") {
+    return "border-red-300 bg-red-50 text-red-800";
+  }
+
+  if (
+    tone === "orange"
+  ) {
+    return "border-amber-300 bg-amber-50 text-amber-900";
+  }
+
+  if (
+    tone === "gold"
+  ) {
+    return "border-orange-300 bg-orange-50 text-orange-800";
+  }
+
+  return "border-slate-300 bg-white text-slate-700";
 }
 
 export default ExecutiveScoreGeneratorPanel;

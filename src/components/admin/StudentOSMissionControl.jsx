@@ -1,13 +1,21 @@
-// StudentOSMissionControl V5 — High Contrast Mission Control
+// StudentOSMissionControl V11 MAXIMUM — Forced KPI Semantic Borders
 // Preserves the complete 1700+ line mission-control analytics architecture:
 // journey, revenue, portal, support, notification, automation, risk, system health,
 // execution logs and connected MissionControlNotificationCenter.
 // Mature file retained; visual hierarchy aligned with Zaifan Admin OS.
+// V6 MAXIMUM additionally hardens record identity, duplicate merging, date handling,
+// money truthfulness, funnel status normalization, monthly trend ordering, system-health
+// semantics, operating-score coverage, and white-surface contrast. No fake forecasts.
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import MissionControlNotificationCenter from "./MissionControlNotificationCenter";
 
+const safeArray = (value) => (Array.isArray(value) ? value.filter(Boolean) : []);
+
 const toLower = (value) => String(value || "").toLowerCase().trim();
+
+const normalizeStatus = (value) =>
+  toLower(value).replace(/\s+/g, "_").replace(/-/g, "_");
 
 const isDone = (status) =>
   [
@@ -22,29 +30,73 @@ const isDone = (status) =>
     "success",
     "successful",
     "executed",
-  ].includes(toLower(status));
+  ].includes(normalizeStatus(status));
 
-const isOverdue = (dateValue) => {
-  if (!dateValue) return false;
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return false;
-  return date < new Date();
+const safeDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 };
 
-const getStudentKey = (item) =>
-  item?.student_id ||
-  item?.studentId ||
-  item?.inquiry_id ||
-  item?.appointment_id ||
-  item?.id ||
-  item?.email ||
-  item?.student_email ||
-  item?.phone ||
-  item?.student_phone ||
-  null;
+const isOverdue = (dateValue) => {
+  const date = safeDate(dateValue);
+  if (!date) return false;
 
-const uniqueCount = (items = []) =>
-  new Set(items.map((item) => getStudentKey(item)).filter(Boolean)).size;
+  // Date-only CRM deadlines stay valid through the end of that calendar day.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateValue))) {
+    date.setHours(23, 59, 59, 999);
+  }
+
+  return date.getTime() < Date.now();
+};
+
+const getRecordIdentity = (item = {}, fallbackPrefix = "record") => {
+  const type = normalizeStatus(
+    item.student_type || item.__leadType || item.lead_type || item.type || fallbackPrefix
+  );
+
+  const rawId =
+    item.student_id ??
+    item.studentId ??
+    item.inquiry_id ??
+    item.appointment_id ??
+    item.id ??
+    item.email ??
+    item.student_email ??
+    item.phone ??
+    item.student_phone ??
+    null;
+
+  return rawId === null || rawId === undefined || rawId === ""
+    ? null
+    : `${type || fallbackPrefix}:${String(rawId)}`;
+};
+
+const uniqueCount = (items = [], prefix = "record") =>
+  new Set(
+    safeArray(items)
+      .map((item) => getRecordIdentity(item, prefix))
+      .filter(Boolean)
+  ).size;
+
+const mergeUniqueRecords = (...collections) => {
+  const map = new Map();
+
+  collections.flatMap(safeArray).forEach((item, index) => {
+    const key =
+      getRecordIdentity(item, "merged") ||
+      `anonymous:${index}:${JSON.stringify(item)}`;
+
+    if (!map.has(key)) map.set(key, item);
+  });
+
+  return [...map.values()];
+};
+
+const duplicateCount = (...collections) => {
+  const rows = collections.flatMap(safeArray);
+  return Math.max(0, rows.length - mergeUniqueRecords(...collections).length);
+};
 
 const formatMoney = (value) => {
   const amount = Number(value || 0);
@@ -61,34 +113,43 @@ const formatMoney = (value) => {
 };
 
 const percent = (value, total) => {
-  if (!total) return 0;
-  return Math.round((Number(value || 0) / Number(total || 1)) * 100);
+  const cleanTotal = Number(total || 0);
+  if (!Number.isFinite(cleanTotal) || cleanTotal <= 0) return 0;
+
+  const cleanValue = Number(value || 0);
+  if (!Number.isFinite(cleanValue)) return 0;
+
+  return Math.max(0, Math.min(100, Math.round((cleanValue / cleanTotal) * 100)));
 };
 
 const formatDate = (value) => {
-  if (!value) return "No date";
+  const date = safeDate(value);
+  if (!date) return value ? "Invalid date" : "No date";
 
-  try {
-    return new Date(value).toLocaleString("en-PK", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return "Invalid date";
-  }
+  return date.toLocaleString("en-PK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 };
 
-const getAmount = (item = {}) =>
-  Number(
-    item.amount ||
-      item.total_amount ||
-      item.invoice_amount ||
-      item.paid_amount ||
-      item.payment_amount ||
-      item.receipt_amount ||
-      item.value ||
-      0
+const getAmount = (item = {}) => {
+  const candidates = [
+    item.amount,
+    item.total_amount,
+    item.invoice_amount,
+    item.paid_amount,
+    item.payment_amount,
+    item.receipt_amount,
+    item.value,
+  ];
+
+  const raw = candidates.find(
+    (value) => value !== null && value !== undefined && value !== ""
   );
+
+  const amount = Number(raw || 0);
+  return Number.isFinite(amount) ? amount : 0;
+};
 
 const getRecordDate = (item = {}) =>
   item.created_at ||
@@ -124,8 +185,16 @@ const isThisMonth = (value) => {
 };
 
 const getMonthKey = (value) => {
-  const date = new Date(value || Date.now());
-  if (Number.isNaN(date.getTime())) return "Unknown";
+  const date = safeDate(value);
+  if (!date) return null;
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const getMonthLabel = (monthKey) => {
+  if (!monthKey) return "Unknown";
+  const [year, month] = monthKey.split("-").map(Number);
+  const date = new Date(year, Math.max(0, month - 1), 1);
 
   return date.toLocaleString("en-GB", {
     month: "short",
@@ -136,21 +205,25 @@ const getMonthKey = (value) => {
 const buildMonthlyMoneyTrend = (items = [], valueResolver = getAmount, limit = 6) => {
   const buckets = new Map();
 
-  items.forEach((item) => {
-    const dateValue = getRecordDate(item);
-    const key = getMonthKey(dateValue);
-    const current = buckets.get(key) || 0;
+  safeArray(items).forEach((item) => {
+    const key = getMonthKey(getRecordDate(item));
+    if (!key) return;
 
-    buckets.set(key, current + Number(valueResolver(item) || 0));
+    buckets.set(key, (buckets.get(key) || 0) + Number(valueResolver(item) || 0));
   });
 
   return [...buckets.entries()]
-    .map(([label, value]) => ({ label, value }))
-    .slice(-limit);
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-limit)
+    .map(([key, value]) => ({
+      key,
+      label: getMonthLabel(key),
+      value,
+    }));
 };
 
 const getTrendMax = (items = []) =>
-  Math.max(...items.map((item) => Number(item.value || 0)), 1);
+  Math.max(...safeArray(items).map((item) => Number(item.value || 0)), 1);
 
 const getUrgencyTone = (value = 0, warning = 1, danger = 5) => {
   const clean = Number(value || 0);
@@ -158,6 +231,19 @@ const getUrgencyTone = (value = 0, warning = 1, danger = 5) => {
   if (clean >= warning) return "text-orange-700";
   return "text-emerald-700";
 };
+
+const averageAvailablePercent = (metrics = []) => {
+  const available = metrics.filter((item) => item.available);
+  if (!available.length) return 0;
+
+  return Math.round(
+    available.reduce((sum, item) => sum + percent(item.value, item.total), 0) /
+      available.length
+  );
+};
+
+const getStatusValue = (item = {}, ...keys) =>
+  normalizeStatus(keys.map((key) => item?.[key]).find(Boolean));
 
 function StudentOSMissionControl({
   cardClass = "",
@@ -186,23 +272,54 @@ function StudentOSMissionControl({
   automationQueue = [],
   executiveActionQueue = [],
 }) {
-  const allStudents = [...inquiries, ...appointments];
-  const allReceipts = [...studentReceipts, ...paymentReceipts];
-  const allPortalAccounts = [...studentPortalAccounts, ...portalAccounts];
-  const allSupportRequests = [...supportRequests, ...studentSupportRequests];
-  const allAutomationQueue = [...automationQueue, ...executiveActionQueue];
+  const reduceMotion = useReducedMotion();
 
-  const totalStudents = uniqueCount(allStudents);
-  const applicationsCount = studentApplications.length;
+  const safeInquiries = safeArray(inquiries);
+  const safeAppointments = safeArray(appointments);
+  const safeApplications = safeArray(studentApplications);
+  const safeDocuments = safeArray(studentDocuments);
+  const safeTasks = safeArray(studentTasks);
+  const safeUniversities = safeArray(studentUniversities);
+  const safeRiskScores = safeArray(studentRiskScores);
+  const safeReminders = safeArray(followUpReminders);
+  const safeInvoices = safeArray(studentInvoices);
+  const safePayments = safeArray(studentPayments);
+  const safeExecutionLogs = safeArray(executiveExecutionLogs);
+  const safePaymentRequests = safeArray(counselorPaymentRequests);
 
-  const submittedApplications = studentApplications.filter((app) => {
-    const status = toLower(app.application_status || app.status);
+  const allStudents = [
+    ...safeInquiries.map((item) => ({ ...item, __leadType: "inquiry" })),
+    ...safeAppointments.map((item) => ({ ...item, __leadType: "appointment" })),
+  ];
+
+  const allReceipts = mergeUniqueRecords(studentReceipts, paymentReceipts);
+  const allPortalAccounts = mergeUniqueRecords(studentPortalAccounts, portalAccounts);
+  const allSupportRequests = mergeUniqueRecords(supportRequests, studentSupportRequests);
+  const allAutomationQueue = mergeUniqueRecords(automationQueue, executiveActionQueue);
+
+  const dataIntegrity = {
+    duplicateReceipts: duplicateCount(studentReceipts, paymentReceipts),
+    duplicatePortalAccounts: duplicateCount(studentPortalAccounts, portalAccounts),
+    duplicateSupportRequests: duplicateCount(supportRequests, studentSupportRequests),
+    duplicateAutomationItems: duplicateCount(automationQueue, executiveActionQueue),
+  };
+
+  const duplicateRecordsPrevented = Object.values(dataIntegrity).reduce(
+    (sum, value) => sum + Number(value || 0),
+    0
+  );
+
+  const totalStudents = uniqueCount(allStudents, "student");
+  const applicationsCount = safeApplications.length;
+
+  const submittedApplications = safeApplications.filter((app) => {
+    const status = getStatusValue(app, "application_status", "status");
     return status.includes("submit") || status.includes("applied") || status.includes("review");
   }).length;
 
-  const offerCount = studentApplications.filter((app) => {
-    const offerStatus = toLower(app.offer_status);
-    const status = toLower(app.status);
+  const offerCount = safeApplications.filter((app) => {
+    const offerStatus = getStatusValue(app, "offer_status");
+    const status = getStatusValue(app, "application_status", "status");
     return (
       offerStatus === "received" ||
       offerStatus.includes("offer") ||
@@ -210,17 +327,17 @@ function StudentOSMissionControl({
     );
   }).length;
 
-  const offerAcceptedCount = studentApplications.filter((app) => {
-    const offerStatus = toLower(app.offer_status);
+  const offerAcceptedCount = safeApplications.filter((app) => {
+    const offerStatus = getStatusValue(app, "offer_status");
     return offerStatus.includes("accepted") || offerStatus.includes("firm");
   }).length;
 
   const casCount = studentApplications.filter((app) =>
-    toLower(app.cas_status || app.cas).includes("issued")
+    getStatusValue(app, "cas_status", "cas", "application_status").includes("issued")
   ).length;
 
-  const visaSubmittedCount = studentApplications.filter((app) => {
-    const status = toLower(app.visa_status || app.visa);
+  const visaSubmittedCount = safeApplications.filter((app) => {
+    const status = getStatusValue(app, "visa_status", "visa");
     return (
       status.includes("submitted") ||
       status.includes("processing") ||
@@ -229,16 +346,16 @@ function StudentOSMissionControl({
   }).length;
 
   const visaCount = studentApplications.filter((app) =>
-    toLower(app.visa_status || app.visa).includes("approved")
+    getStatusValue(app, "visa_status", "visa").includes("approved")
   ).length;
 
-  const documentsCount = studentDocuments.length;
+  const documentsCount = safeDocuments.length;
 
-  const pendingDocuments = studentDocuments.filter(
+  const pendingDocuments = safeDocuments.filter(
     (doc) => !isDone(doc.status || doc.document_status || doc.verification_status)
   ).length;
 
-  const pendingTasksList = studentTasks.filter(
+  const pendingTasksList = safeTasks.filter(
     (task) => !isDone(task.status || task.task_status)
   );
 
@@ -248,42 +365,42 @@ function StudentOSMissionControl({
     isOverdue(task.due_date || task.deadline || task.target_date)
   ).length;
 
-  const universityPlans = studentUniversities.length;
+  const universityPlans = safeUniversities.length;
 
-  const dreamUniversities = studentUniversities.filter((uni) =>
+  const dreamUniversities = safeUniversities.filter((uni) =>
     toLower(uni.preference_type || uni.category || uni.type).includes("dream")
   ).length;
 
-  const targetUniversities = studentUniversities.filter((uni) =>
+  const targetUniversities = safeUniversities.filter((uni) =>
     toLower(uni.preference_type || uni.category || uni.type).includes("target")
   ).length;
 
-  const safeUniversities = studentUniversities.filter((uni) =>
+  const safeUniversityCount = safeUniversities.filter((uni) =>
     toLower(uni.preference_type || uni.category || uni.type).includes("safe")
   ).length;
 
-  const highRiskStudents = studentRiskScores.filter((risk) => {
+  const highRiskStudents = safeRiskScores.filter((risk) => {
     const riskLevel = toLower(risk.risk_level || risk.priority || risk.level);
     const score = Number(risk.risk_score || risk.score || risk.overall_score || 0);
 
     return riskLevel.includes("high") || riskLevel.includes("critical") || score >= 70;
   }).length;
 
-  const criticalRiskStudents = studentRiskScores.filter((risk) => {
+  const criticalRiskStudents = safeRiskScores.filter((risk) => {
     const riskLevel = toLower(risk.risk_level || risk.priority || risk.level);
     const score = Number(risk.risk_score || risk.score || risk.overall_score || 0);
 
     return riskLevel.includes("critical") || score >= 85;
   }).length;
 
-  const overdueReminders = followUpReminders.filter((reminder) => {
+  const overdueReminders = safeReminders.filter((reminder) => {
     const dueDate = reminder.due_date || reminder.reminder_date || reminder.date;
     return isOverdue(dueDate) && !isDone(reminder.status);
   }).length;
 
-  const casDelays = studentApplications.filter((app) => {
-    const offerStatus = toLower(app.offer_status);
-    const casStatus = toLower(app.cas_status || app.cas);
+  const casDelays = safeApplications.filter((app) => {
+    const offerStatus = getStatusValue(app, "offer_status");
+    const casStatus = getStatusValue(app, "cas_status", "cas", "application_status");
     const acceptedOffer =
       offerStatus.includes("accepted") || offerStatus.includes("firm");
     const casNotIssued = !casStatus.includes("issued");
@@ -291,41 +408,60 @@ function StudentOSMissionControl({
     return acceptedOffer && casNotIssued;
   }).length;
 
-  const visaDelays = studentApplications.filter((app) => {
-    const casStatus = toLower(app.cas_status || app.cas);
-    const visaStatus = toLower(app.visa_status || app.visa);
+  const visaDelays = safeApplications.filter((app) => {
+    const casStatus = getStatusValue(app, "cas_status", "cas", "application_status");
+    const visaStatus = getStatusValue(app, "visa_status", "visa");
     const casIssued = casStatus.includes("issued");
     const visaNotApproved = !visaStatus.includes("approved");
 
     return casIssued && visaNotApproved;
   }).length;
 
-  const invoicesCount = studentInvoices.length;
+  const invoicesCount = safeInvoices.length;
 
-  const invoiceValue = studentInvoices.reduce(
+  const invoiceValue = safeInvoices.reduce(
     (sum, invoice) =>
       sum + Number(invoice.amount || invoice.total_amount || invoice.invoice_amount || 0),
     0
   );
 
-  const paymentsCount = studentPayments.length;
+  const paymentsCount = safePayments.length;
 
-  const paidValue = studentPayments.reduce(
+  const paidValue = safePayments.reduce(
     (sum, payment) =>
       sum + Number(payment.amount || payment.paid_amount || payment.payment_amount || 0),
     0
   );
 
-  const outstandingValue = studentInvoices.reduce((sum, invoice) => {
+  const outstandingValue = safeInvoices.reduce((sum, invoice) => {
     const status = toLower(invoice.status || invoice.payment_status);
-    const amount = Number(invoice.amount || invoice.total_amount || invoice.invoice_amount || 0);
-    const outstanding = Number(invoice.outstanding_amount || invoice.balance || 0);
+    const amount = getAmount(invoice);
+    const hasExplicitOutstanding =
+      invoice.outstanding_amount !== null &&
+      invoice.outstanding_amount !== undefined &&
+      invoice.outstanding_amount !== "";
+    const hasExplicitBalance =
+      invoice.balance !== null &&
+      invoice.balance !== undefined &&
+      invoice.balance !== "";
+
+    const explicitOutstanding = hasExplicitOutstanding
+      ? Number(invoice.outstanding_amount)
+      : hasExplicitBalance
+      ? Number(invoice.balance)
+      : null;
 
     if (status.includes("paid") || status.includes("complete")) return sum;
-    return sum + (outstanding || amount);
+
+    return (
+      sum +
+      (Number.isFinite(explicitOutstanding)
+        ? Math.max(0, explicitOutstanding)
+        : Math.max(0, amount))
+    );
   }, 0);
 
-  const unpaidInvoices = studentInvoices.filter((invoice) => {
+  const unpaidInvoices = safeInvoices.filter((invoice) => {
     const status = toLower(invoice.status || invoice.payment_status);
     return !status.includes("paid") && !status.includes("complete");
   }).length;
@@ -340,7 +476,7 @@ function StudentOSMissionControl({
     return status.includes("approved");
   }).length;
 
-  const paymentRisks = unpaidInvoices + pendingReceipts + counselorPaymentRequests.length;
+  const paymentRisks = unpaidInvoices + pendingReceipts + safePaymentRequests.length;
 
   const activePortalUsers = allPortalAccounts.filter((account) => {
     const active = account.is_active ?? account.active ?? account.status;
@@ -395,8 +531,8 @@ function StudentOSMissionControl({
     return status.includes("resolved") || status.includes("closed");
   }).length;
 
-  const successfulExecutions = executiveExecutionLogs.filter((log) => {
-    const status = toLower(log.status || log.execution_status || log.approval_status);
+  const successfulExecutions = safeExecutionLogs.filter((log) => {
+    const status = normalizeStatus(log.status || log.execution_status || log.approval_status);
     return (
       status.includes("success") ||
       status.includes("executed") ||
@@ -405,27 +541,27 @@ function StudentOSMissionControl({
     );
   }).length;
 
-  const failedExecutions = executiveExecutionLogs.filter((log) => {
-    const status = toLower(log.status || log.execution_status || log.approval_status);
+  const failedExecutions = safeExecutionLogs.filter((log) => {
+    const status = normalizeStatus(log.status || log.execution_status || log.approval_status);
     const error = log.error_message || log.error || log.failure_reason;
     return status.includes("failed") || status.includes("error") || Boolean(error);
   }).length;
 
-  const pendingApprovals = executiveExecutionLogs.filter((log) => {
+  const pendingApprovals = safeExecutionLogs.filter((log) => {
     const approval = toLower(log.approval_status || log.status);
     return approval.includes("pending") || approval.includes("queued") || approval.includes("waiting");
   }).length;
 
-  const duplicateBlockedExecutions = executiveExecutionLogs.filter(
+  const duplicateBlockedExecutions = safeExecutionLogs.filter(
     (log) => log.duplicate_detected || log.duplicate_blocked
   ).length;
 
-  const humanApprovedExecutions = executiveExecutionLogs.filter((log) => {
+  const humanApprovedExecutions = safeExecutionLogs.filter((log) => {
     const approval = toLower(log.approval_status || log.status);
     return approval.includes("approved");
   }).length;
 
-  const recentExecutions = [...executiveExecutionLogs]
+  const recentExecutions = [...safeExecutionLogs]
     .sort((a, b) => {
       const aDate = new Date(a.executed_at || a.created_at || a.generated_at || 0).getTime();
       const bDate = new Date(b.executed_at || b.created_at || b.generated_at || 0).getTime();
@@ -446,30 +582,30 @@ function StudentOSMissionControl({
   const automationPressure =
     failedExecutions + pendingApprovals + queuedAutomation + duplicateBlockedExecutions;
 
-  const currentMonthInvoiceValue = studentInvoices
+  const currentMonthInvoiceValue = safeInvoices
     .filter((invoice) => isThisMonth(getRecordDate(invoice)))
     .reduce((sum, invoice) => sum + getAmount(invoice), 0);
 
-  const currentMonthPaidValue = studentPayments
+  const currentMonthPaidValue = safePayments
     .filter((payment) => isThisMonth(getRecordDate(payment)))
     .reduce((sum, payment) => sum + getAmount(payment), 0);
 
-  const recentInvoiceValue = studentInvoices
+  const recentInvoiceValue = safeInvoices
     .filter((invoice) => isWithinDays(getRecordDate(invoice), 30))
     .reduce((sum, invoice) => sum + getAmount(invoice), 0);
 
-  const recentPaymentValue = studentPayments
+  const recentPaymentValue = safePayments
     .filter((payment) => isWithinDays(getRecordDate(payment), 30))
     .reduce((sum, payment) => sum + getAmount(payment), 0);
 
   const invoiceCollectionRate = percent(paidValue, invoiceValue);
-  const paymentCollectionRate = percent(paymentsCount, invoicesCount);
+  const invoicePaymentCoverage = percent(paymentsCount, invoicesCount);
   const receiptApprovalRate = percent(approvedReceipts, allReceipts.length);
-  const outstandingRevenueForecast = outstandingValue + pendingReceipts * 250;
-  const revenueRiskScore = unpaidInvoices + pendingReceipts + counselorPaymentRequests.length;
+  const outstandingRevenueExposure = outstandingValue;
+  const revenueRiskScore = unpaidInvoices + pendingReceipts + safePaymentRequests.length;
 
-  const invoiceTrend = buildMonthlyMoneyTrend(studentInvoices);
-  const paymentTrend = buildMonthlyMoneyTrend(studentPayments);
+  const invoiceTrend = buildMonthlyMoneyTrend(safeInvoices);
+  const paymentTrend = buildMonthlyMoneyTrend(safePayments);
   const maxInvoiceTrend = getTrendMax(invoiceTrend);
   const maxPaymentTrend = getTrendMax(paymentTrend);
 
@@ -547,7 +683,8 @@ function StudentOSMissionControl({
       value: totalStudents,
       subtitle: "Inquiry + appointment base",
       icon: "🎓",
-      color: "from-orange-100 to-orange-50",
+      color: "bg-[#FFF4E8]",
+      border: "border-[#F59E0B]",
       text: "text-orange-700",
     },
     {
@@ -555,7 +692,8 @@ function StudentOSMissionControl({
       value: applicationsCount,
       subtitle: `${submittedApplications} submitted / active`,
       icon: "📝",
-      color: "from-sky-100 to-sky-50",
+      color: "bg-[#F1F7FD]",
+      border: "border-[#60A5FA]",
       text: "text-sky-700",
     },
     {
@@ -563,7 +701,8 @@ function StudentOSMissionControl({
       value: offerCount,
       subtitle: `${offerAcceptedCount} accepted`,
       icon: "🎉",
-      color: "from-emerald-100 to-emerald-50",
+      color: "bg-[#F0FBF6]",
+      border: "border-[#34D399]",
       text: "text-emerald-700",
     },
     {
@@ -571,7 +710,8 @@ function StudentOSMissionControl({
       value: casCount,
       subtitle: `${casDelays} delayed`,
       icon: "📄",
-      color: "from-blue-100 to-blue-50",
+      color: "bg-[#F1F6FC]",
+      border: "border-[#60A5FA]",
       text: "text-blue-700",
     },
     {
@@ -579,7 +719,8 @@ function StudentOSMissionControl({
       value: visaCount,
       subtitle: `${visaSubmittedCount} submitted / pending`,
       icon: "✈️",
-      color: "from-emerald-100 to-emerald-50",
+      color: "bg-[#F0FBF6]",
+      border: "border-[#34D399]",
       text: "text-emerald-700",
     },
   ];
@@ -636,7 +777,7 @@ function StudentOSMissionControl({
     },
     {
       title: "Automation",
-      value: executiveExecutionLogs.length,
+      value: safeExecutionLogs.length,
       icon: "⚙️",
       color: "text-sky-700",
       note: `${automationSuccessRate}% success`,
@@ -730,7 +871,7 @@ function StudentOSMissionControl({
     {
       title: "Collection Rate",
       value: `${invoiceCollectionRate}%`,
-      note: "Paid value against invoiced value",
+      note: `${invoicePaymentCoverage}% invoice/payment record coverage`,
       icon: "🎯",
       color: "text-orange-700",
     },
@@ -742,15 +883,15 @@ function StudentOSMissionControl({
       color: "text-violet-700",
     },
     {
-      title: "Forecast Risk",
-      value: formatMoney(outstandingRevenueForecast),
-      note: "Outstanding plus receipt pressure",
+      title: "Outstanding Exposure",
+      value: formatMoney(outstandingRevenueExposure),
+      note: "Verified outstanding invoice exposure",
       icon: "⚠️",
       color: "text-orange-700",
     },
     {
       title: "Payment Requests",
-      value: counselorPaymentRequests.length,
+      value: safePaymentRequests.length,
       note: "Counselor payment pressure",
       icon: "🙋",
       color: "text-blue-700",
@@ -884,7 +1025,7 @@ function StudentOSMissionControl({
   const automationMetrics = [
     {
       title: "Execution Logs",
-      value: executiveExecutionLogs.length,
+      value: safeExecutionLogs.length,
       note: "Executive automation history",
       icon: "📜",
       color: "text-sky-700",
@@ -930,7 +1071,7 @@ function StudentOSMissionControl({
     {
       title: "University Plans",
       value: universityPlans,
-      note: `${dreamUniversities}/${targetUniversities}/${safeUniversities} D/T/S`,
+      note: `${dreamUniversities}/${targetUniversities}/${safeUniversityCount} D/T/S`,
       icon: "🏛️",
       color: "text-pink-700",
     },
@@ -943,7 +1084,7 @@ function StudentOSMissionControl({
     },
     {
       title: "Task Health",
-      value: `${percent(studentTasks.length - pendingTasks, studentTasks.length)}%`,
+      value: `${percent(safeTasks.length - pendingTasks, safeTasks.length)}%`,
       note: `${overdueTasks} overdue tasks`,
       icon: "✅",
       color: "text-emerald-700",
@@ -975,17 +1116,17 @@ function StudentOSMissionControl({
     },
     {
       title: "Task OS",
-      active: studentTasks.length > 0,
+      active: safeTasks.length > 0,
       detail: `${pendingTasks} pending`,
     },
     {
-      title: "Executive AI",
-      active: studentRiskScores.length > 0,
-      detail: `${highRiskStudents} high risk`,
+      title: "Executive Risk",
+      active: safeRiskScores.length > 0,
+      detail: `${highRiskStudents} high risk scores`,
     },
     {
       title: "Executive Automation",
-      active: executiveExecutionLogs.length > 0 || allAutomationQueue.length > 0,
+      active: safeExecutionLogs.length > 0 || allAutomationQueue.length > 0,
       detail: `${automationPressure} pressure`,
     },
     {
@@ -1006,21 +1147,35 @@ function StudentOSMissionControl({
     {
       title: "Mission Control",
       active: true,
-      detail: "Executive layer online",
+      detail: "Derived from loaded Admin OS data",
     },
   ];
 
-  const operatingScore = Math.round(
-    (
-      percent(applicationsCount, Math.max(totalStudents, 1)) +
-      percent(offerCount, Math.max(applicationsCount, 1)) +
-      percent(casCount, Math.max(offerAcceptedCount || offerCount, 1)) +
-      percent(visaCount, Math.max(casCount, 1)) +
-      percent(documentsCount - pendingDocuments, Math.max(documentsCount, 1)) +
-      percent(studentTasks.length - pendingTasks, Math.max(studentTasks.length, 1)) +
-      automationSuccessRate
-    ) / 7
-  );
+  const operatingScore = averageAvailablePercent([
+    { value: applicationsCount, total: totalStudents, available: totalStudents > 0 },
+    { value: offerCount, total: applicationsCount, available: applicationsCount > 0 },
+    {
+      value: casCount,
+      total: offerAcceptedCount || offerCount,
+      available: (offerAcceptedCount || offerCount) > 0,
+    },
+    { value: visaCount, total: casCount, available: casCount > 0 },
+    {
+      value: documentsCount - pendingDocuments,
+      total: documentsCount,
+      available: documentsCount > 0,
+    },
+    {
+      value: safeTasks.length - pendingTasks,
+      total: safeTasks.length,
+      available: safeTasks.length > 0,
+    },
+    {
+      value: successfulExecutions,
+      total: successfulExecutions + failedExecutions,
+      available: successfulExecutions + failedExecutions > 0,
+    },
+  ]);
 
   const executivePressure =
     highRiskStudents +
@@ -1032,26 +1187,26 @@ function StudentOSMissionControl({
     automationPressure;
 
   return (
-    <div className="space-y-6 text-[#10233f]">
+    <div className="space-y-6 rounded-[2rem] border-[3px] border-[#173A67]/22 bg-[#FFF7EC] p-3 text-[#10233f] shadow-[0_18px_55px_rgba(16,47,92,0.10)] sm:p-4">
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
+        initial={reduceMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className={`${cardClass} relative overflow-hidden rounded-[1.9rem] border-2 border-orange-300 bg-[#102f5c] p-6 text-[#10233f] shadow-[0_18px_50px_rgba(15,35,63,0.14)]`}
+        transition={{ duration: reduceMotion ? 0 : 0.35 }}
+        className={`${cardClass} relative overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] p-5 text-white shadow-[0_22px_60px_rgba(15,35,63,0.18)] sm:p-6`}
+        style={{ backgroundColor: "#173F6B", color: "#FFFFFF" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/15 via-transparent to-white/5" />
 
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-orange-700">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-300">
               Executive Operations Center
             </p>
 
             <h2 className="mt-3 text-3xl font-black text-white">
-              Student OS Mission Control V4
+              Student OS Mission Control V6
             </h2>
 
-            <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300">
+            <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-white/90">
               Unified command layer across Student Journey, Applications, Offers,
               CAS, Visa, Payments, Portal, Support, Executive AI, Automation,
               Execution Logs, Risk, Tasks, Documents, University Planning, Revenue Intelligence, Portal Analytics, and Notification Alerts.
@@ -1059,22 +1214,22 @@ function StudentOSMissionControl({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-5 text-center backdrop-blur-sm">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
+            <div className="rounded-2xl border-2 border-[#F59E0B]/70 bg-[#10345B] p-5 text-center shadow-inner">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-white">
                 Operating Score
               </p>
 
-              <p className="mt-2 text-5xl font-black text-orange-700">
+              <p className="mt-2 text-5xl font-black text-orange-300">
                 {operatingScore}%
               </p>
 
-              <p className="mt-1 text-xs text-slate-500">
-                Journey + automation health
+              <p className="mt-1 text-xs text-white">
+                Available-system health
               </p>
             </div>
 
-            <div className="rounded-2xl border border-red-300/30 bg-red-500/15 p-5 text-center">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
+            <div className="rounded-2xl border-2 border-[#FF9AA7] bg-[#FFF1F3] p-5 text-center shadow-[0_6px_16px_rgba(190,24,93,0.06)]">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-700">
                 Executive Pressure
               </p>
 
@@ -1082,13 +1237,53 @@ function StudentOSMissionControl({
                 {executivePressure}
               </p>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs font-semibold text-red-700">
                 Risks needing leadership attention
               </p>
             </div>
           </div>
         </div>
       </motion.div>
+
+      <SectionShell
+        cardClass={cardClass}
+        eyebrow="Data Integrity"
+        title="Mission Control Data Contract"
+        subtitle="Checks merged sources before executive totals are calculated so duplicate connector rows do not inflate operations."
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <IntegrityMetric
+            label="Duplicates Prevented"
+            value={duplicateRecordsPrevented}
+            note="Across merged receipt, portal, support and automation sources"
+            tone={duplicateRecordsPrevented ? "warning" : "good"}
+          />
+          <IntegrityMetric
+            label="Student Identity"
+            value={totalStudents}
+            note="Inquiry and appointment IDs remain type-scoped"
+            tone="navy"
+          />
+          <IntegrityMetric
+            label="Revenue Basis"
+            value={formatMoney(invoiceValue)}
+            note="Actual loaded invoice values only"
+            tone="orange"
+          />
+          <IntegrityMetric
+            label="Outstanding Basis"
+            value={formatMoney(outstandingValue)}
+            note="Explicit balance/outstanding fields preferred"
+            tone={outstandingValue > 0 ? "warning" : "good"}
+          />
+          <IntegrityMetric
+            label="Operating Score"
+            value={`${operatingScore}%`}
+            note="Average of available systems only"
+            tone="navy"
+          />
+        </div>
+      </SectionShell>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => (
@@ -1107,14 +1302,14 @@ function StudentOSMissionControl({
         title="Journey Pipeline"
         subtitle="Lead → Application → Offer → CAS → Visa progression"
       >
-        <div className="grid gap-4 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
           {pipelineStages.map((stage, index) => (
             <motion.div
               key={stage.title}
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${stage.color} p-5`}
+              className={`relative min-w-0 overflow-hidden rounded-2xl border-[3px] ${stage.border || "border-[#94A3B8]"} ${stage.color} p-5 shadow-[0_7px_18px_rgba(15,35,63,0.07)]`}
             >
               {index < pipelineStages.length - 1 && (
                 <div className="absolute right-3 top-1/2 hidden -translate-y-1/2 text-2xl text-slate-300 xl:block">
@@ -1124,7 +1319,7 @@ function StudentOSMissionControl({
 
               <div className="text-3xl">{stage.icon}</div>
 
-              <p className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-500">
+              <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-[#617187]">
                 {stage.title}
               </p>
 
@@ -1132,7 +1327,7 @@ function StudentOSMissionControl({
                 {stage.value}
               </p>
 
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs font-semibold text-[#5b6e84]">
                 {stage.subtitle}
               </p>
             </motion.div>
@@ -1140,15 +1335,15 @@ function StudentOSMissionControl({
         </div>
       </SectionShell>
 
-      <div className="grid gap-6 2xl:grid-cols-5">
-        <div className="2xl:col-span-3">
+      <div className="grid gap-6 2xl:grid-cols-2">
+        <div className="min-w-0">
           <SectionShell
             cardClass={cardClass}
             eyebrow="Executive Intelligence"
             title="Executive Watchlist"
             subtitle="The pressure points leadership should act on first"
           >
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {watchlist.map((item, index) => (
                 <CompactMetric key={item.title} item={item} index={index} />
               ))}
@@ -1156,7 +1351,7 @@ function StudentOSMissionControl({
           </SectionShell>
         </div>
 
-        <div className="2xl:col-span-2">
+        <div className="min-w-0">
           <SectionShell
             cardClass={cardClass}
             eyebrow="Journey Readiness"
@@ -1219,13 +1414,13 @@ function StudentOSMissionControl({
         </div>
       </SectionShell>
 
-      <div className="grid gap-6 2xl:grid-cols-5">
-        <div className="2xl:col-span-3">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)]">
+        <div className="min-w-0">
           <SectionShell
             cardClass={cardClass}
             eyebrow="Revenue Intelligence"
-            title="Revenue Forecast and Collection Analytics"
-            subtitle="Month-to-date revenue, collection rate, receipt approval, and outstanding forecast risk"
+            title="Revenue Collection & Exposure Analytics"
+            subtitle="Month-to-date revenue, collection rate, receipt approval, and verified outstanding exposure"
           >
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {revenueIntelligenceMetrics.map((item, index) => (
@@ -1235,7 +1430,7 @@ function StudentOSMissionControl({
           </SectionShell>
         </div>
 
-        <div className="2xl:col-span-2">
+        <div className="min-w-0">
           <SectionShell
             cardClass={cardClass}
             eyebrow="Revenue Trend"
@@ -1353,16 +1548,16 @@ function StudentOSMissionControl({
 
       <SectionShell
         cardClass={cardClass}
-        eyebrow="Executive Command Shortcuts"
-        title="Mission Control Operating Actions"
-        subtitle="Leadership shortcuts for the next operating layer: notifications, revenue, portal, support, and automation control"
+        eyebrow="Executive Pressure Summary"
+        title="Mission Control Operating Pressure"
+        subtitle="Read-only leadership pressure indicators. These cards do not execute actions by themselves."
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <OperatingActionCard title="Open Alerts" value={notificationAlerts.reduce((sum, item) => sum + Number(item.value || 0), 0)} note="Cross-system alert pressure" icon="🔔" />
-          <OperatingActionCard title="Revenue Follow-up" value={formatMoney(outstandingValue)} note={`${unpaidInvoices} unpaid invoices`} icon="💷" />
-          <OperatingActionCard title="Portal Recovery" value={portalRiskScore} note={`${stalePortalAccounts} stale portal accounts`} icon="🔐" />
-          <OperatingActionCard title="Support Recovery" value={supportPressureScore} note={`${escalatedSupportRequests} escalated support cases`} icon="📬" />
-          <OperatingActionCard title="Automation Recovery" value={automationRiskScore} note={`${failedExecutions} failed executions`} icon="⚙️" />
+          <OperatingActionCard title="Alert Pressure" value={notificationAlerts.reduce((sum, item) => sum + Number(item.value || 0), 0)} note="Cross-system alert pressure" icon="🔔" />
+          <OperatingActionCard title="Revenue Exposure" value={formatMoney(outstandingValue)} note={`${unpaidInvoices} unpaid invoices`} icon="💷" />
+          <OperatingActionCard title="Portal Pressure" value={portalRiskScore} note={`${stalePortalAccounts} stale portal accounts`} icon="🔐" />
+          <OperatingActionCard title="Support Pressure" value={supportPressureScore} note={`${escalatedSupportRequests} escalated support cases`} icon="📬" />
+          <OperatingActionCard title="Automation Pressure" value={automationRiskScore} note={`${failedExecutions} failed executions`} icon="⚙️" />
         </div>
       </SectionShell>
 
@@ -1379,14 +1574,18 @@ function StudentOSMissionControl({
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: index * 0.03 }}
-              className="flex items-center justify-between rounded-2xl border border-slate-300 bg-white p-4"
+              className={`flex min-w-0 items-center justify-between gap-3 rounded-2xl border-2 p-4 shadow-[0_6px_16px_rgba(15,35,63,0.10)] ${
+                [1, 3, 5, 7, 9].includes(index)
+                  ? "border-[#C84F08] bg-[#E96512]"
+                  : "border-[#3B6288] bg-[#173F6B]"
+              }`}
             >
-              <div>
-                <p className="text-sm font-bold text-[#10233f]">
+              <div className="min-w-0">
+                <p className="break-words text-sm font-black text-white">
                   {system.title}
                 </p>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 break-words text-xs font-semibold leading-5 text-white">
                   {system.detail}
                 </p>
               </div>
@@ -1394,8 +1593,8 @@ function StudentOSMissionControl({
               <span
                 className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${
                   system.active
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "bg-orange-50 text-orange-700 border border-orange-200"
+                    ? "border border-emerald-200 bg-white text-emerald-700"
+                    : "border border-orange-200 bg-white text-orange-700"
                 }`}
               >
                 {system.active ? "Live" : "Waiting"}
@@ -1409,27 +1608,85 @@ function StudentOSMissionControl({
 }
 
 
+function IntegrityMetric({ label, value, note, tone = "navy" }) {
+  const styles = {
+    good: "border-emerald-400 bg-emerald-50",
+    warning: "border-orange-400 bg-orange-50",
+    orange: "border-[#C84F08] bg-[#E96512]",
+    navy: "border-[#123865] bg-[#123865]",
+  };
+
+  const dark = tone === "navy" || tone === "orange";
+
+  return (
+    <div
+      className={`rounded-2xl border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.06)] ${styles[tone] || styles.navy}`}
+      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
+    >
+      <p
+        className="text-[9px] font-black uppercase tracking-[0.1em]"
+        style={{ color: tone === "orange" ? "#FFFFFF" : dark ? "#FDBA74" : "#64748B" }}
+      >
+        {label}
+      </p>
+      <p
+        className="mt-2 break-words text-2xl font-black"
+        style={{ color: dark ? "#FFFFFF" : "#10233F" }}
+      >
+        {value}
+      </p>
+      <p
+        className="mt-2 text-xs font-semibold leading-5"
+        style={{ color: dark ? "#F8FAFC" : "#64748B" }}
+      >
+        {note}
+      </p>
+    </div>
+  );
+}
+
 function OperatingActionCard({ title, value, note, icon }) {
+  const orangeTitles = new Set([
+    "Revenue Exposure",
+    "Support Pressure",
+  ]);
+
+  const orange = orangeTitles.has(title);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24 }}
-      className="rounded-2xl border border-slate-300 bg-white p-5"
+      className={`min-w-0 rounded-2xl border-2 p-5 shadow-[0_7px_18px_rgba(15,35,63,0.12)] ${
+        orange
+          ? "border-[#C84F08] bg-[#E96512]"
+          : "border-[#F59E0B] bg-[#173F6B]"
+      }`}
+      style={{ color: "#FFFFFF" }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`break-words text-[10px] font-black uppercase leading-4 tracking-[0.18em] ${
+              orange ? "text-white" : "text-orange-300"
+            }`}
+          >
             {title}
           </p>
-          <p className="mt-3 text-2xl font-black text-[#10233f]">
+
+          <p className="mt-2 text-2xl font-black text-white">
             {value}
           </p>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
+
+          <p className="mt-2 break-words text-xs font-semibold leading-5 text-white">
             {note}
           </p>
         </div>
-        <div className="text-3xl">{icon}</div>
+
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-xl">
+          {icon}
+        </div>
       </div>
     </motion.div>
   );
@@ -1437,29 +1694,68 @@ function OperatingActionCard({ title, value, note, icon }) {
 
 function SectionShell({ cardClass, eyebrow, title, subtitle, children }) {
   return (
-    <div className={`${cardClass} rounded-[1.75rem] border border-slate-300 bg-white p-6 shadow-[0_8px_24px_rgba(15,35,63,0.045)]`}>
-      <div className="mb-5">
-        <p className="text-[10px] uppercase tracking-[0.25em] text-orange-700">
-          {eyebrow}
-        </p>
+    <section
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFCF7] p-3 shadow-[0_12px_30px_rgba(15,35,63,0.08)] sm:p-4`}
+    >
+      <div
+        className="relative overflow-hidden rounded-[1.45rem] border-[3px] border-[#F97316] px-5 py-4 shadow-[0_8px_20px_rgba(18,56,101,0.14)] sm:px-6"
+        style={{ backgroundColor: "#173F6B", color: "#FFFFFF" }}
+      >
 
-        <h3 className="mt-2 text-xl font-black text-[#10233f]">
-          {title}
-        </h3>
+        <div className="relative">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-orange-400 shadow-[0_0_0_4px_rgba(251,146,60,0.14)]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-orange-300">
+              {eyebrow}
+            </p>
+          </div>
 
-        {subtitle && (
-          <p className="mt-2 text-sm text-slate-500">
-            {subtitle}
-          </p>
-        )}
+          <h3 className="text-xl font-black text-white">
+            {title}
+          </h3>
+
+          {subtitle && (
+            <p className="mt-1.5 max-w-5xl text-sm font-semibold leading-6 text-white/85">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
 
-      {children}
-    </div>
+      <div className="px-1 pb-1 pt-4 sm:px-2 sm:pb-2 sm:pt-5">
+        {children}
+      </div>
+    </section>
   );
 }
 
 function MissionMetricCard({ stat, index, cardClass }) {
+  const visual =
+    stat.color.includes("red")
+      ? {
+          borderColor: "#FB7185",
+          backgroundColor: "#FFF4F4",
+        }
+      : stat.color.includes("emerald")
+      ? {
+          borderColor: "#34D399",
+          backgroundColor: "#F0FFF8",
+        }
+      : stat.color.includes("violet")
+      ? {
+          borderColor: "#9B6CFF",
+          backgroundColor: "#F8F5FF",
+        }
+      : stat.color.includes("blue") || stat.color.includes("sky")
+      ? {
+          borderColor: "#60A5FA",
+          backgroundColor: "#F2F7FF",
+        }
+      : {
+          borderColor: "#F59E0B",
+          backgroundColor: "#FFF7ED",
+        };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1468,24 +1764,31 @@ function MissionMetricCard({ stat, index, cardClass }) {
         duration: 0.3,
         delay: index * 0.05,
       }}
-      className={`${cardClass} rounded-[1.5rem] border border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)]`}
+      className={`${cardClass} min-w-0 rounded-[1.5rem] border-[3px] p-5 shadow-[0_8px_20px_rgba(15,35,63,0.07)]`}
+      style={{
+        borderColor: visual.borderColor,
+        backgroundColor: visual.backgroundColor,
+      }}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+      <div className="flex min-w-0 items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="break-words text-[10px] font-black uppercase leading-4 tracking-[0.18em] text-[#5f7088]">
             {stat.title}
           </p>
 
-          <h3 className={`mt-3 text-4xl font-black ${stat.color}`}>
+          <h3 className={`mt-2 break-words text-4xl font-black ${stat.color}`}>
             {stat.value}
           </h3>
 
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 break-words text-xs font-semibold leading-5 text-[#52667f]">
             {stat.note}
           </p>
         </div>
 
-        <div className="text-3xl">
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 bg-white text-2xl shadow-sm"
+          style={{ borderColor: `${visual.borderColor}55` }}
+        >
           {stat.icon}
         </div>
       </div>
@@ -1494,30 +1797,41 @@ function MissionMetricCard({ stat, index, cardClass }) {
 }
 
 function CompactMetric({ item, index }) {
+  const tone =
+    item.color.includes("red")
+      ? "border-[#FB7185] bg-[#FFF4F4]"
+      : item.color.includes("emerald") || item.color.includes("green")
+      ? "border-[#34D399] bg-[#F0FFF8]"
+      : item.color.includes("violet") || item.color.includes("pink")
+      ? "border-[#9B6CFF] bg-[#F8F5FF]"
+      : item.color.includes("blue") || item.color.includes("sky")
+      ? "border-[#60A5FA] bg-[#F2F7FF]"
+      : "border-[#F59E0B] bg-[#FFF7ED]";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className="rounded-2xl border border-slate-300 bg-white p-5"
+      className={`min-w-0 rounded-2xl border-[3px] p-4 shadow-[0_7px_18px_rgba(15,35,63,0.07)] ${tone}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+        <div className="min-w-0">
+          <p className="break-words text-[10px] font-black uppercase leading-4 tracking-[0.13em] text-[#65758b]">
             {item.title}
           </p>
 
-          <p className={`mt-3 text-3xl font-black ${item.color}`}>
+          <p className={`mt-2 text-3xl font-black ${item.color}`}>
             {item.value}
           </p>
         </div>
 
-        <div className="text-2xl">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#D6E0EA] bg-white text-lg shadow-[0_3px_8px_rgba(15,35,63,0.06)]">
           {item.icon}
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-2 break-words text-xs font-semibold leading-5 text-[#566980]">
         {item.note}
       </p>
     </motion.div>
@@ -1525,7 +1839,7 @@ function CompactMetric({ item, index }) {
 }
 
 function ExecutionLogRow({ log, index }) {
-  const status = toLower(log.status || log.execution_status || log.approval_status);
+  const status = normalizeStatus(log.status || log.execution_status || log.approval_status);
   const failed =
     status.includes("failed") ||
     status.includes("error") ||
@@ -1547,7 +1861,7 @@ function ExecutionLogRow({ log, index }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, delay: index * 0.03 }}
-      className="rounded-2xl border border-slate-300 bg-white p-4"
+      className="rounded-2xl border-2 border-[#c8d5e3] bg-[#fffaf4] p-4 shadow-[0_4px_12px_rgba(15,35,63,0.04)]"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
@@ -1606,19 +1920,19 @@ function RevenueTrendPanel({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 rounded-2xl border-2 border-[#D3DEE9] bg-[#FFFDF9] p-4">
       <TrendGroup
         title="Invoice Trend"
         items={invoiceTrend}
         maxValue={maxInvoiceTrend}
-        tone="bg-cyan-300"
+        tone="bg-[#F97316]"
       />
 
       <TrendGroup
         title="Payment Trend"
         items={paymentTrend}
         maxValue={maxPaymentTrend}
-        tone="bg-green-300"
+        tone="bg-[#315B88]"
       />
     </div>
   );
@@ -1642,13 +1956,13 @@ function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#F97316]" }) 
           const width = Math.max(5, Math.min(100, percent(item.value, maxValue)));
 
           return (
-            <div key={`${title}-${item.label}`} className="space-y-1">
+            <div key={`${title}-${item.key || item.label}`} className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-white/70">{item.label}</span>
+                <span className="font-bold text-slate-600">{item.label}</span>
                 <span className="text-slate-500">{formatMoney(item.value)}</span>
               </div>
 
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#e5edf5]">
                 <div className={`h-full rounded-full ${tone}`} style={{ width: `${width}%` }} />
               </div>
             </div>
@@ -1660,36 +1974,46 @@ function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#F97316]" }) 
 }
 
 function AlertMetric({ item, index }) {
+  const active = Number(item.value || 0) > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className="relative overflow-hidden rounded-2xl border border-slate-300 bg-white p-5"
+      className={`relative overflow-hidden rounded-2xl border-[3px] p-5 shadow-[0_7px_18px_rgba(15,35,63,0.07)] ${
+        active
+          ? "border-[#F59E0B] bg-[#FFF7ED]"
+          : "border-emerald-400 bg-[#F0FFF8]"
+      }`}
     >
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 via-orange-300 to-red-400" />
+      <div
+        className={`absolute inset-x-0 top-0 h-1 ${
+          active ? "bg-[#F97316]" : "bg-emerald-500"
+        }`}
+      />
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#64748b]">
             {item.title}
           </p>
 
-          <p className={`mt-3 text-4xl font-black ${item.color}`}>
+          <p className={`mt-2 text-4xl font-black ${item.color}`}>
             {item.value}
           </p>
         </div>
 
-        <div className="text-3xl">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white bg-white/80 text-2xl shadow-sm">
           {item.icon}
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-2 text-xs font-semibold text-[#586b82]">
         {item.note}
       </p>
 
-      <p className="mt-4 rounded-full border border-slate-300 bg-[#fffaf2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+      <p className="mt-4 rounded-full border border-[#c9d5e2] bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#52667f]">
         {item.type} alert
       </p>
     </motion.div>
@@ -1698,7 +2022,7 @@ function AlertMetric({ item, index }) {
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-[#fffaf2] p-6 text-sm text-slate-500">
+    <div className="rounded-2xl border-2 border-dashed border-[#B9C9D9] bg-[#F8FAFC] p-6 text-sm font-semibold text-[#5a6c82]">
       {text}
     </div>
   );

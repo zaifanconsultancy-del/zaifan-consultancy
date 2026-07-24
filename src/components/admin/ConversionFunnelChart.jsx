@@ -1,12 +1,29 @@
-import { motion } from "framer-motion";
+// ConversionFunnelChart V5.1 MAXIMUM — Framed Funnel + JSX Fix
+// src/components/admin/ConversionFunnelChart.jsx
+//
+// Maximum pass:
+// - preserves existing cardClass + inquiries API
+// - fixes false sequential "drop-off" math from snapshot stage counts
+// - normalizes aliases consistently
+// - detects unknown/unmapped pipeline stages
+// - distinguishes stage distribution from true cohort conversion
+// - preserves approved / total outcome metric while labeling it accurately
+// - adds stage concentration, pipeline depth, data quality and operational guidance
+// - removes unsupported generic recommendations
+// - responsive, reduced-motion aware and high contrast
+// - approved Zaifan Admin OS orange/navy visual system
+// - navy surfaces use white text only
+
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  ArrowDown,
+  AlertTriangle,
   Award,
   BarChart3,
   CheckCircle2,
-  Crown,
+  CircleDot,
   FileCheck,
-  Flame,
+  Gauge,
+  Info,
   Plane,
   Sparkles,
   Target,
@@ -14,440 +31,653 @@ import {
   UserCheck,
 } from "lucide-react";
 
+const FUNNEL_STAGES = [
+  {
+    key: "new",
+    label: "New Lead",
+    shortLabel: "New",
+    aliases: ["new", "new_lead", "new_inquiry"],
+    description: "Fresh student inquiries waiting for first response.",
+    icon: Sparkles,
+  },
+  {
+    key: "contacted",
+    label: "Contacted",
+    shortLabel: "Contacted",
+    aliases: ["contacted", "first_contact", "contact_made"],
+    description: "Students who received first contact or counseling response.",
+    icon: UserCheck,
+  },
+  {
+    key: "documents_pending",
+    label: "Documents Pending",
+    shortLabel: "Documents",
+    aliases: [
+      "documents_pending",
+      "documents pending",
+      "docs_pending",
+      "document_pending",
+    ],
+    description: "Students preparing academic, financial, or visa documents.",
+    icon: FileCheck,
+  },
+  {
+    key: "applied",
+    label: "Applied",
+    shortLabel: "Applied",
+    aliases: ["applied", "application_submitted", "submitted"],
+    description: "Applications submitted to universities or institutions.",
+    icon: Target,
+  },
+  {
+    key: "offer_letter",
+    label: "Offer Letter",
+    shortLabel: "Offer",
+    aliases: ["offer_letter", "offer letter", "offer", "offer_received"],
+    description: "Students who reached an offer-letter decision stage.",
+    icon: Award,
+  },
+  {
+    key: "visa_process",
+    label: "Visa Process",
+    shortLabel: "Visa",
+    aliases: ["visa_process", "visa process", "visa", "visa_processing"],
+    description: "Students progressing through visa guidance and filing.",
+    icon: Plane,
+  },
+  {
+    key: "approved",
+    label: "Approved",
+    shortLabel: "Approved",
+    aliases: ["approved", "visa_approved", "completed", "success"],
+    description: "Students successfully approved or completed in the journey.",
+    icon: CheckCircle2,
+  },
+];
+
+function normalize(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll("-", "_")
+    .replace(/\s+/g, "_");
+}
+
+function clamp(value, min = 0, max = 100) {
+  return Math.min(max, Math.max(min, Number(value) || 0));
+}
+
 function ConversionFunnelChart({ cardClass = "", inquiries = [] }) {
+  const reduceMotion = useReducedMotion();
   const safeInquiries = Array.isArray(inquiries) ? inquiries : [];
 
-  const funnel = buildFunnelData(safeInquiries);
-  const totalLeads = safeInquiries.length;
-  const finalStage = funnel[funnel.length - 1];
-
-  const conversionRate = totalLeads
-    ? Math.round((finalStage.count / totalLeads) * 100)
-    : 0;
-
-  const strongestStage = [...funnel].sort((a, b) => b.count - a.count)[0];
-
-  const weakestStage = [...funnel]
-    .filter((stage) => stage.count > 0)
-    .sort((a, b) => a.count - b.count)[0];
+  const analytics = buildFunnelAnalytics(safeInquiries);
+  const {
+    funnel,
+    totalLeads,
+    approvedCount,
+    approvedShare,
+    activeStages,
+    unknownCount,
+    dataQuality,
+    averageDepth,
+    concentration,
+    deepestActiveStage,
+  } = analytics;
 
   const metricCards = [
     {
-      label: "Total Leads",
+      label: "Tracked Leads",
       value: totalLeads,
+      helper: "Inquiry records in this snapshot",
       icon: Target,
+      tone: "orange",
     },
     {
       label: "Approved",
-      value: finalStage.count,
+      value: approvedCount,
+      helper: `${approvedShare}% of tracked inquiries`,
       icon: CheckCircle2,
+      tone: approvedCount ? "green" : "blue",
     },
     {
-      label: "Conversion",
-      value: `${conversionRate}%`,
+      label: "Pipeline Depth",
+      value: `${averageDepth}%`,
+      helper: "Average current stage position",
       icon: TrendingUp,
+      tone: averageDepth >= 60 ? "green" : averageDepth >= 35 ? "orange" : "blue",
     },
     {
-      label: "Active Stages",
-      value: funnel.filter((stage) => stage.count > 0).length,
-      icon: BarChart3,
+      label: "Data Quality",
+      value: `${dataQuality}%`,
+      helper: unknownCount ? `${unknownCount} unmapped record(s)` : "All stages recognized",
+      icon: Gauge,
+      tone: dataQuality >= 90 ? "green" : dataQuality >= 70 ? "amber" : "red",
     },
   ];
 
   return (
     <section className="space-y-5">
-      <div className="relative overflow-hidden rounded-[2rem] border-2 border-[#E9802D]/45 bg-[#FFFDF8] p-5 shadow-[0_18px_50px_rgba(23,36,61,0.08)] sm:p-6">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#E9802D] via-[#F2A766] to-[#E9802D]" />
-        <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#E9802D]/10 blur-3xl" />
+      <motion.header
+        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.28 }}
+        className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4`}
+      >
+        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
+          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                <BarChart3 size={13} />
+                Funnel Intelligence
+              </span>
 
-        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-[#D96C1F]" />
-
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#B84F0E]">
-                Conversion Funnel Analytics
-              </p>
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                <CircleDot size={13} />
+                Live Snapshot
+              </span>
             </div>
 
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-[#17243D] sm:text-3xl">
+            <h2 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
               Student Journey Funnel
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#667085]">
-              Tracks how inquiry leads move from new student interest to
-              contacted, documents, application, offer letter, visa process,
-              and final approval.
+            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+              See where inquiry records currently sit across the Zaifan student
+              journey, how deep the active pipeline has progressed, and where
+              workload is concentrated.
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric label="Leads" value={totalLeads} />
+              <DarkMetric label="Active Stages" value={activeStages} />
+              <DarkMetric label="Approved" value={approvedCount} />
+              <DarkMetric label="Unmapped" value={unknownCount} />
+            </div>
+          </div>
+
+          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
+              Pipeline Snapshot
+            </p>
+
+            <p className="mt-3 text-4xl font-black text-white">
+              {approvedShare}%
+            </p>
+
+            <p className="mt-1 text-sm font-black text-white">
+              currently approved
+            </p>
+
+            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-4 text-white">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                Deepest Active Stage
+              </p>
+              <p className="mt-1 text-lg font-black text-white">
+                {deepestActiveStage?.label || "No active stage"}
+              </p>
+            </div>
+
+            <p className="mt-4 text-xs font-semibold leading-5 text-white">
+              This is a current-state funnel. True historical conversion and
+              drop-off require student stage-transition history.
             </p>
           </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[560px] xl:grid-cols-4">
-            {metricCards.map((metric) => {
-              const Icon = metric.icon;
-
-              return (
-                <div
-                  key={metric.label}
-                  className="rounded-2xl border border-[#243A60]/25 bg-white p-4 shadow-[0_10px_24px_rgba(23,36,61,0.05)]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#667085]">
-                      {metric.label}
-                    </p>
-
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E9802D]/30 bg-[#FFF3E7]">
-                      <Icon className="h-4 w-4 text-[#D96C1F]" />
-                    </div>
-                  </div>
-
-                  <h3 className="mt-2 text-2xl font-black text-[#17243D]">
-                    {metric.value}
-                  </h3>
-                </div>
-              );
-            })}
-          </div>
         </div>
+      </motion.header>
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+        {metricCards.map((metric, index) => (
+          <MetricCard
+            key={metric.label}
+            {...metric}
+            index={index}
+            reduceMotion={reduceMotion}
+          />
+        ))}
       </div>
 
       {totalLeads === 0 ? (
         <div
-          className={`${cardClass} rounded-[2rem] border-2 border-dashed border-[#E9802D]/35 bg-[#FFFDF8] p-8 text-center`}
+          className={`${cardClass} rounded-[2rem] border-[3px] border-dashed border-[#F97316] bg-[#FFFDF8] p-9 text-center shadow-[0_8px_22px_rgba(15,35,63,0.04)]`}
         >
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#E9802D]/35 bg-[#FFF3E7]">
-            <BarChart3 className="h-8 w-8 text-[#D96C1F]" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+            <BarChart3 size={28} />
           </div>
 
-          <h3 className="mt-4 text-xl font-black text-[#17243D]">
+          <h3 className="mt-4 text-xl font-black text-[#10233f]">
             Funnel will activate with inquiry data
           </h3>
 
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-[#667085]">
-            Add inquiry records and update pipeline stages to see the full
-            student conversion journey.
+          <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+            Add inquiry records and update their pipeline stages to see student
+            distribution, pipeline depth and stage concentration.
           </p>
         </div>
       ) : (
         <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
           <div
-            className={`${cardClass} rounded-[2rem] border-2 border-[#243A60]/30 bg-[#FFFDF8] p-5 shadow-[0_16px_42px_rgba(23,36,61,0.07)] sm:p-6`}
+            className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_14px_36px_rgba(15,35,63,0.07)]`}
           >
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#B84F0E]">
-                  Funnel Flow
+            <div className="overflow-hidden rounded-[1.6rem] border-[3px] border-[#F97316]">
+              <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+                <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
+                  Stage Distribution
                 </p>
 
-                <h3 className="mt-2 text-xl font-black text-[#17243D]">
-                  Lead stage conversion path
+                <h3 className="mt-1 break-words text-xl font-black leading-6 text-white">
+                  Current inquiry pipeline
                 </h3>
+
+                <p className="mt-1 break-words text-sm font-semibold leading-5 text-white">
+                  Each bar represents the share of all tracked inquiry records
+                  currently sitting in that stage.
+                </p>
               </div>
 
-              <div className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#B84F0E]">
-                {conversionRate}% final conversion
-              </div>
-            </div>
+              <div className="space-y-3 bg-[#FFF8EE] p-4 sm:p-5">
+                {funnel.map((stage, index) => {
+                  const Icon = stage.icon;
 
-            <div className="space-y-4">
-              {funnel.map((stage, index) => {
-                const Icon = stage.icon;
-                const previous = funnel[index - 1];
-
-                const dropRate = previous?.count
-                  ? Math.max(
-                      0,
-                      Math.round(
-                        ((previous.count - stage.count) / previous.count) * 100
-                      )
-                    )
-                  : 0;
-
-                return (
-                  <div key={stage.key}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 16 }}
+                  return (
+                    <motion.article
+                      key={stage.key}
+                      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.35, delay: index * 0.05 }}
-                      className="group relative overflow-hidden rounded-[1.5rem] border border-[#243A60]/25 bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:border-[#E9802D]/55 hover:shadow-[0_12px_24px_rgba(23,36,61,0.07)]"
+                      transition={{
+                        duration: reduceMotion ? 0 : 0.22,
+                        delay: reduceMotion ? 0 : index * 0.025,
+                      }}
+                      className="min-w-0 rounded-[1.3rem] border-[3px] border-[#D1DCE7] bg-[#FFFDF8] p-4 transition hover:border-[#F97316] hover:shadow-[0_8px_20px_rgba(15,35,63,0.055)]"
                     >
-                      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#E9802D] to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+                          <Icon size={18} />
+                        </div>
 
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex min-w-0 flex-1 items-center gap-4">
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#E9802D]/30 bg-[#FFF3E7]">
-                            <Icon className="h-6 w-6 text-[#D96C1F]" />
-                          </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <h4 className="break-words font-black text-[#10233f]">
+                                  {stage.label}
+                                </h4>
 
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="text-lg font-black text-[#17243D]">
-                                {stage.label}
-                              </h4>
+                                <span className="rounded-full border-2 border-[#C9D7E6] bg-white px-2.5 py-1 text-[9px] font-black uppercase text-slate-600">
+                                  Stage {index + 1}/{funnel.length}
+                                </span>
+                              </div>
 
-                              <span className="rounded-full border border-[#243A60]/20 bg-[#F5F1E8] px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-[#596579]">
-                                {stage.percent}% of leads
-                              </span>
+                              <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
+                                {stage.description}
+                              </p>
                             </div>
 
-                            <p className="mt-1 text-sm leading-relaxed text-[#667085]">
-                              {stage.description}
-                            </p>
+                            <div className="shrink-0 text-right">
+                              <p className="text-xl font-black text-[#10233f]">
+                                {stage.count}
+                              </p>
+                              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+                                {stage.percent}% share
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+                            <motion.div
+                              initial={reduceMotion ? false : { width: 0 }}
+                              animate={{ width: `${stage.percent}%` }}
+                              transition={{
+                                duration: reduceMotion ? 0 : 0.55,
+                                delay: reduceMotion ? 0 : 0.04 + index * 0.025,
+                              }}
+                              className="h-full rounded-full bg-[#E96512]"
+                            />
                           </div>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-3 lg:min-w-[260px]">
-                          <MiniMetric label="Leads" value={stage.count} />
-                          <MiniMetric
-                            label="Drop"
-                            value={index === 0 ? "—" : `${dropRate}%`}
-                            danger={dropRate >= 50}
-                          />
-                        </div>
                       </div>
-
-                      <div className="mt-4 h-3 overflow-hidden rounded-full border border-[#243A60]/10 bg-[#EEF0F3]">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${stage.percent}%` }}
-                          transition={{
-                            duration: 0.7,
-                            delay: index * 0.04,
-                          }}
-                          className="h-full rounded-full bg-[#E9802D]"
-                        />
-                      </div>
-                    </motion.div>
-
-                    {index < funnel.length - 1 && (
-                      <div className="flex justify-center py-1">
-                        <ArrowDown className="h-5 w-5 text-[#D96C1F]/70" />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-5">
-            <InsightCard
-              cardClass={cardClass}
-              icon={Crown}
-              title="Strongest Stage"
-              value={strongestStage?.label || "No stage"}
-              text={
-                strongestStage
-                  ? `${strongestStage.count} lead(s) currently sit in this stage.`
-                  : "No funnel stage data available yet."
-              }
-            />
-
-            <InsightCard
-              cardClass={cardClass}
-              icon={Flame}
-              title="Weakest Active Stage"
-              value={weakestStage?.label || "No active stage"}
-              text={
-                weakestStage
-                  ? `Only ${weakestStage.count} lead(s) are currently here. Improve movement into this stage.`
-                  : "No active weak stage detected."
-              }
-              danger
-            />
-
-            <InsightCard
-              cardClass={cardClass}
-              icon={Award}
-              title="CRM Recommendation"
-              value="Improve funnel movement"
-              text="Focus on moving contacted leads into documents pending, then push documents pending into applied status."
-            />
-
-            <div
-              className={`${cardClass} rounded-[2rem] border-2 border-[#243A60]/30 bg-[#FFFDF8] p-5 shadow-[0_14px_34px_rgba(23,36,61,0.06)] sm:p-6`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#E9802D]/30 bg-[#FFF3E7]">
-                  <TrendingUp className="h-5 w-5 text-[#D96C1F]" />
-                </div>
-
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#667085]">
-                    Funnel Health
-                  </p>
-
-                  <h3 className="mt-1 text-lg font-black text-[#17243D]">
-                    {getFunnelHealth(conversionRate)}
-                  </h3>
-                </div>
+                    </motion.article>
+                  );
+                })}
               </div>
-
-              <p className="mt-4 text-sm leading-relaxed text-[#667085]">
-                {getFunnelHealthText(conversionRate)}
-              </p>
             </div>
           </div>
+
+          <aside className="space-y-4">
+            <InsightCard
+              icon={CircleDot}
+              eyebrow="Largest Workload"
+              title={concentration.title}
+              description={concentration.description}
+              tone={concentration.tone}
+            />
+
+            <InsightCard
+              icon={TrendingUp}
+              eyebrow="Pipeline Depth"
+              title={`${averageDepth}% average depth`}
+              description={getDepthMessage(averageDepth, deepestActiveStage)}
+              tone={averageDepth >= 60 ? "green" : averageDepth >= 35 ? "orange" : "blue"}
+            />
+
+            <InsightCard
+              icon={Gauge}
+              eyebrow="Data Quality"
+              title={`${dataQuality}% mapped correctly`}
+              description={
+                unknownCount
+                  ? `${unknownCount} inquiry record(s) use a status that does not match this funnel. Review those statuses before trusting pipeline reporting.`
+                  : "Every inquiry in this snapshot maps to a recognized Zaifan funnel stage."
+              }
+              tone={unknownCount ? "amber" : "green"}
+            />
+
+            <OperationalRecommendation analytics={analytics} />
+
+            <MethodologyNote />
+          </aside>
         </div>
       )}
     </section>
   );
 }
 
-function buildFunnelData(inquiries = []) {
-  const stages = [
-    {
-      key: "new",
-      label: "New Lead",
-      aliases: ["new"],
-      description: "Fresh student inquiries waiting for first response.",
-      icon: Sparkles,
-    },
-    {
-      key: "contacted",
-      label: "Contacted",
-      aliases: ["contacted"],
-      description: "Students who received first contact or counseling response.",
-      icon: UserCheck,
-    },
-    {
-      key: "documents_pending",
-      label: "Documents Pending",
-      aliases: ["documents_pending", "documents pending", "docs_pending"],
-      description: "Students preparing academic, financial, or visa documents.",
-      icon: FileCheck,
-    },
-    {
-      key: "applied",
-      label: "Applied",
-      aliases: ["applied", "application_submitted"],
-      description: "Applications submitted to universities or institutions.",
-      icon: Target,
-    },
-    {
-      key: "offer_letter",
-      label: "Offer Letter",
-      aliases: ["offer_letter", "offer letter", "offer"],
-      description: "Students who reached offer letter stage.",
-      icon: Award,
-    },
-    {
-      key: "visa_process",
-      label: "Visa Process",
-      aliases: ["visa_process", "visa process", "visa"],
-      description: "Students progressing through visa guidance and filing.",
-      icon: Plane,
-    },
-    {
-      key: "approved",
-      label: "Approved",
-      aliases: ["approved"],
-      description: "Successful students approved or completed in the journey.",
-      icon: CheckCircle2,
-    },
-  ];
+function buildFunnelAnalytics(inquiries = []) {
+  const aliasMap = new Map();
 
-  const total = inquiries.length || 1;
-
-  return stages.map((stage) => {
-    const count = inquiries.filter((inquiry) => {
-      const status = String(inquiry.status || "new").trim().toLowerCase();
-      return stage.aliases.includes(status);
-    }).length;
-
-    return {
-      ...stage,
-      count,
-      percent: Math.round((count / total) * 100),
-    };
+  FUNNEL_STAGES.forEach((stage) => {
+    [stage.key, ...stage.aliases].forEach((alias) => {
+      aliasMap.set(normalize(alias), stage.key);
+    });
   });
+
+  const counts = Object.fromEntries(FUNNEL_STAGES.map((stage) => [stage.key, 0]));
+  let unknownCount = 0;
+  let depthTotal = 0;
+  let mappedCount = 0;
+
+  inquiries.forEach((inquiry) => {
+    const rawStatus =
+      inquiry?.status ||
+      inquiry?.pipeline_stage ||
+      inquiry?.lead_status ||
+      "new";
+
+    const mappedKey = aliasMap.get(normalize(rawStatus));
+
+    if (!mappedKey) {
+      unknownCount += 1;
+      return;
+    }
+
+    counts[mappedKey] += 1;
+    mappedCount += 1;
+
+    const index = FUNNEL_STAGES.findIndex((stage) => stage.key === mappedKey);
+    if (index >= 0) {
+      depthTotal += index;
+    }
+  });
+
+  const totalLeads = inquiries.length;
+  const denominator = totalLeads || 1;
+
+  const funnel = FUNNEL_STAGES.map((stage) => ({
+    ...stage,
+    count: counts[stage.key],
+    percent: totalLeads
+      ? Math.round((counts[stage.key] / denominator) * 100)
+      : 0,
+  }));
+
+  const approvedCount = counts.approved || 0;
+  const approvedShare = totalLeads
+    ? Math.round((approvedCount / totalLeads) * 100)
+    : 0;
+
+  const activeStages = funnel.filter((stage) => stage.count > 0).length;
+
+  const dataQuality = totalLeads
+    ? clamp(Math.round((mappedCount / totalLeads) * 100))
+    : 0;
+
+  const maxStageIndex = FUNNEL_STAGES.length - 1;
+  const averageDepth =
+    mappedCount && maxStageIndex
+      ? clamp(Math.round((depthTotal / mappedCount / maxStageIndex) * 100))
+      : 0;
+
+  const active = funnel.filter((stage) => stage.count > 0);
+  const deepestActiveStage = active.length
+    ? active.reduce((deepest, stage) => {
+        const currentIndex = FUNNEL_STAGES.findIndex((item) => item.key === stage.key);
+        const deepestIndex = FUNNEL_STAGES.findIndex((item) => item.key === deepest.key);
+        return currentIndex > deepestIndex ? stage : deepest;
+      }, active[0])
+    : null;
+
+  const largest = [...funnel].sort((a, b) => b.count - a.count)[0];
+  const largestShare = largest && totalLeads
+    ? Math.round((largest.count / totalLeads) * 100)
+    : 0;
+
+  let concentrationTone = "green";
+  if (largestShare >= 50) concentrationTone = "amber";
+  if (largestShare >= 70) concentrationTone = "red";
+
+  const concentration = largest?.count
+    ? {
+        title: `${largest.label} · ${largestShare}%`,
+        description:
+          largestShare >= 50
+            ? `${largest.count} lead(s) are concentrated in ${largest.label}. Review whether this reflects normal workload or a progression bottleneck.`
+            : `${largest.count} lead(s) sit in ${largest.label}. The pipeline is relatively distributed across stages.`,
+        tone: concentrationTone,
+      }
+    : {
+        title: "No concentration",
+        description: "No mapped inquiry stages currently contain records.",
+        tone: "blue",
+      };
+
+  return {
+    funnel,
+    totalLeads,
+    approvedCount,
+    approvedShare,
+    activeStages,
+    unknownCount,
+    dataQuality,
+    averageDepth,
+    concentration,
+    deepestActiveStage,
+  };
 }
 
-function MiniMetric({ label, value, danger = false }) {
-  return (
-    <div className="rounded-2xl border border-[#243A60]/20 bg-[#F7F3EB] p-3">
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#747D8D]">
-        {label}
-      </p>
+function OperationalRecommendation({ analytics }) {
+  const {
+    funnel,
+    unknownCount,
+    averageDepth,
+    concentration,
+  } = analytics;
 
-      <p
-        className={`mt-2 text-lg font-black ${
-          danger ? "text-[#B83A34]" : "text-[#17243D]"
-        }`}
-      >
-        {value}
+  let title = "Keep pipeline records current";
+  let description =
+    "Continue updating inquiry stages after meaningful counselor actions so this funnel remains useful.";
+
+  if (unknownCount > 0) {
+    title = "Clean unmapped statuses first";
+    description =
+      "Some inquiries do not match a configured funnel stage. Standardize those records before using the chart for operational decisions.";
+  } else if (concentration?.tone === "red") {
+    title = `Review ${concentration.title.split(" · ")[0]}`;
+    description =
+      "A very large share of the current pipeline is sitting in one stage. Check overdue follow-ups, missing documents, counselor ownership and blocked next actions for those students.";
+  } else if (averageDepth < 35) {
+    title = "Strengthen early-stage progression";
+    description =
+      "Most mapped records are still near the beginning of the journey. Review response speed, follow-up coverage and whether students have clear next actions.";
+  } else {
+    const docs = funnel.find((stage) => stage.key === "documents_pending");
+    if (docs?.count > 0) {
+      title = "Protect document-stage momentum";
+      description =
+        `${docs.count} lead(s) are currently in document preparation. Make sure each has a clear missing-document list, owner and follow-up date.`;
+    }
+  }
+
+  return (
+    <InsightCard
+      icon={Target}
+      eyebrow="Operational Recommendation"
+      title={title}
+      description={description}
+      tone="orange"
+    />
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  icon: Icon,
+  tone = "orange",
+  index = 0,
+  reduceMotion,
+}) {
+  const styles = {
+    orange: "border-[#F97316] bg-[#FFF4E8] text-orange-800",
+    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
+    amber: "border-[#F59E0B] bg-[#FFF7ED] text-amber-900",
+    red: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
+  };
+
+  return (
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.22,
+        delay: reduceMotion ? 0 : index * 0.035,
+      }}
+      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.055)] ${
+        styles[tone] || styles.orange
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.14em]">
+            {label}
+          </p>
+          <p className="mt-2 text-3xl font-black text-[#10233f]">{value}</p>
+        </div>
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-current/20 bg-white">
+          <Icon size={17} />
+        </div>
+      </div>
+
+      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+        {helper}
       </p>
-    </div>
+    </motion.article>
   );
 }
 
 function InsightCard({
-  cardClass,
   icon: Icon,
+  eyebrow,
   title,
-  value,
-  text,
-  danger = false,
+  description,
+  tone = "orange",
 }) {
+  const styles = {
+    orange: "border-[#F97316] bg-[#FFF4E8] text-orange-800",
+    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
+    amber: "border-[#F59E0B] bg-[#FFF7ED] text-amber-900",
+    red: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
+  };
+
   return (
-    <div
-      className={`${cardClass} rounded-[2rem] border-2 border-[#243A60]/30 bg-[#FFFDF8] p-5 shadow-[0_14px_34px_rgba(23,36,61,0.06)] sm:p-6`}
+    <article
+      className={`min-w-0 rounded-[1.5rem] border-[3px] p-5 shadow-[0_8px_22px_rgba(15,35,63,0.055)] ${
+        styles[tone] || styles.orange
+      }`}
     >
-      <div className="flex items-start gap-4">
-        <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${
-            danger
-              ? "border-[#C2413B]/30 bg-[#FFF0EE]"
-              : "border-[#E9802D]/30 bg-[#FFF3E7]"
-          }`}
-        >
-          <Icon
-            className={`h-5 w-5 ${
-              danger ? "text-[#C2413B]" : "text-[#D96C1F]"
-            }`}
-          />
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white">
+          <Icon size={18} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] opacity-80">
+            {eyebrow}
+          </p>
+          <h3 className="mt-1.5 break-words text-base font-black leading-5 text-[#10233f]">
+            {title}
+          </h3>
+          <p className="mt-2 break-words text-sm font-semibold leading-6 text-slate-700">
+            {description}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MethodologyNote() {
+  return (
+    <div className="rounded-[1.5rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-5 shadow-[0_8px_22px_rgba(15,35,63,0.045)]">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#60A5FA] bg-white text-blue-700">
+          <Info size={17} />
         </div>
 
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#667085]">
-            {title}
+          <p className="text-sm font-black text-[#10233f]">
+            Why there is no fake “drop-off” number
           </p>
-
-          <h3
-            className={`mt-2 text-lg font-black ${
-              danger ? "text-[#A8342F]" : "text-[#17243D]"
-            }`}
-          >
-            {value}
-          </h3>
-
-          <p className="mt-2 text-sm leading-relaxed text-[#667085]">{text}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
+            These records show where students are now. A smaller count in a
+            later stage does not prove the difference was lost between those
+            stages. True conversion and drop-off should later be calculated
+            from stage-transition history or cohorts.
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-function getFunnelHealth(rate) {
-  if (rate >= 35) return "Excellent";
-  if (rate >= 20) return "Strong";
-  if (rate >= 10) return "Improving";
-  return "Needs Work";
+function DarkMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    </div>
+  );
 }
 
-function getFunnelHealthText(rate) {
-  if (rate >= 35) {
-    return "Your inquiry-to-approval funnel is performing strongly. Keep improving speed and follow-up consistency.";
+function getDepthMessage(depth, deepestStage) {
+  if (!deepestStage) {
+    return "No mapped stage currently contains an inquiry.";
   }
 
-  if (rate >= 20) {
-    return "Your funnel is healthy, but you can improve by reducing drop-off between contacted and documents pending.";
+  if (depth >= 70) {
+    return `The active pipeline is relatively mature, with records reaching ${deepestStage.label}. Protect late-stage follow-up and completion quality.`;
   }
 
-  if (rate >= 10) {
-    return "Your funnel has movement, but needs tighter follow-up and document collection systems.";
+  if (depth >= 40) {
+    return `The pipeline has meaningful mid-stage movement and currently reaches ${deepestStage.label}. Review blocked records before they become stale.`;
   }
 
-  return "Your funnel needs more stage movement. Focus on contacting new leads and pushing them toward documents pending.";
+  return `Most records remain early in the journey even though the pipeline reaches ${deepestStage.label}. Prioritize first response, qualification and clear next actions.`;
 }
 
 export default ConversionFunnelChart;

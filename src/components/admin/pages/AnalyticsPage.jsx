@@ -1,5 +1,27 @@
 import { lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  BarChart3,
+  Bot,
+  BrainCircuit,
+  BriefcaseBusiness,
+  ChartNoAxesCombined,
+  CircleGauge,
+  Command,
+  Funnel,
+  Gauge,
+  HeartPulse,
+  LayoutDashboard,
+  ListChecks,
+  Radar,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  UsersRound,
+  Workflow,
+  Zap,
+} from "lucide-react";
 
 const DashboardAnalytics = lazy(() => import("../DashboardAnalytics"));
 const DashboardOverview = lazy(() => import("../DashboardOverview"));
@@ -59,27 +81,80 @@ function AnalyticsPage({
   latestInquiry,
   latestAppointment,
 }) {
-  const analyticsNavItems = [
-    ["ai-executive", "AI Executive"],
-    ["mission-control", "Mission Control"],
-    ["command", "Command"],
-    ["operations", "Ops Center"],
-    ["visa-risk", "Visa Risk"],
-    ["counselor-ai", "Counselor AI"],
-    ["workload-ai", "Workload AI"],
-    ["kpi", "KPI"],
-    ["intelligence", "AI Feed"],
-    ["staff", "Staff"],
-    ["scoring", "Scoring"],
-    ["conversion", "Conversion"],
-    ["charts", "Charts"],
-    ["automation", "Automation"],
-    ["actions", "Actions"],
-    ["followup-performance", "Follow-Ups"],
-    ["lead-health", "Lead Health"],
-    ["funnel", "Funnel"],
-    ["overview", "Overview"],
+  const analyticsNavGroups = [
+    {
+      id: "command",
+      eyebrow: "Live Intelligence",
+      title: "Command & AI",
+      icon: Sparkles,
+      tone: "orange",
+      items: [
+        { id: "ai-executive", label: "AI Executive", icon: Sparkles },
+        { id: "mission-control", label: "Mission Control", icon: Radar },
+        { id: "command", label: "CRM Command", icon: Command },
+        { id: "operations", label: "Ops Center", icon: BriefcaseBusiness },
+        { id: "intelligence", label: "AI Feed", icon: Bot },
+      ],
+    },
+    {
+      id: "people",
+      eyebrow: "Risk & Team",
+      title: "People Intelligence",
+      icon: UsersRound,
+      tone: "blue",
+      items: [
+        { id: "visa-risk", label: "Visa Risk", icon: ShieldCheck },
+        { id: "counselor-ai", label: "Counselor AI", icon: BrainCircuit },
+        { id: "workload-ai", label: "Workload AI", icon: Gauge },
+        { id: "staff", label: "Staff Analytics", icon: UsersRound },
+        { id: "lead-health", label: "Lead Health", icon: HeartPulse },
+      ],
+    },
+    {
+      id: "performance",
+      eyebrow: "Performance",
+      title: "CRM Analytics",
+      icon: BarChart3,
+      tone: "green",
+      items: [
+        { id: "kpi", label: "KPI Analytics", icon: CircleGauge },
+        { id: "scoring", label: "Lead Scoring", icon: Target },
+        { id: "conversion", label: "Conversion", icon: ChartNoAxesCombined },
+        { id: "charts", label: "CRM Charts", icon: BarChart3 },
+        { id: "funnel", label: "Funnel", icon: Funnel },
+      ],
+    },
+    {
+      id: "execution",
+      eyebrow: "Execution",
+      title: "Workflow & Control",
+      icon: Workflow,
+      tone: "violet",
+      items: [
+        { id: "automation", label: "Automation", icon: Workflow },
+        { id: "actions", label: "Action Center", icon: ListChecks },
+        { id: "followup-performance", label: "Follow-Ups", icon: HeartPulse },
+        { id: "overview", label: "Overview", icon: LayoutDashboard },
+      ],
+    },
   ];
+
+  const analyticsNavItems = analyticsNavGroups.flatMap((group) => group.items);
+
+  const activeAnalyticsNavItem =
+    analyticsNavItems.find((item) => item.id === activeAnalyticsSection) ||
+    analyticsNavItems[0];
+
+  const activeAnalyticsGroup =
+    analyticsNavGroups.find((group) =>
+      group.items.some((item) => item.id === activeAnalyticsSection)
+    ) || analyticsNavGroups[0];
+
+  const ActiveAnalyticsNavIcon =
+    activeAnalyticsNavItem?.icon || LayoutDashboard;
+
+  const ActiveAnalyticsGroupIcon =
+    activeAnalyticsGroup?.icon || BarChart3;
 
   const AnalyticsSection = AnalyticsSectionWrapper;
 
@@ -210,12 +285,13 @@ if (activeAnalyticsSection === "mission-control") {
     if (activeAnalyticsSection === "intelligence") {
       return (
         <AnalyticsSection eyebrow="AI Intelligence" title="Lead Intelligence Feed">
-          <div className="grid gap-6 2xl:grid-cols-2">
+          <div className="space-y-6">
             <AiLeadIntelligenceFeed
               cardClass={cardClass}
               inquiries={inquiries}
               appointments={appointments}
             />
+
             <AiLeadPrioritizationPanel
               cardClass={cardClass}
               inquiries={inquiries}
@@ -229,12 +305,13 @@ if (activeAnalyticsSection === "mission-control") {
     if (activeAnalyticsSection === "staff") {
       return (
         <AnalyticsSection eyebrow="Team Performance" title="Staff Analytics">
-          <div className="grid gap-6 2xl:grid-cols-2">
+          <div className="space-y-7">
             <StaffPerformanceAnalytics
               cardClass={cardClass}
               inquiries={inquiries}
               appointments={appointments}
             />
+
             <StaffLeaderboard
               cardClass={cardClass}
               inquiries={inquiries}
@@ -288,7 +365,7 @@ if (activeAnalyticsSection === "mission-control") {
           eyebrow="Automation Layer"
           title="Escalations, Reminders & Stage Movement"
         >
-          <div className="grid gap-6 2xl:grid-cols-2">
+          <div className="space-y-7">
             <OverdueEscalationPanel cardClass={cardClass} />
 
             <AutoReminderGenerator
@@ -384,7 +461,7 @@ if (activeAnalyticsSection === "mission-control") {
         eyebrow="Classic Dashboard"
         title="Overview, Analytics & Timeline"
       >
-        <div className="grid gap-6 2xl:grid-cols-2">
+        <div className="space-y-7">
           <DashboardAnalytics
             cardClass={cardClass}
             inquiries={inquiries}
@@ -401,13 +478,11 @@ if (activeAnalyticsSection === "mission-control") {
             appointments={appointments}
           />
 
-          <div className="2xl:col-span-2">
-            <ActivityTimeline
-              cardClass={cardClass}
-              inquiries={inquiries}
-              appointments={appointments}
-            />
-          </div>
+          <ActivityTimeline
+            cardClass={cardClass}
+            inquiries={inquiries}
+            appointments={appointments}
+          />
         </div>
       </AnalyticsSection>
     );
@@ -422,28 +497,164 @@ if (activeAnalyticsSection === "mission-control") {
       transition={{ duration: 0.22 }}
       className="space-y-6"
     >
-      <div className="sticky top-3 z-20 rounded-[1.4rem] border border-slate-200/80 bg-white/95 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {analyticsNavItems.map(([id, label]) => {
-            const isActive = activeAnalyticsSection === id;
+      <nav
+        aria-label="Analytics workspace navigation"
+        className="sticky top-3 z-20 min-w-0 rounded-[2rem] border-[3px] border-[#173F6B] bg-[#FFFDF8] p-3 shadow-[0_16px_44px_rgba(15,35,63,0.10)] sm:p-4"
+      >
+        <div className="mb-3 flex min-w-0 flex-col gap-3 rounded-[1.45rem] border-[3px] border-[#F97316] bg-[#173F6B] p-4 text-white lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
+              <ActiveAnalyticsGroupIcon size={20} />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
+                Analytics Workspace Navigator
+              </p>
+
+              <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+                <h2 className="break-words text-lg font-black leading-6 text-white">
+                  {activeAnalyticsNavItem.label}
+                </h2>
+
+                <span className="rounded-full border-2 border-orange-300/40 bg-orange-400/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-orange-200">
+                  {activeAnalyticsGroup.title}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2 text-right">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white/70">
+                Current Module
+              </p>
+              <p className="mt-0.5 text-sm font-black text-white">
+                {analyticsNavItems.findIndex((item) => item.id === activeAnalyticsSection) + 1}
+                /{analyticsNavItems.length}
+              </p>
+            </div>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-orange-200">
+              <ActiveAnalyticsNavIcon size={17} />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {analyticsNavGroups.map((group) => {
+            const GroupIcon = group.icon;
+            const groupActive = group.items.some(
+              (item) => item.id === activeAnalyticsSection
+            );
+
+            const groupTheme =
+              group.tone === "orange"
+                ? {
+                    shell: "border-[#F97316] bg-[#FFF4E8]",
+                    icon: "border-[#F97316] bg-[#E96512] text-white",
+                    eyebrow: "text-orange-700",
+                  }
+                : group.tone === "green"
+                ? {
+                    shell: "border-[#34D399] bg-[#F0FFF8]",
+                    icon: "border-[#34D399] bg-[#047857] text-white",
+                    eyebrow: "text-emerald-700",
+                  }
+                : group.tone === "violet"
+                ? {
+                    shell: "border-[#9B6CFF] bg-[#F8F5FF]",
+                    icon: "border-[#9B6CFF] bg-[#6D28D9] text-white",
+                    eyebrow: "text-violet-700",
+                  }
+                : {
+                    shell: "border-[#60A5FA] bg-[#F2F7FF]",
+                    icon: "border-[#60A5FA] bg-[#315B88] text-white",
+                    eyebrow: "text-blue-700",
+                  };
 
             return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveAnalyticsSection(id)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition ${
-                  isActive
-                    ? "border-orange-500 bg-orange-500 text-white shadow-[0_6px_18px_rgba(249,115,22,0.18)]"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+              <section
+                key={group.id}
+                className={`min-w-0 rounded-[1.45rem] border-[3px] p-3 transition ${
+                  groupActive
+                    ? `${groupTheme.shell} shadow-[0_8px_20px_rgba(15,35,63,0.06)]`
+                    : "border-[#C9D7E6] bg-white"
                 }`}
               >
-                {label}
-              </button>
+                <div className="flex min-w-0 items-center gap-3 px-1 pb-3">
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${
+                      groupActive
+                        ? groupTheme.icon
+                        : "border-[#C9D7E6] bg-[#FFF8EE] text-[#173F6B]"
+                    }`}
+                  >
+                    <GroupIcon size={17} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p
+                      className={`text-[8px] font-black uppercase tracking-[0.11em] ${
+                        groupActive ? groupTheme.eyebrow : "text-slate-500"
+                      }`}
+                    >
+                      {group.eyebrow}
+                    </p>
+
+                    <h3 className="mt-0.5 break-words text-sm font-black leading-5 text-[#10233F]">
+                      {group.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeAnalyticsSection === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveAnalyticsSection(item.id)}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`group flex min-h-11 w-full min-w-0 items-center gap-2.5 rounded-xl border-2 px-3 py-2 text-left transition duration-200 ${
+                          isActive
+                            ? "border-[#F97316] bg-[#E96512] text-white shadow-[0_6px_16px_rgba(249,115,22,0.18)]"
+                            : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4E8]"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
+                            isActive
+                              ? "border-white/25 bg-white/10 text-white"
+                              : "border-[#D1DCE7] bg-[#FFF8EE] text-[#173F6B] group-hover:border-orange-200 group-hover:text-orange-700"
+                          }`}
+                        >
+                          <Icon size={13} />
+                        </span>
+
+                        <span className="min-w-0 flex-1 break-words text-[11px] font-black leading-4">
+                          {item.label}
+                        </span>
+
+                        <span
+                          className={`shrink-0 text-xs font-black ${
+                            isActive ? "text-white" : "text-slate-400"
+                          }`}
+                        >
+                          ↗
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
             );
           })}
         </div>
-      </div>
+      </nav>
 
       <AnimatePresence mode="wait">
         <motion.div

@@ -31,14 +31,13 @@ const formatLabel = (value = "") => {
 const formatDate = (value) => {
   if (!value) return "No date";
 
-  try {
-    return new Date(value).toLocaleString("en-PK", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return "Invalid date";
-  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Invalid date";
+
+  return date.toLocaleString("en-PK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 };
 
 const percent = (value, total) => {
@@ -121,6 +120,14 @@ function ExecutiveAutomationControlCenter({
   const [scoreSummary, setScoreSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [collapsedPanels, setCollapsedPanels] = useState({});
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const togglePanel = (key) =>
+    setCollapsedPanels((current) => ({ ...current, [key]: !current[key] }));
+
+  const toggleRow = (key) =>
+    setExpandedRows((current) => ({ ...current, [key]: !current[key] }));
 
   const loadAutomationData = async () => {
     setLoading(true);
@@ -380,9 +387,8 @@ function ExecutiveAutomationControlCenter({
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
+      <div className="relative overflow-hidden rounded-[2rem] border-[3px] border-[#E9802D]/45 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
         <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#FFF1E3] blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/5 blur-3xl" />
 
         <div className="relative flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
@@ -424,7 +430,7 @@ function ExecutiveAutomationControlCenter({
           </div>
         ) : null}
 
-        <div className="relative mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-9">
+        <div className="relative mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
           {kpis.map((item, index) => (
             <MetricCard key={item.title} item={item} index={index} />
           ))}
@@ -441,31 +447,39 @@ function ExecutiveAutomationControlCenter({
       />
 
       <CommandPanel
+  panelKey="verification-recovery"
+  tone="navy"
   eyebrow="Platform Recovery"
   title="Verification Recovery Queue"
   description="Students requiring automated recovery workflows."
+  collapsed={collapsedPanels["verification-recovery"]}
+  onToggle={() => togglePanel("verification-recovery")}
 >
   <div className="grid gap-3 md:grid-cols-4">
-    <SmallMetric label="Critical Recovery" value={verificationSnapshot.criticalRecovery} />
-    <SmallMetric label="High Recovery" value={verificationSnapshot.highRecovery} />
-    <SmallMetric label="Broken Stages" value={verificationSnapshot.failures.length} />
-    <SmallMetric label="Recovery Queue" value={verificationSnapshot.recoveryQueue.length} />
+    <SmallMetric label="Critical Recovery" value={verificationSnapshot?.criticalRecovery || 0} />
+    <SmallMetric label="High Recovery" value={verificationSnapshot?.highRecovery || 0} />
+    <SmallMetric label="Broken Stages" value={verificationSnapshot?.failures?.length || 0} />
+    <SmallMetric label="Recovery Queue" value={verificationSnapshot?.recoveryQueue?.length || 0} />
   </div>
 
   <div className="mt-4 grid gap-3 md:grid-cols-5">
-    <SmallMetric label="CAS Recovery" value={recoveryEngine.casQueue.length} />
-    <SmallMetric label="Visa Recovery" value={recoveryEngine.visaQueue.length} />
-    <SmallMetric label="Payment Recovery" value={recoveryEngine.paymentQueue.length} />
-    <SmallMetric label="Portal Recovery" value={recoveryEngine.portalQueue.length} />
-    <SmallMetric label="Recovery Actions" value={recoveryEngine.totalActions} />
+    <SmallMetric label="CAS Recovery" value={recoveryEngine?.casQueue?.length || 0} />
+    <SmallMetric label="Visa Recovery" value={recoveryEngine?.visaQueue?.length || 0} />
+    <SmallMetric label="Payment Recovery" value={recoveryEngine?.paymentQueue?.length || 0} />
+    <SmallMetric label="Portal Recovery" value={recoveryEngine?.portalQueue?.length || 0} />
+    <SmallMetric label="Recovery Actions" value={recoveryEngine?.totalActions || 0} />
   </div>
 </CommandPanel>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <CommandPanel
+          panelKey="approval-queue"
+          tone="orange"
           eyebrow="Approval Command"
           title="Approval Queue"
           description="Actions waiting for human approval, queued execution, or decision."
+          collapsed={collapsedPanels["approval-queue"]}
+          onToggle={() => togglePanel("approval-queue")}
         >
           {automation.pending.length || automation.queued.length ? (
             <div className="space-y-3">
@@ -477,7 +491,7 @@ function ExecutiveAutomationControlCenter({
                     item={item}
                     index={index}
                     type="pending"
-                  />
+                   rowKey={String(item.id || `pending-${index}`)} expanded={Boolean(expandedRows[String(item.id || `pending-${index}`)])} onToggle={() => toggleRow(String(item.id || `pending-${index}`))} />
                 ))}
             </div>
           ) : (
@@ -486,9 +500,13 @@ function ExecutiveAutomationControlCenter({
         </CommandPanel>
 
         <CommandPanel
+          panelKey="failed-recovery"
+          tone="red"
           eyebrow="Recovery Center"
           title="Failed Automation Recovery"
           description="Failed executions and queue items that need retry, investigation, or cleanup."
+          collapsed={collapsedPanels["failed-recovery"]}
+          onToggle={() => togglePanel("failed-recovery")}
         >
           {automation.failed.length || automation.failedQueue.length ? (
             <div className="space-y-3">
@@ -500,7 +518,7 @@ function ExecutiveAutomationControlCenter({
                     item={item}
                     index={index}
                     type="failed"
-                  />
+                   rowKey={String(item.id || `failed-${index}`)} expanded={Boolean(expandedRows[String(item.id || `failed-${index}`)])} onToggle={() => toggleRow(String(item.id || `failed-${index}`))} />
                 ))}
             </div>
           ) : (
@@ -511,9 +529,13 @@ function ExecutiveAutomationControlCenter({
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <CommandPanel
+          panelKey="duplicate-protection"
+          tone="blue"
           eyebrow="Protection Monitor"
           title="Duplicate Protection"
           description="Blocked duplicate actions and spam-prevention events."
+          collapsed={collapsedPanels["duplicate-protection"]}
+          onToggle={() => togglePanel("duplicate-protection")}
         >
           {automation.duplicateBlocked.length ? (
             <div className="space-y-3">
@@ -523,7 +545,7 @@ function ExecutiveAutomationControlCenter({
                   item={item}
                   index={index}
                   type="duplicate"
-                />
+                 rowKey={String(item.id || `duplicate-${index}`)} expanded={Boolean(expandedRows[String(item.id || `duplicate-${index}`)])} onToggle={() => toggleRow(String(item.id || `duplicate-${index}`))} />
               ))}
             </div>
           ) : (
@@ -532,9 +554,13 @@ function ExecutiveAutomationControlCenter({
         </CommandPanel>
 
         <CommandPanel
+          panelKey="operations-feed"
+          tone="navy"
           eyebrow="Execution Timeline"
           title="Executive Operations Feed"
           description="Latest automation execution events across tasks, reminders, email, WhatsApp, approvals, failures, and duplicate prevention."
+          collapsed={collapsedPanels["operations-feed"]}
+          onToggle={() => togglePanel("operations-feed")}
         >
           {automation.sortedLogs.length ? (
             <div className="space-y-3">
@@ -544,7 +570,7 @@ function ExecutiveAutomationControlCenter({
                   item={item}
                   index={index}
                   type="timeline"
-                />
+                 rowKey={String(item.id || `log-${index}`)} expanded={Boolean(expandedRows[String(item.id || `log-${index}`)])} onToggle={() => toggleRow(String(item.id || `log-${index}`))} />
               ))}
             </div>
           ) : (
@@ -555,9 +581,13 @@ function ExecutiveAutomationControlCenter({
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <CommandPanel
+          panelKey="performance"
+          tone="orange"
           eyebrow="Automation Analytics"
           title="Performance Breakdown"
-          description="Simple performance distribution for leadership review."
+          description="Leadership health view of execution quality, failures, approvals, and rejection pressure."
+          collapsed={collapsedPanels["performance"]}
+          onToggle={() => togglePanel("performance")}
         >
           <div className="space-y-4">
             <ProgressRow
@@ -588,9 +618,13 @@ function ExecutiveAutomationControlCenter({
         </CommandPanel>
 
         <CommandPanel
+          panelKey="automation-mix"
+          tone="green"
           eyebrow="Action Types"
           title="Automation Mix"
           description="Most common automation actions executed by the executive layer."
+          collapsed={collapsedPanels["automation-mix"]}
+          onToggle={() => togglePanel("automation-mix")}
         >
           {automation.topActionTypes.length ? (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -646,11 +680,12 @@ function ExecutiveLaunchCenter({
 
   return (
     <CommandPanel
+      tone="navy"
       eyebrow="Executive Launch Center"
       title="Production readiness, go-live status, and workflow blockers"
       description="V4 verification layer for deciding whether the executive automation system is ready for production launch or needs recovery first."
     >
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <SmallMetric label="Readiness Score" value={`${readinessScore}%`} />
         <SmallMetric label="Go Live Status" value={formatLabel(goLiveStatus)} />
         <SmallMetric label="Workflow Integrity" value={`${integrityScore}%`} />
@@ -752,203 +787,283 @@ function LaunchIssueRow({ issue = {} }) {
 }
 
 function MetricCard({ item, index }) {
+  const toneMap = {
+    red: "border-[#FF8F96] bg-[#FFF4F4]",
+    orange: "border-[#FFAA63] bg-[#FFF8F1]",
+    green: "border-[#57DDA8] bg-[#EEFCF5]",
+    gold: "border-[#F5BD3D] bg-[#FFFAE9]",
+    blue: "border-[#AFC7E4] bg-[#F1F6FC]",
+    purple: "border-[#B9A7FF] bg-[#F6F3FF]",
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.04 }}
-      className={`rounded-[1.5rem] border shadow-[0_10px_24px_rgba(23,36,61,0.05)] p-4 ${getToneStyle(item.tone)}`}
+      transition={{ duration: 0.25, delay: index * 0.035 }}
+      className={`min-w-0 rounded-[1.65rem] border-[2px] p-5 shadow-[0_12px_28px_rgba(23,36,61,0.055)] ${toneMap[item.tone] || toneMap.blue}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
-            {item.title}
-          </p>
-
-          <p className={`mt-3 text-3xl font-black ${item.color}`}>
-            {item.value}
-          </p>
-        </div>
-
-        <span className="text-2xl">{item.icon}</span>
+        <p className="min-w-0 text-[10px] font-black uppercase leading-4 tracking-[0.14em] text-[#536783]">
+          {item.title}
+        </p>
+        <span className="shrink-0 text-xl" aria-hidden="true">{item.icon}</span>
       </div>
-
-      <p className="mt-3 text-xs leading-5 text-[#7A8392]">{item.note}</p>
+      <p className={`mt-4 break-words text-[2rem] font-black leading-none tracking-[-0.04em] ${item.color}`}>
+        {item.value}
+      </p>
+      <p className="mt-3 min-h-[40px] text-xs font-semibold leading-5 text-[#60708A]">{item.note}</p>
     </motion.div>
   );
 }
 
-function CommandPanel({ eyebrow, title, description, children }) {
-  return (
-    <div className="rounded-[1.75rem] border shadow-[0_12px_28px_rgba(23,36,61,0.05)] border-[#243A60]/18 bg-white p-5">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#B84F0E]">
-        {eyebrow}
-      </p>
-
-      <h3 className="mt-1 text-xl font-black text-[#17243D]">{title}</h3>
-
-      {description ? (
-        <p className="mt-1 text-sm leading-6 text-[#7A8392]">{description}</p>
-      ) : null}
-
-      <div className="mt-5">{children}</div>
-    </div>
-  );
-}
-
-function AutomationRow({ item = {}, index, type = "timeline" }) {
-  const failed = isFailed(item);
-  const pending = isPending(item);
-  const duplicate = item.duplicate_detected || item.duplicate_blocked;
-  const success = isSuccess(item);
-
-  const statusClass = failed
-    ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-    : pending
-    ? "border-[#A36A18]/28 bg-[#FFF7E8] text-[#8A5611]"
-    : duplicate || type === "duplicate"
-    ? "border-[#243A60]/24 bg-[#F3F5F8] text-[#243A60]"
-    : success
-    ? "border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
-    : "border-[#243A60]/18 bg-white text-[#7A8392]";
+function CommandPanel({
+  panelKey,
+  eyebrow,
+  title,
+  description,
+  children,
+  tone = "default",
+  collapsed = false,
+  onToggle,
+}) {
+  const tones = {
+    navy: "border-[#173F6B] bg-[#FFFDF8]",
+    orange: "border-[#FF8A35] bg-[#FFFDF8]",
+    red: "border-[#FF8F96] bg-[#FFFDF8]",
+    blue: "border-[#7EA9D8] bg-[#FFFDF8]",
+    green: "border-[#57DDA8] bg-[#FFFDF8]",
+    default: "border-[#C8D5E4] bg-[#FFFDF8]",
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, delay: index * 0.03 }}
-      className="rounded-2xl border border-[#243A60]/18 bg-white p-4"
-    >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <section className={`overflow-hidden rounded-[2rem] border-[2px] shadow-[0_16px_38px_rgba(23,36,61,0.07)] ${tones[tone] || tones.default}`}>
+      <div className={`flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between ${
+        tone === "navy" ? "bg-[#173F6B]" : "bg-[#FFF9F2]"
+      }`}>
         <div className="min-w-0">
-          <p className="font-black text-[#17243D]">{getActionName(item)}</p>
-
-          <p className="mt-1 text-xs text-[#7A8392]">
-            {getStudentName(item)} • {item.student_type || "student"} •{" "}
-            {formatDate(getLogTime(item))}
+          <p className={`text-[10px] font-black uppercase tracking-[0.18em] ${tone === "navy" ? "text-[#FFB06E]" : "text-[#C84A10]"}`}>
+            {eyebrow}
           </p>
-
-          {(item.error_message || item.error || item.failure_reason) && (
-            <p className="mt-2 line-clamp-2 text-xs text-[#A8342F]">
-              {item.error_message || item.error || item.failure_reason}
-            </p>
-          )}
-
-          {item.target_table || item.target_id ? (
-            <p className="mt-2 text-[11px] text-[#8992A1]">
-              Target: {item.target_table || "unknown"} / {item.target_id || "no id"}
+          <h3 className={`mt-1 text-xl font-black ${tone === "navy" ? "text-white" : "text-[#10233F]"}`}>{title}</h3>
+          {description ? (
+            <p className={`mt-1 max-w-3xl text-sm font-semibold leading-5 ${tone === "navy" ? "text-white/80" : "text-[#65748B]"}`}>
+              {description}
             </p>
           ) : null}
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <span
-            className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${statusClass}`}
+        {onToggle ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={!collapsed}
+            aria-controls={panelKey}
+            className={`shrink-0 rounded-xl border-2 px-4 py-2 text-xs font-black transition ${
+              tone === "navy"
+                ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                : "border-[#FF9A52] bg-white text-[#B83C0A] hover:bg-[#FFF1E5]"
+            }`}
           >
-            {item.status || item.execution_status || item.approval_status || "tracked"}
-          </span>
-
-          {item.priority && (
-            <span className="rounded-full border border-[#E9802D]/35 bg-[#FFF1E3] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
-              {item.priority}
-            </span>
-          )}
-
-          {duplicate && (
-            <span className="rounded-full border border-[#243A60]/24 bg-[#F3F5F8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#243A60]">
-              Duplicate Protected
-            </span>
-          )}
-        </div>
+            {collapsed ? "Show section" : "Hide section"}
+          </button>
+        ) : null}
       </div>
 
-      {(failed || pending) && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          <ActionChip label="Retry" tone="gold" />
-          <ActionChip label="Investigate" tone="blue" />
-          <ActionChip label="Dismiss" tone="red" />
+      {!collapsed ? <div id={panelKey} className="border-t border-[#D8E1EB] p-5">{children}</div> : null}
+    </section>
+  );
+}
+
+function AutomationRow({
+  item = {},
+  index,
+  type = "timeline",
+  rowKey,
+  expanded = false,
+  onToggle,
+}) {
+  const failed = isFailed(item);
+  const pending = isPending(item);
+  const duplicate = item.duplicate_detected || item.duplicate_blocked;
+  const success = isSuccess(item);
+  const errorText = item.error_message || item.error || item.failure_reason;
+  const status = item.status || item.execution_status || item.approval_status || "tracked";
+
+  const accent = failed
+    ? "border-l-[#D64545]"
+    : pending
+    ? "border-l-[#F59E0B]"
+    : duplicate || type === "duplicate"
+    ? "border-l-[#315D8A]"
+    : success
+    ? "border-l-[#12A66A]"
+    : "border-l-[#FF6B18]";
+
+  const statusClass = failed
+    ? "border-[#FF9EA3] bg-[#FFF1F1] text-[#A51D28]"
+    : pending
+    ? "border-[#F4C45B] bg-[#FFF8DF] text-[#87560A]"
+    : duplicate || type === "duplicate"
+    ? "border-[#AFC7E4] bg-[#EFF5FB] text-[#173F6B]"
+    : success
+    ? "border-[#65D9AB] bg-[#ECFBF4] text-[#087A52]"
+    : "border-[#FFAA63] bg-[#FFF4E9] text-[#B83C0A]";
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: Math.min(index * 0.025, 0.2) }}
+      className={`overflow-hidden rounded-[1.35rem] border-2 border-[#CBD8E6] border-l-[6px] bg-white shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${accent}`}
+    >
+      <div className="p-4 sm:p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="break-words text-[15px] font-black leading-5 text-[#10233F]">
+                {getActionName(item)}
+              </p>
+              <span className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${statusClass}`}>
+                {formatLabel(status)}
+              </span>
+              {item.priority ? (
+                <span className="rounded-full border-2 border-[#FFAA63] bg-[#FFF5EA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#B83C0A]">
+                  {formatLabel(item.priority)}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <RowMeta label="Student" value={getStudentName(item)} />
+              <RowMeta label="Record Type" value={formatLabel(item.student_type || "student")} />
+              <RowMeta label="Event Time" value={formatDate(getLogTime(item))} />
+            </div>
+          </div>
+
+          {onToggle ? (
+            <button
+              type="button"
+              onClick={onToggle}
+              className="shrink-0 rounded-xl border-2 border-[#B8C9DC] bg-[#F5F8FC] px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-[#173F6B] hover:border-[#FF9A52] hover:bg-[#FFF4E9]"
+            >
+              {expanded ? "Less detail" : "View detail"}
+            </button>
+          ) : null}
         </div>
-      )}
-    </motion.div>
+
+        {errorText ? (
+          <div className="mt-3 rounded-xl border-2 border-[#FFB0B4] bg-[#FFF4F4] px-3 py-2.5 text-xs font-semibold leading-5 text-[#9C2530]">
+            <span className="font-black">Failure:</span> {String(errorText)}
+          </div>
+        ) : null}
+
+        {expanded ? (
+          <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr]">
+            <div className="rounded-xl border-2 border-[#D2DDE9] bg-[#F8FAFC] p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#61738D]">Target Reference</p>
+              <p className="mt-1 break-all text-xs font-bold text-[#173F6B]">
+                {item.target_table || "No target table"}{item.target_id ? ` / ${item.target_id}` : ""}
+              </p>
+            </div>
+
+            {(failed || pending) ? (
+              <div className="rounded-xl border-2 border-[#FFB06E] bg-[#FFF7EE] p-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#B83C0A]">Operator Guidance</p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-[#596A80]">
+                  {failed
+                    ? "Investigate the source workflow and recorded failure before retrying. This dashboard does not pretend to perform a retry it cannot verify."
+                    : "This item is waiting for a decision or execution source. Review the originating workflow before changing its state."}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-xl border-2 border-[#AFC7E4] bg-[#F2F7FC] p-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#173F6B]">Event Classification</p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-[#596A80]">
+                  Read-only execution intelligence. Open the source workflow for any operational change.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </motion.article>
+  );
+}
+
+function RowMeta({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-[#D7E0EA] bg-[#FAFBFD] px-3 py-2.5">
+      <p className="text-[8px] font-black uppercase tracking-[0.11em] text-[#71819A]">{label}</p>
+      <p className="mt-1 break-words text-xs font-bold leading-4 text-[#243A60]">{value || "—"}</p>
+    </div>
   );
 }
 
 function ProgressRow({ label, value, detail, tone = "gold" }) {
   const clean = Math.max(0, Math.min(100, Number(value || 0)));
-
   return (
-    <div>
-      <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-        <span className="font-semibold text-[#17243D]">{label}</span>
-        <span className="font-black text-[#B84F0E]">{clean}%</span>
+    <div className="rounded-2xl border-2 border-[#D1DCE8] bg-white p-4">
+      <div className="flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="font-black text-[#10233F]">{label}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-[#68778D]">{detail}</p>
+        </div>
+        <span className="shrink-0 text-2xl font-black text-[#173F6B]">{clean}%</span>
       </div>
-
-      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-        <div
-          className={`h-full rounded-full ${getProgressTone(tone)}`}
-          style={{ width: `${clean}%` }}
-        />
+      <div className="mt-3 h-3 overflow-hidden rounded-full border border-[#D7E0EA] bg-[#EDF2F7]">
+        <div className={`h-full rounded-full ${getProgressTone(tone)}`} style={{ width: `${clean}%` }} />
       </div>
-
-      <p className="mt-2 text-xs text-[#7A8392]">{detail}</p>
     </div>
   );
 }
 
-function SmallMetric({ label, value }) {
+function SmallMetric({ label, value, tone = "blue" }) {
+  const tones = {
+    orange: "border-[#FFAA63] bg-[#FFF7EE]",
+    red: "border-[#FF9EA3] bg-[#FFF3F3]",
+    green: "border-[#5ADDA9] bg-[#EEFCF5]",
+    blue: "border-[#B8CBE0] bg-[#F3F7FB]",
+    navy: "border-[#315D8A] bg-[#EDF4FA]",
+  };
+
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
-      <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-[#8992A1]">
+    <div className={`min-w-0 rounded-[1.25rem] border-2 p-4 ${tones[tone] || tones.blue}`}>
+      <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.12em] text-[#526984]">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">{value}</p>
+      <p className="mt-2 break-words text-2xl font-black leading-none tracking-[-0.02em] text-[#10233F]">
+        {value}
+      </p>
     </div>
-  );
-}
-
-function ActionChip({ label, tone = "default" }) {
-  const toneClass =
-    tone === "red"
-      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-      : tone === "blue"
-      ? "border-[#243A60]/24 bg-[#F3F5F8] text-[#243A60]"
-      : tone === "gold"
-      ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
-      : "border-[#243A60]/18 bg-white text-[#7A8392]";
-
-  return (
-    <span
-      className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${toneClass}`}
-    >
-      {label}
-    </span>
   );
 }
 
 function EmptyState({ text }) {
   return (
-    <p className="rounded-2xl border border-dashed border-[#243A60]/18 bg-white p-5 text-sm text-[#7A8392]">
-      {text}
-    </p>
+    <div className="rounded-[1.4rem] border-2 border-dashed border-[#B8C9DC] bg-[#F7FAFD] p-6 text-center">
+      <p className="text-sm font-bold text-[#61738D]">{text}</p>
+    </div>
   );
 }
 
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-[#C2413B]/32 bg-[#FFF0EE]";
-  if (tone === "orange") return "border-[#A36A18]/30 bg-[#FFF7E8]";
-  if (tone === "green") return "border-[#E9802D]/35 bg-[#FFF1E3]";
-  if (tone === "gold") return "border-[#E9802D]/40 bg-[#FFF1E3]";
-  if (tone === "blue") return "border-[#243A60]/25 bg-[#F3F5F8]";
-  if (tone === "purple") return "border-[#243A60]/25 bg-[#F3F5F8]";
-  return "border-[#243A60]/18 bg-white";
+  if (tone === "red") return "border-[#FF9EA3] bg-[#FFF3F3]";
+  if (tone === "orange") return "border-[#FFAA63] bg-[#FFF7EE]";
+  if (tone === "green") return "border-[#5ADDA9] bg-[#EEFCF5]";
+  if (tone === "gold") return "border-[#F3C34F] bg-[#FFF9E7]";
+  if (tone === "blue") return "border-[#AFC7E4] bg-[#F1F6FC]";
+  if (tone === "purple") return "border-[#B9A7FF] bg-[#F6F3FF]";
+  return "border-[#C8D5E4] bg-white";
 }
 
 function getProgressTone(tone = "") {
-  if (tone === "red") return "bg-red-400";
-  if (tone === "orange") return "bg-orange-400";
-  if (tone === "green") return "bg-emerald-400";
-  if (tone === "blue") return "bg-blue-400";
-  return "bg-[#E9802D]";
+  if (tone === "red") return "bg-[#D64545]";
+  if (tone === "orange") return "bg-[#FF6B18]";
+  if (tone === "blue") return "bg-[#315D8A]";
+  if (tone === "green") return "bg-[#12A66A]";
+  return "bg-[#F0A51A]";
 }
+
 
 export default ExecutiveAutomationControlCenter;

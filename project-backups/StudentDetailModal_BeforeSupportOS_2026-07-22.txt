@@ -1,4 +1,4 @@
-﻿// StudentDetailModal V25 SHELL MAXIMUM — Unified Student OS Command Workspace
+// StudentDetailModal V22 — Persistent Panel State Edition
 // Full replacement built from V14.
 // Major upgrades:
 // - fixes the Lucide Map / native JavaScript Map constructor collision
@@ -8,18 +8,8 @@
 // - removes the heavy scoped !important readability guard in favor of explicit Tailwind styling
 // - keeps StudentDocumentsPanel as the connected live backend operations layer
 // - upgrades Student 360 overview and navigation without shrinking the mature file
-// - student identity is now student_id + student_type, not the object reference
-// - prevents stale Student OS / portal requests from overwriting a newly opened student
-// - strict typed-table loading: no silent cross-type fallback when a typed query returns zero rows
-// - partial Student OS source failures are isolated instead of collapsing the entire modal
-// - child save refreshes remain soft/no-blink; hard remount remains manual/identity-only
-// - inquiry pipeline stages are never shown as saved unless a persistence handler exists
-// - portal account loading is type-safe and no longer searches both inquiry + appointment by default
-// - removes the insecure default temporary password and adds secure local password generation
-// - portal password fields use password inputs and stronger validation
-// - mobile/desktop state remains persistent while live Student OS data refreshes
 
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Activity,
@@ -103,7 +93,6 @@ const CounselorQueuePanel = lazy(() => import("./CounselorQueuePanel"));
 const SmartActionsPanel = lazy(() => import("./SmartActionsPanel"));
 const StudentAnalyticsPanel = lazy(() => import("./StudentAnalyticsPanel"));
 const PaymentCenterPanel = lazy(() => import("./PaymentCenterPanel"));
-const StudentSupportDeskPanel = lazy(() => import("./StudentSupportDeskPanel"));
 import * as studentPortalApi from "../../lib/studentPortal";
 
 import {
@@ -124,7 +113,6 @@ function StudentDetailModal({
   updateAppointmentPriority = null,
   updateAppointmentStatus = null,
   updateAppointmentStage = null,
-  updateInquiryStage = null,
   toggleInquiryStatus = null,
   deleteInquiry = null,
   deleteAppointment = null,
@@ -144,10 +132,6 @@ function StudentDetailModal({
 
   const [osLoading, setOsLoading] = useState(false);
   const [osError, setOsError] = useState("");
-  const [osSourceHealth, setOsSourceHealth] = useState({});
-  const osRequestRef = useRef(0);
-  const portalRequestRef = useRef(0);
-  const studentIdentityRef = useRef("");
   const [studentDocuments, setStudentDocuments] = useState([]);
   const [studentApplication, setStudentApplication] = useState(null);
   const [studentUniversities, setStudentUniversities] = useState([]);
@@ -173,14 +157,11 @@ function StudentDetailModal({
   });
   const [portalAccountForm, setPortalAccountForm] = useState({
     email: "",
-    temporaryPassword: "",
+    temporaryPassword: "student123",
     resetPassword: "",
     forcePasswordChange: true,
   });
-  // Hard remount key: ONLY change this when switching to another student
-  // or when an explicit hard panel reset is requested. Normal background
-  // Student OS synchronization must never touch it.
-  const [panelMountKey, setPanelMountKey] = useState(0);
+  const [panelRefreshKey, setPanelRefreshKey] = useState(0);
 
   const workingStudent = localStudent || student;
 
@@ -188,15 +169,12 @@ function StudentDetailModal({
 
   const studentEmail = workingStudent?.email || student?.email || "";
 
-  const studentType = normalize(
+  const studentType =
     workingStudent?.student_type ||
-      workingStudent?.__leadType ||
-      workingStudent?.type ||
-      type ||
-      "inquiry"
-  );
-
-  const studentIdentity = `${String(studentId || "")}:${studentType}`;
+    workingStudent?.__leadType ||
+    workingStudent?.type ||
+    type ||
+    "inquiry";
 
   const safePermissions = {
     canDelete: false,
@@ -231,10 +209,12 @@ function StudentDetailModal({
   const getStudentTypeVariants = useCallback(() => {
     return [
       studentType,
-      normalize(type),
-      normalize(workingStudent?.student_type),
-      normalize(workingStudent?.type),
-      normalize(workingStudent?.__leadType),
+      type,
+      workingStudent?.student_type,
+      workingStudent?.type,
+      workingStudent?.__leadType,
+      "inquiry",
+      "appointment",
     ].filter(Boolean);
   }, [
     studentType,
@@ -243,37 +223,6 @@ function StudentDetailModal({
     workingStudent?.type,
     workingStudent?.__leadType,
   ]);
-
-  const generateSecurePortalPassword = useCallback(() => {
-    const alphabet =
-      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-    const values = new Uint32Array(16);
-
-    if (window.crypto?.getRandomValues) {
-      window.crypto.getRandomValues(values);
-    } else {
-      for (let index = 0; index < values.length; index += 1) {
-        values[index] = Math.floor(Math.random() * 0xffffffff);
-      }
-    }
-
-    const password = Array.from(values)
-      .map((value) => alphabet[value % alphabet.length])
-      .join("");
-
-    setPortalAccountForm((prev) => ({
-      ...prev,
-      temporaryPassword: password,
-      resetPassword: "",
-      forcePasswordChange: true,
-    }));
-
-    setPortalAccountStatus({
-      type: "info",
-      message:
-        "A strong temporary password was generated locally. It has not been saved or sent anywhere yet.",
-    });
-  }, []);
 
   const normalizePortalAccount = useCallback((account = null) => {
     if (!account) return null;
@@ -298,8 +247,6 @@ function StudentDetailModal({
   const loadPortalAccount = useCallback(async () => {
     if (!studentId) return null;
 
-    const requestId = portalRequestRef.current + 1;
-    portalRequestRef.current = requestId;
     setPortalAccountLoading(true);
 
     try {
@@ -317,20 +264,14 @@ function StudentDetailModal({
       );
 
       const results = await Promise.all(attempts);
-
-      if (portalRequestRef.current !== requestId) return null;
-
-      const successfulRows = results.flatMap((result) => result.data || []);
+      const firstSuccess = results.find((result) => result.data?.length > 0);
       const firstError = results.find((result) => result.error)?.error;
 
-      if (!successfulRows.length && firstError) {
+      if (!firstSuccess && firstError) {
         throw firstError;
       }
 
-      const account = normalizePortalAccount(successfulRows[0] || null);
-
-      if (portalRequestRef.current !== requestId) return account;
-
+      const account = normalizePortalAccount(firstSuccess?.data?.[0] || null);
       setPortalAccount(account);
 
       setPortalAccountForm((prev) => ({
@@ -340,34 +281,13 @@ function StudentDetailModal({
 
       return account;
     } catch (error) {
-      if (portalRequestRef.current !== requestId) return null;
-
       console.warn("Portal account failed to load:", error?.message || error);
       setPortalAccount(null);
-      setPortalAccountStatus((prev) =>
-        prev.message
-          ? prev
-          : {
-              type: "warning",
-              message:
-                error?.message ||
-                "Portal account could not be loaded for this student identity.",
-            }
-      );
       return null;
     } finally {
-      if (portalRequestRef.current === requestId) {
-        setPortalAccountLoading(false);
-      }
+      setPortalAccountLoading(false);
     }
-  }, [
-    getStudentIdVariants,
-    getStudentTypeVariants,
-    normalizePortalAccount,
-    studentEmail,
-    studentId,
-    studentType,
-  ]);
+  }, [getStudentIdVariants, getStudentTypeVariants, normalizePortalAccount, studentEmail, studentId, studentType]);
 
   const callPortalApi = async (functionName, payload = {}) => {
     const handler = studentPortalApi?.[functionName];
@@ -447,44 +367,13 @@ function StudentDetailModal({
         return;
       }
 
-      if (!passwordToUse || passwordToUse.length < 10) {
+      if (!passwordToUse || passwordToUse.length < 6) {
         setPortalAccountStatus({
           type: "warning",
-          message: "Temporary password must be at least 10 characters.",
+          message: "Temporary password must be at least 6 characters.",
         });
         return;
       }
-
-      if (
-        !/[A-Z]/.test(passwordToUse) ||
-        !/[a-z]/.test(passwordToUse) ||
-        !/[0-9]/.test(passwordToUse)
-      ) {
-        setPortalAccountStatus({
-          type: "warning",
-          message:
-            "Temporary password must include uppercase, lowercase, and a number.",
-        });
-        return;
-      }
-    }
-
-    if (
-      action === "deactivate" &&
-      !window.confirm(
-        `Deactivate ${fullName}'s student portal account? The student will be unable to log in until it is activated again.`
-      )
-    ) {
-      return;
-    }
-
-    if (
-      action === "reset" &&
-      !window.confirm(
-        `Reset ${fullName}'s portal password now? Their previous password will stop working.`
-      )
-    ) {
-      return;
     }
 
     setPortalAccountSaving(action);
@@ -565,40 +454,26 @@ function StudentDetailModal({
   const loadStudentOsData = useCallback(async () => {
     if (!studentId) return;
 
-    const requestId = osRequestRef.current + 1;
-    osRequestRef.current = requestId;
-
     setOsLoading(true);
     setOsError("");
 
-    const idVariants = getStudentIdVariants();
-    const typeVariants = [...new Set(getStudentTypeVariants())];
+    try {
+      const idVariants = getStudentIdVariants();
+      const typeVariants = [...new Set(getStudentTypeVariants())];
 
-    const isMissingStudentTypeColumn = (error) => {
-      const message = String(error?.message || "").toLowerCase();
-      return (
-        message.includes("student_type") &&
-        (message.includes("column") ||
-          message.includes("does not exist") ||
-          message.includes("schema cache"))
-      );
-    };
+      const fetchByStudentId = async (table, options = {}) => {
+        const {
+          select = "*",
+          orderBy = "created_at",
+          ascending = false,
+          limit = null,
+          matchStudentType = false,
+        } = options;
 
-    const fetchByStudentId = async (table, options = {}) => {
-      const {
-        select = "*",
-        orderBy = "created_at",
-        ascending = false,
-        limit = null,
-        matchStudentType = false,
-        allowLegacyWithoutStudentType = false,
-      } = options;
-
-      const runQueries = async (typed) => {
         const attempts = idVariants.map((idValue) => {
           let query = supabase.from(table).select(select).eq("student_id", idValue);
 
-          if (typed && typeVariants.length > 0) {
+          if (matchStudentType && typeVariants.length > 0) {
             query = query.in("student_type", typeVariants);
           }
 
@@ -614,252 +489,161 @@ function StudentDetailModal({
         });
 
         const results = await Promise.all(attempts);
-        const rows = results.flatMap((result) => result.data || []);
-        const errors = results
-          .map((result) => result.error)
-          .filter(Boolean);
+        const firstError = results.find((result) => result.error)?.error;
+        const mergedData = results.flatMap((result) => result.data || []);
 
-        return { rows, errors };
+        if (firstError && mergedData.length === 0) {
+          throw firstError;
+        }
+
+        return Array.from(
+          new Map(
+            mergedData.map((item) => [item.id || JSON.stringify(item), item])
+          ).values()
+        );
       };
 
-      let result = await runQueries(matchStudentType);
+      const [
+  supportRequestsData,
+  documentsData,
+  applicationsData,
+  universitiesData,
+  tasksData,
+  communicationsData,
+  invoicesData,
+  paymentsData,
+  receiptsData,
+  paymentRequestsData,
+] = await Promise.all([
+  fetchByStudentId("student_support_requests", {
+  orderBy: "created_at",
+  ascending: false,
+}),
+        fetchByStudentId("student_documents", {
+          orderBy: "created_at",
+          ascending: false,
+        }),
 
-      if (
-        matchStudentType &&
-        allowLegacyWithoutStudentType &&
-        result.errors.length &&
-        result.rows.length === 0 &&
-        result.errors.every(isMissingStudentTypeColumn)
-      ) {
-        result = await runQueries(false);
-      }
+        fetchByStudentId("student_applications", {
+          orderBy: "created_at",
+          ascending: false,
+          limit: 3,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
 
-      if (result.errors.length && result.rows.length === 0) {
-        throw result.errors[0];
-      }
-
-      return Array.from(
-        new Map(
-          result.rows.map((item) => [item.id || JSON.stringify(item), item])
-        ).values()
-      );
-    };
-
-    const sources = [
-      {
-        key: "support",
-        run: () =>
-          fetchByStudentId("student_support_requests", {
+          return fetchByStudentId("student_applications", {
             orderBy: "created_at",
             ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "documents",
-        run: () =>
-          fetchByStudentId("student_documents", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "applications",
-        run: () =>
-          fetchByStudentId("student_applications", {
-            orderBy: "created_at",
-            ascending: false,
-            limit: 10,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: false,
-          }),
-      },
-      {
-        key: "universities",
-        run: () =>
-          fetchByStudentId("student_universities", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "tasks",
-        run: () =>
-          fetchByStudentId("student_tasks", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "communications",
-        run: () =>
-          fetchByStudentId("student_communications", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "invoices",
-        run: () =>
-          fetchByStudentId("student_invoices", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "payments",
-        run: () =>
-          fetchByStudentId("student_payments", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "receipts",
-        run: () =>
-          fetchByStudentId("student_receipts", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-      {
-        key: "paymentRequests",
-        run: () =>
-          fetchByStudentId("counselor_payment_requests", {
-            orderBy: "created_at",
-            ascending: false,
-            matchStudentType: true,
-            allowLegacyWithoutStudentType: true,
-          }),
-      },
-    ];
-
-    try {
-      const settled = await Promise.allSettled(
-        sources.map((source) => source.run())
-      );
-
-      if (osRequestRef.current !== requestId) return;
-
-      const values = {};
-      const health = {};
-      const failures = [];
-
-      settled.forEach((result, index) => {
-        const key = sources[index].key;
-
-        if (result.status === "fulfilled") {
-          values[key] = result.value || [];
-          health[key] = "ready";
-        } else {
-          values[key] = null;
-          health[key] = "error";
-          failures.push({
-            key,
-            message:
-              result.reason?.message ||
-              `${key} source failed.`,
+            limit: 3,
+            matchStudentType: false,
           });
-        }
-      });
+        }),
 
-      setOsSourceHealth(health);
+        fetchByStudentId("student_universities", {
+          orderBy: "created_at",
+          ascending: false,
+        }),
 
-      if (values.documents !== null) {
-        setStudentDocuments(values.documents);
-      }
+        fetchByStudentId("student_tasks", {
+          orderBy: "created_at",
+          ascending: false,
+        }),
 
-      if (values.applications !== null) {
-        setStudentApplication(values.applications?.[0] || null);
-      }
+        fetchByStudentId("student_communications", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
 
-      if (values.universities !== null) {
-        setStudentUniversities(values.universities);
-      }
+          return fetchByStudentId("student_communications", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
 
-      if (values.tasks !== null) {
-        setStudentTasks(values.tasks);
-      }
+        fetchByStudentId("student_invoices", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("student_invoices", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
 
-      if (values.communications !== null) {
-        setStudentCommunications(values.communications);
-      }
+        fetchByStudentId("student_payments", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("student_payments", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
 
-      if (values.invoices !== null) {
-        setStudentInvoices(values.invoices);
-      }
+        fetchByStudentId("student_receipts", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("student_receipts", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
 
-      if (values.payments !== null) {
-        setStudentPayments(values.payments);
-      }
+        fetchByStudentId("counselor_payment_requests", {
+          orderBy: "created_at",
+          ascending: false,
+          matchStudentType: true,
+        }).then(async (data) => {
+          if (data.length > 0) return data;
+          return fetchByStudentId("counselor_payment_requests", {
+            orderBy: "created_at",
+            ascending: false,
+            matchStudentType: false,
+          });
+        }),
+      ]);
 
-      if (values.receipts !== null) {
-        setStudentReceipts(values.receipts);
-      }
+      setStudentDocuments(documentsData || []);
+      setStudentApplication(applicationsData?.[0] || null);
+      setStudentUniversities(universitiesData || []);
+      setStudentTasks(tasksData || []);
+      setStudentCommunications(communicationsData || []);
+      setStudentInvoices(invoicesData || []);
+      setStudentPayments(paymentsData || []);
+      setStudentReceipts(receiptsData || []);
+      setStudentPaymentRequests(paymentRequestsData || []);
+      setStudentSupportRequests(supportRequestsData || []);
 
-      if (values.paymentRequests !== null) {
-        setStudentPaymentRequests(values.paymentRequests);
-      }
-
-      if (values.support !== null) {
-        setStudentSupportRequests(values.support);
-      }
-
-      if (failures.length) {
-        setOsError(
-          `Some Student OS sources could not refresh: ${failures
-            .map((item) => item.key)
-            .join(", ")}. Existing data was preserved for failed sources.`
-        );
-      }
+      setPanelRefreshKey((prev) => prev + 1);
     } catch (error) {
-      if (osRequestRef.current !== requestId) return;
-
       console.error("Student OS data failed to load:", error);
       setOsError(error.message || "Student OS data failed to load.");
     } finally {
-      if (osRequestRef.current === requestId) {
-        setOsLoading(false);
-      }
+      setOsLoading(false);
     }
-  }, [
-    getStudentIdVariants,
-    getStudentTypeVariants,
-    studentId,
-    studentType,
-  ]);
+  }, [getStudentIdVariants, getStudentTypeVariants, studentId]);
 
   useEffect(() => {
-    if (!studentIdentity) return;
-
-    if (studentIdentityRef.current === studentIdentity) return;
-
-    studentIdentityRef.current = studentIdentity;
-    osRequestRef.current += 1;
-    portalRequestRef.current += 1;
-
     setLocalStudent(student);
     setActivePanel(student?.__preferredPanel || "ai-workspace");
     setMobileNavOpen(false);
 
     setOsLoading(false);
     setOsError("");
-    setOsSourceHealth({});
     setStudentDocuments([]);
     setStudentApplication(null);
     setStudentUniversities([]);
@@ -873,48 +657,18 @@ function StudentDetailModal({
     setSupportResponseDrafts({});
     setSavingSupportResponseId(null);
     setSupportActionStatus({ type: "", message: "" });
-
     setPortalAccount(null);
     setPortalAccountLoading(false);
     setPortalAccountSaving("");
     setPortalAccountStatus({ type: "", message: "" });
     setPortalAccountForm({
       email: student?.email || "",
-      temporaryPassword: "",
+      temporaryPassword: "student123",
       resetPassword: "",
       forcePasswordChange: true,
     });
-
-    setPanelMountKey((prev) => prev + 1);
-  }, [studentIdentity]);
-
-  useEffect(() => {
-    if (!student) return;
-
-    const incomingType = normalize(
-      student?.student_type ||
-        student?.__leadType ||
-        student?.type ||
-        type ||
-        "inquiry"
-    );
-
-    const incomingIdentity = `${String(student?.id || "")}:${incomingType}`;
-
-    if (incomingIdentity !== studentIdentityRef.current) return;
-    if (savingStage || savingPriority || savingStatus) return;
-
-    setLocalStudent((prev) => ({
-      ...(prev || {}),
-      ...student,
-    }));
-  }, [
-    student,
-    type,
-    savingStage,
-    savingPriority,
-    savingStatus,
-  ]);
+    setPanelRefreshKey((prev) => prev + 1);
+  }, [student]);
 
   useEffect(() => {
     loadStudentOsData();
@@ -927,11 +681,7 @@ function StudentDetailModal({
   const refreshCurrentPanel = async () => {
     if (osLoading) return;
 
-    // Explicit/manual refresh: reload authoritative parent data first, then
-    // remount the active panel once. Child save callbacks use loadStudentOsData
-    // directly and therefore remain soft/no-blink.
     await loadStudentOsData();
-    setPanelMountKey((prev) => prev + 1);
   };
 
 
@@ -942,8 +692,8 @@ function StudentDetailModal({
       ? [{ ...workingStudent, __leadType: type }]
       : [];
 
-  const isAppointment = studentType === "appointment";
-  const isInquiry = studentType === "inquiry";
+  const isAppointment = type === "appointment";
+  const isInquiry = type === "inquiry";
   const pipelineType = isAppointment ? "appointment" : "inquiry";
 
   const stages = useMemo(() => getPipelineStages(pipelineType), [pipelineType]);
@@ -1125,7 +875,7 @@ function StudentDetailModal({
 
       await addTimelineEvent({
         studentId: workingStudent.id,
-        studentType,
+        studentType: type,
         actionType: "priority_changed",
         title: "Priority Updated",
         description: `${fullName}'s priority was updated.`,
@@ -1168,7 +918,7 @@ function StudentDetailModal({
 
       await addTimelineEvent({
         studentId: workingStudent.id,
-        studentType,
+        studentType: type,
         actionType: "status_changed",
         title: "Status Updated",
         description: `${fullName}'s status was updated.`,
@@ -1189,18 +939,7 @@ function StudentDetailModal({
   };
 
   const handleStageChange = async (stageId) => {
-    if (!stageId || stageId === currentStageId || savingStage) return;
-
-    const persistenceHandler = isAppointment
-      ? updateAppointmentStage
-      : updateInquiryStage;
-
-    if (typeof persistenceHandler !== "function") {
-      alert(
-        `${isAppointment ? "Appointment" : "Inquiry"} pipeline-stage persistence is not connected yet. No local-only stage change was applied.`
-      );
-      return;
-    }
+    if (!stageId || stageId === currentStageId) return;
 
     const nextStage = getPipelineStageById(pipelineType, stageId);
     const oldStageId = currentStageId;
@@ -1215,11 +954,13 @@ function StudentDetailModal({
     setSavingStage(true);
 
     try {
-      await persistenceHandler(workingStudent.id, stageId);
+      if (updateAppointmentStage && isAppointment) {
+        await updateAppointmentStage(workingStudent.id, stageId);
+      }
 
       await addTimelineEvent({
         studentId: workingStudent.id,
-        studentType,
+        studentType: type,
         actionType: "pipeline_stage_changed",
         title: "Pipeline Stage Updated",
         description: `${fullName} moved in the CRM pipeline.`,
@@ -1503,25 +1244,15 @@ function StudentDetailModal({
 
     if (!confirmed) return;
 
-    try {
-      if (isAppointment && typeof deleteAppointment === "function") {
-        await deleteAppointment(workingStudent.id);
-        onClose();
-        return;
-      }
+    if (isAppointment && deleteAppointment) {
+      await deleteAppointment(workingStudent.id);
+      onClose();
+      return;
+    }
 
-      if (isInquiry && typeof deleteInquiry === "function") {
-        await deleteInquiry(workingStudent.id);
-        onClose();
-        return;
-      }
-
-      throw new Error(
-        `${isAppointment ? "Appointment" : "Inquiry"} delete action is not connected.`
-      );
-    } catch (error) {
-      console.error("Student delete failed:", error);
-      alert(error.message || "Student delete failed.");
+    if (isInquiry && deleteInquiry) {
+      await deleteInquiry(workingStudent.id);
+      onClose();
     }
   };
 
@@ -2632,19 +2363,6 @@ function StudentDetailModal({
     });
   }, [studentDocuments]);
 
-  const osHealthSummary = useMemo(() => {
-    const entries = Object.entries(osSourceHealth);
-    const ready = entries.filter(([, health]) => health === "ready").length;
-    const failed = entries.filter(([, health]) => health !== "ready").length;
-
-    return {
-      total: entries.length,
-      ready,
-      failed,
-      allReady: entries.length > 0 && failed === 0,
-    };
-  }, [osSourceHealth]);
-
   const activePanelDefinition = useMemo(() => {
     const item = sidebarItems.find(([id]) => id === activePanel);
     return item
@@ -2663,7 +2381,7 @@ function StudentDetailModal({
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/65 px-2 py-2 backdrop-blur-md sm:px-4 sm:py-4"
+        className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/55 px-2 py-2 backdrop-blur-md sm:px-4 sm:py-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -2673,64 +2391,68 @@ function StudentDetailModal({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={shouldReduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.99 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
-          className={`zaifan-student-os-v24 flex h-[96dvh] max-h-[96dvh] w-full max-w-[1680px] flex-col overflow-hidden overscroll-contain touch-pan-y rounded-[1.45rem] border-[3px] border-[#F97316] bg-[#FFF8EE] text-[#152238] shadow-[0_36px_140px_rgba(15,23,42,0.42)] sm:rounded-[2rem] ${cardClass}`}
+          className={`zaifan-student-os-v18 flex h-[96dvh] max-h-[96dvh] w-full max-w-[1680px] flex-col overflow-hidden overscroll-contain touch-pan-y rounded-[1.4rem] border-2 border-orange-500 bg-[#fff8ee] text-[#152238] shadow-[0_34px_130px_rgba(15,23,42,0.38)] sm:rounded-[1.9rem] ${cardClass}`}
         >
-          <div className="relative shrink-0 border-b-[3px] border-[#D7E1EB] bg-[#FFFDF8] px-4 py-3 sm:px-6 sm:py-4">
-            <div className="absolute inset-x-8 top-0 h-[4px] rounded-b-full bg-[#F97316]" />
+          <div className="relative shrink-0 border-b border-slate-300 bg-[#fffdfa] px-4 py-4 sm:px-6 sm:py-5">
+            <div className="absolute inset-x-10 top-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-100" />
 
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border-2 border-[#F97316] bg-[#FFF4E8] px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-700 sm:text-[10px]">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-orange-300/25 bg-orange-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-600 sm:text-xs sm:tracking-[0.22em]">
                     {isAppointment ? "Appointment" : "Inquiry"}
                   </span>
 
-                  <span className={`rounded-full border-2 px-3 py-1 text-[9px] font-black capitalize sm:text-[10px] ${getPriorityStyle(priority)}`}>
+                  <span
+                    className={`rounded-full border px-3 py-1 text-[10px] font-semibold capitalize sm:text-xs ${getPriorityStyle(
+                      priority
+                    )}`}
+                  >
                     {priority} priority
                   </span>
 
-                  <span className={`rounded-full border-2 px-3 py-1 text-[9px] font-black capitalize sm:text-[10px] ${getStatusStyle(status)}`}>
+                  <span
+                    className={`rounded-full border px-3 py-1 text-[10px] font-semibold capitalize sm:text-xs ${getStatusStyle(
+                      status
+                    )}`}
+                  >
                     {status}
                   </span>
 
-                  <span className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] sm:text-[10px] ${
-                    osLoading
-                      ? "border-blue-200 bg-blue-50 text-blue-700"
-                      : osHealthSummary.failed > 0
-                        ? "border-red-200 bg-red-50 text-red-700"
-                        : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  }`}>
-                    {osLoading ? <LoaderCircle size={11} className="animate-spin" /> : <ShieldCheck size={11} />}
-                    {osLoading
-                      ? "Syncing Student OS"
-                      : osHealthSummary.total
-                        ? `Student OS ${osHealthSummary.ready}/${osHealthSummary.total}`
-                        : "Student OS connected"}
-                  </span>
+                  {osLoading ? (
+                    <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-[10px] font-semibold text-cyan-700">
+                      Refreshing Panel...
+                    </span>
+                  ) : null}
                 </div>
 
-                <div className="mt-2 flex flex-col gap-1 lg:flex-row lg:items-end lg:gap-4">
-                  <h2 className="min-w-0 break-words text-2xl font-black leading-tight text-[#10233F] sm:text-[2rem]">
-                    {fullName}
-                  </h2>
-                  <p className="pb-0.5 text-sm font-semibold text-slate-500">
-                    {country} <span className="px-1 text-orange-400">•</span> {field}
+                <h2 className="break-words text-2xl font-bold text-slate-900 sm:text-3xl">
+                  {fullName}
+                </h2>
+
+                <div className="mt-2 max-w-2xl">
+                  <p className="break-words text-sm text-slate-500">
+                    {country} • {field}
+                  </p>
+
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">
+                    AI Counselor Workspace Ready
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="hidden min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#F5F9FF] px-3 text-sm font-black text-[#173F6B] 2xl:inline-flex">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#173F6B] text-white">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="hidden items-center gap-2 rounded-xl border border-slate-300 bg-[#fff8ee] px-3 py-2.5 text-sm font-black text-[#152238] xl:inline-flex">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#152238] text-orange-400">
                     <ActivePanelIcon size={14} />
                   </span>
-                  <span className="max-w-[170px] truncate">{activePanelDefinition.label}</span>
+                  <span className="max-w-[190px] truncate">{activePanelDefinition.label}</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setMobileNavOpen((prev) => !prev)}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3.5 text-sm font-black text-[#173F6B] transition hover:border-orange-300 hover:bg-[#FFF4E8] lg:hidden"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-black text-[#152238] transition hover:border-orange-300 hover:text-orange-700 lg:hidden"
                 >
                   <Menu size={16} />
                   Modules
@@ -2739,27 +2461,25 @@ function StudentDetailModal({
                 <button
                   type="button"
                   onClick={() => setActivePanel("ai-workspace")}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-[3px] border-[#D94F08] bg-[#E96512] px-4 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#D94F08]"
+                  className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600"
                 >
-                  <Bot size={16} />
-                  GPT Workspace
+                  Open Real GPT
                 </button>
 
                 <button
                   type="button"
                   onClick={refreshCurrentPanel}
                   disabled={osLoading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#173F6B] transition duration-300 hover:border-[#F97316] hover:bg-[#FFF4E8] hover:text-orange-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition duration-300 hover:border-orange-200 hover:text-orange-700 disabled:opacity-50"
                 >
-                  <RefreshCw size={15} className={osLoading ? "animate-spin" : ""} />
-                  <span className="hidden sm:inline">Refresh</span>
+                  Refresh Current Panel
                 </button>
 
                 {safePermissions.canDelete ? (
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-4 text-sm font-black text-red-700 transition duration-300 hover:bg-red-100"
+                    className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 transition duration-300 hover:bg-red-100"
                   >
                     Delete
                   </button>
@@ -2768,27 +2488,22 @@ function StudentDetailModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#173F6B] transition duration-300 hover:border-[#173F6B] hover:bg-[#F2F7FF]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition duration-300 hover:border-slate-300 hover:text-slate-900"
                 >
-                  <X size={16} />
-                  <span className="hidden sm:inline">Close</span>
+                  Close
                 </button>
               </div>
             </div>
 
             {osError ? (
-              <div className="mt-3 flex items-start gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs font-semibold text-amber-900">
-                <CircleAlert size={16} className="mt-0.5 shrink-0 text-amber-600" />
-                <div className="min-w-0">
-                  <span className="font-black">Partial sync issue.</span>{" "}
-                  {osError}
-                </div>
+              <div className="mt-4 rounded-2xl border border-orange-400/20 bg-orange-500/10 p-3 text-sm text-orange-800">
+                OS data warning: {osError}
               </div>
             ) : null}
           </div>
 
-          <div className="shrink-0 border-b-[3px] border-[#D7E1EB] bg-[#FFF8EE] px-4 py-2.5 sm:px-6">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
+          <div className="shrink-0 border-b border-slate-300 bg-[#fff8ee] px-4 py-3 sm:px-6">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
               <Student360Metric label="Profile readiness" value={`${profileReadiness}%`} icon={BadgeCheck} tone="orange" />
               <Student360Metric label="Pipeline" value={`${pipelineProgress || 0}%`} icon={Target} tone="blue" />
               <Student360Metric label="Documents" value={`${verifiedDocuments}/${studentDocuments.length}`} icon={FolderOpen} tone="emerald" />
@@ -2799,8 +2514,8 @@ function StudentDetailModal({
             </div>
           </div>
 
-          <div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[292px_minmax(0,1fr)]">
-            <aside className={`zaifan-student-nav min-h-0 overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch] border-b-[3px] border-[#D7E1EB] bg-[#FFF9F2] p-3.5 lg:block lg:border-b-0 lg:border-r-[3px] lg:border-[#D7E1EB] ${mobileNavOpen ? "block" : "hidden"}`}>
+          <div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[292px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className={`zaifan-student-nav min-h-0 overscroll-contain overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch] border-b border-slate-300 bg-[#fff7ed] p-4 lg:block lg:border-b-0 lg:border-r lg:border-slate-300 ${mobileNavOpen ? "block" : "hidden"}`}>
               <div className="mb-4">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -2808,40 +2523,40 @@ function StudentDetailModal({
                     type="search"
                     value={panelSearch}
                     onChange={(event) => setPanelSearch(event.target.value)}
-                    placeholder="Search Student OS modules..."
-                    className="w-full rounded-xl border-2 border-[#B9C9D9] bg-white py-3 pl-10 pr-3 text-sm font-semibold text-[#152238] outline-none placeholder:font-medium placeholder:text-slate-400 transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                    placeholder="Find student workspace..."
+                    className="w-full rounded-xl border border-slate-400 bg-white py-3 pl-10 pr-3 text-sm font-semibold text-[#152238] outline-none placeholder:font-medium placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
                   />
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {filteredSidebarGroups.map((group) => (
                   <div key={group.title}>
                     <div className="mb-2 flex items-center gap-3 px-1">
-                      <div className="h-px flex-1 bg-[#D7E1EB]" />
-                      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+                      <div className="h-px flex-1 bg-slate-100" />
+                      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-900/30">
                         {group.title}
                       </p>
-                      <div className="h-px flex-1 bg-[#D7E1EB]" />
+                      <div className="h-px flex-1 bg-slate-100" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-1.5 lg:grid-cols-1">
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
                       {group.items.map(([id, label, description, Icon]) => (
                         <button
                           key={id}
                           type="button"
                           onClick={() => { setActivePanel(id); setMobileNavOpen(false); }}
-                          className={`w-full min-w-0 rounded-[1rem] border-2 px-3 py-2.5 text-left transition sm:px-4 ${
+                          className={`w-full rounded-2xl border px-3 py-3 text-left transition sm:px-4 ${
                             activePanel === id
-                              ? "border-[#D94F08] bg-[#E96512] text-white shadow-[0_8px_18px_rgba(249,115,22,0.20)]"
-                              : "border-[#C9D7E6] bg-white text-[#24324a] shadow-[0_3px_10px_rgba(15,23,42,0.04)] hover:border-[#F97316] hover:bg-[#FFF4E8] hover:text-[#152238]"
+                              ? "border-orange-500 bg-[#ff5a0a] text-white shadow-[0_8px_18px_rgba(255,90,10,0.20)]"
+                              : "border-slate-300 bg-[#fffdfa] text-[#24324a] shadow-[0_3px_10px_rgba(15,23,42,0.04)] hover:border-orange-400 hover:bg-[#fff3df] hover:text-[#152238]"
                           }`}
                         >
                           <span className="flex items-center gap-3 text-xs font-semibold sm:text-sm">
                             <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                               activePanel === id
-                                ? "border border-white/30 bg-white/15 text-white"
-                                : "border border-[#D1DCE7] bg-[#FFF8EE] text-[#315B88]"
+                                ? "bg-white text-orange-600"
+                                : "border border-slate-300 bg-[#fffaf2] text-slate-500"
                             }`}>
                               <Icon size={15} />
                             </span>
@@ -2851,6 +2566,9 @@ function StudentDetailModal({
                             </span>
                             <ChevronRight size={14} className="shrink-0 opacity-40" />
                           </span>
+                          <span className="mt-1 hidden text-xs opacity-60 sm:block">
+                            {description}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -2858,9 +2576,9 @@ function StudentDetailModal({
                 ))}
               </div>
 
-              <div className="mt-4 rounded-[1.1rem] border-2 border-[#F97316] bg-[#FFFDF8] p-3.5 shadow-[0_5px_14px_rgba(15,35,63,0.04)]">
+              <div className="mt-5 rounded-2xl border border-slate-300 bg-white p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Current Journey
+                  Pipeline Progress
                 </p>
 
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -2908,966 +2626,199 @@ function StudentDetailModal({
                 }`}
               >
               <Suspense fallback={<StudentPanelLoader />}>
-              {activePanel === "overview" ? (() => {
-                const cleanTaskStatus = (value = "") =>
-                  String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
-
-                const nowMs = Date.now();
-
-                const activeTasks = studentTasks.filter(
-                  (task) =>
-                    !["completed", "done", "cancelled", "archived"].includes(
-                      cleanTaskStatus(task?.status)
-                    ) && !task?.is_archived
-                );
-
-                const overdueTasks = activeTasks.filter((task) => {
-                  if (!task?.due_date) return false;
-                  const dueMs = new Date(task.due_date).getTime();
-                  return Number.isFinite(dueMs) && dueMs < nowMs;
-                });
-
-                const blockedTasks = activeTasks.filter(
-                  (task) => cleanTaskStatus(task?.status) === "blocked"
-                );
-
-                const urgentTasks = activeTasks.filter((task) =>
-                  ["critical", "urgent", "high"].includes(
-                    cleanTaskStatus(task?.priority)
-                  )
-                );
-
-                const openInvoices = studentInvoices.filter(
-                  (invoice) =>
-                    !["paid", "cancelled", "void"].includes(
-                      cleanTaskStatus(invoice?.status)
-                    )
-                );
-
-                const totalOutstanding = openInvoices.reduce((sum, invoice) => {
-                  const explicitOutstanding = Number(invoice?.outstanding_amount);
-                  if (Number.isFinite(explicitOutstanding)) {
-                    return sum + Math.max(0, explicitOutstanding);
-                  }
-
-                  const total = Number(
-                    invoice?.total_amount ?? invoice?.amount ?? 0
-                  );
-                  const paid = Number(invoice?.paid_amount ?? 0);
-
-                  return (
-                    sum +
-                    Math.max(
-                      0,
-                      (Number.isFinite(total) ? total : 0) -
-                        (Number.isFinite(paid) ? paid : 0)
-                    )
-                  );
-                }, 0);
-
-                const applicationStatus =
-                  studentApplication?.application_status ||
-                  studentApplication?.status ||
-                  "Not started";
-
-                const offerStatus =
-                  studentApplication?.offer_status || "No offer yet";
-
-                const visaStatus =
-                  studentApplication?.visa_status || "Not started";
-
-                const selectedUniversity =
-                  studentApplication?.university ||
-                  studentApplication?.university_name ||
-                  studentApplication?.source_university_name ||
-                  studentUniversities?.[0]?.university ||
-                  studentUniversities?.[0]?.name ||
-                  "Not selected";
-
-                const intake =
-                  studentApplication?.intake ||
-                  studentUniversities?.[0]?.intake ||
-                  "Not assigned";
-
-                const ownerName =
-                  workingStudent?.assigned_admin_name ||
-                  workingStudent?.assigned_to_name ||
-                  workingStudent?.counselor_name ||
-                  "Open ownership panel";
-
-                const portalLabel = portalAccount
-                  ? portalAccount.is_active
-                    ? "Active"
-                    : "Paused"
-                  : "Not created";
-
-                const portalNeedsAction =
-                  !portalAccount ||
-                  !portalAccount.is_active ||
-                  portalAccount.must_change_password;
-
-                const attentionSignals = [
-                  documentStatusSummary.rejected > 0
-                    ? {
-                        id: "rejected-documents",
-                        title: `${documentStatusSummary.rejected} rejected document${
-                          documentStatusSummary.rejected === 1 ? "" : "s"
-                        }`,
-                        text: "Open the Student Master File and replace or verify the affected records.",
-                        panel: "documents",
-                        tone: "danger",
-                      }
-                    : null,
-                  documentStatusSummary.expired > 0
-                    ? {
-                        id: "expired-documents",
-                        title: `${documentStatusSummary.expired} expired document${
-                          documentStatusSummary.expired === 1 ? "" : "s"
-                        }`,
-                        text: "Fresh evidence is required before this case should move forward.",
-                        panel: "documents",
-                        tone: "warning",
-                      }
-                    : null,
-                  overdueTasks.length > 0
-                    ? {
-                        id: "overdue-tasks",
-                        title: `${overdueTasks.length} overdue task${
-                          overdueTasks.length === 1 ? "" : "s"
-                        }`,
-                        text: "Clear overdue operational work before deadlines create downstream risk.",
-                        panel: "operations",
-                        tone: "danger",
-                      }
-                    : null,
-                  blockedTasks.length > 0
-                    ? {
-                        id: "blocked-tasks",
-                        title: `${blockedTasks.length} blocked task${
-                          blockedTasks.length === 1 ? "" : "s"
-                        }`,
-                        text: "Resolve the blocker or reassign the task so the case can continue.",
-                        panel: "operations",
-                        tone: "danger",
-                      }
-                    : null,
-                  openSupportRequests > 0
-                    ? {
-                        id: "support",
-                        title: `${openSupportRequests} open support request${
-                          openSupportRequests === 1 ? "" : "s"
-                        }`,
-                        text: "The student is waiting for Zaifan support or counselor action.",
-                        panel: "support-requests",
-                        tone: "warning",
-                      }
-                    : null,
-                  !studentApplication
-                    ? {
-                        id: "application",
-                        title: "No application case connected",
-                        text: "Create or connect an application when the shortlist is ready.",
-                        panel: "applications",
-                        tone: "warning",
-                      }
-                    : null,
-                  studentUniversities.length === 0
-                    ? {
-                        id: "universities",
-                        title: "University shortlist is empty",
-                        text: "Add realistic dream, target and safe options before application planning.",
-                        panel: "universities",
-                        tone: "warning",
-                      }
-                    : null,
-                  portalNeedsAction
-                    ? {
-                        id: "portal",
-                        title: !portalAccount
-                          ? "Student portal not created"
-                          : !portalAccount.is_active
-                            ? "Student portal is paused"
-                            : "Student must change portal password",
-                        text: "Review Student Portal access and security state.",
-                        panel: "portal-account",
-                        tone: "info",
-                      }
-                    : null,
-                  totalOutstanding > 0
-                    ? {
-                        id: "finance",
-                        title: "Outstanding finance balance",
-                        text: `${studentInvoices.length} invoice${
-                          studentInvoices.length === 1 ? "" : "s"
-                        } on file with an unpaid balance requiring review.`,
-                        panel: "payments",
-                        tone: "warning",
-                      }
-                    : null,
-                ].filter(Boolean);
-
-                const criticalAttention = attentionSignals.filter(
-                  (item) => item.tone === "danger"
-                ).length;
-
-                const attentionLabel =
-                  criticalAttention > 0
-                    ? `${criticalAttention} critical`
-                    : attentionSignals.length > 0
-                      ? `${attentionSignals.length} to review`
-                      : "Case clear";
-
-                const formatMoney = (amount) => {
-                  const value = Number(amount || 0);
-                  if (!Number.isFinite(value)) return "PKR 0";
-                  return `PKR ${value.toLocaleString("en-PK", {
-                    maximumFractionDigits: 0,
-                  })}`;
-                };
-
-                const commandCards = [
-                  {
-                    label: "Documents",
-                    value: `${verifiedDocuments}/${studentDocuments.length}`,
-                    helper:
-                      documentStatusSummary.attention > 0
-                        ? `${documentStatusSummary.attention} need attention`
-                        : "Vault health clear",
-                    icon: FolderOpen,
-                    panel: "documents",
-                    accent: "navy",
-                  },
-                  {
-                    label: "Application",
-                    value: String(applicationStatus).replace(/_/g, " "),
-                    helper: String(offerStatus).replace(/_/g, " "),
-                    icon: GraduationCap,
-                    panel: "applications",
-                    accent: "orange",
-                  },
-                  {
-                    label: "Universities",
-                    value: studentUniversities.length,
-                    helper: selectedUniversity,
-                    icon: Building2,
-                    panel: "universities",
-                    accent: "cream",
-                  },
-                  {
-                    label: "Tasks",
-                    value: `${completedTasks}/${studentTasks.length}`,
-                    helper:
-                      overdueTasks.length > 0
-                        ? `${overdueTasks.length} overdue`
-                        : `${activeTasks.length} active`,
-                    icon: ClipboardCheck,
-                    panel: "operations",
-                    accent: "cream",
-                  },
-                  {
-                    label: "Support",
-                    value: openSupportRequests,
-                    helper:
-                      openSupportRequests > 0 ? "Needs response" : "Queue clear",
-                    icon: LifeBuoy,
-                    panel: "support-requests",
-                    accent: "cream",
-                  },
-                  {
-                    label: "Finance",
-                    value:
-                      totalOutstanding > 0
-                        ? formatMoney(totalOutstanding)
-                        : "Clear",
-                    helper: `${studentPayments.length} payment${
-                      studentPayments.length === 1 ? "" : "s"
-                    } recorded`,
-                    icon: WalletCards,
-                    panel: "payments",
-                    accent: totalOutstanding > 0 ? "orange" : "navy",
-                  },
-                ];
-
-                const actionCards = [
-                  {
-                    label: "Master File",
-                    text: "Documents, evidence and permanent case vault",
-                    icon: FolderKey,
-                    panel: "documents",
-                  },
-                  {
-                    label: "Applications",
-                    text: "University application workflow and offer tracking",
-                    icon: GraduationCap,
-                    panel: "applications",
-                  },
-                  {
-                    label: "Visa",
-                    text: "Visa readiness, requirements and risk workflow",
-                    icon: MapIcon,
-                    panel: "visa",
-                  },
-                  {
-                    label: "Task Command",
-                    text: "Deadlines, ownership, blockers and next actions",
-                    icon: ListChecks,
-                    panel: "operations",
-                  },
-                  {
-                    label: "Support Desk",
-                    text: "Student requests, counselor response and resolution",
-                    icon: LifeBuoy,
-                    panel: "support-requests",
-                  },
-                  {
-                    label: "Timeline",
-                    text: "Permanent Student Journey and CRM audit history",
-                    icon: History,
-                    panel: "timeline",
-                  },
-                ];
-
-                return (
-                  <div className="space-y-5">
-                    <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.08)]">
-                      <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
-                        <div className="bg-[#123865] p-5 text-white sm:p-6">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-orange-300/30 bg-orange-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
-                              Student Command Center
-                            </span>
-
-                            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                              {isAppointment ? "Appointment Case" : "Inquiry Case"}
-                            </span>
-                          </div>
-
-                          <h3 className="mt-3 text-2xl font-black text-white sm:text-3xl">
-                            {fullName}
-                          </h3>
-
-                          <p className="mt-2 max-w-3xl text-sm leading-6 text-white">
-                            One operational view for identity, readiness, applications,
-                            documents, finance, portal access, tasks, support and next actions.
-                          </p>
-
-                          <div className="mt-5 grid gap-2 sm:grid-cols-4">
-                            <CommandHeroStat
-                              label="Profile Ready"
-                              value={`${profileReadiness}%`}
-                            />
-                            <CommandHeroStat
-                              label="Pipeline"
-                              value={`${pipelineProgress || 0}%`}
-                            />
-                            <CommandHeroStat
-                              label="Stage"
-                              value={currentStage?.label || "Stage"}
-                            />
-                            <CommandHeroStat
-                              label="Owner"
-                              value={ownerName}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="bg-orange-500 p-5 text-white sm:p-6">
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
-                            Needs Attention Now
-                          </p>
-
-                          <p className="mt-3 text-4xl font-black text-white">
-                            {attentionSignals.length}
-                          </p>
-
-                          <p className="mt-1 text-sm font-black text-white">
-                            {attentionLabel}
-                          </p>
-
-                          <p className="mt-3 text-sm leading-6 text-white">
-                            {attentionSignals.length
-                              ? "Open the flagged modules below and clear blockers before moving the case forward."
-                              : "No immediate operational blockers were detected from the currently loaded Student OS data."}
-                          </p>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setActivePanel(
-                                attentionSignals[0]?.panel || "analytics"
-                              )
-                            }
-                            className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-white/40 bg-white px-4 py-2.5 text-xs font-black text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50"
-                          >
-                            {attentionSignals.length
-                              ? "Open Highest Priority"
-                              : "Open Student Analytics"}
-                            <ChevronRight size={14} />
-                          </button>
-                        </div>
+              {activePanel === "overview" ? (
+                <div className="space-y-5">
+                  <div className="rounded-[1.75rem] border border-orange-300/20 bg-orange-500/[0.05] p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">
+                          Real GPT Counselor Desk
+                        </p>
+                        <h3 className="mt-2 text-xl font-black text-slate-900">
+                          Use OpenAI only when you need generated counselor output.
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-500">
+                          Local CRM intelligence handles scores and pipeline signals.
+                          Real GPT is available here for summaries, WhatsApp, email,
+                          call scripts, visa risk, and follow-up plans.
+                        </p>
                       </div>
-                    </section>
 
-                    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-                      {commandCards.map((card) => {
-                        const Icon = card.icon;
+                      <button
+                        type="button"
+                        onClick={() => setActivePanel("ai-workspace")}
+                        className="rounded-full bg-orange-500 px-6 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600"
+                      >
+                        Launch Real GPT Workspace
+                      </button>
+                    </div>
+                  </div>
 
-                        const className =
-                          card.accent === "navy"
-                            ? "border-[#123865] bg-[#123865] text-white"
-                            : card.accent === "orange"
-                              ? "border-orange-500 bg-orange-500 text-white"
-                              : "border-orange-300 bg-white text-[#10233f]";
 
-                        return (
-                          <button
-                            key={card.label}
-                            type="button"
-                            onClick={() => setActivePanel(card.panel)}
-                            className={`group rounded-[1.35rem] border-[3px] p-4 text-left shadow-[0_5px_16px_rgba(15,35,63,0.04)] transition hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(15,35,63,0.10)] ${className}`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <span
-                                className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-                                  card.accent === "navy" ||
-                                  card.accent === "orange"
-                                    ? "border border-white/20 bg-white/10 text-white"
-                                    : "border-2 border-orange-200 bg-orange-50 text-orange-700"
-                                }`}
-                              >
-                                <Icon size={15} />
-                              </span>
+                  <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+                    <div className="rounded-[1.6rem] border border-slate-400 bg-[#152238] p-5 text-white">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
+                        Student Master Record
+                      </p>
+                      <h3 className="mt-2 text-2xl font-black">
+                        One student. One permanent operational record.
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-300">
+                        Identity, documents, applications, universities, finance, visa,
+                        support, communications, tasks, portal access and CRM history are
+                        treated as one connected case instead of separate disconnected widgets.
+                      </p>
 
-                              <ChevronRight
-                                size={14}
-                                className="opacity-50 transition group-hover:translate-x-0.5 group-hover:opacity-100"
-                              />
-                            </div>
-
-                            <p
-                              className={`mt-3 text-[8px] font-black uppercase tracking-[0.13em] ${
-                                card.accent === "navy" ||
-                                card.accent === "orange"
-                                  ? "text-white"
-                                  : "text-slate-500"
-                              }`}
-                            >
-                              {card.label}
-                            </p>
-
-                            <p
-                              className={`mt-1 break-words text-lg font-black capitalize ${
-                                card.accent === "navy" ||
-                                card.accent === "orange"
-                                  ? "text-white"
-                                  : "text-[#10233f]"
-                              }`}
-                            >
-                              {card.value}
-                            </p>
-
-                            <p
-                              className={`mt-1 line-clamp-2 text-[10px] font-semibold leading-4 ${
-                                card.accent === "navy" ||
-                                card.accent === "orange"
-                                  ? "text-white"
-                                  : "text-slate-500"
-                              }`}
-                            >
-                              {card.helper}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </section>
-
-                    {attentionSignals.length ? (
-                      <section className="rounded-[1.7rem] border-[3px] border-red-300 bg-white p-4 sm:p-5">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-red-700">
-                              Intervention Queue
-                            </p>
-                            <h3 className="mt-1 text-xl font-black text-[#10233f]">
-                              What needs attention before this case moves?
-                            </h3>
-                          </div>
-
-                          <span className="rounded-full border-2 border-red-300 bg-red-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-red-800">
-                            {attentionSignals.length} signal
-                            {attentionSignals.length === 1 ? "" : "s"}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                          {attentionSignals.slice(0, 6).map((signal) => {
-                            const danger = signal.tone === "danger";
-
-                            return (
-                              <button
-                                key={signal.id}
-                                type="button"
-                                onClick={() => setActivePanel(signal.panel)}
-                                className={`group rounded-2xl border-2 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
-                                  danger
-                                    ? "border-red-300 bg-red-50"
-                                    : signal.tone === "info"
-                                      ? "border-blue-300 bg-blue-50"
-                                      : "border-orange-300 bg-orange-50"
-                                }`}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <span
-                                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 bg-white ${
-                                      danger
-                                        ? "border-red-300 text-red-700"
-                                        : signal.tone === "info"
-                                          ? "border-blue-300 text-blue-700"
-                                          : "border-orange-300 text-orange-700"
-                                    }`}
-                                  >
-                                    <CircleAlert size={15} />
-                                  </span>
-
-                                  <span className="min-w-0 flex-1">
-                                    <span className="block font-black text-[#10233f]">
-                                      {signal.title}
-                                    </span>
-                                    <span className="mt-1 block text-xs font-medium leading-5 text-slate-600">
-                                      {signal.text}
-                                    </span>
-                                  </span>
-
-                                  <ChevronRight
-                                    size={15}
-                                    className="mt-1 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-orange-600"
-                                  />
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </section>
-                    ) : (
-                      <section className="rounded-[1.7rem] border-[3px] border-emerald-300 bg-emerald-50 p-5">
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-emerald-300 bg-white text-emerald-700">
-                            <CheckCircle2 size={18} />
-                          </span>
-                          <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-700">
-                              Operational Health
-                            </p>
-                            <h3 className="mt-1 text-lg font-black text-[#10233f]">
-                              No immediate blockers detected
-                            </h3>
-                            <p className="mt-1 text-sm leading-6 text-slate-600">
-                              Continue normal counselor review and use Student Analytics
-                              for deeper journey intelligence.
+                      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                        {[
+                          ["Documents", studentDocuments.length],
+                          ["Universities", studentUniversities.length],
+                          ["Tasks", studentTasks.length],
+                          ["Messages", studentCommunications.length],
+                          ["Invoices", studentInvoices.length],
+                          ["Support", studentSupportRequests.length],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-xl border border-white/15 bg-white/[0.07] p-3">
+                            <p className="text-lg font-black">{value}</p>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-300">
+                              {label}
                             </p>
                           </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setActivePanel("documents")}
+                      className="rounded-[1.6rem] border-2 border-orange-300 bg-[#fff8ee] p-5 text-left transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]"
+                    >
+                      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-white">
+                        <FolderKey size={18} />
+                      </span>
+                      <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
+                        Heart of Student OS
+                      </p>
+                      <h4 className="mt-1 text-xl font-black text-[#152238]">
+                        Open Student Master File
+                      </h4>
+                      <p className="mt-2 text-xs leading-5 text-slate-600">
+                        Access the complete document architecture and live document operations.
+                      </p>
+                    </button>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {infoRows.map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="rounded-2xl border border-slate-300 bg-white p-4"
+                      >
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          {label}
+                        </p>
+
+                        <p className="mt-2 break-words text-sm font-medium text-slate-700">
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {isAppointment ? (
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {appointmentRows.map(([label, value]) => (
+                        <div
+                          key={label}
+                          className="rounded-2xl border border-orange-300/15 bg-orange-500/[0.04] p-4"
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-600/70">
+                            {label}
+                          </p>
+
+                          <p className="mt-2 break-words text-sm font-medium text-slate-800">
+                            {value}
+                          </p>
                         </div>
-                      </section>
-                    )}
+                      ))}
+                    </div>
+                  ) : null}
 
-                    <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-                      <div className="rounded-[1.7rem] border-[3px] border-[#123865] bg-white p-5">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">
-                              Case Identity
-                            </p>
-                            <h3 className="mt-1 text-xl font-black text-[#10233f]">
-                              Student Master Record
-                            </h3>
-                          </div>
+                  <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      Notes / Message
+                    </h3>
 
-                          <span className="rounded-full border-2 border-[#123865] bg-[#123865] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                            {studentType}
-                          </span>
-                        </div>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-500">
+                      {notes}
+                    </p>
+                  </div>
 
-                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                          {infoRows.map(([label, value]) => (
-                            <div
-                              key={label}
-                              className="rounded-xl border-2 border-slate-200 bg-[#fffaf4] p-3"
-                            >
-                              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">
-                                {label}
-                              </p>
-                              <p className="mt-1 break-words text-sm font-black text-[#10233f]">
-                                {value}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
+                  <div className="grid gap-5 lg:grid-cols-2">
+                    <div className="rounded-[1.75rem] border border-slate-300 bg-slate-50 p-5">
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-slate-900">
+                          Priority
+                        </h3>
 
-                        {isAppointment ? (
-                          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                            {appointmentRows.map(([label, value]) => (
-                              <div
-                                key={label}
-                                className="rounded-xl border-2 border-orange-300 bg-orange-50 p-3"
-                              >
-                                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-orange-700">
-                                  {label}
-                                </p>
-                                <p className="mt-1 break-words text-xs font-black text-[#10233f]">
-                                  {value}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
+                        {savingPriority ? (
+                          <span className="text-xs text-slate-400">Saving...</span>
                         ) : null}
                       </div>
 
-                      <div className="rounded-[1.7rem] border-[3px] border-orange-500 bg-orange-500 p-5 text-white">
-                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
-                          Academic Route
-                        </p>
-
-                        <h3 className="mt-2 text-xl font-black text-white">
-                          {selectedUniversity}
-                        </h3>
-
-                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                          <CommandOrangeStat
-                            label="Application"
-                            value={String(applicationStatus).replace(/_/g, " ")}
-                          />
-                          <CommandOrangeStat
-                            label="Offer"
-                            value={String(offerStatus).replace(/_/g, " ")}
-                          />
-                          <CommandOrangeStat
-                            label="Visa"
-                            value={String(visaStatus).replace(/_/g, " ")}
-                          />
-                          <CommandOrangeStat label="Intake" value={intake} />
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        {priorityOptions.map((item) => (
                           <button
+                            key={item}
                             type="button"
-                            onClick={() => setActivePanel("applications")}
-                            className="rounded-xl border-2 border-white/40 bg-white px-3 py-2 text-xs font-black text-orange-700 transition hover:-translate-y-0.5 hover:bg-orange-50"
-                          >
-                            Open Application
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setActivePanel("universities")}
-                            className="rounded-xl border-2 border-white/40 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/20"
-                          >
-                            Open Universities
-                          </button>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="grid gap-4 lg:grid-cols-3">
-                      <div className="rounded-[1.65rem] border-[3px] border-orange-300 bg-white p-5">
-                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
-                          Document Readiness
-                        </p>
-                        <div className="mt-3 flex items-end justify-between gap-3">
-                          <div>
-                            <p className="text-3xl font-black text-[#10233f]">
-                              {documentHealthScore}%
-                            </p>
-                            <p className="mt-1 text-xs font-semibold text-slate-500">
-                              {verifiedDocuments} verified ·{" "}
-                              {documentStatusSummary.pending} pending
-                            </p>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setActivePanel("documents")}
-                            className="rounded-xl border-2 border-orange-300 bg-orange-50 px-3 py-2 text-xs font-black text-orange-800 transition hover:bg-orange-100"
-                          >
-                            Master File
-                          </button>
-                        </div>
-
-                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-                          <div
-                            className="h-full rounded-full bg-orange-500 transition-all duration-500"
-                            style={{ width: `${documentHealthScore}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="rounded-[1.65rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
-                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
-                          Portal & Communication
-                        </p>
-                        <p className="mt-3 text-2xl font-black text-white">
-                          {portalLabel}
-                        </p>
-                        <p className="mt-1 text-xs font-semibold text-white">
-                          {studentCommunications.length} communication
-                          {studentCommunications.length === 1 ? "" : "s"} logged
-                        </p>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setActivePanel("portal-account")}
-                            className="rounded-xl border-2 border-white/30 bg-white px-3 py-2 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-orange-50"
-                          >
-                            Portal Access
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setActivePanel("communication")}
-                            className="rounded-xl border-2 border-white/30 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/20"
-                          >
-                            Communications
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="rounded-[1.65rem] border-[3px] border-orange-300 bg-white p-5">
-                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
-                          Finance Health
-                        </p>
-                        <p className="mt-3 text-2xl font-black text-[#10233f]">
-                          {totalOutstanding > 0
-                            ? formatMoney(totalOutstanding)
-                            : "No outstanding balance"}
-                        </p>
-                        <p className="mt-1 text-xs font-semibold text-slate-500">
-                          {studentInvoices.length} invoices ·{" "}
-                          {studentReceipts.length} receipts ·{" "}
-                          {studentPayments.length} payments
-                        </p>
-
-                        <button
-                          type="button"
-                          onClick={() => setActivePanel("payments")}
-                          className="mt-4 rounded-xl border-2 border-orange-400 bg-orange-500 px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600"
-                        >
-                          Open Finance Center
-                        </button>
-                      </div>
-                    </section>
-
-                    <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-[#fff8ee] p-5">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">
-                            Counselor Control
-                          </p>
-                          <h3 className="mt-1 text-xl font-black text-[#10233f]">
-                            Pipeline, Priority & CRM Status
-                          </h3>
-                          <p className="mt-1 text-sm leading-6 text-slate-600">
-                            Keep the student's operational state current without
-                            leaving the Command Overview.
-                          </p>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setActivePanel("assignment")}
-                          className="inline-flex items-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:shadow-md"
-                        >
-                          <UsersRound size={14} />
-                          Ownership
-                        </button>
-                      </div>
-
-                      <div className="mt-4 grid gap-4 xl:grid-cols-3">
-                        <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
-                              Journey Stage
-                            </p>
-                            {savingStage ? (
-                              <span className="text-[10px] font-bold text-orange-700">
-                                Saving...
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <select
-                            value={currentStageId || ""}
-                            onChange={(event) =>
-                              handleStageChange(event.target.value)
+                            disabled={
+                              !safePermissions.canUpdatePriority || savingPriority
                             }
-                            disabled={savingStage}
-                            className="mt-3 w-full rounded-xl border-2 border-slate-300 bg-[#fffaf4] px-3 py-2.5 text-sm font-black text-[#10233f] outline-none transition focus:border-orange-400 disabled:opacity-50"
+                            onClick={() => handlePriorityChange(item)}
+                            className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                              priority === item
+                                ? getPriorityStyle(item)
+                                : "border-slate-300 bg-white text-slate-500 hover:border-orange-300/30 hover:text-orange-600"
+                            }`}
                           >
-                            {stages.map((stage) => (
-                              <option key={stage.id} value={stage.id}>
-                                {stage.label}
-                              </option>
-                            ))}
-                          </select>
-
-                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                            <div
-                              className="h-full rounded-full bg-orange-500 transition-all duration-500"
-                              style={{ width: `${pipelineProgress || 0}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
-                              Priority
-                            </p>
-                            {savingPriority ? (
-                              <span className="text-[10px] font-bold text-orange-700">
-                                Saving...
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {priorityOptions.map((item) => (
-                              <button
-                                key={item}
-                                type="button"
-                                disabled={
-                                  !safePermissions.canUpdatePriority ||
-                                  savingPriority
-                                }
-                                onClick={() => handlePriorityChange(item)}
-                                className={`rounded-xl border-2 px-3 py-2 text-xs font-black capitalize transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${
-                                  priority === item
-                                    ? getPriorityStyle(item)
-                                    : "border-slate-300 bg-[#fffaf4] text-[#10233f] hover:border-orange-400 hover:bg-orange-50"
-                                }`}
-                              >
-                                {item}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
-                              CRM Status
-                            </p>
-                            {savingStatus ? (
-                              <span className="text-[10px] font-bold text-orange-700">
-                                Saving...
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {statusOptions.map((item) => (
-                              <button
-                                key={item}
-                                type="button"
-                                disabled={
-                                  !safePermissions.canUpdateStatus || savingStatus
-                                }
-                                onClick={() => handleStatusChange(item)}
-                                className={`rounded-xl border-2 px-3 py-2 text-xs font-black capitalize transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${
-                                  status === item
-                                    ? getStatusStyle(item)
-                                    : "border-slate-300 bg-[#fffaf4] text-[#10233f] hover:border-orange-400 hover:bg-orange-50"
-                                }`}
-                              >
-                                {item}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                            {item}
+                          </button>
+                        ))}
                       </div>
-                    </section>
+                    </div>
 
-                    <section className="grid gap-4 xl:grid-cols-[1fr_0.75fr]">
-                      <div className="rounded-[1.7rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
-                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
-                          Counselor Context
-                        </p>
-                        <h3 className="mt-2 text-xl font-black text-white">
-                          Notes / Student Message
+                    <div className="rounded-[1.75rem] border border-slate-300 bg-slate-50 p-5">
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-slate-900">
+                          Status
                         </h3>
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-white">
-                          {notes}
-                        </p>
+
+                        {savingStatus ? (
+                          <span className="text-xs text-slate-400">Saving...</span>
+                        ) : null}
                       </div>
 
-                      <div className="rounded-[1.7rem] border-[3px] border-orange-500 bg-orange-500 p-5 text-white">
-                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
-                          Real GPT Counselor Desk
-                        </p>
-                        <h3 className="mt-2 text-xl font-black text-white">
-                          Generate only when human-ready output is useful.
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-white">
-                          Open the connected GPT workspace for summaries, email,
-                          WhatsApp, call scripts, visa reasoning and follow-up plans.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setActivePanel("ai-workspace")}
-                          className="mt-4 inline-flex items-center gap-2 rounded-xl border-2 border-white/40 bg-white px-4 py-2.5 text-xs font-black text-orange-700 transition hover:-translate-y-0.5 hover:bg-orange-50"
-                        >
-                          <Bot size={14} />
-                          Launch Real GPT
-                        </button>
+                      <div className="flex flex-wrap gap-2">
+                        {statusOptions.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            disabled={!safePermissions.canUpdateStatus || savingStatus}
+                            onClick={() => handleStatusChange(item)}
+                            className={`rounded-full border px-4 py-2 text-xs font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                              status === item
+                                ? getStatusStyle(item)
+                                : "border-slate-300 bg-white text-slate-500 hover:border-orange-300/30 hover:text-orange-600"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ))}
                       </div>
-                    </section>
-
-                    <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5">
-                      <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">
-                          Quick Navigation
-                        </p>
-                        <h3 className="mt-1 text-xl font-black text-[#10233f]">
-                          Move directly to the operating module
-                        </h3>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        {actionCards.map((action) => {
-                          const Icon = action.icon;
-
-                          return (
-                            <button
-                              key={action.label}
-                              type="button"
-                              onClick={() => setActivePanel(action.panel)}
-                              className="group rounded-2xl border-2 border-slate-300 bg-[#fffaf4] p-4 text-left transition hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md"
-                            >
-                              <div className="flex items-start gap-3">
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
-                                  <Icon size={16} />
-                                </span>
-
-                                <span className="min-w-0 flex-1">
-                                  <span className="block font-black text-[#10233f]">
-                                    {action.label}
-                                  </span>
-                                  <span className="mt-1 block text-xs font-medium leading-5 text-slate-600">
-                                    {action.text}
-                                  </span>
-                                </span>
-
-                                <ChevronRight
-                                  size={15}
-                                  className="mt-1 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-orange-600"
-                                />
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
+                    </div>
                   </div>
-                );
-              })() : null}
+                </div>
+              ) : null}
 
               {activePanel === "analytics" ? (
   <StudentAnalyticsPanel
@@ -3908,18 +2859,16 @@ function StudentDetailModal({
               ) : null}
 {activePanel === "portal-account" ? (
   <div className="space-y-5">
-    <div className="overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_10px_28px_rgba(15,35,63,0.055)]">
-      <div className="flex flex-col gap-4 bg-[#173F6B] p-5 text-white lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
+    <div className="rounded-[1.75rem] border border-orange-300/20 bg-orange-500/[0.05] p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">
             Student Portal Access Control
           </p>
-
-          <h3 className="mt-1 break-words text-xl font-black text-white">
+          <h3 className="mt-2 text-xl font-black text-slate-900">
             Portal Account Management
           </h3>
-
-          <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Create login access, reset temporary passwords, activate or deactivate access,
             and force password changes from the admin Student OS.
           </p>
@@ -3929,7 +2878,7 @@ function StudentDetailModal({
           type="button"
           onClick={loadPortalAccount}
           disabled={portalAccountLoading || Boolean(portalAccountSaving)}
-          className="shrink-0 rounded-xl border-2 border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:border-orange-300/60 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-700 transition hover:border-cyan-400/45 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {portalAccountLoading ? "Checking Account..." : "Refresh Account"}
         </button>
@@ -3938,19 +2887,19 @@ function StudentDetailModal({
 
     {portalAccountStatus.message ? (
       <div
-        className={`rounded-[1.3rem] border-2 p-4 text-sm font-semibold ${
+        className={`rounded-2xl border p-4 text-sm ${
           portalAccountStatus.type === "success"
-            ? "border-[#34D399] bg-[#F0FFF8] text-emerald-800"
+            ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-800"
             : portalAccountStatus.type === "warning"
-              ? "border-[#FB7185] bg-[#FFF4F4] text-red-800"
-              : "border-[#60A5FA] bg-[#F2F7FF] text-blue-800"
+              ? "border-red-400/20 bg-red-500/10 text-red-800"
+              : "border-blue-400/20 bg-blue-500/10 text-blue-800"
         }`}
       >
         {portalAccountStatus.message}
       </div>
     ) : null}
 
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <PortalAccountStat
         label="Account Status"
         value={portalAccount ? (portalAccount.is_active ? "Active" : "Inactive") : "Not Created"}
@@ -3972,7 +2921,7 @@ function StudentDetailModal({
     </div>
 
     <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-5 shadow-[0_8px_22px_rgba(15,35,63,0.045)]">
+      <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
             <h4 className="text-lg font-bold text-slate-900">Login Details</h4>
@@ -3982,11 +2931,11 @@ function StudentDetailModal({
           </div>
 
           {portalAccount ? (
-            <span className="rounded-full border-2 border-[#34D399] bg-[#F0FFF8] px-3 py-1 text-[10px] font-black uppercase text-emerald-700">
+            <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
               Account Found
             </span>
           ) : (
-            <span className="rounded-full border-2 border-[#F59E0B] bg-[#FFF7ED] px-3 py-1 text-[10px] font-black uppercase text-amber-800">
+            <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-semibold text-amber-700">
               No Account
             </span>
           )}
@@ -4002,7 +2951,7 @@ function StudentDetailModal({
               onChange={(event) =>
                 setPortalAccountForm((prev) => ({ ...prev, email: event.target.value }))
               }
-              className="mt-2 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 py-2.5 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-orange-300/40"
               placeholder="student@email.com"
             />
           </label>
@@ -4012,8 +2961,6 @@ function StudentDetailModal({
               Temporary Password
             </span>
             <input
-              type="password"
-              autoComplete="new-password"
               value={portalAccountForm.temporaryPassword}
               onChange={(event) =>
                 setPortalAccountForm((prev) => ({
@@ -4021,18 +2968,9 @@ function StudentDetailModal({
                   temporaryPassword: event.target.value,
                 }))
               }
-              className="mt-2 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 py-2.5 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-              placeholder="Minimum 10 characters"
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-orange-300/40"
+              placeholder="Minimum 6 characters"
             />
-
-            <button
-              type="button"
-              onClick={generateSecurePortalPassword}
-              className="mt-2 inline-flex items-center gap-2 rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] px-3 py-2 text-xs font-black text-orange-700 transition hover:bg-[#FFE8D5]"
-            >
-              <Sparkles size={13} />
-              Generate Strong Password
-            </button>
           </label>
 
           <label className="block md:col-span-2">
@@ -4040,13 +2978,11 @@ function StudentDetailModal({
               Reset Password Override
             </span>
             <input
-              type="password"
-              autoComplete="new-password"
               value={portalAccountForm.resetPassword}
               onChange={(event) =>
                 setPortalAccountForm((prev) => ({ ...prev, resetPassword: event.target.value }))
               }
-              className="mt-2 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 py-2.5 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-orange-300/40"
               placeholder="Optional. Leave blank to reuse temporary password."
             />
           </label>
@@ -4088,7 +3024,7 @@ function StudentDetailModal({
       </div>
     </div>
 
-    <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-5 shadow-[0_8px_22px_rgba(15,35,63,0.045)]">
+    <div className="rounded-[1.75rem] border border-slate-300 bg-white p-5">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h4 className="text-lg font-bold text-slate-900">Admin Controls</h4>
@@ -4109,7 +3045,7 @@ function StudentDetailModal({
           type="button"
           disabled={Boolean(portalAccountSaving) || Boolean(portalAccount)}
           onClick={() => handlePortalAccountAction("create")}
-          className="rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] px-4 py-3 text-sm font-black text-orange-700 transition hover:bg-[#FFE8D5] disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-2xl border border-orange-300/25 bg-orange-500/10 px-4 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {portalAccountSaving === "create" ? "Creating..." : "Create Account"}
         </button>
@@ -4118,7 +3054,7 @@ function StudentDetailModal({
           type="button"
           disabled={Boolean(portalAccountSaving) || !portalAccount}
           onClick={() => handlePortalAccountAction("reset")}
-          className="rounded-xl border-2 border-[#60A5FA] bg-[#F2F7FF] px-4 py-3 text-sm font-black text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-2xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {portalAccountSaving === "reset" ? "Resetting..." : "Reset Password"}
         </button>
@@ -4127,7 +3063,7 @@ function StudentDetailModal({
           type="button"
           disabled={Boolean(portalAccountSaving) || !portalAccount || portalAccount.is_active}
           onClick={() => handlePortalAccountAction("activate")}
-          className="rounded-xl border-2 border-[#34D399] bg-[#F0FFF8] px-4 py-3 text-sm font-black text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {portalAccountSaving === "activate" ? "Activating..." : "Activate"}
         </button>
@@ -4136,7 +3072,7 @@ function StudentDetailModal({
           type="button"
           disabled={Boolean(portalAccountSaving) || !portalAccount || !portalAccount.is_active}
           onClick={() => handlePortalAccountAction("deactivate")}
-          className="rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-4 py-3 text-sm font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-700 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {portalAccountSaving === "deactivate" ? "Deactivating..." : "Deactivate"}
         </button>
@@ -4157,7 +3093,7 @@ function StudentDetailModal({
                 <div className="pb-10">
                   <section className="overflow-hidden rounded-[1.6rem] border-2 border-orange-400 bg-white shadow-[0_14px_40px_rgba(121,72,40,0.08)]">
                     <StudentDocumentsPanel
-                      key={`documents-${studentId}-${studentType}-${panelMountKey}`}
+                      key={`documents-${studentId}-${studentType}`}
                       student={{
                         ...workingStudent,
                         documents: studentDocuments,
@@ -4170,20 +3106,19 @@ function StudentDetailModal({
               ) : null}
               {activePanel === "applications" ? (
                 <StudentApplicationPanel
-                  key={`applications-${studentId}-${studentType}-${panelMountKey}`}
+                  key={`applications-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     application: studentApplication,
                   }}
                   sharedApplication={studentApplication}
-                  studentType={studentType}
                   onSharedDataChange={loadStudentOsData}
                 />
               ) : null}
 
               {activePanel === "visa" ? (
                 <VisaTrackerPanel
-                  key={`visa-${studentId}-${studentType}-${panelMountKey}`}
+                  key={`visa-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     application: studentApplication,
@@ -4197,7 +3132,7 @@ function StudentDetailModal({
 
               {activePanel === "universities" ? (
                 <UniversityManagementPanel
-                  key={`universities-${studentId}-${studentType}-${panelMountKey}`}
+                  key={`universities-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     universities: studentUniversities,
@@ -4211,7 +3146,7 @@ function StudentDetailModal({
 
               {activePanel === "payments" ? (
                 <PaymentCenterPanel
-                  key={`payments-${studentId}-${studentType}-${panelMountKey}`}
+                  key={`payments-${studentId}-${panelRefreshKey}`}
                   student={workingStudent}
                   studentType={studentType}
                   adminProfile={adminProfile}
@@ -4222,20 +3157,237 @@ function StudentDetailModal({
                   onSharedDataChange={loadStudentOsData}
                 />
               ) : null}
-{activePanel === "support-requests" ? (
-  <StudentSupportDeskPanel
-    key={`support-${studentId}-${studentType}-${panelMountKey}`}
-    student={workingStudent}
-    studentType={studentType}
-    adminProfile={adminProfile}
-    requests={studentSupportRequests}
-    onRefresh={loadStudentOsData}
-    onOpenTimeline={() => setActivePanel("timeline")}
-  />
+{activePanel === "support-requests" && (
+  <div className="space-y-4">
+    <div className="rounded-2xl border border-slate-300 bg-white p-5">
+      <h3 className="mb-2 text-lg font-bold text-slate-900">
+        Student Support Requests
+      </h3>
+
+      <p className="text-sm text-slate-500">
+        Requests submitted through Student Portal.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+        <MiniOsStat label="Total" value={studentSupportRequests.length} />
+        <MiniOsStat
+          label="Open"
+          value={studentSupportRequests.filter((item) => ["open", "pending", "in_progress"].includes(normalize(item.status || "open"))).length}
+        />
+        <MiniOsStat
+          label="Responded"
+          value={studentSupportRequests.filter((item) => Boolean(item.counselor_response)).length}
+        />
+        <MiniOsStat
+          label="Resolved"
+          value={studentSupportRequests.filter((item) => ["resolved", "closed"].includes(normalize(item.status))).length}
+        />
+      </div>
+    </div>
+
+    {supportActionStatus.message ? (
+      <div
+        className={`rounded-2xl border p-4 text-sm ${
+          supportActionStatus.type === "success"
+            ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-800"
+            : supportActionStatus.type === "warning"
+              ? "border-red-400/20 bg-red-500/10 text-red-800"
+              : "border-blue-400/20 bg-blue-500/10 text-blue-800"
+        }`}
+      >
+        {supportActionStatus.message}
+      </div>
+    ) : null}
+
+    {studentSupportRequests.length === 0 ? (
+      <div className="rounded-2xl border border-slate-300 bg-white p-6 text-center text-slate-500">
+        No support requests found.
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {studentSupportRequests.map((request) => (
+          <div
+            key={request.id}
+            className="rounded-2xl border border-slate-300 bg-white p-4"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-slate-900">
+                  {request.subject}
+                </h4>
+
+                <p className="text-xs text-slate-500">
+                  {request.request_type}
+                </p>
+
+                <div className="mt-1 flex gap-2">
+                  <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-2 py-1 text-[10px] uppercase text-amber-700">
+                    {request.priority || "normal"}
+                  </span>
+                </div>
+              </div>
+
+              <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-700">
+                {request.status || "open"}
+              </span>
+            </div>
+
+            <div className="mt-3 text-sm text-slate-600">
+              {request.message}
+
+              {request.admin_notes ? (
+  <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3">
+    <div className="text-xs font-semibold text-emerald-700">
+      Admin Notes
+    </div>
+
+    <div className="mt-1 text-sm text-slate-800">
+      {request.admin_notes}
+    </div>
+  </div>
 ) : null}
-{activePanel === "communication" ? (
+
+              {request.counselor_response ? (
+                <div className="mt-3 rounded-xl border border-orange-300/20 bg-orange-500/10 p-3">
+                  <div className="text-xs font-semibold text-orange-600">
+                    Counselor Response Sent
+                  </div>
+
+                  <div className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
+                    {request.counselor_response}
+                  </div>
+
+                  {request.responded_at ? (
+                    <div className="mt-2 text-xs text-slate-900/40">
+                      Responded: {new Date(request.responded_at).toLocaleString()}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+<div className="mt-3 text-xs text-slate-900/40">
+              {request.created_at
+                ? new Date(request.created_at).toLocaleString()
+                : "Unknown"}
+
+              {request.resolved_at ? (
+                <div className="mt-1 text-emerald-700">
+                  Resolved: {new Date(request.resolved_at).toLocaleString()}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-slate-300 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Counselor Response
+              </p>
+
+              <textarea
+                value={
+                  supportResponseDrafts[request.id] ??
+                  request.counselor_response ??
+                  ""
+                }
+                onChange={(event) =>
+                  setSupportResponseDrafts((prev) => ({
+                    ...prev,
+                    [request.id]: event.target.value,
+                  }))
+                }
+                rows={4}
+                className="mt-3 w-full resize-none rounded-xl border border-slate-300 bg-black/35 px-3 py-2 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-900/25 focus:border-orange-300/40"
+                placeholder="Write the response the student will see in their portal."
+              />
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={savingSupportResponseId === request.id}
+                  onClick={() => handleSupportResponseSubmit(request)}
+                  className="rounded-lg border border-orange-300/25 bg-orange-500/10 px-4 py-2 text-xs font-semibold text-orange-600 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {savingSupportResponseId === request.id
+                    ? "Sending Response..."
+                    : request.counselor_response
+                      ? "Update Response"
+                      : "Send Response"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActivePanel("timeline")}
+                  className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500 transition hover:border-orange-300/30 hover:text-orange-600"
+                >
+                  Open Timeline
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      ["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "in_progress")}
+    className="rounded-lg border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "In Progress"}
+  </button>
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      ["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "resolved")}
+    className="rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "Resolve"}
+  </button>
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      ["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "closed")}
+    className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "Close"}
+  </button>
+
+  <button
+    type="button"
+    disabled={
+      savingSupportResponseId === request.id ||
+      !["resolved", "closed"].includes(normalize(request.status))
+    }
+    onClick={() => handleSupportStatusChange(request, "open")}
+    className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500 disabled:cursor-not-allowed disabled:opacity-40"
+  >
+    {savingSupportResponseId === request.id ? "Updating..." : "Reopen"}
+  </button>
+
+</div>
+            <div className="mt-3 text-xs text-slate-900/40">
+              {request.created_at
+                ? new Date(request.created_at).toLocaleString()
+                : "Unknown"}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+              {activePanel === "communication" ? (
                 <CommunicationCenterPanel
-                  key={`communication-${studentId}-${studentType}-${panelMountKey}`}
+                  key={`communication-${studentId}-${panelRefreshKey}`}
                   student={{
                     ...workingStudent,
                     communications: studentCommunications,
@@ -4252,7 +3404,7 @@ function StudentDetailModal({
               {activePanel === "operations" ? (
                 <div className="space-y-5">
                   <TaskCenterPanel
-                    key={`tasks-${studentId}-${studentType}-${panelMountKey}`}
+                    key={`tasks-${studentId}-${panelRefreshKey}`}
                     student={{
                       ...workingStudent,
                       documents: studentDocuments,
@@ -4305,16 +3457,6 @@ function StudentDetailModal({
                     ) : null}
                   </div>
 
-                  {(isAppointment
-                    ? typeof updateAppointmentStage !== "function"
-                    : typeof updateInquiryStage !== "function") ? (
-                    <div className="mb-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
-                      Pipeline stages are visible, but stage persistence is not
-                      connected for this record type. Buttons are disabled to
-                      prevent fake local-only progress.
-                    </div>
-                  ) : null}
-
                   <div className="space-y-3">
                     {stages.map((stage, index) => {
                       const isActive = stage.id === currentStageId;
@@ -4328,12 +3470,7 @@ function StudentDetailModal({
                           key={stage.id}
                           type="button"
                           onClick={() => handleStageChange(stage.id)}
-                          disabled={
-                            savingStage ||
-                            (isAppointment
-                              ? typeof updateAppointmentStage !== "function"
-                              : typeof updateInquiryStage !== "function")
-                          }
+                          disabled={savingStage}
                           className={`group w-full rounded-2xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
                             isActive
                               ? "border-orange-300/40 bg-orange-500/10"
@@ -4389,7 +3526,7 @@ function StudentDetailModal({
 
               {activePanel === "timeline" ? (
                 <CrmTimelinePanel
-  key={`timeline-${studentId}-${studentType}-${panelMountKey}`}
+  key={`timeline-${studentId}-${studentType}-${panelRefreshKey}`}
   studentId={workingStudent.id}
   studentType={studentType}
   adminProfile={adminProfile}
@@ -4398,7 +3535,7 @@ function StudentDetailModal({
 
               {activePanel === "followups" ? (
                 <FollowUpReminderPanel
-  key={`followups-${studentId}-${studentType}-${panelMountKey}`}
+  key={`followups-${studentId}-${studentType}-${panelRefreshKey}`}
   studentId={workingStudent.id}
   studentType={studentType}
   adminProfile={adminProfile}
@@ -4443,26 +3580,59 @@ function StudentDetailModal({
             }
 
             /*
-             * ZAIFAN ADMIN OS — SAFE CONTRAST BRIDGE
-             *
-             * IMPORTANT:
-             * Do NOT globally reinterpret Tailwind text utilities here.
-             * Component-level text-white / text-slate-* classes must remain the
-             * source of truth so navy/orange surfaces keep their intended contrast.
-             *
-             * The old bridge forced text-white -> dark slate and forced all
-             * headings dark, which broke AIWorkspacePanel, AICounselorAssistant,
-             * GPTCopilotPanel and other dark operational surfaces.
+             * Theme bridge for legacy AI panels.
+             * The AI components were originally styled for darker surfaces.
+             * Within Student OS only, force readable typography on their pale cards
+             * while preserving explicit orange/navy action surfaces.
              */
-
-            .zaifan-ai-panel-surface {
-              --zaifan-navy: #152238;
-              --zaifan-navy-soft: #24324a;
-              --zaifan-orange: #f97316;
-              --zaifan-cream: #fff8ee;
+            .zaifan-ai-panel-surface .text-white {
+              color: #152238 !important;
             }
 
+            .zaifan-ai-panel-surface .text-slate-100,
+            .zaifan-ai-panel-surface .text-slate-200,
+            .zaifan-ai-panel-surface .text-slate-300 {
+              color: #475569 !important;
+            }
+
+            .zaifan-ai-panel-surface .text-white\/70,
+            .zaifan-ai-panel-surface .text-white\/80,
+            .zaifan-ai-panel-surface .text-white\/90 {
+              color: #475569 !important;
+            }
+
+            /* Restore white text on clearly dark / orange interactive surfaces. */
+            .zaifan-ai-panel-surface .bg-orange-500.text-white,
+            .zaifan-ai-panel-surface .bg-orange-600.text-white,
+            .zaifan-ai-panel-surface .bg-\[\#152238\].text-white,
+            .zaifan-ai-panel-surface .bg-slate-900.text-white,
+            .zaifan-ai-panel-surface .bg-slate-950.text-white {
+              color: #ffffff !important;
+            }
+
+            .zaifan-ai-panel-surface button.bg-orange-500,
+            .zaifan-ai-panel-surface button.bg-orange-600 {
+              color: #ffffff !important;
+            }
+
+            .zaifan-ai-panel-surface h1,
+            .zaifan-ai-panel-surface h2,
+            .zaifan-ai-panel-surface h3,
+            .zaifan-ai-panel-surface h4 {
+              text-shadow: none !important;
+            }
+
+
+            /* =========================================================
+             * ZAIFAN ADMIN OS — HIGH CONTRAST LEGACY PANEL BRIDGE
+             * Scoped only inside StudentDetailModal.
+             * Goal: match approved Inquiry/Appointment card language:
+             * cream canvas, white cards, navy operational blocks,
+             * orange actions, readable dark text, visible borders.
+             * ========================================================= */
+
             .zaifan-admin-contrast-surface {
+              color: #152238;
               --zaifan-admin-navy: #0f2a55;
               --zaifan-admin-navy-deep: #0a1f44;
               --zaifan-admin-orange: #ff5a0a;
@@ -4471,36 +3641,69 @@ function StudentDetailModal({
               --zaifan-admin-border: #cbd5e1;
             }
 
-            /*
-             * Keep typography crisp without changing its intended foreground
-             * color. Explicit component utilities now control contrast.
-             */
-            .zaifan-ai-panel-surface *,
+            .zaifan-admin-contrast-surface,
             .zaifan-admin-contrast-surface * {
-              text-shadow: none;
+              text-shadow: none !important;
             }
 
-            /*
-             * Form controls stay readable on the warm Student OS canvas.
-             * These selectors are intentionally limited to actual form controls;
-             * they do not recolor surrounding cards, headings, icons or badges.
-             */
-            .zaifan-admin-contrast-surface :is(input, select, textarea) {
-              background: #ffffff;
+            /* Default readable typography for legacy pale panels */
+            .zaifan-admin-contrast-surface [class*="text-white"],
+            .zaifan-admin-contrast-surface [class*="text-slate-50"],
+            .zaifan-admin-contrast-surface [class*="text-slate-100"],
+            .zaifan-admin-contrast-surface [class*="text-slate-200"],
+            .zaifan-admin-contrast-surface [class*="text-slate-300"],
+            .zaifan-admin-contrast-surface [class*="text-gray-100"],
+            .zaifan-admin-contrast-surface [class*="text-gray-200"],
+            .zaifan-admin-contrast-surface [class*="text-gray-300"] {
+              color: #334155 !important;
+            }
+
+            .zaifan-admin-contrast-surface [class*="text-white/"],
+            .zaifan-admin-contrast-surface [class*="text-slate-100/"],
+            .zaifan-admin-contrast-surface [class*="text-slate-200/"],
+            .zaifan-admin-contrast-surface [class*="text-slate-300/"] {
+              color: #475569 !important;
+              opacity: 1 !important;
+            }
+
+            .zaifan-admin-contrast-surface h1,
+            .zaifan-admin-contrast-surface h2,
+            .zaifan-admin-contrast-surface h3,
+            .zaifan-admin-contrast-surface h4,
+            .zaifan-admin-contrast-surface h5,
+            .zaifan-admin-contrast-surface h6 {
               color: #152238;
-              border-color: #94a3b8;
-              opacity: 1;
+            }
+
+            /* Legacy transparent/dark washes become clean premium cards */
+            .zaifan-admin-contrast-surface [class*="bg-black/"],
+            .zaifan-admin-contrast-surface [class*="bg-white/5"],
+            .zaifan-admin-contrast-surface [class*="bg-white/[0.0"],
+            .zaifan-admin-contrast-surface [class*="bg-slate-950/"],
+            .zaifan-admin-contrast-surface [class*="bg-slate-900/"],
+            .zaifan-admin-contrast-surface [class*="bg-zinc-900/"] {
+              background-color: #fffdf9 !important;
+              background-image: none !important;
+            }
+
+            /* Common muted gray inputs/cards from older components */
+            .zaifan-admin-contrast-surface :is(input, select, textarea) {
+              background: #ffffff !important;
+              color: #152238 !important;
+              border: 1px solid #94a3b8 !important;
+              box-shadow: none !important;
+              opacity: 1 !important;
             }
 
             .zaifan-admin-contrast-surface :is(input, select, textarea)::placeholder {
-              color: #94a3b8;
-              opacity: 1;
+              color: #94a3b8 !important;
+              opacity: 1 !important;
             }
 
             .zaifan-admin-contrast-surface :is(input, select, textarea):focus {
-              border-color: #ff5a0a;
-              outline: none;
-              box-shadow: 0 0 0 3px rgba(255, 90, 10, 0.12);
+              border-color: #ff5a0a !important;
+              outline: none !important;
+              box-shadow: 0 0 0 3px rgba(255,90,10,0.12) !important;
             }
 
             .zaifan-admin-contrast-surface select option {
@@ -4508,17 +3711,85 @@ function StudentDetailModal({
               color: #152238;
             }
 
-            /*
-             * Disabled state only. Do not globally override opacity utility
-             * classes because many components use them deliberately for hierarchy.
-             */
-            .zaifan-admin-contrast-surface :is(button, input, select, textarea):disabled {
-              opacity: 0.55;
+            /* Make generic legacy bordered cards actually visible */
+            .zaifan-admin-contrast-surface [class*="border-white/"],
+            .zaifan-admin-contrast-surface [class*="border-slate-700"],
+            .zaifan-admin-contrast-surface [class*="border-slate-800"],
+            .zaifan-admin-contrast-surface [class*="border-zinc-700"],
+            .zaifan-admin-contrast-surface [class*="border-zinc-800"] {
+              border-color: #cbd5e1 !important;
             }
 
-            /*
-             * Tables remain readable while preserving explicit component colors.
-             */
+            /* Remove accidental washed-out opacity from content containers */
+            .zaifan-admin-contrast-surface [class*="opacity-40"],
+            .zaifan-admin-contrast-surface [class*="opacity-50"],
+            .zaifan-admin-contrast-surface [class*="opacity-60"],
+            .zaifan-admin-contrast-surface [class*="opacity-70"] {
+              opacity: 1 !important;
+            }
+
+            /* Keep disabled controls visibly disabled without becoming unreadable */
+            .zaifan-admin-contrast-surface :is(button, input, select, textarea):disabled {
+              opacity: 0.55 !important;
+            }
+
+            /* Strong dark operational surfaces retain white text */
+            .zaifan-admin-contrast-surface [class*="bg-[#0f2a55]"],
+            .zaifan-admin-contrast-surface [class*="bg-[#0a1f44]"],
+            .zaifan-admin-contrast-surface [class*="bg-[#152238]"],
+            .zaifan-admin-contrast-surface [class*="bg-slate-900"]:not([class*="/"]),
+            .zaifan-admin-contrast-surface [class*="bg-slate-950"]:not([class*="/"]) {
+              background-color: #0f2a55 !important;
+              background-image: none !important;
+              border-color: #0a1f44 !important;
+              color: #ffffff !important;
+            }
+
+            .zaifan-admin-contrast-surface [class*="bg-[#0f2a55]"] *,
+            .zaifan-admin-contrast-surface [class*="bg-[#0a1f44]"] *,
+            .zaifan-admin-contrast-surface [class*="bg-[#152238]"] *,
+            .zaifan-admin-contrast-surface [class*="bg-slate-900"]:not([class*="/"]) *,
+            .zaifan-admin-contrast-surface [class*="bg-slate-950"]:not([class*="/"]) * {
+              color: #ffffff !important;
+            }
+
+            /* Orange actions always stay strong and readable */
+            .zaifan-admin-contrast-surface [class*="bg-orange-500"],
+            .zaifan-admin-contrast-surface [class*="bg-orange-600"],
+            .zaifan-admin-contrast-surface [class*="bg-[#ff5a0a]"] {
+              color: #ffffff !important;
+            }
+
+            .zaifan-admin-contrast-surface [class*="bg-orange-500"] *,
+            .zaifan-admin-contrast-surface [class*="bg-orange-600"] *,
+            .zaifan-admin-contrast-surface [class*="bg-[#ff5a0a]"] * {
+              color: #ffffff !important;
+            }
+
+            /* Preserve semantic success/warning/error contrast */
+            .zaifan-admin-contrast-surface [class*="bg-emerald-"],
+            .zaifan-admin-contrast-surface [class*="bg-green-"] {
+              color: #065f46;
+            }
+
+            .zaifan-admin-contrast-surface [class*="bg-red-"] {
+              color: #991b1b;
+            }
+
+            .zaifan-admin-contrast-surface [class*="bg-blue-"] {
+              color: #1e40af;
+            }
+
+            /* Better button separation */
+            .zaifan-admin-contrast-surface button {
+              font-weight: 700;
+            }
+
+            .zaifan-admin-contrast-surface button[class*="border"] {
+              border-color: #cbd5e1;
+            }
+
+            /* Tables */
             .zaifan-admin-contrast-surface table {
               color: #152238;
             }
@@ -4579,43 +3850,31 @@ function formatPortalDate(value) {
   }
 }
 
-function PortalAccountStat({
-  label,
-  value,
-  tone = "muted",
-}) {
-  const tones = {
-    success: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-    danger: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-    warning: "border-[#F59E0B] bg-[#FFF7ED] text-amber-800",
-    muted: "border-[#C9D7E6] bg-white text-[#10233F]",
+function PortalAccountStat({ label, value, tone = "muted" }) {
+  const styles = {
+    success: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    danger: "border-red-300 bg-red-50 text-red-800",
+    warning: "border-orange-300 bg-orange-50 text-orange-800",
+    muted: "border-slate-300 bg-white text-slate-700",
   };
 
   return (
-    <div
-      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_5px_14px_rgba(15,35,63,0.035)] ${tones[tone] || tones.muted}`}
-    >
-      <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] opacity-65">
+    <div className={`rounded-2xl border p-4 ${styles[tone] || styles.muted}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-60">
         {label}
       </p>
-
-      <p className="mt-2 break-words text-sm font-black leading-5 text-[#10233F]">
-        {value || "—"}
-      </p>
+      <p className="mt-2 break-words text-sm font-black">{value}</p>
     </div>
   );
 }
 
 function PortalInfoRow({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-[#D1DCE7] bg-white px-3 py-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
+    <div className="rounded-2xl border border-slate-300 bg-white p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
         {label}
       </p>
-
-      <p className="mt-1 break-all text-xs font-black leading-5 text-[#10233F] sm:break-words">
-        {value || "—"}
-      </p>
+      <p className="mt-1 break-words text-sm text-slate-700">{value}</p>
     </div>
   );
 }
@@ -4804,30 +4063,24 @@ function DocumentMasterFamilyCard({ section }) {
 
 function Student360Metric({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    orange: "border-[#F97316] bg-[#FFF4E8] text-orange-700",
-    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
-    emerald: "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
-    violet: "border-[#9B6CFF] bg-[#F8F5FF] text-violet-700",
-    red: "border-[#FB7185] bg-[#FFF4F4] text-red-700",
-    slate: "border-[#C9D7E6] bg-white text-slate-700",
+    orange: "border-orange-200 bg-orange-50 text-orange-700",
+    blue: "border-blue-200 bg-blue-50 text-blue-700",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    violet: "border-violet-200 bg-violet-50 text-violet-700",
+    red: "border-red-200 bg-red-50 text-red-700",
+    slate: "border-slate-300 bg-slate-50 text-slate-600",
   };
 
   return (
-    <div
-      className={`flex min-w-0 items-center gap-3 rounded-xl border-2 px-3 py-2.5 shadow-[0_4px_12px_rgba(15,35,63,0.035)] ${tones[tone] || tones.slate}`}
-    >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white shadow-sm">
+    <div className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${tones[tone] || tones.slate}`}>
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/80 shadow-sm">
         <Icon size={15} />
       </div>
-
       <div className="min-w-0">
-        <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] opacity-70">
+        <p className="truncate text-[8px] font-black uppercase tracking-[0.12em] opacity-65">
           {label}
         </p>
-
-        <p className="mt-0.5 break-words text-xs font-black leading-4 text-[#10233F]">
-          {value}
-        </p>
+        <p className="mt-0.5 truncate text-xs font-black text-slate-950">{value}</p>
       </div>
     </div>
   );
@@ -4835,7 +4088,7 @@ function Student360Metric({ label, value, icon: Icon, tone = "slate" }) {
 
 function StudentPanelLoader() {
   return (
-    <div className="flex min-h-[420px] items-center justify-center rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8]">
+    <div className="flex min-h-[420px] items-center justify-center rounded-[1.4rem] border border-slate-300 bg-white">
       <div className="text-center">
         <LoaderCircle className="mx-auto h-9 w-9 animate-spin text-orange-500" />
         <p className="mt-4 text-sm font-black text-slate-900">Opening student module</p>
@@ -4843,31 +4096,6 @@ function StudentPanelLoader() {
           Loading only this part of the student operating system.
         </p>
       </div>
-    </div>
-  );
-}
-
-
-function CommandHeroStat({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-sm font-black text-white">{value}</p>
-    </div>
-  );
-}
-
-function CommandOrangeStat({ label, value }) {
-  return (
-    <div className="rounded-xl border border-white/25 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-sm font-black capitalize text-white">
-        {value}
-      </p>
     </div>
   );
 }

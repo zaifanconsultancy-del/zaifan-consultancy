@@ -150,34 +150,53 @@ function buildDuplicateKey(score = {}, recommendation = {}, template = {}) {
 }
 
 function buildAutomationTemplates(scores = []) {
-  const rawItems = (scores || []).flatMap((score) => {
-    const recommendations = buildExecutiveRecommendations(score);
+  const safeScores = Array.isArray(scores) ? scores.filter(Boolean) : [];
+
+  const rawItems = safeScores.flatMap((score) => {
+    let recommendations = [];
+
+    try {
+      recommendations = buildExecutiveRecommendations(score) || [];
+    } catch (error) {
+      console.warn("Executive recommendation generation skipped:", error);
+      return [];
+    }
+
+    if (!Array.isArray(recommendations)) return [];
 
     return recommendations
-      .filter((recommendation) => normalize(recommendation.action) !== "none")
+      .filter((recommendation) => normalize(recommendation?.action) !== "none")
       .map((recommendation) => {
-        const template = buildExecutiveActionTemplate(score, recommendation);
-        const studentStage = getJourneyStage(score, template);
-        const priorityRank = getPriorityRank(recommendation.priority);
-        const actionRank = getActionRank(template.actionType);
+        try {
+          const template = buildExecutiveActionTemplate(score, recommendation);
+          if (!template || !template.actionType) return null;
 
-        return {
-          key: `${getStudentKey(score)}-${recommendation.type}-${template.actionType}`,
-          duplicateKey: buildDuplicateKey(score, recommendation, template),
-          score,
-          recommendation,
-          template,
-          studentStage,
-          priorityRank,
-          actionRank,
-          approvalRequired: approvalRequired(recommendation, template),
-          impactScore:
-            number(score.risk_score) +
-            number(score.opportunity_score) +
-            priorityRank * 12 +
-            actionRank * 5,
-        };
-      });
+          const studentStage = getJourneyStage(score, template);
+          const priorityRank = getPriorityRank(recommendation.priority);
+          const actionRank = getActionRank(template.actionType);
+
+          return {
+            key: `${getStudentKey(score)}-${recommendation.type}-${template.actionType}`,
+            duplicateKey: buildDuplicateKey(score, recommendation, template),
+            score,
+            recommendation,
+            template,
+            studentStage,
+            priorityRank,
+            actionRank,
+            approvalRequired: approvalRequired(recommendation, template),
+            impactScore:
+              number(score.risk_score) +
+              number(score.opportunity_score) +
+              priorityRank * 12 +
+              actionRank * 5,
+          };
+        } catch (error) {
+          console.warn("Automation template generation skipped:", error);
+          return null;
+        }
+      })
+      .filter(Boolean);
   });
 
   const deduped = new Map();
@@ -213,9 +232,14 @@ function buildAutomationTemplates(scores = []) {
 }
 
 function buildAutomationAnalytics(scores = [], automationTemplates = []) {
+  const safeScores = Array.isArray(scores) ? scores.filter(Boolean) : [];
+  const safeTemplates = Array.isArray(automationTemplates)
+    ? automationTemplates.filter(Boolean)
+    : [];
+
   const analytics = {
-    totalStudents: scores.length,
-    totalTemplates: automationTemplates.length,
+    totalStudents: safeScores.length,
+    totalTemplates: safeTemplates.length,
 
     critical: 0,
     executive: 0,
@@ -224,7 +248,7 @@ function buildAutomationAnalytics(scores = [], automationTemplates = []) {
     low: 0,
 
     approvalRequired: 0,
-    readyToExecute: 0,
+    readyForReview: 0,
 
     communicationDrafts: 0,
     taskActions: 0,
@@ -245,7 +269,7 @@ function buildAutomationAnalytics(scores = [], automationTemplates = []) {
     byStudentType: {},
   };
 
-  automationTemplates.forEach((item) => {
+  safeTemplates.forEach((item) => {
     const priority = normalize(item.recommendation.priority || "medium");
     const actionType = normalize(item.template.actionType);
     const stage = normalize(item.studentStage);
@@ -260,7 +284,7 @@ function buildAutomationAnalytics(scores = [], automationTemplates = []) {
     analytics.byStudentType[studentType] = (analytics.byStudentType[studentType] || 0) + 1;
 
     if (item.approvalRequired) analytics.approvalRequired += 1;
-    else analytics.readyToExecute += 1;
+    else analytics.readyForReview += 1;
 
     if (["send_email", "send_whatsapp"].includes(actionType)) analytics.communicationDrafts += 1;
     if (actionType === "send_email") analytics.emailDrafts += 1;
@@ -283,12 +307,17 @@ function buildAutomationAnalytics(scores = [], automationTemplates = []) {
     if (recommendationType.includes("university")) analytics.universityActions += 1;
   });
 
+  const studentsWithActions = new Set(
+    safeTemplates.map((item) => getStudentKey(item.score))
+  ).size;
+
+  analytics.studentsWithActions = studentsWithActions;
   analytics.coverage = analytics.totalStudents
-    ? Math.round((analytics.totalTemplates / analytics.totalStudents) * 100)
+    ? Math.min(100, Math.round((studentsWithActions / analytics.totalStudents) * 100))
     : 0;
 
   analytics.healthScore = analytics.totalTemplates
-    ? Math.round((analytics.readyToExecute / analytics.totalTemplates) * 100)
+    ? Math.round((analytics.readyForReview / analytics.totalTemplates) * 100)
     : 100;
 
   analytics.approvalRate = analytics.totalTemplates
@@ -309,7 +338,7 @@ function ExecutiveAutomationEngine({ scores = [] }) {
   const topTemplates = automationTemplates.slice(0, 15);
 
   return (
-    <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
+    <div className="rounded-[2rem] border-[3px] border-[#E9802D]/45 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
@@ -332,9 +361,20 @@ function ExecutiveAutomationEngine({ scores = [] }) {
           <Badge label={`${analytics.critical} Critical`} danger />
           <Badge label={`${analytics.executive} Executive`} gold />
           <Badge label={`${analytics.approvalRequired} Approval`} gold />
-          <Badge label={`${analytics.readyToExecute} Ready`} success />
+          <Badge label={`${analytics.readyForReview} Review Ready`} success />
           <Badge label={`Health ${analytics.healthScore}%`} success={analytics.healthScore >= 70} />
         </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-[#243A60]/20 bg-white px-4 py-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
+          Engine Scope
+        </p>
+        <p className="mt-1 text-xs font-semibold leading-5 text-[#596579]">
+          This component generates, prioritizes, deduplicates, and explains proposed automation
+          templates. It does not send emails, send WhatsApp messages, create tasks, or mutate
+          Supabase records by itself.
+        </p>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -425,7 +465,7 @@ function AutomationTemplateCard({ item }) {
               />
             ) : (
               <Tag
-                text="Ready"
+                text="Review Ready"
                 className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
               />
             )}
@@ -488,12 +528,13 @@ function AutomationHealthPanel({ analytics }) {
           </p>
 
           <h3 className="mt-2 text-xl font-black text-[#17243D]">
-            {analytics.healthScore}% Ready Without Extra Approval
+            {analytics.healthScore}% Review Ready Without Extra Approval
           </h3>
 
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
-            This score shows how much of the generated automation queue can move quickly.
-            Executive and communication-heavy actions still stay protected behind human approval.
+            This score shows how much of the generated template queue can be reviewed without an
+            additional approval gate. It does not mean an action has already executed. Executive
+            and communication-heavy actions remain protected behind human approval.
           </p>
         </div>
 
@@ -514,7 +555,7 @@ function DistributionPanel({ title, description, items = {} }) {
   const entries = Object.entries(items).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
+    <div className="rounded-2xl border-2 border-[#243A60]/18 bg-white p-5">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8992A1]">
         {title}
       </p>
@@ -571,10 +612,22 @@ function PayloadPreview({ title, payload }) {
       </p>
 
       <pre className="mt-3 max-h-44 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#667085]">
-        {JSON.stringify(payload, null, 2)}
+        {safeStringify(payload)}
       </pre>
     </div>
   );
+}
+
+function safeStringify(value) {
+  try {
+    const serialized = JSON.stringify(value, null, 2);
+    if (!serialized) return "No payload data.";
+    return serialized.length > 6000
+      ? `${serialized.slice(0, 6000)}\n… payload preview truncated`
+      : serialized;
+  } catch {
+    return "Payload could not be serialized.";
+  }
 }
 
 function MetricCard({ label, value, compact = false }) {
@@ -618,7 +671,7 @@ function Badge({ label, danger = false, gold = false, success = false }) {
     ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
     : success
     ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
-    : "border-purple-400/25 bg-purple-500/10 text-[#B84F0E]";
+    : "border-[#243A60]/20 bg-white text-[#243A60]";
 
   return (
     <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>

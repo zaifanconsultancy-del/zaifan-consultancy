@@ -56,6 +56,7 @@ import { enrichLeadWithAi } from "../../services/aiLeadEngine";
 const ADMIN_ACTIVE_TAB_KEY = "zaifan_admin_active_tab";
 const ADMIN_ANALYTICS_SECTION_KEY = "zaifan_admin_analytics_section";
 const ADMIN_SCROLL_KEY = "zaifan_admin_scroll_y";
+const ADMIN_OVERVIEW_COLLAPSED_KEY = "zaifan_admin_overview_collapsed";
 
 function getStoredValue(key, fallback) {
   if (typeof window === "undefined") return fallback;
@@ -72,6 +73,10 @@ function AdminPage() {
   const [activeAnalyticsSection, setActiveAnalyticsSection] = useState(() =>
     getStoredValue(ADMIN_ANALYTICS_SECTION_KEY, "ai-executive")
   );
+  const [overviewCollapsed, setOverviewCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem(ADMIN_OVERVIEW_COLLAPSED_KEY) === "1";
+  });
   const [aiReanalysisState, setAiReanalysisState] = useState({
     loading: false,
     leadId: null,
@@ -94,6 +99,14 @@ function AdminPage() {
       activeAnalyticsSection
     );
   }, [activeAnalyticsSection]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem(
+      ADMIN_OVERVIEW_COLLAPSED_KEY,
+      overviewCollapsed ? "1" : "0"
+    );
+  }, [overviewCollapsed]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -697,59 +710,143 @@ function AdminPage() {
 
         <main className="min-w-0 flex-1 overflow-hidden px-3 py-4 sm:px-5 sm:py-5 xl:px-7 2xl:px-9">
           <div className="mx-auto w-full max-w-[1800px]">
-            <div className="relative mb-6 overflow-hidden rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white via-[#fffaf5] to-[#fff1e7] p-5 text-[#0b2a57] shadow-[0_24px_70px_rgba(121,72,40,0.10)] sm:p-7">
-              <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-orange-300/25 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-[#ffcdb4]/28 blur-3xl" />
-              <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="sticky top-2 z-40 mb-3 flex items-center justify-between gap-3 rounded-[1.15rem] border-2 border-orange-300 bg-[#fff8ee]/95 px-3 py-2.5 shadow-[0_8px_24px_rgba(15,35,63,0.10)] backdrop-blur-md sm:px-4">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    System online
-                  </span>
-
-                  <span className="rounded-full border border-orange-400/20 bg-orange-500/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-orange-700">
-                    GPT Coverage {aiCoverageStats.percent}%
-                  </span>
-                </div>
-
-                <h2 className="mt-3 truncate text-3xl font-black tracking-[-0.035em] text-[#0b2a57] sm:text-4xl">
-                  Welcome back, {adminProfile.full_name || "Admin User"}
-                </h2>
-
-                <p className="mt-2 text-[15px] font-medium text-slate-600">
-                  Operating as{" "}
-                  <span className="font-extrabold text-orange-400">
-                    {roleLabels[role] || role}
-                  </span>
-                  . Your workspace is ready.
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
+                  Workspace Focus
+                </p>
+                <p className="truncate text-xs font-bold text-[#10233f] sm:text-sm">
+                  {overviewCollapsed
+                    ? "Overview hidden — working area moved to the top."
+                    : "Overview visible — hide it to reach the active workspace instantly."}
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
-                <PermissionPill
-                  label="Delete"
-                  enabled={currentPermissions.canDelete}
-                />
-                <PermissionPill
-                  label="Export"
-                  enabled={currentPermissions.canExport}
-                />
-                <PermissionPill
-                  label="Clear all"
-                  enabled={currentPermissions.canClearAll}
-                />
+              <button
+                type="button"
+                onClick={() => {
+                  setOverviewCollapsed((current) => !current);
+                  window.requestAnimationFrame(() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  });
+                }}
+                className={`shrink-0 rounded-xl border-2 px-4 py-2 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${
+                  overviewCollapsed
+                    ? "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
+                    : "border-[#234e78] bg-[#123865] text-white hover:bg-[#0d2d50]"
+                }`}
+              >
+                {overviewCollapsed ? "Show Overview" : "Hide Overview"}
+              </button>
+            </div>
+
+            {!overviewCollapsed && (
+            <>
+            <div className="relative mb-6 overflow-hidden rounded-[2rem] border-2 border-orange-400 bg-[#173f69] text-white shadow-[0_24px_70px_rgba(16,49,86,0.16)]">
+              <div className="grid lg:grid-cols-[minmax(0,1fr)_380px]">
+                <div className="relative p-5 sm:p-7">
+                  <div className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
+                  <div className="pointer-events-none absolute -bottom-28 right-10 h-56 w-56 rounded-full bg-[#2f6ea8]/25 blur-3xl" />
+
+                  <div className="relative">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                        System online
+                      </span>
+
+                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white">
+                        GPT Coverage {aiCoverageStats.percent}%
+                      </span>
+                    </div>
+
+                    <h2 className="mt-4 truncate text-3xl font-black tracking-[-0.035em] text-white sm:text-4xl">
+                      Welcome back, {adminProfile.full_name || "Admin User"}
+                    </h2>
+
+                    <p className="mt-2 max-w-3xl text-[15px] font-semibold leading-6 text-white/85">
+                      Operating as{" "}
+                      <span className="font-black text-[#ff8a2a]">
+                        {roleLabels[role] || role}
+                      </span>
+                      . Your workspace is ready.
+                    </p>
+                  </div>
+                </div>
+
+                <aside className="relative border-t-2 border-orange-300/50 bg-[#ff5a0a] p-5 text-white lg:border-l-2 lg:border-t-0 lg:border-orange-300/50 sm:p-6">
+                  <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+
+                  <div className="relative">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/90">
+                      Operator permissions
+                    </p>
+                    <h3 className="mt-2 text-2xl font-black text-white">
+                      {roleLabels[role] || role}
+                    </h3>
+                    <p className="mt-1 text-xs font-bold text-white/85">
+                      Live access controls for this session
+                    </p>
+
+                    <div className="mt-5 grid grid-cols-3 gap-2">
+                      <PermissionPill
+                        label="Delete"
+                        enabled={currentPermissions.canDelete}
+                        dark
+                      />
+                      <PermissionPill
+                        label="Export"
+                        enabled={currentPermissions.canExport}
+                        dark
+                      />
+                      <PermissionPill
+                        label="Clear all"
+                        enabled={currentPermissions.canClearAll}
+                        dark
+                      />
+                    </div>
+                  </div>
+                </aside>
               </div>
 
-              </div>
-
-              <div className="relative mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-                <AdminCommandMetric label="Student leads" value={adminCommandMetrics.totalLeads} detail="Unified inquiry + appointment portfolio" />
-                <AdminCommandMetric label="Pending appointments" value={adminCommandMetrics.pendingAppointments} detail="Consultations awaiting action" tone="orange" />
-                <AdminCommandMetric label="Open tasks" value={adminCommandMetrics.pendingTasks} detail="Student operations still active" tone="blue" />
-                <AdminCommandMetric label="Support queue" value={adminCommandMetrics.openSupport} detail="Unresolved student requests" tone={adminCommandMetrics.openSupport ? "red" : "green"} />
-                <AdminCommandMetric label="Portal accounts" value={adminCommandMetrics.activePortalAccounts} detail="Active Student OS access" tone="green" />
-                <AdminCommandMetric label="GPT coverage" value={`${adminCommandMetrics.gptCoverage}%`} detail="Leads with stored GPT intelligence" tone="orange" />
+              <div className="border-t border-orange-200/80 bg-[#fff8f1] p-4 sm:p-5">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+                  <AdminCommandMetric
+                    label="Student leads"
+                    value={adminCommandMetrics.totalLeads}
+                    detail="Unified inquiry + appointment portfolio"
+                  />
+                  <AdminCommandMetric
+                    label="Pending appointments"
+                    value={adminCommandMetrics.pendingAppointments}
+                    detail="Consultations awaiting action"
+                    tone="orange"
+                  />
+                  <AdminCommandMetric
+                    label="Open tasks"
+                    value={adminCommandMetrics.pendingTasks}
+                    detail="Student operations still active"
+                    tone="blue"
+                  />
+                  <AdminCommandMetric
+                    label="Support queue"
+                    value={adminCommandMetrics.openSupport}
+                    detail="Unresolved student requests"
+                    tone={adminCommandMetrics.openSupport ? "red" : "green"}
+                  />
+                  <AdminCommandMetric
+                    label="Portal accounts"
+                    value={adminCommandMetrics.activePortalAccounts}
+                    detail="Active Student OS access"
+                    tone="green"
+                  />
+                  <AdminCommandMetric
+                    label="GPT coverage"
+                    value={`${adminCommandMetrics.gptCoverage}%`}
+                    detail="Leads with stored GPT intelligence"
+                    tone="orange"
+                  />
+                </div>
               </div>
             </div>
 
@@ -785,7 +882,7 @@ function AdminPage() {
               </div>
             )}
 
-            <div className="zaifan-admin-embedded-dark mb-6 overflow-hidden rounded-[1.9rem] border border-orange-100 bg-white shadow-[0_18px_50px_rgba(121,72,40,0.09)]">
+            <div className="zaifan-admin-embedded-dark relative z-20 mb-6 overflow-visible">
               <AdminHeader
               inquiries={inquiries}
               appointments={appointments}
@@ -850,6 +947,8 @@ function AdminPage() {
                   supportRequests={supportRequests}
                   counselorPaymentRequests={counselorPaymentRequests}
                   executiveExecutionLogs={executiveExecutionLogs}
+                  setActiveTab={setActiveTab}
+                  setActiveAnalyticsSection={setActiveAnalyticsSection}
                 />
                 </div>
 
@@ -878,6 +977,9 @@ function AdminPage() {
                 />
                 </>
               </Suspense>
+            )}
+
+            </>
             )}
 
             <Suspense fallback={<AdminModuleLoader />}>
@@ -978,32 +1080,34 @@ function AdminPage() {
 
 function AdminCommandMetric({ label, value, detail, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-200 bg-white/90",
-    orange: "border-orange-400/20 bg-orange-500/10/90",
-    blue: "border-blue-200 bg-blue-50/90",
-    red: "border-red-200 bg-red-50/90",
-    green: "border-emerald-400/20 bg-emerald-500/10/90",
-    orange: "border-orange-200 bg-orange-50/90",
+    slate: "border-orange-300 bg-[#fff8f1]",
+    orange: "border-orange-300 bg-[#fff7ef]",
+    blue: "border-blue-300 bg-[#eef6ff]",
+    red: "border-rose-300 bg-[#fff1f3]",
+    green: "border-emerald-300 bg-[#ecfbf4]",
   };
 
   const values = {
-    slate: "text-[#0b2a57]",
-    orange: "text-orange-700",
-    blue: "text-blue-700",
-    red: "text-red-700",
-    green: "text-emerald-700",
-    orange: "text-orange-700",
+    slate: "text-[#102b4c]",
+    orange: "text-[#c93208]",
+    blue: "text-[#164fa3]",
+    red: "text-[#c42145]",
+    green: "text-[#087f5b]",
   };
 
   return (
-    <div className={`rounded-2xl border p-3.5 shadow-sm ${tones[tone] || tones.slate}`}>
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+    <div
+      className={`rounded-2xl border-2 p-3.5 shadow-[0_4px_10px_rgba(16,43,76,0.06)] ${
+        tones[tone] || tones.slate
+      }`}
+    >
+      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#63738a]">
         {label}
       </p>
       <p className={`mt-1.5 text-xl font-black ${values[tone] || values.slate}`}>
         {value}
       </p>
-      <p className="mt-1 text-[11px] leading-4 text-slate-500">{detail}</p>
+      <p className="mt-1 text-[11px] leading-4 text-[#415674]">{detail}</p>
     </div>
   );
 }
@@ -1021,10 +1125,24 @@ function AdminInsightLoader() {
   );
 }
 
-function PermissionPill({ label, enabled }) {
+function PermissionPill({ label, enabled, dark = false }) {
+  if (dark) {
+    return (
+      <div
+        className={`whitespace-nowrap rounded-xl border px-2.5 py-2.5 text-center text-[9px] font-black uppercase tracking-[0.06em] ${
+          enabled
+            ? "border-white/45 bg-white/15 text-white"
+            : "border-white/20 bg-[#173f69]/25 text-white/55"
+        }`}
+      >
+        {label}: {enabled ? "Yes" : "No"}
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`rounded-xl border px-3 py-2 text-center text-[11px] font-extrabold uppercase tracking-[0.1em] ${
+      className={`whitespace-nowrap rounded-xl border px-3 py-2 text-center text-[11px] font-extrabold uppercase tracking-[0.08em] ${
         enabled
           ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-700"
           : "border-slate-200 bg-slate-50 text-slate-400"

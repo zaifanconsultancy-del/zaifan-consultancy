@@ -29,9 +29,18 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
 
   const mountedRef = useRef(true);
   const profileFetchIdRef = useRef(0);
+  const scheduledProfileTimerRef = useRef(null);
+  const lastProfileUserIdRef = useRef(null);
 
   const safeSetState = (callback) => {
     if (mountedRef.current) callback();
+  };
+
+  const cancelScheduledProfileLoad = () => {
+    if (scheduledProfileTimerRef.current) {
+      window.clearTimeout(scheduledProfileTimerRef.current);
+      scheduledProfileTimerRef.current = null;
+    }
   };
 
   const loadAdminProfile = async (userId, options = {}) => {
@@ -40,6 +49,7 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
     const { force = false } = options;
     const fetchId = profileFetchIdRef.current + 1;
     profileFetchIdRef.current = fetchId;
+    lastProfileUserIdRef.current = userId;
 
     safeSetState(() => {
       setProfileLoading(true);
@@ -59,7 +69,6 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
         );
 
         if (profileFetchIdRef.current !== fetchId) return null;
-
         if (error) throw error;
 
         if (data) {
@@ -80,6 +89,8 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
         }
       } catch (error) {
         console.error("Admin profile timeout/error:", error);
+
+        if (profileFetchIdRef.current !== fetchId) return null;
 
         if (attempt < PROFILE_RETRY_LIMIT) {
           await wait(PROFILE_RETRY_DELAY_MS * attempt);
@@ -115,15 +126,29 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
     return null;
   };
 
+  const scheduleAdminProfileLoad = (userId, options = {}) => {
+    if (!userId) return;
+
+    cancelScheduledProfileLoad();
+
+    scheduledProfileTimerRef.current = window.setTimeout(() => {
+      scheduledProfileTimerRef.current = null;
+      if (!mountedRef.current) return;
+      void loadAdminProfile(userId, options);
+    }, 0);
+  };
+
   useEffect(() => {
     mountedRef.current = true;
 
     const checkSession = async () => {
       try {
-        const { data } = await withTimeout(
+        const { data, error } = await withTimeout(
           supabase.auth.getSession(),
           "Session check"
         );
+
+        if (error) throw error;
 
         if (data.session?.user) {
           safeSetState(() => {
@@ -138,6 +163,8 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
             setAdminUser(null);
             setAdminProfile(null);
             setProfileLoading(false);
+            setProfileError("");
+            setProfileRetryCount(0);
           });
         }
       } catch (error) {
@@ -148,36 +175,52 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
           setAdminUser(null);
           setAdminProfile(null);
           setProfileLoading(false);
+          setProfileError("");
+          setProfileRetryCount(0);
         });
       } finally {
         safeSetState(() => setSessionChecked(true));
       }
     };
 
-    checkSession();
+    void checkSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // IMPORTANT: keep this callback synchronous.
+      // Never await another Supabase request inside onAuthStateChange.
       safeSetState(() => {
-        setIsLoggedIn(!!session);
+        setIsLoggedIn(Boolean(session));
         setAdminUser(session?.user || null);
+        setSessionChecked(true);
       });
 
       if (session?.user) {
-        await loadAdminProfile(session.user.id);
+        const userId = session.user.id;
+
+        if (lastProfileUserIdRef.current !== userId) {
+          scheduleAdminProfileLoad(userId);
+        }
       } else {
+        cancelScheduledProfileLoad();
+        profileFetchIdRef.current += 1;
+        lastProfileUserIdRef.current = null;
+
         safeSetState(() => {
           setAdminProfile(null);
           setProfileLoading(false);
+          setProfileError("");
+          setProfileRetryCount(0);
         });
       }
-
-      safeSetState(() => setSessionChecked(true));
     });
 
     return () => {
       mountedRef.current = false;
+      cancelScheduledProfileLoad();
+      profileFetchIdRef.current += 1;
+
       if (subscription) subscription.unsubscribe();
     };
   }, []);
@@ -197,8 +240,13 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
       }
 
       if (data.user) {
-        safeSetState(() => setAdminUser(data.user));
-        await loadAdminProfile(data.user.id);
+        safeSetState(() => {
+          setAdminUser(data.user);
+          setIsLoggedIn(true);
+        });
+
+        // Do not load the profile here as well.
+        // SIGNED_IN will trigger the listener above, which schedules it.
       }
 
       safeSetState(() => {
@@ -212,6 +260,10 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
   };
 
   const logout = async () => {
+    cancelScheduledProfileLoad();
+    profileFetchIdRef.current += 1;
+    lastProfileUserIdRef.current = null;
+
     try {
       await withTimeout(supabase.auth.signOut(), "Logout");
     } catch (error) {

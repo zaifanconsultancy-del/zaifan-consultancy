@@ -1,303 +1,213 @@
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  updateFollowUpReminderStatus,
-  deleteFollowUpReminder,
-} from "../../lib/followUpReminders";
+  AlertTriangle, CalendarClock, CheckCircle2, ChevronDown, ChevronUp,
+  CircleDot, Clock3, ListFilter, RefreshCw, RotateCcw, Search, Sparkles,
+  Trash2, XCircle,
+} from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
+import { updateFollowUpReminderStatus, deleteFollowUpReminder } from "../../lib/followUpReminders";
+
+const LOAD_TIMEOUT_MS = 12000;
+const ACTION_TIMEOUT_MS = 12000;
+const normalize = (value = "") => String(value || "").toLowerCase().trim();
+const dateKey = (value) => value ? String(value).slice(0, 10) : "";
+
+function withTimeout(promise, ms, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), ms); });
+  return Promise.race([promise, timeout]).finally(() => timer && clearTimeout(timer));
+}
+function getErrorMessage(error) {
+  return error?.message || error?.details || error?.hint || (typeof error === "string" ? error : "Unknown error.");
+}
+function formatDue(reminder) {
+  if (!reminder?.due_date) return "No deadline";
+  return `${reminder.due_date}${reminder.due_time ? ` · ${String(reminder.due_time).slice(0,5)}` : ""}`;
+}
 
 function FollowUpDashboard({ cardClass = "" }) {
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("pending");
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [busyId, setBusyId] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [compactQueue, setCompactQueue] = useState(false);
+  const mountedRef = useRef(true);
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  const today = new Date().toISOString().slice(0, 10);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
-  const fetchReminders = async () => {
-    setLoading(true);
-
-    const { data, error } = await supabase
-      .from("follow_up_reminders")
-      .select("*")
-      .order("due_date", { ascending: true })
-      .order("due_time", { ascending: true });
-
-    if (error) {
-      console.error("Failed to load follow-up dashboard:", error);
-      setReminders([]);
-      setLoading(false);
-      return;
+  const fetchReminders = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    setError("");
+    try {
+      const request = supabase.from("follow_up_reminders").select("*")
+        .order("due_date", { ascending: true }).order("due_time", { ascending: true });
+      const { data, error: fetchError } = await withTimeout(request, LOAD_TIMEOUT_MS, "Follow-up reminders took too long to load.");
+      if (fetchError) throw fetchError;
+      if (!mountedRef.current) return;
+      setReminders(Array.isArray(data) ? data : []);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error("Failed to load follow-up dashboard:", err);
+      if (mountedRef.current) setError(getErrorMessage(err));
+    } finally {
+      if (mountedRef.current && !silent) setLoading(false);
     }
-
-    setReminders(data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchReminders();
   }, []);
 
-  const filteredReminders = useMemo(() => {
-    if (filter === "all") return reminders;
+  useEffect(() => { fetchReminders(); }, [fetchReminders]);
 
-    if (filter === "today") {
-      return reminders.filter(
-        (reminder) =>
-          reminder.status === "pending" && reminder.due_date === today
-      );
-    }
-
-    if (filter === "overdue") {
-      return reminders.filter(
-        (reminder) =>
-          reminder.status === "pending" && reminder.due_date < today
-      );
-    }
-
-    return reminders.filter((reminder) => reminder.status === filter);
-  }, [reminders, filter, today]);
-
-  const stats = useMemo(
-    () => ({
+  const stats = useMemo(() => {
+    const pending = reminders.filter((item) => normalize(item.status) === "pending");
+    return {
       total: reminders.length,
-      pending: reminders.filter((item) => item.status === "pending").length,
-      today: reminders.filter(
-        (item) => item.status === "pending" && item.due_date === today
-      ).length,
-      overdue: reminders.filter(
-        (item) => item.status === "pending" && item.due_date < today
-      ).length,
-      done: reminders.filter((item) => item.status === "done").length,
-    }),
-    [reminders, today]
-  );
+      pending: pending.length,
+      today: pending.filter((item) => dateKey(item.due_date) === today).length,
+      overdue: pending.filter((item) => dateKey(item.due_date) && dateKey(item.due_date) < today).length,
+      done: reminders.filter((item) => normalize(item.status) === "done").length,
+      cancelled: reminders.filter((item) => normalize(item.status) === "cancelled").length,
+    };
+  }, [reminders, today]);
 
-  const updateStatus = async (id, status) => {
-    await updateFollowUpReminderStatus(id, status);
-    await fetchReminders();
+  const filteredReminders = useMemo(() => {
+    const cleanQuery = normalize(query);
+    return reminders.filter((reminder) => {
+      const status = normalize(reminder.status || "pending");
+      const due = dateKey(reminder.due_date);
+      let match = true;
+      if (filter === "today") match = status === "pending" && due === today;
+      else if (filter === "overdue") match = status === "pending" && Boolean(due) && due < today;
+      else if (filter !== "all") match = status === filter;
+      if (!match) return false;
+      if (!cleanQuery) return true;
+      return [reminder.title, reminder.notes, reminder.student_type, reminder.created_by_name, reminder.due_date, reminder.due_time]
+        .map(normalize).join(" ").includes(cleanQuery);
+    });
+  }, [reminders, filter, query, today]);
+
+  const runAction = async (id, action) => {
+    if (busyId) return;
+    setBusyId(id); setActionError("");
+    try {
+      await withTimeout(Promise.resolve(action()), ACTION_TIMEOUT_MS, "Reminder action timed out. The dashboard has been unlocked.");
+      await fetchReminders({ silent: true });
+    } catch (err) {
+      console.error("Follow-up reminder action failed:", err);
+      setActionError(getErrorMessage(err));
+    } finally { if (mountedRef.current) setBusyId(null); }
   };
-
+  const updateStatus = (id, status) => runAction(id, () => updateFollowUpReminderStatus(id, status));
   const removeReminder = async (id) => {
-    const confirmed = window.confirm("Delete this reminder?");
-    if (!confirmed) return;
-
-    await deleteFollowUpReminder(id);
-    await fetchReminders();
+    if (!window.confirm("Delete this reminder permanently? This cannot be undone.")) return;
+    await runAction(id, () => deleteFollowUpReminder(id));
   };
-
-  const getBadge = (reminder) => {
-    if (reminder.status !== "pending") return reminder.status;
-    if (reminder.due_date < today) return "overdue";
-    if (reminder.due_date === today) return "due today";
+  const getBadge = (r) => {
+    const status = normalize(r.status || "pending"), due = dateKey(r.due_date);
+    if (status !== "pending") return status;
+    if (due && due < today) return "overdue";
+    if (due === today) return "due today";
     return "upcoming";
   };
-
-  const getBadgeStyle = (badge) => {
-    if (badge === "overdue") {
-      return "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
-    }
-
-    if (badge === "due today") {
-      return "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]";
-    }
-
-    if (badge === "done") {
-      return "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]";
-    }
-
-    if (badge === "cancelled") {
-      return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
-    }
-
-    return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
-  };
-
+  const queueHealth = stats.pending === 0 ? "Clear" : stats.overdue > 0 ? "Needs action" : stats.today > 0 ? "Due today" : "On track";
   const statCards = [
-    ["Total", stats.total, "all"],
-    ["Pending", stats.pending, "pending"],
-    ["Due Today", stats.today, "today"],
-    ["Overdue", stats.overdue, "overdue"],
-    ["Done", stats.done, "done"],
+    ["Total", stats.total, "all", "navy"], ["Pending", stats.pending, "pending", "blue"],
+    ["Due Today", stats.today, "today", "orange"], ["Overdue", stats.overdue, "overdue", "red"],
+    ["Done", stats.done, "done", "green"], ["Cancelled", stats.cancelled, "cancelled", "slate"],
   ];
 
-  return (
-    <section className={`space-y-5 ${cardClass}`}>
-      <div className="rounded-[2rem] border-2 border-[#E9802D]/45 bg-[#FFFDF8] p-5 shadow-[0_18px_50px_rgba(23,36,61,0.08)] sm:p-6">
-        <div className="flex flex-col gap-4 border-b border-[#243A60]/15 pb-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[#B84F0E]">
-              Follow-up Center
-            </p>
-
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-[#17243D]">
-              CRM Follow-up Dashboard
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-[#667085]">
-              Track overdue, due today, pending, cancelled, and completed reminders.
-            </p>
+  return <section className={`space-y-5 ${cardClass}`}>
+    <div className="overflow-hidden rounded-[2rem] border-[3px] border-orange-400 bg-[#FFF8EF] shadow-[0_18px_50px_rgba(23,36,61,.10)]">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_330px]">
+        <div className="bg-[#123865] p-5 text-white sm:p-6">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+              <div className="flex flex-wrap gap-2">
+                <Pill icon={CalendarClock}>Follow-up Operations</Pill><Pill>Live CRM Queue</Pill>
+              </div>
+              <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">Follow-up Command Center</h2>
+              <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">Prioritize student contact, clear overdue work, and close every reminder without losing queue context.</p>
+              <div className="mt-5 grid max-w-3xl gap-2 sm:grid-cols-3">
+                <HeroMetric label="Open Queue" value={stats.pending}/><HeroMetric label="Due Today" value={stats.today}/><HeroMetric label="Overdue" value={stats.overdue}/>
+              </div>
+            </div>
+            <button type="button" onClick={() => fetchReminders()} disabled={loading} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/35 bg-white/10 px-5 text-sm font-black text-white hover:bg-white/15 disabled:opacity-50">
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""}/>{loading ? "Refreshing..." : "Refresh Queue"}
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={fetchReminders}
-            disabled={loading}
-            className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-5 py-2.5 text-sm font-black text-[#B84F0E] transition hover:-translate-y-0.5 hover:bg-[#FFE8D3] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
         </div>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {statCards.map(([label, value, nextFilter]) => {
-            const active = filter === nextFilter;
-            const danger = label === "Overdue";
-
-            return (
-              <button
-                key={label}
-                type="button"
-                onClick={() => setFilter(nextFilter)}
-                className={`rounded-2xl border p-4 text-left transition duration-300 hover:-translate-y-0.5 ${
-                  active
-                    ? danger
-                      ? "border-[#C2413B]/45 bg-[#FFF0EE] shadow-[0_10px_24px_rgba(194,65,59,0.08)]"
-                      : "border-[#E9802D]/50 bg-[#FFF3E7] shadow-[0_10px_24px_rgba(233,128,45,0.09)]"
-                    : "border-[#243A60]/22 bg-white hover:border-[#E9802D]/35"
-                }`}
-              >
-                <p
-                  className={`text-[10px] font-black uppercase tracking-[0.16em] ${
-                    danger ? "text-[#A8342F]" : "text-[#667085]"
-                  }`}
-                >
-                  {label}
-                </p>
-
-                <p
-                  className={`mt-2 text-2xl font-black ${
-                    danger ? "text-[#A8342F]" : "text-[#17243D]"
-                  }`}
-                >
-                  {value}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {["pending", "today", "overdue", "done", "cancelled", "all"].map(
-            (item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setFilter(item)}
-                className={`rounded-full border px-4 py-2 text-xs font-black capitalize transition ${
-                  filter === item
-                    ? "border-[#E9802D]/45 bg-[#E9802D] text-white"
-                    : "border-[#243A60]/20 bg-white text-[#596579] hover:border-[#E9802D]/35 hover:text-[#B84F0E]"
-                }`}
-              >
-                {item}
-              </button>
-            )
-          )}
+        <aside className="border-t-[3px] border-orange-300 bg-[#ff5a0a] p-5 text-white lg:border-l-[3px] lg:border-t-0">
+          <p className="text-[9px] font-black uppercase tracking-[.18em] text-white">Queue Health</p>
+          <div className="mt-3 flex items-start justify-between gap-3"><div><p className="text-3xl font-black text-white">{queueHealth}</p><p className="mt-1 text-xs font-bold text-white">{stats.pending} reminder{stats.pending===1?"":"s"} still operational.</p></div><Sparkles size={28}/></div>
+          <div className="mt-5 rounded-2xl border border-white/35 bg-white/10 p-4"><p className="text-[9px] font-black uppercase tracking-[.12em] text-white">Last synced</p><p className="mt-1 text-lg font-black text-white">{lastUpdated ? lastUpdated.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "Waiting…"}</p></div>
+        </aside>
+      </div>
+      <div className="p-4 sm:p-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">{statCards.map(([label,value,f,tone]) => <StatCard key={label} label={label} value={value} tone={tone} active={filter===f} onClick={()=>setFilter(f)}/>)}</div>
+        <div className="mt-4 rounded-[1.5rem] border-2 border-[#123865] bg-white p-3">
+          <div className="grid gap-3 xl:grid-cols-[1fr_auto] xl:items-center">
+            <label className="relative"><Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search title, notes, student type, creator or deadline..." className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-[#FFFDF8] py-2.5 pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400"/></label>
+            <div className="flex flex-wrap gap-2">{["pending","today","overdue","done","cancelled","all"].map(item=><button key={item} type="button" onClick={()=>setFilter(item)} className={`rounded-xl border-2 px-4 py-2 text-xs font-black capitalize ${filter===item?"border-orange-600 bg-orange-500 text-white":"border-slate-300 bg-white text-[#10233f] hover:border-orange-300"}`}>{item}</button>)}</div>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div className="rounded-[2rem] border-2 border-[#243A60]/28 bg-[#FFFDF8] p-5 shadow-[0_14px_38px_rgba(23,36,61,0.06)]">
-        {loading ? (
-          <div className="rounded-2xl border border-[#243A60]/20 bg-white p-5 text-sm font-semibold text-[#667085]">
-            Loading reminders...
-          </div>
-        ) : filteredReminders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#243A60]/25 bg-[#F7F3EB] p-6 text-sm font-semibold text-[#667085]">
-            No reminders found for this filter.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredReminders.map((reminder) => {
-              const badge = getBadge(reminder);
+    {error && <MessageBox title="Follow-up queue could not load" message={error} action={<button onClick={()=>fetchReminders()} className="rounded-xl border-2 border-red-300 bg-white px-4 py-2 text-xs font-black text-red-700">Retry</button>}/>}
+    {actionError && <MessageBox title="Reminder action failed" message={actionError} action={<button onClick={()=>setActionError("")} className="rounded-xl border-2 border-red-300 bg-white px-4 py-2 text-xs font-black text-red-700">Dismiss</button>}/>}
 
-              return (
-                <div
-                  key={reminder.id}
-                  className="rounded-2xl border border-[#243A60]/22 bg-white p-4 transition duration-300 hover:border-[#E9802D]/40 hover:shadow-[0_10px_24px_rgba(23,36,61,0.06)]"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-black text-[#17243D]">
-                          {reminder.title}
-                        </h3>
-
-                        <span
-                          className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${getBadgeStyle(
-                            badge
-                          )}`}
-                        >
-                          {badge}
-                        </span>
-                      </div>
-
-                      {reminder.notes ? (
-                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#667085]">
-                          {reminder.notes}
-                        </p>
-                      ) : null}
-
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#7A8392]">
-                        <span>
-                          Due: {reminder.due_date}
-                          {reminder.due_time ? ` · ${reminder.due_time}` : ""}
-                        </span>
-                        <span>•</span>
-                        <span className="capitalize">{reminder.student_type}</span>
-                        <span>•</span>
-                        <span>By {reminder.created_by_name || "Admin"}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {reminder.status !== "done" ? (
-                        <button
-                          type="button"
-                          onClick={() => updateStatus(reminder.id, "done")}
-                          className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1.5 text-xs font-black text-[#B84F0E]"
-                        >
-                          Done
-                        </button>
-                      ) : null}
-
-                      {reminder.status !== "cancelled" ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateStatus(reminder.id, "cancelled")
-                          }
-                          className="rounded-full border border-[#A36A18]/30 bg-[#FFF7E8] px-3 py-1.5 text-xs font-black text-[#8A5611]"
-                        >
-                          Cancel
-                        </button>
-                      ) : null}
-
-                      <button
-                        type="button"
-                        onClick={() => removeReminder(reminder.id)}
-                        className="rounded-full border border-[#C2413B]/30 bg-[#FFF0EE] px-3 py-1.5 text-xs font-black text-[#A8342F]"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+    <div className="overflow-hidden rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_14px_38px_rgba(23,36,61,.07)]">
+      <div className="flex flex-col gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div><div className="flex items-center gap-2"><ListFilter size={16}/><p className="text-[9px] font-black uppercase tracking-[.14em] text-white">Operational Queue</p></div><h3 className="mt-1 text-xl font-black text-white">{filteredReminders.length} reminder{filteredReminders.length===1?"":"s"} in view</h3></div>
+        <div className="flex gap-2">{query && <button onClick={()=>setQuery("")} className="rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-xs font-black text-white">Clear search</button>}<button onClick={()=>setCompactQueue(v=>!v)} className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-xs font-black text-white">{compactQueue?<ChevronDown size={15}/>:<ChevronUp size={15}/>} {compactQueue?"Expand Cards":"Compact Cards"}</button></div>
       </div>
-    </section>
-  );
+      <div className="p-4 sm:p-5">
+        {loading && reminders.length===0 ? <Empty icon={RefreshCw} text="Loading follow-up reminders..." spin/> :
+        filteredReminders.length===0 ? <Empty icon={CheckCircle2} text="Queue is clear — nothing matches this view."/> :
+        <div className="space-y-3">{filteredReminders.map(r=><ReminderCard key={r.id} reminder={r} badge={getBadge(r)} status={normalize(r.status||"pending")} busy={busyId===r.id} compact={compactQueue} onDone={()=>updateStatus(r.id,"done")} onReopen={()=>updateStatus(r.id,"pending")} onCancel={()=>updateStatus(r.id,"cancelled")} onDelete={()=>removeReminder(r.id)}/>)}</div>}
+      </div>
+    </div>
+  </section>;
 }
 
+function Pill({icon:Icon,children}) { return <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.14em] text-white">{Icon&&<Icon size={14}/>} {children}</span>; }
+function HeroMetric({label,value}) { return <div className="rounded-2xl border border-white/25 bg-white/10 px-4 py-3"><p className="text-[8px] font-black uppercase tracking-[.12em] text-white">{label}</p><p className="mt-1 text-2xl font-black text-white">{value}</p></div>; }
+function StatCard({label,value,active,onClick,tone}) {
+  const tones={navy:"border-[#123865] bg-[#edf3f9] text-[#123865]",blue:"border-blue-400 bg-blue-50 text-blue-700",orange:"border-orange-400 bg-orange-50 text-orange-700",red:"border-red-400 bg-red-50 text-red-700",green:"border-emerald-400 bg-emerald-50 text-emerald-700",slate:"border-slate-400 bg-slate-50 text-slate-700"};
+  return <button type="button" onClick={onClick} className={`rounded-[1.35rem] border-[3px] p-4 text-left transition hover:-translate-y-.5 ${tones[tone]} ${active?"ring-4 ring-orange-100 shadow-md":""}`}><p className="text-[9px] font-black uppercase tracking-[.1em]">{label}</p><p className="mt-2 text-3xl font-black">{value}</p></button>;
+}
+function ReminderCard({reminder,badge,status,busy,compact,onDone,onReopen,onCancel,onDelete}) {
+  const t=getTone(badge), closed=status==="done"||status==="cancelled";
+  return <article className={`overflow-hidden rounded-[1.65rem] border-[3px] ${t.border} ${t.bg} shadow-[0_8px_24px_rgba(15,35,63,.05)] transition hover:-translate-y-.5 hover:shadow-lg`}>
+    <div className={`h-1.5 ${t.bar}`}/>
+    <div className="p-4 sm:p-5"><div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-3"><span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border-2 ${t.icon}`}>{badge==="overdue"?<AlertTriangle size={18}/>:badge==="due today"?<Clock3 size={18}/>:closed?<CheckCircle2 size={18}/>:<CircleDot size={18}/>}</span><div><div className="flex flex-wrap items-center gap-2"><h4 className="text-base font-black text-[#10233f] sm:text-lg">{reminder.title||"Untitled reminder"}</h4><Badge badge={badge}/></div><p className="mt-1 text-[9px] font-black uppercase tracking-[.1em] text-slate-500">{reminder.student_type||"Student"} · {reminder.created_by_name||"Admin"}</p></div></div>
+        {!compact && <><div className="mt-4 rounded-[1.2rem] border-2 border-orange-200 bg-white/80 p-4"><div className="flex items-center gap-2"><Sparkles size={15} className="text-orange-600"/><p className="text-[9px] font-black uppercase tracking-[.12em] text-orange-700">Follow-up Context</p></div><p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-700">{reminder.notes||"No additional notes saved. Review the related student workflow before taking action."}</p></div><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4"><Meta label="Deadline" value={formatDue(reminder)}/><Meta label="Student Type" value={reminder.student_type||"Unknown"}/><Meta label="Owner" value={reminder.created_by_name||"Admin"}/><Meta label="Workflow" value={status||"pending"}/></div></>}
+      </div>
+      <div className="shrink-0 xl:w-[310px]"><div className={`rounded-[1.25rem] border-2 ${t.actionBorder} bg-white/80 p-3`}><p className="mb-2 text-[8px] font-black uppercase tracking-[.12em] text-slate-500">Workflow Actions</p><div className="grid grid-cols-2 gap-2">{status!=="done"?<ActionButton icon={CheckCircle2} label={busy?"Working...":"Complete"} disabled={busy} onClick={onDone} tone="green"/>:<ActionButton icon={RotateCcw} label="Reopen" disabled={busy} onClick={onReopen} tone="navy"/>}{status!=="cancelled"?<ActionButton icon={XCircle} label="Cancel" disabled={busy} onClick={onCancel}/>:<ActionButton icon={RotateCcw} label="Reopen" disabled={busy} onClick={onReopen} tone="navy"/>}<div className="col-span-2"><ActionButton icon={Trash2} label={busy?"Working...":"Delete Permanently"} disabled={busy} onClick={onDelete} tone="red"/></div></div></div></div>
+    </div></div>
+  </article>;
+}
+function getTone(badge) {
+  if(badge==="overdue") return {border:"border-red-400",bg:"bg-[#fff5f5]",bar:"bg-red-500",icon:"border-red-300 bg-red-50 text-red-700",actionBorder:"border-red-200"};
+  if(badge==="due today") return {border:"border-orange-400",bg:"bg-[#fff7ed]",bar:"bg-orange-500",icon:"border-orange-300 bg-orange-50 text-orange-700",actionBorder:"border-orange-200"};
+  if(badge==="done") return {border:"border-emerald-400",bg:"bg-[#f1fcf7]",bar:"bg-emerald-500",icon:"border-emerald-300 bg-emerald-50 text-emerald-700",actionBorder:"border-emerald-200"};
+  if(badge==="cancelled") return {border:"border-slate-400",bg:"bg-slate-50",bar:"bg-slate-500",icon:"border-slate-300 bg-white text-slate-700",actionBorder:"border-slate-300"};
+  return {border:"border-blue-400",bg:"bg-[#f3f8ff]",bar:"bg-blue-500",icon:"border-blue-300 bg-blue-50 text-blue-700",actionBorder:"border-blue-200"};
+}
+function Meta({label,value}) { return <div className="rounded-xl border-2 border-slate-300 bg-[#FFFDF8] px-3 py-2.5"><p className="text-[8px] font-black uppercase tracking-[.08em] text-slate-500">{label}</p><p className="mt-1 break-words text-xs font-black capitalize text-[#10233f]">{value}</p></div>; }
+function Badge({badge}) {
+  let s="border-blue-300 bg-blue-50 text-blue-700"; if(badge==="overdue")s="border-red-300 bg-red-50 text-red-700"; if(badge==="due today")s="border-orange-400 bg-orange-50 text-orange-800"; if(badge==="done")s="border-emerald-300 bg-emerald-50 text-emerald-800"; if(badge==="cancelled")s="border-slate-300 bg-slate-100 text-slate-700";
+  return <span className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[.08em] ${s}`}>{badge}</span>;
+}
+function ActionButton({icon:Icon,label,onClick,disabled,tone="default"}) {
+  const s={red:"border-red-300 bg-red-50 text-red-700 hover:bg-red-100",green:"border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600",navy:"border-[#123865] bg-[#123865] text-white hover:bg-[#0e2f55]",default:"border-slate-300 bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50"};
+  return <button type="button" onClick={onClick} disabled={disabled} className={`inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border-2 px-3 py-2 text-[11px] font-black transition disabled:opacity-45 ${s[tone]}`}><Icon size={14}/>{label}</button>;
+}
+function MessageBox({title,message,action}) { return <div className="rounded-[1.4rem] border-[3px] border-red-300 bg-red-50 p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="flex items-start gap-3"><AlertTriangle size={18} className="mt-.5 text-red-700"/><div><p className="font-black text-[#10233f]">{title}</p><p className="mt-1 text-sm font-semibold leading-6 text-slate-600">{message}</p></div></div>{action}</div></div>; }
+function Empty({icon:Icon,text,spin}) { return <div className="rounded-2xl border-[3px] border-dashed border-orange-300 bg-white p-8 text-center"><Icon className={`mx-auto text-orange-600 ${spin?"animate-spin":""}`} size={28}/><p className="mt-3 font-black text-[#10233f]">{text}</p></div>; }
 export default FollowUpDashboard;

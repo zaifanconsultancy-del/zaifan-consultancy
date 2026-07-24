@@ -1,8 +1,58 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+// AdminHeader V3 MAXIMUM — Zaifan Student OS Executive Command Header
+// src/components/admin/AdminHeader.jsx
+//
+// Maximum pass:
+// - preserves the existing AdminHeader public prop API
+// - preserves CRM / Student OS calculations and permission gates
+// - preserves Supabase follow_up_reminders realtime integration
+// - adds timeout-safe reminder reads and realtime refresh protection
+// - fixes date handling so local "today" is not derived from UTC ISO date
+// - removes window.alert dependency in favor of inline operation feedback
+// - accessible notification popover, Escape close, outside-click close
+// - notification buttons can route operators toward relevant workspaces
+// - persistent-in-session read notification state
+// - proper Lucide icons instead of emoji-heavy operational UI
+// - reduced-motion support
+// - stronger high-contrast Zaifan navy/orange/cream visual system
+// - navy surfaces use explicit white text
+// - responsive/mobile-safe action layout and notification panel
+// - rounded Admin OS geometry; avoids sharp dashboard edges
+
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AlertTriangle,
+  Bell,
+  BrainCircuit,
+  CalendarCheck2,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  CircleDollarSign,
+  Download,
+  FileClock,
+  FileText,
+  Gauge,
+  Headphones,
+  Inbox,
+  KeyRound,
+  LogOut,
+  RefreshCw,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabaseClient";
 
-const toLower = (value) => String(value || "").toLowerCase().trim();
+const REQUEST_TIMEOUT_MS = 12000;
+const READ_STORAGE_KEY = "zaifan-admin-header-read-notifications";
+
+const toLower = (value) => String(value ?? "").toLowerCase().trim();
 
 const isDone = (status) => {
   const value = toLower(status);
@@ -18,6 +68,29 @@ const isDone = (status) => {
     value.includes("paid")
   );
 };
+
+const safeArray = (value) => (Array.isArray(value) ? value : []);
+
+const safeNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const localDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const withTimeout = (promise, message = "Request timed out.") =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      const timer = window.setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS);
+      Promise.resolve(promise).finally(() => window.clearTimeout(timer));
+    }),
+  ]);
 
 function AdminHeader({
   inquiries = [],
@@ -49,219 +122,362 @@ function AdminHeader({
   setActiveTab = null,
   setActiveAnalyticsSection = null,
 }) {
+  const shouldReduceMotion = useReducedMotion();
+  const mountedRef = useRef(true);
+
   const [showNotifications, setShowNotifications] = useState(false);
-  const [readNotifications, setReadNotifications] = useState([]);
+  const [readNotifications, setReadNotifications] = useState(() => {
+    try {
+      const stored = window.sessionStorage.getItem(READ_STORAGE_KEY);
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
   const [refreshing, setRefreshing] = useState(false);
   const [followUpAlerts, setFollowUpAlerts] = useState([]);
+  const [reminderLoading, setReminderLoading] = useState(true);
+  const [reminderError, setReminderError] = useState("");
+  const [operationMessage, setOperationMessage] = useState(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
 
-  const safePermissions = {
-    canDelete: false,
-    canClearAll: false,
-    canExport: false,
-    canManageAdmins: false,
-    canUpdateStatus: true,
-    canUpdatePriority: true,
-    canConfirmAppointments: true,
-    ...permissions,
-  };
+  const safeInquiries = safeArray(inquiries);
+  const safeAppointments = safeArray(appointments);
+  const safeApplications = safeArray(studentApplications);
+  const safeDocuments = safeArray(studentDocuments);
+  const safeTasks = safeArray(studentTasks);
+  const safeUniversities = safeArray(studentUniversities);
+  const safeRiskScores = safeArray(studentRiskScores);
+  const safeInvoices = safeArray(studentInvoices);
+  const safePayments = safeArray(studentPayments);
+  const safeReceipts = safeArray(studentReceipts);
+  const safePortalAccounts = safeArray(studentPortalAccounts);
+  const safeSupportRequests = safeArray(supportRequests);
+  const safeCounselorPayments = safeArray(counselorPaymentRequests);
+
+  const safePermissions = useMemo(
+    () => ({
+      canDelete: false,
+      canClearAll: false,
+      canExport: false,
+      canManageAdmins: false,
+      canUpdateStatus: true,
+      canUpdatePriority: true,
+      canConfirmAppointments: true,
+      ...permissions,
+    }),
+    [permissions]
+  );
 
   const roleConfig = {
     staff: {
       label: "Staff",
-      icon: "🧑‍💼",
-      badge: "border-blue-200 bg-blue-50 text-blue-700",
-      glow: "bg-blue-50",
       helper: "Student follow-up workspace",
+      Icon: UserRound,
     },
     admin: {
       label: "Admin",
-      icon: "🛡️",
-      badge: "border-orange-200 bg-[#fff1ea] text-[#ff4b12]",
-      glow: "bg-[#fff1ea]",
       helper: "Student operations and export access",
+      Icon: ShieldCheck,
     },
     super_admin: {
       label: "Super Admin",
-      icon: "👑",
-      badge: "border-violet-200 bg-violet-50 text-violet-700",
-      glow: "bg-violet-50",
       helper: "Full Student OS control enabled",
+      Icon: Sparkles,
     },
   };
 
   const currentRole = roleConfig[role] || roleConfig.staff;
-  const allLeads = [...inquiries, ...appointments];
+  const RoleIcon = currentRole.Icon;
+  const allLeads = useMemo(
+    () => [...safeInquiries, ...safeAppointments],
+    [safeInquiries, safeAppointments]
+  );
 
-  const newInquiries = inquiries.filter(
-    (inquiry) => toLower(inquiry.status || "new") === "new"
-  ).length;
+  const todayKey = localDateKey();
 
-  const confirmedAppointments = appointments.filter(
-    (appointment) => toLower(appointment.status) === "confirmed"
-  ).length;
+  const fetchFollowUpAlerts = useCallback(async ({ quiet = false } = {}) => {
+    if (!quiet && mountedRef.current) setReminderLoading(true);
+    if (mountedRef.current) setReminderError("");
 
-  const vipLeads = allLeads.filter((lead) => toLower(lead.priority) === "vip").length;
-
-  const highPriorityLeads = allLeads.filter(
-    (lead) => toLower(lead.priority) === "high"
-  ).length;
-
-  const assignedLeads = allLeads.filter((lead) => lead.assigned_admin_id).length;
-  const unassignedLeads = Math.max(allLeads.length - assignedLeads, 0);
-
-  const pendingApplications = studentApplications.filter((app) => {
-    const status = toLower(app.application_status || app.status);
-    return (
-      status.includes("pending") ||
-      status.includes("draft") ||
-      status.includes("review") ||
-      status.includes("submitted")
-    );
-  }).length;
-
-  const offers = studentApplications.filter((app) => {
-    const status = toLower(app.status);
-    const offerStatus = toLower(app.offer_status);
-    return status.includes("offer") || offerStatus.includes("received");
-  }).length;
-
-  const casDelays = studentApplications.filter((app) => {
-    const offer = toLower(app.offer_status);
-    const cas = toLower(app.cas_status || app.cas);
-    return (offer.includes("accepted") || offer.includes("firm")) && !cas.includes("issued");
-  }).length;
-
-  const visaDelays = studentApplications.filter((app) => {
-    const cas = toLower(app.cas_status || app.cas);
-    const visa = toLower(app.visa_status || app.visa);
-    return cas.includes("issued") && !visa.includes("approved");
-  }).length;
-
-  const pendingDocuments = studentDocuments.filter(
-    (doc) => !isDone(doc.status || doc.document_status || doc.verification_status)
-  ).length;
-
-  const pendingTasks = studentTasks.filter(
-    (task) => !isDone(task.status || task.task_status)
-  ).length;
-
-  const highRiskStudents = studentRiskScores.filter((risk) => {
-    const score = Number(risk.risk_score || risk.score || risk.overall_score || 0);
-    const level = toLower(risk.risk_level || risk.priority || risk.level);
-    return score >= 70 || level.includes("high") || level.includes("critical");
-  }).length;
-
-  const unpaidInvoices = studentInvoices.filter((invoice) => {
-    const status = toLower(invoice.status || invoice.payment_status);
-    return !status.includes("paid") && !status.includes("complete");
-  }).length;
-
-  const outstandingAmount = studentInvoices.reduce((sum, invoice) => {
-    const status = toLower(invoice.status || invoice.payment_status);
-    if (status.includes("paid") || status.includes("complete")) return sum;
-
-    return (
-      sum +
-      Number(
-        invoice.outstanding_amount ||
-          invoice.balance ||
-          invoice.amount ||
-          invoice.total_amount ||
-          invoice.invoice_amount ||
-          0
-      )
-    );
-  }, 0);
-
-  const pendingReceipts = studentReceipts.filter((receipt) => {
-    const status = toLower(
-      receipt.status || receipt.receipt_status || receipt.approval_status
-    );
-    return !status.includes("approved") && !status.includes("rejected");
-  }).length;
-
-  const portalResetRequired = studentPortalAccounts.filter(
-    (account) => account.must_change_password || account.force_password_change
-  ).length;
-
-  const activePortalAccounts = studentPortalAccounts.filter((account) => {
-    const active = account.is_active ?? account.active ?? account.status;
-    if (typeof active === "boolean") return active;
-    return !["inactive", "disabled", "blocked", "false"].includes(toLower(active));
-  }).length;
-
-  const openSupportRequests = supportRequests.filter((request) => {
-    const status = toLower(request.status || request.request_status);
-    return !status.includes("resolved") && !status.includes("closed");
-  }).length;
-
-  const escalatedSupportRequests = supportRequests.filter((request) => {
-    const status = toLower(request.status || request.request_status);
-    const priority = toLower(request.priority || request.severity);
-
-    return (
-      status.includes("escalated") ||
-      priority.includes("urgent") ||
-      priority.includes("high") ||
-      priority.includes("critical")
-    );
-  }).length;
-
-  const todayKey = new Date().toISOString().slice(0, 10);
-
-  const fetchFollowUpAlerts = async () => {
     try {
-      const { data, error } = await supabase
-        .from("follow_up_reminders")
-        .select("*")
-        .neq("status", "completed")
-        .order("due_date", { ascending: true })
-        .limit(80);
+      const result = await withTimeout(
+        supabase
+          .from("follow_up_reminders")
+          .select("*")
+          .neq("status", "completed")
+          .order("due_date", { ascending: true })
+          .limit(100),
+        "Follow-up reminders took too long to load."
+      );
 
-      if (error) {
-        console.error("Follow-up notification fetch failed:", error);
-        setFollowUpAlerts([]);
-        return;
+      if (result?.error) throw result.error;
+
+      if (mountedRef.current) {
+        setFollowUpAlerts(safeArray(result?.data));
+        setLastSyncedAt(new Date());
       }
-
-      setFollowUpAlerts(data || []);
     } catch (error) {
-      console.error("Follow-up notification crash:", error);
-      setFollowUpAlerts([]);
+      console.error("AdminHeader follow-up reminder load failed:", error);
+      if (mountedRef.current) {
+        setReminderError(error?.message || "Follow-up alerts could not load.");
+      }
+    } finally {
+      if (mountedRef.current) setReminderLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     fetchFollowUpAlerts();
 
+    let realtimeTimer = null;
+
     const channel = supabase
-      .channel("admin-header-follow-up-alerts")
+      .channel("admin-header-follow-up-alerts-v3")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "follow_up_reminders" },
-        fetchFollowUpAlerts
+        () => {
+          window.clearTimeout(realtimeTimer);
+          realtimeTimer = window.setTimeout(() => {
+            fetchFollowUpAlerts({ quiet: true });
+          }, 250);
+        }
       )
       .subscribe();
 
     return () => {
+      mountedRef.current = false;
+      window.clearTimeout(realtimeTimer);
       supabase.removeChannel(channel);
+    };
+  }, [fetchFollowUpAlerts]);
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(
+        READ_STORAGE_KEY,
+        JSON.stringify(readNotifications)
+      );
+    } catch {
+      // Session persistence is optional.
+    }
+  }, [readNotifications]);
+
+  useEffect(() => {
+    if (!operationMessage) return undefined;
+    const timer = window.setTimeout(() => setOperationMessage(null), 4500);
+    return () => window.clearTimeout(timer);
+  }, [operationMessage]);
+
+  useEffect(() => {
+    if (!showNotifications || typeof document === "undefined") return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showNotifications]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setShowNotifications(false);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
+  const metrics = useMemo(() => {
+    const newInquiries = safeInquiries.filter(
+      (item) => toLower(item.status || "new") === "new"
+    ).length;
+
+    const confirmedAppointments = safeAppointments.filter(
+      (item) => toLower(item.status) === "confirmed"
+    ).length;
+
+    const vipLeads = allLeads.filter(
+      (lead) => toLower(lead.priority) === "vip"
+    ).length;
+
+    const highPriorityLeads = allLeads.filter(
+      (lead) => toLower(lead.priority) === "high"
+    ).length;
+
+    const assignedLeads = allLeads.filter((lead) => lead.assigned_admin_id).length;
+    const unassignedLeads = Math.max(allLeads.length - assignedLeads, 0);
+
+    const pendingApplications = safeApplications.filter((app) => {
+      const status = toLower(app.application_status || app.status);
+      return (
+        status.includes("pending") ||
+        status.includes("draft") ||
+        status.includes("review") ||
+        status.includes("submitted")
+      );
+    }).length;
+
+    const offers = safeApplications.filter((app) => {
+      const status = toLower(app.status);
+      const offerStatus = toLower(app.offer_status);
+      return (
+        status.includes("offer") ||
+        offerStatus.includes("received") ||
+        offerStatus.includes("accepted")
+      );
+    }).length;
+
+    const casDelays = safeApplications.filter((app) => {
+      const offer = toLower(app.offer_status);
+      const cas = toLower(app.cas_status || app.cas);
+      return (
+        (offer.includes("accepted") || offer.includes("firm")) &&
+        !cas.includes("issued")
+      );
+    }).length;
+
+    const visaDelays = safeApplications.filter((app) => {
+      const cas = toLower(app.cas_status || app.cas);
+      const visa = toLower(app.visa_status || app.visa);
+      return cas.includes("issued") && !visa.includes("approved");
+    }).length;
+
+    const pendingDocuments = safeDocuments.filter(
+      (doc) =>
+        !isDone(doc.status || doc.document_status || doc.verification_status)
+    ).length;
+
+    const pendingTasks = safeTasks.filter(
+      (task) => !isDone(task.status || task.task_status)
+    ).length;
+
+    const highRiskStudents = safeRiskScores.filter((risk) => {
+      const score = safeNumber(
+        risk.risk_score || risk.score || risk.overall_score
+      );
+      const level = toLower(risk.risk_level || risk.priority || risk.level);
+      return (
+        score >= 70 ||
+        level.includes("high") ||
+        level.includes("critical")
+      );
+    }).length;
+
+    const unpaidInvoices = safeInvoices.filter((invoice) => {
+      const status = toLower(invoice.status || invoice.payment_status);
+      return !status.includes("paid") && !status.includes("complete");
+    }).length;
+
+    const outstandingAmount = safeInvoices.reduce((sum, invoice) => {
+      const status = toLower(invoice.status || invoice.payment_status);
+      if (status.includes("paid") || status.includes("complete")) return sum;
+
+      return (
+        sum +
+        safeNumber(
+          invoice.outstanding_amount ||
+            invoice.balance ||
+            invoice.amount ||
+            invoice.total_amount ||
+            invoice.invoice_amount
+        )
+      );
+    }, 0);
+
+    const pendingReceipts = safeReceipts.filter((receipt) => {
+      const status = toLower(
+        receipt.status || receipt.receipt_status || receipt.approval_status
+      );
+      return !status.includes("approved") && !status.includes("rejected");
+    }).length;
+
+    const portalResetRequired = safePortalAccounts.filter(
+      (account) =>
+        account.must_change_password || account.force_password_change
+    ).length;
+
+    const activePortalAccounts = safePortalAccounts.filter((account) => {
+      const active = account.is_active ?? account.active ?? account.status;
+      if (typeof active === "boolean") return active;
+      return !["inactive", "disabled", "blocked", "false"].includes(toLower(active));
+    }).length;
+
+    const openSupportRequests = safeSupportRequests.filter((request) => {
+      const status = toLower(request.status || request.request_status);
+      return !status.includes("resolved") && !status.includes("closed");
+    }).length;
+
+    const escalatedSupportRequests = safeSupportRequests.filter((request) => {
+      const status = toLower(request.status || request.request_status);
+      const priority = toLower(request.priority || request.severity);
+      return (
+        status.includes("escalated") ||
+        priority.includes("urgent") ||
+        priority.includes("high") ||
+        priority.includes("critical")
+      );
+    }).length;
+
+    return {
+      newInquiries,
+      confirmedAppointments,
+      vipLeads,
+      highPriorityLeads,
+      assignedLeads,
+      unassignedLeads,
+      pendingApplications,
+      offers,
+      casDelays,
+      visaDelays,
+      pendingDocuments,
+      pendingTasks,
+      highRiskStudents,
+      unpaidInvoices,
+      outstandingAmount,
+      pendingReceipts,
+      portalResetRequired,
+      activePortalAccounts,
+      openSupportRequests,
+      escalatedSupportRequests,
+    };
+  }, [
+    safeInquiries,
+    safeAppointments,
+    allLeads,
+    safeApplications,
+    safeDocuments,
+    safeTasks,
+    safeRiskScores,
+    safeInvoices,
+    safeReceipts,
+    safePortalAccounts,
+    safeSupportRequests,
+  ]);
+
   const reminderStats = useMemo(() => {
     const activeReminders = followUpAlerts.filter(
-      (reminder) => reminder.status !== "completed"
+      (reminder) => toLower(reminder.status) !== "completed"
     );
 
-    const overdue = activeReminders.filter((reminder) => {
-      if (!reminder.due_date) return false;
-      return String(reminder.due_date).slice(0, 10) < todayKey;
-    });
+    const overdue = activeReminders.filter(
+      (reminder) =>
+        reminder.due_date &&
+        String(reminder.due_date).slice(0, 10) < todayKey
+    );
 
-    const today = activeReminders.filter((reminder) => {
-      if (!reminder.due_date) return false;
-      return String(reminder.due_date).slice(0, 10) === todayKey;
-    });
+    const today = activeReminders.filter(
+      (reminder) =>
+        reminder.due_date &&
+        String(reminder.due_date).slice(0, 10) === todayKey
+    );
 
     return {
       active: activeReminders.length,
@@ -272,697 +488,679 @@ function AdminHeader({
 
   const executivePressure =
     reminderStats.overdue +
-    appointmentPendingCount +
-    newInquiries +
-    casDelays +
-    visaDelays +
-    unpaidInvoices +
-    pendingReceipts +
-    portalResetRequired +
-    escalatedSupportRequests +
-    highRiskStudents;
-
-  const studentOsHealthItems = [
-    {
-      label: "Apps",
-      value: studentApplications.length,
-      color: "text-cyan-700",
-      helper: `${pendingApplications} pending`,
-    },
-    {
-      label: "Offers",
-      value: offers,
-      color: "text-emerald-700",
-      helper: "opportunities",
-    },
-    {
-      label: "CAS Risk",
-      value: casDelays,
-      color: casDelays > 0 ? "text-orange-700" : "text-emerald-700",
-      helper: "delays",
-    },
-    {
-      label: "Visa Risk",
-      value: visaDelays,
-      color: visaDelays > 0 ? "text-red-700" : "text-emerald-700",
-      helper: "delays",
-    },
-    {
-      label: "Revenue",
-      value: unpaidInvoices,
-      color: unpaidInvoices > 0 ? "text-orange-700" : "text-emerald-700",
-      helper: "unpaid",
-    },
-    {
-      label: "Portal",
-      value: activePortalAccounts,
-      color: "text-blue-700",
-      helper: `${portalResetRequired} resets`,
-    },
-    {
-      label: "Support",
-      value: openSupportRequests,
-      color: openSupportRequests > 0 ? "text-orange-700" : "text-emerald-700",
-      helper: `${escalatedSupportRequests} escalated`,
-    },
-    {
-      label: "Risk",
-      value: highRiskStudents,
-      color: highRiskStudents > 0 ? "text-red-700" : "text-emerald-700",
-      helper: "AI watch",
-    },
-  ];
+    safeNumber(appointmentPendingCount) +
+    metrics.newInquiries +
+    metrics.casDelays +
+    metrics.visaDelays +
+    metrics.unpaidInvoices +
+    metrics.pendingReceipts +
+    metrics.portalResetRequired +
+    metrics.escalatedSupportRequests +
+    metrics.highRiskStudents;
 
   const notifications = useMemo(
     () => [
       {
         id: "overdue-followups",
-        icon: "🚨",
+        Icon: AlertTriangle,
         title: "Overdue Follow-ups",
-        text: `${reminderStats.overdue} reminders are overdue and need action`,
+        text: `${reminderStats.overdue} reminders are overdue and need action.`,
         show: reminderStats.overdue > 0,
-        color: "text-red-700",
-        glow: "bg-red-500/10",
         time: "Overdue",
         priority: "urgent",
+        destination: "followups",
       },
       {
         id: "today-followups",
-        icon: "⏰",
+        Icon: FileClock,
         title: "Follow-ups Today",
-        text: `${reminderStats.today} reminders are due today`,
+        text: `${reminderStats.today} reminders are due today.`,
         show: reminderStats.today > 0,
-        color: "text-orange-700",
-        glow: "bg-orange-500/10",
         time: "Today",
         priority: "high",
+        destination: "followups",
       },
       {
         id: "new-inquiries",
-        icon: "📨",
+        Icon: Inbox,
         title: "New Inquiries",
-        text: `${newInquiries} students need follow-up`,
-        show: newInquiries > 0,
-        color: "text-[#ff4b12]",
-        glow: "bg-[#fff1ea]",
+        text: `${metrics.newInquiries} students need follow-up.`,
+        show: metrics.newInquiries > 0,
         time: "Live",
         priority: "medium",
+        destination: "inquiries",
       },
       {
         id: "pending-appointments",
-        icon: "⏳",
+        Icon: CalendarCheck2,
         title: "Pending Appointments",
-        text: `${appointmentPendingCount} bookings need confirmation`,
-        show: appointmentPendingCount > 0,
-        color: "text-orange-700",
-        glow: "bg-orange-500/10",
+        text: `${safeNumber(appointmentPendingCount)} bookings need confirmation.`,
+        show: safeNumber(appointmentPendingCount) > 0,
         time: "Active",
         priority: "high",
-      },
-      {
-        id: "confirmed-consultations",
-        icon: "✅",
-        title: "Confirmed Consultations",
-        text: `${confirmedAppointments} consultations are ready`,
-        show: confirmedAppointments > 0,
-        color: "text-emerald-700",
-        glow: "bg-green-500/10",
-        time: "Updated",
-        priority: "medium",
+        destination: "appointments",
       },
       {
         id: "vip-leads",
-        icon: "👑",
+        Icon: Sparkles,
         title: "VIP Students Active",
-        text: `${vipLeads} premium leads require priority attention`,
-        show: vipLeads > 0,
-        color: "text-violet-700",
-        glow: "bg-violet-50",
+        text: `${metrics.vipLeads} VIP leads require priority attention.`,
+        show: metrics.vipLeads > 0,
         time: "Priority",
         priority: "vip",
+        destination: "inquiries",
       },
       {
         id: "high-priority",
-        icon: "🔥",
+        Icon: AlertTriangle,
         title: "High Priority Students",
-        text: `${highPriorityLeads} leads marked as high priority`,
-        show: highPriorityLeads > 0,
-        color: "text-red-700",
-        glow: "bg-red-500/10",
+        text: `${metrics.highPriorityLeads} leads are marked high priority.`,
+        show: metrics.highPriorityLeads > 0,
         time: "Urgent",
         priority: "high",
+        destination: "inquiries",
       },
       {
         id: "open-leads",
-        icon: "🧭",
-        title: "Open Student Pool",
-        text: `${unassignedLeads} students are not assigned yet`,
-        show: unassignedLeads > 0,
-        color: "text-cyan-700",
-        glow: "bg-cyan-500/10",
+        Icon: UsersRound,
+        title: "Unassigned Student Pool",
+        text: `${metrics.unassignedLeads} students do not have an owner yet.`,
+        show: metrics.unassignedLeads > 0,
         time: "Ownership",
         priority: "medium",
+        destination: "inquiries",
       },
       {
         id: "cas-delays",
-        icon: "📄",
+        Icon: FileText,
         title: "CAS Delays",
-        text: `${casDelays} students have accepted offers but no CAS issued`,
-        show: casDelays > 0,
-        color: "text-orange-700",
-        glow: "bg-orange-500/10",
+        text: `${metrics.casDelays} accepted/firm applications do not show CAS issued.`,
+        show: metrics.casDelays > 0,
         time: "CAS",
         priority: "high",
+        destination: "analytics",
       },
       {
         id: "visa-delays",
-        icon: "✈️",
+        Icon: Gauge,
         title: "Visa Delays",
-        text: `${visaDelays} students have CAS issued but visa not approved`,
-        show: visaDelays > 0,
-        color: "text-red-700",
-        glow: "bg-red-500/10",
+        text: `${metrics.visaDelays} CAS-issued cases do not show visa approval.`,
+        show: metrics.visaDelays > 0,
         time: "Visa",
         priority: "high",
+        destination: "analytics",
       },
       {
         id: "payment-risks",
-        icon: "💷",
+        Icon: CircleDollarSign,
         title: "Payment Risks",
-        text: `${unpaidInvoices} unpaid invoices and ${pendingReceipts} pending receipts`,
-        show: unpaidInvoices > 0 || pendingReceipts > 0,
-        color: "text-[#ff4b12]",
-        glow: "bg-[#fff1ea]",
+        text: `${metrics.unpaidInvoices} unpaid invoices · ${metrics.pendingReceipts} receipts pending.`,
+        show: metrics.unpaidInvoices > 0 || metrics.pendingReceipts > 0,
         time: "Revenue",
         priority: "high",
+        destination: "analytics",
       },
       {
         id: "portal-resets",
-        icon: "🔐",
-        title: "Portal Password Resets",
-        text: `${portalResetRequired} students must change their portal password`,
-        show: portalResetRequired > 0,
-        color: "text-orange-700",
-        glow: "bg-orange-500/10",
+        Icon: KeyRound,
+        title: "Portal Password Changes",
+        text: `${metrics.portalResetRequired} portal accounts require a password change.`,
+        show: metrics.portalResetRequired > 0,
         time: "Portal",
         priority: "medium",
+        destination: "analytics",
       },
       {
         id: "support-escalations",
-        icon: "🎧",
+        Icon: Headphones,
         title: "Support Escalations",
-        text: `${escalatedSupportRequests} support requests need urgent attention`,
-        show: escalatedSupportRequests > 0,
-        color: "text-red-700",
-        glow: "bg-red-500/10",
+        text: `${metrics.escalatedSupportRequests} support requests need urgent review.`,
+        show: metrics.escalatedSupportRequests > 0,
         time: "Support",
         priority: "urgent",
+        destination: "analytics",
       },
       {
         id: "executive-risk",
-        icon: "🧠",
+        Icon: BrainCircuit,
         title: "Executive AI Risk",
-        text: `${highRiskStudents} students are flagged by Executive AI`,
-        show: highRiskStudents > 0,
-        color: "text-red-700",
-        glow: "bg-red-500/10",
+        text: `${metrics.highRiskStudents} students are flagged high/critical risk.`,
+        show: metrics.highRiskStudents > 0,
         time: "AI Risk",
         priority: "urgent",
+        destination: "analytics",
       },
     ],
-    [
-      reminderStats.overdue,
-      reminderStats.today,
-      newInquiries,
-      appointmentPendingCount,
-      confirmedAppointments,
-      vipLeads,
-      highPriorityLeads,
-      unassignedLeads,
-      casDelays,
-      visaDelays,
-      unpaidInvoices,
-      pendingReceipts,
-      portalResetRequired,
-      escalatedSupportRequests,
-      highRiskStudents,
-    ]
+    [reminderStats, appointmentPendingCount, metrics]
   );
 
   const visibleNotifications = notifications.filter((item) => item.show);
+  const visibleNotificationIds = visibleNotifications.map((item) => item.id);
+
+  useEffect(() => {
+    setReadNotifications((current) =>
+      current.filter((id) => visibleNotificationIds.includes(id))
+    );
+    // The joined key prevents effect churn from a new array reference.
+  }, [visibleNotificationIds.join("|")]);
 
   const unreadNotifications = visibleNotifications.filter(
     (item) => !readNotifications.includes(item.id)
   );
-
   const notificationCount = unreadNotifications.length;
 
-  const summaryItems = [
+  const healthItems = [
     {
-      label: "Inquiries",
-      value: inquiries.length,
-      color: "text-[#ff4b12]",
+      label: "Applications",
+      value: safeApplications.length,
+      helper: `${metrics.pendingApplications} pending`,
+      tone: metrics.pendingApplications ? "warning" : "good",
     },
     {
-      label: "Appointments",
-      value: appointments.length,
-      color: "text-emerald-700",
+      label: "Documents",
+      value: safeDocuments.length,
+      helper: `${metrics.pendingDocuments} need attention`,
+      tone: metrics.pendingDocuments ? "warning" : "good",
     },
     {
-      label: "Follow-ups",
-      value: reminderStats.active,
-      color: "text-orange-700",
+      label: "Tasks",
+      value: safeTasks.length,
+      helper: `${metrics.pendingTasks} open`,
+      tone: metrics.pendingTasks ? "warning" : "good",
     },
     {
-      label: "Executive Pressure",
-      value: executivePressure,
-      color: executivePressure > 0 ? "text-red-700" : "text-emerald-700",
+      label: "Universities",
+      value: safeUniversities.length,
+      helper: "student shortlist records",
+      tone: "info",
+    },
+    {
+      label: "CAS Risk",
+      value: metrics.casDelays,
+      helper: "accepted without CAS",
+      tone: metrics.casDelays ? "danger" : "good",
+    },
+    {
+      label: "Visa Risk",
+      value: metrics.visaDelays,
+      helper: "CAS issued, visa pending",
+      tone: metrics.visaDelays ? "danger" : "good",
+    },
+    {
+      label: "Portal",
+      value: metrics.activePortalAccounts,
+      helper: `${metrics.portalResetRequired} password changes`,
+      tone: metrics.portalResetRequired ? "warning" : "good",
+    },
+    {
+      label: "Support",
+      value: metrics.openSupportRequests,
+      helper: `${metrics.escalatedSupportRequests} escalated`,
+      tone: metrics.escalatedSupportRequests ? "danger" : "good",
     },
   ];
 
   const markAllAsRead = () => {
-    setReadNotifications(visibleNotifications.map((item) => item.id));
+    setReadNotifications(visibleNotificationIds);
   };
 
   const markSingleAsRead = (id) => {
-    if (readNotifications.includes(id)) return;
-    setReadNotifications((current) => [...current, id]);
+    setReadNotifications((current) =>
+      current.includes(id) ? current : [...current, id]
+    );
+  };
+
+  const navigateFromNotification = (item) => {
+    markSingleAsRead(item.id);
+
+    if (typeof setActiveTab === "function") {
+      if (item.destination === "inquiries") setActiveTab("inquiries");
+      if (item.destination === "appointments") setActiveTab("appointments");
+      if (item.destination === "analytics" || item.destination === "followups") {
+        setActiveTab("analytics");
+      }
+    }
+
+    if (typeof setActiveAnalyticsSection === "function") {
+      if (item.destination === "followups") {
+        setActiveAnalyticsSection("followups");
+      } else if (item.destination === "analytics") {
+        setActiveAnalyticsSection("mission-control");
+      }
+    }
+
+    setShowNotifications(false);
   };
 
   const handleMissionControl = () => {
-    if (typeof setActiveTab === "function") {
-      setActiveTab("analytics");
-    }
-
+    if (typeof setActiveTab === "function") setActiveTab("analytics");
     if (typeof setActiveAnalyticsSection === "function") {
       setActiveAnalyticsSection("mission-control");
     }
   };
 
   const handleRefresh = async () => {
+    if (refreshing) return;
     setRefreshing(true);
+    setOperationMessage(null);
 
     try {
       await Promise.all([
-        fetchAllData({ force: true, source: "admin_header_manual_refresh" }),
-        fetchFollowUpAlerts(),
+        withTimeout(
+          Promise.resolve(
+            fetchAllData({ force: true, source: "admin_header_manual_refresh" })
+          ),
+          "Admin data refresh timed out."
+        ),
+        fetchFollowUpAlerts({ quiet: true }),
       ]);
+
+      setOperationMessage({
+        type: "success",
+        text: "Admin OS data refreshed successfully.",
+      });
     } catch (error) {
-      console.error("Admin header refresh failed:", error);
-      alert(error.message || "Refresh failed. Please try again.");
+      console.error("AdminHeader refresh failed:", error);
+      setOperationMessage({
+        type: "error",
+        text: error?.message || "Refresh failed. Please try again.",
+      });
     } finally {
-      setTimeout(() => setRefreshing(false), 350);
+      if (mountedRef.current) setRefreshing(false);
     }
   };
 
   const handleExport = () => {
     if (!safePermissions.canExport) {
-      alert("Only Admin and Super Admin can export CRM data.");
+      setOperationMessage({
+        type: "warning",
+        text: "Your current role does not have CRM export permission.",
+      });
       return;
     }
 
-    if (activeTab === "inquiries") {
-      exportInquiriesToCSV();
-    } else {
-      exportAppointmentsToCSV();
+    try {
+      if (activeTab === "appointments") {
+        exportAppointmentsToCSV();
+      } else {
+        exportInquiriesToCSV();
+      }
+
+      setOperationMessage({
+        type: "success",
+        text: `${
+          activeTab === "appointments" ? "Appointments" : "Inquiries"
+        } export started.`,
+      });
+    } catch (error) {
+      setOperationMessage({
+        type: "error",
+        text: error?.message || "Export failed.",
+      });
     }
   };
 
   const handleClear = () => {
     if (!safePermissions.canClearAll) {
-      alert("Only Super Admin can clear all CRM records.");
+      setOperationMessage({
+        type: "warning",
+        text: "Only an authorized role can clear all CRM records.",
+      });
       return;
     }
 
-    if (activeTab === "inquiries") {
-      clearInquiries();
-    } else {
-      clearAppointments();
+    const target =
+      activeTab === "appointments" ? "appointments" : "inquiries";
+
+    const confirmed = window.confirm(
+      `Clear all ${target}? This is a destructive CRM action and may not be reversible.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      if (target === "appointments") clearAppointments();
+      else clearInquiries();
+
+      setOperationMessage({
+        type: "success",
+        text: `Clear ${target} action was submitted.`,
+      });
+    } catch (error) {
+      setOperationMessage({
+        type: "error",
+        text: error?.message || `Could not clear ${target}.`,
+      });
     }
   };
 
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (!event.target.closest(".notification-wrapper")) {
-        setShowNotifications(false);
-      }
-    };
+  const summaryItems = [
+    {
+      label: "Inquiries",
+      value: safeInquiries.length,
+      helper: `${metrics.newInquiries} new`,
+      tone: "orange",
+    },
+    {
+      label: "Appointments",
+      value: safeAppointments.length,
+      helper: `${safeNumber(appointmentPendingCount)} pending`,
+      tone: "blue",
+    },
+    {
+      label: "Follow-ups",
+      value: reminderStats.active,
+      helper: `${reminderStats.overdue} overdue`,
+      tone: reminderStats.overdue ? "red" : "green",
+    },
+    {
+      label: "Pressure",
+      value: executivePressure,
+      helper: executivePressure ? "needs review" : "systems stable",
+      tone: executivePressure ? "red" : "green",
+    },
+  ];
 
-    window.addEventListener("click", handleOutsideClick);
-
-    return () => {
-      window.removeEventListener("click", handleOutsideClick);
-    };
-  }, []);
-
-  useEffect(() => {
-    const visibleIds = visibleNotifications.map((item) => item.id);
-
-    setReadNotifications((current) =>
-      current.filter((id) => visibleIds.includes(id))
-    );
-  }, [visibleNotifications.length]);
+  const financeContext =
+    safePayments.length +
+    safeInvoices.length +
+    safeReceipts.length +
+    safeCounselorPayments.length;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
+    <motion.header
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-      className="relative z-20 mb-5 overflow-visible rounded-[1.8rem] border border-orange-100 bg-gradient-to-br from-white via-[#fffaf5] to-[#fff1ea] p-4 shadow-[0_24px_70px_rgba(7,31,80,0.08)] backdrop-blur-2xl sm:mb-6 sm:rounded-[2.3rem] sm:p-6"
+      transition={{ duration: shouldReduceMotion ? 0 : 0.28 }}
+      className="relative z-30 overflow-visible rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.07)]"
     >
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#ff4b12] to-transparent opacity-70"></div>
-
-      <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0">
+      <div className="overflow-hidden rounded-[1.78rem]">
+        <div
+          className="grid lg:grid-cols-[minmax(0,1fr)_340px]"
+          style={{ color: "#ffffff" }}
+        >
+          <div className="bg-[#123865] p-5 sm:p-6" style={{ color: "#ffffff" }}>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#ff4b12]/20 bg-[#fff1ea] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#ff4b12]">
-                <span className="h-2 w-2 rounded-full bg-[#ff4b12] shadow-[0_0_16px_rgba(255,75,18,0.28)]"></span>
-                Student OS Executive Command
-              </div>
-
-              <div
-                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${currentRole.badge}`}
+              <HeaderBadge Icon={Rocket}>Student OS Command</HeaderBadge>
+              <HeaderBadge Icon={RoleIcon}>{currentRole.label}</HeaderBadge>
+              <HeaderBadge
+                Icon={executivePressure ? AlertTriangle : CheckCircle2}
+                emphasis={executivePressure ? "warning" : "success"}
               >
-                <span>{currentRole.icon}</span>
-                {currentRole.label}
-              </div>
-
-              <div
-                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${
-                  executivePressure > 0
-                    ? "border-red-400/25 bg-red-500/10 text-red-700"
-                    : "border-green-400/25 bg-green-500/10 text-emerald-700"
-                }`}
-              >
-                <span>{executivePressure > 0 ? "⚠️" : "✅"}</span>
-                {executivePressure > 0
-                  ? `${executivePressure} Pressure Points`
-                  : "Systems Stable"}
-              </div>
+                {executivePressure
+                  ? `${executivePressure} pressure points`
+                  : "Systems stable"}
+              </HeaderBadge>
             </div>
 
-            <h1 className="mt-4 text-3xl font-black leading-tight text-[#071f50] sm:text-5xl">
+            <h1 className="mt-4 text-3xl font-black leading-tight text-white sm:text-4xl">
               Zaifan Student OS
             </h1>
 
-            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#526178]">
-              Executive top bar for CRM, Student Journey, Mission Control,
-              payments, portal accounts, support, documents, tasks, visa,
-              CAS, and real-time operational intelligence.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+              Live operational command for leads, appointments, student journey,
+              finance, portal access, support and counselor workload.
             </p>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-5 grid grid-cols-2 gap-2 xl:grid-cols-4">
               {summaryItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-2xl border border-orange-100 bg-[#fffaf5] px-4 py-3 text-xs text-[#526178]"
-                >
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-[#71809a]">
-                    {item.label}
-                  </p>
-                  <p className={`mt-1 text-lg font-black ${item.color}`}>
-                    {item.value}
-                  </p>
-                </div>
+                <SummaryCard key={item.label} {...item} />
               ))}
             </div>
           </div>
 
-          <div className="flex shrink-0 items-start justify-between gap-3 xl:justify-start">
-            <div className="rounded-[1.5rem] border border-orange-100 bg-[#fff5e9] p-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-100 text-2xl ${currentRole.glow}`}
-                >
-                  {currentRole.icon}
-                </div>
+          <div className="bg-orange-500 p-5 text-white sm:p-6" style={{ color: "#ffffff" }}>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white">
+              Operator Session
+            </p>
 
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-[#71809a]">
-                    Logged In
-                  </p>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-white">
+                <RoleIcon size={21} />
+              </div>
 
-                  <h3 className="mt-1 max-w-[170px] truncate text-sm font-black text-[#071f50]">
-                    {adminProfile?.full_name || "Admin User"}
-                  </h3>
-
-                  <p className="mt-1 text-xs text-[#ff4b12]">
-                    {currentRole.helper}
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <p className="truncate text-lg font-black text-white">
+                  {adminProfile?.full_name || "Admin User"}
+                </p>
+                <p className="mt-0.5 text-xs font-bold text-white">
+                  {currentRole.helper}
+                </p>
               </div>
             </div>
 
-            <div className="notification-wrapper relative flex h-14 w-14 shrink-0 items-center justify-center overflow-visible">
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setShowNotifications((current) => !current);
-                }}
-                className="group relative flex h-14 w-14 items-center justify-center rounded-[1.5rem] border border-orange-100 bg-white/90 text-2xl text-[#071f50] transition duration-300 hover:border-[#ff4b12]/40 hover:bg-[#fff1ea]"
-              >
-                <span className="relative z-10 leading-none">🔔</span>
-
-                {notificationCount > 0 && (
-                  <span className="absolute right-1.5 top-1.5 z-20 flex h-5 min-w-5 items-center justify-center rounded-full border border-white bg-[#ff4b12] px-1 text-[9px] font-black leading-none text-white shadow-[0_0_18px_rgba(255,75,18,0.30)]">
-                    {notificationCount > 9 ? "9+" : notificationCount}
-                  </span>
-                )}
-
-                {notificationCount > 0 && (
-                  <span className="absolute inset-0 rounded-[1.5rem] border border-[#ff4b12]/20 shadow-[0_0_28px_rgba(255,75,18,0.14)]"></span>
-                )}
-              </button>
-
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 14, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 14, scale: 0.96 }}
-                    transition={{ duration: 0.22 }}
-                    className="absolute right-0 top-[72px] z-[999] w-[min(92vw,460px)] overflow-hidden rounded-[2rem] border border-orange-100 bg-[#fffaf5]/[0.99] shadow-[0_40px_120px_rgba(7,31,80,0.18)] backdrop-blur-2xl"
-                  >
-                    <div className="relative overflow-hidden border-b border-orange-100 p-5">
-                      <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-[#fff1ea] blur-3xl"></div>
-
-                      <div className="relative flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-[0.32em] text-[#ff4b12]">
-                            Executive Alerts
-                          </p>
-
-                          <h3 className="mt-2 text-2xl font-black text-[#071f50]">
-                            CRM + Student OS Signals
-                          </h3>
-
-                          <p className="mt-2 text-xs leading-relaxed text-[#526178]">
-                            Real-time signals from CRM, reminders, CAS, visa,
-                            payments, portal, support, and Executive AI.
-                          </p>
-                        </div>
-
-                        {notificationCount > 0 && (
-                          <button
-                            type="button"
-                            onClick={markAllAsRead}
-                            className="rounded-full border border-[#ff4b12]/20 bg-[#fff1ea] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff4b12] transition duration-300 hover:bg-[#ff4b12]/20"
-                          >
-                            Mark Read
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="max-h-[460px] overflow-y-auto p-3 [scrollbar-color:#ff4b12_transparent] [scrollbar-width:thin]">
-                      {visibleNotifications.length === 0 ? (
-                        <div className="rounded-[1.5rem] border border-dashed border-orange-100 bg-[#fff5e9] p-8 text-center">
-                          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-orange-100 bg-[#fffaf5] text-3xl">
-                            ✨
-                          </div>
-
-                          <h3 className="mt-4 text-lg font-bold text-[#071f50]">
-                            All Clear
-                          </h3>
-
-                          <p className="mt-2 text-sm leading-relaxed text-[#526178]">
-                            No active executive notifications right now.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {visibleNotifications.map((item, index) => {
-                            const isRead = readNotifications.includes(item.id);
-
-                            return (
-                              <motion.button
-                                key={item.id}
-                                type="button"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                  duration: 0.2,
-                                  delay: index * 0.03,
-                                }}
-                                onClick={() => markSingleAsRead(item.id)}
-                                className={`group relative w-full overflow-hidden rounded-[1.4rem] border p-4 text-left transition duration-300 ${
-                                  isRead
-                                    ? "border-orange-100 bg-[#fffaf5] opacity-70"
-                                    : "border-[#ff4b12]/15 bg-white/90 hover:border-[#ff4b12]/30 hover:bg-[#fff1ea]"
-                                }`}
-                              >
-                                {!isRead && (
-                                  <div className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-[#ff4b12] shadow-[0_0_15px_rgba(255,75,18,0.32)]"></div>
-                                )}
-
-                                <div className="flex gap-4">
-                                  <div
-                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-orange-100 text-2xl ${item.glow}`}
-                                  >
-                                    {item.icon}
-                                  </div>
-
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div>
-                                        <p className={`text-sm font-black ${item.color}`}>
-                                          {item.title}
-                                        </p>
-
-                                        <p className="mt-1 text-xs leading-relaxed text-[#526178]">
-                                          {item.text}
-                                        </p>
-                                      </div>
-
-                                      <span className="rounded-full border border-orange-100 bg-[#fff5e9] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#71809a]">
-                                        {item.time}
-                                      </span>
-                                    </div>
-
-                                    <div className="mt-3 flex items-center justify-between">
-                                      <span
-                                        className={`rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] ${
-                                          item.priority === "urgent"
-                                            ? "border border-red-400/30 bg-red-500/10 text-red-700"
-                                            : item.priority === "vip"
-                                            ? "border border-purple-400/20 bg-violet-50 text-violet-700"
-                                            : item.priority === "high"
-                                            ? "border border-red-400/20 bg-red-500/10 text-red-700"
-                                            : "border border-[#ff4b12]/20 bg-[#fff1ea] text-[#ff4b12]"
-                                        }`}
-                                      >
-                                        {item.priority}
-                                      </span>
-
-                                      <span className="text-[10px] text-[#71809a]">
-                                        {isRead ? "Read" : "Unread"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </motion.button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border-t border-orange-100 p-4">
-                      <div className="grid grid-cols-3 gap-2">
-                        <MiniStat label="Unread" value={notificationCount} color="text-[#ff4b12]" />
-                        <MiniStat label="Overdue" value={reminderStats.overdue} color="text-red-700" />
-                        <MiniStat label="Pressure" value={executivePressure} color="text-orange-700" />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <OrangeMetric label="Unread alerts" value={notificationCount} />
+              <OrangeMetric label="Finance records" value={financeContext} />
             </div>
+
+            <p className="mt-3 whitespace-nowrap text-[10px] font-black text-white">
+              {lastSyncedAt
+                ? `PORTAL · Alerts synced ${lastSyncedAt.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}`
+                : reminderLoading
+                ? "PORTAL · Loading live alerts…"
+                : "PORTAL · Alert sync pending"}
+            </p>
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          {studentOsHealthItems.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border border-orange-100 bg-[#fffaf5] px-4 py-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[9px] uppercase tracking-[0.2em] text-[#71809a]">
-                  {item.label}
-                </p>
+        <div className="bg-[#fff8ee] p-4 sm:p-5">
+          {operationMessage ? (
+            <StatusMessage
+              type={operationMessage.type}
+              text={operationMessage.text}
+              onClose={() => setOperationMessage(null)}
+            />
+          ) : null}
 
-                <p className={`text-lg font-black ${item.color}`}>
-                  {item.value}
+          {reminderError ? (
+            <div className="mb-4 flex flex-col gap-3 rounded-[1.25rem] border-2 border-red-300 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-red-800">
+                  Follow-up alert sync needs attention
+                </p>
+                <p className="mt-1 text-xs font-semibold text-red-700">
+                  {reminderError}
                 </p>
               </div>
-
-              <p className="mt-1 text-xs text-[#71809a]">
-                {item.helper}
-              </p>
+              <button
+                type="button"
+                onClick={() => fetchFollowUpAlerts()}
+                className="rounded-xl border-2 border-red-300 bg-white px-4 py-2 text-xs font-black text-red-700 transition hover:bg-red-100"
+              >
+                Retry alerts
+              </button>
             </div>
-          ))}
-        </div>
+          ) : null}
 
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
-          <ActionButton
-            onClick={handleRefresh}
-            label={refreshing ? "Refreshing..." : "Refresh"}
-            icon="🔄"
-            disabled={refreshing}
-          />
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            {healthItems.map((item) => (
+              <HealthCard key={item.label} {...item} />
+            ))}
+          </div>
 
-          <ActionButton
-            onClick={handleMissionControl}
-            label="Mission Control"
-            icon="🚀"
-            variant="gold"
-          />
+          <div className="mt-4 flex flex-col gap-3 rounded-[1.5rem] border-2 border-slate-300 bg-white p-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-3 px-1">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+                <Gauge size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-[#10233f]">
+                  Admin Operations
+                </p>
+                <p className="text-xs font-semibold text-slate-600">
+                  Refresh, inspect alerts, open Mission Control, export or run authorized destructive actions.
+                </p>
+              </div>
+            </div>
 
-          <ActionButton
-            onClick={handleExport}
-            label={safePermissions.canExport ? "Export CSV" : "Export Locked"}
-            icon="📤"
-            variant={safePermissions.canExport ? "default" : "locked"}
-            disabled={!safePermissions.canExport}
-          />
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+              <ActionButton
+                onClick={handleRefresh}
+                label={refreshing ? "Refreshing" : "Refresh"}
+                Icon={RefreshCw}
+                loading={refreshing}
+                disabled={refreshing}
+              />
 
-          <ActionButton onClick={logout} label="Logout" icon="🚪" />
+              <ActionButton
+                onClick={() => setShowNotifications((current) => !current)}
+                label={`Alerts${notificationCount ? ` ${notificationCount}` : ""}`}
+                Icon={Bell}
+                active={showNotifications}
+                ariaExpanded={showNotifications}
+              />
 
-          <ActionButton
-            onClick={handleClear}
-            label={
-              safePermissions.canClearAll
-                ? `Clear ${activeTab === "inquiries" ? "Inquiries" : "Appointments"}`
-                : "Clear Locked"
-            }
-            icon="🗑️"
-            variant={safePermissions.canClearAll ? "danger" : "locked"}
-            disabled={!safePermissions.canClearAll}
-          />
+              <ActionButton
+                onClick={handleMissionControl}
+                label="Mission Control"
+                Icon={Rocket}
+                variant="primary"
+              />
+
+              <ActionButton
+                onClick={handleExport}
+                label={safePermissions.canExport ? "Export CSV" : "Export Locked"}
+                Icon={Download}
+                disabled={!safePermissions.canExport}
+              />
+
+              <ActionButton
+                onClick={logout}
+                label="Logout"
+                Icon={LogOut}
+              />
+
+              <ActionButton
+                onClick={handleClear}
+                label={safePermissions.canClearAll ? "Clear Records" : "Clear Locked"}
+                Icon={Trash2}
+                variant={safePermissions.canClearAll ? "danger" : "locked"}
+                disabled={!safePermissions.canClearAll}
+              />
+            </div>
+          </div>
         </div>
       </div>
-    </motion.div>
+
+      {typeof document !== "undefined"
+        ? createPortal(
+            <AnimatePresence>
+              {showNotifications ? (
+                <NotificationPanel
+                  notifications={visibleNotifications}
+                  readNotifications={readNotifications}
+                  notificationCount={notificationCount}
+                  reminderStats={reminderStats}
+                  executivePressure={executivePressure}
+                  onMarkAll={markAllAsRead}
+                  onOpen={navigateFromNotification}
+                  onClose={() => setShowNotifications(false)}
+                  shouldReduceMotion={shouldReduceMotion}
+                />
+              ) : null}
+            </AnimatePresence>,
+            document.body
+          )
+        : null}
+    </motion.header>
+  );
+}
+
+function HeaderBadge({ Icon, children, emphasis = "default" }) {
+  const style =
+    emphasis === "warning"
+      ? "border-white/35 bg-white/15"
+      : emphasis === "success"
+      ? "border-white/35 bg-white/10"
+      : "border-white/25 bg-white/10";
+
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white ${style}`}
+      style={{ color: "#ffffff" }}
+    >
+      <Icon size={12} />
+      {children}
+    </span>
+  );
+}
+
+function SummaryCard({ label, value, helper, tone }) {
+  const styles = {
+    orange: "border-orange-300 bg-orange-50",
+    blue: "border-blue-300 bg-blue-50",
+    red: "border-red-300 bg-red-50",
+    green: "border-emerald-300 bg-emerald-50",
+  };
+
+  return (
+    <div className={`rounded-[1.15rem] border-2 p-3 ${styles[tone] || styles.blue}`}>
+      <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-600">
+        {label}
+      </p>
+      <div className="mt-1 flex items-end justify-between gap-2">
+        <p className="text-xl font-black text-[#10233f]">{value}</p>
+        <p className="text-[10px] font-bold text-slate-600">{helper}</p>
+      </div>
+    </div>
+  );
+}
+
+function OrangeMetric({ label, value }) {
+  return (
+    <div className="rounded-[1.1rem] border-2 border-white/30 bg-white/10 p-3">
+      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function HealthCard({ label, value, helper, tone = "info" }) {
+  const styles = {
+    good: "border-emerald-300 bg-emerald-50",
+    warning: "border-orange-300 bg-orange-50",
+    danger: "border-red-300 bg-red-50",
+    info: "border-blue-300 bg-blue-50",
+  };
+
+  return (
+    <div className={`rounded-[1.25rem] border-2 p-4 ${styles[tone] || styles.info}`}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-600">
+          {label}
+        </p>
+        <p className="text-xl font-black text-[#10233f]">{value}</p>
+      </div>
+      <p className="mt-1 text-[11px] font-semibold text-slate-600">{helper}</p>
+    </div>
   );
 }
 
 function ActionButton({
   onClick,
   label,
-  icon,
+  Icon,
   variant = "default",
   disabled = false,
+  loading = false,
+  active = false,
+  ariaExpanded,
 }) {
   const variants = {
     default:
-      "border border-orange-100 bg-white/90 text-[#526178] hover:border-[#ff4b12]/40 hover:text-[#ff4b12]",
-    gold: "bg-[#ff4b12] text-white hover:bg-[#ff6a35]",
+      "border-slate-300 bg-white text-[#10233f] hover:border-orange-400 hover:bg-orange-50",
+    primary:
+      "border-orange-500 bg-orange-500 text-white hover:bg-orange-600",
     danger:
-      "border border-red-400/20 bg-red-400/10 text-red-700 hover:border-red-400 hover:bg-red-400/15",
+      "border-red-300 bg-red-50 text-red-700 hover:bg-red-100",
     locked:
-      "cursor-not-allowed border border-orange-100 bg-[#fffaf5] text-[#71809a]",
+      "border-slate-300 bg-slate-100 text-slate-500",
   };
 
   return (
@@ -970,24 +1168,215 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-2xl px-4 py-3 text-sm font-bold transition duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
-        variants[variant] || variants.default
+      aria-expanded={ariaExpanded}
+      className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto ${
+        active
+          ? "border-orange-500 bg-orange-50 text-orange-700"
+          : variants[variant] || variants.default
       }`}
     >
-      <span className="mr-2">{icon}</span>
-      {label}
+      <Icon size={15} className={loading ? "animate-spin" : ""} />
+      <span>{label}</span>
     </button>
   );
 }
 
-function MiniStat({ label, value, color }) {
+function StatusMessage({ type, text, onClose }) {
+  const styles = {
+    success: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    warning: "border-orange-300 bg-orange-50 text-orange-800",
+    error: "border-red-300 bg-red-50 text-red-800",
+  };
+
   return (
-    <div className="rounded-[1rem] border border-orange-100 bg-[#fffaf5] p-3 text-center">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-[#71809a]">
+    <div
+      role="status"
+      className={`mb-4 flex items-center justify-between gap-3 rounded-[1.25rem] border-2 p-4 ${
+        styles[type] || styles.warning
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {type === "success" ? <Check size={17} /> : <AlertTriangle size={17} />}
+        <p className="text-sm font-black">{text}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="rounded-lg p-1 transition hover:bg-black/5"
+        aria-label="Dismiss message"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  );
+}
+
+function NotificationPanel({
+  notifications,
+  readNotifications,
+  notificationCount,
+  reminderStats,
+  executivePressure,
+  onMarkAll,
+  onOpen,
+  onClose,
+  shouldReduceMotion,
+}) {
+  return (
+    <motion.div
+      initial={shouldReduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.16 }}
+      className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-[#07182b]/55 p-3 backdrop-blur-[2px] sm:p-6 lg:items-center"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <motion.div
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.985 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+        className="my-4 w-full max-w-[760px] overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-white shadow-[0_32px_100px_rgba(7,24,43,0.38)]"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Admin notifications"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+      <div className="bg-[#123865] p-5 text-white" style={{ color: "#ffffff" }}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
+              Executive Alerts
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Student OS Signals
+            </h3>
+            <p className="mt-1 text-xs font-semibold text-white">
+              Live operational exceptions that may require counselor action.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white transition hover:bg-white/20"
+            aria-label="Close notifications"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <DarkMiniStat label="Unread" value={notificationCount} />
+          <DarkMiniStat label="Overdue" value={reminderStats.overdue} />
+          <DarkMiniStat label="Pressure" value={executivePressure} />
+        </div>
+      </div>
+
+      <div className="bg-[#fff8ee] p-3">
+        <div className="mb-3 flex items-center justify-between gap-3 px-1">
+          <p className="text-xs font-black text-[#10233f]">
+            {notifications.length
+              ? `${notifications.length} active signals`
+              : "No active signals"}
+          </p>
+
+          {notificationCount > 0 ? (
+            <button
+              type="button"
+              onClick={onMarkAll}
+              className="rounded-lg border-2 border-orange-300 bg-white px-3 py-1.5 text-[10px] font-black text-orange-700 transition hover:bg-orange-50"
+            >
+              Mark all read
+            </button>
+          ) : null}
+        </div>
+
+        <div className="max-h-[min(58vh,470px)] space-y-2 overflow-y-auto pr-1 [scrollbar-color:#f97316_transparent] [scrollbar-width:thin]">
+          {notifications.length ? (
+            notifications.map((item) => {
+              const isRead = readNotifications.includes(item.id);
+              const Icon = item.Icon;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onOpen(item)}
+                  className={`group w-full rounded-[1.2rem] border-2 p-3 text-left transition ${
+                    isRead
+                      ? "border-slate-300 bg-white opacity-75"
+                      : item.priority === "urgent"
+                      ? "border-red-300 bg-red-50"
+                      : item.priority === "high"
+                      ? "border-orange-300 bg-orange-50"
+                      : "border-blue-300 bg-blue-50"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-slate-300 bg-white text-[#10233f]">
+                      <Icon size={17} />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-black text-[#10233f]">
+                            {item.title}
+                          </p>
+                          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                            {item.text}
+                          </p>
+                        </div>
+                        <ChevronRight
+                          size={16}
+                          className="mt-1 shrink-0 text-slate-500 transition group-hover:translate-x-0.5"
+                        />
+                      </div>
+
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="rounded-full border border-slate-300 bg-white px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
+                          {item.time}
+                        </span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
+                          {isRead ? "Read" : "Unread"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
+          ) : (
+            <div className="rounded-[1.3rem] border-2 border-emerald-300 bg-emerald-50 p-7 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-emerald-300 bg-white text-emerald-700">
+                <CheckCircle2 size={21} />
+              </div>
+              <p className="mt-3 text-base font-black text-[#10233f]">
+                Operations clear
+              </p>
+              <p className="mt-1 text-xs font-semibold text-slate-600">
+                No active executive alert conditions were detected.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function DarkMiniStat({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-2.5 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white">
         {label}
       </p>
-
-      <h3 className={`mt-2 text-xl font-black ${color}`}>{value}</h3>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
     </div>
   );
 }

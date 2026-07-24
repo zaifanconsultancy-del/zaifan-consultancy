@@ -1,6 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+// GPTIntelligencePanel V4 — Maximum Stored GPT Intelligence OS
+import { useEffect, useMemo, useRef, useState } from "react";
 import AIActionPanel from "./AIActionPanel";
 import { motion } from "framer-motion";
+import {
+  AlertTriangle,
+  BrainCircuit,
+  CheckCircle2,
+  Clock3,
+  GraduationCap,
+  History,
+  Mail,
+  MessageCircle,
+  RefreshCw,
+  ShieldAlert,
+  Sparkles,
+  Target,
+} from "lucide-react";
 import {
   AI_ANALYSIS_TYPES,
   getLatestStudentAIAnalysis,
@@ -8,47 +23,67 @@ import {
   runStudentAIAnalysis,
 } from "../../utils/studentAIService";
 
+
+const REQUEST_TIMEOUT_MS = 30000;
+const STALE_ANALYSIS_DAYS = 14;
+
+function withTimeout(promise, message = "Request timed out.") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      window.setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
+    ),
+  ]);
+}
+
+function getAnalysisAgeDays(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86400000));
+}
+
 const AI_MODULES = [
   {
     id: AI_ANALYSIS_TYPES.STUDENT_ANALYSIS,
     label: "Student Analysis",
     shortLabel: "Student",
-    icon: "🧠",
+    icon: BrainCircuit,
     description: "Overall counselor analysis",
   },
   {
     id: AI_ANALYSIS_TYPES.RISK_ANALYSIS,
     label: "Risk Analysis",
     shortLabel: "Risk",
-    icon: "⚠️",
+    icon: ShieldAlert,
     description: "Visa, document, application, and timeline risks",
   },
   {
     id: AI_ANALYSIS_TYPES.UNIVERSITY_RECOMMENDATION,
     label: "University Recommendations",
     shortLabel: "Universities",
-    icon: "🏫",
+    icon: GraduationCap,
     description: "Dream, target, and safe matching",
   },
   {
     id: AI_ANALYSIS_TYPES.COUNSELOR_COPILOT,
     label: "Counselor Copilot",
     shortLabel: "Copilot",
-    icon: "🎯",
+    icon: Target,
     description: "Next actions and call script",
   },
   {
     id: AI_ANALYSIS_TYPES.EMAIL_DRAFT,
     label: "Email Draft",
     shortLabel: "Email",
-    icon: "✉️",
+    icon: Mail,
     description: "Professional student email",
   },
   {
     id: AI_ANALYSIS_TYPES.WHATSAPP_DRAFT,
     label: "WhatsApp Draft",
     shortLabel: "WhatsApp",
-    icon: "💬",
+    icon: MessageCircle,
     description: "Short student follow-up message",
   },
 ];
@@ -66,6 +101,19 @@ function GPTIntelligencePanel({
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [runningType, setRunningType] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const requestSequenceRef = useRef(0);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      requestSequenceRef.current += 1;
+    };
+  }, []);
 
   const studentId = student?.id;
 
@@ -111,6 +159,18 @@ function GPTIntelligencePanel({
     ? new Date(latestAnalysis.created_at).toLocaleString()
     : "Not analyzed yet";
 
+  const analysisAgeDays = getAnalysisAgeDays(latestAnalysis?.created_at);
+  const isStale =
+    analysisAgeDays !== null && analysisAgeDays >= STALE_ANALYSIS_DAYS;
+
+  const freshnessLabel = !latestAnalysis
+    ? "Not generated"
+    : isStale
+      ? `${analysisAgeDays} days old`
+      : analysisAgeDays === 0
+        ? "Generated today"
+        : `${analysisAgeDays} day${analysisAgeDays === 1 ? "" : "s"} old`;
+
   const hasGPT = Boolean(latestAnalysis);
   const isRunning = runningType === activeModule;
 
@@ -119,62 +179,118 @@ function GPTIntelligencePanel({
   const loadAIAnalysis = async (moduleType = activeModule) => {
     if (!studentId) return;
 
-    setLoadingAnalysis(true);
-    setError("");
+    const requestId = ++requestSequenceRef.current;
+
+    if (mountedRef.current) {
+      setLoadingAnalysis(true);
+      setError("");
+    }
 
     try {
-      const [latest, history] = await Promise.all([
-        getLatestStudentAIAnalysis(studentId, moduleType),
-        getStudentAIAnalysisHistory(studentId, moduleType),
-      ]);
+      const [latest, history] = await withTimeout(
+        Promise.all([
+          getLatestStudentAIAnalysis(studentId, moduleType),
+          getStudentAIAnalysisHistory(studentId, moduleType),
+        ]),
+        "Stored GPT intelligence took too long to load."
+      );
 
-      setLatestAnalysis(latest);
-      setAnalysisHistory(history || []);
+      if (!mountedRef.current || requestId !== requestSequenceRef.current) return;
+
+      setLatestAnalysis(latest || null);
+      setAnalysisHistory(Array.isArray(history) ? history : []);
     } catch (err) {
-      setError(err.message || "Failed to load AI analysis.");
+      if (!mountedRef.current || requestId !== requestSequenceRef.current) return;
+
+      console.error("GPT intelligence load failed:", err);
+      setError(
+        err?.message ||
+          "Stored GPT intelligence could not load. Check student_ai_analysis permissions or connectivity."
+      );
     } finally {
-      setLoadingAnalysis(false);
+      if (mountedRef.current && requestId === requestSequenceRef.current) {
+        setLoadingAnalysis(false);
+      }
     }
   };
 
   useEffect(() => {
+    requestSequenceRef.current += 1;
     setLatestAnalysis(null);
     setAnalysisHistory([]);
     setError("");
+    setSuccessMessage("");
 
     if (studentId) {
-      loadAIAnalysis(activeModule);
+      void loadAIAnalysis(activeModule);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, activeModule]);
 
   const handleRunAnalysis = async (moduleType = activeModule) => {
-    if (!studentId) {
-      setError("Student ID missing. Cannot run AI analysis.");
+    if (!studentId || runningType || loadingAnalysis) {
+      if (!studentId) {
+        setError("Student ID missing. Cannot run GPT analysis.");
+      }
       return;
     }
 
+    const moduleToRun =
+      AI_MODULES.find((item) => item.id === moduleType) || selectedModule;
+
+    const confirmed = window.confirm(
+      `Run ${moduleToRun.label} for ${studentName}? This will make a paid OpenAI/API request and store the result.`
+    );
+
+    if (!confirmed) return;
+
     setRunningType(moduleType);
     setError("");
+    setSuccessMessage("");
 
     try {
-      const result = await runStudentAIAnalysis({
-        student,
-        analysisType: moduleType,
-      });
+      const result = await withTimeout(
+        runStudentAIAnalysis({
+          student,
+          analysisType: moduleType,
+        }),
+        `${selectedModule.label} generation timed out.`
+      );
 
-      if (moduleType === activeModule) {
+      if (!result?.saved && !result?.parsed) {
+        throw new Error("GPT analysis returned no saved or parsed result.");
+      }
+
+      if (moduleType === activeModule && mountedRef.current) {
         setLatestAnalysis({
-          ...result.saved,
-          parsed: result.parsed,
+          ...(result.saved || {}),
+          parsed: result.parsed || result.saved?.parsed || null,
         });
       }
 
       await loadAIAnalysis(moduleType);
+
+      if (mountedRef.current) {
+        setSuccessMessage(
+          `${moduleToRun.label} generated and stored successfully.`
+        );
+        window.setTimeout(() => {
+          if (mountedRef.current) setSuccessMessage("");
+        }, 3200);
+      }
     } catch (err) {
-      setError(err.message || "AI analysis failed.");
+      console.error("GPT intelligence generation failed:", err);
+
+      if (mountedRef.current) {
+        setError(
+          err?.message ||
+            "GPT analysis failed. Check the AI service, Edge Function/API configuration, and student_ai_analysis permissions."
+        );
+      }
     } finally {
-      setRunningType("");
+      if (mountedRef.current) {
+        setRunningType("");
+      }
     }
   };
 
@@ -186,30 +302,38 @@ function GPTIntelligencePanel({
   return (
     <div className="space-y-5">
       <div className="overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
-        <div className="flex flex-col gap-4 border-b border-orange-200 bg-[#102f5c] p-6 text-white lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-4 border-b border-orange-300 bg-[#123865] p-6 lg:flex-row lg:items-start lg:justify-between" style={{ color: "#FFFFFF" }}>
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-300">
               Real GPT Counselor Intelligence
             </p>
 
-            <h2 className="mt-3 text-2xl font-black text-white">
+            <h2 className="mt-3 text-2xl font-black" style={{ color: "#FFFFFF" }}>
               Multi-Module AI Operating System
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-200">
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6" style={{ color: "#F8FAFC" }}>
               Run separate OpenAI modules for analysis, risk, university
               recommendations, counselor copilot, email drafts, and WhatsApp
               drafts. Each module saves its own history.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+            <div
+              className="rounded-xl border border-orange-300/50 bg-white/10 px-3 py-2 text-[11px] font-bold"
+              style={{ color: "#FFF7ED" }}
+            >
+              Paid GPT call only runs when you press Run / Re-run.
+            </div>
+            <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={() => loadAIAnalysis(activeModule)}
               disabled={loadingAnalysis || Boolean(runningType)}
-              className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-black text-[#10233f] transition hover:border-orange-300 hover:bg-white/15 hover:text-[#10233f] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-white/25 bg-white px-4 py-2.5 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <RefreshCw size={14} className={loadingAnalysis ? "animate-spin" : ""} />
               {loadingAnalysis ? "Loading..." : "Reload"}
             </button>
 
@@ -217,22 +341,58 @@ function GPTIntelligencePanel({
               type="button"
               onClick={() => handleRunAnalysis(activeModule)}
               disabled={Boolean(runningType) || loadingAnalysis}
-              className="rounded-full bg-orange-500 px-5 py-2 text-sm font-black text-[#10233f] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-500 px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
+              <Sparkles size={14} />
               {isRunning
                 ? "Analyzing..."
                 : hasGPT
                 ? `Re-run ${selectedModule.shortLabel}`
                 : `Run ${selectedModule.shortLabel}`}
             </button>
+            </div>
           </div>
         </div>
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <GPTModeCard
+          label="Generation"
+          value="Real GPT"
+          detail="A paid/remote model call happens only when you run a module."
+          tone="orange"
+        />
+        <GPTModeCard
+          label="Storage"
+          value={hasGPT ? "Stored" : "Empty"}
+          detail="Each module keeps its own saved analysis history."
+          tone="navy"
+        />
+        <GPTModeCard
+          label="Freshness"
+          value={freshnessLabel}
+          detail={
+            isStale
+              ? "Stored intelligence is old enough to consider re-running."
+              : "Current stored intelligence age for the selected module."
+          }
+          tone="cream"
+        />
+      </div>
+
+      {successMessage ? (
+        <StatusBanner
+          type="success"
+          message={successMessage}
+          onDismiss={() => setSuccessMessage("")}
+        />
+      ) : null}
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {AI_MODULES.map((module) => {
           const isActive = module.id === activeModule;
           const isModuleRunning = runningType === module.id;
+          const ModuleIcon = module.icon;
 
           return (
             <button
@@ -242,30 +402,40 @@ function GPTIntelligencePanel({
               disabled={Boolean(runningType) || loadingAnalysis}
               className={`rounded-[1.5rem] border-2 p-4 text-left shadow-[0_5px_16px_rgba(15,35,63,0.035)] transition disabled:cursor-not-allowed disabled:opacity-60 ${
                 isActive
-                  ? "border-orange-500 bg-orange-500 text-[#10233f] shadow-[0_8px_18px_rgba(249,115,22,0.16)]"
-                  : "border-slate-300 bg-white hover:border-orange-300 hover:bg-orange-50"
+                  ? "border-orange-500 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.16)]"
+                  : "border-[#b8c5d3] bg-white hover:border-orange-300 hover:bg-orange-50"
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-lg">{module.icon}</p>
-                  <h3
-                    className={`mt-2 text-sm font-black ${
-                      isActive ? "text-[#10233f]" : "text-[#10233f]"
+                  <span
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${
+                      isActive
+                        ? "border-white/30 bg-white/10 text-white"
+                        : "border-orange-200 bg-orange-50 text-orange-700"
                     }`}
+                  >
+                    <ModuleIcon size={17} />
+                  </span>
+                  <h3
+                    className="mt-2 text-sm font-black"
+                    style={{ color: isActive ? "#FFFFFF" : "#10233F" }}
                   >
                     {module.label}
                   </h3>
                 </div>
 
                 {isModuleRunning ? (
-                  <span className="rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-orange-700">
+                  <span className="rounded-full border border-white/30 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
                     Running
                   </span>
                 ) : null}
               </div>
 
-              <p className="mt-2 text-xs leading-5 text-slate-600">
+              <p
+                className="mt-2 text-xs font-semibold leading-5"
+                style={{ color: isActive ? "#FFFFFF" : "#36506F" }}
+              >
                 {module.description}
               </p>
             </button>
@@ -274,19 +444,36 @@ function GPTIntelligencePanel({
       </div>
 
       {error ? (
-        <div className="rounded-[1.5rem] border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-          {error}
-        </div>
+        <StatusBanner
+          type="error"
+          message={error}
+          onDismiss={() => setError("")}
+        />
       ) : null}
 
       {!hasGPT && !loadingAnalysis ? (
-        <div className="rounded-[1.75rem] border border-amber-300 bg-amber-50 p-5">
+        <div className="rounded-[1.75rem] border-2 border-amber-300 bg-amber-50 p-5">
           <p className="font-bold text-amber-800">
             No {selectedModule.label.toLowerCase()} saved yet.
           </p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-[#36506f]">
             Run this module to generate real OpenAI output for {studentName}.
           </p>
+        </div>
+      ) : null}
+
+      {hasGPT && isStale ? (
+        <div className="flex items-start gap-3 rounded-[1.5rem] border-2 border-orange-300 bg-orange-50 p-4">
+          <Clock3 size={18} className="mt-0.5 shrink-0 text-orange-700" />
+          <div>
+            <p className="text-sm font-black text-[#10233f]">
+              Stored GPT intelligence may be stale
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-[#36506f]">
+              This {selectedModule.label.toLowerCase()} is {freshnessLabel}.
+              Re-run only when the student profile or case facts have materially changed.
+            </p>
+          </div>
         </div>
       ) : null}
 
@@ -299,27 +486,27 @@ function GPTIntelligencePanel({
 
       <InsightBlock title={`${selectedModule.label} Summary`} content={summary} />
 
-      <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+      <div className="rounded-[1.75rem] border-[3px] border-[#b8c5d3] bg-white p-6">
         <div
           className={`inline-flex rounded-full border px-4 py-2 text-xs font-bold ${riskStyle}`}
         >
           Risk Level: {risk}
         </div>
 
-        <p className="mt-4 text-sm leading-7 text-slate-600">
+        <p className="mt-4 text-sm leading-7 text-[#36506f]">
           Module type:{" "}
           <span className="font-semibold text-orange-700">{activeModule}</span>
         </p>
       </div>
 
       {hasGPT ? (
-  <AIActionPanel
-    student={student}
-    parsed={parsed}
-    activeModule={activeModule}
-    adminProfile={adminProfile}
-  />
-) : null}
+        <AIActionPanel
+          student={student}
+          parsed={parsed}
+          activeModule={activeModule}
+          adminProfile={adminProfile}
+        />
+      ) : null}
 
       {activeModule === AI_ANALYSIS_TYPES.RISK_ANALYSIS ? (
         <RiskAnalysisView parsed={parsed} />
@@ -365,7 +552,7 @@ function GPTIntelligencePanel({
         />
       ) : null}
 
-      <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+      <div className="rounded-[1.75rem] border-[3px] border-[#b8c5d3] bg-white p-6">
         <h3 className="font-bold text-[#10233f]">AI Metadata</h3>
 
         <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -375,12 +562,15 @@ function GPTIntelligencePanel({
         </div>
       </div>
 
-      <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+      <div className="rounded-[1.75rem] border-[3px] border-[#b8c5d3] bg-white p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="font-bold text-[#10233f]">Module History</h3>
-            <p className="mt-1 text-sm text-slate-600">
-              Every run creates a new saved row for this module.
+            <div className="flex items-center gap-2">
+              <History size={16} className="text-orange-700" />
+              <h3 className="font-black text-[#10233f]">Module History</h3>
+            </div>
+            <p className="mt-1 text-sm text-[#36506f]">
+              Saved history for this selected GPT module. New runs create additional stored rows.
             </p>
           </div>
 
@@ -398,7 +588,7 @@ function GPTIntelligencePanel({
             analysisHistory.slice(0, 5).map((item) => (
               <div
                 key={item.id}
-                className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]"
+                className="rounded-2xl border border-[#b8c5d3] bg-[#fff8ee] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm font-bold text-[#10233f]">
@@ -407,14 +597,14 @@ function GPTIntelligencePanel({
                       selectedModule.label}
                   </p>
 
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[#4d6380]">
                     {item.created_at
                       ? new Date(item.created_at).toLocaleString()
                       : "Unknown date"}
                   </p>
                 </div>
 
-                <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#36506f]">
                   {item?.parsed?.summary ||
                     item?.analysis ||
                     "Saved AI analysis"}
@@ -422,12 +612,84 @@ function GPTIntelligencePanel({
               </div>
             ))
           ) : (
-            <p className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-600">
+            <p className="rounded-2xl border border-[#b8c5d3] bg-[#fff8ee] p-4 text-sm text-[#36506f]">
               No history for this module yet.
             </p>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+
+function StatusBanner({ type = "info", message, onDismiss }) {
+  const style =
+    type === "error"
+      ? "border-red-300 bg-red-50 text-red-800"
+      : type === "success"
+        ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+        : "border-blue-300 bg-blue-50 text-blue-800";
+
+  const Icon =
+    type === "error"
+      ? AlertTriangle
+      : type === "success"
+        ? CheckCircle2
+        : BrainCircuit;
+
+  return (
+    <div className={`flex items-start gap-3 rounded-[1.5rem] border-2 p-4 ${style}`}>
+      <Icon size={18} className="mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1 text-sm font-black">{message}</div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="shrink-0 text-lg font-black leading-none"
+        aria-label="Dismiss message"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+function GPTModeCard({ label, value, detail, tone = "cream" }) {
+  const isNavy = tone === "navy";
+  const isOrange = tone === "orange";
+  const isStrong = isNavy || isOrange;
+
+  const style = isNavy
+    ? "border-[#123865] bg-[#123865]"
+    : isOrange
+    ? "border-[#FF5A0A] bg-[#FF5A0A]"
+    : "border-orange-300 bg-white";
+
+  return (
+    <div
+      className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_20px_rgba(15,35,63,0.05)] ${style}`}
+      style={{ color: isStrong ? "#FFFFFF" : "#10233F" }}
+    >
+      <p
+        className="text-[9px] font-black uppercase tracking-[0.14em]"
+        style={{ color: isStrong ? "#FFFFFF" : "#4D6380" }}
+      >
+        {label}
+      </p>
+
+      <p
+        className="mt-1 break-words text-xl font-black"
+        style={{ color: isStrong ? "#FFFFFF" : "#10233F" }}
+      >
+        {value}
+      </p>
+
+      <p
+        className="mt-1 text-xs font-semibold leading-5"
+        style={{ color: isStrong ? "#FFF7ED" : "#4D6380" }}
+      >
+        {detail}
+      </p>
     </div>
   );
 }
@@ -446,7 +708,7 @@ function RiskAnalysisView({ parsed }) {
       {riskCards.map(([title, risk]) => (
         <div
           key={title}
-          className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6"
+          className="rounded-[1.75rem] border-[3px] border-[#b8c5d3] bg-white p-6"
         >
           <div
             className={`inline-flex rounded-full border px-4 py-2 text-xs font-bold ${getRiskStyle(
@@ -456,7 +718,7 @@ function RiskAnalysisView({ parsed }) {
             {title}: {risk?.level || "Not analyzed"}
           </div>
 
-          <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#243b5a]">
             {risk?.reason || "No reason generated yet."}
           </p>
 
@@ -567,7 +829,7 @@ function UniversityList({ title, items = [] }) {
   const safeItems = Array.isArray(items) ? items : [];
 
   return (
-    <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+    <div className="rounded-[1.75rem] border-[3px] border-[#b8c5d3] bg-white p-6">
       <h3 className="font-bold text-[#10233f]">{title}</h3>
 
       <div className="mt-4 space-y-3">
@@ -575,7 +837,7 @@ function UniversityList({ title, items = [] }) {
           safeItems.map((item, index) => (
             <div
               key={`${title}-${index}`}
-              className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]"
+              className="rounded-2xl border border-[#b8c5d3] bg-[#fff8ee] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]"
             >
               <p className="font-bold text-[#10233f]">
                 {item?.university || item?.name || `Option ${index + 1}`}
@@ -585,7 +847,7 @@ function UniversityList({ title, items = [] }) {
                 {item?.country || "Country not specified"}
               </p>
 
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <p className="mt-3 text-sm leading-6 text-[#36506f]">
                 {item?.reason || item?.description || "No reason generated."}
               </p>
 
@@ -599,7 +861,7 @@ function UniversityList({ title, items = [] }) {
                 </span>
 
                 {item?.requiredNextStep ? (
-                  <span className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-[11px] text-slate-600">
+                  <span className="rounded-full border border-[#b8c5d3] bg-[#f7f9fc] px-3 py-1 text-[11px] text-[#36506f]">
                     {item.requiredNextStep}
                   </span>
                 ) : null}
@@ -607,7 +869,7 @@ function UniversityList({ title, items = [] }) {
             </div>
           ))
         ) : (
-          <p className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-500">
+          <p className="rounded-2xl border border-[#b8c5d3] bg-[#fff8ee] p-4 text-sm text-[#4d6380]">
             No recommendations generated yet.
           </p>
         )}
@@ -618,10 +880,10 @@ function UniversityList({ title, items = [] }) {
 
 function InsightBlock({ title, content }) {
   return (
-    <div className="rounded-[1.75rem] border-2 border-slate-300 bg-white p-6">
+    <div className="rounded-[1.75rem] border-[3px] border-[#b8c5d3] bg-white p-6">
       <h3 className="font-bold text-[#10233f]">{title}</h3>
 
-      <p className="mt-3 whitespace-pre-wrap text-slate-700 leading-7">
+      <p className="mt-3 whitespace-pre-wrap text-[#243b5a] leading-7">
         {content}
       </p>
     </div>
@@ -636,7 +898,7 @@ function ListBlock({ title, items = [], emptyText = "", compact = false }) {
       className={
         compact
           ? "mt-5"
-          : "rounded-[1.75rem] border-2 border-slate-300 bg-white p-6"
+          : "rounded-[1.75rem] border-[3px] border-[#b8c5d3] bg-white p-6"
       }
     >
       <h3 className="font-bold text-[#10233f]">{title}</h3>
@@ -646,13 +908,13 @@ function ListBlock({ title, items = [], emptyText = "", compact = false }) {
           safeItems.map((item, index) => (
             <div
               key={`${title}-${index}`}
-              className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm leading-6 text-slate-700"
+              className="rounded-2xl border border-[#b8c5d3] bg-[#fff8ee] p-4 text-sm leading-6 text-[#243b5a]"
             >
               {formatListItem(item)}
             </div>
           ))
         ) : (
-          <p className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 text-sm text-slate-500">
+          <p className="rounded-2xl border border-[#b8c5d3] bg-[#fff8ee] p-4 text-sm text-[#4d6380]">
             {emptyText}
           </p>
         )}
@@ -684,12 +946,12 @@ function formatListItem(item) {
 
 function MetaCard({ label, value }) {
   return (
-    <div className="rounded-2xl border border-slate-300 bg-[#fffaf2] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]">
-      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+    <div className="rounded-2xl border border-[#b8c5d3] bg-[#fff8ee] p-4 shadow-[0_4px_14px_rgba(15,35,63,0.025)]">
+      <p className="text-xs uppercase tracking-[0.18em] text-[#4d6380]">
         {label}
       </p>
 
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-slate-700">
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-[#243b5a]">
         {value}
       </p>
     </div>
@@ -700,9 +962,9 @@ function StatCard({ label, value }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="rounded-2xl border-2 border-slate-300 bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.03)]"
+      className="rounded-2xl border-2 border-[#b8c5d3] bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.03)]"
     >
-      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+      <p className="text-xs uppercase tracking-[0.18em] text-[#4d6380]">
         {label}
       </p>
 
@@ -732,7 +994,7 @@ function getRiskStyle(value = "") {
     return "text-emerald-700 border-emerald-300 bg-emerald-50";
   }
 
-  return "text-slate-700 border-slate-300 bg-slate-50";
+  return "text-[#243b5a] border-[#b8c5d3] bg-[#f7f9fc]";
 }
 
 export default GPTIntelligencePanel;

@@ -182,12 +182,28 @@ function buildRecommendation(score = {}, mode = "executive") {
 }
 
 function buildTemplatesFromScores(scores = [], mode = "executive") {
-  return asArray(scores).map((score) => buildExecutiveActionTemplate(score, buildRecommendation(score, mode)));
+  return asArray(scores)
+    .filter(Boolean)
+    .map((score) => {
+      try {
+        return buildExecutiveActionTemplate(
+          score,
+          buildRecommendation(score, mode)
+        );
+      } catch (error) {
+        console.warn("Executive template generation skipped:", error);
+        return null;
+      }
+    })
+    .filter(Boolean);
 }
 
 function buildTemplatesFromRecoveryActions(actions = []) {
-  return asArray(actions).map((action) =>
-    buildExecutiveActionTemplate(
+  return asArray(actions)
+    .filter(Boolean)
+    .map((action) => {
+      try {
+        return buildExecutiveActionTemplate(
       {
         student_id: action.student_id,
         student_type: action.student_type,
@@ -212,8 +228,48 @@ function buildTemplatesFromRecoveryActions(actions = []) {
           ...action.payload,
         },
       }
-    )
+        );
+      } catch (error) {
+        console.warn("Recovery template generation skipped:", error);
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+function getRecoveryActionsForSelection(recovery = {}, selectedItems = []) {
+  const selected = asArray(selectedItems);
+  if (!selected.length) return asArray(recovery.actions);
+
+  const workflows = asArray(recovery.workflows);
+  const selectedIds = new Set(
+    selected
+      .map((item) => String(item?.id || item?.issue_id || item?.recovery_issue_id || ""))
+      .filter(Boolean)
   );
+
+  const fromWorkflows = workflows.flatMap((workflow) => {
+    const issueId = String(workflow?.issue?.id || workflow?.issue_id || "");
+    if (!issueId || !selectedIds.has(issueId)) return [];
+    return asArray(workflow.actions);
+  });
+
+  if (fromWorkflows.length) return fromWorkflows;
+
+  // Some engine versions expose queue entries as actions rather than scanner issues.
+  return selected.filter(
+    (item) =>
+      item?.action_type ||
+      item?.automation_template ||
+      item?.target_table ||
+      item?.recovery_action
+  );
+}
+
+function getErrorMessage(error, fallback = "Operation failed.") {
+  if (!error) return fallback;
+  if (typeof error === "string") return error;
+  return error.message || error.details || error.hint || fallback;
 }
 
 function buildBulkAnalytics(scores = [], logs = []) {
@@ -248,28 +304,87 @@ function buildBulkAnalytics(scores = [], logs = []) {
 
 function buildRecoveryOperatingModel({ scores = [], platformStudents = [], verificationSnapshot = null } = {}) {
   const students = mergeStudentOperatingData(scores, platformStudents);
-  const scanner = buildBrokenWorkflowScannerSnapshot(students);
-  const recovery = buildExecutiveRecoveryActions(scanner.issues || []);
-  const report = generateBrokenWorkflowReport(students);
-  const executiveSnapshot = buildExecutiveAutomationSnapshot({ students, scores, verificationSnapshot });
 
-  return {
-    students,
-    scanner,
-    recovery,
-    report,
-    executiveSnapshot,
-    generatedAt: new Date().toISOString(),
-  };
+  try {
+    const scanner = buildBrokenWorkflowScannerSnapshot(students) || {};
+    const recovery = buildExecutiveRecoveryActions(asArray(scanner.issues)) || {};
+    const report = generateBrokenWorkflowReport(students) || {};
+    const executiveSnapshot =
+      buildExecutiveAutomationSnapshot({
+        students,
+        scores: asArray(scores),
+        verificationSnapshot,
+      }) || {};
+
+    return {
+      students,
+      scanner: {
+        ...scanner,
+        issues: asArray(scanner.issues),
+        totalIssues: number(scanner.totalIssues, asArray(scanner.issues).length),
+      },
+      recovery: {
+        ...recovery,
+        actions: asArray(recovery.actions),
+        workflows: asArray(recovery.workflows),
+        casQueue: asArray(recovery.casQueue),
+        visaQueue: asArray(recovery.visaQueue),
+        paymentQueue: asArray(recovery.paymentQueue),
+        portalQueue: asArray(recovery.portalQueue),
+        totalActions: number(recovery.totalActions, asArray(recovery.actions).length),
+      },
+      report: {
+        ...report,
+        heatmap: report.heatmap && typeof report.heatmap === "object" ? report.heatmap : {},
+      },
+      executiveSnapshot,
+      error: "",
+      generatedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Executive recovery model failed:", error);
+
+    return {
+      students,
+      scanner: {
+        issues: [],
+        totalIssues: 0,
+        critical: 0,
+        high: 0,
+        medium: 0,
+        brokenStages: 0,
+        scannedStudents: students.length,
+        health_status: "scanner_error",
+      },
+      recovery: {
+        actions: [],
+        workflows: [],
+        casQueue: [],
+        visaQueue: [],
+        paymentQueue: [],
+        portalQueue: [],
+        totalActions: 0,
+      },
+      report: { heatmap: {} },
+      executiveSnapshot: {},
+      error: getErrorMessage(error, "Recovery scanner could not build its operating model."),
+      generatedAt: new Date().toISOString(),
+    };
+  }
 }
 
 function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionExecuted, platformStudents = [], verificationSnapshot = null }) {
   const [executing, setExecuting] = useState(false);
+  const [activeExecution, setActiveExecution] = useState("");
   const [activeMode, setActiveMode] = useState("critical");
   const [activeRecoveryQueue, setActiveRecoveryQueue] = useState("all");
   const [logs, setLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsError, setLogsError] = useState("");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState(null);
+  const [showAllPreview, setShowAllPreview] = useState(false);
+  const [showExecutionHistory, setShowExecutionHistory] = useState(false);
 
   const analytics = useMemo(() => buildBulkAnalytics(scores, logs), [scores, logs]);
   const executionAnalytics = useMemo(() => buildExecutionAnalytics(logs), [logs]);
@@ -303,8 +418,19 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
   }, [activeRecoveryQueue, recoveryModel]);
 
   const loadLogs = async () => {
-    const response = await fetchExecutiveExecutionLogs({ limit: 160 });
-    setLogs(response.data || []);
+    setLogsLoading(true);
+    setLogsError("");
+
+    try {
+      const response = await fetchExecutiveExecutionLogs({ limit: 160 });
+      if (response?.error) throw response.error;
+      setLogs(asArray(response?.data));
+    } catch (error) {
+      console.error("Executive execution logs failed:", error);
+      setLogsError(getErrorMessage(error, "Execution logs could not be loaded."));
+    } finally {
+      setLogsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -312,20 +438,59 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
   }, []);
 
   const afterExecution = async (response, label) => {
-    setResult(response);
-    setMessage(`${label}: ${response.successful || 0} completed • ${response.failed || 0} failed • ${response.duplicateBlocked || 0} duplicate blocked`);
+    const safeResponse = response || {};
+    setResult(safeResponse);
+
+    setMessage(
+      `${label}: ${number(safeResponse.successful)} completed • ${number(
+        safeResponse.failed
+      )} failed • ${number(safeResponse.duplicateBlocked)} duplicate blocked`
+    );
+
     await loadLogs();
-    if (onActionExecuted) await onActionExecuted(response);
+
+    if (typeof onActionExecuted === "function") {
+      try {
+        await onActionExecuted(safeResponse);
+      } catch (error) {
+        console.warn("Post-execution refresh callback failed:", error);
+      }
+    }
+  };
+
+  const requireTemplates = (templates, label) => {
+    const safeTemplates = asArray(templates).filter(Boolean);
+
+    if (!safeTemplates.length) {
+      setMessage(`No executable ${label} templates are available right now.`);
+      setResult({
+        total: 0,
+        successful: 0,
+        failed: 0,
+        duplicateBlocked: 0,
+        results: [],
+      });
+      return null;
+    }
+
+    return safeTemplates;
   };
 
   const executeBulk = async (type) => {
+    if (executing) return;
+
     try {
       setExecuting(true);
+      setActiveExecution(type);
       setMessage("");
       setResult(null);
 
       if (type === "critical") {
-        const templates = buildTemplatesFromScores(analytics.critical, "critical");
+        const templates = requireTemplates(
+          buildTemplatesFromScores(analytics.critical, "critical"),
+          "critical"
+        );
+        if (!templates) return;
         return await afterExecution(
           await executeCriticalExecutiveActions({ templates, adminProfile }),
           "Critical queue executed"
@@ -333,7 +498,11 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       }
 
       if (type === "executive") {
-        const templates = buildTemplatesFromScores(analytics.executive, "executive");
+        const templates = requireTemplates(
+          buildTemplatesFromScores(analytics.executive, "executive"),
+          "executive"
+        );
+        if (!templates) return;
         return await afterExecution(
           await executeExecutivePriorityActions({ templates, adminProfile }),
           "Executive queue executed"
@@ -341,7 +510,11 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       }
 
       if (type === "conversion") {
-        const templates = buildTemplatesFromScores(analytics.conversion, "conversion");
+        const templates = requireTemplates(
+          buildTemplatesFromScores(analytics.conversion, "conversion"),
+          "conversion"
+        );
+        if (!templates) return;
         return await afterExecution(
           await executeBulkExecutiveActions({ templates, adminProfile }),
           "Conversion queue executed"
@@ -356,20 +529,38 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       }
 
       if (type === "approve") {
-        const templates = buildTemplatesFromScores(analytics.approval, "executive");
+        const templates = requireTemplates(
+          buildTemplatesFromScores(analytics.approval, "executive"),
+          "approval"
+        );
+        if (!templates) return;
         return await afterExecution(
-          await executeBulkExecutiveActions({ templates, adminProfile, skipDuplicateCheck: false, batchMode: "bulk_approve_execute" }),
+          await executeBulkExecutiveActions({
+            templates,
+            adminProfile,
+            skipDuplicateCheck: false,
+            batchMode: "bulk_approve_execute",
+          }),
           "Bulk approval execution completed"
         );
       }
 
       if (type === "recovery") {
-        const actions = selectedRecoveryQueue.length
-          ? selectedRecoveryQueue.flatMap((issue) => recoveryModel.recovery.workflows?.find((workflow) => workflow.issue?.id === issue.id)?.actions || [])
-          : recoveryModel.recovery.actions || [];
-        const templates = buildTemplatesFromRecoveryActions(actions);
+        const actions = getRecoveryActionsForSelection(
+          recoveryModel.recovery,
+          selectedRecoveryQueue
+        );
+        const templates = requireTemplates(
+          buildTemplatesFromRecoveryActions(actions),
+          "recovery"
+        );
+        if (!templates) return;
         return await afterExecution(
-          await executeBulkExecutiveActions({ templates, adminProfile, batchMode: "workflow_recovery_execution" }),
+          await executeBulkExecutiveActions({
+            templates,
+            adminProfile,
+            batchMode: "workflow_recovery_execution",
+          }),
           "Workflow recovery queue executed"
         );
       }
@@ -379,16 +570,18 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
         return setResult({ total: analytics.approval.length, successful: 0, failed: 0, duplicateBlocked: 0, results: [] });
       }
     } catch (error) {
-      setMessage(error.message || "Bulk operation failed.");
+      console.error("Executive bulk operation failed:", error);
+      setMessage(getErrorMessage(error, "Bulk operation failed."));
       setResult({ error, total: 0, successful: 0, failed: 1, duplicateBlocked: 0, results: [] });
     } finally {
       setExecuting(false);
+      setActiveExecution("");
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-6 shadow-[0_20px_55px_rgba(23,36,61,0.08)]">
+    <div className="space-y-5" aria-busy={executing || logsLoading}>
+      <div className="rounded-[2rem] border-[3px] border-[#E9802D]/45 bg-[#FFFDF8] p-6 shadow-[0_20px_55px_rgba(23,36,61,0.08)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">Executive Operations Center V4</p>
@@ -401,18 +594,18 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
             <button
               type="button"
               onClick={loadLogs}
-              disabled={executing}
-              className="rounded-full border border-[#243A60]/18 bg-white px-5 py-2 text-sm font-bold text-[#596579] transition hover:border-[#D4AF37]/30 hover:text-[#B84F0E] disabled:opacity-50"
+              disabled={executing || logsLoading}
+              className="rounded-full border border-[#243A60]/18 bg-white px-5 py-2 text-sm font-bold text-[#596579] transition hover:border-[#E9802D]/40 hover:text-[#B84F0E] disabled:opacity-50"
             >
-              Refresh Queue
+              {logsLoading ? "Refreshing..." : "Refresh Queue"}
             </button>
             <button
               type="button"
               onClick={() => executeBulk("recovery")}
               disabled={executing || !recoveryModel.recovery.totalActions}
-              className="rounded-full border border-[#E9802D]/40 bg-[#FFF1E3] px-5 py-2 text-sm font-black text-[#B84F0E] transition hover:bg-[#D4AF37] hover:text-white disabled:opacity-50"
+              className="rounded-full border border-[#E9802D]/40 bg-[#FFF1E3] px-5 py-2 text-sm font-black text-[#B84F0E] transition hover:bg-[#D96C1F] hover:text-white disabled:opacity-50"
             >
-              Execute Recovery
+              {activeExecution === "recovery" ? "Processing Recovery..." : "Execute Recovery"}
             </button>
           </div>
         </div>
@@ -421,21 +614,21 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Students" value={analytics.totalStudents} />
         <MetricCard label="Critical Queue" value={analytics.criticalStudents} tone="red" />
-        <MetricCard label="Executive Queue" value={analytics.executiveStudents} tone="gold" />
+        <MetricCard label="Executive Queue" value={analytics.executiveStudents} tone="navy" />
         <MetricCard label="Conversion Ready" value={analytics.conversionReady} tone="green" />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Broken Workflows" value={recoveryModel.scanner.totalIssues} tone={recoveryModel.scanner.critical ? "red" : "gold"} />
+        <MetricCard label="Broken Workflows" value={recoveryModel.scanner.totalIssues} tone={recoveryModel.scanner.critical ? "red" : "navy"} />
         <MetricCard label="Critical Recovery" value={recoveryModel.scanner.critical} tone="red" />
         <MetricCard label="Recovery Actions" value={recoveryModel.recovery.totalActions} tone="orange" />
-        <MetricCard label="Broken Stages" value={recoveryModel.scanner.brokenStages} tone="gold" />
+        <MetricCard label="Broken Stages" value={recoveryModel.scanner.brokenStages} tone="navy" />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Approval Pressure" value={analytics.approvalRequired} tone="orange" />
         <MetricCard label="Failed Actions" value={analytics.failedActions} tone="red" />
-        <MetricCard label="Queue Pressure" value={queueHealth.queuePressure} tone="gold" />
+        <MetricCard label="Queue Pressure" value={queueHealth.queuePressure} tone="navy" />
         <MetricCard label="Success Rate" value={`${queueHealth.successRate || executionAnalytics.successRate || 0}%`} tone="green" />
       </div>
 
@@ -445,17 +638,23 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
         </div>
       ) : null}
 
+      {logsError || recoveryModel.error ? (
+        <div className="rounded-[1.5rem] border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm font-bold text-[#A8342F]">
+          {logsError || recoveryModel.error}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <ActionButton title="Execute Critical Queue" description="Create immediate action tasks for critical-risk students." onClick={() => executeBulk("critical")} executing={executing} tone="red" />
-        <ActionButton title="Execute Executive Queue" description="Run executive-priority student movement actions." onClick={() => executeBulk("executive")} executing={executing} tone="gold" />
-        <ActionButton title="Execute Conversion Queue" description="Execute conversion-ready calls, reminders, and tasks." onClick={() => executeBulk("conversion")} executing={executing} tone="green" />
-        <ActionButton title="Retry Failed Actions" description="Rebuild and retry failed automation items from logs." onClick={() => executeBulk("retry")} executing={executing} tone="orange" />
-        <ActionButton title="Bulk Approve + Execute" description="Approve safe queue items and execute them in one batch." onClick={() => executeBulk("approve")} executing={executing} tone="gold" />
-        <ActionButton title="Execute Recovery Workflows" description="Run generated workflow recovery actions from CAS/Visa/Payment/Portal queues." onClick={() => executeBulk("recovery")} executing={executing || !recoveryModel.recovery.totalActions} tone="red" />
+        <ActionButton title="Execute Critical Queue" description="Create immediate action tasks for critical-risk students." onClick={() => executeBulk("critical")} busy={executing} active={activeExecution === "critical"} tone="red" />
+        <ActionButton title="Execute Executive Queue" description="Run executive-priority student movement actions." onClick={() => executeBulk("executive")} busy={executing} active={activeExecution === "executive"} tone="navy" />
+        <ActionButton title="Execute Conversion Queue" description="Execute conversion-ready calls, reminders, and tasks." onClick={() => executeBulk("conversion")} busy={executing} active={activeExecution === "conversion"} tone="green" />
+        <ActionButton title="Retry Failed Actions" description="Rebuild and retry failed automation items from logs." onClick={() => executeBulk("retry")} busy={executing} active={activeExecution === "retry"} tone="orange" />
+        <ActionButton title="Approve + Execute Batch" description="Run the approval-selected batch through the executor after reviewing the queue preview." onClick={() => executeBulk("approve")} busy={executing} active={activeExecution === "approve"} tone="navy" />
+        <ActionButton title="Execute Recovery Workflows" description="Run generated workflow recovery actions from CAS, Visa, Payment and Portal queues." onClick={() => executeBulk("recovery")} busy={executing} active={activeExecution === "recovery"} unavailable={!recoveryModel.recovery.totalActions} tone="red" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <div className="rounded-[1.75rem] border border-red-400/15 bg-red-500/[0.035] p-5">
+        <div className="rounded-[1.75rem] border-2 border-[#C2413B]/30 bg-[#FFF7F5] p-5">
           <SectionHeader eyebrow="Broken Workflow Scanner" title="Production-hardening scan" description="Detects broken journey records, missing CAS/Visa/Payment/Portal links, sync failures, timeline gaps, and stale execution risk." />
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <SmallMetric label="Health" value={formatLabel(recoveryModel.scanner.health_status)} />
@@ -467,7 +666,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-[#E9802D]/30 bg-[#FFF8F1] p-5">
+        <div className="rounded-[1.75rem] border-2 border-[#17446F]/25 bg-[#F5F8FC] p-5">
           <SectionHeader eyebrow="Recovery Queues" title="CAS / Visa / Payment / Portal" description="Generated from the scanner and ready for executive approval/execution." />
           <div className="mt-4 flex flex-wrap gap-2">
             {["all", "cas", "visa", "payment", "portal"].map((queue) => (
@@ -475,7 +674,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
                 key={queue}
                 type="button"
                 onClick={() => setActiveRecoveryQueue(queue)}
-                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeRecoveryQueue === queue ? "bg-[#D4AF37] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#D4AF37]/30 hover:text-[#B84F0E]"}`}
+                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeRecoveryQueue === queue ? "bg-[#E9802D] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#E9802D]/40 hover:text-[#B84F0E]"}`}
               >
                 {formatLabel(queue)}
               </button>
@@ -491,7 +690,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white/[0.035] p-5">
+        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
           <SectionHeader eyebrow="Queue Health" title="Automation operating condition" description="Live pressure from pending, failed, duplicate-blocked, and completed execution logs." />
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <SmallMetric label="Pending" value={queueHealth.pendingCount} />
@@ -503,19 +702,35 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
-          <SectionHeader eyebrow="Batch Execution History" title="Recent automation execution feed" description="Latest completion, failure, and duplicate-protection events." />
-          <div className="mt-5 space-y-3">
-            {logs.slice(0, 8).map((log, index) => (
-              <LogRow key={log.id || `${log.template_key}-${index}`} log={log} />
-            ))}
-            {!logs.length ? <EmptyState text="No execution logs found yet." /> : null}
+        <div className="rounded-[1.75rem] border-2 border-[#243A60]/20 bg-[#FFFDF8] p-5 shadow-[0_12px_32px_rgba(23,36,61,0.05)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <SectionHeader eyebrow="Batch Execution History" title="Recent automation execution feed" description="Latest completion, failure, and duplicate-protection events." />
+            <button
+              type="button"
+              onClick={() => setShowExecutionHistory((value) => !value)}
+              className="shrink-0 rounded-xl border-2 border-[#243A60]/20 bg-white px-3 py-2 text-xs font-black text-[#17243D] transition hover:border-[#E9802D]/55 hover:text-[#B84F0E]"
+              aria-expanded={showExecutionHistory}
+            >
+              {showExecutionHistory ? "Hide history" : `Show history (${logs.length})`}
+            </button>
           </div>
+          {showExecutionHistory ? (
+            <div className="mt-5 max-h-[34rem] space-y-3 overflow-y-auto pr-1">
+              {logs.slice(0, 12).map((log, index) => (
+                <LogRow key={log.id || `${log.template_key}-${index}`} log={log} />
+              ))}
+              {!logs.length ? <EmptyState text="No execution logs found yet." /> : null}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-dashed border-[#243A60]/20 bg-white/70 px-4 py-3 text-xs font-bold text-[#667085]">
+              History is collapsed to keep the command center compact. Open it when you need audit detail.
+            </div>
+          )}
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[1.75rem] border border-[#E9802D]/30 bg-[#FFF8F1] p-5">
+        <div className="rounded-[1.75rem] border-2 border-[#17446F]/25 bg-[#F5F8FC] p-5">
           <SectionHeader eyebrow="Selected Queue" title={`${activeMode === "recovery" ? formatLabel(activeRecoveryQueue) : formatLabel(activeMode)} queue preview`} description="Switch between queues before executing a batch command." />
           <div className="mt-4 flex flex-wrap gap-2">
             {["critical", "executive", "conversion", "approval", "failed", "recovery"].map((mode) => (
@@ -523,7 +738,7 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
                 key={mode}
                 type="button"
                 onClick={() => setActiveMode(mode)}
-                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeMode === mode ? "bg-[#D4AF37] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#D4AF37]/30 hover:text-[#B84F0E]"}`}
+                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeMode === mode ? "bg-[#E9802D] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#E9802D]/40 hover:text-[#B84F0E]"}`}
               >
                 {formatLabel(mode)}
               </button>
@@ -541,13 +756,13 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-red-400/15 bg-red-500/[0.035] p-5">
+        <div className="rounded-[1.75rem] border-2 border-[#C2413B]/30 bg-[#FFF7F5] p-5">
           <SectionHeader eyebrow="Recovery Center" title="Failure prediction and recovery" description="Uses failed logs, duplicate blocks, scanner issues, risk pressure, and stale queue data to show where automation needs attention." />
           <div className="mt-5 space-y-3">
             <RecoveryRow title="Broken workflow issues" value={recoveryModel.scanner.totalIssues} detail="Scanner output from student journey data, verification snapshot, and operating records." tone="red" />
-            <RecoveryRow title="Generated actions" value={recoveryModel.recovery.totalActions} detail="Automatic recovery workflows ready for approval/execution." tone="gold" />
+            <RecoveryRow title="Generated actions" value={recoveryModel.recovery.totalActions} detail="Automatic recovery workflows ready for approval/execution." tone="navy" />
             <RecoveryRow title="Failed action retry" value={analytics.failedActions} detail="Retry only uses logs with saved original templates. Older logs without templates are skipped safely." tone="red" />
-            <RecoveryRow title="Duplicate protection" value={queueHealth.duplicateBlockedCount} detail="Blocks repeated task/reminder/draft creation for the same student action key." tone="gold" />
+            <RecoveryRow title="Duplicate protection" value={queueHealth.duplicateBlockedCount} detail="Blocks repeated task/reminder/draft creation for the same student action key." tone="navy" />
             <RecoveryRow title="Critical pressure" value={analytics.criticalStudents} detail="High-risk students that should be cleared before normal queue execution." tone="red" />
             <RecoveryRow title="Queue aging" value={queueHealth.oldestPendingAgeLabel || "Clear"} detail="Oldest pending/approval item based on available created/executed timestamps." tone="orange" />
           </div>
@@ -581,32 +796,50 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
 
 function MetricCard({ label, value, tone = "default" }) {
   return (
-    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <p className="text-xs uppercase tracking-wider text-[#7A8392]">{label}</p>
-      <p className="mt-2 text-3xl font-black text-[#17243D]">{value}</p>
+    <div className={`min-w-0 rounded-[1.4rem] border-2 p-4 shadow-[0_8px_22px_rgba(23,36,61,0.05)] ${getToneStyle(tone)}`}>
+      <p className="break-words text-[10px] font-black uppercase tracking-[0.14em] text-[#53657D]">{label}</p>
+      <p className="mt-2 break-words text-3xl font-black leading-none text-[#10233F]">{value}</p>
     </div>
   );
 }
 
 function SmallMetric({ label, value }) {
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8992A1]">{label}</p>
-      <p className="mt-2 text-2xl font-black text-[#17243D]">{value}</p>
+    <div className="min-w-0 rounded-[1.2rem] border-2 border-[#C8D5E4] bg-[#F7FAFD] p-4">
+      <p className="break-words text-[10px] font-black uppercase tracking-[0.14em] text-[#53657D]">{label}</p>
+      <p className="mt-2 break-words text-2xl font-black leading-tight text-[#10233F]">{value}</p>
     </div>
   );
 }
 
-function ActionButton({ title, description, onClick, executing, tone = "default" }) {
+function ActionButton({ title, description, onClick, busy = false, active = false, unavailable = false, tone = "default" }) {
+  const disabled = busy || unavailable;
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={executing}
-      className={`rounded-[1.5rem] border p-5 text-left transition hover:-translate-y-0.5 hover:border-[#D4AF37]/50 disabled:cursor-not-allowed disabled:opacity-50 ${getToneStyle(tone)}`}
+      disabled={disabled}
+      aria-busy={active}
+      className={`group min-h-[142px] rounded-[1.45rem] border-2 p-5 text-left shadow-[0_10px_28px_rgba(23,36,61,0.055)] transition duration-200 ${
+        disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(23,36,61,0.11)]"
+      } ${getToneStyle(tone)}`}
     >
-      <h3 className="font-black text-[#17243D]">{executing ? "Processing..." : title}</h3>
-      <p className="mt-2 text-sm leading-6 text-[#7A8392]">{description}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#B84F0E]">Executable Command</p>
+          <h3 className="mt-2 break-words text-base font-black leading-5 text-[#10233F]">
+            {active ? "Processing this command..." : unavailable ? "No actions available" : title}
+          </h3>
+        </div>
+        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${
+          active ? "border-[#E9802D] bg-[#E9802D] text-white" :
+          unavailable ? "border-[#C8D5E4] bg-white text-[#667085]" :
+          "border-[#17446F]/25 bg-white/80 text-[#17446F]"
+        }`}>
+          {active ? "Running" : unavailable ? "Empty" : "Run"}
+        </span>
+      </div>
+      <p className="mt-3 break-words text-sm font-semibold leading-5 text-[#596A80]">{description}</p>
     </button>
   );
 }
@@ -630,11 +863,11 @@ function LogRow({ log = {} }) {
           <p className="truncate font-black text-[#17243D]">{log.student_name || log.metadata?.title || "Executive Action"}</p>
           <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(log.action_type)} • {formatLabel(log.priority)} • {log.executed_at ? new Date(log.executed_at).toLocaleString() : "No time"}</p>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${status === "failed" ? "border-red-400/25 bg-red-500/10 text-red-300" : status === "duplicate_blocked" ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]" : "border-emerald-400/25 bg-emerald-500/10 text-emerald-300"}`}>
+        <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${status === "failed" ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]" : status === "duplicate_blocked" ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]" : "border-[#E9802D]/30 bg-[#FFF1E3] text-[#B84F0E]"}`}>
           {formatLabel(status)}
         </span>
       </div>
-      {log.error_message ? <p className="mt-2 text-xs leading-5 text-red-300/80">{log.error_message}</p> : null}
+      {log.error_message ? <p className="mt-2 text-xs leading-5 text-[#A8342F]">{log.error_message}</p> : null}
     </div>
   );
 }
@@ -660,7 +893,7 @@ function StudentRow({ item = {}, mode = "critical" }) {
 
 function IssueRow({ issue = {} }) {
   return (
-    <div className="rounded-2xl border border-red-400/15 bg-red-500/[0.04] p-4">
+    <div className="rounded-2xl border-2 border-[#C2413B]/30 bg-[#FFF7F5] p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="truncate font-black text-[#17243D]">{issue.title || "Workflow Issue"}</p>
@@ -695,20 +928,20 @@ function Badge({ label, tone = "default" }) {
 }
 
 function EmptyState({ text }) {
-  return <div className="rounded-2xl border border-dashed border-[#243A60]/18 bg-white/[0.02] p-5 text-sm text-[#8992A1]">{text}</div>;
+  return <div className="rounded-2xl border border-dashed border-[#243A60]/18 bg-white p-5 text-sm text-[#8992A1]">{text}</div>;
 }
 
 function getToneStyle(tone = "default") {
-  if (tone === "red") return "border-red-400/20 bg-red-500/[0.05]";
-  if (tone === "green") return "border-emerald-400/20 bg-emerald-500/[0.05]";
-  if (tone === "gold") return "border-[#E9802D]/35 bg-[#FFFDF8]";
-  if (tone === "orange") return "border-orange-400/20 bg-orange-500/[0.05]";
-  return "border-[#243A60]/18 bg-white";
+  if (tone === "red") return "border-[#FF8F94] bg-[#FFF4F3]";
+  if (tone === "green") return "border-[#55D9AA] bg-[#EEFBF5]";
+  if (tone === "navy") return "border-[#17446F] bg-[#EEF4FA]";
+  if (tone === "orange") return "border-[#FF9A4A] bg-[#FFF5EC]";
+  return "border-[#C8D5E4] bg-[#F8FAFD]";
 }
 
 function getBadgeStyle(tone = "default") {
-  if (tone === "red") return "border-red-400/25 bg-red-500/10 text-red-300";
-  if (tone === "green") return "border-emerald-400/25 bg-emerald-500/10 text-emerald-300";
+  if (tone === "red") return "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
+  if (tone === "green") return "border-[#E9802D]/30 bg-[#FFF1E3] text-[#B84F0E]";
   return "border-[#243A60]/18 bg-white text-[#667085]";
 }
 

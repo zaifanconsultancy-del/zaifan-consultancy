@@ -4,7 +4,33 @@
 // and lazy-loaded risk/opportunity intelligence.
 // Visual hierarchy aligned with the approved Zaifan Admin OS cream + navy + orange system.
 
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  Bot,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleGauge,
+  Clock3,
+  Crown,
+  FileWarning,
+  GraduationCap,
+  HeartPulse,
+  Radar,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+  UserRoundCheck,
+  Workflow,
+  MousePointerClick,
+  Info,
+  Zap,
+} from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 const RiskMonitoringPanel = lazy(() => import("./RiskMonitoringPanel"));
 const OpportunityFeedPanel = lazy(() => import("./OpportunityFeedPanel"));
 import {
@@ -486,7 +512,59 @@ function buildAutomationPressure(students = []) {
   return summary;
 }
 
+function buildCommandHealth(metrics = {}, workflowScanner = {}, automationPressure = {}, platformHealth = {}) {
+  const total = Math.max(1, asNumber(metrics.total));
+  const riskPressure = percent(
+    asNumber(metrics.criticalRisk) + asNumber(metrics.highRisk),
+    total
+  );
+  const operationalPressure = Math.min(
+    100,
+    Math.round(
+      (percent(asNumber(metrics.documentWeak), total) +
+        percent(asNumber(metrics.taskProblems), total) +
+        percent(asNumber(metrics.staleStudents), total) +
+        asNumber(automationPressure.pressureScore)) /
+        4
+    )
+  );
+  const workflowPenalty = Math.min(100, asNumber(workflowScanner.totalIssues) * 7);
+  const platformScore = asNumber(platformHealth.averageScore, asNumber(metrics.coverage));
+
+  const readiness = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        platformScore * 0.3 +
+          asNumber(metrics.coverage) * 0.2 +
+          asNumber(metrics.journeyPercent?.submitted) * 0.15 +
+          asNumber(metrics.journeyPercent?.offers) * 0.15 +
+          (100 - riskPressure) * 0.1 +
+          (100 - workflowPenalty) * 0.1
+      )
+    )
+  );
+
+  return {
+    readiness,
+    riskPressure,
+    operationalPressure,
+    workflowPenalty,
+    status:
+      readiness >= 80
+        ? "Strong"
+        : readiness >= 60
+        ? "Watch"
+        : readiness >= 40
+        ? "Intervention"
+        : "Critical",
+  };
+}
+
 function ExecutiveAIDashboard({ students = [] }) {
+  const reduceMotion = useReducedMotion();
+
   const metrics = useMemo(() => buildMetrics(students), [students]);
   const executiveIntelligence = useMemo(() => buildExecutiveIntelligence(students), [students]);
   const automationPressure = useMemo(() => buildAutomationPressure(students), [students]);
@@ -527,52 +605,118 @@ const recoveryEngine = useMemo(
   [workflowScanner]
 );
 
+const commandHealth = useMemo(
+  () =>
+    buildCommandHealth(
+      metrics,
+      workflowScanner,
+      automationPressure,
+      platformHealth
+    ),
+  [metrics, workflowScanner, automationPressure, platformHealth]
+);
+
   return (
-    <div className="space-y-6 rounded-[2rem] bg-[#fffaf3] p-1 text-slate-950 sm:p-2">
-      <div className="relative overflow-hidden rounded-[2rem] border-2 border-orange-300 bg-gradient-to-br from-[#fff7ed] via-white to-[#fff3df] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-7">
-        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-orange-200/35 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-amber-100/60 blur-3xl" />
-        <p className="relative text-xs font-black uppercase tracking-[0.25em] text-orange-600">
-          Executive Intelligence
-        </p>
+    <motion.section
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.28 }}
+      className="space-y-5 text-[#10233f]"
+    >
+      <div className="rounded-[2rem] border-[3px] border-orange-400 bg-[#fff8ee] p-3 shadow-[0_18px_55px_rgba(15,35,63,0.08)] sm:p-4">
+        <div className="grid overflow-hidden rounded-[1.6rem] border-2 border-[#234e78] xl:grid-cols-[1.35fr_0.65fr]">
+          <div className="bg-[#123865] p-5 text-white sm:p-7">
+            <div className="flex flex-wrap gap-2">
+              <CommandChip icon={Crown}>Executive Intelligence</CommandChip>
+              <CommandChip icon={ShieldCheck}>Student OS</CommandChip>
+              <CommandChip icon={Workflow}>Workflow Verification</CommandChip>
+            </div>
 
-        <h2 className="relative mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-          Student OS Command Dashboard
-        </h2>
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
+              Zaifan Command Intelligence
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-white">
+              One leadership surface for portfolio risk, opportunity, applications,
+              offers, CAS, visa, documents, tasks, workflow failures, recovery, and
+              automation pressure.
+            </p>
 
-        <p className="relative mt-2 max-w-4xl text-sm leading-6 text-slate-500 sm:text-base">
-          Executive-level intelligence across applications, offers, CAS, visa,
-          university planning, tasks, documents, student risk, and automation pressure.
-        </p>
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <NavyMetric label="Students" value={metrics.total} />
+              <NavyMetric label="AI Coverage" value={`${metrics.coverage}%`} />
+              <NavyMetric label="Critical Risk" value={metrics.criticalRisk} />
+              <NavyMetric label="Conversion Ready" value={metrics.conversionReady} />
+            </div>
+          </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <CommandPill
-            label="Portfolio Risk"
-            value={`${metrics.averageRisk}/100`}
-            tone={metrics.averageRisk >= 65 ? "risk" : metrics.averageRisk >= 35 ? "warning" : "good"}
-          />
-          <CommandPill
-            label="Opportunity Index"
-            value={`${metrics.averageOpportunity}/100`}
-            tone={metrics.averageOpportunity >= 65 ? "good" : "neutral"}
-          />
-          <CommandPill
-            label="AI Coverage"
-            value={`${metrics.coverage}%`}
-            tone={metrics.coverage >= 80 ? "good" : metrics.coverage >= 50 ? "warning" : "risk"}
-          />
+          <div className="border-t-2 border-orange-300 bg-orange-500 p-5 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
+            <div className="flex items-center gap-2">
+              <CircleGauge size={18} />
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-white">
+                Command Readiness
+              </p>
+            </div>
+            <p className="mt-3 text-5xl font-black text-white">{commandHealth.readiness}</p>
+            <p className="mt-1 text-sm font-black uppercase text-white">
+              {commandHealth.status}
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeCommandMetric label="Avg Risk" value={`${metrics.averageRisk}/100`} />
+              <OrangeCommandMetric label="Opportunity" value={`${metrics.averageOpportunity}/100`} />
+              <OrangeCommandMetric label="Workflow Breaks" value={workflowScanner.totalIssues || 0} />
+              <OrangeCommandMetric label="Pressure" value={`${automationPressure.pressureScore}/100`} />
+            </div>
+          </div>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-            Leadership Priority
-          </p>
-          <p className="mt-2 text-lg font-black text-slate-950">
-            {executiveIntelligence.leadershipPriority}
-          </p>
+        <div className="mt-3 grid gap-3 rounded-[1.35rem] border-2 border-orange-200 bg-[#fffaf4] p-4 md:grid-cols-3 sm:p-5">
+          <CommandPill label="Portfolio Risk" value={`${metrics.averageRisk}/100`} tone={metrics.averageRisk >= 65 ? "risk" : metrics.averageRisk >= 35 ? "warning" : "good"} />
+          <CommandPill label="Opportunity Index" value={`${metrics.averageOpportunity}/100`} tone={metrics.averageOpportunity >= 65 ? "good" : "neutral"} />
+          <CommandPill label="AI Coverage" value={`${metrics.coverage}%`} tone={metrics.coverage >= 80 ? "good" : metrics.coverage >= 50 ? "warning" : "risk"} />
+        </div>
+      </div>
+
+      <div className="grid gap-3 rounded-[1.7rem] border-[3px] border-[#234e78] bg-[#fff8ef] p-4 md:grid-cols-3">
+        <ExecutiveGuideCard
+          icon={Info}
+          label="Read-only intelligence"
+          detail="Metric and health cards explain the current operating state. They are intentionally not clickable."
+          tone="navy"
+        />
+        <ExecutiveGuideCard
+          icon={AlertTriangle}
+          label="Attention signals"
+          detail="Red and amber surfaces identify risk, broken workflows, or work that needs review."
+          tone="warning"
+        />
+        <ExecutiveGuideCard
+          icon={MousePointerClick}
+          label="Interactive areas"
+          detail="Only visible buttons, filters, disclosure controls, and dedicated action panels should be clicked."
+          tone="orange"
+        />
+      </div>
+
+      <div className="rounded-[1.65rem] border-[3px] border-orange-300 bg-[#fff8ef] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-[3px] border-[#123865] bg-[#123865] text-white">
+            <Target size={20} />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Leadership Priority
+            </p>
+            <p className="mt-1 text-lg font-black text-[#10233f]">
+              {executiveIntelligence.leadershipPriority}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-600">
+              {automationPressure.automationCandidates} automation candidate(s), {automationPressure.approvalLikely} likely approval-controlled, and {workflowScanner.totalIssues || 0} workflow break(s) currently detected.
+            </p>
+          </div>
         </div>
 
-        <div className="relative mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <ExecutiveSignal label="Students in command" value={metrics.total} detail="Current executive portfolio" />
           <ExecutiveSignal label="Immediate rescue" value={executiveIntelligence.rescueCases} detail="High-value cases under pressure" tone="risk" />
           <ExecutiveSignal label="Likely wins" value={executiveIntelligence.likelyWins} detail="Strong conversion potential" tone="good" />
@@ -580,30 +724,20 @@ const recoveryEngine = useMemo(
         </div>
       </div>
 
-      <SectionTitle
-        eyebrow="Command Metrics"
-        title="Executive Overview"
-        description="Fast view of the most important Student OS signals."
-      />
-
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
-        <MetricCard label="Students Loaded" value={metrics.total} />
-        <MetricCard label="AI Coverage" value={`${metrics.coverage}%`} />
-        <MetricCard label="Executive Priority" value={metrics.executivePriority} tone="gold" />
-        <MetricCard label="Critical Risk" value={metrics.criticalRisk} tone="risk" />
-        <MetricCard label="High Risk" value={metrics.highRisk} tone="warning" />
-        <MetricCard label="Medium Risk" value={metrics.mediumRisk} />
-        <MetricCard label="High Opportunity" value={metrics.highOpportunity} tone="good" />
-        <MetricCard label="Conversion Ready" value={metrics.conversionReady} tone="good" />
+      <SectionTitle eyebrow="Command Metrics" title="Executive Overview" description="The highest-value portfolio signals before drilling into individual workflows." icon={Activity} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Students Loaded" value={metrics.total} icon={GraduationCap} />
+        <MetricCard label="AI Coverage" value={`${metrics.coverage}%`} icon={Bot} />
+        <MetricCard label="Executive Priority" value={metrics.executivePriority} tone="gold" icon={Crown} />
+        <MetricCard label="Critical Risk" value={metrics.criticalRisk} tone="risk" icon={AlertTriangle} />
+        <MetricCard label="High Risk" value={metrics.highRisk} tone="warning" icon={HeartPulse} />
+        <MetricCard label="Medium Risk" value={metrics.mediumRisk} icon={Radar} />
+        <MetricCard label="High Opportunity" value={metrics.highOpportunity} tone="good" icon={TrendingUp} />
+        <MetricCard label="Conversion Ready" value={metrics.conversionReady} tone="good" icon={UserRoundCheck} />
       </div>
 
-      <SectionTitle
-        eyebrow="Student Journey"
-        title="Application → Offer → CAS → Visa"
-        description="This is the real operating system path, not CRM lead scoring."
-      />
-
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <SectionTitle eyebrow="Student Journey" title="Application → Offer → CAS → Visa" description="Real Student OS movement rather than generic CRM lead scoring." icon={Workflow} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard label="No Application" value={metrics.journey.notStarted} tone="warning" />
         <MetricCard label="Application Started" value={metrics.journey.started} />
         <MetricCard label="Application Submitted" value={metrics.journey.submitted} />
@@ -618,165 +752,214 @@ const recoveryEngine = useMemo(
 
       <JourneyProgressPanel metrics={metrics} />
 
-      <SectionTitle
-        eyebrow="Foundation Health"
-        title="Operational Gaps"
-        description="These numbers show what counselors need to fix first."
-      />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <HealthCard
-          label="No University Plan"
-          value={metrics.noUniversityPlan}
-          detail="Students without dream, target, or safe planning."
-          tone="warning"
-        />
-        <HealthCard
-          label="Missing Safe University"
-          value={metrics.missingSafeUniversity}
-          detail="Students with plans but no safe option."
-          tone="risk"
-        />
-        <HealthCard
-          label="Weak Documents"
-          value={metrics.documentWeak}
-          detail="Low readiness or missing document signals."
-          tone="warning"
-        />
-        <HealthCard
-          label="Task Problems"
-          value={metrics.taskProblems}
-          detail="Overdue or overloaded student task queues."
-          tone="risk"
-        />
+      <SectionTitle eyebrow="Foundation Health" title="Operational Gaps" description="The counselor-facing weaknesses most likely to block movement." icon={FileWarning} />
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <HealthCard label="No University Plan" value={metrics.noUniversityPlan} detail="Students without dream, target, or safe planning." tone="warning" />
+        <HealthCard label="Missing Safe University" value={metrics.missingSafeUniversity} detail="Students with plans but no safe option." tone="risk" />
+        <HealthCard label="Weak Documents" value={metrics.documentWeak} detail="Low readiness or missing document signals." tone="warning" />
+        <HealthCard label="Task Problems" value={metrics.taskProblems} detail="Overdue or overloaded student task queues." tone="risk" />
       </div>
 
-      <SectionTitle
-        eyebrow="Executive Automation Pressure"
-        title="Automation Engine Readiness"
-        description="Shows how much counselor work can be prepared by Executive AI."
-      />
-
+      <SectionTitle eyebrow="Executive Automation Pressure" title="Automation Engine Readiness" description="How much counselor work Executive AI can prepare while preserving human control." icon={Zap} />
       <AutomationPressurePanel automationPressure={automationPressure} />
 
-      <SectionTitle
-        eyebrow="Executive Business Intelligence"
-        title="Portfolio Forecast & Leadership View"
-        description="This layer helps the consultancy see expected wins, risky revenue, stalled students, and next-stage movement."
-      />
-
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <ForecastCard
-          label="Likely Wins"
-          value={executiveIntelligence.likelyWins}
-          detail="High opportunity with controlled risk."
-          tone="good"
-        />
-        <ForecastCard
-          label="Rescue Cases"
-          value={executiveIntelligence.rescueCases}
-          detail="High value but needs intervention."
-          tone="warning"
-        />
-        <ForecastCard
-          label="Visa Ready Soon"
-          value={executiveIntelligence.readyForVisa}
-          detail="Offer/CAS students close to visa."
-          tone="gold"
-        />
-        <ForecastCard
-          label="Stalled Watch"
-          value={executiveIntelligence.stalled.length}
-          detail="Needs fresh movement or follow-up."
-          tone="risk"
-        />
-        <ForecastCard
-          label="Rejected / Lost"
-          value={executiveIntelligence.lostOrRejected}
-          detail="Cases needing recovery or closure."
-          tone="risk"
-        />
-        <ForecastCard
-          label="Opportunity Power"
-          value={`${metrics.averageOpportunity}/100`}
-          detail="Portfolio-wide opportunity average."
-          tone="good"
-        />
+      <SectionTitle eyebrow="Executive Business Intelligence" title="Portfolio Forecast & Leadership View" description="Expected wins, risky value, stalled students, and next-stage movement." icon={TrendingUp} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <ForecastCard label="Likely Wins" value={executiveIntelligence.likelyWins} detail="High opportunity with controlled risk." tone="good" />
+        <ForecastCard label="Rescue Cases" value={executiveIntelligence.rescueCases} detail="High value but needs intervention." tone="warning" />
+        <ForecastCard label="Visa Ready Soon" value={executiveIntelligence.readyForVisa} detail="Offer/CAS students close to visa." tone="gold" />
+        <ForecastCard label="Stalled Watch" value={executiveIntelligence.stalled.length} detail="Needs fresh movement or follow-up." tone="risk" />
+        <ForecastCard label="Rejected / Lost" value={executiveIntelligence.lostOrRejected} detail="Cases needing recovery or closure." tone="risk" />
+        <ForecastCard label="Opportunity Power" value={`${metrics.averageOpportunity}/100`} detail="Portfolio-wide opportunity average." tone="good" />
       </div>
 
       <ExecutiveRadar metrics={metrics} />
 
-      <div className="grid gap-5 xl:grid-cols-3">
-        <ExecutiveStudentList
-          title="Highest Risk Students"
-          items={executiveIntelligence.rankedRisk}
-          scoreKey="risk_score"
-          tone="risk"
-        />
-        <ExecutiveStudentList
-          title="Highest Opportunity Students"
-          items={executiveIntelligence.rankedOpportunity}
-          scoreKey="opportunity_score"
-          tone="gold"
-        />
-        <ExecutiveStudentList
-          title="Stalled / Low Movement"
-          items={executiveIntelligence.stalled}
-          scoreKey="days_since_updated"
-          tone="warning"
-        />
+      <div className="grid gap-4 xl:grid-cols-3">
+        <ExecutiveStudentList title="Highest Risk Students" items={executiveIntelligence.rankedRisk} scoreKey="risk_score" tone="risk" />
+        <ExecutiveStudentList title="Highest Opportunity Students" items={executiveIntelligence.rankedOpportunity} scoreKey="opportunity_score" tone="gold" />
+        <ExecutiveStudentList title="Stalled / Low Movement" items={executiveIntelligence.stalled} scoreKey="days_since_updated" tone="warning" />
       </div>
 
-      <ExecutiveOperationsExpansion
-        metrics={metrics}
-        executiveIntelligence={executiveIntelligence}
-        automationPressure={automationPressure}
-      />
-<PlatformVerificationCenter
-  platformHealth={platformHealth}
-  brokenWorkflows={brokenWorkflows}
-/>
+      <ExecutiveDisclosure
+        eyebrow="Operations"
+        title="Admin Operations & Command Readiness"
+        description="Daily operating score, executive priority, and counselor workload signals."
+        defaultOpen
+      >
+        <ExecutiveOperationsExpansion
+          metrics={metrics}
+          executiveIntelligence={executiveIntelligence}
+          automationPressure={automationPressure}
+        />
+      </ExecutiveDisclosure>
 
-      <RecoveryIntelligenceCenter
-        workflowScanner={workflowScanner}
-        recoveryEngine={recoveryEngine}
-      />
+      <ExecutiveDisclosure
+        eyebrow="Verification"
+        title="Platform Verification & Production Readiness"
+        description="Technical workflow validation, broken-stage scanning, and production hardening. Open this when auditing the platform."
+      >
+        <div className="space-y-4">
+          <PlatformVerificationCenter
+            platformHealth={platformHealth}
+            brokenWorkflows={brokenWorkflows}
+          />
+          <ProductionHardeningMonitor
+            metrics={metrics}
+            platformHealth={platformHealth}
+            workflowScanner={workflowScanner}
+            recoveryEngine={recoveryEngine}
+            automationPressure={automationPressure}
+          />
+        </div>
+      </ExecutiveDisclosure>
 
-      <WorkflowFailureHeatmap
-        workflowScanner={workflowScanner}
-      />
+      <ExecutiveDisclosure
+        eyebrow="Recovery"
+        title="Workflow Recovery Center"
+        description="Broken workflows, generated recovery actions, and stage-level failure diagnostics."
+      >
+        <div className="space-y-4">
+          <RecoveryIntelligenceCenter
+            workflowScanner={workflowScanner}
+            recoveryEngine={recoveryEngine}
+          />
+          <WorkflowFailureHeatmap workflowScanner={workflowScanner} />
+          <ExecutiveRecoveryQueue
+            issues={workflowScanner.issues || []}
+            recoveryEngine={recoveryEngine}
+          />
+        </div>
+      </ExecutiveDisclosure>
 
-      <ExecutiveRecoveryQueue
-        issues={workflowScanner.issues || []}
-        recoveryEngine={recoveryEngine}
-      />
+      <ExecutiveDisclosure
+        eyebrow="Student Intelligence"
+        title="Risk Command Center"
+        description="Open only when you need student-level risk diagnosis and rescue priorities."
+      >
+        <Suspense fallback={<IntelligenceFeedLoader label="Loading risk intelligence..." />}>
+          <RiskMonitoringPanel students={students} />
+        </Suspense>
+      </ExecutiveDisclosure>
 
-      <ProductionHardeningMonitor
-        metrics={metrics}
-        platformHealth={platformHealth}
-        workflowScanner={workflowScanner}
-        recoveryEngine={recoveryEngine}
-        automationPressure={automationPressure}
-      />
+      <ExecutiveDisclosure
+        eyebrow="Student Intelligence"
+        title="Opportunity Command Center"
+        description="Open only when you need student-level opportunity, conversion, CAS, and visa signals."
+      >
+        <Suspense fallback={<IntelligenceFeedLoader label="Loading opportunity intelligence..." />}>
+          <OpportunityFeedPanel students={students} />
+        </Suspense>
+      </ExecutiveDisclosure>
+    </motion.section>
+  );
+}
 
-      <Suspense fallback={<IntelligenceFeedLoader label="Loading risk intelligence..." />}>
-        <RiskMonitoringPanel students={students} />
-      </Suspense>
-      <Suspense fallback={<IntelligenceFeedLoader label="Loading opportunity intelligence..." />}>
-        <OpportunityFeedPanel students={students} />
-      </Suspense>
+function ExecutiveGuideCard({ icon: Icon, label, detail, tone = "navy" }) {
+  const style =
+    tone === "warning"
+      ? "border-amber-300 bg-amber-50"
+      : tone === "orange"
+      ? "border-orange-300 bg-orange-50"
+      : "border-[#234e78] bg-[#edf4fb]";
+
+  const iconStyle =
+    tone === "warning"
+      ? "border-amber-300 bg-white text-amber-700"
+      : tone === "orange"
+      ? "border-orange-300 bg-white text-orange-700"
+      : "border-[#234e78] bg-[#123865] text-white";
+
+  return (
+    <div className={`rounded-[1.25rem] border-2 p-4 ${style}`}>
+      <div className="flex items-start gap-3">
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${iconStyle}`}>
+          <Icon size={16} />
+        </span>
+        <div>
+          <p className="text-xs font-black text-[#10233f]">{label}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">{detail}</p>
+        </div>
+      </div>
     </div>
   );
 }
 
-function SectionTitle({ eyebrow, title, description }) {
+function ExecutiveDisclosure({
+  eyebrow,
+  title,
+  description,
+  children,
+  defaultOpen = false,
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
-    <div>
-      <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
-        {eyebrow}
-      </p>
-      <h3 className="mt-1 text-xl font-black text-slate-950">{title}</h3>
-      {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
+    <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#234e78] bg-[#fff8ef] shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0f3158] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200"
+      >
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-300">
+            {eyebrow}
+          </p>
+          <h3 className="mt-1 text-lg font-black text-white sm:text-xl">{title}</h3>
+          <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-white/80">
+            {description}
+          </p>
+        </div>
+
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
+          {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </span>
+      </button>
+
+      {open ? <div className="p-4 sm:p-5">{children}</div> : null}
+    </section>
+  );
+}
+
+function CommandChip({ icon: Icon, children }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+      <Icon size={11} />
+      {children}
+    </span>
+  );
+}
+
+function NavyMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.09em] text-white">{label}</p>
+      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function OrangeCommandMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">{label}</p>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function SectionTitle({ eyebrow, title, description, icon: Icon = Sparkles }) {
+  return (
+    <div className="flex items-start gap-3 border-l-[5px] border-orange-500 pl-4">
+      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-[3px] border-orange-300 bg-orange-50 text-orange-700">
+        <Icon size={17} />
+      </div>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-orange-700">{eyebrow}</p>
+        <h3 className="mt-0.5 text-xl font-black text-[#10233f]">{title}</h3>
+        {description ? <p className="mt-1 text-sm font-semibold text-slate-600">{description}</p> : null}
+      </div>
     </div>
   );
 }
@@ -784,37 +967,41 @@ function SectionTitle({ eyebrow, title, description }) {
 function CommandPill({ label, value, tone = "neutral" }) {
   const toneClass =
     tone === "risk"
-      ? "border-red-200 bg-red-50 text-red-700"
+      ? "border-red-400 bg-[#fff0f0] text-red-800"
       : tone === "warning"
-      ? "border-amber-200 bg-amber-50 text-amber-700"
+      ? "border-amber-400 bg-[#fff4d8] text-amber-900"
       : tone === "good"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-slate-200 bg-slate-50 text-slate-700";
+      ? "border-emerald-400 bg-[#e8fbf3] text-emerald-800"
+      : "border-[#234e78] bg-[#eaf2fa] text-[#123865]";
 
   return (
-    <div className={`rounded-2xl border px-4 py-3 ${toneClass}`}>
-      <p className="text-[10px] uppercase tracking-[0.2em] opacity-60">{label}</p>
-      <p className="mt-1 text-2xl font-black">{value}</p>
+    <div className={`cursor-default rounded-[1.25rem] border-[3px] px-4 py-3 shadow-[0_5px_14px_rgba(15,35,63,0.04)] ${toneClass}`}>
+      <p className="text-[9px] font-black uppercase tracking-[0.14em]">{label}</p>
+      <p className="mt-1 text-2xl font-black leading-none">{value}</p>
+      <p className="mt-2 text-[10px] font-bold opacity-75">Read-only portfolio metric</p>
     </div>
   );
 }
 
-function MetricCard({ label, value, tone = "default" }) {
-  const valueClass =
+function MetricCard({ label, value, tone = "default", icon: Icon = Activity }) {
+  const boxClass =
     tone === "risk"
-      ? "text-red-600"
+      ? "border-red-300 bg-red-50"
       : tone === "warning"
-      ? "text-amber-700"
+      ? "border-amber-300 bg-amber-50"
       : tone === "good"
-      ? "text-emerald-600"
+      ? "border-emerald-300 bg-emerald-50"
       : tone === "gold"
-      ? "text-orange-600"
-      : "text-orange-600";
+      ? "border-orange-300 bg-orange-50"
+      : "border-slate-300 bg-white";
 
   return (
-    <div className="rounded-[1.5rem] border border-slate-300 bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)] p-5">
-      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
-      <p className={`mt-3 text-3xl font-black ${valueClass}`}>{value}</p>
+    <div className={`cursor-default select-none rounded-[1.25rem] border-[3px] p-4 ${boxClass}`}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">{label}</p>
+        <Icon size={15} className="text-orange-700" />
+      </div>
+      <p className="mt-2 text-3xl font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
@@ -825,14 +1012,14 @@ function HealthCard({ label, value, detail, tone = "default" }) {
       ? "border-red-200 bg-red-50 text-red-700"
       : tone === "warning"
       ? "border-amber-200 bg-amber-50 text-amber-700"
-      : "border-slate-200 bg-slate-50 text-slate-600";
+      : "border-[#cbd6e2] bg-[#f7f9fc] text-[#36506f]";
 
   return (
-    <div className="rounded-[1.5rem] border border-slate-300 bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)] p-5">
+    <div className="cursor-default rounded-[1.5rem] border-[3px] border-slate-300 bg-[#fffdf8] p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
-          <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#4d6380]">{label}</p>
+          <p className="mt-3 text-3xl font-black text-[#10233f]">{value}</p>
         </div>
 
         <span
@@ -842,7 +1029,7 @@ function HealthCard({ label, value, detail, tone = "default" }) {
         </span>
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-slate-500">{detail}</p>
+      <p className="mt-3 text-sm leading-relaxed text-[#4d6380]">{detail}</p>
     </div>
   );
 }
@@ -857,15 +1044,15 @@ function ForecastCard({ label, value, detail, tone = "default" }) {
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : tone === "gold"
       ? "border-orange-200 bg-orange-50 text-orange-700"
-      : "border-slate-200 bg-white shadow-sm text-slate-600";
+      : "border-[#cbd6e2] bg-white shadow-sm text-[#36506f]";
 
   return (
-    <div className={`rounded-[1.5rem] border p-5 ${style}`}>
+    <div className={`cursor-default rounded-[1.5rem] border-2 p-5 ${style}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
         {label}
       </p>
-      <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+      <p className="mt-3 text-3xl font-black text-[#10233f]">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-[#4d6380]">{detail}</p>
     </div>
   );
 }
@@ -881,11 +1068,11 @@ function JourneyProgressPanel({ metrics }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-slate-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)] p-5">
-      <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
+    <div className="rounded-[1.75rem] border-[3px] border-slate-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)] p-5">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">
         Journey Conversion Map
       </p>
-      <h3 className="mt-1 text-xl font-black text-slate-950">
+      <h3 className="mt-1 text-xl font-black text-[#10233f]">
         Student OS Movement Funnel
       </h3>
 
@@ -900,24 +1087,24 @@ function JourneyProgressPanel({ metrics }) {
 
 function AutomationPressurePanel({ automationPressure }) {
   return (
-    <div className="rounded-[1.75rem] border border-orange-300 bg-[#fff7ed] p-5">
+    <div className="rounded-[1.75rem] border-[3px] border-orange-300 bg-[#fff7ed] p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">
             Automation Pressure
           </p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">
+          <h3 className="mt-1 text-xl font-black text-[#10233f]">
             {automationPressure.estimatedWorkload} Workload
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
             Executive AI sees {automationPressure.automationCandidates} student(s) that can
             generate prepared counselor actions. {automationPressure.approvalLikely} likely need
             approval before execution.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
+        <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] px-5 py-4 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
             Pressure Score
           </p>
           <p className="mt-2 text-3xl font-black text-orange-700">
@@ -951,17 +1138,17 @@ function ExecutiveRadar({ metrics }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-slate-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)] p-5">
+    <div className="rounded-[1.75rem] border-[3px] border-slate-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)] p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">
             Executive Health Radar
           </p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">
+          <h3 className="mt-1 text-xl font-black text-[#10233f]">
             Operating System Coverage
           </h3>
         </div>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-[#61738d]">
           Positive bars show progress; weak bars reveal operational pressure.
         </p>
       </div>
@@ -984,8 +1171,8 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
       : "border-orange-200 bg-orange-50 text-orange-700";
 
   return (
-    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
-      <h3 className="font-black text-slate-950">{title}</h3>
+    <div className="rounded-[1.75rem] border-2 border-slate-300 bg-[#f7f9fc] p-5">
+      <h3 className="font-black text-[#10233f]">{title}</h3>
 
       <div className="mt-4 space-y-3">
         {items.length ? (
@@ -994,12 +1181,12 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
             return (
               <div
                 key={`${title}-${student?.id || student?.student_id || index}`}
-                className="rounded-xl border border-slate-200 bg-white shadow-sm p-4"
+                className="rounded-xl border-2 border-slate-300 bg-white shadow-sm p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-950">{name}</p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="truncate font-semibold text-[#10233f]">{name}</p>
+                    <p className="mt-1 text-xs text-[#61738d]">
                       {formatLabel(getJourneyStage(student))} •{" "}
                       {student?.executive_category || "Standard"}
                     </p>
@@ -1012,14 +1199,14 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
                   </span>
                 </div>
 
-                <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#4d6380]">
                   {student?.summary || student?.gpt_summary || "No executive summary available."}
                 </p>
               </div>
             );
           })
         ) : (
-          <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-400">
+          <p className="rounded-xl border-2 border-slate-300 bg-[#f7f9fc] p-4 text-sm text-[#61738d]">
             No records yet.
           </p>
         )}
@@ -1030,12 +1217,12 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
 
 function ProgressBar({ label, value }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+    <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] p-4">
+      <div className="flex items-center justify-between text-xs font-bold text-[#4d6380]">
         <span>{label}</span>
         <span>{value}%</span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dce4ed]">
         <div className="h-full rounded-full bg-orange-500" style={{ width: `${value}%` }} />
       </div>
     </div>
@@ -1044,9 +1231,9 @@ function ProgressBar({ label, value }) {
 
 function SmallInfo({ label, value }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
+    <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">{label}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
@@ -1074,23 +1261,23 @@ function ExecutiveOperationsExpansion({ metrics, executiveIntelligence, automati
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-amber-50/70 p-5">
+    <div className="rounded-[1.75rem] border-[3px] border-orange-300 bg-[#fff8ee] p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">
             Admin Operations Extension
           </p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">
+          <h3 className="mt-1 text-xl font-black text-[#10233f]">
             Command Readiness Snapshot
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
             This connects Executive AI intelligence to daily admin operations. Use it
             with the new Operations Center tab for one-screen CEO/Counselor visibility.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
+        <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] px-5 py-4 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
             Operating Score
           </p>
           <p className="mt-2 text-3xl font-black text-orange-600">
@@ -1101,12 +1288,12 @@ function ExecutiveOperationsExpansion({ metrics, executiveIntelligence, automati
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {commandRows.map(([label, value, detail]) => (
-          <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+          <div key={label} className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#61738d]">
               {label}
             </p>
-            <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
-            <p className="mt-2 text-xs leading-5 text-slate-400">{detail}</p>
+            <p className="mt-2 text-3xl font-black text-[#10233f]">{value}</p>
+            <p className="mt-2 text-xs leading-5 text-[#61738d]">{detail}</p>
           </div>
         ))}
       </div>
@@ -1137,16 +1324,16 @@ function PlatformVerificationCenter({
   brokenWorkflows,
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-blue-300 bg-blue-50 p-5">
-      <p className="text-xs uppercase tracking-[0.22em] text-blue-700">
+    <div className="rounded-[1.75rem] border-[3px] border-slate-300 bg-white p-5">
+      <p className="text-xs uppercase tracking-[0.22em] text-[#10233f]">
         Platform Verification
       </p>
 
-      <h3 className="mt-1 text-xl font-black text-slate-950">
+      <h3 className="mt-1 text-xl font-black text-[#10233f]">
         End-to-End Workflow Validation
       </h3>
 
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="mt-2 text-sm text-[#4d6380]">
         Verifies Inquiry → University →
         Application → Offer → CAS →
         Visa → Payment → Portal →
@@ -1185,16 +1372,16 @@ function PlatformVerificationCenter({
         />
       </div>
 
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm font-black text-slate-950">
+      <div className="mt-5 rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] p-4">
+        <p className="text-sm font-black text-[#10233f]">
           Broken Workflow Records
         </p>
 
-        <p className="mt-2 text-3xl font-black text-blue-700">
+        <p className="mt-2 text-3xl font-black text-[#10233f]">
           {brokenWorkflows.length}
         </p>
 
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-[#4d6380]">
           Students with one or more
           workflow failures detected.
         </p>
@@ -1224,22 +1411,22 @@ function RecoveryIntelligenceCenter({ workflowScanner = {}, recoveryEngine = {} 
       : "Healthy";
 
   return (
-    <div className="rounded-[1.75rem] border border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-amber-50/70 p-5">
+    <div className="rounded-[1.75rem] border-[3px] border-orange-300 bg-[#fff8ee] p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">
             Recovery Intelligence
           </p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">
+          <h3 className="mt-1 text-xl font-black text-[#10233f]">
             Automatic Recovery Workflow Center
           </h3>
-          <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-[#4d6380]">
             Converts broken verification signals into executive recovery queues for CAS, visa, payment, portal, timeline, documents, and task execution.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
+        <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] px-5 py-4 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
             Recovery Status
           </p>
           <p className="mt-2 text-2xl font-black text-orange-600">
@@ -1294,21 +1481,21 @@ function WorkflowFailureHeatmap({ workflowScanner = {} }) {
   const maxValue = Math.max(1, ...stages.map((stage) => asNumber(byStage[stage])));
 
   return (
-    <div className="rounded-[1.75rem] border border-red-300 bg-red-50 p-5">
+    <div className="rounded-[1.75rem] border-[3px] border-red-300 bg-red-50 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-red-600">
             Workflow Failure Heatmap
           </p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">
+          <h3 className="mt-1 text-xl font-black text-[#10233f]">
             Stage-Level Break Detection
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
             Shows where student journeys are breaking across Inquiry → University → Application → Offer → CAS → Visa → Payment → Portal → Executive → Automation.
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Total Breaks</p>
+        <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] px-5 py-4 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">Total Breaks</p>
           <p className="mt-2 text-3xl font-black text-red-700">{asNumber(workflowScanner.totalIssues)}</p>
         </div>
       </div>
@@ -1318,16 +1505,16 @@ function WorkflowFailureHeatmap({ workflowScanner = {} }) {
           const value = asNumber(byStage[stage]);
           const width = Math.round((value / maxValue) * 100);
           return (
-            <div key={stage} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div key={stage} className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#4d6380]">
                   {formatLabel(stage)}
                 </p>
                 <p className={`text-xl font-black ${value ? "text-red-700" : "text-emerald-600"}`}>
                   {value}
                 </p>
               </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dce4ed]">
                 <div
                   className={`h-full rounded-full ${value ? "bg-red-300" : "bg-emerald-300"}`}
                   style={{ width: `${value ? width : 8}%` }}
@@ -1350,18 +1537,18 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
     <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50/70 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-orange-600">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">
             Executive Recovery Queue
           </p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">
+          <h3 className="mt-1 text-xl font-black text-[#10233f]">
             Highest Priority Workflow Repairs
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
             Prioritized list of broken workflows and recommended recovery actions generated by the recovery engine.
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Generated Actions</p>
+        <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] px-5 py-4 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">Generated Actions</p>
           <p className="mt-2 text-3xl font-black text-orange-700">{asNumber(recoveryEngine.totalActions)}</p>
         </div>
       </div>
@@ -1371,7 +1558,7 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
           rows.map((issue, index) => (
             <div
               key={issue.id || `${issue.student_id}-${issue.issue_type}-${index}`}
-              className="rounded-2xl border border-slate-200 bg-white p-4"
+              className="rounded-2xl border-2 border-slate-300 bg-white p-4"
             >
               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
@@ -1379,29 +1566,29 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
                     <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getSeverityBadgeClass(issue.severity)}`}>
                       {formatLabel(issue.severity)}
                     </span>
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+                    <span className="rounded-full border-2 border-slate-300 bg-[#f7f9fc] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
                       {formatLabel(issue.stage)}
                     </span>
                   </div>
-                  <p className="mt-3 truncate text-lg font-black text-slate-950">
+                  <p className="mt-3 truncate text-lg font-black text-[#10233f]">
                     {issue.student_name || "Unknown Student"}
                   </p>
                   <p className="mt-1 text-sm font-bold text-orange-700">
                     {issue.title || formatLabel(issue.issue_type)}
                   </p>
-                  <p className="mt-1 max-w-4xl text-xs leading-5 text-slate-500">
+                  <p className="mt-1 max-w-4xl text-xs leading-5 text-[#4d6380]">
                     {issue.recommendation || issue.description || "Review and recover this workflow."}
                   </p>
                 </div>
 
-                <div className="min-w-[220px] rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+                <div className="min-w-[220px] rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#61738d]">
                     Recovery Action
                   </p>
-                  <p className="mt-2 text-sm font-black text-slate-950">
+                  <p className="mt-2 text-sm font-black text-[#10233f]">
                     {formatLabel(issue.recovery_action || issue.recovery_type)}
                   </p>
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-xs text-[#61738d]">
                     Priority {asNumber(issue.priority_score)}
                   </p>
                 </div>
@@ -1409,7 +1596,7 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
             </div>
           ))
         ) : (
-          <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-400">
+          <p className="rounded-2xl border border-dashed border-[#cbd6e2] bg-[#f7f9fc] p-5 text-sm text-[#61738d]">
             No recovery issues detected from the current student dataset.
           </p>
         )}
@@ -1446,21 +1633,21 @@ function ProductionHardeningMonitor({
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-emerald-300 bg-emerald-50 p-5">
+    <div className="rounded-[1.75rem] border-[3px] border-emerald-300 bg-emerald-50 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-emerald-600">
             Production Hardening
           </p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">
+          <h3 className="mt-1 text-xl font-black text-[#10233f]">
             Final Readiness Monitor
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
             Final operating layer for deciding whether Zaifan Student OS is ready for full workflow testing, production hardening, and main website handoff.
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Platform Gate</p>
+        <div className="rounded-2xl border-2 border-slate-300 bg-[#f7f9fc] px-5 py-4 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">Platform Gate</p>
           <p className={`mt-2 text-3xl font-black ${workflowScanner.totalIssues ? "text-orange-700" : "text-emerald-600"}`}>
             {workflowScanner.totalIssues ? "Harden" : "Ready"}
           </p>
@@ -1470,11 +1657,11 @@ function ProductionHardeningMonitor({
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {rows.map(([label, value, detail, tone]) => (
           <div key={label} className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#61738d]">
               {label}
             </p>
-            <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
-            <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+            <p className="mt-2 text-3xl font-black text-[#10233f]">{value}</p>
+            <p className="mt-2 text-xs leading-5 text-[#4d6380]">{detail}</p>
           </div>
         ))}
       </div>
@@ -1485,10 +1672,10 @@ function ProductionHardeningMonitor({
 function RecoveryMetric({ label, value, tone = "default" }) {
   return (
     <div className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#61738d]">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+      <p className="mt-2 text-3xl font-black text-[#10233f]">{value}</p>
     </div>
   );
 }
@@ -1498,28 +1685,28 @@ function RecoveryQueuePreview({ title, items = [], tone = "default" }) {
     <div className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#61738d]">
             {title}
           </p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{items.length}</p>
+          <p className="mt-2 text-3xl font-black text-[#10233f]">{items.length}</p>
         </div>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+        <span className="rounded-full border-2 border-slate-300 bg-[#f7f9fc] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
           Queue
         </span>
       </div>
       <div className="mt-4 space-y-2">
         {items.slice(0, 3).map((item, index) => (
-          <div key={item.id || `${title}-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="truncate text-xs font-black text-slate-950">
+          <div key={item.id || `${title}-${index}`} className="rounded-xl border-2 border-slate-300 bg-[#f7f9fc] p-3">
+            <p className="truncate text-xs font-black text-[#10233f]">
               {item.student_name || "Unknown Student"}
             </p>
-            <p className="mt-1 truncate text-[11px] text-slate-400">
+            <p className="mt-1 truncate text-[11px] text-[#61738d]">
               {item.title || formatLabel(item.issue_type)}
             </p>
           </div>
         ))}
         {!items.length ? (
-          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs text-slate-400">
+          <p className="rounded-xl border border-dashed border-[#cbd6e2] bg-[#f7f9fc] p-3 text-xs text-[#61738d]">
             Clear
           </p>
         ) : null}
@@ -1534,7 +1721,7 @@ function getSeverityBadgeClass(severity = "") {
   if (key === "high") return "border-orange-200 bg-orange-50 text-orange-600";
   if (key === "executive") return "border-orange-200 bg-orange-50 text-orange-700";
   if (key === "medium") return "border-yellow-400/25 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-600";
+  return "border-[#cbd6e2] bg-[#f7f9fc] text-[#36506f]";
 }
 
 function getHardeningCardClass(tone = "default") {
@@ -1542,7 +1729,7 @@ function getHardeningCardClass(tone = "default") {
   if (tone === "warning") return "border-orange-200 bg-orange-50";
   if (tone === "good") return "border-emerald-200 bg-emerald-50";
   if (tone === "gold") return "border-orange-200 bg-orange-50";
-  return "border-slate-200 bg-white shadow-sm";
+  return "border-[#cbd6e2] bg-white shadow-sm";
 }
 
 
@@ -1554,7 +1741,7 @@ function ExecutiveSignal({ label, value, detail, tone = "default" }) {
       ? "border-orange-200 bg-orange-50"
       : tone === "good"
       ? "border-emerald-200 bg-emerald-50"
-      : "border-slate-200 bg-white/90";
+      : "border-[#cbd6e2] bg-white/90";
 
   const valueClass =
     tone === "risk"
@@ -1563,26 +1750,26 @@ function ExecutiveSignal({ label, value, detail, tone = "default" }) {
       ? "text-orange-700"
       : tone === "good"
       ? "text-emerald-700"
-      : "text-slate-950";
+      : "text-[#10233f]";
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-sm ${toneClass}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+    <div className={`cursor-default rounded-2xl border-2 p-4 ${toneClass}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#61738d]">
         {label}
       </p>
       <p className={`mt-2 text-2xl font-black ${valueClass}`}>{value}</p>
-      <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+      <p className="mt-1 text-xs leading-5 text-[#4d6380]">{detail}</p>
     </div>
   );
 }
 
 function IntelligenceFeedLoader({ label }) {
   return (
-    <div className="flex min-h-[180px] items-center justify-center rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+    <div className="flex min-h-[180px] items-center justify-center rounded-[1.75rem] border-2 border-slate-300 bg-white shadow-sm">
       <div className="text-center">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-orange-500" />
-        <p className="mt-3 text-sm font-black text-slate-800">{label}</p>
-        <p className="mt-1 text-xs text-slate-400">Loading this intelligence layer only when required.</p>
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#cbd6e2] border-t-orange-500" />
+        <p className="mt-3 text-sm font-black text-[#10233f]">{label}</p>
+        <p className="mt-1 text-xs text-[#61738d]">Loading this intelligence layer only when required.</p>
       </div>
     </div>
   );

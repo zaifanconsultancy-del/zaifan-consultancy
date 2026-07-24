@@ -1,4 +1,19 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useMemo, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  CalendarClock,
+  CheckCircle2,
+  Clipboard,
+  Copy,
+  ExternalLink,
+  Mail,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  Trash2,
+  X,
+} from "lucide-react";
 import {
   appointmentStages,
   appointmentStageToStatus,
@@ -6,6 +21,155 @@ import {
   getPipelineStage,
 } from "../../data/crmPipelineConfig";
 import { enrichLeadWithAi } from "../../services/aiLeadEngine";
+
+
+const MOTION = {
+  duration: 0.3,
+  ease: [0.22, 1, 0.36, 1],
+};
+
+const TRANSITION =
+  "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+
+function normalizePhone(value = "") {
+  return String(value || "")
+    .trim()
+    .replace(/[^\d+]/g, "");
+}
+
+function toWhatsAppNumber(value = "") {
+  const digits = normalizePhone(value).replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("0")) return `92${digits.slice(1)}`;
+  return digits;
+}
+
+function safeDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatAppointmentDate(dateValue, timeValue) {
+  if (!dateValue && !timeValue) return "Not scheduled";
+
+  const date = safeDate(dateValue);
+  const dateLabel = date
+    ? new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(date)
+    : String(dateValue || "");
+
+  return [dateLabel, timeValue].filter(Boolean).join(" · ");
+}
+
+function getTimingSignal(dateValue, timeValue, status = "") {
+  const normalizedStatus = String(status || "").toLowerCase();
+
+  if (["completed", "cancelled"].includes(normalizedStatus)) {
+    return {
+      label: normalizedStatus === "completed" ? "Completed" : "Cancelled",
+      tone:
+        normalizedStatus === "completed"
+          ? "border-orange-300 bg-orange-50 text-orange-800"
+          : "border-red-300 bg-red-50 text-red-700",
+      helper:
+        normalizedStatus === "completed"
+          ? "Consultation workflow is closed."
+          : "Booking is cancelled.",
+    };
+  }
+
+  if (!dateValue) {
+    return {
+      label: "Unscheduled",
+      tone: "border-amber-300 bg-amber-50 text-amber-800",
+      helper: "Appointment date is missing.",
+    };
+  }
+
+  const date = safeDate(`${dateValue}${timeValue ? `T${timeValue}` : "T23:59:59"}`);
+
+  if (!date) {
+    return {
+      label: "Check Date",
+      tone: "border-amber-300 bg-amber-50 text-amber-800",
+      helper: "Appointment date/time could not be interpreted.",
+    };
+  }
+
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  const diffHours = diffMs / 3600000;
+
+  if (diffHours < -24) {
+    return {
+      label: "Past Due",
+      tone: "border-red-300 bg-red-50 text-red-700",
+      helper: "Appointment date has passed and still needs workflow resolution.",
+    };
+  }
+
+  if (diffHours < 0) {
+    return {
+      label: "Due / Passed",
+      tone: "border-red-300 bg-red-50 text-red-700",
+      helper: "Appointment time has passed today.",
+    };
+  }
+
+  if (diffHours <= 24) {
+    return {
+      label: "Within 24h",
+      tone: "border-orange-300 bg-orange-50 text-orange-800",
+      helper: "High scheduling attention recommended.",
+    };
+  }
+
+  if (diffHours <= 72) {
+    return {
+      label: "Within 3 Days",
+      tone: "border-orange-300 bg-[#fff1ea] text-[#c2410c]",
+      helper: "Upcoming consultation window.",
+    };
+  }
+
+  return {
+    label: "Upcoming",
+    tone: "border-slate-300 bg-slate-50 text-slate-700",
+    helper: "Appointment is scheduled ahead.",
+  };
+}
+
+async function copyText(value) {
+  if (!value) return false;
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(String(value));
+      return true;
+    }
+  } catch {
+    // Fallback below.
+  }
+
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = String(value);
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.setAttribute("readonly", "");
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return copied;
+  } catch {
+    return false;
+  }
+}
 
 
 const PRIORITY_CHOICES = [
@@ -107,6 +271,12 @@ function AppointmentCard({
   role = "staff",
   permissions = {},
 }) {
+  const shouldReduceMotion = useReducedMotion();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [copiedField, setCopiedField] = useState("");
+  const feedbackTimerRef = useRef(null);
+
   const status = appointment.status || "pending";
   const priority = appointment.priority || "low";
   const aiLead = enrichLeadWithAi(appointment, "appointment");
@@ -138,6 +308,70 @@ function AppointmentCard({
   const assignedAdminInitial = assignedAdminName
     ? assignedAdminName.trim().charAt(0).toUpperCase()
     : "?";
+
+
+  const normalizedPhone = useMemo(
+    () => normalizePhone(appointment.phone || appointment.phone_number || appointment.whatsapp),
+    [appointment.phone, appointment.phone_number, appointment.whatsapp]
+  );
+
+  const whatsappPhone = useMemo(
+    () => toWhatsAppNumber(normalizedPhone),
+    [normalizedPhone]
+  );
+
+  const contactLinks = useMemo(
+    () => ({
+      email: appointment.email ? `mailto:${appointment.email}` : "",
+      phone: normalizedPhone ? `tel:${normalizedPhone}` : "",
+      whatsapp: whatsappPhone ? `https://wa.me/${whatsappPhone}` : "",
+    }),
+    [appointment.email, normalizedPhone, whatsappPhone]
+  );
+
+  const appointmentDate = formatAppointmentDate(
+    appointment.appointment_date,
+    appointment.appointment_time
+  );
+
+  const timingSignal = useMemo(
+    () =>
+      getTimingSignal(
+        appointment.appointment_date,
+        appointment.appointment_time,
+        status
+      ),
+    [appointment.appointment_date, appointment.appointment_time, status]
+  );
+
+  const completeness = useMemo(() => {
+    const fields = [
+      appointment.full_name,
+      appointment.email,
+      appointment.phone,
+      appointment.appointment_date,
+      appointment.appointment_time,
+      appointment.consultation_type,
+      appointment.country_interest,
+      assignedAdminName,
+      appointment.status,
+      appointment.priority,
+    ];
+
+    const completed = fields.filter((value) => String(value || "").trim()).length;
+    return Math.round((completed / fields.length) * 100);
+  }, [
+    appointment.full_name,
+    appointment.email,
+    appointment.phone,
+    appointment.appointment_date,
+    appointment.appointment_time,
+    appointment.consultation_type,
+    appointment.country_interest,
+    appointment.status,
+    appointment.priority,
+    assignedAdminName,
+  ]);
 
   const safePermissions = {
     canDelete: false,
@@ -208,18 +442,29 @@ function AppointmentCard({
 
   const activePriority = priorityStyles[priority] || priorityStyles.low;
 
+  const showFeedback = (message) => {
+    setFeedback(message);
+    window.clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = window.setTimeout(() => setFeedback(""), 2200);
+  };
+
   const handleDelete = () => {
     if (!safePermissions.canDelete || !deleteAppointment) {
-      alert("Only Admin and Super Admin can delete appointments.");
+      showFeedback("Delete is locked for your current role.");
       return;
     }
 
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
     deleteAppointment(appointment.id);
+    setShowDeleteConfirm(false);
   };
 
   const handlePriorityUpdate = (value) => {
     if (!safePermissions.canUpdatePriority) {
-      alert("You do not have permission to update appointment priority.");
+      showFeedback("You do not have permission to update appointment priority.");
       return;
     }
 
@@ -228,12 +473,12 @@ function AppointmentCard({
 
   const handleStatusUpdate = (newStatus) => {
     if (!safePermissions.canUpdateStatus) {
-      alert("You do not have permission to update appointment status.");
+      showFeedback("You do not have permission to update appointment status.");
       return;
     }
 
     if (newStatus === "confirmed" && !safePermissions.canConfirmAppointments) {
-      alert("You do not have permission to confirm appointments.");
+      showFeedback("You do not have permission to confirm appointments.");
       return;
     }
 
@@ -242,12 +487,12 @@ function AppointmentCard({
 
   const handleStageUpdate = (newStage) => {
     if (!safePermissions.canUpdateAppointmentPipeline) {
-      alert("You do not have permission to update appointment pipeline.");
+      showFeedback("You do not have permission to update appointment pipeline.");
       return;
     }
 
     if (newStage === "confirmed" && !safePermissions.canConfirmAppointments) {
-      alert("You do not have permission to confirm appointments.");
+      showFeedback("You do not have permission to confirm appointments.");
       return;
     }
 
@@ -262,6 +507,36 @@ function AppointmentCard({
     );
   };
 
+  const copyValue = async (field, value) => {
+    if (!value) return;
+
+    const copied = await copyText(value);
+
+    if (!copied) {
+      showFeedback("Copy failed. Please copy the value manually.");
+      return;
+    }
+
+    setCopiedField(field);
+    showFeedback(`${field} copied.`);
+
+    window.setTimeout(() => {
+      setCopiedField("");
+    }, 1600);
+  };
+
+  const openExternal = (event, url) => {
+    event.stopPropagation();
+    if (!url) return;
+
+    if (url.startsWith("mailto:") || url.startsWith("tel:")) {
+      window.location.href = url;
+      return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const openRealGptWorkspace = () => {
     openModal({
       ...appointment,
@@ -269,15 +544,11 @@ function AppointmentCard({
     });
   };
 
-  const appointmentDate =
-    appointment.appointment_date && appointment.appointment_time
-      ? `${appointment.appointment_date} · ${appointment.appointment_time}`
-      : appointment.appointment_date || appointment.appointment_time;
-
   return (
+    <>
     <motion.div
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+      transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => openModal(appointment)}
       className={`${cardClass} group relative cursor-pointer overflow-hidden rounded-[1.55rem] border-2 ${activePriority.card} !border-[#ff7a3d] hover:!border-[#ff4b12] bg-gradient-to-br from-white via-[#fffdf9] to-[#fff7ef] p-4 shadow-[0_14px_42px_rgba(15,23,42,0.07)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:rounded-[2rem] sm:p-5`}
     >
@@ -290,6 +561,17 @@ function AppointmentCard({
       )}
 
       <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-orange-500 to-transparent transition duration-500 group-hover:scale-x-100"></div>
+
+      {feedback ? (
+        <div
+          role="status"
+          className="relative mb-3 flex items-center gap-2 rounded-xl border border-orange-300 bg-orange-50 px-4 py-3 text-xs font-black text-orange-800"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <CheckCircle2 size={14} />
+          {feedback}
+        </div>
+      ) : null}
 
       <div className="relative flex flex-col gap-3 border-b border-slate-200 pb-4 sm:gap-4 sm:pb-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -350,6 +632,13 @@ function AppointmentCard({
           <span className="w-fit shrink-0 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-700">
             Urgency: {aiLead.ai_urgency.label}
           </span>
+          <span
+            className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${timingSignal.tone}`}
+            title={timingSignal.helper}
+          >
+            <CalendarClock size={11} />
+            {timingSignal.label}
+          </span>
 
           <AssignmentBadge
             assignedAdminName={assignedAdminName}
@@ -365,7 +654,7 @@ function AppointmentCard({
       </div>
 
       {!compact && (
-        <div className="relative mt-4 grid gap-2.5 sm:grid-cols-3">
+        <div className="relative mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
           <SummaryCard
             label="Schedule"
             value={appointmentDate || "Not scheduled"}
@@ -380,6 +669,11 @@ function AppointmentCard({
             label="Destination"
             value={appointment.country_interest || "Not specified"}
             accent="navy"
+          />
+          <SummaryCard
+            label="Profile Readiness"
+            value={`${completeness}%`}
+            accent={completeness >= 80 ? "orange" : "navy"}
           />
         </div>
       )}
@@ -413,10 +707,56 @@ function AppointmentCard({
         </div>
       )}
 
+      {!compact ? (
+        <section
+          onClick={(event) => event.stopPropagation()}
+          className="relative mt-4 rounded-[1.3rem] border border-orange-200 bg-white p-4 shadow-[0_8px_24px_rgba(7,31,80,0.04)]"
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#ff4b12]">
+                Quick Contact
+              </p>
+              <p className="mt-1 text-xs font-semibold text-[#526178]">
+                Reach the student directly without leaving the appointment queue.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <ContactAction
+                label="Email"
+                icon={Mail}
+                disabled={!contactLinks.email}
+                onClick={(event) => openExternal(event, contactLinks.email)}
+              />
+              <ContactAction
+                label="Call"
+                icon={Phone}
+                disabled={!contactLinks.phone}
+                onClick={(event) => openExternal(event, contactLinks.phone)}
+              />
+              <ContactAction
+                label="WhatsApp"
+                icon={MessageCircle}
+                disabled={!contactLinks.whatsapp}
+                primary
+                onClick={(event) => openExternal(event, contactLinks.whatsapp)}
+              />
+              <ContactAction
+                label={copiedField === "phone" ? "Copied" : "Copy Phone"}
+                icon={copiedField === "phone" ? CheckCircle2 : Copy}
+                disabled={!appointment.phone}
+                onClick={() => void copyValue("phone", appointment.phone)}
+              />
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {!compact && (
         <div
           onClick={(event) => event.stopPropagation()}
-          className="relative mt-4 rounded-[1.2rem] border border-[#071f50] bg-[#071f50] p-4 shadow-[0_14px_32px_rgba(7,31,80,0.12)] sm:mt-5 sm:rounded-[1.4rem] sm:p-5"
+          className="relative mt-4 rounded-[1.2rem] border border-[#071f50] bg-[#071f50] p-4 shadow-[0_14px_32px_rgba(7,31,80,0.12)] sm:mt-5 sm:rounded-[1.4rem] sm:p-5" style={{ color: "#FFFFFF" }}
         >
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -450,7 +790,6 @@ function AppointmentCard({
               );
               const isActive = stage.key === appointmentStage;
               const isCompleted = index < activeStageIndex;
-              const compactLabel = formatCompactAppointmentStageLabel(stage.label);
               const fullLabel = formatAppointmentStageLabel(stage.label);
 
               return (
@@ -550,11 +889,11 @@ function AppointmentCard({
           </div>
 
           <div className="mt-3 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
-            <InfoCard label="Email" value={appointment.email} />
+            <InfoCard label="Email" value={appointment.email} onCopy={() => void copyValue("email", appointment.email)} copied={copiedField === "email"} />
 
-            {!compact && <InfoCard label="Phone" value={appointment.phone} />}
+            {!compact && <InfoCard label="Phone" value={appointment.phone} onCopy={() => void copyValue("phone", appointment.phone)} copied={copiedField === "phone"} />}
 
-            <InfoCard label="Date" value={appointmentDate} />
+            <InfoCard label="Schedule" value={appointmentDate} />
 
             {!compact && (
               <InfoCard
@@ -806,6 +1145,75 @@ function AppointmentCard({
         )}
       </footer>
     </motion.div>
+
+      <AnimatePresence>
+        {showDeleteConfirm ? (
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-[#071f50]/45 px-4 backdrop-blur-sm"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.97 }}
+              transition={shouldReduceMotion ? { duration: 0 } : MOTION}
+              onClick={(event) => event.stopPropagation()}
+              className="w-full max-w-md rounded-[1.8rem] border-[3px] border-red-200 bg-white p-6 shadow-[0_28px_90px_rgba(7,31,80,0.22)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-red-200 bg-red-50 text-red-700">
+                  <AlertTriangle size={22} />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  aria-label="Close delete confirmation"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <h3 className="mt-4 text-2xl font-black text-[#071f50]">
+                Delete this appointment?
+              </h3>
+
+              <p className="mt-3 text-sm font-medium leading-6 text-[#526178]">
+                This will remove{" "}
+                <strong className="text-[#071f50]">
+                  {appointment.full_name || "this appointment"}
+                </strong>{" "}
+                from the CRM. Use permanent deletion only when the booking record is
+                genuinely no longer required.
+              </p>
+
+              <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-sm font-black text-[#071f50] hover:bg-slate-50"
+                >
+                  Keep Appointment
+                </button>
+
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-red-700 bg-red-600 px-5 py-3 text-sm font-black text-white hover:bg-red-700"
+                >
+                  <Trash2 size={15} />
+                  Delete Permanently
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -853,14 +1261,56 @@ function SummaryCard({ label, value, accent = "navy" }) {
   );
 }
 
-function InfoCard({ label, value }) {
+function ContactAction({
+  label,
+  icon: Icon,
+  onClick,
+  disabled = false,
+  primary = false,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${TRANSITION} ${
+        disabled
+          ? "cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400"
+          : primary
+          ? "border border-[#ff4b12] bg-[#ff4b12] text-white shadow-[0_8px_20px_rgba(255,75,18,0.18)] hover:-translate-y-0.5 hover:bg-[#ff642f]"
+          : "border border-orange-200 bg-[#fffaf5] text-[#071f50] hover:-translate-y-0.5 hover:border-[#ff7a3d] hover:bg-white"
+      }`}
+    >
+      <Icon size={14} />
+      {label}
+    </button>
+  );
+}
+
+function InfoCard({ label, value, onCopy = null, copied = false }) {
   return (
     <div className="min-w-0 rounded-[1.15rem] border border-[#071f50]/20 bg-[#fffaf5] p-3 shadow-[0_1px_0_rgba(7,31,80,0.03)] transition duration-300 hover:-translate-y-0.5 hover:border-[#ff7a3d] hover:bg-white sm:p-4">
-      <p className="text-[9px] uppercase tracking-[0.22em] text-slate-400 sm:text-[10px] sm:tracking-[0.28em]">
-        {label}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+          {label}
+        </p>
 
-      <p className="mt-1.5 break-words text-sm leading-relaxed text-slate-700 sm:mt-2">
+        {onCopy && value ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onCopy();
+            }}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[9px] font-black text-slate-600 hover:border-orange-300 hover:text-orange-700"
+          >
+            {copied ? <CheckCircle2 size={11} /> : <Clipboard size={11} />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+        ) : null}
+      </div>
+
+      <p className="mt-1.5 break-words text-sm font-bold leading-relaxed text-[#071f50] sm:mt-2">
         {value || "-"}
       </p>
     </div>

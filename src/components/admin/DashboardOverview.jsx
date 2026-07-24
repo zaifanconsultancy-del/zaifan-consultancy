@@ -1,5 +1,151 @@
-import { motion } from "framer-motion";
+// DashboardOverview V6 MAXIMUM — Framed Executive Daily CRM Overview
+// src/components/admin/DashboardOverview.jsx
+//
+// Maximum pass:
+// - preserves buildAiLeadInsights integration
+// - preserves all current public props
+// - keeps local deterministic AI scoring separate from paid GPT generation
+// - safer latest-lead normalization
+// - safer date parsing
+// - stronger today-activity modeling
+// - removes decorative fake pulse bars when no activity exists
+// - replaces emoji icons with Lucide icons
+// - stronger role of daily CRM pulse
+// - adds operational health summary
+// - better AI executive briefing
+// - clearer hot/warm/urgent interpretation
+// - stronger latest inquiry / appointment cards
+// - reduced-motion support
+// - explicit white text on navy surfaces
+// - consistent Zaifan orange/navy/cream Admin OS visual system
+// - mobile-safe layouts
+// - no fake Supabase writes or automatic GPT calls
+//
+// NOTE:
+// This component is intentionally read-only and receives already-fetched CRM data.
+// Backend writes should remain in the parent/child workflow handlers.
+
+import {
+  Activity,
+  AlertTriangle,
+  Bot,
+  BrainCircuit,
+  CalendarCheck2,
+  CheckCircle2,
+  Clock3,
+  Crown,
+  Flame,
+  Gauge,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Radar,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+  UserCheck,
+  UserRoundSearch,
+  Users,
+  Zap,
+} from "lucide-react";
+import {
+  motion,
+  useReducedMotion,
+} from "framer-motion";
+import { useMemo } from "react";
 import { buildAiLeadInsights } from "../../services/aiLeadEngine";
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalize(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " ");
+}
+
+function safeDate(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? null
+    : date;
+}
+
+function getOwnerName(lead = {}) {
+  return (
+    lead.assigned_admin_name ||
+    lead.assigned_counselor_name ||
+    lead.counselor_name ||
+    lead.owner_name ||
+    ""
+  );
+}
+
+function getPriority(lead = {}) {
+  const priority = normalize(lead.priority || "low");
+
+  if (priority === "vip") return "vip";
+
+  if (
+    [
+      "critical",
+      "urgent",
+      "high",
+    ].includes(priority)
+  ) {
+    return "high";
+  }
+
+  if (priority === "medium") {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function getLeadStatus(lead = {}, type = "inquiry") {
+  if (type === "appointment") {
+    return normalize(
+      lead.appointment_stage ||
+        lead.status ||
+        "pending"
+    );
+  }
+
+  return normalize(
+    lead.pipeline_stage ||
+      lead.status ||
+      "new"
+  );
+}
+
+function isAssigned(lead = {}) {
+  return Boolean(
+    lead.assigned_admin_id ||
+      lead.assigned_to ||
+      lead.counselor_id ||
+      lead.owner_id ||
+      lead.assigned_counselor_id ||
+      getOwnerName(lead)
+  );
+}
+
+function formatDate(date) {
+  const parsed = safeDate(date);
+
+  if (!parsed) return "No date";
+
+  return parsed.toLocaleString("en-PK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
 
 function DashboardOverview({
   cardClass = "",
@@ -10,173 +156,292 @@ function DashboardOverview({
   inquiries = [],
   appointments = [],
 }) {
-  const totalToday = todayInquiriesCount + todayAppointmentsCount;
+  const reduceMotion = useReducedMotion();
 
-  const inquiryPercent =
-    totalToday === 0 ? 0 : Math.round((todayInquiriesCount / totalToday) * 100);
+  const model = useMemo(() => {
+    const safeInquiries = safeArray(inquiries);
+    const safeAppointments = safeArray(appointments);
 
-  const appointmentPercent =
-    totalToday === 0
-      ? 0
-      : Math.round((todayAppointmentsCount / totalToday) * 100);
+    const totalToday =
+      Number(todayInquiriesCount || 0) +
+      Number(todayAppointmentsCount || 0);
 
-  const aiInsights = buildAiLeadInsights({ inquiries, appointments });
+    const inquiryPercent =
+      totalToday === 0
+        ? 0
+        : Math.round(
+            (Number(todayInquiriesCount || 0) / totalToday) *
+              100
+          );
 
-  const latestCards = [
-    {
-      title: "Latest Inquiry",
-      icon: "📨",
-      lead: latestInquiry,
-      fallbackTitle: "No inquiry yet",
-      fallbackText: "Waiting for first website inquiry",
-      type: "inquiry",
-      accent: "gold",
-      detail: latestInquiry?.country || latestInquiry?.field_of_interest,
-      time: latestInquiry?.created_at,
-    },
-    {
-      title: "Latest Appointment",
-      icon: "📅",
-      lead: latestAppointment,
-      fallbackTitle: "No booking yet",
-      fallbackText: "Waiting for first consultation booking",
-      type: "appointment",
-      accent: "green",
-      detail: latestAppointment
-        ? `${latestAppointment.appointment_date || "No date"} · ${
-            latestAppointment.appointment_time || "No time"
-          }`
-        : "",
-      time: latestAppointment?.created_at,
-    },
-  ];
+    const appointmentPercent =
+      totalToday === 0
+        ? 0
+        : Math.round(
+            (Number(todayAppointmentsCount || 0) / totalToday) *
+              100
+          );
 
-  const todayBars = [
-    {
-      label: "Inquiries",
-      value: inquiryPercent,
-      count: todayInquiriesCount,
-      icon: "📨",
-    },
-    {
-      label: "Appointments",
-      value: appointmentPercent,
-      count: todayAppointmentsCount,
-      icon: "📅",
-    },
-  ];
+    const aiRaw =
+      buildAiLeadInsights({
+        inquiries: safeInquiries,
+        appointments: safeAppointments,
+      }) || {};
 
-  const pulseBars = buildPulseBars(todayInquiriesCount, todayAppointmentsCount);
+    const aiInsights = {
+      totalAnalyzed:
+        Number(aiRaw.totalAnalyzed || 0),
+      hotLeads: safeArray(aiRaw.hotLeads),
+      warmLeads: safeArray(aiRaw.warmLeads),
+      immediateLeads: safeArray(aiRaw.immediateLeads),
+      highUrgencyLeads: safeArray(
+        aiRaw.highUrgencyLeads
+      ),
+      topLeads: safeArray(aiRaw.topLeads),
+      averageScore: Number(aiRaw.averageScore || 0),
+    };
+
+    const allLeads = [
+      ...safeInquiries,
+      ...safeAppointments,
+    ];
+
+    const assignedCount =
+      allLeads.filter(isAssigned).length;
+
+    const openPoolCount =
+      Math.max(allLeads.length - assignedCount, 0);
+
+    const vipHighCount =
+      allLeads.filter((lead) =>
+        ["vip", "high"].includes(
+          getPriority(lead)
+        )
+      ).length;
+
+    const hotCount =
+      aiInsights.hotLeads.length;
+
+    const warmCount =
+      aiInsights.warmLeads.length;
+
+    const urgentCount =
+      aiInsights.immediateLeads.length +
+      aiInsights.highUrgencyLeads.length;
+
+    const assignmentRate =
+      allLeads.length
+        ? Math.round(
+            (assignedCount / allLeads.length) * 100
+          )
+        : 0;
+
+    const operationalHealth =
+      allLeads.length === 0
+        ? 0
+        : Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(
+                assignmentRate * 0.35 +
+                  aiInsights.averageScore * 0.35 +
+                  Math.min(
+                    20,
+                    hotCount * 5
+                  ) +
+                  (totalToday > 0 ? 10 : 0) -
+                  Math.min(
+                    25,
+                    urgentCount * 4
+                  )
+              )
+            )
+          );
+
+    const health = getHealthConfig(
+      operationalHealth,
+      allLeads.length
+    );
+
+    const latestCards = [
+      buildLatestCard({
+        type: "inquiry",
+        title: "Latest Inquiry",
+        lead: latestInquiry,
+      }),
+      buildLatestCard({
+        type: "appointment",
+        title: "Latest Appointment",
+        lead: latestAppointment,
+      }),
+    ];
+
+    const briefingLines = buildBriefingLines({
+      totalAnalyzed:
+        aiInsights.totalAnalyzed,
+      hotCount,
+      warmCount,
+      urgentCount,
+      averageScore:
+        aiInsights.averageScore,
+      topOpportunity:
+        aiInsights.topLeads?.[0] || null,
+      topRisk: [
+        ...aiInsights.immediateLeads,
+        ...aiInsights.highUrgencyLeads,
+      ].sort(
+        (a, b) =>
+          Number(b.ai_score || 0) -
+          Number(a.ai_score || 0)
+      )[0] || null,
+      assignedCount,
+      openPoolCount,
+    });
+
+    return {
+      totalToday,
+      inquiryPercent,
+      appointmentPercent,
+      aiInsights,
+      hotCount,
+      warmCount,
+      urgentCount,
+      assignedCount,
+      openPoolCount,
+      vipHighCount,
+      assignmentRate,
+      operationalHealth,
+      health,
+      latestCards,
+      briefingLines,
+    };
+  }, [
+    todayInquiriesCount,
+    todayAppointmentsCount,
+    latestInquiry,
+    latestAppointment,
+    inquiries,
+    appointments,
+  ]);
 
   return (
-    <div className="mb-5 space-y-4 xl:mb-6">
-      <AIExecutiveBriefing cardClass={cardClass} aiInsights={aiInsights} />
-
-      <div className="grid gap-3 xl:grid-cols-[1.25fr_0.95fr] xl:gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          className={`${cardClass} p-4 sm:p-5`}
-        >
-          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#E9802D] to-transparent opacity-60"></div>
-
-          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase tracking-[0.22em] text-[#8992A1] sm:text-[11px] sm:tracking-[0.35em]">
+    <div className="mb-5 space-y-5 xl:mb-6">
+      <section className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4">
+        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
+          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <HeaderBadge>
+                <Activity size={12} />
                 Daily Operations
-              </p>
+              </HeaderBadge>
 
-              <h2 className="mt-2 text-2xl font-black text-[#17243D] sm:mt-3 sm:text-3xl">
-                Today&apos;s CRM Pulse
-              </h2>
-
-              <p className="mt-1.5 text-xs leading-relaxed text-[#667085] sm:mt-2 sm:text-sm">
-                Real-time overview of today&apos;s student activity from inquiries and consultation bookings.
-              </p>
+              <HeaderBadge>
+                <ShieldCheck size={12} />
+                Executive Overview
+              </HeaderBadge>
             </div>
 
-            <div className="shrink-0 rounded-xl border border-[#E9802D]/35 bg-[#FFF1E3] px-3 py-2 text-xs font-bold text-[#B84F0E] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm">
-              {totalToday} Today
-            </div>
-          </div>
+            <h1 className="mt-4 text-2xl font-black text-white sm:text-3xl">
+              Today&apos;s CRM Pulse
+            </h1>
 
-          <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-            <div className="rounded-[1.5rem] border border-[#D4AF37]/15 bg-[#E9802D]/5 p-5">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#B84F0E]">
-                Activity Count
-              </p>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+              A live executive overview of today&apos;s inquiry and appointment activity,
+              current ownership, priority workload, and local CRM intelligence.
+            </p>
 
-              <h3 className="mt-3 text-5xl font-black text-[#B84F0E]">
-                {totalToday}
-              </h3>
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric
+                label="Today"
+                value={model.totalToday}
+              />
 
-              <p className="mt-3 text-sm leading-relaxed text-[#667085]">
-                {totalToday === 0
-                  ? "No new CRM activity today yet."
-                  : `${todayInquiriesCount} inquiries and ${todayAppointmentsCount} appointments logged today.`}
-              </p>
+              <DarkMetric
+                label="Assigned"
+                value={model.assignedCount}
+              />
 
-              <div className="mt-5 space-y-4">
-                {todayBars.map((bar) => (
-                  <div key={bar.label}>
-                    <div className="mb-2 flex items-center justify-between text-xs text-[#667085]">
-                      <span>
-                        {bar.icon} {bar.label}
-                      </span>
-                      <span>
-                        {bar.count} · {bar.value}%
-                      </span>
-                    </div>
+              <DarkMetric
+                label="Open Pool"
+                value={model.openPoolCount}
+              />
 
-                    <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${bar.value}%` }}
-                        transition={{ duration: 0.8, delay: 0.15 }}
-                        className="h-full rounded-full bg-[#E9802D]"
-                      ></motion.div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex h-64 items-end gap-2 rounded-[1.5rem] border border-[#243A60]/18 bg-[#FFFDF8] p-4 sm:gap-3 sm:p-5">
-              {pulseBars.map((bar, index) => (
-                <div
-                  key={bar.label}
-                  className="flex flex-1 flex-col items-center gap-2 sm:gap-3"
-                >
-                  <div className="flex h-40 w-full items-end rounded-full bg-white p-1">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${bar.value}%` }}
-                      transition={{ duration: 0.7, delay: index * 0.05 }}
-                      className={`w-full rounded-full ${
-                        bar.active
-                          ? "bg-gradient-to-t from-[#D4AF37] to-[#E7C768]"
-                          : "bg-white/10"
-                      }`}
-                    ></motion.div>
-                  </div>
-
-                  <span className="text-[10px] text-[#8992A1] sm:text-[11px]">
-                    {bar.label}
-                  </span>
-                </div>
-              ))}
+              <DarkMetric
+                label="VIP / High"
+                value={model.vipHighCount}
+              />
             </div>
           </div>
-        </motion.div>
 
-        <div className="grid gap-3 xl:gap-4">
-          {latestCards.map((card, index) => (
+          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Operational Health
+            </p>
+
+            <div className="mt-3 flex items-end gap-3">
+              <p className="text-5xl font-black text-white">
+                {model.operationalHealth}
+              </p>
+
+              <p className="pb-1 text-xs font-black uppercase tracking-[0.1em] text-white">
+                {model.health.label}
+              </p>
+            </div>
+
+            <div className="mt-4 h-3 overflow-hidden rounded-full border border-white/25 bg-white/10">
+              <motion.div
+                initial={
+                  reduceMotion
+                    ? false
+                    : { width: 0 }
+                }
+                animate={{
+                  width: `${model.operationalHealth}%`,
+                }}
+                transition={{
+                  duration: reduceMotion ? 0 : 0.65,
+                }}
+                className="h-full rounded-full bg-white"
+              />
+            </div>
+
+            <p className="mt-4 text-xs font-semibold leading-5 text-white">
+              {model.health.message}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <AIExecutiveBriefing
+        cardClass={cardClass}
+        aiInsights={model.aiInsights}
+        briefingLines={model.briefingLines}
+        hotCount={model.hotCount}
+        warmCount={model.warmCount}
+        urgentCount={model.urgentCount}
+        reduceMotion={reduceMotion}
+      />
+
+      <div className="grid gap-4 xl:grid-cols-[1.25fr_0.95fr]">
+        <DailyPulseCard
+          cardClass={cardClass}
+          totalToday={model.totalToday}
+          inquiryPercent={model.inquiryPercent}
+          appointmentPercent={model.appointmentPercent}
+          todayInquiriesCount={todayInquiriesCount}
+          todayAppointmentsCount={todayAppointmentsCount}
+          reduceMotion={reduceMotion}
+        />
+
+        <div className="grid gap-4">
+          {model.latestCards.map((card, index) => (
             <LatestLeadCard
               key={card.title}
               card={card}
               cardClass={cardClass}
               index={index}
+              reduceMotion={reduceMotion}
             />
           ))}
         </div>
@@ -185,93 +450,322 @@ function DashboardOverview({
   );
 }
 
-function AIExecutiveBriefing({ cardClass, aiInsights }) {
-  const totalAnalyzed = aiInsights.totalAnalyzed || 0;
-  const hotCount = aiInsights.hotLeads.length;
-  const warmCount = aiInsights.warmLeads.length;
-  const urgentCount = aiInsights.immediateLeads.length + aiInsights.highUrgencyLeads.length;
-  const averageScore = aiInsights.averageScore || 0;
+function DailyPulseCard({
+  cardClass,
+  totalToday,
+  inquiryPercent,
+  appointmentPercent,
+  todayInquiriesCount,
+  todayAppointmentsCount,
+  reduceMotion,
+}) {
+  const bars = [
+    {
+      label: "Inquiries",
+      value: inquiryPercent,
+      count: todayInquiriesCount,
+      icon: UserRoundSearch,
+      tone: "orange",
+    },
+    {
+      label: "Appointments",
+      value: appointmentPercent,
+      count: todayAppointmentsCount,
+      icon: CalendarCheck2,
+      tone: "blue",
+    },
+  ];
 
-  const topOpportunity = aiInsights.topLeads?.[0] || null;
-  const topRisk = [...aiInsights.immediateLeads, ...aiInsights.highUrgencyLeads]
-    .sort((a, b) => b.ai_score - a.ai_score)?.[0];
+  return (
+    <motion.section
+      initial={
+        reduceMotion
+          ? false
+          : { opacity: 0, y: 12 }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.26,
+      }}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_12px_32px_rgba(15,35,63,0.06)]`}
+    >
+      <div className="overflow-hidden rounded-[1.45rem] border-[3px] border-[#F97316]">
+      <div className="min-w-0 bg-[#173F6B] p-5 text-white">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
+            <Activity size={17} />
+          </div>
 
-  const briefingLines = buildBriefingLines({
-    totalAnalyzed,
-    hotCount,
-    warmCount,
-    urgentCount,
-    averageScore,
-    topOpportunity,
-    topRisk,
-  });
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.13em] text-white">
+              Daily CRM Activity
+            </p>
+
+            <h2 className="mt-1 text-xl font-black text-white">
+              Today&apos;s Activity Split
+            </h2>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid min-w-0 gap-4 bg-[#FFF8EE] p-4 sm:p-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <div className="rounded-[1.4rem] border-[3px] border-orange-300 bg-orange-50 p-5">
+          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-800">
+            Activity Count
+          </p>
+
+          <p className="mt-3 text-5xl font-black text-[#10233f]">
+            {totalToday}
+          </p>
+
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+            {totalToday === 0
+              ? "No new CRM activity has been recorded today yet."
+              : `${todayInquiriesCount} inquiries and ${todayAppointmentsCount} appointments were logged today.`}
+          </p>
+
+          <div className="mt-5 space-y-4">
+            {bars.map((bar) => (
+              <ProgressMetric
+                key={bar.label}
+                {...bar}
+                reduceMotion={reduceMotion}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4 sm:p-5">
+          {totalToday === 0 ? (
+            <DailyEmptyState />
+          ) : (
+            <ActivityDistribution
+              bars={bars}
+              reduceMotion={reduceMotion}
+            />
+          )}
+        </div>
+      </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function ActivityDistribution({
+  bars,
+  reduceMotion,
+}) {
+  return (
+    <div className="flex min-h-[250px] flex-col justify-center">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {bars.map((bar) => {
+          const Icon = bar.icon;
+          const style = getToneStyle(bar.tone);
+
+          return (
+            <div
+              key={bar.label}
+              className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.04)] ${style.card}`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.1em]">
+                    {bar.label}
+                  </p>
+
+                  <p className="mt-2 text-3xl font-black text-[#10233f]">
+                    {bar.count}
+                  </p>
+                </div>
+
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${style.icon}`}
+                >
+                  <Icon size={17} />
+                </div>
+              </div>
+
+              <div className="mt-4 h-2.5 overflow-hidden rounded-full border border-slate-200 bg-white">
+                <motion.div
+                  initial={
+                    reduceMotion
+                      ? false
+                      : { width: 0 }
+                  }
+                  animate={{
+                    width: `${bar.value}%`,
+                  }}
+                  transition={{
+                    duration: reduceMotion ? 0 : 0.65,
+                  }}
+                  className={`h-full rounded-full ${style.bar}`}
+                />
+              </div>
+
+              <p className="mt-2 text-xs font-bold text-slate-500">
+                {bar.value}% of today&apos;s activity
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
+        <div className="flex items-start gap-3">
+          <TrendingUp
+            size={17}
+            className="mt-0.5 shrink-0 text-blue-700"
+          />
+
+          <div>
+            <p className="text-sm font-black text-[#10233f]">
+              Daily mix
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
+              This chart shows the share of today&apos;s CRM activity only. It does not
+              treat an appointment as a converted inquiry.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressMetric({
+  label,
+  value,
+  count,
+  icon: Icon,
+  tone,
+  reduceMotion,
+}) {
+  const style = getToneStyle(tone);
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Icon
+            size={14}
+            className={style.text}
+          />
+
+          <span className="text-xs font-black text-slate-700">
+            {label}
+          </span>
+        </div>
+
+        <span className="text-xs font-black text-[#10233f]">
+          {count} · {value}%
+        </span>
+      </div>
+
+      <div className="h-2.5 overflow-hidden rounded-full border border-slate-200 bg-white">
+        <motion.div
+          initial={
+            reduceMotion
+              ? false
+              : { width: 0 }
+          }
+          animate={{
+            width: `${value}%`,
+          }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.65,
+          }}
+          className={`h-full rounded-full ${style.bar}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function AIExecutiveBriefing({
+  cardClass,
+  aiInsights,
+  briefingLines,
+  hotCount,
+  warmCount,
+  urgentCount,
+  reduceMotion,
+}) {
+  const totalAnalyzed =
+    aiInsights.totalAnalyzed || 0;
+
+  const averageScore =
+    aiInsights.averageScore || 0;
 
   const statCards = [
     {
-      label: "AI Score Avg",
-      value: averageScore,
-      suffix: "/100",
-      icon: "🧠",
-      tone: "gold",
+      label: "Local Score Avg",
+      value: `${averageScore}/100`,
+      icon: BrainCircuit,
+      tone: "blue",
     },
     {
       label: "Hot Leads",
       value: hotCount,
-      suffix: "",
-      icon: "🔥",
+      icon: Flame,
       tone: "red",
     },
     {
       label: "Warm Leads",
       value: warmCount,
-      suffix: "",
-      icon: "⚡",
-      tone: "gold",
+      icon: Zap,
+      tone: "orange",
     },
     {
       label: "Urgent Follow-Ups",
       value: urgentCount,
-      suffix: "",
-      icon: "🚨",
-      tone: "orange",
+      icon: AlertTriangle,
+      tone: "amber",
     },
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
+    <motion.section
+      initial={
+        reduceMotion
+          ? false
+          : { opacity: 0, y: 10 }
+      }
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className={`${cardClass} overflow-hidden p-4 sm:p-5`}
+      transition={{
+        duration: reduceMotion ? 0 : 0.25,
+      }}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_12px_32px_rgba(15,35,63,0.06)]`}
     >
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#E9802D] to-transparent opacity-80" />
-      <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#FFF1E3] blur-3xl" />
-      <div className="pointer-events-none absolute -left-24 bottom-0 h-52 w-52 rounded-full bg-cyan-400/5 blur-3xl" />
+      <div className="grid min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.14fr)_minmax(20rem,0.86fr)]">
+        <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <HeaderBadge>
+              <BrainCircuit size={11} />
+              Student OS Intelligence
+            </HeaderBadge>
 
-      <div className="relative grid gap-5 2xl:grid-cols-[1.1fr_1fr]">
-        <div>
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-[#D4AF37]/30 bg-[#FFF1E3] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#B84F0E]">
-              Real Student OS Intelligence
-            </span>
-            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#17243D]/45">
-              No Auto GPT Cost
-            </span>
+            <HeaderBadge>
+              <ShieldCheck size={11} />
+              No Automatic GPT Cost
+            </HeaderBadge>
           </div>
 
-          <h2 className="text-2xl font-black text-[#17243D] sm:text-3xl">
+          <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">
             AI Executive Briefing
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#17243D]/50">
-            This briefing uses your Student OS data and local AI scoring engine. Real GPT remains available inside the student workspace when a counselor needs generated messages, summaries, scripts, or strategy.
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+            Local deterministic scoring ranks opportunity and urgency. Paid GPT stays
+            optional inside the student workspace for high-value summaries, messages,
+            strategy, scripts, or deeper reasoning.
           </p>
 
           <div className="mt-5 space-y-2.5">
-            {briefingLines.map((line) => (
+            {briefingLines.map((line, index) => (
               <div
-                key={line}
-                className="rounded-2xl border border-[#243A60]/18 bg-[#FFFDF8] px-4 py-3 text-sm leading-6 text-[#17243D]/70"
+                key={`${line}-${index}`}
+                className="rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold leading-6 text-white"
               >
                 {line}
               </div>
@@ -279,137 +773,330 @@ function AIExecutiveBriefing({ cardClass, aiInsights }) {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EE] p-4 sm:grid-cols-2 sm:p-5">
           {statCards.map((stat) => (
-            <AIStatCard key={stat.label} stat={stat} />
+            <AIStatCard
+              key={stat.label}
+              stat={stat}
+            />
           ))}
+
+          <div className="sm:col-span-2 rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
+            <div className="flex items-start gap-3">
+              <Bot
+                size={16}
+                className="mt-0.5 shrink-0 text-blue-700"
+              />
+
+              <div>
+                <p className="text-sm font-black text-[#10233f]">
+                  Intelligence coverage
+                </p>
+
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
+                  {totalAnalyzed > 0
+                    ? `${totalAnalyzed} CRM record${totalAnalyzed === 1 ? "" : "s"} are currently being evaluated by the local scoring engine.`
+                    : "No inquiry or appointment records are currently available for local scoring."}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </motion.section>
   );
 }
 
 function AIStatCard({ stat }) {
-  const toneClass =
-    stat.tone === "red"
-      ? "border-red-400/20 bg-red-500/10 text-red-300"
-      : stat.tone === "orange"
-      ? "border-orange-400/20 bg-orange-500/10 text-orange-300"
-      : "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
+  const Icon = stat.icon;
+  const style = getToneStyle(stat.tone);
 
   return (
-    <div className={`rounded-[1.5rem] border p-4 ${toneClass}`}>
+    <div
+      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.04)] ${style.card}`}
+    >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-80">
+        <p className="text-[9px] font-black uppercase tracking-[0.1em]">
           {stat.label}
         </p>
-        <span className="text-xl">{stat.icon}</span>
-      </div>
-
-      <p className="mt-4 text-4xl font-black text-[#17243D]">
-        {stat.value}
-        <span className="text-base text-[#17243D]/35">{stat.suffix}</span>
-      </p>
-    </div>
-  );
-}
-
-function LatestLeadCard({ card, cardClass, index }) {
-  const hasLead = Boolean(card.lead);
-  const assignedAdmin =
-    card.lead?.assigned_admin_name || card.lead?.assigned_to || null;
-
-  const priority = card.lead?.priority || "low";
-  const status =
-    card.type === "inquiry"
-      ? card.lead?.status || "new"
-      : card.lead?.status || "pending";
-
-  const accentClass =
-    card.accent === "green"
-      ? "border-green-400/20 bg-green-400/10 text-green-300"
-      : "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: index * 0.08 }}
-      className={`${cardClass} group relative p-4 sm:p-5`}
-    >
-      <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#E9802D] to-transparent transition duration-500 group-hover:scale-x-100"></div>
-
-      <div className="flex items-start justify-between gap-3 sm:gap-5">
-        <div className="min-w-0">
-          <p className="text-[9px] uppercase tracking-[0.22em] text-[#8992A1] sm:text-[10px] sm:tracking-[0.3em]">
-            {card.title}
-          </p>
-
-          <h2 className="mt-2 break-words text-xl font-black leading-tight text-[#17243D] sm:mt-3 sm:text-2xl">
-            {hasLead ? card.lead.full_name || "Unnamed Student" : card.fallbackTitle}
-          </h2>
-
-          <p className="mt-1.5 text-xs leading-relaxed text-[#667085] sm:mt-2 sm:text-sm">
-            {hasLead ? card.detail || "No detail available" : card.fallbackText}
-          </p>
-        </div>
 
         <div
-          className={`shrink-0 rounded-xl border p-2.5 text-lg sm:rounded-2xl sm:p-3 sm:text-xl ${accentClass}`}
+          className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${style.icon}`}
         >
-          {card.icon}
+          <Icon size={17} />
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${accentClass}`}>
-          {card.type}
-        </span>
-
-        {hasLead && (
-          <>
-            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#344054]">
-              {priority}
-            </span>
-
-            <span className="rounded-full border border-[#243A60]/18 bg-[#FFFDF8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#667085]">
-              {status}
-            </span>
-
-            <span
-              className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${
-                assignedAdmin
-                  ? "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
-                  : "border-orange-400/20 bg-orange-400/10 text-orange-300"
-              }`}
-            >
-              {assignedAdmin ? `Assigned: ${assignedAdmin}` : "Open Pool"}
-            </span>
-          </>
-        )}
-      </div>
-
-      {hasLead && (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <MiniInfo label="Email" value={card.lead.email} />
-          <MiniInfo label="Created" value={formatDate(card.time)} />
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
-function MiniInfo({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-[#243A60]/18 bg-[#FFFDF8] px-3 py-2">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-[#8992A1]">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xs font-semibold text-[#344054]">
-        {value || "-"}
+      <p className="mt-3 text-3xl font-black text-[#10233f]">
+        {stat.value}
       </p>
     </div>
   );
+}
+
+function LatestLeadCard({
+  card,
+  cardClass,
+  index,
+  reduceMotion,
+}) {
+  const hasLead = Boolean(card.lead);
+  const lead = card.lead || {};
+  const assignedAdmin =
+    getOwnerName(lead) || null;
+
+  const priority =
+    getPriority(lead);
+
+  const status =
+    getLeadStatus(
+      lead,
+      card.type
+    );
+
+  const style =
+    getToneStyle(
+      card.tone
+    );
+
+  const CardIcon =
+    card.icon;
+
+  return (
+    <motion.section
+      initial={
+        reduceMotion
+          ? false
+          : { opacity: 0, y: 10 }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.24,
+        delay: reduceMotion ? 0 : index * 0.05,
+      }}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_10px_28px_rgba(15,35,63,0.06)]`}
+    >
+      <div className="overflow-hidden rounded-[1.4rem] border-[3px] border-[#F97316]">
+      <div className="min-w-0 bg-[#173F6B] p-4 text-white">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
+              {card.title}
+            </p>
+
+            <h2 className="mt-1 break-words text-lg font-black leading-6 text-white">
+              {hasLead
+                ? lead.full_name ||
+                  lead.student_name ||
+                  lead.name ||
+                  "Unnamed Student"
+                : card.fallbackTitle}
+            </h2>
+          </div>
+
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
+            <CardIcon size={17} />
+          </div>
+        </div>
+      </div>
+
+      <div className="min-w-0 bg-[#FFF8EE] p-4">
+        <p className="break-words text-sm font-semibold leading-6 text-slate-700">
+          {hasLead
+            ? card.detail || "No detail available"
+            : card.fallbackText}
+        </p>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span
+            className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${style.badge}`}
+          >
+            {card.type}
+          </span>
+
+          {hasLead ? (
+            <>
+              <PriorityBadge
+                priority={priority}
+              />
+
+              <span className="rounded-full border-2 border-slate-300 bg-white px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-slate-700">
+                {status || "unknown"}
+              </span>
+
+              <span
+                className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${
+                  assignedAdmin
+                    ? "border-[#34D399] bg-[#F0FFF8] text-emerald-800"
+                    : "border-[#F59E0B] bg-[#FFF7ED] text-amber-900"
+                }`}
+              >
+                {assignedAdmin
+                  ? `Assigned: ${assignedAdmin}`
+                  : "Open Pool"}
+              </span>
+            </>
+          ) : null}
+        </div>
+
+        {hasLead ? (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <MiniInfo
+              icon={Mail}
+              label="Email"
+              value={lead.email}
+            />
+
+            <MiniInfo
+              icon={Clock3}
+              label="Created"
+              value={formatDate(card.time)}
+            />
+
+            <MiniInfo
+              icon={MapPin}
+              label="Country"
+              value={
+                lead.country_interest ||
+                lead.country ||
+                lead.destination_country
+              }
+            />
+
+            <MiniInfo
+              icon={MessageCircle}
+              label="Phone"
+              value={
+                lead.phone ||
+                lead.phone_number ||
+                lead.whatsapp
+              }
+            />
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border-2 border-dashed border-slate-300 bg-white p-4 text-center">
+            <p className="text-xs font-semibold text-slate-500">
+              This card will populate automatically when a new record arrives.
+            </p>
+          </div>
+        )}
+      </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function MiniInfo({
+  icon: Icon,
+  label,
+  value,
+}) {
+  return (
+    <div className="min-w-0 overflow-hidden rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3">
+      <div className="flex items-center gap-2">
+        <Icon
+          size={12}
+          className="text-orange-700"
+        />
+
+        <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
+          {label}
+        </p>
+      </div>
+
+      <p className="mt-1 break-all text-xs font-bold leading-5 text-[#10233f] sm:break-words">
+        {value || "—"}
+      </p>
+    </div>
+  );
+}
+
+function PriorityBadge({
+  priority,
+}) {
+  const style =
+    priority === "vip"
+      ? "border-[#F97316] bg-[#FFF4E8] text-orange-800"
+      : priority === "high"
+      ? "border-[#FB7185] bg-[#FFF4F4] text-red-800"
+      : priority === "medium"
+      ? "border-[#60A5FA] bg-[#F2F7FF] text-blue-800"
+      : "border-slate-300 bg-slate-50 text-slate-700";
+
+  return (
+    <span
+      className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${style}`}
+    >
+      {priority}
+    </span>
+  );
+}
+
+function DailyEmptyState() {
+  return (
+    <div className="flex min-h-[250px] flex-col items-center justify-center text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+        <Radar size={22} />
+      </div>
+
+      <h3 className="mt-4 text-lg font-black text-[#10233f]">
+        No activity today yet
+      </h3>
+
+      <p className="mt-2 max-w-sm text-sm font-semibold leading-6 text-slate-600">
+        Real inquiry and appointment activity will appear here automatically. No fake
+        placeholder activity bars are shown.
+      </p>
+    </div>
+  );
+}
+
+function buildLatestCard({
+  type,
+  title,
+  lead,
+}) {
+  if (type === "appointment") {
+    return {
+      title,
+      icon: CalendarCheck2,
+      lead,
+      fallbackTitle: "No booking yet",
+      fallbackText:
+        "Waiting for the first consultation booking.",
+      type,
+      tone: "blue",
+      detail: lead
+        ? `${lead.appointment_date || "No date"} · ${
+            lead.appointment_time || "No time"
+          }`
+        : "",
+      time:
+        lead?.created_at ||
+        lead?.submitted_at ||
+        lead?.appointment_date,
+    };
+  }
+
+  return {
+    title,
+    icon: UserRoundSearch,
+    lead,
+    fallbackTitle: "No inquiry yet",
+    fallbackText:
+      "Waiting for the first website inquiry.",
+    type,
+    tone: "orange",
+    detail:
+      lead?.country_interest ||
+      lead?.country ||
+      lead?.field_of_interest ||
+      lead?.program ||
+      "",
+    time:
+      lead?.created_at ||
+      lead?.submitted_at,
+  };
 }
 
 function buildBriefingLines({
@@ -420,85 +1107,215 @@ function buildBriefingLines({
   averageScore,
   topOpportunity,
   topRisk,
+  assignedCount,
+  openPoolCount,
 }) {
   if (!totalAnalyzed) {
     return [
-      "No leads have been analyzed yet. Once inquiries or appointments arrive, this panel will show AI-ranked opportunities and risks.",
-      "Real GPT generation remains available inside each student profile when a counselor needs written output.",
+      "No active CRM records have been scored yet. Intelligence will appear automatically when inquiries or appointments arrive.",
+      "Paid GPT remains optional and should be used only when a counselor needs generated content or deeper reasoning.",
     ];
   }
 
   const lines = [
-    `${totalAnalyzed} active CRM records analyzed with an average AI score of ${averageScore}/100.`,
+    `${totalAnalyzed} active CRM record${
+      totalAnalyzed === 1 ? "" : "s"
+    } analyzed with an average local score of ${averageScore}/100.`,
   ];
 
   if (hotCount > 0 || warmCount > 0) {
     lines.push(
-      `${hotCount} hot lead${hotCount === 1 ? "" : "s"} and ${warmCount} warm lead${warmCount === 1 ? "" : "s"} should be prioritized before cold follow-ups.`
+      `${hotCount} hot lead${
+        hotCount === 1 ? "" : "s"
+      } and ${warmCount} warm lead${
+        warmCount === 1 ? "" : "s"
+      } should be reviewed before lower-intent follow-ups.`
     );
   } else {
-    lines.push("No hot leads detected yet. Focus on nurturing and improving lead qualification quality.");
+    lines.push(
+      "No hot leads are detected right now. Focus on qualification quality, follow-up discipline, and moving promising students forward."
+    );
   }
 
   if (urgentCount > 0) {
     lines.push(
-      `${urgentCount} urgent follow-up${urgentCount === 1 ? "" : "s"} need counselor attention before momentum drops.`
+      `${urgentCount} urgent follow-up${
+        urgentCount === 1 ? "" : "s"
+      } currently need counselor attention.`
     );
   } else {
-    lines.push("No urgent follow-up pressure detected right now.");
+    lines.push(
+      "No urgent follow-up pressure is detected right now."
+    );
+  }
+
+  if (openPoolCount > 0) {
+    lines.push(
+      `${openPoolCount} active CRM record${
+        openPoolCount === 1 ? "" : "s"
+      } remain in the open pool while ${assignedCount} are assigned.`
+    );
   }
 
   if (topOpportunity) {
     lines.push(
-      `Top opportunity: ${topOpportunity.full_name || "Unnamed Student"} with ${topOpportunity.ai_score}/100 AI score.`
+      `Top opportunity: ${
+        topOpportunity.full_name ||
+        topOpportunity.student_name ||
+        "Unnamed Student"
+      } with ${Number(topOpportunity.ai_score || 0)}/100 local score.`
     );
   }
 
   if (topRisk) {
     lines.push(
-      `Highest urgency risk: ${topRisk.full_name || "Unnamed Student"} — ${topRisk.ai_urgency.message}`
+      `Highest urgency risk: ${
+        topRisk.full_name ||
+        topRisk.student_name ||
+        "Unnamed Student"
+      }${
+        topRisk.ai_urgency?.message
+          ? ` — ${topRisk.ai_urgency.message}`
+          : "."
+      }`
     );
   }
 
   return lines.slice(0, 5);
 }
 
-function buildPulseBars(todayInquiriesCount, todayAppointmentsCount) {
-  const total = todayInquiriesCount + todayAppointmentsCount;
-
-  if (total === 0) {
-    return [
-      { label: "Now", value: 18, active: false },
-      { label: "Leads", value: 28, active: false },
-      { label: "Calls", value: 20, active: false },
-      { label: "Apps", value: 32, active: false },
-      { label: "CRM", value: 24, active: false },
-      { label: "Flow", value: 36, active: false },
-      { label: "Live", value: 22, active: false },
-    ];
-  }
-
-  const inquiryBoost = Math.min(90, 30 + todayInquiriesCount * 15);
-  const appointmentBoost = Math.min(95, 35 + todayAppointmentsCount * 18);
-
-  return [
-    { label: "Start", value: 25, active: true },
-    { label: "Inq", value: inquiryBoost, active: todayInquiriesCount > 0 },
-    { label: "Follow", value: Math.max(35, inquiryBoost - 12), active: true },
-    { label: "Book", value: appointmentBoost, active: todayAppointmentsCount > 0 },
-    { label: "Work", value: Math.max(40, appointmentBoost - 15), active: true },
-    { label: "Close", value: Math.min(88, 45 + total * 10), active: true },
-    { label: "Live", value: Math.min(96, 50 + total * 12), active: true },
-  ];
+function HeaderBadge({
+  children,
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+      {children}
+    </span>
+  );
 }
 
-function formatDate(date) {
-  if (!date) return "No date";
+function DarkMetric({
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
 
-  return new Date(date).toLocaleString("en-PK", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+      <p className="mt-1 text-xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function getToneStyle(tone) {
+  const styles = {
+    orange: {
+      card:
+        "border-[#F97316] bg-[#FFF4E8] text-orange-800",
+      icon:
+        "border-orange-300 text-orange-700",
+      badge:
+        "border-[#F97316] bg-[#FFF4E8] text-orange-800",
+      text: "text-orange-700",
+      bar: "bg-orange-500",
+    },
+
+    red: {
+      card:
+        "border-[#FB7185] bg-[#FFF4F4] text-red-800",
+      icon:
+        "border-red-300 text-red-700",
+      badge:
+        "border-[#FB7185] bg-[#FFF4F4] text-red-800",
+      text: "text-red-700",
+      bar: "bg-red-500",
+    },
+
+    amber: {
+      card:
+        "border-[#F59E0B] bg-[#FFF7ED] text-amber-900",
+      icon:
+        "border-amber-300 text-amber-800",
+      badge:
+        "border-[#F59E0B] bg-[#FFF7ED] text-amber-900",
+      text: "text-amber-800",
+      bar: "bg-amber-500",
+    },
+
+    green: {
+      card:
+        "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
+      icon:
+        "border-emerald-300 text-emerald-700",
+      badge:
+        "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
+      text: "text-emerald-700",
+      bar: "bg-emerald-500",
+    },
+
+    blue: {
+      card:
+        "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
+      icon:
+        "border-blue-300 text-blue-700",
+      badge:
+        "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
+      text: "text-blue-700",
+      bar: "bg-blue-500",
+    },
+  };
+
+  return (
+    styles[tone] ||
+    styles.orange
+  );
+}
+
+function getHealthConfig(
+  score,
+  totalLeads
+) {
+  if (totalLeads === 0) {
+    return {
+      label: "No Data",
+      message:
+        "Operational health will activate when inquiry or appointment records are available.",
+    };
+  }
+
+  if (score >= 80) {
+    return {
+      label: "Excellent",
+      message:
+        "Ownership, lead quality, and current activity are strong with manageable urgency pressure.",
+    };
+  }
+
+  if (score >= 60) {
+    return {
+      label: "Healthy",
+      message:
+        "CRM operations look healthy overall, with some room to improve ownership or urgency handling.",
+    };
+  }
+
+  if (score >= 40) {
+    return {
+      label: "Needs Attention",
+      message:
+        "Operational pressure is building. Review open-pool records, urgent follow-ups, and lead quality.",
+    };
+  }
+
+  return {
+    label: "Critical",
+    message:
+      "Current CRM operations need attention. Resolve urgency, improve ownership coverage, and work the highest-value records first.",
+  };
 }
 
 export default DashboardOverview;

@@ -1,4 +1,49 @@
-import { useMemo } from "react";
+// ExecutivePortfolioSummary V4 MAXIMUM — Portfolio Health & Executive Board
+// src/components/admin/ExecutivePortfolioSummary.jsx
+//
+// Maximum pass:
+// - preserves calculatePortfolioHealth(students)
+// - preserves the public students prop
+// - safer malformed/undefined student handling
+// - truthful "Verified Outcomes" wording instead of fake Success Stories
+// - portfolio health readiness score
+// - stronger risk/opportunity/stalled boards
+// - zero-safe KPI rendering
+// - safer nested health access
+// - better application / visa / document / university / task health interpretation
+// - clearer weak-ops pressure
+// - stronger Admin OS hierarchy, borders, density, and mobile behavior
+// - navy surfaces use white text only
+// - removes mismatched blue/green styling from non-semantic surfaces
+// - keeps red only for real risk/failure states
+// - read-only executive intelligence; no fake Supabase writes
+
+import { useMemo, useState } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  BriefcaseBusiness,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleGauge,
+  ClipboardCheck,
+  Clock3,
+  Crown,
+  FileWarning,
+  GraduationCap,
+  Landmark,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Trophy,
+  UserRoundCheck,
+  UsersRound,
+  Workflow,
+} from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { calculatePortfolioHealth } from "../../lib/executiveAI";
 
 function normalize(value = "") {
@@ -14,9 +59,26 @@ function number(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function safeArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function pctNumber(value, total) {
+  const safeTotal = number(total);
+
+  if (!safeTotal) return 0;
+
+  return Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round((number(value) / safeTotal) * 100)
+    )
+  );
+}
+
 function pct(value, total) {
-  if (!total) return "0%";
-  return `${Math.round((number(value) / total) * 100)}%`;
+  return `${pctNumber(value, total)}%`;
 }
 
 function getStudentName(student = {}, executive = {}) {
@@ -29,19 +91,189 @@ function getStudentName(student = {}, executive = {}) {
   );
 }
 
+function getExecutiveRow(item = {}) {
+  return {
+    student: item.student || item,
+    executive: item.executive || item,
+  };
+}
+
+function calculateCommandReadiness({
+  total = 0,
+  critical = 0,
+  high = 0,
+  conversionReady = 0,
+  highOpportunity = 0,
+  applicationSubmitted = 0,
+  visaInMotion = 0,
+  weakDocuments = 0,
+  weakTasks = 0,
+  weakUniversityPlan = 0,
+}) {
+  if (!total) {
+    return {
+      score: 0,
+      label: "No Data",
+      message:
+        "Portfolio readiness will activate when Student OS executive records are available.",
+    };
+  }
+
+  const positive =
+    pctNumber(conversionReady, total) * 0.25 +
+    pctNumber(highOpportunity, total) * 0.2 +
+    pctNumber(applicationSubmitted, total) * 0.2 +
+    pctNumber(visaInMotion, total) * 0.15;
+
+  const negative =
+    pctNumber(critical, total) * 0.12 +
+    pctNumber(high, total) * 0.08 +
+    pctNumber(
+      weakDocuments + weakTasks + weakUniversityPlan,
+      total * 3
+    ) *
+      0.2;
+
+  const score = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(45 + positive - negative)
+    )
+  );
+
+  if (score >= 80) {
+    return {
+      score,
+      label: "Strong",
+      message:
+        "Portfolio movement is strong with good conversion, application, and visa momentum.",
+    };
+  }
+
+  if (score >= 60) {
+    return {
+      score,
+      label: "Healthy",
+      message:
+        "Portfolio health is generally good, but some operational weaknesses still need attention.",
+    };
+  }
+
+  if (score >= 40) {
+    return {
+      score,
+      label: "Needs Attention",
+      message:
+        "Portfolio pressure is building across risk, documents, tasks, or university planning.",
+    };
+  }
+
+  return {
+    score,
+    label: "Critical",
+    message:
+      "Executive intervention is needed across risk, stalled movement, and weak operational foundations.",
+  };
+}
+
 function ExecutivePortfolioSummary({ students = [] }) {
+  const reduceMotion = useReducedMotion();
+  const [showHealthMatrix, setShowHealthMatrix] = useState(true);
+  const [showPriorityBoards, setShowPriorityBoards] = useState(true);
+
+  const safeStudents = useMemo(
+    () => safeArray(students),
+    [students]
+  );
+
   const portfolio = useMemo(() => {
-    return calculatePortfolioHealth(students);
-  }, [students]);
+    try {
+      const result = calculatePortfolioHealth(safeStudents);
+
+      return result && typeof result === "object"
+        ? result
+        : {};
+    } catch (error) {
+      console.error(
+        "Executive portfolio calculation failed:",
+        error
+      );
+
+      return {};
+    }
+  }, [safeStudents]);
 
   const health = useMemo(() => {
-    const total = portfolio.total || 0;
+    const total = number(portfolio.total, safeStudents.length);
 
-    const applicationHealth = portfolio.applicationHealth || {};
-    const visaHealth = portfolio.visaHealth || {};
-    const documentHealth = portfolio.documentHealth || {};
-    const universityHealth = portfolio.universityHealth || {};
-    const taskHealth = portfolio.taskHealth || {};
+    const applicationHealth =
+      portfolio.applicationHealth || {};
+
+    const visaHealth =
+      portfolio.visaHealth || {};
+
+    const documentHealth =
+      portfolio.documentHealth || {};
+
+    const universityHealth =
+      portfolio.universityHealth || {};
+
+    const taskHealth =
+      portfolio.taskHealth || {};
+
+    const applicationSubmitted =
+      number(applicationHealth.submitted) +
+      number(applicationHealth.offerReceived) +
+      number(applicationHealth.offerAccepted) +
+      number(applicationHealth.casPending) +
+      number(applicationHealth.casIssued);
+
+    const visaInMotion =
+      number(visaHealth.pending) +
+      number(visaHealth.approved);
+
+    const weakDocuments =
+      number(documentHealth.weak) +
+      number(documentHealth.critical) +
+      number(documentHealth.missing);
+
+    const weakTasks =
+      number(taskHealth.weak) +
+      number(taskHealth.critical);
+
+    const weakUniversityPlan =
+      number(universityHealth.risky) +
+      number(universityHealth.missing);
+
+    const weakOpsLoad =
+      weakDocuments +
+      weakTasks +
+      weakUniversityPlan;
+
+    const verifiedOutcomes =
+      number(
+        portfolio.verifiedOutcomes,
+        number(portfolio.successStories)
+      );
+
+    const commandReadiness =
+      calculateCommandReadiness({
+        total,
+        critical: number(portfolio.critical),
+        high: number(portfolio.high),
+        conversionReady: number(
+          portfolio.conversionReady
+        ),
+        highOpportunity: number(
+          portfolio.highOpportunity
+        ),
+        applicationSubmitted,
+        visaInMotion,
+        weakDocuments,
+        weakTasks,
+        weakUniversityPlan,
+      });
 
     return {
       total,
@@ -50,280 +282,973 @@ function ExecutivePortfolioSummary({ students = [] }) {
       documentHealth,
       universityHealth,
       taskHealth,
-
-      applicationSubmitted:
-        number(applicationHealth.submitted) +
-        number(applicationHealth.offerReceived) +
-        number(applicationHealth.offerAccepted) +
-        number(applicationHealth.casPending) +
-        number(applicationHealth.casIssued),
-
-      visaInMotion:
-        number(visaHealth.pending) +
-        number(visaHealth.approved),
-
-      weakDocuments:
-        number(documentHealth.weak) +
-        number(documentHealth.critical) +
-        number(documentHealth.missing),
-
-      weakTasks:
-        number(taskHealth.weak) +
-        number(taskHealth.critical),
-
-      weakUniversityPlan:
-        number(universityHealth.risky) +
-        number(universityHealth.missing),
+      applicationSubmitted,
+      visaInMotion,
+      weakDocuments,
+      weakTasks,
+      weakUniversityPlan,
+      weakOpsLoad,
+      verifiedOutcomes,
+      commandReadiness,
     };
-  }, [portfolio]);
-
-
+  }, [portfolio, safeStudents.length]);
 
   const executiveBoard = useMemo(() => {
-    const rows = Array.isArray(students) ? students : [];
-    const riskPipeline = rows
-      .map((item) => ({ student: item.student || item, executive: item.executive || item }))
-      .sort((a, b) => number(b.executive.risk_score) - number(a.executive.risk_score))
+    const rows = safeStudents.map(getExecutiveRow);
+
+    const riskPipeline = [...rows]
+      .sort(
+        (a, b) =>
+          number(b.executive.risk_score) -
+          number(a.executive.risk_score)
+      )
       .slice(0, 8);
 
-    const opportunityPipeline = rows
-      .map((item) => ({ student: item.student || item, executive: item.executive || item }))
-      .sort((a, b) => number(b.executive.opportunity_score) - number(a.executive.opportunity_score))
+    const opportunityPipeline = [...rows]
+      .sort(
+        (a, b) =>
+          number(b.executive.opportunity_score) -
+          number(a.executive.opportunity_score)
+      )
       .slice(0, 8);
 
     const stalledPipeline = rows
-      .map((item) => ({ student: item.student || item, executive: item.executive || item }))
-      .filter(({ executive }) => number(executive.days_since_updated, -1) >= 10 || normalize(executive.journey_stage) === "not_started")
-      .sort((a, b) => number(b.executive.days_since_updated) - number(a.executive.days_since_updated))
+      .filter(({ executive }) => {
+        const daysSinceUpdated = number(
+          executive.days_since_updated,
+          -1
+        );
+
+        const journeyStage = normalize(
+          executive.journey_stage
+        );
+
+        return (
+          daysSinceUpdated >= 10 ||
+          journeyStage === "not_started"
+        );
+      })
+      .sort(
+        (a, b) =>
+          number(b.executive.days_since_updated) -
+          number(a.executive.days_since_updated)
+      )
       .slice(0, 8);
 
-    const expectedOffers = rows.filter((item) => {
-      const executive = item.executive || item;
-      return number(executive.opportunity_score) >= 65 && ["application_submitted", "application_under_review"].includes(normalize(executive.journey_stage));
-    }).length;
+    const expectedOffers = rows.filter(
+      ({ executive }) => {
+        const stage = normalize(
+          executive.journey_stage
+        );
 
-    const expectedVisaMovement = rows.filter((item) => {
-      const executive = item.executive || item;
-      return ["offer_accepted", "cas_pending", "cas_issued"].includes(normalize(executive.journey_stage));
-    }).length;
+        return (
+          number(executive.opportunity_score) >= 65 &&
+          [
+            "application_submitted",
+            "application_under_review",
+          ].includes(stage)
+        );
+      }
+    ).length;
 
-    const urgentRecovery = rows.filter((item) => {
-      const executive = item.executive || item;
-      return number(executive.risk_score) >= 70 && number(executive.opportunity_score) >= 60;
-    }).length;
+    const expectedVisaMovement = rows.filter(
+      ({ executive }) =>
+        [
+          "offer_accepted",
+          "cas_pending",
+          "cas_issued",
+        ].includes(
+          normalize(executive.journey_stage)
+        )
+    ).length;
 
-    return { riskPipeline, opportunityPipeline, stalledPipeline, expectedOffers, expectedVisaMovement, urgentRecovery };
-  }, [students]);
+    const urgentRecovery = rows.filter(
+      ({ executive }) =>
+        number(executive.risk_score) >= 70 &&
+        number(executive.opportunity_score) >= 60
+    ).length;
 
+    return {
+      riskPipeline,
+      opportunityPipeline,
+      stalledPipeline,
+      expectedOffers,
+      expectedVisaMovement,
+      urgentRecovery,
+    };
+  }, [safeStudents]);
+
+  const commandMetrics = [
+    {
+      label: "Total Students",
+      value: health.total,
+      icon: UsersRound,
+      tone: "default",
+    },
+    {
+      label: "Critical Risk",
+      value: number(portfolio.critical),
+      icon: AlertTriangle,
+      tone: "red",
+    },
+    {
+      label: "High Risk",
+      value: number(portfolio.high),
+      icon: FileWarning,
+      tone: "orange",
+    },
+    {
+      label: "High Opportunity",
+      value: number(portfolio.highOpportunity),
+      icon: TrendingUp,
+      tone: "green",
+    },
+    {
+      label: "Conversion Ready",
+      value: number(portfolio.conversionReady),
+      icon: Rocket,
+      tone: "green",
+    },
+    {
+      label: "Verified Outcomes",
+      value: health.verifiedOutcomes,
+      icon: Trophy,
+      tone: "green",
+    },
+    {
+      label: "Executive Priority",
+      value: number(portfolio.executivePriority),
+      icon: Crown,
+      tone: "blue",
+    },
+    {
+      label: "Weak Ops Load",
+      value: health.weakOpsLoad,
+      icon: Workflow,
+      tone: "orange",
+    },
+  ];
 
   return (
-    <div className="rounded-[2rem] border-2 border-[#E9802D]/40 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
-            Executive Portfolio Intelligence
-          </p>
+    <motion.section
+      initial={
+        reduceMotion
+          ? false
+          : { opacity: 0, y: 10 }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.26,
+      }}
+      className="space-y-5"
+    >
+      <section className="rounded-[2rem] border-[3px] border-orange-400 bg-[#fff8ee] p-3 shadow-[0_18px_55px_rgba(15,35,63,0.08)] sm:p-4">
+        <div className="grid overflow-hidden rounded-[1.65rem] border-2 border-[#234e78] xl:grid-cols-[1.32fr_0.68fr]">
+          <div className="bg-[#123865] p-5 text-white sm:p-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <HeaderChip icon={BriefcaseBusiness}>
+                Executive Portfolio
+              </HeaderChip>
 
-          <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">
-            Student Success Portfolio
-          </h2>
+              <HeaderChip icon={ShieldCheck}>
+                Student OS Health
+              </HeaderChip>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
-            Executive visibility across risk, opportunity, applications, offers,
-            CAS, visa, documents, tasks, and university planning.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Badge label={`${portfolio.total} Students`} />
-          <Badge label={`${portfolio.executivePriority || 0} Executive`} gold />
-          <Badge label={`${portfolio.critical || 0} Critical`} danger />
-          <Badge label={`${portfolio.conversionReady || 0} Conversion`} success />
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-8">
-        <MetricCard label="Total" value={portfolio.total} />
-        <MetricCard label="Critical Risk" value={portfolio.critical} tone="red" />
-        <MetricCard label="High Risk" value={portfolio.high} tone="orange" />
-        <MetricCard label="Medium Risk" value={portfolio.medium} tone="blue" />
-
-        <MetricCard label="High Opportunity" value={portfolio.highOpportunity} tone="green" />
-        <MetricCard label="Conversion Ready" value={portfolio.conversionReady} tone="gold" />
-        <MetricCard label="Success Stories" value={portfolio.successStories} tone="green" />
-        <MetricCard label="Executive Priority" value={portfolio.executivePriority} tone="gold" />
-
-        <MetricCard label="Avg Risk" value={portfolio.averageRisk} tone="red" />
-        <MetricCard label="Avg Opportunity" value={portfolio.averageOpportunity} tone="gold" />
-        <MetricCard label="Apps Submitted" value={health.applicationSubmitted} tone="blue" />
-        <MetricCard label="Visa In Motion" value={health.visaInMotion} tone="green" />
-
-        <MetricCard label="Weak Documents" value={health.weakDocuments} tone="orange" />
-        <MetricCard label="Weak Tasks" value={health.weakTasks} tone="red" />
-        <MetricCard label="Weak Uni Plan" value={health.weakUniversityPlan} tone="orange" />
-        <MetricCard label="Visa Rejected" value={health.visaHealth?.rejected || 0} tone="red" />
-      </div>
-
-
-
-      <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <BoardCard label="Expected Offers" value={executiveBoard.expectedOffers} detail="Strong submitted/review cases." tone="blue" />
-        <BoardCard label="Expected Visa Movement" value={executiveBoard.expectedVisaMovement} detail="Offer/CAS students moving next." tone="green" />
-        <BoardCard label="Urgent Recovery" value={executiveBoard.urgentRecovery} detail="High-risk but valuable cases." tone="red" />
-        <BoardCard label="Application Yield" value={pct(health.applicationSubmitted, health.total)} detail="Submitted or beyond." tone="gold" />
-        <BoardCard label="Visa Yield" value={pct(health.visaInMotion, health.total)} detail="Pending or approved." tone="green" />
-        <BoardCard label="Weak Ops Load" value={health.weakDocuments + health.weakTasks + health.weakUniversityPlan} detail="Docs/tasks/planning pressure." tone="orange" />
-      </div>
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-3">
-        <BoardList title="Risk Board" items={executiveBoard.riskPipeline} scoreKey="risk_score" tone="red" />
-        <BoardList title="Opportunity Board" items={executiveBoard.opportunityPipeline} scoreKey="opportunity_score" tone="gold" />
-        <BoardList title="Stalled Board" items={executiveBoard.stalledPipeline} scoreKey="days_since_updated" tone="orange" />
-      </div>
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-5">
-        <HealthBlock
-          title="Application Health"
-          total={portfolio.total}
-          rows={[
-            ["Not Started", health.applicationHealth.notStarted || 0, "red"],
-            ["Started", health.applicationHealth.started || 0, "blue"],
-            ["Submitted", health.applicationHealth.submitted || 0, "blue"],
-            ["Offer Received", health.applicationHealth.offerReceived || 0, "gold"],
-            ["Offer Accepted", health.applicationHealth.offerAccepted || 0, "green"],
-            ["CAS Pending", health.applicationHealth.casPending || 0, "orange"],
-            ["CAS Issued", health.applicationHealth.casIssued || 0, "green"],
-          ]}
-        />
-
-        <HealthBlock
-          title="Visa Health"
-          total={portfolio.total}
-          rows={[
-            ["Needed", health.visaHealth.needed || 0, "gold"],
-            ["Pending", health.visaHealth.pending || 0, "orange"],
-            ["Approved", health.visaHealth.approved || 0, "green"],
-            ["Rejected", health.visaHealth.rejected || 0, "red"],
-          ]}
-        />
-
-        <HealthBlock
-          title="Document Health"
-          total={portfolio.total}
-          rows={[
-            ["Strong", health.documentHealth.strong || 0, "green"],
-            ["Good", health.documentHealth.good || 0, "blue"],
-            ["Weak", health.documentHealth.weak || 0, "orange"],
-            ["Critical", health.documentHealth.critical || 0, "red"],
-            ["Missing", health.documentHealth.missing || 0, "red"],
-          ]}
-        />
-
-        <HealthBlock
-          title="University Health"
-          total={portfolio.total}
-          rows={[
-            ["Strong", health.universityHealth.strong || 0, "green"],
-            ["Partial", health.universityHealth.partial || 0, "blue"],
-            ["Risky", health.universityHealth.risky || 0, "orange"],
-            ["Missing", health.universityHealth.missing || 0, "red"],
-          ]}
-        />
-
-        <HealthBlock
-          title="Task Health"
-          total={portfolio.total}
-          rows={[
-            ["Strong", health.taskHealth.strong || 0, "green"],
-            ["Good", health.taskHealth.good || 0, "blue"],
-            ["Weak", health.taskHealth.weak || 0, "orange"],
-            ["Critical", health.taskHealth.critical || 0, "red"],
-            ["Empty", health.taskHealth.empty || 0, "default"],
-          ]}
-        />
-      </div>
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-2">
-        <PortfolioList
-          title="Highest Risk Students"
-          items={portfolio.rankedByRisk.slice(0, 5)}
-          scoreKey="risk_score"
-          tone="red"
-          emptyText="No high-risk students."
-        />
-
-        <PortfolioList
-          title="Highest Opportunity Students"
-          items={portfolio.rankedByOpportunity.slice(0, 5)}
-          scoreKey="opportunity_score"
-          tone="gold"
-          emptyText="No opportunity records."
-        />
-      </div>
-    </div>
-  );
-}
-
-
-function BoardCard({ label, value, detail, tone = "default" }) {
-  const style = getToneStyle(tone);
-  return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-75">{label}</p>
-      <p className="mt-3 text-3xl font-black tracking-[-0.025em] text-[#17243D]">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-[#7A8392]">{detail}</p>
-    </div>
-  );
-}
-
-function BoardList({ title, items = [], scoreKey, tone = "gold" }) {
-  const style = getToneStyle(tone);
-  return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
-      <h3 className="font-black text-[#17243D]">{title}</h3>
-      <div className="mt-4 space-y-3">
-        {items.length ? items.map((item, index) => {
-          const student = item.student || {};
-          const executive = item.executive || {};
-          const name = getStudentName(student, executive);
-          return (
-            <div key={`${title}-${name}-${index}`} className="rounded-xl border border-[#243A60]/18 bg-white p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#17243D]">{name}</p>
-                  <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(executive.journey_stage || "not_started")} • {executive.executive_category || "Standard"}</p>
-                </div>
-                <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${style}`}>{executive[scoreKey] || 0}</span>
-              </div>
-              <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#7A8392]">{executive.summary || "No portfolio summary."}</p>
+              <HeaderChip icon={Activity}>
+                Live Portfolio View
+              </HeaderChip>
             </div>
-          );
-        }) : <p className="rounded-xl border border-[#243A60]/18 bg-white p-4 text-sm text-[#7A8392]">No records.</p>}
-      </div>
-    </div>
+
+            <h2 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
+              Student Portfolio Command View
+            </h2>
+
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+              Executive visibility across risk, opportunity, applications,
+              offers, CAS, visa, documents, tasks, and university planning.
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric
+                label="Students"
+                value={health.total}
+              />
+
+              <DarkMetric
+                label="Executive"
+                value={number(
+                  portfolio.executivePriority
+                )}
+              />
+
+              <DarkMetric
+                label="Critical"
+                value={number(
+                  portfolio.critical
+                )}
+              />
+
+              <DarkMetric
+                label="Conversion"
+                value={number(
+                  portfolio.conversionReady
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="border-t-2 border-orange-300 bg-orange-500 p-5 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
+            <div className="flex items-center gap-2">
+              <CircleGauge size={18} />
+
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                Portfolio Readiness
+              </p>
+            </div>
+
+            <p className="mt-3 text-5xl font-black text-white">
+              {
+                health
+                  .commandReadiness
+                  .score
+              }
+            </p>
+
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+              {
+                health
+                  .commandReadiness
+                  .label
+              }
+            </p>
+
+            <div className="mt-4 h-3 overflow-hidden rounded-full border border-white/25 bg-white/10">
+              <motion.div
+                initial={
+                  reduceMotion
+                    ? false
+                    : { width: 0 }
+                }
+                animate={{
+                  width: `${health.commandReadiness.score}%`,
+                }}
+                transition={{
+                  duration: reduceMotion ? 0 : 0.65,
+                }}
+                className="h-full rounded-full bg-white"
+              />
+            </div>
+
+            <p className="mt-4 text-xs font-semibold leading-5 text-white">
+              {
+                health
+                  .commandReadiness
+                  .message
+              }
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {health.total === 0 ? (
+        <EmptyPortfolioState />
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {commandMetrics.map(
+              (item) => (
+                <MetricCard
+                  key={item.label}
+                  {...item}
+                />
+              )
+            )}
+          </div>
+
+          <SectionHeader
+            eyebrow="Executive Forecast"
+            title="Portfolio Movement Board"
+            description="Near-term opportunity, visa movement, operational pressure, and recovery demand."
+            icon={TrendingUp}
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <BoardCard
+              label="Expected Offers"
+              value={
+                executiveBoard
+                  .expectedOffers
+              }
+              detail="Strong submitted or review-stage cases."
+              tone="blue"
+              icon={GraduationCap}
+            />
+
+            <BoardCard
+              label="Expected Visa Movement"
+              value={
+                executiveBoard
+                  .expectedVisaMovement
+              }
+              detail="Offer/CAS students approaching visa movement."
+              tone="blue"
+              icon={Rocket}
+            />
+
+            <BoardCard
+              label="Urgent Recovery"
+              value={
+                executiveBoard
+                  .urgentRecovery
+              }
+              detail="High-risk but still valuable cases."
+              tone="red"
+              icon={AlertTriangle}
+            />
+
+            <BoardCard
+              label="Application Yield"
+              value={pct(
+                health.applicationSubmitted,
+                health.total
+              )}
+              detail="Submitted or further along."
+              tone="green"
+              icon={ClipboardCheck}
+            />
+
+            <BoardCard
+              label="Visa Yield"
+              value={pct(
+                health.visaInMotion,
+                health.total
+              )}
+              detail="Pending or approved."
+              tone="green"
+              icon={ShieldCheck}
+            />
+
+            <BoardCard
+              label="Weak Ops Load"
+              value={
+                health.weakOpsLoad
+              }
+              detail="Document, task, and planning pressure."
+              tone="orange"
+              icon={Workflow}
+            />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-3">
+            <BoardList
+              title="Risk Board"
+              subtitle="Highest portfolio risk"
+              items={
+                executiveBoard
+                  .riskPipeline
+              }
+              scoreKey="risk_score"
+              tone="red"
+              icon={AlertTriangle}
+            />
+
+            <BoardList
+              title="Opportunity Board"
+              subtitle="Best conversion potential"
+              items={
+                executiveBoard
+                  .opportunityPipeline
+              }
+              scoreKey="opportunity_score"
+              tone="green"
+              icon={TrendingUp}
+            />
+
+            <BoardList
+              title="Stalled Board"
+              subtitle="Low movement / overdue attention"
+              items={
+                executiveBoard
+                  .stalledPipeline
+              }
+              scoreKey="days_since_updated"
+              tone="orange"
+              icon={Clock3}
+            />
+          </div>
+
+          <ExecutiveDisclosure
+            eyebrow="Portfolio Health"
+            title="Student Journey & Operations Health"
+            description="Application, visa, document, university, and task health from the executive portfolio model."
+            open={showHealthMatrix}
+            onToggle={() => setShowHealthMatrix((current) => !current)}
+            icon={Workflow}
+          >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+            <HealthBlock
+              icon={ClipboardCheck}
+              title="Application Health"
+              total={health.total}
+              rows={[
+                [
+                  "Not Started",
+                  number(
+                    health
+                      .applicationHealth
+                      .notStarted
+                  ),
+                  "red",
+                ],
+                [
+                  "Started",
+                  number(
+                    health
+                      .applicationHealth
+                      .started
+                  ),
+                  "blue",
+                ],
+                [
+                  "Submitted",
+                  number(
+                    health
+                      .applicationHealth
+                      .submitted
+                  ),
+                  "gold",
+                ],
+                [
+                  "Offer Received",
+                  number(
+                    health
+                      .applicationHealth
+                      .offerReceived
+                  ),
+                  "gold",
+                ],
+                [
+                  "Offer Accepted",
+                  number(
+                    health
+                      .applicationHealth
+                      .offerAccepted
+                  ),
+                  "gold",
+                ],
+                [
+                  "CAS Pending",
+                  number(
+                    health
+                      .applicationHealth
+                      .casPending
+                  ),
+                  "orange",
+                ],
+                [
+                  "CAS Issued",
+                  number(
+                    health
+                      .applicationHealth
+                      .casIssued
+                  ),
+                  "gold",
+                ],
+              ]}
+            />
+
+            <HealthBlock
+              icon={ShieldCheck}
+              title="Visa Health"
+              total={health.total}
+              rows={[
+                [
+                  "Needed",
+                  number(
+                    health.visaHealth
+                      .needed
+                  ),
+                  "gold",
+                ],
+                [
+                  "Pending",
+                  number(
+                    health.visaHealth
+                      .pending
+                  ),
+                  "orange",
+                ],
+                [
+                  "Approved",
+                  number(
+                    health.visaHealth
+                      .approved
+                  ),
+                  "gold",
+                ],
+                [
+                  "Rejected",
+                  number(
+                    health.visaHealth
+                      .rejected
+                  ),
+                  "red",
+                ],
+              ]}
+            />
+
+            <HealthBlock
+              icon={FileWarning}
+              title="Document Health"
+              total={health.total}
+              rows={[
+                [
+                  "Strong",
+                  number(
+                    health
+                      .documentHealth
+                      .strong
+                  ),
+                  "gold",
+                ],
+                [
+                  "Good",
+                  number(
+                    health
+                      .documentHealth
+                      .good
+                  ),
+                  "blue",
+                ],
+                [
+                  "Weak",
+                  number(
+                    health
+                      .documentHealth
+                      .weak
+                  ),
+                  "orange",
+                ],
+                [
+                  "Critical",
+                  number(
+                    health
+                      .documentHealth
+                      .critical
+                  ),
+                  "red",
+                ],
+                [
+                  "Missing",
+                  number(
+                    health
+                      .documentHealth
+                      .missing
+                  ),
+                  "red",
+                ],
+              ]}
+            />
+
+            <HealthBlock
+              icon={Landmark}
+              title="University Health"
+              total={health.total}
+              rows={[
+                [
+                  "Strong",
+                  number(
+                    health
+                      .universityHealth
+                      .strong
+                  ),
+                  "gold",
+                ],
+                [
+                  "Partial",
+                  number(
+                    health
+                      .universityHealth
+                      .partial
+                  ),
+                  "blue",
+                ],
+                [
+                  "Risky",
+                  number(
+                    health
+                      .universityHealth
+                      .risky
+                  ),
+                  "orange",
+                ],
+                [
+                  "Missing",
+                  number(
+                    health
+                      .universityHealth
+                      .missing
+                  ),
+                  "red",
+                ],
+              ]}
+            />
+
+            <HealthBlock
+              icon={Target}
+              title="Task Health"
+              total={health.total}
+              rows={[
+                [
+                  "Strong",
+                  number(
+                    health.taskHealth
+                      .strong
+                  ),
+                  "gold",
+                ],
+                [
+                  "Good",
+                  number(
+                    health.taskHealth
+                      .good
+                  ),
+                  "blue",
+                ],
+                [
+                  "Weak",
+                  number(
+                    health.taskHealth
+                      .weak
+                  ),
+                  "orange",
+                ],
+                [
+                  "Critical",
+                  number(
+                    health.taskHealth
+                      .critical
+                  ),
+                  "red",
+                ],
+                [
+                  "Empty",
+                  number(
+                    health.taskHealth
+                      .empty
+                  ),
+                  "default",
+                ],
+              ]}
+            />
+          </div>
+          </ExecutiveDisclosure>
+
+          <ExecutiveDisclosure
+            eyebrow="Executive Student Boards"
+            title="Highest Priority Student Cases"
+            description="The most important risk and opportunity cases from the calculated executive portfolio."
+            open={showPriorityBoards}
+            onToggle={() => setShowPriorityBoards((current) => !current)}
+            icon={Crown}
+          >
+
+          <div className="grid gap-4 xl:grid-cols-2">
+
+            <PortfolioList
+              title="Highest Risk Students"
+              items={safeArray(
+                portfolio.rankedByRisk
+              ).slice(0, 5)}
+              scoreKey="risk_score"
+              tone="red"
+              emptyText="No high-risk students."
+              icon={AlertTriangle}
+            />
+
+            <PortfolioList
+              title="Highest Opportunity Students"
+              items={safeArray(
+                portfolio.rankedByOpportunity
+              ).slice(0, 5)}
+              scoreKey="opportunity_score"
+              tone="gold"
+              emptyText="No opportunity records."
+              icon={Trophy}
+            />
+          </div>
+          </ExecutiveDisclosure>
+
+          <MethodologyNote />
+        </>
+      )}
+    </motion.section>
   );
 }
 
-function MetricCard({ label, value, tone = "default" }) {
-  const style = getToneStyle(tone);
-
+function HeaderChip({
+  icon: Icon,
+  children,
+}) {
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-75">
+    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-white">
+      <Icon size={11} />
+      {children}
+    </span>
+  );
+}
+
+function DarkMetric({
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
         {label}
       </p>
 
-      <p className="mt-3 text-3xl font-black tracking-[-0.025em] text-[#17243D]">{value || 0}</p>
+      <p className="mt-1 text-xl font-black text-white">
+        {value ?? 0}
+      </p>
     </div>
   );
 }
 
-function HealthBlock({ title, total = 0, rows = [] }) {
+function ExecutiveDisclosure({
+  eyebrow,
+  title,
+  description,
+  open,
+  onToggle,
+  icon: Icon = Sparkles,
+  children,
+}) {
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
-      <h3 className="font-black text-[#17243D]">{title}</h3>
+    <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#234e78] bg-[#fff8ee] shadow-[0_10px_28px_rgba(15,35,63,0.06)]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0f3158]"
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300/60 bg-white/10 text-white">
+            <Icon size={18} />
+          </div>
 
-      <div className="mt-4 space-y-3">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
+              {eyebrow}
+            </p>
+            <h3 className="mt-0.5 text-xl font-black text-white">{title}</h3>
+            {description ? (
+              <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-white/80">
+                {description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
+          {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </span>
+      </button>
+
+      {open ? <div className="p-4 sm:p-5">{children}</div> : null}
+    </section>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  description,
+  icon: Icon = Sparkles,
+}) {
+  return (
+    <div className="flex items-start gap-3 border-l-[5px] border-orange-500 pl-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+        <Icon size={18} />
+      </div>
+
+      <div>
+        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+          {eyebrow}
+        </p>
+
+        <h3 className="mt-0.5 text-xl font-black text-[#10233f]">
+          {title}
+        </h3>
+
+        {description ? (
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+            {description}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  tone = "default",
+  icon: Icon = Activity,
+}) {
+  const style = getToneStyle(tone);
+
+  return (
+    <div
+      className={`relative min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] p-4 shadow-[0_10px_26px_rgba(15,35,63,0.06)] ${style}`}
+    >
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
+
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233f]">
+          {label}
+        </p>
+
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70">
+          <Icon size={16} />
+        </span>
+      </div>
+
+      <p className="mt-3 break-words text-3xl font-black leading-none tracking-[-0.025em] text-[#10233f]">
+        {value ?? 0}
+      </p>
+
+      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
+        Read-only portfolio signal
+      </p>
+    </div>
+  );
+}
+
+function BoardCard({
+  label,
+  value,
+  detail,
+  tone = "default",
+  icon: Icon = Sparkles,
+}) {
+  const style = getToneStyle(tone);
+
+  return (
+    <div
+      className={`relative min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] p-4 shadow-[0_10px_26px_rgba(15,35,63,0.055)] ${style}`}
+    >
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
+
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233f]">
+          {label}
+        </p>
+
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70">
+          <Icon size={16} />
+        </span>
+      </div>
+
+      <p className="mt-3 break-words text-3xl font-black leading-none tracking-[-0.025em] text-[#10233f]">
+        {value ?? 0}
+      </p>
+
+      <p className="mt-2 min-h-[40px] text-xs font-semibold leading-5 text-slate-600">
+        {detail}
+      </p>
+    </div>
+  );
+}
+
+function BoardList({
+  title,
+  subtitle,
+  items = [],
+  scoreKey,
+  tone = "green",
+  icon: Icon = Sparkles,
+}) {
+  const style = getToneStyle(tone);
+
+  return (
+    <div className={`overflow-hidden rounded-[1.6rem] border-[3px] bg-[#fffdf8] shadow-[0_10px_28px_rgba(15,35,63,0.06)] ${getOuterBorder(tone)}`}>
+      <div className="flex items-start justify-between gap-3 border-b-2 border-orange-300 bg-[#123865] px-4 py-4 text-white">
+        <div>
+          <h3 className="font-black text-white">{title}</h3>
+          <p className="mt-1 text-xs font-semibold text-white/75">{subtitle}</p>
+        </div>
+
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${style}`}>
+          <Icon size={17} />
+        </div>
+      </div>
+
+      <div className="space-y-3 p-4">
+        {items.length ? (
+          items.map((item, index) => {
+            const student = item.student || {};
+            const executive = item.executive || {};
+            const name = getStudentName(student, executive);
+
+            return (
+              <div
+                key={`${title}-${name}-${index}`}
+                className={`rounded-[1.15rem] border-2 bg-white p-4 ${getOuterBorder(tone)}`}
+              >
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_95px]">
+                  <div className="min-w-0">
+                    <p className="break-words font-black leading-5 text-[#10233f]">
+                      {name}
+                    </p>
+
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                      {formatLabel(executive.journey_stage || "not_started")} •{" "}
+                      {formatLabel(executive.executive_category || "Standard")}
+                    </p>
+
+                    <p className="mt-2 line-clamp-3 text-xs font-semibold leading-5 text-slate-600">
+                      {executive.summary || "No portfolio summary."}
+                    </p>
+                  </div>
+
+                  <div className={`rounded-xl border-2 p-3 text-center ${style}`}>
+                    <p className="text-[8px] font-black uppercase tracking-[0.09em]">
+                      {scoreKey === "opportunity_score" ? "Opportunity" : scoreKey === "days_since_updated" ? "Days Stale" : "Risk"}
+                    </p>
+                    <p className="mt-1 text-2xl font-black">{number(executive[scoreKey])}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <p className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+            No records.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HealthBlock({
+  title,
+  total = 0,
+  rows = [],
+  icon: Icon = Workflow,
+}) {
+  return (
+    <div className="overflow-hidden rounded-[1.55rem] border-[3px] border-[#234e78] bg-[#fffdf8] shadow-[0_10px_28px_rgba(15,35,63,0.055)]">
+      <div className="flex items-center gap-3 border-b-2 border-orange-300 bg-[#123865] px-4 py-4 text-white">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
+          <Icon size={16} />
+        </div>
+        <h3 className="font-black text-white">{title}</h3>
+      </div>
+
+      <div className="space-y-3 p-4">
         {rows.map(([label, value, tone]) => (
           <HealthRow
             key={label}
@@ -338,19 +1263,25 @@ function HealthBlock({ title, total = 0, rows = [] }) {
   );
 }
 
-function HealthRow({ label, value, percent, tone = "default" }) {
-  const style = getToneText(tone);
+function HealthRow({
+  label,
+  value,
+  percent,
+  tone = "default",
+}) {
+  const textStyle = getToneText(tone);
 
   return (
-    <div className="rounded-xl border border-[#243A60]/18 bg-white p-3">
+    <div className={`rounded-xl border-2 p-3 ${getToneStyle(tone)}`}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold text-[#667085]">{label}</p>
-        <p className={`text-xs font-black ${style}`}>
-          {value || 0} • {percent}
+        <p className="text-xs font-black text-[#10233f]">{label}</p>
+
+        <p className={`shrink-0 text-xs font-black ${textStyle}`}>
+          {value ?? 0} • {percent}
         </p>
       </div>
 
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+      <div className="mt-2 h-2.5 overflow-hidden rounded-full border border-slate-200 bg-white/70">
         <div
           className={`h-full rounded-full ${getToneBar(tone)}`}
           style={{ width: percent }}
@@ -364,16 +1295,23 @@ function PortfolioList({
   title,
   items = [],
   scoreKey,
-  tone = "gold",
+  tone = "green",
   emptyText = "No records.",
+  icon: Icon = Sparkles,
 }) {
   const style = getToneStyle(tone);
 
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-5">
-      <h3 className="font-black text-[#17243D]">{title}</h3>
+    <div className={`overflow-hidden rounded-[1.6rem] border-[3px] bg-[#fffdf8] shadow-[0_10px_28px_rgba(15,35,63,0.06)] ${getOuterBorder(tone)}`}>
+      <div className="flex items-center justify-between gap-3 border-b-2 border-orange-300 bg-[#123865] px-4 py-4 text-white">
+        <h3 className="font-black text-white">{title}</h3>
 
-      <div className="mt-4 space-y-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${style}`}>
+          <Icon size={17} />
+        </div>
+      </div>
+
+      <div className="space-y-3 p-4">
         {items.length ? (
           items.map((item, index) => {
             const student = item.student || {};
@@ -383,40 +1321,52 @@ function PortfolioList({
             return (
               <div
                 key={`${name}-${index}`}
-                className="rounded-xl border border-[#243A60]/18 bg-white p-4"
+                className={`rounded-[1.2rem] border-2 bg-white p-4 ${getOuterBorder(tone)}`}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_100px]">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-[#17243D]">{name}</p>
+                    <p className="break-words font-black leading-5 text-[#10233f]">
+                      {name}
+                    </p>
 
-                    <p className="mt-1 text-xs text-[#7A8392]">
-                      {executive.executive_category || "Standard"} •{" "}
-                      {executive.priority_level || "Standard"} •{" "}
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                      {formatLabel(executive.executive_category || "Standard")} •{" "}
+                      {formatLabel(executive.priority_level || "Standard")} •{" "}
                       {formatLabel(executive.journey_stage || "not_started")}
+                    </p>
+
+                    <p className="mt-3 line-clamp-3 text-xs font-semibold leading-5 text-slate-600">
+                      {executive.summary || "No executive summary."}
                     </p>
                   </div>
 
-                  <span
-                    className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${style}`}
-                  >
-                    {executive[scoreKey] || 0}
-                  </span>
+                  <div className={`rounded-xl border-2 p-3 text-center ${style}`}>
+                    <p className="text-[8px] font-black uppercase tracking-[0.08em]">
+                      {scoreKey === "opportunity_score" ? "Opportunity" : "Risk"}
+                    </p>
+                    <p className="mt-1 text-2xl font-black">{number(executive[scoreKey])}</p>
+                  </div>
                 </div>
 
-                <p className="mt-3 line-clamp-2 text-xs leading-5 text-[#7A8392]">
-                  {executive.summary || "No executive summary."}
-                </p>
-
-                <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#8992A1]">
-                  <span>Docs {executive.diagnostics?.document_readiness_percent || 0}%</span>
-                  <span>Tasks {executive.diagnostics?.task_completion_percent || 0}%</span>
-                  <span>Universities {executive.diagnostics?.university_plan_count || 0}</span>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <MiniFact
+                    label="Docs"
+                    value={`${number(executive.diagnostics?.document_readiness_percent)}%`}
+                  />
+                  <MiniFact
+                    label="Tasks"
+                    value={`${number(executive.diagnostics?.task_completion_percent)}%`}
+                  />
+                  <MiniFact
+                    label="Universities"
+                    value={number(executive.diagnostics?.university_plan_count)}
+                  />
                 </div>
               </div>
             );
           })
         ) : (
-          <p className="rounded-xl border border-[#243A60]/18 bg-white p-4 text-sm text-[#7A8392]">
+          <p className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-semibold text-slate-500">
             {emptyText}
           </p>
         )}
@@ -425,59 +1375,144 @@ function PortfolioList({
   );
 }
 
-function Badge({ label, danger = false, gold = false, success = false }) {
-  const style = danger
-    ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]"
-    : gold
-    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
-    : success
-    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
-    : "border-[#243A60]/18 bg-white text-[#7A8392]";
-
+function MiniFact({
+  label,
+  value,
+}) {
   return (
-    <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>
-      {label}
-    </span>
+    <div className="min-w-0 rounded-xl border-2 border-slate-200 bg-[#F8FAFC] px-3 py-2">
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-xs font-black text-[#243A60]">
+        {value}
+      </p>
+    </div>
   );
 }
 
-function getToneStyle(tone = "") {
-  if (tone === "red") return "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]";
-  if (tone === "orange") return "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]";
-  if (tone === "gold") return "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]";
-  if (tone === "green") return "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]";
-  if (tone === "blue") return "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]";
+function EmptyPortfolioState() {
+  return (
+    <div className="rounded-[1.6rem] border-[3px] border-dashed border-orange-300 bg-white p-8 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+        <UsersRound size={26} />
+      </div>
 
-  return "border-[#243A60]/18 bg-white text-[#596579]";
+      <h3 className="mt-4 text-xl font-black text-[#10233f]">
+        No portfolio records yet
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+        Student portfolio intelligence will appear when Executive AI records are available.
+      </p>
+    </div>
+  );
 }
 
-function getToneText(tone = "") {
-  if (tone === "red") return "text-[#A8342F]";
-  if (tone === "orange") return "text-[#8A5611]";
-  if (tone === "gold") return "text-[#B84F0E]";
-  if (tone === "green") return "text-[#B84F0E]";
-  if (tone === "blue") return "text-[#243A60]";
+function MethodologyNote() {
+  return (
+    <div className="rounded-[1.5rem] border-[3px] border-orange-300 bg-orange-50 p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+          <CheckCircle2 size={17} />
+        </div>
 
-  return "text-[#667085]";
+        <div>
+          <p className="text-sm font-black text-[#10233f]">
+            Portfolio methodology
+          </p>
+
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
+            Forecast cards are operational indicators based on the current executive
+            score model. They are not guaranteed admissions, offers, visa outcomes,
+            or business forecasts. “Verified Outcomes” only reflects records the
+            underlying portfolio engine already classifies as completed/approved.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function getToneBar(tone = "") {
-  if (tone === "red") return "bg-red-400";
-  if (tone === "orange") return "bg-orange-400";
-  if (tone === "gold") return "bg-[#E9802D]";
-  if (tone === "green") return "bg-emerald-400";
-  if (tone === "blue") return "bg-blue-400";
+function getToneStyle(
+  tone = ""
+) {
+  if (tone === "red") {
+    return "border-red-400 bg-red-50 text-red-800";
+  }
 
-  return "bg-white/40";
+  if (tone === "orange") {
+    return "border-orange-400 bg-orange-50 text-orange-800";
+  }
+
+  if (tone === "green") {
+    return "border-emerald-400 bg-emerald-50 text-emerald-800";
+  }
+
+  if (tone === "blue") {
+    return "border-blue-400 bg-blue-50 text-blue-800";
+  }
+
+  if (tone === "gold") {
+    return "border-orange-400 bg-orange-50 text-orange-800";
+  }
+
+  return "border-[#234e78] bg-[#edf4fb] text-[#123865]";
 }
 
-function formatLabel(value = "") {
-  const clean = normalize(value);
-  if (!clean) return "Unknown";
+function getToneText(
+  tone = ""
+) {
+  if (tone === "red") return "text-red-700";
+  if (tone === "orange") return "text-orange-700";
+  if (tone === "green") return "text-emerald-700";
+  if (tone === "blue") return "text-blue-700";
+  if (tone === "gold") return "text-orange-700";
+  return "text-[#123865]";
+}
+
+function getToneBar(
+  tone = ""
+) {
+  if (tone === "red") return "bg-red-500";
+  if (tone === "orange") return "bg-orange-500";
+  if (tone === "green") return "bg-emerald-500";
+  if (tone === "blue") return "bg-blue-500";
+  if (tone === "gold") return "bg-orange-500";
+  return "bg-[#123865]";
+}
+
+function getOuterBorder(
+  tone = ""
+) {
+  if (tone === "red") return "border-red-400";
+  if (tone === "orange") return "border-orange-400";
+  if (tone === "green") return "border-emerald-400";
+  if (tone === "blue") return "border-blue-400";
+  if (tone === "gold") return "border-orange-400";
+  return "border-[#234e78]";
+}
+
+
+function formatLabel(
+  value = ""
+) {
+  const clean =
+    normalize(value);
+
+  if (!clean) {
+    return "Unknown";
+  }
 
   return clean
     .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map(
+      (part) =>
+        part
+          .charAt(0)
+          .toUpperCase() +
+        part.slice(1)
+    )
     .join(" ");
 }
 

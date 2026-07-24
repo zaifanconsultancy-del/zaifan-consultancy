@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -12,7 +12,8 @@ import {
   Gauge,
   LogOut,
   Menu,
-  Search,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -22,7 +23,15 @@ import {
 } from "lucide-react";
 
 const EASE = [0.22, 1, 0.36, 1];
+const ADMIN_SIDEBAR_COLLAPSED_KEY = "zaifan_admin_sidebar_collapsed";
 
+function readStoredCollapsedState() {
+  if (typeof window === "undefined") return false;
+
+  return window.localStorage.getItem(ADMIN_SIDEBAR_COLLAPSED_KEY) === "true";
+}
+
+// AdminSidebar V5 MAXIMUM — Navy Glass Rail Navigation
 function AdminSidebar({
   activeTab,
   setActiveTab,
@@ -32,6 +41,18 @@ function AdminSidebar({
   permissions = {},
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(
+    readStoredCollapsedState
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem(
+      ADMIN_SIDEBAR_COLLAPSED_KEY,
+      String(desktopCollapsed)
+    );
+  }, [desktopCollapsed]);
 
   const safePermissions = {
     canDelete: false,
@@ -50,10 +71,8 @@ function AdminSidebar({
       shortLabel: "Staff",
       icon: UsersRound,
       description: "Student & lead operations",
-      badge:
-        "border-sky-200 bg-sky-50 text-sky-700",
-      avatar:
-        "border-sky-200 bg-sky-50 text-sky-700",
+      badge: "border-sky-300 bg-sky-50 text-sky-700",
+      avatar: "border-sky-300 bg-sky-50 text-sky-700",
       dot: "bg-sky-500",
     },
     admin: {
@@ -61,10 +80,8 @@ function AdminSidebar({
       shortLabel: "Admin",
       icon: ShieldCheck,
       description: "Operations & CRM control",
-      badge:
-        "border-orange-200 bg-orange-50 text-orange-700",
-      avatar:
-        "border-orange-200 bg-orange-50 text-orange-700",
+      badge: "border-orange-300 bg-orange-50 text-orange-700",
+      avatar: "border-orange-300 bg-orange-50 text-orange-700",
       dot: "bg-orange-500",
     },
     super_admin: {
@@ -72,11 +89,9 @@ function AdminSidebar({
       shortLabel: "Owner",
       icon: Crown,
       description: "Full Zaifan OS control",
-      badge:
-        "border-orange-200 bg-orange-50 text-orange-700",
-      avatar:
-        "border-orange-200 bg-orange-50 text-orange-700",
-      dot: "bg-orange-500/100",
+      badge: "border-orange-300 bg-orange-50 text-orange-700",
+      avatar: "border-orange-300 bg-orange-50 text-orange-700",
+      dot: "bg-orange-500",
     },
   };
 
@@ -87,7 +102,6 @@ function AdminSidebar({
     () => [
       {
         title: "Workspace",
-        description: "Daily operations",
         items: [
           {
             id: "inquiries",
@@ -128,7 +142,6 @@ function AdminSidebar({
       },
       {
         title: "Intelligence",
-        description: "AI & performance",
         items: [
           {
             id: "analytics",
@@ -141,7 +154,6 @@ function AdminSidebar({
       },
       {
         title: "System",
-        description: "Administration",
         items: [
           {
             id: "admin-management",
@@ -193,13 +205,15 @@ function AdminSidebar({
 
   return (
     <>
-      {/* Mobile top bar */}
-      <div className="sticky top-0 z-50 border-b border-orange-100 bg-[#fffaf5]/96 px-3 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.06)] backdrop-blur-xl xl:hidden">
+      {/* MOBILE TOP BAR */}
+      <>
+      <div className="h-[68px] xl:hidden" aria-hidden="true" />
+      <div className="fixed inset-x-0 top-0 z-50 border-b-[3px] border-[#F97316] bg-[#123865]/98 px-3 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.20)] backdrop-blur-xl xl:hidden">
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-white text-[#071f50] shadow-sm transition duration-300 hover:border-orange-200 hover:text-orange-600 active:scale-95"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white shadow-sm transition duration-300 hover:border-orange-300/60 hover:bg-white/15 active:scale-95"
             aria-label="Open admin navigation"
           >
             <Menu size={20} />
@@ -207,30 +221,33 @@ function AdminSidebar({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black uppercase tracking-[0.28em] text-orange-600">
+              <span className="text-[9px] font-black uppercase tracking-[0.24em] text-orange-300">
                 Zaifan OS
               </span>
+
               <span className="h-1 w-1 rounded-full bg-slate-300" />
-              <span className="truncate text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
+
+              <span className="truncate text-[9px] font-bold uppercase tracking-[0.2em] text-white/65">
                 Admin
               </span>
             </div>
 
-            <p className="mt-1 truncate text-base font-black text-[#071f50]">
+            <p className="mt-1 truncate text-base font-black text-white">
               {activeItem?.label || "Workspace"}
             </p>
           </div>
 
           <div
-            className={`hidden items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] sm:flex ${currentRole.badge}`}
+            className="hidden items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-white sm:flex"
           >
             <span className={`h-1.5 w-1.5 rounded-full ${currentRole.dot}`} />
             {currentRole.shortLabel}
           </div>
         </div>
       </div>
+      </>
 
-      {/* Mobile drawer */}
+      {/* MOBILE DRAWER */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -242,7 +259,7 @@ function AdminSidebar({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
               onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 z-[70] bg-[#071f50]/20 backdrop-blur-sm xl:hidden"
+              className="fixed inset-0 z-[70] bg-[#071f50]/45 backdrop-blur-sm xl:hidden"
             />
 
             <motion.aside
@@ -250,22 +267,22 @@ function AdminSidebar({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.38, ease: EASE }}
-              className="fixed inset-y-0 left-0 z-[80] flex w-[min(88vw,340px)] flex-col border-r border-orange-100 bg-[#fffaf5] shadow-[32px_0_90px_rgba(121,72,40,0.16)] xl:hidden"
+              className="fixed inset-y-0 left-0 z-[80] flex w-[min(88vw,330px)] flex-col border-r-2 border-[#F97316] bg-[#123865] text-white shadow-[32px_0_90px_rgba(15,35,63,0.34)] xl:hidden"
             >
-              <div className="flex items-center justify-between border-b border-orange-100 px-5 py-4">
+              <div className="flex items-center justify-between border-b-2 border-white/10 px-5 py-4">
                 <BrandBlock compact />
 
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-orange-100 bg-white text-slate-500 transition hover:border-orange-200 hover:text-orange-600"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] text-white transition hover:border-orange-300/60 hover:bg-white/15"
                   aria-label="Close navigation"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-5">
+              <div className="zaifan-admin-sidebar-scroll flex-1 overflow-y-auto px-4 py-5">
                 <ProfileCard
                   adminProfile={adminProfile}
                   currentRole={currentRole}
@@ -286,38 +303,103 @@ function AdminSidebar({
         )}
       </AnimatePresence>
 
-      {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[304px] shrink-0 border-r border-orange-100 bg-[#fffaf5] text-[#071f50] shadow-[24px_0_70px_rgba(121,72,40,0.12)] xl:flex xl:flex-col">
-        <div className="pointer-events-none absolute left-[-120px] top-[-100px] h-72 w-72 rounded-full bg-orange-300/20 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-[-140px] right-[-140px] h-72 w-72 rounded-full bg-sky-200/20 blur-3xl" />
+      {/* DESKTOP LAYOUT SPACER
+          This reserves the correct horizontal width while the real sidebar
+          itself is fixed to the viewport, so the sidebar follows you forever. */}
+      <motion.div
+        initial={false}
+        animate={{ width: desktopCollapsed ? 88 : 304 }}
+        transition={{ duration: 0.32, ease: EASE }}
+        className="hidden h-screen shrink-0 xl:block"
+        aria-hidden="true"
+      />
 
-        <div className="relative border-b border-orange-100 px-5 py-5">
-          <BrandBlock />
+      {/* DESKTOP FIXED SIDEBAR */}
+      <motion.aside
+        initial={false}
+        animate={{ width: desktopCollapsed ? 88 : 304 }}
+        transition={{ duration: 0.32, ease: EASE }}
+        className="fixed bottom-0 left-0 top-0 z-[60] hidden overflow-hidden border-r-2 border-[#F97316] bg-[#123865] text-white shadow-[22px_0_60px_rgba(15,35,63,0.24)] xl:flex xl:flex-col"
+      >
+        <div className="pointer-events-none absolute left-[-120px] top-[-100px] h-72 w-72 rounded-full bg-orange-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-[-140px] right-[-140px] h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+
+        <div
+          className={`relative border-b-2 border-white/10 ${
+            desktopCollapsed ? "px-3 py-3.5" : "px-4 py-4"
+          }`}
+        >
+          <div
+            className={`flex items-center ${
+              desktopCollapsed ? "flex-col gap-3" : "justify-between gap-3"
+            }`}
+          >
+            <BrandBlock collapsed={desktopCollapsed} />
+
+            <button
+              type="button"
+              onClick={() => setDesktopCollapsed((current) => !current)}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/[0.07] text-white/90 transition duration-300 hover:border-orange-300/60 hover:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50"
+              aria-label={
+                desktopCollapsed
+                  ? "Expand admin sidebar"
+                  : "Collapse admin sidebar"
+              }
+              title={
+                desktopCollapsed
+                  ? "Expand admin sidebar"
+                  : "Collapse admin sidebar"
+              }
+            >
+              {desktopCollapsed ? (
+                <PanelLeftOpen size={18} />
+              ) : (
+                <PanelLeftClose size={18} />
+              )}
+            </button>
+          </div>
         </div>
 
-        <div className="zaifan-admin-sidebar-scroll relative flex-1 overflow-y-auto px-4 py-5">
+        <div
+          className={`zaifan-admin-sidebar-scroll relative flex-1 overflow-y-auto ${
+            desktopCollapsed ? "px-2 py-4" : "px-4 py-5"
+          }`}
+        >
           <ProfileCard
             adminProfile={adminProfile}
             currentRole={currentRole}
             RoleIcon={RoleIcon}
             canManageAdmins={safePermissions.canManageAdmins}
+            collapsed={desktopCollapsed}
           />
+
+          {!desktopCollapsed ? (
+            <div className="mb-4 flex items-center gap-2 px-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+              <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.12em] text-white/55">
+                {activeItem?.label || "Workspace"}
+              </p>
+            </div>
+          ) : null}
 
           <Navigation
             navGroups={navGroups}
             activeTab={activeTab}
             onTabClick={handleTabClick}
+            collapsed={desktopCollapsed}
           />
         </div>
 
-        <div className="relative">
-          <SidebarFooter openWebsite={openWebsite} logout={logout} />
-        </div>
+        <SidebarFooter
+          openWebsite={openWebsite}
+          logout={logout}
+          collapsed={desktopCollapsed}
+        />
 
         <style>{`
           .zaifan-admin-sidebar-scroll {
             scrollbar-width: thin;
-            scrollbar-color: rgba(249, 115, 22, 0.28) transparent;
+            scrollbar-color: rgba(249, 115, 22, 0.70) transparent;
           }
 
           .zaifan-admin-sidebar-scroll::-webkit-scrollbar {
@@ -329,41 +411,58 @@ function AdminSidebar({
           }
 
           .zaifan-admin-sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(249, 115, 22, 0.22);
+            background: rgba(249, 115, 22, 0.62);
             border-radius: 999px;
           }
 
           .zaifan-admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(249, 115, 22, 0.38);
+            background: rgba(249, 115, 22, 0.65);
           }
         `}</style>
-      </aside>
+      </motion.aside>
     </>
   );
 }
 
-function BrandBlock({ compact = false }) {
+function BrandBlock({ compact = false, collapsed = false }) {
+  if (collapsed) {
+    return (
+      <div className="flex w-full justify-center">
+        <div
+          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#E96512] text-white shadow-[0_7px_18px_rgba(249,115,22,0.18)]"
+          title="Zaifan OS"
+        >
+          <Sparkles size={19} strokeWidth={2.3} />
+          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[#173F6B] bg-emerald-400" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex min-w-0 items-center gap-3">
       <div
-        className={`relative flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-[0_10px_28px_rgba(249,115,22,0.22)] ${
+        className={`relative flex shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#E96512] text-white shadow-[0_7px_18px_rgba(249,115,22,0.18)] ${
           compact ? "h-10 w-10" : "h-12 w-12"
         }`}
       >
         <Sparkles size={compact ? 18 : 21} strokeWidth={2.3} />
-        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[#fffaf5] bg-emerald-500" />
+
+        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[#173F6B] bg-emerald-400" />
       </div>
 
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-xl font-black tracking-tight text-[#071f50]">
+          <p className="text-xl font-black tracking-tight text-white">
             Zaifan
           </p>
-          <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-orange-600">
+
+          <span className="rounded-full border border-orange-300/50 bg-orange-400/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-orange-200">
             OS
           </span>
         </div>
-        <p className="mt-0.5 truncate text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+
+        <p className="mt-0.5 truncate text-[11px] font-bold uppercase tracking-[0.16em] text-white/60">
           Operations Console
         </p>
       </div>
@@ -376,16 +475,39 @@ function ProfileCard({
   currentRole,
   RoleIcon,
   canManageAdmins,
+  collapsed = false,
 }) {
   const name = adminProfile?.full_name || adminProfile?.name || "Admin User";
   const firstName = name.split(" ")[0] || "Admin";
+
+  if (collapsed) {
+    return (
+      <motion.div
+        initial={false}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex justify-center"
+      >
+        <div
+          className={`relative flex h-11 w-11 items-center justify-center rounded-xl border-2 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.12)] ${currentRole.avatar}`}
+          title={`${firstName} · ${currentRole.label}`}
+        >
+          <RoleIcon size={19} strokeWidth={2.2} />
+
+          <span
+            className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white ${currentRole.dot}`}
+          />
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE }}
-      className="mb-6 overflow-hidden rounded-[1.4rem] border border-orange-100 bg-white p-4 shadow-[0_10px_30px_rgba(121,72,40,0.08)]"
+      className="mb-4 w-full overflow-hidden rounded-xl border border-white/10 bg-white/[0.06] p-3.5"
     >
       <div className="flex items-center gap-3">
         <div
@@ -395,10 +517,11 @@ function ProfileCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-black text-[#071f50]">
+          <p className="truncate text-sm font-black text-white">
             {firstName}
           </p>
-          <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">
+
+          <p className="mt-0.5 truncate text-[11px] font-semibold text-white/60">
             {currentRole.description}
           </p>
         </div>
@@ -408,14 +531,14 @@ function ProfileCard({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] ${currentRole.badge}`}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.10em] ${currentRole.badge}`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${currentRole.dot}`} />
           {currentRole.label}
         </span>
 
         {canManageAdmins && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-300/40 bg-orange-400/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.10em] text-orange-200">
             <Crown size={11} />
             Owner tools
           </span>
@@ -425,21 +548,61 @@ function ProfileCard({
   );
 }
 
-function Navigation({ navGroups, activeTab, onTabClick }) {
+function Navigation({
+  navGroups,
+  activeTab,
+  onTabClick,
+  collapsed = false,
+}) {
   return (
-    <nav className="space-y-6" aria-label="Admin navigation">
+    <nav
+      className={collapsed ? "space-y-4" : "space-y-4"}
+      aria-label="Admin navigation"
+    >
       {navGroups.map((group) => (
         <div key={group.title}>
-          <div className="mb-2 px-2">
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-500">
-              {group.title}
-            </p>
-          </div>
+          {!collapsed && (
+            <div className="mb-1.5 px-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/55">
+                {group.title}
+              </p>
+            </div>
+          )}
 
-          <div className="space-y-1.5">
+          {collapsed && (
+            <div className="mx-auto mb-2 h-px w-8 bg-white/15 first:hidden" />
+          )}
+
+          <div className="space-y-2">
             {group.items.map((item) => {
               const isActive = activeTab === item.id;
               const ItemIcon = item.icon;
+
+              if (collapsed) {
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onTabClick(item)}
+                    title={
+                      item.locked
+                        ? `${item.label} — ${item.lockText}`
+                        : `${item.label} — ${item.description}`
+                    }
+                    aria-current={isActive ? "page" : undefined}
+                    className={`group relative mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 ${
+                      item.locked
+                        ? "cursor-not-allowed border-white/5 bg-white/[0.03] text-white/20 opacity-60"
+                        : isActive
+                        ? "border-[#F97316] bg-[#E96512] text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)]"
+                        : "border-white/[0.08] bg-white/[0.045] text-white/80 hover:border-white/15 hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    <ItemIcon size={18} strokeWidth={2.15} />
+
+                  </button>
+                );
+              }
 
               return (
                 <button
@@ -448,21 +611,21 @@ function Navigation({ navGroups, activeTab, onTabClick }) {
                   onClick={() => onTabClick(item)}
                   title={item.locked ? item.lockText : item.label}
                   aria-current={isActive ? "page" : undefined}
-                  className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 ${
+                  className={`group relative flex min-h-[54px] w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 ${
                     item.locked
-                      ? "cursor-not-allowed bg-white/60 text-slate-400 opacity-70"
+                      ? "cursor-not-allowed border-white/5 bg-white/[0.03] text-white/25 opacity-60"
                       : isActive
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_12px_30px_rgba(249,115,22,0.30)]"
-                      : "border border-transparent bg-white text-orange-700 shadow-[0_3px_12px_rgba(121,72,40,0.035)] hover:border-orange-100 hover:bg-[#fff1e7] hover:text-orange-700 hover:shadow-[0_8px_24px_rgba(121,72,40,0.08)]"
+                      ? "border-[#F97316] bg-[#E96512] text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)]"
+                      : "border-white/[0.07] bg-white/[0.045] text-white hover:border-white/15 hover:bg-white/[0.08]"
                   }`}
                 >
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition duration-300 ${
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition duration-300 ${
                       item.locked
-                        ? "border border-slate-200 bg-slate-50 text-slate-400"
+                        ? "border-white/5 bg-white/[0.03] text-white/25"
                         : isActive
-                        ? "bg-white/15 text-white"
-                        : "border border-orange-100 bg-[#fffaf5] text-orange-600 group-hover:border-orange-200 group-hover:bg-white group-hover:text-orange-700"
+                        ? "border-white/30 bg-white/10 text-white"
+                        : "border-white/10 bg-white/[0.05] text-orange-200 group-hover:border-white/20 group-hover:text-white"
                     }`}
                   >
                     <ItemIcon size={17} strokeWidth={2.1} />
@@ -471,18 +634,23 @@ function Navigation({ navGroups, activeTab, onTabClick }) {
                   <span className="min-w-0 flex-1">
                     <span
                       className={`block truncate text-sm font-extrabold ${
-                        isActive ? "text-white" : item.locked ? "text-slate-400" : "text-orange-700"
+                        isActive
+                          ? "text-white"
+                          : item.locked
+                          ? "text-white/25"
+                          : "text-white"
                       }`}
                     >
                       {item.label}
                     </span>
+
                     <span
                       className={`mt-0.5 block truncate text-[11px] font-semibold ${
                         item.locked
-                          ? "text-slate-500"
+                          ? "text-white/20"
                           : isActive
                           ? "text-orange-100"
-                          : "text-[#7c4a2f]"
+                          : "text-white/50"
                       }`}
                     >
                       {item.description}
@@ -493,10 +661,10 @@ function Navigation({ navGroups, activeTab, onTabClick }) {
                     size={15}
                     className={`shrink-0 transition duration-300 ${
                       item.locked
-                        ? "opacity-20"
+                        ? "opacity-10"
                         : isActive
-                        ? "translate-x-0 text-white"
-                        : "-translate-x-1 text-orange-400 opacity-0 group-hover:translate-x-0 group-hover:text-orange-600 group-hover:opacity-100"
+                        ? "text-white"
+                        : "text-white/25 group-hover:translate-x-0.5 group-hover:text-orange-300"
                     }`}
                   />
                 </button>
@@ -509,42 +677,73 @@ function Navigation({ navGroups, activeTab, onTabClick }) {
   );
 }
 
-function SidebarFooter({ openWebsite, logout }) {
+function SidebarFooter({ openWebsite, logout, collapsed = false }) {
+  if (collapsed) {
+    return (
+      <div className="relative border-t-2 border-white/10 bg-[#123865] px-2 py-3 shadow-[0_-10px_28px_rgba(15,35,63,0.12)]">
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={openWebsite}
+            title="Open public website"
+            aria-label="Open public website"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-white/15 bg-white/10 text-white shadow-sm transition duration-300 hover:border-orange-300/60 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50"
+          >
+            <ExternalLink size={17} />
+          </button>
+
+          <button
+            type="button"
+            onClick={logout}
+            title="Sign out"
+            aria-label="Sign out"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-white/15 bg-white/10 text-white shadow-sm transition duration-300 hover:border-orange-300/60 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50"
+          >
+            <LogOut size={17} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative overflow-hidden border-t border-orange-100 bg-[#fffaf5] p-4 shadow-[0_-10px_28px_rgba(121,72,40,0.06)]">
-      <div className="pointer-events-none absolute -right-16 -top-20 h-40 w-40 rounded-full bg-orange-200/35 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 -left-16 h-36 w-36 rounded-full bg-amber-100/50 blur-3xl" />
+    <div className="relative overflow-hidden border-t border-white/10 bg-[#102F5C] px-3.5 py-3.5">
+      <div className="pointer-events-none absolute -right-16 -top-20 h-40 w-40 rounded-full bg-orange-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-16 h-36 w-36 rounded-full bg-white/5 blur-3xl" />
 
       <div className="relative">
         <button
           type="button"
           onClick={openWebsite}
-          className="group mb-2 flex w-full items-center justify-between rounded-2xl border border-orange-200 bg-white px-4 py-3 text-left text-sm font-black text-[#071f50] shadow-[0_6px_18px_rgba(121,72,40,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:bg-[#fff3e8] hover:text-orange-700 hover:shadow-[0_10px_24px_rgba(121,72,40,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50"
+          className="group mb-2 flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2.5 text-left text-sm font-black text-white shadow-[0_6px_18px_rgba(15,35,63,0.10)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300/60 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50"
         >
           <span className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-[0_6px_16px_rgba(249,115,22,0.22)]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md border border-[#F97316] bg-[#E96512] text-white shadow-[0_6px_16px_rgba(249,115,22,0.20)]">
               <ExternalLink size={15} />
             </span>
+
             <span>Open public website</span>
           </span>
+
           <ChevronRight
             size={15}
-            className="text-orange-400 transition duration-300 group-hover:translate-x-0.5 group-hover:text-orange-700"
+            className="text-orange-300 transition duration-300 group-hover:translate-x-0.5 group-hover:text-white"
           />
         </button>
 
         <button
           type="button"
           onClick={logout}
-          className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-sm font-black text-[#071f50] transition duration-300 hover:border-orange-200 hover:bg-white hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50"
+          className="group flex w-full items-center gap-3 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm font-black text-white shadow-sm transition duration-300 hover:border-orange-300/60 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-orange-100 bg-white text-orange-600 shadow-sm transition group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:text-orange-700">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md border border-white/10 bg-white/[0.05] text-white shadow-sm transition group-hover:border-orange-300/60 group-hover:bg-white/15">
             <LogOut size={15} />
           </span>
+
           Sign out
         </button>
 
-        <div className="mt-3 flex items-center justify-between border-t border-orange-100 px-1 pt-3 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
+        <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.07] px-1 pt-2.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white/25">
           <span>Zaifan Consultancy</span>
           <span>Internal</span>
         </div>
