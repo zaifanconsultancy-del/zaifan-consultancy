@@ -445,49 +445,57 @@ function VisaRiskAnalyzer({
         source?.name ||
         `Student #${visa.student_id}`;
 
-      const requiredReqs = reqs.filter(
-        (item) => item.required !== false
-      );
+      const requiredReqs = [];
+      const ready = [];
+      const missing = [];
+      const rejected = [];
+      const review = [];
+      const overdueRequirements = [];
+      const dueSoonRequirements = [];
+      const expiredRequirements = [];
 
-      const ready = requiredReqs.filter(
-        (item) => requirementState(item.status) === "ready"
-      );
+      for (const item of reqs) {
+        if (item.required === false) {
+          continue;
+        }
 
-      const missing = requiredReqs.filter(
-        (item) => requirementState(item.status) === "missing"
-      );
+        requiredReqs.push(item);
 
-      const rejected = requiredReqs.filter(
-        (item) => requirementState(item.status) === "rejected"
-      );
+        const state = requirementState(item.status);
 
-      const review = requiredReqs.filter(
-        (item) => requirementState(item.status) === "review"
-      );
+        if (state === "ready") {
+          ready.push(item);
+        } else if (state === "missing") {
+          missing.push(item);
+        } else if (state === "rejected") {
+          rejected.push(item);
+        } else if (state === "review") {
+          review.push(item);
+        }
 
-      const overdueRequirements = requiredReqs.filter((item) => {
-        if (requirementState(item.status) === "ready") return false;
+        if (state !== "ready") {
+          const dueDays = daysFromNow(item.due_date);
 
-        const days = daysFromNow(item.due_date);
-        return days !== null && days < 0;
-      });
+          if (dueDays !== null) {
+            if (dueDays < 0) {
+              overdueRequirements.push(item);
+            } else if (dueDays <= 7) {
+              dueSoonRequirements.push(item);
+            }
+          }
+        }
 
-      const dueSoonRequirements = requiredReqs.filter((item) => {
-        if (requirementState(item.status) === "ready") return false;
-
-        const days = daysFromNow(item.due_date);
-        return days !== null && days >= 0 && days <= 7;
-      });
-
-      const expiredRequirements = requiredReqs.filter((item) => {
         const expiry =
           item.expiry_date ||
           item.document_expiry_date ||
           item.expires_at;
 
-        const days = daysFromNow(expiry);
-        return days !== null && days < 0;
-      });
+        const expiryDays = daysFromNow(expiry);
+
+        if (expiryDays !== null && expiryDays < 0) {
+          expiredRequirements.push(item);
+        }
+      }
 
       const nextActionDays = daysFromNow(visa.next_action_due);
       const appointmentDays = daysFromNow(visa.appointment_date);

@@ -60,30 +60,37 @@ function PipelinePage({
 
   const isAppointments = activeTab === "appointments";
 
-  const visibleRecords = isAppointments
-    ? filteredAppointments
-    : filteredInquiries;
+  const visibleRecords = useMemo(
+    () => (isAppointments ? filteredAppointments : filteredInquiries),
+    [filteredAppointments, filteredInquiries, isAppointments]
+  );
 
-  const allCurrentRecords = isAppointments ? appointments : inquiries;
+  const allCurrentRecords = useMemo(
+    () => (isAppointments ? appointments : inquiries),
+    [appointments, inquiries, isAppointments]
+  );
 
   const visibleCount = visibleRecords.length;
   const totalCount = allCurrentRecords.length;
 
-  const completeAllLeads =
-    allLeads.length > 0
-      ? allLeads
-      : [
-          ...inquiries.map((lead) => ({
-            ...lead,
-            student_type: lead.student_type || "inquiry",
-            __leadType: "inquiry",
-          })),
-          ...appointments.map((lead) => ({
-            ...lead,
-            student_type: lead.student_type || "appointment",
-            __leadType: "appointment",
-          })),
-        ];
+  const completeAllLeads = useMemo(
+    () =>
+      allLeads.length > 0
+        ? allLeads
+        : [
+            ...inquiries.map((lead) => ({
+              ...lead,
+              student_type: lead.student_type || "inquiry",
+              __leadType: "inquiry",
+            })),
+            ...appointments.map((lead) => ({
+              ...lead,
+              student_type: lead.student_type || "appointment",
+              __leadType: "appointment",
+            })),
+          ],
+    [allLeads, appointments, inquiries]
+  );
 
   const pipelineMeta = isAppointments
     ? {

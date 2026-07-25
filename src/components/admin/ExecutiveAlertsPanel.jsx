@@ -338,223 +338,107 @@ function ExecutiveAlertsPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usingExternalScores]);
 
-  const alertGroups =
-    useMemo(() => {
-      const criticalRisks =
-        scores
-          .filter((item) => {
-            const category =
-              normalize(
-                item.executive_category
-              );
+  const alertGroups = useMemo(() => {
+    const criticalRisks = [];
+    const needsAttention = [];
+    const conversionReady = [];
+    const visaWatch = [];
+    const verifiedOutcomes = [];
 
-            const riskLevel =
-              normalize(
-                item.risk_level
-              );
+    for (const item of scores) {
+      const category = normalize(item.executive_category);
+      const riskLevel = normalize(item.risk_level);
+      const riskScore = number(item.risk_score);
+      const opportunityScore = number(item.opportunity_score);
+      const journeyStage = getJourneyStage(item);
 
-            const journeyStage =
-              getJourneyStage(
-                item
-              );
+      if (
+        category === "critical_risk" ||
+        riskLevel === "critical" ||
+        journeyStage === "visa_rejected" ||
+        riskScore >= 85
+      ) {
+        criticalRisks.push(item);
+      }
 
-            return (
-              category ===
-                "critical_risk" ||
-              riskLevel ===
-                "critical" ||
-              journeyStage ===
-                "visa_rejected" ||
-              number(
-                item.risk_score
-              ) >= 85
-            );
-          })
-          .sort(
-            (a, b) =>
-              number(
-                b.risk_score
-              ) -
-              number(
-                a.risk_score
-              )
-          )
-          .slice(0, 6);
+      if (
+        category === "needs_attention" ||
+        category === "high_risk" ||
+        riskLevel === "high" ||
+        journeyStage === "cas_pending" ||
+        (riskScore >= 60 && riskScore < 85)
+      ) {
+        needsAttention.push(item);
+      }
 
-      const needsAttention =
-        scores
-          .filter((item) => {
-            const category =
-              normalize(
-                item.executive_category
-              );
+      if (
+        category === "conversion_ready" ||
+        category === "high_opportunity" ||
+        ["offer_accepted", "cas_issued", "visa_pending"].includes(
+          journeyStage
+        ) ||
+        opportunityScore >= 80
+      ) {
+        conversionReady.push(item);
+      }
 
-            const riskLevel =
-              normalize(
-                item.risk_level
-              );
+      if (
+        [
+          "cas_pending",
+          "cas_issued",
+          "visa_pending",
+          "visa_rejected",
+        ].includes(journeyStage)
+      ) {
+        visaWatch.push(item);
+      }
 
-            const riskScore =
-              number(
-                item.risk_score
-              );
+      if (
+        category === "success_story" ||
+        journeyStage === "visa_approved"
+      ) {
+        verifiedOutcomes.push(item);
+      }
+    }
 
-            const journeyStage =
-              getJourneyStage(
-                item
-              );
+    const riskSort = (a, b) =>
+      number(b.risk_score) - number(a.risk_score);
 
-            return (
-              category ===
-                "needs_attention" ||
-              category ===
-                "high_risk" ||
-              riskLevel ===
-                "high" ||
-              journeyStage ===
-                "cas_pending" ||
-              (riskScore >= 60 &&
-                riskScore < 85)
-            );
-          })
-          .sort(
-            (a, b) =>
-              number(
-                b.risk_score
-              ) -
-              number(
-                a.risk_score
-              )
-          )
-          .slice(0, 6);
+    const opportunitySort = (a, b) =>
+      number(b.opportunity_score) - number(a.opportunity_score);
 
-      const conversionReady =
-        scores
-          .filter((item) => {
-            const category =
-              normalize(
-                item.executive_category
-              );
+    const visaOrder = {
+      visa_rejected: 4,
+      visa_pending: 3,
+      cas_issued: 2,
+      cas_pending: 1,
+    };
 
-            const journeyStage =
-              getJourneyStage(
-                item
-              );
+    criticalRisks.sort(riskSort);
+    needsAttention.sort(riskSort);
+    conversionReady.sort(opportunitySort);
+    verifiedOutcomes.sort(opportunitySort);
 
-            return (
-              category ===
-                "conversion_ready" ||
-              category ===
-                "high_opportunity" ||
-              [
-                "offer_accepted",
-                "cas_issued",
-                "visa_pending",
-              ].includes(
-                journeyStage
-              ) ||
-              number(
-                item.opportunity_score
-              ) >= 80
-            );
-          })
-          .sort(
-            (a, b) =>
-              number(
-                b.opportunity_score
-              ) -
-              number(
-                a.opportunity_score
-              )
-          )
-          .slice(0, 6);
+    visaWatch.sort((a, b) => {
+      const stageB = getJourneyStage(b);
+      const stageA = getJourneyStage(a);
 
-      const visaWatch =
-        scores
-          .filter((item) =>
-            [
-              "cas_pending",
-              "cas_issued",
-              "visa_pending",
-              "visa_rejected",
-            ].includes(
-              getJourneyStage(
-                item
-              )
-            )
-          )
-          .sort((a, b) => {
-            const order = {
-              visa_rejected: 4,
-              visa_pending: 3,
-              cas_issued: 2,
-              cas_pending: 1,
-            };
+      return (
+        (visaOrder[stageB] || 0) -
+          (visaOrder[stageA] || 0) ||
+        number(b.risk_score) -
+          number(a.risk_score)
+      );
+    });
 
-            const stageB =
-              getJourneyStage(
-                b
-              );
-
-            const stageA =
-              getJourneyStage(
-                a
-              );
-
-            return (
-              (order[stageB] ||
-                0) -
-                (order[stageA] ||
-                  0) ||
-              number(
-                b.risk_score
-              ) -
-                number(
-                  a.risk_score
-                )
-            );
-          })
-          .slice(0, 6);
-
-      const verifiedOutcomes =
-        scores
-          .filter((item) => {
-            const category =
-              normalize(
-                item.executive_category
-              );
-
-            const journeyStage =
-              getJourneyStage(
-                item
-              );
-
-            return (
-              category ===
-                "success_story" ||
-              journeyStage ===
-                "visa_approved"
-            );
-          })
-          .sort(
-            (a, b) =>
-              number(
-                b.opportunity_score
-              ) -
-              number(
-                a.opportunity_score
-              )
-          )
-          .slice(0, 6);
-
-      return {
-        criticalRisks,
-        needsAttention,
-        conversionReady,
-        visaWatch,
-        verifiedOutcomes,
-      };
-    }, [scores]);
+    return {
+      criticalRisks: criticalRisks.slice(0, 6),
+      needsAttention: needsAttention.slice(0, 6),
+      conversionReady: conversionReady.slice(0, 6),
+      visaWatch: visaWatch.slice(0, 6),
+      verifiedOutcomes: verifiedOutcomes.slice(0, 6),
+    };
+  }, [scores]);
 
   const totalAlerts =
     alertGroups

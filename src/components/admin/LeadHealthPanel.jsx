@@ -59,88 +59,146 @@ function LeadHealthPanel({
     ]
   );
 
-  const healthy = studentInsights.filter((item) => item.health === "healthy");
-  const attention = studentInsights.filter((item) => item.health === "attention");
-  const risk = studentInsights.filter((item) => item.health === "risk");
+  const healthMetrics = useMemo(() => {
+    let healthy = 0;
+    let attention = 0;
+    let risk = 0;
+    let noApplication = 0;
+    let offerStage = 0;
+    let visaStage = 0;
+    let noUniversityPlan = 0;
+    let overdueTasks = 0;
+    let assignedStudents = 0;
+    let studentsWithBlockers = 0;
+    let urgentStudents = 0;
+    let scoreTotal = 0;
 
-  
-  const noApplication = studentInsights.filter((item) => !item.application);
-  const offerStage = studentInsights.filter((item) => item.isOfferStage);
-  const visaStage = studentInsights.filter((item) => item.isVisaStage);
-  const noUniversityPlan = studentInsights.filter((item) => !item.hasUniversityPlan);
-  const overdueTasks = studentInsights.filter((item) => item.overdueTaskCount > 0);
+    const riskHeatmap = {
+      critical: 0,
+      high: 0,
+      medium: 0,
+      healthy: 0,
+    };
 
-  const healthScore =
-    studentInsights.length === 0
-      ? 0
-      : Math.round(
-          studentInsights.reduce((sum, item) => sum + item.score, 0) /
-            studentInsights.length
-        );
+    for (const item of studentInsights) {
+      if (item.health === "healthy") healthy += 1;
+      else if (item.health === "attention") attention += 1;
+      else if (item.health === "risk") risk += 1;
 
-  const safeHealthScore = Math.max(0, Math.min(100, healthScore));
+      if (!item.application) noApplication += 1;
+      if (item.isOfferStage) offerStage += 1;
+      if (item.isVisaStage) visaStage += 1;
+      if (!item.hasUniversityPlan) noUniversityPlan += 1;
+      if (item.overdueTaskCount > 0) overdueTasks += 1;
+      if (!item.isUnassigned) assignedStudents += 1;
+      if (item.riskSignals?.length > 0) studentsWithBlockers += 1;
+      if (item.score < 45 || item.overdueTaskCount >= 2) urgentStudents += 1;
+
+      scoreTotal += item.score;
+
+      if (item.score < 25) riskHeatmap.critical += 1;
+      else if (item.score < 50) riskHeatmap.high += 1;
+      else if (item.score < 75) riskHeatmap.medium += 1;
+      else riskHeatmap.healthy += 1;
+    }
+
+    return {
+      healthy,
+      attention,
+      risk,
+      noApplication,
+      offerStage,
+      visaStage,
+      noUniversityPlan,
+      overdueTasks,
+      assignedStudents,
+      studentsWithBlockers,
+      urgentStudents,
+      healthScore: studentInsights.length
+        ? Math.round(scoreTotal / studentInsights.length)
+        : 0,
+      riskHeatmap,
+    };
+  }, [studentInsights]);
+
+  const healthy = { length: healthMetrics.healthy };
+  const attention = { length: healthMetrics.attention };
+  const risk = { length: healthMetrics.risk };
+  const noApplication = { length: healthMetrics.noApplication };
+  const offerStage = { length: healthMetrics.offerStage };
+  const visaStage = { length: healthMetrics.visaStage };
+  const noUniversityPlan = { length: healthMetrics.noUniversityPlan };
+  const overdueTasks = { length: healthMetrics.overdueTasks };
+
+  const safeHealthScore = Math.max(
+    0,
+    Math.min(100, healthMetrics.healthScore)
+  );
   const teamHealth = getTeamHealth(safeHealthScore);
 
-  const assignedStudents = studentInsights.filter(
-    (item) => !item.isUnassigned
-  ).length;
+  const assignedStudents = healthMetrics.assignedStudents;
   const assignmentCoverage = studentInsights.length
     ? Math.round((assignedStudents / studentInsights.length) * 100)
     : 0;
-  const studentsWithBlockers = studentInsights.filter(
-    (item) => item.riskSignals?.length > 0
-  ).length;
-  const urgentStudents = studentInsights.filter(
-    (item) => item.score < 45 || item.overdueTaskCount >= 2
-  ).length;
-const applicationFunnel = {
-  
-  notStarted: studentApplications.filter(
-    (a) => a.application_status === "not_started"
-  ).length,
+  const studentsWithBlockers = healthMetrics.studentsWithBlockers;
+  const urgentStudents = healthMetrics.urgentStudents;
 
-  documentsPending: studentApplications.filter(
-    (a) => a.application_status === "documents_pending"
-  ).length,
+  const applicationFunnel = useMemo(() => {
+    const result = {
+      notStarted: 0,
+      documentsPending: 0,
+      applied: 0,
+      underReview: 0,
+      offerReceived: 0,
+      offerAccepted: 0,
+      visaStage: 0,
+      visaApproved: 0,
+      enrolled: 0,
+    };
 
-  applied: studentApplications.filter(
-    (a) => a.application_status === "applied"
-  ).length,
+    for (const application of studentApplications) {
+      const applicationStatus = application.application_status;
+      const offerStatus = application.offer_status;
+      const visaStatus = application.visa_status;
 
-  underReview: studentApplications.filter(
-    (a) => a.application_status === "under_review"
-  ).length,
+      if (applicationStatus === "not_started") result.notStarted += 1;
+      if (applicationStatus === "documents_pending") {
+        result.documentsPending += 1;
+      }
+      if (applicationStatus === "applied") result.applied += 1;
+      if (applicationStatus === "under_review") result.underReview += 1;
 
-  offerReceived: studentApplications.filter(
-    (a) =>
-      a.application_status === "offer_received" ||
-      a.offer_status === "offer_received"
-  ).length,
+      if (
+        applicationStatus === "offer_received" ||
+        offerStatus === "offer_received"
+      ) {
+        result.offerReceived += 1;
+      }
 
-  offerAccepted: studentApplications.filter(
-    (a) =>
-      a.application_status === "offer_accepted" ||
-      a.offer_status === "offer_accepted"
-  ).length,
+      if (
+        applicationStatus === "offer_accepted" ||
+        offerStatus === "offer_accepted"
+      ) {
+        result.offerAccepted += 1;
+      }
 
-  visaStage: studentApplications.filter(
-    (a) => a.visa_status && a.visa_status !== "not_started"
-  ).length,
+      if (visaStatus && visaStatus !== "not_started") {
+        result.visaStage += 1;
+      }
 
-  visaApproved: studentApplications.filter(
-    (a) => a.visa_status === "visa_approved"
-  ).length,
+      if (visaStatus === "visa_approved") {
+        result.visaApproved += 1;
+      }
 
-  enrolled: studentApplications.filter(
-    (a) => a.application_status === "enrolled"
-  ).length,
-};
-const riskHeatmap = {
-  critical: studentInsights.filter((s) => s.score < 25).length,
-  high: studentInsights.filter((s) => s.score >= 25 && s.score < 50).length,
-  medium: studentInsights.filter((s) => s.score >= 50 && s.score < 75).length,
-  healthy: studentInsights.filter((s) => s.score >= 75).length,
-};
+      if (applicationStatus === "enrolled") {
+        result.enrolled += 1;
+      }
+    }
+
+    return result;
+  }, [studentApplications]);
+
+  const riskHeatmap = healthMetrics.riskHeatmap;
   const cards = [
     {
       label: "Healthy",

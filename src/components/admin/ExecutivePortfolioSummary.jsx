@@ -312,61 +312,73 @@ function ExecutivePortfolioSummary({ students = [] }) {
       )
       .slice(0, 8);
 
-    const stalledPipeline = rows
-      .filter(({ executive }) => {
-        const daysSinceUpdated = number(
-          executive.days_since_updated,
-          -1
-        );
+    const stalledRows = [];
+    let expectedOffers = 0;
+    let expectedVisaMovement = 0;
+    let urgentRecovery = 0;
 
-        const journeyStage = normalize(
-          executive.journey_stage
-        );
+    for (const row of rows) {
+      const { executive } = row;
 
-        return (
-          daysSinceUpdated >= 10 ||
-          journeyStage === "not_started"
-        );
-      })
+      const stage = normalize(
+        executive.journey_stage
+      );
+
+      const riskScore = number(
+        executive.risk_score
+      );
+
+      const opportunityScore = number(
+        executive.opportunity_score
+      );
+
+      const daysSinceUpdated = number(
+        executive.days_since_updated,
+        -1
+      );
+
+      if (
+        daysSinceUpdated >= 10 ||
+        stage === "not_started"
+      ) {
+        stalledRows.push(row);
+      }
+
+      if (
+        opportunityScore >= 65 &&
+        [
+          "application_submitted",
+          "application_under_review",
+        ].includes(stage)
+      ) {
+        expectedOffers += 1;
+      }
+
+      if (
+        [
+          "offer_accepted",
+          "cas_pending",
+          "cas_issued",
+        ].includes(stage)
+      ) {
+        expectedVisaMovement += 1;
+      }
+
+      if (
+        riskScore >= 70 &&
+        opportunityScore >= 60
+      ) {
+        urgentRecovery += 1;
+      }
+    }
+
+    const stalledPipeline = stalledRows
       .sort(
         (a, b) =>
           number(b.executive.days_since_updated) -
           number(a.executive.days_since_updated)
       )
       .slice(0, 8);
-
-    const expectedOffers = rows.filter(
-      ({ executive }) => {
-        const stage = normalize(
-          executive.journey_stage
-        );
-
-        return (
-          number(executive.opportunity_score) >= 65 &&
-          [
-            "application_submitted",
-            "application_under_review",
-          ].includes(stage)
-        );
-      }
-    ).length;
-
-    const expectedVisaMovement = rows.filter(
-      ({ executive }) =>
-        [
-          "offer_accepted",
-          "cas_pending",
-          "cas_issued",
-        ].includes(
-          normalize(executive.journey_stage)
-        )
-    ).length;
-
-    const urgentRecovery = rows.filter(
-      ({ executive }) =>
-        number(executive.risk_score) >= 70 &&
-        number(executive.opportunity_score) >= 60
-    ).length;
 
     return {
       riskPipeline,

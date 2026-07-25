@@ -6,7 +6,7 @@
 // approved Zaifan InquiryCard / AppointmentCard design language.
 
 import { motion } from "framer-motion";
-import { useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   AlertTriangle,
@@ -28,9 +28,9 @@ import {
   Clock3,
   Zap,
 } from "lucide-react";
-import AICounselorAssistant from "./AICounselorAssistant";
+const AICounselorAssistant = lazy(() => import("./AICounselorAssistant"));
 import { enrichLeadWithAi } from "../../services/aiLeadEngine";
-import GPTCopilotPanel from "./GPTCopilotPanel";
+const GPTCopilotPanel = lazy(() => import("./GPTCopilotPanel"));
 
 function AIWorkspacePanel({ student, studentType = "inquiry", adminProfile }) {
   const [copyStatus, setCopyStatus] = useState("");
@@ -348,13 +348,15 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         </div>
 
         <div className="bg-[#fff8ee] p-4 sm:p-5">
-          <GPTCopilotPanel
+          <Suspense fallback={null}>
+<GPTCopilotPanel
             student={student}
             studentType={studentType}
             adminProfile={adminProfile}
             aiLead={aiLead}
             crmContext={crmContext}
           />
+</Suspense>
         </div>
       </section>
 
@@ -485,11 +487,13 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
           </div>
         </div>
 
-        <AICounselorAssistant
+        <Suspense fallback={null}>
+<AICounselorAssistant
           student={student}
           studentType={studentType}
           adminProfile={adminProfile}
         />
+</Suspense>
       </div>
     </section>
   );

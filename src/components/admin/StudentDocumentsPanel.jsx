@@ -173,11 +173,18 @@ function StudentDocumentsPanel({
   const loadRequestRef = useRef(0);
 
   const studentId = student?.id;
-  const studentType =
-    student?.student_type ||
-    student?.__leadType ||
-    student?.type ||
-    "inquiry";
+  const studentType = useMemo(
+    () =>
+      String(
+        student?.student_type ||
+          student?.__leadType ||
+          student?.type ||
+          "inquiry"
+      )
+        .trim()
+        .toLowerCase(),
+    [student?.__leadType, student?.student_type, student?.type]
+  );
 
   useEffect(() => {
     mountedRef.current = true;

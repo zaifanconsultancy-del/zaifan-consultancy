@@ -561,47 +561,60 @@ function OpportunityFeedPanel({ students = [] }) {
   }, [opportunities]);
 
   const metrics = useMemo(() => {
-    const conversionCount = opportunities.filter((item) =>
-      item.signals.some((signal) =>
-        [
-          "offer_accepted",
-          "cas_pending",
-          "cas_issued",
-          "visa_pending",
-          "conversion_ready",
-        ].includes(signal.type)
-      )
-    ).length;
+    let conversionCount = 0;
+    let planningCount = 0;
+    let opportunityTotal = 0;
+    let riskTotal = 0;
 
-    const planningCount = opportunities.filter((item) =>
-      item.signals.some((signal) =>
-        ["strong_plan", "good_plan"].includes(signal.type)
-      )
-    ).length;
+    const conversionTypes = new Set([
+      "offer_accepted",
+      "cas_pending",
+      "cas_issued",
+      "visa_pending",
+      "conversion_ready",
+    ]);
 
-    const averageOpportunity = opportunities.length
-      ? Math.round(
-          opportunities.reduce(
-            (sum, item) => sum + item.opportunityScore,
-            0
-          ) / opportunities.length
-        )
-      : 0;
+    const planningTypes = new Set([
+      "strong_plan",
+      "good_plan",
+    ]);
 
-    const averageRisk = opportunities.length
-      ? Math.round(
-          opportunities.reduce(
-            (sum, item) => sum + item.riskScore,
-            0
-          ) / opportunities.length
-        )
-      : 0;
+    for (const item of opportunities) {
+      let hasConversionSignal = false;
+      let hasPlanningSignal = false;
+
+      for (const signal of item.signals) {
+        if (!hasConversionSignal && conversionTypes.has(signal.type)) {
+          hasConversionSignal = true;
+        }
+
+        if (!hasPlanningSignal && planningTypes.has(signal.type)) {
+          hasPlanningSignal = true;
+        }
+
+        if (hasConversionSignal && hasPlanningSignal) {
+          break;
+        }
+      }
+
+      if (hasConversionSignal) conversionCount += 1;
+      if (hasPlanningSignal) planningCount += 1;
+
+      opportunityTotal += item.opportunityScore;
+      riskTotal += item.riskScore;
+    }
+
+    const total = opportunities.length;
 
     return {
       conversionCount,
       planningCount,
-      averageOpportunity,
-      averageRisk,
+      averageOpportunity: total
+        ? Math.round(opportunityTotal / total)
+        : 0,
+      averageRisk: total
+        ? Math.round(riskTotal / total)
+        : 0,
       approvedOutcomes: command.approvedOutcomes.length,
     };
   }, [opportunities, command.approvedOutcomes.length]);

@@ -28,12 +28,18 @@ const REQUEST_TIMEOUT_MS = 30000;
 const STALE_ANALYSIS_DAYS = 14;
 
 function withTimeout(promise, message = "Request timed out.") {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      window.setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
-    ),
-  ]);
+  let timeoutId;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(
+      () => reject(new Error(message)),
+      REQUEST_TIMEOUT_MS
+    );
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    window.clearTimeout(timeoutId);
+  });
 }
 
 function getAnalysisAgeDays(value) {

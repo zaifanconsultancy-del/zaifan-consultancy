@@ -281,8 +281,18 @@ function VisaTrackerPanel({
   const supportRequestRef = useRef(0);
   const studentId = student?.id;
   const numericStudentId = Number(studentId);
-  const studentType =
-    student?.student_type || student?.__leadType || student?.type || "inquiry";
+  const studentType = useMemo(
+    () =>
+      String(
+        student?.student_type ||
+          student?.__leadType ||
+          student?.type ||
+          "inquiry"
+      )
+        .trim()
+        .toLowerCase(),
+    [student?.__leadType, student?.student_type, student?.type]
+  );
   const hasStudentId = Number.isFinite(numericStudentId);
 
   const activeVisa = useMemo(

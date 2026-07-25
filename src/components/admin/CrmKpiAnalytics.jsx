@@ -177,45 +177,48 @@ function CrmKpiAnalytics({
 
     const totalLeads = allLeads.length;
 
-    const activeLeads = allLeads.filter(
-      (item) => !isInactive(item)
-    );
+    let activeLeads = 0;
+    let assignedLeads = 0;
+    let priorityLeads = 0;
+    let vipLeads = 0;
+    let progressedInquiries = 0;
+    let inquiryOutcomes = 0;
+    let progressedAppointments = 0;
+    let appointmentOutcomes = 0;
 
-    const inactiveLeads = totalLeads - activeLeads.length;
+    for (const item of safeInquiries) {
+      if (isInquiryProgressed(item)) progressedInquiries += 1;
+      if (isInquiryOutcome(item)) inquiryOutcomes += 1;
 
-    const progressedInquiries = safeInquiries.filter(
-      isInquiryProgressed
-    ).length;
+      if (!isInactive(item)) {
+        activeLeads += 1;
+        if (isAssigned(item)) assignedLeads += 1;
 
-    const inquiryOutcomes = safeInquiries.filter(
-      isInquiryOutcome
-    ).length;
+        if (isPriority(item)) {
+          priorityLeads += 1;
+          if (normalize(item.priority) === "vip") vipLeads += 1;
+        }
+      }
+    }
 
-    const progressedAppointments = safeAppointments.filter(
-      isAppointmentProgressed
-    ).length;
+    for (const item of safeAppointments) {
+      if (isAppointmentProgressed(item)) progressedAppointments += 1;
+      if (isAppointmentOutcome(item)) appointmentOutcomes += 1;
 
-    const appointmentOutcomes = safeAppointments.filter(
-      isAppointmentOutcome
-    ).length;
+      if (!isInactive(item)) {
+        activeLeads += 1;
+        if (isAssigned(item)) assignedLeads += 1;
 
-    const assignedLeads = activeLeads.filter(
-      isAssigned
-    ).length;
+        if (isPriority(item)) {
+          priorityLeads += 1;
+          if (normalize(item.priority) === "vip") vipLeads += 1;
+        }
+      }
+    }
 
-    const unassignedLeads =
-      activeLeads.length - assignedLeads;
-
-    const priorityLeads = activeLeads.filter(
-      isPriority
-    );
-
-    const vipLeads = priorityLeads.filter(
-      (item) => normalize(item.priority) === "vip"
-    ).length;
-
-    const highLeads =
-      priorityLeads.length - vipLeads;
+    const inactiveLeads = totalLeads - activeLeads;
+    const unassignedLeads = activeLeads - assignedLeads;
+    const highLeads = priorityLeads - vipLeads;
 
     const progressedTotal =
       progressedInquiries + progressedAppointments;
@@ -235,7 +238,7 @@ function CrmKpiAnalytics({
 
     const assignedRate = percent(
       assignedLeads,
-      activeLeads.length
+      activeLeads
     );
 
     const activeRate = percent(
@@ -245,7 +248,7 @@ function CrmKpiAnalytics({
 
     const priorityShare = percent(
       priorityLeads.length,
-      activeLeads.length
+      activeLeads
     );
 
     const healthScore = totalLeads
@@ -265,7 +268,7 @@ function CrmKpiAnalytics({
       safeInquiries,
       safeAppointments,
       totalLeads,
-      activeLeads: activeLeads.length,
+      activeLeads,
       inactiveLeads,
       progressedInquiries,
       inquiryOutcomes,
@@ -273,7 +276,7 @@ function CrmKpiAnalytics({
       appointmentOutcomes,
       assignedLeads,
       unassignedLeads,
-      priorityLeads: priorityLeads.length,
+      priorityLeads,
       vipLeads,
       highLeads,
       progressedTotal,

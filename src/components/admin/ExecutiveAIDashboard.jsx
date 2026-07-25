@@ -149,162 +149,246 @@ function getScoreValue(student = {}, key, fallback = 0) {
 
 function buildMetrics(students = []) {
   const total = students.length;
-  const countBy = (fn) => students.filter(fn).length;
 
-  const analyzed = countBy(
-    (student) =>
+  let analyzed = 0;
+  let criticalRisk = 0;
+  let highRisk = 0;
+  let mediumRisk = 0;
+  let executivePriority = 0;
+  let highOpportunity = 0;
+  let conversionReady = 0;
+
+  let offerHolders = 0;
+  let casPending = 0;
+  let casIssued = 0;
+  let visaStage = 0;
+  let visaPending = 0;
+  let visaApproved = 0;
+  let visaRejected = 0;
+  let enrolledStudents = 0;
+
+  let noApplication = 0;
+  let applicationStarted = 0;
+  let applicationSubmitted = 0;
+  let noUniversityPlan = 0;
+  let missingSafeUniversity = 0;
+  let documentWeak = 0;
+  let taskProblems = 0;
+  let staleStudents = 0;
+
+  let riskTotal = 0;
+  let opportunityTotal = 0;
+
+  const startedStages = new Set([
+    "application_started",
+    "application_submitted",
+    "application_under_review",
+    "offer_received",
+    "offer_accepted",
+    "cas_pending",
+    "cas_issued",
+    "visa_pending",
+    "visa_approved",
+    "enrolled",
+  ]);
+
+  const submittedStages = new Set([
+    "application_submitted",
+    "application_under_review",
+    "offer_received",
+    "offer_accepted",
+    "cas_pending",
+    "cas_issued",
+    "visa_pending",
+    "visa_approved",
+    "enrolled",
+  ]);
+
+  const offerStages = new Set([
+    "offer_received",
+    "offer_accepted",
+    "cas_pending",
+    "cas_issued",
+    "visa_pending",
+    "visa_approved",
+  ]);
+
+  const conversionStages = new Set([
+    "offer_accepted",
+    "cas_pending",
+    "cas_issued",
+    "visa_pending",
+  ]);
+
+  const visaStages = new Set([
+    "visa_pending",
+    "visa_approved",
+    "visa_rejected",
+  ]);
+
+  for (const student of students) {
+    const category = normalize(student?.executive_category);
+    const riskLevel = normalize(student?.risk_level);
+    const priority = normalize(student?.priority_level);
+    const applicationStatus = normalize(student?.application_status);
+    const stage = getJourneyStage(student);
+
+    const riskScore = asNumber(student?.risk_score);
+    const opportunityScore = asNumber(student?.opportunity_score);
+
+    riskTotal += riskScore;
+    opportunityTotal += opportunityScore;
+
+    if (
       student?.gpt_analyzed_at ||
       student?.gpt_summary ||
       student?.risk_score ||
       student?.opportunity_score ||
       student?.executive_category ||
       student?.journey_stage
-  );
+    ) {
+      analyzed += 1;
+    }
 
-  const criticalRisk = countBy((student) => {
-    const category = normalize(student?.executive_category);
-    const riskLevel = normalize(student?.risk_level);
-    const riskScore = asNumber(student?.risk_score);
-    return category === "critical_risk" || riskLevel === "critical" || riskScore >= 85;
-  });
+    if (
+      category === "critical_risk" ||
+      riskLevel === "critical" ||
+      riskScore >= 85
+    ) {
+      criticalRisk += 1;
+    }
 
-  const highRisk = countBy((student) => {
-    const riskLevel = normalize(student?.risk_level);
-    const riskScore = asNumber(student?.risk_score);
-    return riskLevel === "high" || (riskScore >= 65 && riskScore < 85);
-  });
+    if (
+      riskLevel === "high" ||
+      (riskScore >= 65 && riskScore < 85)
+    ) {
+      highRisk += 1;
+    }
 
-  const mediumRisk = countBy((student) => {
-    const riskLevel = normalize(student?.risk_level);
-    const riskScore = asNumber(student?.risk_score);
-    return riskLevel === "medium" || (riskScore >= 35 && riskScore < 65);
-  });
+    if (
+      riskLevel === "medium" ||
+      (riskScore >= 35 && riskScore < 65)
+    ) {
+      mediumRisk += 1;
+    }
 
-  const executivePriority = countBy((student) => {
-    const priority = normalize(student?.priority_level);
-    const riskScore = asNumber(student?.risk_score);
-    const opportunityScore = asNumber(student?.opportunity_score);
-    return priority === "executive" || riskScore >= 85 || opportunityScore >= 85;
-  });
+    if (
+      priority === "executive" ||
+      riskScore >= 85 ||
+      opportunityScore >= 85
+    ) {
+      executivePriority += 1;
+    }
 
-  const highOpportunity = countBy((student) => {
-    const category = normalize(student?.executive_category);
-    const opportunityScore = asNumber(student?.opportunity_score);
-    return category === "high_opportunity" || opportunityScore >= 80;
-  });
+    if (
+      category === "high_opportunity" ||
+      opportunityScore >= 80
+    ) {
+      highOpportunity += 1;
+    }
 
-  const conversionReady = countBy((student) => {
-    const category = normalize(student?.executive_category);
-    const stage = getJourneyStage(student);
-    return (
+    if (
       category === "conversion_ready" ||
-      ["offer_accepted", "cas_pending", "cas_issued", "visa_pending"].includes(stage)
+      conversionStages.has(stage)
+    ) {
+      conversionReady += 1;
+    }
+
+    if (offerStages.has(stage)) offerHolders += 1;
+
+    if (stage === "cas_pending") casPending += 1;
+    if (stage === "cas_issued") casIssued += 1;
+
+    if (visaStages.has(stage)) visaStage += 1;
+    if (stage === "visa_pending") visaPending += 1;
+    if (stage === "visa_approved") visaApproved += 1;
+    if (stage === "visa_rejected") visaRejected += 1;
+
+    if (
+      category === "success_story" ||
+      applicationStatus === "enrolled" ||
+      stage === "enrolled"
+    ) {
+      enrolledStudents += 1;
+    }
+
+    if (
+      stage === "not_started" ||
+      asNumber(student?.application_count) === 0
+    ) {
+      noApplication += 1;
+    }
+
+    if (startedStages.has(stage)) applicationStarted += 1;
+    if (submittedStages.has(stage)) applicationSubmitted += 1;
+
+    const universityPlanCount = asNumber(
+      getScoreValue(student, "university_plan_count")
     );
-  });
 
-  const offerHolders = countBy((student) =>
-    [
-      "offer_received",
-      "offer_accepted",
-      "cas_pending",
-      "cas_issued",
-      "visa_pending",
-      "visa_approved",
-    ].includes(getJourneyStage(student))
-  );
+    if (
+      !isTruthy(student?.has_university_plan) &&
+      universityPlanCount === 0
+    ) {
+      noUniversityPlan += 1;
+    }
 
-  const casPending = countBy((student) => getJourneyStage(student) === "cas_pending");
-  const casIssued = countBy((student) => getJourneyStage(student) === "cas_issued");
-
-  const visaStage = countBy((student) =>
-    ["visa_pending", "visa_approved", "visa_rejected"].includes(getJourneyStage(student))
-  );
-
-  const visaPending = countBy((student) => getJourneyStage(student) === "visa_pending");
-  const visaApproved = countBy((student) => getJourneyStage(student) === "visa_approved");
-  const visaRejected = countBy((student) => getJourneyStage(student) === "visa_rejected");
-
-  const enrolledStudents = countBy((student) => {
-    const category = normalize(student?.executive_category);
-    const applicationStatus = normalize(student?.application_status);
-    const stage = getJourneyStage(student);
-    return category === "success_story" || applicationStatus === "enrolled" || stage === "enrolled";
-  });
-
-  const noApplication = countBy((student) => {
-    const stage = getJourneyStage(student);
-    const applicationCount = asNumber(student?.application_count);
-    return stage === "not_started" || applicationCount === 0;
-  });
-
-  const applicationStarted = countBy((student) =>
-    [
-      "application_started",
-      "application_submitted",
-      "application_under_review",
-      "offer_received",
-      "offer_accepted",
-      "cas_pending",
-      "cas_issued",
-      "visa_pending",
-      "visa_approved",
-      "enrolled",
-    ].includes(getJourneyStage(student))
-  );
-
-  const applicationSubmitted = countBy((student) =>
-    [
-      "application_submitted",
-      "application_under_review",
-      "offer_received",
-      "offer_accepted",
-      "cas_pending",
-      "cas_issued",
-      "visa_pending",
-      "visa_approved",
-      "enrolled",
-    ].includes(getJourneyStage(student))
-  );
-
-  const noUniversityPlan = countBy((student) => {
-    const universityPlanCount = asNumber(getScoreValue(student, "university_plan_count"));
-    return !isTruthy(student?.has_university_plan) && universityPlanCount === 0;
-  });
-
-  const missingSafeUniversity = countBy((student) => {
-    const safeCount = asNumber(
-      getScoreValue(student, "safe_university_count", student?.safe_universities_count)
+    const safeUniversityCount = asNumber(
+      getScoreValue(
+        student,
+        "safe_university_count",
+        student?.safe_universities_count
+      )
     );
-    const totalPlan = asNumber(getScoreValue(student, "university_plan_count"));
-    return totalPlan > 0 && safeCount === 0;
-  });
 
-  const documentWeak = countBy((student) => {
-    const health = getHealthValue(student, "document_health");
-    const readiness = asNumber(getScoreValue(student, "document_readiness_percent"));
-    return ["critical", "weak", "missing"].includes(health) || readiness < 60;
-  });
+    if (universityPlanCount > 0 && safeUniversityCount === 0) {
+      missingSafeUniversity += 1;
+    }
 
-  const taskProblems = countBy((student) => {
-    const overdue = asNumber(getScoreValue(student, "overdue_tasks_count"));
-    const pending = asNumber(getScoreValue(student, "pending_tasks_count"));
-    const health = getHealthValue(student, "task_health");
-    return overdue > 0 || pending > 5 || ["critical", "weak"].includes(health);
-  });
+    const documentHealth = getHealthValue(student, "document_health");
+    const documentReadiness = asNumber(
+      getScoreValue(student, "document_readiness_percent")
+    );
 
-  const staleStudents = countBy((student) => {
-    const days = asNumber(getScoreValue(student, "days_since_updated"), -1);
-    return days >= 10;
-  });
+    if (
+      ["critical", "weak", "missing"].includes(documentHealth) ||
+      documentReadiness < 60
+    ) {
+      documentWeak += 1;
+    }
+
+    const overdueTasks = asNumber(
+      getScoreValue(student, "overdue_tasks_count")
+    );
+    const pendingTasks = asNumber(
+      getScoreValue(student, "pending_tasks_count")
+    );
+    const taskHealth = getHealthValue(student, "task_health");
+
+    if (
+      overdueTasks > 0 ||
+      pendingTasks > 5 ||
+      ["critical", "weak"].includes(taskHealth)
+    ) {
+      taskProblems += 1;
+    }
+
+    const daysSinceUpdated = asNumber(
+      getScoreValue(student, "days_since_updated"),
+      -1
+    );
+
+    if (daysSinceUpdated >= 10) {
+      staleStudents += 1;
+    }
+  }
 
   const averageRisk = total
-    ? Math.round(students.reduce((sum, student) => sum + asNumber(student?.risk_score), 0) / total)
+    ? Math.round(riskTotal / total)
     : 0;
 
   const averageOpportunity = total
-    ? Math.round(
-        students.reduce((sum, student) => sum + asNumber(student?.opportunity_score), 0) / total
-      )
+    ? Math.round(opportunityTotal / total)
     : 0;
 
   const journey = {

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
 import AdminLogin from "../../components/admin/AdminLogin";
-import AdminHeader from "../../components/admin/AdminHeader";
+const AdminHeader = lazy(() => import("../../components/admin/AdminHeader"));
 const AdminStats = lazy(() => import("../../components/admin/AdminStats"));
 const NotificationCenter = lazy(() => import("../../components/admin/NotificationCenter"));
 import AdminSidebar from "../../components/admin/AdminSidebar";
@@ -57,6 +57,12 @@ const ADMIN_ACTIVE_TAB_KEY = "zaifan_admin_active_tab";
 const ADMIN_ANALYTICS_SECTION_KEY = "zaifan_admin_analytics_section";
 const ADMIN_SCROLL_KEY = "zaifan_admin_scroll_y";
 const ADMIN_OVERVIEW_COLLAPSED_KEY = "zaifan_admin_overview_collapsed";
+
+const ADMIN_CARD_CLASS =
+  "group relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white p-5 text-[#0b2a57] shadow-[0_12px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_46px_rgba(15,23,42,0.10)] sm:p-6";
+
+const ADMIN_INPUT_CLASS =
+  "w-full rounded-xl border border-slate-300 bg-white px-5 py-4 text-[15px] font-semibold text-[#0b2a57] outline-none placeholder:text-slate-400 transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
 
 function getStoredValue(key, fallback) {
   if (typeof window === "undefined") return fallback;
@@ -125,11 +131,8 @@ function AdminPage() {
     };
   }, []);
 
-  const cardClass =
-    "group relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white p-5 text-[#0b2a57] shadow-[0_12px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_46px_rgba(15,23,42,0.10)] sm:p-6";
-
-  const inputClass =
-    "w-full rounded-xl border border-slate-300 bg-white px-5 py-4 text-[15px] font-semibold text-[#0b2a57] outline-none placeholder:text-slate-400 transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
+  const cardClass = ADMIN_CARD_CLASS;
+  const inputClass = ADMIN_INPUT_CLASS;
 
   const auth = useAdminAuth();
 
@@ -208,7 +211,7 @@ function AdminPage() {
   }, [isLoggedIn, adminProfile, activeTab, activeAnalyticsSection, loading]);
 
   const role = adminProfile?.role || "staff";
-  const currentPermissions = getPermissionsForRole(role);
+  const currentPermissions = useMemo(() => getPermissionsForRole(role), [role]);
 
   const { logActivity } = useAdminActivityLogger({
     adminUser,
@@ -525,17 +528,25 @@ function AdminPage() {
     }
   };
 
-  const filteredInquiries = filterInquiries({
-    inquiries,
-    search,
-    statusFilter,
-  });
+  const filteredInquiries = useMemo(
+    () =>
+      filterInquiries({
+        inquiries,
+        search,
+        statusFilter,
+      }),
+    [inquiries, search, statusFilter]
+  );
 
-  const filteredAppointments = filterAppointments({
-    appointments,
-    search,
-    statusFilter,
-  });
+  const filteredAppointments = useMemo(
+    () =>
+      filterAppointments({
+        appointments,
+        search,
+        statusFilter,
+      }),
+    [appointments, search, statusFilter]
+  );
 
   const {
     inquiryNewCount,
@@ -544,17 +555,21 @@ function AdminPage() {
     appointmentConfirmedCount,
     appointmentCompletedCount,
     appointmentCancelledCount,
-  } = getCrmCounts({ inquiries, appointments });
+  } = useMemo(
+    () => getCrmCounts({ inquiries, appointments }),
+    [inquiries, appointments]
+  );
 
   const latestInquiry = inquiries[0];
   const latestAppointment = appointments[0];
 
-  const { todayInquiriesCount, todayAppointmentsCount } = getTodayCounts({
-    inquiries,
-    appointments,
-  });
+  const { todayInquiriesCount, todayAppointmentsCount } = useMemo(
+    () => getTodayCounts({ inquiries, appointments }),
+    [inquiries, appointments]
+  );
 
-  const statusOptions = getStatusOptions(activeTab);
+  const statusOptions = useMemo(() => getStatusOptions(activeTab), [activeTab]);
+  const showOverviewStats = useMemo(() => shouldShowStats(activeTab), [activeTab]);
 
   const adminCommandMetrics = useMemo(() => {
     const openSupport = supportRequests.filter(
@@ -914,7 +929,7 @@ function AdminPage() {
             />
             </div>
 
-            {shouldShowStats(activeTab) && (
+            {showOverviewStats && (
               <div className="mb-4 flex flex-col gap-1 px-1 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-orange-600">Live operating picture</p>
@@ -924,7 +939,7 @@ function AdminPage() {
               </div>
             )}
 
-            {shouldShowStats(activeTab) && (
+            {showOverviewStats && (
               <Suspense fallback={<AdminInsightLoader />}>
                 <>
                 <div className="zaifan-admin-embedded-dark mb-4">

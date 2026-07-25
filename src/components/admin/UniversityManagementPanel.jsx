@@ -642,20 +642,36 @@ function UniversityManagementPanel({
   }, [sharedUniversities]);
 
   const requirementStats = useMemo(() => {
+    let verified = 0;
+    let missing = 0;
+    let review = 0;
+
+    for (const item of requirements) {
+      const status = String(item?.status || "");
+
+      if (["verified", "not_required"].includes(status)) {
+        verified += 1;
+      } else if (["missing", "rejected"].includes(status)) {
+        missing += 1;
+      } else if (
+        ["requested", "received", "under_review"].includes(status)
+      ) {
+        review += 1;
+      }
+    }
+
     const total = requirements.length;
-    const verified = requirements.filter((item) =>
-      ["verified", "not_required"].includes(item.status)
-    ).length;
-    const missing = requirements.filter((item) =>
-      ["missing", "rejected"].includes(item.status)
-    ).length;
-    const review = requirements.filter((item) =>
-      ["requested", "received", "under_review"].includes(item.status)
-    ).length;
+    const readiness = total
+      ? Math.round((verified / total) * 100)
+      : 0;
 
-    const readiness = total ? Math.round((verified / total) * 100) : 0;
-
-    return { total, verified, missing, review, readiness };
+    return {
+      total,
+      verified,
+      missing,
+      review,
+      readiness,
+    };
   }, [requirements]);
 
   const calculatedIntelligence = useMemo(() => {

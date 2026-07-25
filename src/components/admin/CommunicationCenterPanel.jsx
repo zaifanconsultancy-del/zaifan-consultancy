@@ -40,14 +40,16 @@ import {
   XCircle,
 } from "lucide-react";
 import {
+  lazy,
+  Suspense,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import WhatsAppWorkspace from "./WhatsAppWorkspace";
-import EmailWorkspace from "./EmailWorkspace";
+const WhatsAppWorkspace = lazy(() => import("./WhatsAppWorkspace"));
+const EmailWorkspace = lazy(() => import("./EmailWorkspace"));
 
 const REQUEST_TIMEOUT_MS = 15000;
 const PAGE_SIZE = 20;
@@ -1281,7 +1283,8 @@ function CommunicationCenterPanel({
         />
       </div>
 
-      <WhatsAppWorkspace
+      <Suspense fallback={null}>
+<WhatsAppWorkspace
         student={student}
         saving={
           creatingChannel ===
@@ -1300,8 +1303,10 @@ function CommunicationCenterPanel({
           })
         }
       />
+</Suspense>
 
-      <EmailWorkspace
+      <Suspense fallback={null}>
+<EmailWorkspace
         student={student}
         saving={
           creatingChannel ===
@@ -1323,6 +1328,7 @@ function CommunicationCenterPanel({
           })
         }
       />
+</Suspense>
 
       <form
         onSubmit={

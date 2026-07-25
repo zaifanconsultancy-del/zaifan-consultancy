@@ -87,6 +87,80 @@ const BOARD_COLUMN_LIMIT = 10;
 const STALE_DAYS = 7;
 const DAY_MS = 86400000;
 
+const ROLE_CONFIG = Object.freeze({
+  staff: {
+    label: "Staff",
+    icon: UsersRound,
+    badge: "border-blue-300 bg-blue-50 text-blue-800",
+  },
+  admin: {
+    label: "Admin",
+    icon: UserCheck,
+    badge: "border-orange-300 bg-orange-50 text-orange-800",
+  },
+  super_admin: {
+    label: "Super Admin",
+    icon: Crown,
+    badge: "border-violet-300 bg-violet-50 text-violet-800",
+  },
+});
+
+const PRIORITY_COLUMNS = Object.freeze([
+  {
+    value: "vip",
+    label: "VIP",
+    description: "Highest strategic value",
+    icon: Crown,
+    border: "border-orange-300",
+    bg: "bg-orange-50/70",
+    accent: "text-orange-800",
+    badge: "border-orange-300 bg-orange-50 text-orange-800",
+  },
+  {
+    value: "high",
+    label: "High",
+    description: "Requires quick action",
+    icon: CircleAlert,
+    border: "border-red-300",
+    bg: "bg-red-50/65",
+    accent: "text-red-800",
+    badge: "border-red-300 bg-red-50 text-red-800",
+  },
+  {
+    value: "medium",
+    label: "Medium",
+    description: "Active opportunity",
+    icon: Target,
+    border: "border-blue-300",
+    bg: "bg-blue-50/65",
+    accent: "text-blue-800",
+    badge: "border-blue-300 bg-blue-50 text-blue-800",
+  },
+  {
+    value: "low",
+    label: "Low",
+    description: "Nurture & monitor",
+    icon: Radar,
+    border: "border-slate-300",
+    bg: "bg-slate-50/90",
+    accent: "text-slate-700",
+    badge: "border-slate-300 bg-slate-50 text-slate-700",
+  },
+]);
+
+const QUEUE_OPTIONS = Object.freeze([
+  ["needs_action", "Needs Action", Radar],
+  ["my_work", "My Work", UserCheck],
+  ["unassigned", "Unassigned", UsersRound],
+  ["today", "Today", CalendarCheck2],
+  ["overdue", "Overdue", CircleAlert],
+  ["waiting", "Waiting", Clock3],
+  ["stale", "Stale", RefreshCw],
+  ["high_priority", "High Priority", Zap],
+  ["completed", "Completed", CheckCircle2],
+  ["all", "All", LayoutList],
+]);
+
 const normalize = (value = "") =>
   String(value || "")
     .trim()
@@ -480,42 +554,24 @@ function DashboardContent({
 
   const [page, setPage] = useState(1);
 
-  const safePermissions = {
-    canDelete: false,
-    canClearAll: false,
-    canExport: false,
-    canManageAdmins: false,
-    canUpdateStatus: true,
-    canUpdatePriority: true,
-    canConfirmAppointments: true,
-    canUpdateAppointmentPipeline: true,
-    ...permissions,
-  };
-
-  const roleConfig = {
-    staff: {
-      label: "Staff",
-      icon: UsersRound,
-      badge:
-        "border-blue-300 bg-blue-50 text-blue-800",
-    },
-    admin: {
-      label: "Admin",
-      icon: UserCheck,
-      badge:
-        "border-orange-300 bg-orange-50 text-orange-800",
-    },
-    super_admin: {
-      label: "Super Admin",
-      icon: Crown,
-      badge:
-        "border-violet-300 bg-violet-50 text-violet-800",
-    },
-  };
+  const safePermissions = useMemo(
+    () => ({
+      canDelete: false,
+      canClearAll: false,
+      canExport: false,
+      canManageAdmins: false,
+      canUpdateStatus: true,
+      canUpdatePriority: true,
+      canConfirmAppointments: true,
+      canUpdateAppointmentPipeline: true,
+      ...permissions,
+    }),
+    [permissions]
+  );
 
   const currentRole =
-    roleConfig[role] ||
-    roleConfig.staff;
+    ROLE_CONFIG[role] ||
+    ROLE_CONFIG.staff;
 
   const RoleIcon =
     currentRole.icon;
@@ -625,115 +681,52 @@ function DashboardContent({
     setSelectedStudent(null);
   };
 
-  const priorityColumns = [
-    {
-      value: "vip",
-      label: "VIP",
-      description: "Highest strategic value",
-      icon: Crown,
-      border: "border-orange-300",
-      bg: "bg-orange-50/70",
-      accent: "text-orange-800",
-      badge:
-        "border-orange-300 bg-orange-50 text-orange-800",
-    },
-    {
-      value: "high",
-      label: "High",
-      description: "Requires quick action",
-      icon: CircleAlert,
-      border: "border-red-300",
-      bg: "bg-red-50/65",
-      accent: "text-red-800",
-      badge:
-        "border-red-300 bg-red-50 text-red-800",
-    },
-    {
-      value: "medium",
-      label: "Medium",
-      description: "Active opportunity",
-      icon: Target,
-      border: "border-blue-300",
-      bg: "bg-blue-50/65",
-      accent: "text-blue-800",
-      badge:
-        "border-blue-300 bg-blue-50 text-blue-800",
-    },
-    {
-      value: "low",
-      label: "Low",
-      description: "Nurture & monitor",
-      icon: Radar,
-      border: "border-slate-300",
-      bg: "bg-slate-50/90",
-      accent: "text-slate-700",
-      badge:
-        "border-slate-300 bg-slate-50 text-slate-700",
-    },
-  ];
+  const priorityColumns = PRIORITY_COLUMNS;
 
-  const inquiryNewCount =
-    safeInquiries.filter((inquiry) =>
-      ["new", "pending"].includes(
-        getLeadStatus(
-          inquiry,
-          "inquiry"
-        )
-      )
-    ).length;
+  const pipelineCounts = useMemo(() => {
+    let inquiryNew = 0;
+    let inquiryContacted = 0;
+    let appointmentPending = 0;
+    let appointmentConfirmed = 0;
+    let appointmentCompleted = 0;
+    let appointmentCancelled = 0;
 
-  const inquiryContactedCount =
-    safeInquiries.filter((inquiry) =>
-      getLeadStatus(
-        inquiry,
-        "inquiry"
-      ).includes("contacted")
-    ).length;
+    for (const inquiry of safeInquiries) {
+      const status = getLeadStatus(inquiry, "inquiry");
+      if (["new", "pending"].includes(status)) inquiryNew += 1;
+      if (status.includes("contacted")) inquiryContacted += 1;
+    }
 
-  const appointmentPendingCount =
-    safeAppointments.filter((appointment) =>
-      [
-        "pending",
-        "new",
-        "new_booking",
-      ].includes(
-        getLeadStatus(
-          appointment,
-          "appointment"
-        )
-      )
-    ).length;
+    for (const appointment of safeAppointments) {
+      const status = getLeadStatus(appointment, "appointment");
+      if (["pending", "new", "new_booking"].includes(status)) {
+        appointmentPending += 1;
+      }
+      if (status === "confirmed") appointmentConfirmed += 1;
+      if (isCompletedLead(appointment, "appointment")) {
+        appointmentCompleted += 1;
+      }
+      if (["cancelled", "canceled", "not_interested"].includes(status)) {
+        appointmentCancelled += 1;
+      }
+    }
 
-  const appointmentConfirmedCount =
-    safeAppointments.filter(
-      (appointment) =>
-        getLeadStatus(
-          appointment,
-          "appointment"
-        ) === "confirmed"
-    ).length;
+    return {
+      inquiryNew,
+      inquiryContacted,
+      appointmentPending,
+      appointmentConfirmed,
+      appointmentCompleted,
+      appointmentCancelled,
+    };
+  }, [safeAppointments, safeInquiries]);
 
-  const appointmentCompletedCount =
-    safeAppointments.filter((appointment) =>
-      isCompletedLead(
-        appointment,
-        "appointment"
-      )
-    ).length;
-
-  const appointmentCancelledCount =
-    safeAppointments.filter((appointment) =>
-      [
-        "cancelled",
-        "canceled",
-        "not_interested",
-      ].includes(
-        getLeadStatus(
-          appointment,
-          "appointment"
-        )
-      )
-    ).length;
+  const inquiryNewCount = pipelineCounts.inquiryNew;
+  const inquiryContactedCount = pipelineCounts.inquiryContacted;
+  const appointmentPendingCount = pipelineCounts.appointmentPending;
+  const appointmentConfirmedCount = pipelineCounts.appointmentConfirmed;
+  const appointmentCompletedCount = pipelineCounts.appointmentCompleted;
+  const appointmentCancelledCount = pipelineCounts.appointmentCancelled;
 
   const executiveLeads = useMemo(() => {
     if (
@@ -1445,10 +1438,7 @@ function DashboardContent({
     );
 
     return byPriority;
-  }, [
-    sortedItems,
-    priorityColumns,
-  ]);
+  }, [sortedItems]);
 
   const viewTitle =
     activeTab === "inquiries"
@@ -1472,58 +1462,7 @@ function DashboardContent({
     sortedItems.length
   );
 
-  const queueOptions = [
-    [
-      "needs_action",
-      "Needs Action",
-      Radar,
-    ],
-    [
-      "my_work",
-      "My Work",
-      UserCheck,
-    ],
-    [
-      "unassigned",
-      "Unassigned",
-      UsersRound,
-    ],
-    [
-      "today",
-      "Today",
-      CalendarCheck2,
-    ],
-    [
-      "overdue",
-      "Overdue",
-      CircleAlert,
-    ],
-    [
-      "waiting",
-      "Waiting",
-      Clock3,
-    ],
-    [
-      "stale",
-      "Stale",
-      RefreshCw,
-    ],
-    [
-      "high_priority",
-      "High Priority",
-      Zap,
-    ],
-    [
-      "completed",
-      "Completed",
-      CheckCircle2,
-    ],
-    [
-      "all",
-      "All",
-      LayoutList,
-    ],
-  ];
+  const queueOptions = QUEUE_OPTIONS;
 
   const lastOpened =
     initialWorkspace.lastOpened ||

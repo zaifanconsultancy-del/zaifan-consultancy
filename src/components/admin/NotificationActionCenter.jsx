@@ -90,29 +90,25 @@ function NotificationActionCenter({
   );
 
   const metrics = useMemo(() => {
-    const urgent = actions.filter(
-      (item) => item.priority === "urgent"
-    ).length;
+    let urgent = 0;
+    let medium = 0;
+    let appointmentActions = 0;
+    let inquiryActions = 0;
+    let reminderActions = 0;
+    let staleLeadActions = 0;
 
-    const medium = actions.filter(
-      (item) => item.priority === "medium"
-    ).length;
+    for (const item of actions) {
+      if (item.priority === "urgent") urgent += 1;
+      else if (item.priority === "medium") medium += 1;
 
-    const appointmentActions = actions.filter(
-      (item) => item.type === "appointment"
-    ).length;
+      if (item.type === "appointment") appointmentActions += 1;
+      else if (item.type === "inquiry") inquiryActions += 1;
+      else if (item.type === "reminder") reminderActions += 1;
 
-    const inquiryActions = actions.filter(
-      (item) => item.type === "inquiry"
-    ).length;
-
-    const reminderActions = actions.filter(
-      (item) => item.type === "reminder"
-    ).length;
-
-    const staleLeadActions = actions.filter(
-      (item) => item.category === "Stale Lead"
-    ).length;
+      if (item.category === "Stale Lead") {
+        staleLeadActions += 1;
+      }
+    }
 
     return {
       total: actions.length,

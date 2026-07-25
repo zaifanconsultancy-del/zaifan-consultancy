@@ -88,6 +88,24 @@ const PRIORITY_STYLES = {
   },
 };
 
+const ROLE_CONFIG = {
+  staff: {
+    label: "Staff",
+    icon: UserRound,
+    badge: "border-sky-200 bg-sky-50 text-sky-700",
+  },
+  admin: {
+    label: "Admin",
+    icon: UserCheck,
+    badge: "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
+  },
+  super_admin: {
+    label: "Super Admin",
+    icon: Crown,
+    badge: "border-violet-200 bg-violet-50 text-violet-700",
+  },
+};
+
 const PIPELINE_STAGES = [
   {
     value: "new",
@@ -179,34 +197,19 @@ function InquiryCard({
 
   const status = inquiry.status || "new";
   const priority = inquiry.priority || "low";
-  const aiLead = enrichLeadWithAi(inquiry, "inquiry");
+  const aiLead = useMemo(() => enrichLeadWithAi(inquiry, "inquiry"), [inquiry]);
 
-  const safePermissions = {
-    canDelete: false,
-    canUpdateStatus: true,
-    canUpdatePriority: true,
-    ...permissions,
-  };
+  const safePermissions = useMemo(
+    () => ({
+      canDelete: false,
+      canUpdateStatus: true,
+      canUpdatePriority: true,
+      ...permissions,
+    }),
+    [permissions]
+  );
 
-  const roleConfig = {
-    staff: {
-      label: "Staff",
-      icon: UserRound,
-      badge: "border-sky-200 bg-sky-50 text-sky-700",
-    },
-    admin: {
-      label: "Admin",
-      icon: UserCheck,
-      badge: "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
-    },
-    super_admin: {
-      label: "Super Admin",
-      icon: Crown,
-      badge: "border-violet-200 bg-violet-50 text-violet-700",
-    },
-  };
-
-  const currentRole = roleConfig[role] || roleConfig.staff;
+  const currentRole = ROLE_CONFIG[role] || ROLE_CONFIG.staff;
   const CurrentRoleIcon = currentRole.icon;
 
   const activePriority =

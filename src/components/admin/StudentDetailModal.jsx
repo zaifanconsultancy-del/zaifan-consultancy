@@ -112,6 +112,8 @@ import {
   getPipelineProgress,
 } from "../../data/crmPipelineConfig";
 
+const PRIORITY_OPTIONS = ["vip", "high", "medium", "low"];
+
 function StudentDetailModal({
   student = null,
   type = "inquiry",
@@ -198,16 +200,19 @@ function StudentDetailModal({
 
   const studentIdentity = `${String(studentId || "")}:${studentType}`;
 
-  const safePermissions = {
-    canDelete: false,
-    canClearAll: false,
-    canExport: false,
-    canManageAdmins: false,
-    canUpdateStatus: true,
-    canUpdatePriority: true,
-    canConfirmAppointments: true,
-    ...permissions,
-  };
+  const safePermissions = useMemo(
+    () => ({
+      canDelete: false,
+      canClearAll: false,
+      canExport: false,
+      canManageAdmins: false,
+      canUpdateStatus: true,
+      canUpdatePriority: true,
+      canConfirmAppointments: true,
+      ...permissions,
+    }),
+    [permissions]
+  );
 
   const getStudentIdVariants = useCallback(() => {
     if (!studentId) return [];
@@ -955,10 +960,15 @@ function StudentDetailModal({
     (isAppointment ? workingStudent?.appointment_stage : null) ||
     stages?.[0]?.id;
 
-  const currentStage =
-    getPipelineStageById(pipelineType, currentStageId) || stages?.[0];
+  const currentStage = useMemo(
+    () => getPipelineStageById(pipelineType, currentStageId) || stages?.[0],
+    [currentStageId, pipelineType, stages]
+  );
 
-  const pipelineProgress = getPipelineProgress(pipelineType, currentStageId);
+  const pipelineProgress = useMemo(
+    () => getPipelineProgress(pipelineType, currentStageId),
+    [currentStageId, pipelineType]
+  );
 
   if (!workingStudent) return null;
 
@@ -1014,13 +1024,17 @@ function StudentDetailModal({
       })
     : "Unknown";
 
-  const priorityOptions = ["vip", "high", "medium", "low"];
+  const priorityOptions = PRIORITY_OPTIONS;
 
-  const statusOptions = isAppointment
-    ? ["pending", "confirmed", "completed", "cancelled"]
-    : ["pending", "contacted", "completed"];
+  const statusOptions = useMemo(
+    () =>
+      isAppointment
+        ? ["pending", "confirmed", "completed", "cancelled"]
+        : ["pending", "contacted", "completed"],
+    [isAppointment]
+  );
 
-  const sidebarGroups = [
+  const sidebarGroups = useMemo(() => [
     {
       title: "AI Command",
       items: [
@@ -1060,7 +1074,7 @@ function StudentDetailModal({
         ["followups", "Follow-ups", "Reminders & next actions", CalendarCheck2],
       ],
     },
-  ];
+  ], []);
 
   const sidebarItems = sidebarGroups.flatMap((group) => group.items);
   const filteredSidebarGroups = useMemo(() => {
@@ -1552,22 +1566,36 @@ function StudentDetailModal({
     support: studentSupportRequests.length,
   };
 
-  const completedTasks = studentTasks.filter((task) =>
-    ["completed", "done"].includes(String(task.status || "").toLowerCase())
-  ).length;
+  const completedTasks = useMemo(
+    () =>
+      studentTasks.filter((task) =>
+        ["completed", "done"].includes(String(task.status || "").toLowerCase())
+      ).length,
+    [studentTasks]
+  );
 
-  const verifiedDocuments = studentDocuments.filter((document) =>
-    ["verified", "approved"].includes(
-      String(document.status || document.verification_status || "").toLowerCase()
-    )
-  ).length;
+  const verifiedDocuments = useMemo(
+    () =>
+      studentDocuments.filter((document) =>
+        ["verified", "approved"].includes(
+          String(
+            document.status || document.verification_status || ""
+          ).toLowerCase()
+        )
+      ).length,
+    [studentDocuments]
+  );
 
-  const openSupportRequests = studentSupportRequests.filter(
-    (request) =>
-      !["resolved", "closed"].includes(
-        String(request.status || "open").toLowerCase()
-      )
-  ).length;
+  const openSupportRequests = useMemo(
+    () =>
+      studentSupportRequests.filter(
+        (request) =>
+          !["resolved", "closed"].includes(
+            String(request.status || "open").toLowerCase()
+          )
+      ).length,
+    [studentSupportRequests]
+  );
 
   const readinessSignals = [
     Boolean(email && email !== "No email added"),

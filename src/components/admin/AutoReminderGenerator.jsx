@@ -174,24 +174,24 @@ function AutoReminderGenerator({
   }, [suggestions, search, typeFilter, dueFilter]);
 
   const summary = useMemo(() => {
-    const today = suggestions.filter(
-      (item) => Number(item.dueInDays || 0) === 0
-    ).length;
+    let today = 0;
+    let soon = 0;
+    let inquiry = 0;
+    let appointment = 0;
 
-    const soon = suggestions.filter((item) => {
+    for (const item of suggestions) {
       const days = Number(item.dueInDays || 0);
-      return days >= 0 && days <= 2;
-    }).length;
+      const studentType = normalize(item.studentType);
 
-    const inquiry = suggestions.filter(
-      (item) =>
-        normalize(item.studentType) === "inquiry"
-    ).length;
+      if (days === 0) today += 1;
+      if (days >= 0 && days <= 2) soon += 1;
 
-    const appointment = suggestions.filter(
-      (item) =>
-        normalize(item.studentType) === "appointment"
-    ).length;
+      if (studentType === "inquiry") {
+        inquiry += 1;
+      } else if (studentType === "appointment") {
+        appointment += 1;
+      }
+    }
 
     return {
       total: suggestions.length,
@@ -201,7 +201,7 @@ function AutoReminderGenerator({
       appointment,
       created: createdIds.length,
     };
-  }, [suggestions, createdIds]);
+  }, [suggestions, createdIds.length]);
 
   const clearFeedbackLater = () => {
     window.setTimeout(() => {

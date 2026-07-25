@@ -25,6 +25,46 @@ import {
 const EASE = [0.22, 1, 0.36, 1];
 const ADMIN_SIDEBAR_COLLAPSED_KEY = "zaifan_admin_sidebar_collapsed";
 
+const DEFAULT_PERMISSIONS = Object.freeze({
+  canDelete: false,
+  canClearAll: false,
+  canExport: false,
+  canManageAdmins: false,
+  canUpdateStatus: true,
+  canUpdatePriority: true,
+  canConfirmAppointments: true,
+});
+
+const ROLE_CONFIG = Object.freeze({
+  staff: {
+    label: "Staff",
+    shortLabel: "Staff",
+    icon: UsersRound,
+    description: "Student & lead operations",
+    badge: "border-sky-300 bg-sky-50 text-sky-700",
+    avatar: "border-sky-300 bg-sky-50 text-sky-700",
+    dot: "bg-sky-500",
+  },
+  admin: {
+    label: "Admin",
+    shortLabel: "Admin",
+    icon: ShieldCheck,
+    description: "Operations & CRM control",
+    badge: "border-orange-300 bg-orange-50 text-orange-700",
+    avatar: "border-orange-300 bg-orange-50 text-orange-700",
+    dot: "bg-orange-500",
+  },
+  super_admin: {
+    label: "Super Admin",
+    shortLabel: "Owner",
+    icon: Crown,
+    description: "Full Zaifan OS control",
+    badge: "border-orange-300 bg-orange-50 text-orange-700",
+    avatar: "border-orange-300 bg-orange-50 text-orange-700",
+    dot: "bg-orange-500",
+  },
+});
+
 function readStoredCollapsedState() {
   if (typeof window === "undefined") return false;
 
@@ -54,48 +94,15 @@ function AdminSidebar({
     );
   }, [desktopCollapsed]);
 
-  const safePermissions = {
-    canDelete: false,
-    canClearAll: false,
-    canExport: false,
-    canManageAdmins: false,
-    canUpdateStatus: true,
-    canUpdatePriority: true,
-    canConfirmAppointments: true,
-    ...permissions,
-  };
+  const safePermissions = useMemo(
+    () => ({
+      ...DEFAULT_PERMISSIONS,
+      ...permissions,
+    }),
+    [permissions]
+  );
 
-  const roleConfig = {
-    staff: {
-      label: "Staff",
-      shortLabel: "Staff",
-      icon: UsersRound,
-      description: "Student & lead operations",
-      badge: "border-sky-300 bg-sky-50 text-sky-700",
-      avatar: "border-sky-300 bg-sky-50 text-sky-700",
-      dot: "bg-sky-500",
-    },
-    admin: {
-      label: "Admin",
-      shortLabel: "Admin",
-      icon: ShieldCheck,
-      description: "Operations & CRM control",
-      badge: "border-orange-300 bg-orange-50 text-orange-700",
-      avatar: "border-orange-300 bg-orange-50 text-orange-700",
-      dot: "bg-orange-500",
-    },
-    super_admin: {
-      label: "Super Admin",
-      shortLabel: "Owner",
-      icon: Crown,
-      description: "Full Zaifan OS control",
-      badge: "border-orange-300 bg-orange-50 text-orange-700",
-      avatar: "border-orange-300 bg-orange-50 text-orange-700",
-      dot: "bg-orange-500",
-    },
-  };
-
-  const currentRole = roleConfig[role] || roleConfig.staff;
+  const currentRole = ROLE_CONFIG[role] || ROLE_CONFIG.staff;
   const RoleIcon = currentRole.icon;
 
   const navGroups = useMemo(
@@ -185,7 +192,7 @@ function AdminSidebar({
     [safePermissions.canManageAdmins]
   );
 
-  const navItems = navGroups.flatMap((group) => group.items);
+  const navItems = useMemo(() => navGroups.flatMap((group) => group.items), [navGroups]);
   const activeItem =
     navItems.find((item) => item.id === activeTab) || navItems[0];
 

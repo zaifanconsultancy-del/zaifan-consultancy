@@ -259,6 +259,62 @@ const STATUS_CHOICES = [
   },
 ];
 
+const ROLE_CONFIG = {
+    staff: {
+      label: "Staff",
+      icon: "🧑‍💼",
+      badge: "border-sky-200 bg-sky-50 text-sky-700",
+    },
+    admin: {
+      label: "Admin",
+      icon: "🛡️",
+      badge: "border-orange-200 bg-orange-50 text-orange-700",
+    },
+    super_admin: {
+      label: "Super Admin",
+      icon: "👑",
+      badge: "border-violet-300 bg-violet-100 text-violet-800",
+    },
+  };
+
+const PRIORITY_STYLES = {
+    vip: {
+      badge: "border-violet-200 bg-violet-50 text-violet-700",
+      card:
+        "border-violet-200 hover:border-violet-300 hover:shadow-[0_18px_50px_rgba(124,58,237,0.08)]",
+      glow: "bg-violet-100/70 group-hover:bg-violet-200/70",
+      icon: "👑",
+    },
+    high: {
+      badge: "border-red-200 bg-red-50 text-red-700",
+      card:
+        "border-red-200 hover:border-red-300 hover:shadow-[0_18px_50px_rgba(239,68,68,0.08)]",
+      glow: "bg-red-100/70 group-hover:bg-red-200/70",
+      icon: "🔥",
+    },
+    medium: {
+      badge: "border-orange-200 bg-orange-50 text-orange-700",
+      card:
+        "border-orange-200 hover:border-orange-300 hover:shadow-[0_18px_50px_rgba(249,115,22,0.08)]",
+      glow: "bg-orange-100/70 group-hover:bg-orange-200/70",
+      icon: "⭐",
+    },
+    low: {
+      badge: "border-slate-200 bg-slate-50 text-slate-600",
+      card:
+        "border-slate-200 hover:border-slate-300 hover:shadow-[0_18px_50px_rgba(15,23,42,0.07)]",
+      glow: "bg-slate-100/70 group-hover:bg-slate-200/70",
+      icon: "🌙",
+    },
+  };
+
+const STATUS_STYLES = {
+    pending: "border-amber-300 bg-amber-50 text-amber-800",
+    confirmed: "border-orange-300 bg-[#fff1ea] text-[#c2410c]",
+    completed: "border-[#ff4b12] bg-[#ff4b12] text-white",
+    cancelled: "border-red-300 bg-red-50 text-red-700",
+  };
+
 function AppointmentCard({
   appointment,
   cardClass = "",
@@ -279,7 +335,7 @@ function AppointmentCard({
 
   const status = appointment.status || "pending";
   const priority = appointment.priority || "low";
-  const aiLead = enrichLeadWithAi(appointment, "appointment");
+  const aiLead = useMemo(() => enrichLeadWithAi(appointment, "appointment"), [appointment]);
   const appointmentStage =
     appointment.appointment_stage ||
     legacyAppointmentStatusToStage[status] ||
@@ -373,74 +429,27 @@ function AppointmentCard({
     assignedAdminName,
   ]);
 
-  const safePermissions = {
-    canDelete: false,
-    canUpdateStatus: true,
-    canUpdatePriority: true,
-    canConfirmAppointments: true,
-    canUpdateAppointmentPipeline: permissions.canUpdateStatus ?? true,
-    ...permissions,
-  };
+  const safePermissions = useMemo(
+    () => ({
+      canDelete: false,
+      canUpdateStatus: true,
+      canUpdatePriority: true,
+      canConfirmAppointments: true,
+      canUpdateAppointmentPipeline: permissions.canUpdateStatus ?? true,
+      ...permissions,
+    }),
+    [permissions]
+  );
 
-  const roleConfig = {
-    staff: {
-      label: "Staff",
-      icon: "🧑‍💼",
-      badge: "border-sky-200 bg-sky-50 text-sky-700",
-    },
-    admin: {
-      label: "Admin",
-      icon: "🛡️",
-      badge: "border-orange-200 bg-orange-50 text-orange-700",
-    },
-    super_admin: {
-      label: "Super Admin",
-      icon: "👑",
-      badge: "border-violet-300 bg-violet-100 text-violet-800",
-    },
-  };
 
-  const currentRole = roleConfig[role] || roleConfig.staff;
 
-  const priorityStyles = {
-    vip: {
-      badge: "border-violet-200 bg-violet-50 text-violet-700",
-      card:
-        "border-violet-200 hover:border-violet-300 hover:shadow-[0_18px_50px_rgba(124,58,237,0.08)]",
-      glow: "bg-violet-100/70 group-hover:bg-violet-200/70",
-      icon: "👑",
-    },
-    high: {
-      badge: "border-red-200 bg-red-50 text-red-700",
-      card:
-        "border-red-200 hover:border-red-300 hover:shadow-[0_18px_50px_rgba(239,68,68,0.08)]",
-      glow: "bg-red-100/70 group-hover:bg-red-200/70",
-      icon: "🔥",
-    },
-    medium: {
-      badge: "border-orange-200 bg-orange-50 text-orange-700",
-      card:
-        "border-orange-200 hover:border-orange-300 hover:shadow-[0_18px_50px_rgba(249,115,22,0.08)]",
-      glow: "bg-orange-100/70 group-hover:bg-orange-200/70",
-      icon: "⭐",
-    },
-    low: {
-      badge: "border-slate-200 bg-slate-50 text-slate-600",
-      card:
-        "border-slate-200 hover:border-slate-300 hover:shadow-[0_18px_50px_rgba(15,23,42,0.07)]",
-      glow: "bg-slate-100/70 group-hover:bg-slate-200/70",
-      icon: "🌙",
-    },
-  };
+  const currentRole = ROLE_CONFIG[role] || ROLE_CONFIG.staff;
 
-  const statusStyles = {
-    pending: "border-amber-300 bg-amber-50 text-amber-800",
-    confirmed: "border-orange-300 bg-[#fff1ea] text-[#c2410c]",
-    completed: "border-[#ff4b12] bg-[#ff4b12] text-white",
-    cancelled: "border-red-300 bg-red-50 text-red-700",
-  };
 
-  const activePriority = priorityStyles[priority] || priorityStyles.low;
+
+
+
+  const activePriority = PRIORITY_STYLES[priority] || PRIORITY_STYLES.low;
 
   const showFeedback = (message) => {
     setFeedback(message);
@@ -619,7 +628,7 @@ function AppointmentCard({
 
           <span
             className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-              statusStyles[status] || statusStyles.pending
+              STATUS_STYLES[status] || STATUS_STYLES.pending
             }`}
           >
             Status: {status}

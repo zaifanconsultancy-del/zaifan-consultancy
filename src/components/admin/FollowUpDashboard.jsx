@@ -62,14 +62,38 @@ function FollowUpDashboard({ cardClass = "" }) {
   useEffect(() => { fetchReminders(); }, [fetchReminders]);
 
   const stats = useMemo(() => {
-    const pending = reminders.filter((item) => normalize(item.status) === "pending");
+    let pending = 0;
+    let dueToday = 0;
+    let overdue = 0;
+    let done = 0;
+    let cancelled = 0;
+
+    for (const item of reminders) {
+      const status = normalize(item.status);
+      const due = dateKey(item.due_date);
+
+      if (status === "pending") {
+        pending += 1;
+
+        if (due === today) {
+          dueToday += 1;
+        } else if (due && due < today) {
+          overdue += 1;
+        }
+      } else if (status === "done") {
+        done += 1;
+      } else if (status === "cancelled") {
+        cancelled += 1;
+      }
+    }
+
     return {
       total: reminders.length,
-      pending: pending.length,
-      today: pending.filter((item) => dateKey(item.due_date) === today).length,
-      overdue: pending.filter((item) => dateKey(item.due_date) && dateKey(item.due_date) < today).length,
-      done: reminders.filter((item) => normalize(item.status) === "done").length,
-      cancelled: reminders.filter((item) => normalize(item.status) === "cancelled").length,
+      pending,
+      today: dueToday,
+      overdue,
+      done,
+      cancelled,
     };
   }, [reminders, today]);
 

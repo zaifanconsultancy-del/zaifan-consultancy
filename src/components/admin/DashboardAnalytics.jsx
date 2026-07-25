@@ -234,97 +234,18 @@ function DashboardAnalytics({
     const totalAppointments = safeAppointments.length;
     const totalLeads = allLeads.length;
 
-    const activeLeads = allLeads.filter(
-      (lead) => !isInactive(lead)
-    );
-
-    const assignedLeads = activeLeads.filter(
-      isAssigned
-    ).length;
-
-    const unassignedLeads =
-      activeLeads.length - assignedLeads;
-
-    const assignedPercent = percent(
-      assignedLeads,
-      activeLeads.length
-    );
-
-    const unassignedPercent = percent(
-      unassignedLeads,
-      activeLeads.length
-    );
-
     const todayKey = dateKey(new Date());
 
-    const todayInquiries = safeInquiries.filter(
-      (inquiry) =>
-        dateKey(
-          inquiry.created_at ||
-            inquiry.submitted_at
-        ) === todayKey
-    ).length;
-
-    const todayAppointments = safeAppointments.filter(
-      (appointment) =>
-        dateKey(
-          appointment.created_at ||
-            appointment.submitted_at ||
-            appointment.appointment_date
-        ) === todayKey
-    ).length;
-
-    const progressedInquiries = safeInquiries.filter(
-      inquiryHasProgressed
-    ).length;
-
-    const inquiryOutcomes = safeInquiries.filter(
-      inquiryHasOutcome
-    ).length;
-
-    const progressedAppointments = safeAppointments.filter(
-      appointmentHasProgressed
-    ).length;
-
-    const appointmentOutcomes = safeAppointments.filter(
-      appointmentHasOutcome
-    ).length;
-
-    const engagementRate = percent(
-      progressedInquiries +
-        progressedAppointments,
-      totalLeads
-    );
-
-    const outcomeRate = percent(
-      inquiryOutcomes +
-        appointmentOutcomes,
-      totalLeads
-    );
-
-    const inquiryNewCount = safeInquiries.filter(
-      (inquiry) =>
-        [
-          "",
-          "new",
-          "new lead",
-          "new inquiry",
-        ].includes(
-          getInquiryStatus(inquiry)
-        )
-    ).length;
-
-    const inquiryContactedCount = safeInquiries.filter(
-      (inquiry) => {
-        const status =
-          getInquiryStatus(inquiry);
-
-        return (
-          status === "contacted" ||
-          status.includes("contacted")
-        );
-      }
-    ).length;
+    let activeLeadCount = 0;
+    let assignedLeads = 0;
+    let todayInquiries = 0;
+    let todayAppointments = 0;
+    let progressedInquiries = 0;
+    let inquiryOutcomes = 0;
+    let progressedAppointments = 0;
+    let appointmentOutcomes = 0;
+    let inquiryNewCount = 0;
+    let inquiryContactedCount = 0;
 
     const appointmentStatusCounts = {
       pending: 0,
@@ -334,9 +255,52 @@ function DashboardAnalytics({
       other: 0,
     };
 
-    safeAppointments.forEach((appointment) => {
-      const status =
-        getAppointmentStatus(appointment);
+    for (const inquiry of safeInquiries) {
+      if (!isInactive(inquiry)) {
+        activeLeadCount += 1;
+        if (isAssigned(inquiry)) assignedLeads += 1;
+      }
+
+      if (
+        dateKey(inquiry.created_at || inquiry.submitted_at) === todayKey
+      ) {
+        todayInquiries += 1;
+      }
+
+      const status = getInquiryStatus(inquiry);
+
+      if (inquiryHasProgressed(inquiry)) progressedInquiries += 1;
+      if (inquiryHasOutcome(inquiry)) inquiryOutcomes += 1;
+
+      if (["", "new", "new lead", "new inquiry"].includes(status)) {
+        inquiryNewCount += 1;
+      }
+
+      if (status === "contacted" || status.includes("contacted")) {
+        inquiryContactedCount += 1;
+      }
+    }
+
+    for (const appointment of safeAppointments) {
+      if (!isInactive(appointment)) {
+        activeLeadCount += 1;
+        if (isAssigned(appointment)) assignedLeads += 1;
+      }
+
+      if (
+        dateKey(
+          appointment.created_at ||
+            appointment.submitted_at ||
+            appointment.appointment_date
+        ) === todayKey
+      ) {
+        todayAppointments += 1;
+      }
+
+      if (appointmentHasProgressed(appointment)) progressedAppointments += 1;
+      if (appointmentHasOutcome(appointment)) appointmentOutcomes += 1;
+
+      const status = getAppointmentStatus(appointment);
 
       if (
         status === "pending" ||
@@ -344,23 +308,41 @@ function DashboardAnalytics({
         status === "new"
       ) {
         appointmentStatusCounts.pending += 1;
-      } else if (
-        status === "confirmed"
-      ) {
+      } else if (status === "confirmed") {
         appointmentStatusCounts.confirmed += 1;
       } else if (
         status === "completed" ||
         status.includes("consultation done")
       ) {
         appointmentStatusCounts.completed += 1;
-      } else if (
-        status.includes("cancel")
-      ) {
+      } else if (status.includes("cancel")) {
         appointmentStatusCounts.cancelled += 1;
       } else {
         appointmentStatusCounts.other += 1;
       }
-    });
+    }
+
+    const unassignedLeads = activeLeadCount - assignedLeads;
+
+    const assignedPercent = percent(
+      assignedLeads,
+      activeLeadCount
+    );
+
+    const unassignedPercent = percent(
+      unassignedLeads,
+      activeLeadCount
+    );
+
+    const engagementRate = percent(
+      progressedInquiries + progressedAppointments,
+      totalLeads
+    );
+
+    const outcomeRate = percent(
+      inquiryOutcomes + appointmentOutcomes,
+      totalLeads
+    );
 
     const priorityCounts = {
       vip: 0,
@@ -493,7 +475,7 @@ function DashboardAnalytics({
       );
 
     const activeRate = percent(
-      activeLeads.length,
+      activeLeadCount,
       totalLeads
     );
 
@@ -522,7 +504,7 @@ function DashboardAnalytics({
       totalInquiries,
       totalAppointments,
       totalLeads,
-      activeLeads: activeLeads.length,
+      activeLeads: activeLeadCount,
       assignedLeads,
       unassignedLeads,
       assignedPercent,

@@ -1,11 +1,16 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
-import Navbar from "../components/public/layout/Navbar";
 import ScrollToTop from "../components/public/shared/ScrollToTop";
-import FloatingConsultationCTA from "../components/public/layout/FloatingConsultationCTA";
 import loadingLogo from "../assets/images/brand/loading-logo.webp";
+
+// Public shell is lazy as well, so portal-only visits do not eagerly pull
+// Navbar / floating CTA code into the initial route workload.
+const Navbar = lazy(() => import("../components/public/layout/Navbar"));
+const FloatingConsultationCTA = lazy(() =>
+  import("../components/public/layout/FloatingConsultationCTA")
+);
 
 // Route-level code splitting.
 // These pages are loaded only when their route is visited.
@@ -46,7 +51,11 @@ const MOTION = {
   ease: [0.22, 1, 0.36, 1],
 };
 
-const portalRoutes = ["/admin", "/student", "/counselor"];
+const PORTAL_PREFIXES = ["/admin", "/student", "/counselor"];
+
+function isPortalPath(pathname) {
+  return PORTAL_PREFIXES.some((route) => pathname.startsWith(route));
+}
 
 function LoadingScreen() {
   return (
@@ -66,6 +75,7 @@ function LoadingScreen() {
           src={loadingLogo}
           alt="Zaifan Consultancy"
           className="h-36 w-36 object-contain drop-shadow-[0_18px_35px_rgba(234,88,12,0.18)] md:h-44 md:w-44"
+          decoding="async"
         />
 
         <h1 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
@@ -132,15 +142,20 @@ function ContactRoute() {
   return <Home />;
 }
 
+function PublicShell() {
+  return (
+    <Suspense fallback={null}>
+      <Navbar />
+      <FloatingConsultationCTA />
+    </Suspense>
+  );
+}
+
 function App() {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
 
-  const isPortalRoute = useMemo(
-    () =>
-      portalRoutes.some((route) => location.pathname.startsWith(route)),
-    [location.pathname]
-  );
+  const isPortalRoute = isPortalPath(location.pathname);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -162,8 +177,7 @@ function App() {
         <>
           <ScrollToTop />
 
-          {!isPortalRoute && <Navbar />}
-          {!isPortalRoute && <FloatingConsultationCTA />}
+          {!isPortalRoute && <PublicShell />}
 
           <Suspense fallback={null}>
             <AnimatePresence mode="wait">

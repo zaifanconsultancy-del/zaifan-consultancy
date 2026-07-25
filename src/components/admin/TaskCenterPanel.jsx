@@ -611,53 +611,74 @@ function TaskCenterPanel({
   }, [studentDocuments, studentApplication, student, tasks]);
 
   const taskStats = useMemo(() => {
-    const active = tasks.filter((task) => !task.is_archived);
-    const completed = active.filter(
-      (task) => normalize(task.status) === "completed"
-    ).length;
-    const pending = active.filter(
-      (task) => normalize(task.status) === "pending"
-    ).length;
-    const inProgress = active.filter(
-      (task) => normalize(task.status) === "in_progress"
-    ).length;
-    const blocked = active.filter(
-      (task) => normalize(task.status) === "blocked"
-    ).length;
-    const overdue = active.filter((task) => dueMeta(task).overdue).length;
-    const archived = tasks.filter((task) => task.is_archived).length;
-    const unassigned = active.filter(
-      (task) => !String(task.assigned_to || "").trim()
-    ).length;
-    const remindersDue = active.filter((task) => {
-      if (!task.reminder_at) return false;
-      if (["completed", "cancelled"].includes(normalize(task.status))) {
-        return false;
+    const now = Date.now();
+
+    let total = 0;
+    let completed = 0;
+    let pending = 0;
+    let inProgress = 0;
+    let blocked = 0;
+    let overdue = 0;
+    let archived = 0;
+    let unassigned = 0;
+    let remindersDue = 0;
+    let stale = 0;
+
+    for (const task of tasks) {
+      if (task.is_archived) {
+        archived += 1;
+        continue;
       }
 
-      const reminder = new Date(task.reminder_at);
-      return (
-        !Number.isNaN(reminder.getTime()) &&
-        reminder.getTime() <= Date.now()
-      );
-    }).length;
-    const stale = active.filter((task) => {
-      if (["completed", "cancelled"].includes(normalize(task.status))) {
-        return false;
+      total += 1;
+
+      const status = normalize(task.status);
+      const isClosed = ["completed", "cancelled"].includes(status);
+
+      if (status === "completed") completed += 1;
+      if (status === "pending") pending += 1;
+      if (status === "in_progress") inProgress += 1;
+      if (status === "blocked") blocked += 1;
+
+      if (dueMeta(task).overdue) {
+        overdue += 1;
       }
 
-      const updated = new Date(task.updated_at || task.created_at || 0);
-      return (
-        !Number.isNaN(updated.getTime()) &&
-        Date.now() - updated.getTime() >= 14 * 86400000
-      );
-    }).length;
-    const completionRate = active.length
-      ? Math.round((completed / active.length) * 100)
+      if (!String(task.assigned_to || "").trim()) {
+        unassigned += 1;
+      }
+
+      if (!isClosed && task.reminder_at) {
+        const reminder = new Date(task.reminder_at);
+
+        if (
+          !Number.isNaN(reminder.getTime()) &&
+          reminder.getTime() <= now
+        ) {
+          remindersDue += 1;
+        }
+      }
+
+      if (!isClosed) {
+        const updated = new Date(
+          task.updated_at || task.created_at || 0
+        );
+
+        if (
+          !Number.isNaN(updated.getTime()) &&
+          now - updated.getTime() >= 14 * 86400000
+        ) {
+          stale += 1;
+        }
+      }
+    }
+
+    const completionRate = total
+      ? Math.round((completed / total) * 100)
       : 0;
 
     return {
-      total: active.length,
+      total,
       completed,
       pending,
       inProgress,

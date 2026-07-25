@@ -220,33 +220,66 @@ function RevenueIntelligencePanel({
   );
 
   const finance = useMemo(() => {
-    const activeInvoices = invoices.filter(
-      (invoice) => !isInactiveInvoice(invoice)
-    );
+    const activeInvoices = [];
+    const collectibleInvoices = [];
+    const overdueInvoices = [];
+    const paidInvoices = [];
+    const confirmedPayments = [];
 
-    const collectibleInvoices = activeInvoices.filter(
-      isCollectibleInvoice
-    );
+    let derivedInvoicedRevenue = 0;
+    let derivedOutstandingRevenue = 0;
+    let overdueValue = 0;
 
-    const overdueInvoices = collectibleInvoices.filter(
-      isOverdueInvoice
-    );
+    for (const invoice of invoices) {
+      if (isInactiveInvoice(invoice)) {
+        continue;
+      }
 
-    const paidInvoices = activeInvoices.filter(isPaidInvoice);
+      activeInvoices.push(invoice);
 
-    const confirmedPayments = payments.filter(
-      isConfirmedPayment
-    );
+      const invoiceTotal = getInvoiceTotal(invoice);
+      const outstanding = getInvoiceOutstanding(invoice);
+
+      derivedInvoicedRevenue += invoiceTotal;
+
+      if (isPaidInvoice(invoice)) {
+        paidInvoices.push(invoice);
+      }
+
+      if (isCollectibleInvoice(invoice)) {
+        collectibleInvoices.push(invoice);
+        derivedOutstandingRevenue += outstanding;
+
+        if (isOverdueInvoice(invoice)) {
+          overdueInvoices.push(invoice);
+          overdueValue += outstanding;
+        }
+      }
+    }
+
+    let derivedCollectedRevenue = 0;
+
+    for (const payment of payments) {
+      if (!isConfirmedPayment(payment)) {
+        continue;
+      }
+
+      confirmedPayments.push(payment);
+      derivedCollectedRevenue += Math.max(
+        0,
+        safeNumber(
+          payment.amount ??
+            payment.paid_amount ??
+            payment.total_amount
+        )
+      );
+    }
 
     const invoicedRevenue = Math.max(
       0,
       safeNumber(
         growth.invoicedRevenue,
-        activeInvoices.reduce(
-          (sum, invoice) =>
-            sum + getInvoiceTotal(invoice),
-          0
-        )
+        derivedInvoicedRevenue
       )
     );
 
@@ -254,19 +287,7 @@ function RevenueIntelligencePanel({
       0,
       safeNumber(
         growth.collectedRevenue,
-        confirmedPayments.reduce(
-          (sum, payment) =>
-            sum +
-            Math.max(
-              0,
-              safeNumber(
-                payment.amount ??
-                  payment.paid_amount ??
-                  payment.total_amount
-              )
-            ),
-          0
-        )
+        derivedCollectedRevenue
       )
     );
 
@@ -274,27 +295,13 @@ function RevenueIntelligencePanel({
       0,
       safeNumber(
         growth.outstandingRevenue,
-        collectibleInvoices.reduce(
-          (sum, invoice) =>
-            sum + getInvoiceOutstanding(invoice),
-          0
-        )
+        derivedOutstandingRevenue
       )
-    );
-
-    const overdueValue = overdueInvoices.reduce(
-      (sum, invoice) =>
-        sum + getInvoiceOutstanding(invoice),
-      0
     );
 
     const averageInvoice = activeInvoices.length
       ? Math.round(
-          activeInvoices.reduce(
-            (sum, invoice) =>
-              sum + getInvoiceTotal(invoice),
-            0
-          ) / activeInvoices.length
+          derivedInvoicedRevenue / activeInvoices.length
         )
       : 0;
 

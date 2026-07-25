@@ -122,21 +122,30 @@ function hasContact(lead = {}) {
 
 function buildCounselorRecord(name, leads) {
   const total = leads.length;
-  const converted = leads.filter(isConverted).length;
-  const vip = leads.filter(isVip).length;
-  const contactable = leads.filter(hasContact).length;
+  let converted = 0;
+  let vip = 0;
+  let contactable = 0;
+  let inquiryCount = 0;
 
-  const inquiryCount = leads.filter((lead) => {
+  for (const lead of leads) {
+    if (isConverted(lead)) converted += 1;
+    if (isVip(lead)) vip += 1;
+    if (hasContact(lead)) contactable += 1;
+
     const type = normalize(
       lead.student_type ||
         lead.__leadType ||
         lead.type
     );
 
-    return type
-      ? type.includes("inquiry")
-      : !lead.appointment_date;
-  }).length;
+    if (
+      type
+        ? type.includes("inquiry")
+        : !lead.appointment_date
+    ) {
+      inquiryCount += 1;
+    }
+  }
 
   const appointmentCount = total - inquiryCount;
 
@@ -255,35 +264,26 @@ function CounselorPerformanceAI({
         return b.leads - a.leads;
       });
 
-    const assignedCount = counselors.reduce(
-      (sum, item) => sum + item.leads,
-      0
-    );
+    let assignedCount = 0;
+    let vipOwned = 0;
+    let convertedCount = 0;
+    let scoreTotal = 0;
+    let conversionTotal = 0;
 
-    const vipOwned = counselors.reduce(
-      (sum, item) => sum + item.vip,
-      0
-    );
-
-    const convertedCount = counselors.reduce(
-      (sum, item) => sum + item.converted,
-      0
-    );
+    for (const item of counselors) {
+      assignedCount += item.leads;
+      vipOwned += item.vip;
+      convertedCount += item.converted;
+      scoreTotal += item.score;
+      conversionTotal += item.conversionRate;
+    }
 
     const averageScore = counselors.length
-      ? Math.round(
-          counselors.reduce((sum, item) => sum + item.score, 0) /
-            counselors.length
-        )
+      ? Math.round(scoreTotal / counselors.length)
       : 0;
 
     const averageConversion = counselors.length
-      ? Math.round(
-          counselors.reduce(
-            (sum, item) => sum + item.conversionRate,
-            0
-          ) / counselors.length
-        )
+      ? Math.round(conversionTotal / counselors.length)
       : 0;
 
     const unassignedCount = allLeads.length - assigned.length;

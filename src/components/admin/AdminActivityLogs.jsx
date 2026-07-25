@@ -44,15 +44,18 @@ const FETCH_LIMIT = 500;
 const PAGE_SIZE_OPTIONS = [20, 40, 75, 100];
 
 function withTimeout(promise, label = "Request") {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      window.setTimeout(
-        () => reject(new Error(`${label} timed out.`)),
-        REQUEST_TIMEOUT_MS
-      )
-    ),
-  ]);
+  let timeoutId;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(
+      () => reject(new Error(`${label} timed out.`)),
+      REQUEST_TIMEOUT_MS
+    );
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    window.clearTimeout(timeoutId);
+  });
 }
 
 function normalize(value = "") {
@@ -181,6 +184,16 @@ function csvEscape(value) {
   const text = String(value ?? "");
   return `"${text.replaceAll('"', '""')}"`;
 }
+
+const ACTION_CATEGORIES = [
+  ["all", "All actions"],
+  ["destructive", "Delete / Remove"],
+  ["ownership", "Ownership"],
+  ["priority", "Priority"],
+  ["status", "Status / Stage"],
+  ["security", "Security / Admin"],
+  ["general", "Other"],
+];
 
 function AdminActivityLogs({ cardClass = "" }) {
   const shouldReduceMotion = useReducedMotion();
@@ -375,34 +388,41 @@ function AdminActivityLogs({ cardClass = "" }) {
     [logs]
   );
 
-  const actionCategories = [
-    ["all", "All actions"],
-    ["destructive", "Delete / Remove"],
-    ["ownership", "Ownership"],
-    ["priority", "Priority"],
-    ["status", "Status / Stage"],
-    ["security", "Security / Admin"],
-    ["general", "Other"],
-  ];
+  const actionCategories = ACTION_CATEGORIES;
 
   const stats = useMemo(() => {
-    const uniqueAdmins = new Set(
-      logs.map((log) => log.admin_id || log.admin_name).filter(Boolean)
-    ).size;
+    const uniqueAdmins = new Set();
+    let today = 0;
+    let destructive = 0;
+    let ownership = 0;
+    let status = 0;
+
+    for (const log of logs) {
+      const actor = log.admin_id || log.admin_name;
+      if (actor) uniqueAdmins.add(actor);
+
+      if (isToday(log.created_at)) {
+        today += 1;
+      }
+
+      const category = getActionCategory(log.action);
+
+      if (category === "destructive") {
+        destructive += 1;
+      } else if (category === "ownership") {
+        ownership += 1;
+      } else if (category === "status") {
+        status += 1;
+      }
+    }
 
     return {
       total: logs.length,
-      today: logs.filter((log) => isToday(log.created_at)).length,
-      admins: uniqueAdmins,
-      destructive: logs.filter(
-        (log) => getActionCategory(log.action) === "destructive"
-      ).length,
-      ownership: logs.filter(
-        (log) => getActionCategory(log.action) === "ownership"
-      ).length,
-      status: logs.filter(
-        (log) => getActionCategory(log.action) === "status"
-      ).length,
+      today,
+      admins: uniqueAdmins.size,
+      destructive,
+      ownership,
+      status,
     };
   }, [logs]);
 

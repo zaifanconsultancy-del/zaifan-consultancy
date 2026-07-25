@@ -849,49 +849,37 @@ function RiskMonitoringPanel({
   }, [riskyStudents]);
 
   const metrics = useMemo(() => {
-    const critical = riskyStudents.filter(
-      (item) =>
-        item.severityBand === "critical"
-    ).length;
+    let critical = 0;
+    let high = 0;
+    let medium = 0;
+    let riskTotal = 0;
+    let opportunityTotal = 0;
 
-    const high = riskyStudents.filter(
-      (item) =>
-        item.severityBand === "high"
-    ).length;
+    for (const item of riskyStudents) {
+      if (item.severityBand === "critical") {
+        critical += 1;
+      } else if (item.severityBand === "high") {
+        high += 1;
+      } else if (item.severityBand === "medium") {
+        medium += 1;
+      }
 
-    const medium = riskyStudents.filter(
-      (item) =>
-        item.severityBand === "medium"
-    ).length;
+      riskTotal += item.riskScore;
+      opportunityTotal += item.opportunityScore;
+    }
 
-    const averageRisk = riskyStudents.length
-      ? Math.round(
-          riskyStudents.reduce(
-            (sum, item) =>
-              sum + item.riskScore,
-            0
-          ) / riskyStudents.length
-        )
-      : 0;
-
-    const averageOpportunity =
-      riskyStudents.length
-        ? Math.round(
-            riskyStudents.reduce(
-              (sum, item) =>
-                sum +
-                item.opportunityScore,
-              0
-            ) / riskyStudents.length
-          )
-        : 0;
+    const total = riskyStudents.length;
 
     return {
       critical,
       high,
       medium,
-      averageRisk,
-      averageOpportunity,
+      averageRisk: total
+        ? Math.round(riskTotal / total)
+        : 0,
+      averageOpportunity: total
+        ? Math.round(opportunityTotal / total)
+        : 0,
     };
   }, [riskyStudents]);
 

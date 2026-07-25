@@ -206,54 +206,41 @@ function AutoStageMovementPanel({
   ]);
 
   const metrics = useMemo(() => {
-    const inquirySuggestions =
-      suggestions.allSuggestions.filter(
-        (item) =>
-          normalize(item.leadType) === "inquiry"
-      ).length;
+    let inquirySuggestions = 0;
+    let appointmentSuggestions = 0;
+    let highConfidence = 0;
+    let highUrgency = 0;
+    let scoreTotal = 0;
 
-    const appointmentSuggestions =
-      suggestions.allSuggestions.filter(
-        (item) =>
-          normalize(item.leadType) ===
-          "appointment"
-      ).length;
+    for (const item of suggestions.allSuggestions) {
+      const leadType = normalize(item.leadType);
+      const confidence = normalize(item.confidence);
+      const urgency = normalize(item.urgency);
 
-    const highConfidence =
-      suggestions.allSuggestions.filter(
-        (item) =>
-          normalize(item.confidence) === "high"
-      ).length;
+      if (leadType === "inquiry") {
+        inquirySuggestions += 1;
+      } else if (leadType === "appointment") {
+        appointmentSuggestions += 1;
+      }
 
-    const highUrgency =
-      suggestions.allSuggestions.filter(
-        (item) =>
-          normalize(item.urgency) === "high"
-      ).length;
+      if (confidence === "high") highConfidence += 1;
+      if (urgency === "high") highUrgency += 1;
 
-    const averageScore =
-      suggestions.allSuggestions.length > 0
-        ? Math.round(
-            suggestions.allSuggestions.reduce(
-              (sum, item) =>
-                sum +
-                Number(item.score || 0),
-              0
-            ) /
-              suggestions.allSuggestions.length
-          )
-        : 0;
+      scoreTotal += Number(item.score || 0);
+    }
+
+    const total = suggestions.allSuggestions.length;
 
     return {
-      total: suggestions.allSuggestions.length,
+      total,
       inquirySuggestions,
       appointmentSuggestions,
       highConfidence,
       highUrgency,
-      averageScore,
+      averageScore: total > 0 ? Math.round(scoreTotal / total) : 0,
       applied: appliedIds.length,
     };
-  }, [suggestions, appliedIds]);
+  }, [suggestions.allSuggestions, appliedIds.length]);
 
   const resetFilters = () => {
     setSearch("");

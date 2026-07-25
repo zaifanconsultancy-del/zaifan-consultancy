@@ -35,15 +35,18 @@ import { supabase } from "../../lib/supabaseClient";
 const REQUEST_TIMEOUT_MS = 12000;
 
 function withTimeout(promise, label = "Request") {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      window.setTimeout(
-        () => reject(new Error(`${label} timed out.`)),
-        REQUEST_TIMEOUT_MS
-      )
-    ),
-  ]);
+  let timeoutId;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(
+      () => reject(new Error(`${label} timed out.`)),
+      REQUEST_TIMEOUT_MS
+    );
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    window.clearTimeout(timeoutId);
+  });
 }
 
 function normalize(value = "") {

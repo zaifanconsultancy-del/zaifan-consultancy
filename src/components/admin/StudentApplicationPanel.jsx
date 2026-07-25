@@ -286,8 +286,14 @@ function StudentApplicationPanel({
     ? numericStudentId
     : studentId;
 
-  const studentName =
-    student?.full_name || student?.name || student?.student_name || "Student";
+  const studentName = useMemo(
+    () =>
+      student?.full_name ||
+      student?.name ||
+      student?.student_name ||
+      "Student",
+    [student?.full_name, student?.name, student?.student_name]
+  );
 
   const activeApplication = useMemo(
     () =>

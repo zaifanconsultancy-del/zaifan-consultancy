@@ -96,33 +96,43 @@ function AiLeadIntelligenceFeed({
       })),
     ];
 
-    const unassigned = allLeads.filter(
-      (lead) =>
-        !lead.assigned_admin_id &&
-        !lead.assigned_to &&
-        !lead.counselor_id
-    );
+    const unassigned = [];
+    const vipLeads = [];
+    const highPriorityLeads = [];
+    const staleLeads = [];
+    const agingCritical = [];
+    const contactedOrProgressed = [];
+    const conversionReady = [];
+    const missingPhone = [];
+    const missingEmail = [];
+    const unreachable = [];
 
-    const vipLeads = allLeads.filter(
-      (lead) => normalize(lead.priority) === "vip"
-    );
-
-    const highPriorityLeads = allLeads.filter((lead) =>
-      ["high", "urgent", "critical"].includes(
-        normalize(lead.priority)
-      )
-    );
-
-    const staleLeads = allLeads.filter((lead) => {
+    for (const lead of allLeads) {
+      const priority = normalize(lead.priority);
       const status = normalize(
         lead.status ||
           lead.pipeline_stage ||
           lead.appointment_stage
       );
-
       const ageDays = getAgeDays(
         lead.updated_at || lead.created_at
       );
+      const ownerMissing =
+        !lead.assigned_admin_id &&
+        !lead.assigned_to &&
+        !lead.counselor_id;
+      const phoneAvailable = hasPhone(lead);
+      const emailAvailable = hasEmail(lead);
+
+      if (ownerMissing) unassigned.push(lead);
+
+      if (priority === "vip") {
+        vipLeads.push(lead);
+      }
+
+      if (["high", "urgent", "critical"].includes(priority)) {
+        highPriorityLeads.push(lead);
+      }
 
       const isClosed =
         status.includes("completed") ||
@@ -131,71 +141,51 @@ function AiLeadIntelligenceFeed({
         status.includes("canceled") ||
         status.includes("rejected");
 
-      return !isClosed && ageDays >= 7;
-    });
+      if (!isClosed && ageDays >= 7) {
+        staleLeads.push(lead);
+      }
 
-    const agingCritical = allLeads.filter((lead) => {
-      const ageDays = getAgeDays(
-        lead.updated_at || lead.created_at
-      );
-
-      return ageDays >= 14;
-    });
-
-    const contactedOrProgressed = allLeads.filter((lead) => {
-      const status = normalize(
-        lead.status ||
-          lead.pipeline_stage ||
-          lead.appointment_stage
-      );
-
-      return (
-        status.includes("contacted") ||
-        status.includes("confirmed") ||
-        status.includes("documents") ||
-        status.includes("applied") ||
-        status.includes("offer") ||
-        status.includes("visa")
-      );
-    });
-
-    const conversionReady = allLeads.filter((lead) => {
-      const priority = normalize(lead.priority);
-      const status = normalize(
-        lead.status ||
-          lead.pipeline_stage ||
-          lead.appointment_stage
-      );
-
-      const strongPriority =
-        priority === "vip" ||
-        priority === "high";
+      if (ageDays >= 14) {
+        agingCritical.push(lead);
+      }
 
       const progressed =
         status.includes("contacted") ||
         status.includes("confirmed") ||
         status.includes("documents") ||
+        status.includes("applied") ||
+        status.includes("offer") ||
+        status.includes("visa");
+
+      if (progressed) {
+        contactedOrProgressed.push(lead);
+      }
+
+      const strongPriority =
+        priority === "vip" || priority === "high";
+
+      const conversionProgressed =
+        status.includes("contacted") ||
+        status.includes("confirmed") ||
+        status.includes("documents") ||
         status.includes("applied");
 
-      return strongPriority && progressed;
-    });
+      if (strongPriority && conversionProgressed) {
+        conversionReady.push(lead);
+      }
+
+      if (!phoneAvailable) missingPhone.push(lead);
+      if (!emailAvailable) missingEmail.push(lead);
+
+      if (!phoneAvailable && !emailAvailable) {
+        unreachable.push(lead);
+      }
+    }
 
     const pendingAppointments = safeAppointments.filter((lead) =>
       ["pending", "new", ""].includes(
         normalize(lead.status || "pending")
       )
-    );
-
-    const missingPhone = allLeads.filter(
-      (lead) => !hasPhone(lead)
-    );
-
-    const missingEmail = allLeads.filter(
-      (lead) => !hasEmail(lead)
-    );
-
-    const unreachable = allLeads.filter(
-      (lead) => !hasPhone(lead) && !hasEmail(lead)
     );
 
     const assignedRate = allLeads.length

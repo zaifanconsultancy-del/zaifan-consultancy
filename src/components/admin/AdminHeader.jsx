@@ -92,6 +92,25 @@ const withTimeout = (promise, message = "Request timed out.") =>
     }),
   ]);
 
+
+const ROLE_CONFIG = {
+    staff: {
+      label: "Staff",
+      helper: "Student follow-up workspace",
+      Icon: UserRound,
+    },
+    admin: {
+      label: "Admin",
+      helper: "Student operations and export access",
+      Icon: ShieldCheck,
+    },
+    super_admin: {
+      label: "Super Admin",
+      helper: "Full Student OS control enabled",
+      Icon: Sparkles,
+    },
+  };
+
 function AdminHeader({
   inquiries = [],
   appointments = [],
@@ -170,25 +189,7 @@ function AdminHeader({
     [permissions]
   );
 
-  const roleConfig = {
-    staff: {
-      label: "Staff",
-      helper: "Student follow-up workspace",
-      Icon: UserRound,
-    },
-    admin: {
-      label: "Admin",
-      helper: "Student operations and export access",
-      Icon: ShieldCheck,
-    },
-    super_admin: {
-      label: "Super Admin",
-      helper: "Full Student OS control enabled",
-      Icon: Sparkles,
-    },
-  };
-
-  const currentRole = roleConfig[role] || roleConfig.staff;
+  const currentRole = ROLE_CONFIG[role] || ROLE_CONFIG.staff;
   const RoleIcon = currentRole.Icon;
   const allLeads = useMemo(
     () => [...safeInquiries, ...safeAppointments],

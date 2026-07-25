@@ -147,25 +147,41 @@ function ActivityTimeline({
   }, [inquiries, appointments]);
 
   const stats = useMemo(() => {
-    const assigned = activities.filter((item) => Boolean(item.owner)).length;
-    const openPool = Math.max(activities.length - assigned, 0);
-    const hot = activities.filter((item) =>
-      ["vip", "high"].includes(item.priority)
-    ).length;
-    const last24h = activities.filter((item) => {
-      const timestamp = safeDateMs(item.date);
-      return timestamp > 0 && Date.now() - timestamp <= 86400000;
-    }).length;
+    let assigned = 0;
+    let hot = 0;
+    let last24h = 0;
+    let inquiryCount = 0;
+    let appointmentCount = 0;
+
+    const now = Date.now();
+
+    for (const item of activities) {
+      if (item.owner) assigned += 1;
+
+      if (["vip", "high"].includes(item.priority)) {
+        hot += 1;
+      }
+
+      const itemTimestamp = safeDateMs(item.date);
+      if (itemTimestamp > 0 && now - itemTimestamp <= 86400000) {
+        last24h += 1;
+      }
+
+      if (item.type === "inquiry") {
+        inquiryCount += 1;
+      } else if (item.type === "appointment") {
+        appointmentCount += 1;
+      }
+    }
 
     return {
       total: activities.length,
       assigned,
-      openPool,
+      openPool: Math.max(activities.length - assigned, 0),
       hot,
       last24h,
-      inquiries: activities.filter((item) => item.type === "inquiry").length,
-      appointments: activities.filter((item) => item.type === "appointment")
-        .length,
+      inquiries: inquiryCount,
+      appointments: appointmentCount,
     };
   }, [activities]);
 

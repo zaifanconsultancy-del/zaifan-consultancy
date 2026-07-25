@@ -51,37 +51,7 @@ const WorkloadBalancerAI = lazy(() => import("../WorkloadBalancerAI"));
 const ExecutiveCommandSystem = lazy(() => import("../ExecutiveCommandSystem"));
 const StudentOSMissionControl = lazy(() => import("../StudentOSMissionControl"));
 
-function AnalyticsPage({
-  cardClass,
-  inquiries = [],
-  appointments = [],
-  followUpReminders = [],
-
-  studentApplications = [],
-  studentDocuments = [],
-  studentTasks = [],
-  studentUniversities = [],
-  studentRiskScores = [],
-
-  studentInvoices = [],
-  studentPayments = [],
-  studentReceipts = [],
-  studentPortalAccounts = [],
-  supportRequests = [],
-  counselorPaymentRequests = [],
-  executiveExecutionLogs = [],
-  activeAnalyticsSection,
-  setActiveAnalyticsSection,
-  toggleInquiryStatus,
-  updateAppointmentStage,
-  updateAppointmentStatus,
-  setActiveTab,
-  todayInquiriesCount,
-  todayAppointmentsCount,
-  latestInquiry,
-  latestAppointment,
-}) {
-  const analyticsNavGroups = [
+const ANALYTICS_NAV_GROUPS = [
     {
       id: "command",
       eyebrow: "Live Intelligence",
@@ -138,6 +108,39 @@ function AnalyticsPage({
       ],
     },
   ];
+
+function AnalyticsPage({
+  cardClass,
+  inquiries = [],
+  appointments = [],
+  followUpReminders = [],
+
+  studentApplications = [],
+  studentDocuments = [],
+  studentTasks = [],
+  studentUniversities = [],
+  studentRiskScores = [],
+
+  studentInvoices = [],
+  studentPayments = [],
+  studentReceipts = [],
+  studentPortalAccounts = [],
+  supportRequests = [],
+  counselorPaymentRequests = [],
+  executiveExecutionLogs = [],
+  activeAnalyticsSection,
+  setActiveAnalyticsSection,
+  toggleInquiryStatus,
+  updateAppointmentStage,
+  updateAppointmentStatus,
+  setActiveTab,
+  todayInquiriesCount,
+  todayAppointmentsCount,
+  latestInquiry,
+  latestAppointment,
+}) {
+  const analyticsNavGroups = ANALYTICS_NAV_GROUPS;
+
 
   const analyticsNavItems = analyticsNavGroups.flatMap((group) => group.items);
 

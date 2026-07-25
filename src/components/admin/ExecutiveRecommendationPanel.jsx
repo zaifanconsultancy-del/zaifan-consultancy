@@ -212,14 +212,30 @@ function ExecutiveRecommendationPanel({
   const studentName = getStudentName(score);
 
   const summary = useMemo(() => {
-    const executable = rows.filter((item) => item.template).length;
-    const approval = rows.filter((item) => item.requiresApproval).length;
+    let critical = 0;
+    let executive = 0;
+    let high = 0;
+    let executable = 0;
+    let approval = 0;
+
+    for (const item of rows) {
+      const priority = normalize(
+        item.recommendation.priority
+      );
+
+      if (priority === "critical") critical += 1;
+      else if (priority === "executive") executive += 1;
+      else if (priority === "high") high += 1;
+
+      if (item.template) executable += 1;
+      if (item.requiresApproval) approval += 1;
+    }
 
     return {
       total: rows.length,
-      critical: rows.filter((item) => normalize(item.recommendation.priority) === "critical").length,
-      executive: rows.filter((item) => normalize(item.recommendation.priority) === "executive").length,
-      high: rows.filter((item) => normalize(item.recommendation.priority) === "high").length,
+      critical,
+      executive,
+      high,
       executable,
       approval,
       executed: Object.keys(executedKeys).length,
@@ -253,9 +269,16 @@ function ExecutiveRecommendationPanel({
     setExecutionMessage("");
     setExecutionError("");
 
+    let timeoutId;
+
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(
-        () => reject(new Error("Executive recommendation execution timed out.")),
+      timeoutId = window.setTimeout(
+        () =>
+          reject(
+            new Error(
+              "Executive recommendation execution timed out."
+            )
+          ),
         EXECUTION_TIMEOUT_MS
       );
     });
@@ -293,6 +316,7 @@ function ExecutiveRecommendationPanel({
     } catch (error) {
       setExecutionError(error.message || "Executive recommendation crashed.");
     } finally {
+      window.clearTimeout(timeoutId);
       setExecutingKey("");
     }
   };

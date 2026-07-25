@@ -15,6 +15,7 @@
 // - navy surfaces use white text only
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useMemo } from "react";
 import {
   AlertTriangle,
   Award,
@@ -111,7 +112,10 @@ function ConversionFunnelChart({ cardClass = "", inquiries = [] }) {
   const reduceMotion = useReducedMotion();
   const safeInquiries = Array.isArray(inquiries) ? inquiries : [];
 
-  const analytics = buildFunnelAnalytics(safeInquiries);
+  const analytics = useMemo(
+    () => buildFunnelAnalytics(safeInquiries),
+    [safeInquiries]
+  );
   const {
     funnel,
     totalLeads,

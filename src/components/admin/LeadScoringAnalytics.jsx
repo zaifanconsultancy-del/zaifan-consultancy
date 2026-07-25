@@ -138,49 +138,61 @@ function LeadScoringAnalytics({
   }, [inquiries, appointments]);
 
   const summary = useMemo(() => {
-    const scores = scoredLeads.map((lead) => safeNumber(lead.score));
+    const scores = [];
     const total = scoredLeads.length;
 
-    const hot = scoredLeads.filter((lead) => lead._band === "hot").length;
-    const warm = scoredLeads.filter((lead) => lead._band === "warm").length;
-    const active = scoredLeads.filter((lead) => lead._band === "active").length;
-    const cold = scoredLeads.filter((lead) => lead._band === "cold").length;
+    let hot = 0;
+    let warm = 0;
+    let active = 0;
+    let cold = 0;
+    let assigned = 0;
+    let completeContact = 0;
+    let scoreTotal = 0;
+    let topScore = 0;
 
-    const assigned = scoredLeads.filter(
-      (lead) => lead.assigned_admin_id || lead.assigned_admin_name
-    ).length;
+    for (const lead of scoredLeads) {
+      const score = safeNumber(lead.score);
 
-    const contactReady = scoredLeads.filter(
-      (lead) => lead.email || lead.phone
-    ).length;
+      scores.push(score);
+      scoreTotal += score;
+      if (score > topScore) topScore = score;
 
-    const averageScore = total
-      ? Math.round(scores.reduce((sum, value) => sum + value, 0) / total)
-      : 0;
+      if (lead._band === "hot") hot += 1;
+      else if (lead._band === "warm") warm += 1;
+      else if (lead._band === "active") active += 1;
+      else cold += 1;
 
-    const averageCompleteness = total
-      ? Math.round(
-          scoredLeads.reduce(
-            (sum, lead) => sum + safeNumber(lead._contactCompleteness),
-            0
-          ) / total
-        )
-      : 0;
+      if (
+        lead.assigned_admin_id ||
+        lead.assigned_admin_name ||
+        lead.assigned_to ||
+        lead.counselor_id
+      ) {
+        assigned += 1;
+      }
+
+      if (lead._contactCompleteness >= 80) {
+        completeContact += 1;
+      }
+    }
 
     return {
       total,
+      average: total ? Math.round(scoreTotal / total) : 0,
+      median: median(scores),
+      topScore,
       hot,
       warm,
       active,
       cold,
       assigned,
-      contactReady,
-      averageScore,
-      medianScore: median(scores),
-      topScore: scores.length ? Math.max(...scores) : 0,
-      assignmentRate: total ? Math.round((assigned / total) * 100) : 0,
-      contactRate: total ? Math.round((contactReady / total) * 100) : 0,
-      averageCompleteness,
+      assignmentRate: total
+        ? Math.round((assigned / total) * 100)
+        : 0,
+      completeContact,
+      contactCompletenessRate: total
+        ? Math.round((completeContact / total) * 100)
+        : 0,
     };
   }, [scoredLeads]);
 
