@@ -1,11 +1,11 @@
-export const roleLabels = {
+export const roleLabels = Object.freeze({
   staff: "Staff",
   admin: "Admin",
   super_admin: "Super Admin",
-};
+});
 
-export const rolePermissions = {
-  staff: {
+export const rolePermissions = Object.freeze({
+  staff: Object.freeze({
     canDelete: false,
     canClearAll: false,
     canExport: false,
@@ -14,8 +14,9 @@ export const rolePermissions = {
     canUpdatePriority: true,
     canConfirmAppointments: true,
     canUpdateAppointmentPipeline: true,
-  },
-  admin: {
+  }),
+
+  admin: Object.freeze({
     canDelete: true,
     canClearAll: false,
     canExport: true,
@@ -24,8 +25,9 @@ export const rolePermissions = {
     canUpdatePriority: true,
     canConfirmAppointments: true,
     canUpdateAppointmentPipeline: true,
-  },
-  super_admin: {
+  }),
+
+  super_admin: Object.freeze({
     canDelete: true,
     canClearAll: true,
     canExport: true,
@@ -34,9 +36,17 @@ export const rolePermissions = {
     canUpdatePriority: true,
     canConfirmAppointments: true,
     canUpdateAppointmentPipeline: true,
-  },
-};
+  }),
+});
+
+function normalizeRole(role = "") {
+  return String(role ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
 
 export function getPermissionsForRole(role) {
-  return rolePermissions[role] || rolePermissions.staff;
+  const normalizedRole = normalizeRole(role);
+  return rolePermissions[normalizedRole] || rolePermissions.staff;
 }

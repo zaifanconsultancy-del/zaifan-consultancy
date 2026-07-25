@@ -571,6 +571,55 @@ function getRiskScore(lead = {}, type = "inquiry") {
   };
 }
 
+
+function assembleAiSignals(
+  lead = {},
+  {
+    intent,
+    engagement,
+    completeness,
+    visaReadiness,
+    risk,
+    storedGpt,
+  }
+) {
+  const hasPhone = hasPhoneInfo(lead);
+  const country = getLeadCountry(lead);
+  const program = getLeadProgram(lead);
+
+  const riskSignals = [
+    ...risk.reasons,
+    ...(!hasPhone ? ["No direct phone/WhatsApp contact available."] : []),
+    ...(completeness.missingCount >= 5
+      ? ["Lead profile has many missing qualification fields."]
+      : []),
+  ];
+
+  const opportunitySignals = [
+    ...(country ? [`Clear country interest: ${country}.`] : []),
+    ...(program ? [`Clear program interest: ${program}.`] : []),
+    ...(hasPhone ? ["Direct phone/WhatsApp contact available."] : []),
+    ...(hasEmailInfo(lead) ? ["Email contact available."] : []),
+    ...(intent.score >= 70
+      ? ["Intent score suggests strong counseling opportunity."]
+      : []),
+    ...(storedGpt.hasStoredGpt
+      ? ["Stored GPT intelligence is available for this lead."]
+      : []),
+  ];
+
+  return {
+    intent,
+    engagement,
+    completeness,
+    visaReadiness,
+    risk,
+    storedGpt,
+    riskSignals,
+    opportunitySignals,
+  };
+}
+
 export function calculateAiLeadScore(lead = {}, type = "inquiry") {
   const text = buildLeadSearchText(lead);
   const country = normalize(getLeadCountry(lead));
@@ -685,26 +734,36 @@ export function calculateAiLeadScore(lead = {}, type = "inquiry") {
   score -= Math.round((risk.score - 35) * 0.16);
 
   const storedGpt = getStoredGptIntelligence(lead);
+  const localOnlyScore = clamp(score);
 
   if (storedGpt.hasStoredGpt && storedGpt.score !== null) {
-    const localScore = clamp(score);
-    score = Math.round(localScore * 0.55 + storedGpt.score * 0.45);
+    score = Math.round(localOnlyScore * 0.55 + storedGpt.score * 0.45);
     reasons.push("Stored GPT intelligence adjusted the local lead score.");
   }
 
   score = clamp(score);
 
+  const signals = assembleAiSignals(lead, {
+    intent,
+    engagement,
+    completeness,
+    visaReadiness,
+    risk,
+    storedGpt,
+  });
+
   return {
     score,
     reasons,
     ageDays,
+    signals,
     componentScores: {
       intent: intent.score,
       engagement: engagement.score,
       dataCompleteness: completeness.score,
       visaReadiness: visaReadiness.score,
       risk: risk.score,
-      localOnlyScore: clamp(score),
+      localOnlyScore,
       storedGptScore: storedGpt.score,
     },
   };
@@ -914,38 +973,14 @@ export function getAiIntentLevel(intentScore = 0) {
 }
 
 export function buildAiSignals(lead = {}, type = "inquiry") {
-  const intent = getIntentScore(lead, type);
-  const engagement = getEngagementScore(lead, type);
-  const completeness = getDataCompleteness(lead);
-  const visaReadiness = getVisaReadinessScore(lead);
-  const risk = getRiskScore(lead, type);
-  const storedGpt = getStoredGptIntelligence(lead);
-
-  const riskSignals = [
-    ...risk.reasons,
-    ...(!hasPhoneInfo(lead) ? ["No direct phone/WhatsApp contact available."] : []),
-    ...(completeness.missingCount >= 5 ? ["Lead profile has many missing qualification fields."] : []),
-  ];
-
-  const opportunitySignals = [
-    ...(getLeadCountry(lead) ? [`Clear country interest: ${getLeadCountry(lead)}.`] : []),
-    ...(getLeadProgram(lead) ? [`Clear program interest: ${getLeadProgram(lead)}.`] : []),
-    ...(hasPhoneInfo(lead) ? ["Direct phone/WhatsApp contact available."] : []),
-    ...(hasEmailInfo(lead) ? ["Email contact available."] : []),
-    ...(intent.score >= 70 ? ["Intent score suggests strong counseling opportunity."] : []),
-    ...(storedGpt.hasStoredGpt ? ["Stored GPT intelligence is available for this lead."] : []),
-  ];
-
-  return {
-    intent,
-    engagement,
-    completeness,
-    visaReadiness,
-    risk,
-    storedGpt,
-    riskSignals,
-    opportunitySignals,
-  };
+  return assembleAiSignals(lead, {
+    intent: getIntentScore(lead, type),
+    engagement: getEngagementScore(lead, type),
+    completeness: getDataCompleteness(lead),
+    visaReadiness: getVisaReadinessScore(lead),
+    risk: getRiskScore(lead, type),
+    storedGpt: getStoredGptIntelligence(lead),
+  });
 }
 
 export function enrichLeadWithAi(lead = {}, type = "inquiry") {
@@ -955,7 +990,7 @@ export function enrichLeadWithAi(lead = {}, type = "inquiry") {
   const conversionProbability = getAiConversionProbability(scoreData.score);
   const conversionRange = getAiConversionRange(scoreData.score);
   const recommendedAction = getAiRecommendedAction(lead, type);
-  const signals = buildAiSignals(lead, type);
+  const signals = scoreData.signals || buildAiSignals(lead, type);
   const riskLevel = getAiRiskLevel(signals.risk.score);
   const intentLevel = getAiIntentLevel(signals.intent.score);
   const storedGpt = signals.storedGpt;
@@ -1002,48 +1037,88 @@ export function rankLeadsByAiPriority(leads = [], type = "inquiry") {
     .sort((a, b) => {
       if (b.ai_score !== a.ai_score) return b.ai_score - a.ai_score;
       if (b.ai_intent_score !== a.ai_intent_score) return b.ai_intent_score - a.ai_intent_score;
-      return daysSince(a.created_at) - daysSince(b.created_at);
+      return a.ai_age_days - b.ai_age_days;
     });
 }
 
 export function buildAiLeadInsights({ inquiries = [], appointments = [] } = {}) {
-  const enrichedInquiries = rankLeadsByAiPriority(inquiries, "inquiry");
-  const enrichedAppointments = rankLeadsByAiPriority(appointments, "appointment");
+  const enrichedInquiries = rankLeadsByAiPriority(
+    Array.isArray(inquiries) ? inquiries : [],
+    "inquiry"
+  );
+  const enrichedAppointments = rankLeadsByAiPriority(
+    Array.isArray(appointments) ? appointments : [],
+    "appointment"
+  );
+
   const allLeads = [
     ...enrichedInquiries.map((lead) => ({ ...lead, lead_type: "inquiry" })),
-    ...enrichedAppointments.map((lead) => ({ ...lead, lead_type: "appointment" })),
+    ...enrichedAppointments.map((lead) => ({
+      ...lead,
+      lead_type: "appointment",
+    })),
   ].sort((a, b) => b.ai_score - a.ai_score);
 
-  const hotLeads = allLeads.filter((lead) => lead.ai_tier.level === "hot");
-  const warmLeads = allLeads.filter((lead) => lead.ai_tier.level === "warm");
-  const nurtureLeads = allLeads.filter((lead) => lead.ai_tier.level === "nurture");
-  const coldLeads = allLeads.filter((lead) => lead.ai_tier.level === "cold");
-  const immediateLeads = allLeads.filter(
-    (lead) => lead.ai_urgency.level === "immediate"
-  );
-  const highUrgencyLeads = allLeads.filter(
-    (lead) => lead.ai_urgency.level === "high"
-  );
-  const highRiskLeads = allLeads.filter(
-    (lead) => lead.ai_risk_level?.level === "high" || lead.ai_risk_score >= 75
-  );
-  const strongIntentLeads = allLeads.filter(
-    (lead) => lead.ai_intent_level?.level === "high" || lead.ai_intent_score >= 78
-  );
-  const weakDataLeads = allLeads.filter(
-    (lead) => lead.ai_data_completeness_score < 50
-  );
-  const storedGptLeads = allLeads.filter((lead) => lead.ai_has_stored_gpt);
+  const hotLeads = [];
+  const warmLeads = [];
+  const nurtureLeads = [];
+  const coldLeads = [];
+  const immediateLeads = [];
+  const highUrgencyLeads = [];
+  const highRiskLeads = [];
+  const strongIntentLeads = [];
+  const weakDataLeads = [];
+  const storedGptLeads = [];
 
-  const averageScore = average(allLeads.map((lead) => lead.ai_score));
-  const averageIntent = average(allLeads.map((lead) => lead.ai_intent_score));
-  const averageRisk = average(allLeads.map((lead) => lead.ai_risk_score));
-  const averageCompleteness = average(
-    allLeads.map((lead) => lead.ai_data_completeness_score)
-  );
-  const averageVisaReadiness = average(
-    allLeads.map((lead) => lead.ai_visa_readiness_score)
-  );
+  let scoreTotal = 0;
+  let intentTotal = 0;
+  let riskTotal = 0;
+  let completenessTotal = 0;
+  let visaReadinessTotal = 0;
+
+  for (const lead of allLeads) {
+    const tier = lead.ai_tier?.level;
+
+    if (tier === "hot") hotLeads.push(lead);
+    else if (tier === "warm") warmLeads.push(lead);
+    else if (tier === "nurture") nurtureLeads.push(lead);
+    else if (tier === "cold") coldLeads.push(lead);
+
+    if (lead.ai_urgency?.level === "immediate") immediateLeads.push(lead);
+    if (lead.ai_urgency?.level === "high") highUrgencyLeads.push(lead);
+
+    if (
+      lead.ai_risk_level?.level === "high" ||
+      Number(lead.ai_risk_score || 0) >= 75
+    ) {
+      highRiskLeads.push(lead);
+    }
+
+    if (
+      lead.ai_intent_level?.level === "high" ||
+      Number(lead.ai_intent_score || 0) >= 78
+    ) {
+      strongIntentLeads.push(lead);
+    }
+
+    if (Number(lead.ai_data_completeness_score || 0) < 50) {
+      weakDataLeads.push(lead);
+    }
+
+    if (lead.ai_has_stored_gpt) {
+      storedGptLeads.push(lead);
+    }
+
+    scoreTotal += Number(lead.ai_score || 0);
+    intentTotal += Number(lead.ai_intent_score || 0);
+    riskTotal += Number(lead.ai_risk_score || 0);
+    completenessTotal += Number(lead.ai_data_completeness_score || 0);
+    visaReadinessTotal += Number(lead.ai_visa_readiness_score || 0);
+  }
+
+  const totalAnalyzed = allLeads.length;
+  const averageFromTotal = (total) =>
+    totalAnalyzed ? Math.round(total / totalAnalyzed) : 0;
 
   return {
     enrichedInquiries,
@@ -1060,27 +1135,18 @@ export function buildAiLeadInsights({ inquiries = [], appointments = [] } = {}) 
     strongIntentLeads,
     weakDataLeads,
     storedGptLeads,
-    averageScore,
-    averageIntent,
-    averageRisk,
-    averageCompleteness,
-    averageVisaReadiness,
-    totalAnalyzed: allLeads.length,
-    hybridCoveragePercent: allLeads.length
-      ? clamp((storedGptLeads.length / allLeads.length) * 100)
+    averageScore: averageFromTotal(scoreTotal),
+    averageIntent: averageFromTotal(intentTotal),
+    averageRisk: averageFromTotal(riskTotal),
+    averageCompleteness: averageFromTotal(completenessTotal),
+    averageVisaReadiness: averageFromTotal(visaReadinessTotal),
+    totalAnalyzed,
+    hybridCoveragePercent: totalAnalyzed
+      ? clamp((storedGptLeads.length / totalAnalyzed) * 100)
       : 0,
   };
 }
 
-function average(values = []) {
-  const valid = values.filter((value) => Number.isFinite(Number(value)));
-
-  if (!valid.length) return 0;
-
-  return Math.round(
-    valid.reduce((sum, value) => sum + Number(value), 0) / valid.length
-  );
-}
 
 export const aiLeadEngineMeta = {
   version: "hybrid_v4",

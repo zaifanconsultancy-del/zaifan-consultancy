@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 import {
@@ -27,116 +27,198 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
   const [profileError, setProfileError] = useState("");
   const [profileRetryCount, setProfileRetryCount] = useState(0);
 
-  const mountedRef = useRef(true);
+  const mountedRef = useRef(false);
   const profileFetchIdRef = useRef(0);
   const scheduledProfileTimerRef = useRef(null);
   const lastProfileUserIdRef = useRef(null);
+  const inFlightProfileRef = useRef(new Map());
+  const onLogoutCleanupRef = useRef(onLogoutCleanup);
 
-  const safeSetState = (callback) => {
+  useEffect(() => {
+    onLogoutCleanupRef.current = onLogoutCleanup;
+  }, [onLogoutCleanup]);
+
+  const safeSetState = useCallback((callback) => {
     if (mountedRef.current) callback();
-  };
+  }, []);
 
-  const cancelScheduledProfileLoad = () => {
-    if (scheduledProfileTimerRef.current) {
+  const cancelScheduledProfileLoad = useCallback(() => {
+    if (scheduledProfileTimerRef.current !== null) {
       window.clearTimeout(scheduledProfileTimerRef.current);
       scheduledProfileTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const loadAdminProfile = async (userId, options = {}) => {
-    if (!userId) return null;
+  const invalidateProfileLoads = useCallback(() => {
+    profileFetchIdRef.current += 1;
+    inFlightProfileRef.current.clear();
+  }, []);
 
-    const { force = false } = options;
-    const fetchId = profileFetchIdRef.current + 1;
-    profileFetchIdRef.current = fetchId;
-    lastProfileUserIdRef.current = userId;
-
-    safeSetState(() => {
-      setProfileLoading(true);
-      setProfileError("");
-      if (force) setAdminProfile(null);
-    });
-
-    const cachedProfile = getCachedAdminProfile(userId);
-
-    for (let attempt = 1; attempt <= PROFILE_RETRY_LIMIT; attempt += 1) {
-      safeSetState(() => setProfileRetryCount(attempt));
-
-      try {
-        const { data, error } = await withTimeout(
-          fetchAdminProfileRow(userId),
-          `Admin profile fetch attempt ${attempt}`
-        );
-
-        if (profileFetchIdRef.current !== fetchId) return null;
-        if (error) throw error;
-
-        if (data) {
-          setCachedAdminProfile(userId, data);
-
-          safeSetState(() => {
-            setAdminProfile(data);
-            setProfileLoading(false);
-            setProfileError("");
-            setProfileRetryCount(0);
-          });
-
-          return data;
-        }
-
-        if (attempt < PROFILE_RETRY_LIMIT) {
-          await wait(PROFILE_RETRY_DELAY_MS * attempt);
-        }
-      } catch (error) {
-        console.error("Admin profile timeout/error:", error);
-
-        if (profileFetchIdRef.current !== fetchId) return null;
-
-        if (attempt < PROFILE_RETRY_LIMIT) {
-          await wait(PROFILE_RETRY_DELAY_MS * attempt);
-          continue;
-        }
-
-        if (cachedProfile?.id === userId) {
-          safeSetState(() => {
-            setAdminProfile(cachedProfile);
-            setProfileLoading(false);
-            setProfileError(
-              "Using cached admin profile because the live profile check timed out."
-            );
-            setProfileRetryCount(0);
-          });
-
-          return cachedProfile;
-        }
-      }
-    }
-
-    if (profileFetchIdRef.current !== fetchId) return null;
-
+  const resetProfileState = useCallback(() => {
     safeSetState(() => {
       setAdminProfile(null);
       setProfileLoading(false);
-      setProfileError(
-        "Admin profile could not be verified after multiple attempts."
-      );
+      setProfileError("");
       setProfileRetryCount(0);
     });
+  }, [safeSetState]);
 
-    return null;
-  };
+  const loadAdminProfile = useCallback(
+    async (userId, options = {}) => {
+      if (!userId) return null;
 
-  const scheduleAdminProfileLoad = (userId, options = {}) => {
-    if (!userId) return;
+      const { force = false } = options;
+      const normalizedUserId = String(userId);
 
-    cancelScheduledProfileLoad();
+      if (!force) {
+        const existingPromise = inFlightProfileRef.current.get(normalizedUserId);
+        if (existingPromise) return existingPromise;
+      }
 
-    scheduledProfileTimerRef.current = window.setTimeout(() => {
-      scheduledProfileTimerRef.current = null;
-      if (!mountedRef.current) return;
-      void loadAdminProfile(userId, options);
-    }, 0);
-  };
+      const requestPromise = (async () => {
+        const fetchId = profileFetchIdRef.current + 1;
+        profileFetchIdRef.current = fetchId;
+        lastProfileUserIdRef.current = normalizedUserId;
+
+        const cachedProfile = getCachedAdminProfile(normalizedUserId);
+
+        safeSetState(() => {
+          setProfileLoading(true);
+          setProfileError("");
+          setProfileRetryCount(0);
+
+          if (force) {
+            setAdminProfile(null);
+          } else if (cachedProfile) {
+            setAdminProfile(cachedProfile);
+          }
+        });
+
+        for (let attempt = 1; attempt <= PROFILE_RETRY_LIMIT; attempt += 1) {
+          if (
+            !mountedRef.current ||
+            profileFetchIdRef.current !== fetchId ||
+            lastProfileUserIdRef.current !== normalizedUserId
+          ) {
+            return null;
+          }
+
+          safeSetState(() => setProfileRetryCount(attempt));
+
+          try {
+            const { data, error } = await withTimeout(
+              fetchAdminProfileRow(normalizedUserId),
+              `Admin profile fetch attempt ${attempt}`
+            );
+
+            if (
+              !mountedRef.current ||
+              profileFetchIdRef.current !== fetchId ||
+              lastProfileUserIdRef.current !== normalizedUserId
+            ) {
+              return null;
+            }
+
+            if (error) throw error;
+
+            if (data) {
+              setCachedAdminProfile(normalizedUserId, data);
+
+              safeSetState(() => {
+                setAdminProfile(data);
+                setProfileLoading(false);
+                setProfileError("");
+                setProfileRetryCount(0);
+              });
+
+              return data;
+            }
+
+            if (attempt < PROFILE_RETRY_LIMIT) {
+              await wait(PROFILE_RETRY_DELAY_MS * attempt);
+            }
+          } catch (error) {
+            console.error("Admin profile timeout/error:", error);
+
+            if (
+              !mountedRef.current ||
+              profileFetchIdRef.current !== fetchId ||
+              lastProfileUserIdRef.current !== normalizedUserId
+            ) {
+              return null;
+            }
+
+            if (attempt < PROFILE_RETRY_LIMIT) {
+              await wait(PROFILE_RETRY_DELAY_MS * attempt);
+              continue;
+            }
+
+            if (cachedProfile) {
+              safeSetState(() => {
+                setAdminProfile(cachedProfile);
+                setProfileLoading(false);
+                setProfileError(
+                  "Using cached admin profile because the live profile check timed out."
+                );
+                setProfileRetryCount(0);
+              });
+
+              return cachedProfile;
+            }
+          }
+        }
+
+        if (
+          !mountedRef.current ||
+          profileFetchIdRef.current !== fetchId ||
+          lastProfileUserIdRef.current !== normalizedUserId
+        ) {
+          return null;
+        }
+
+        safeSetState(() => {
+          setAdminProfile(null);
+          setProfileLoading(false);
+          setProfileError(
+            "Admin profile could not be verified after multiple attempts."
+          );
+          setProfileRetryCount(0);
+        });
+
+        return null;
+      })();
+
+      if (!force) {
+        inFlightProfileRef.current.set(normalizedUserId, requestPromise);
+      }
+
+      try {
+        return await requestPromise;
+      } finally {
+        if (
+          inFlightProfileRef.current.get(normalizedUserId) === requestPromise
+        ) {
+          inFlightProfileRef.current.delete(normalizedUserId);
+        }
+      }
+    },
+    [safeSetState]
+  );
+
+  const scheduleAdminProfileLoad = useCallback(
+    (userId, options = {}) => {
+      if (!userId) return;
+
+      cancelScheduledProfileLoad();
+
+      scheduledProfileTimerRef.current = window.setTimeout(() => {
+        scheduledProfileTimerRef.current = null;
+        if (!mountedRef.current) return;
+        void loadAdminProfile(userId, options);
+      }, 0);
+    },
+    [cancelScheduledProfileLoad, loadAdminProfile]
+  );
 
   useEffect(() => {
     mountedRef.current = true;
@@ -149,35 +231,40 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
         );
 
         if (error) throw error;
+        if (!mountedRef.current) return;
 
-        if (data.session?.user) {
+        const sessionUser = data.session?.user || null;
+
+        if (sessionUser) {
           safeSetState(() => {
             setIsLoggedIn(true);
-            setAdminUser(data.session.user);
+            setAdminUser(sessionUser);
           });
 
-          await loadAdminProfile(data.session.user.id);
+          await loadAdminProfile(sessionUser.id);
         } else {
+          lastProfileUserIdRef.current = null;
+          invalidateProfileLoads();
+
           safeSetState(() => {
             setIsLoggedIn(false);
             setAdminUser(null);
-            setAdminProfile(null);
-            setProfileLoading(false);
-            setProfileError("");
-            setProfileRetryCount(0);
           });
+
+          resetProfileState();
         }
       } catch (error) {
         console.error("Session check failed:", error);
 
+        lastProfileUserIdRef.current = null;
+        invalidateProfileLoads();
+
         safeSetState(() => {
           setIsLoggedIn(false);
           setAdminUser(null);
-          setAdminProfile(null);
-          setProfileLoading(false);
-          setProfileError("");
-          setProfileRetryCount(0);
         });
+
+        resetProfileState();
       } finally {
         safeSetState(() => setSessionChecked(true));
       }
@@ -188,81 +275,85 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      // IMPORTANT: keep this callback synchronous.
-      // Never await another Supabase request inside onAuthStateChange.
+      const sessionUser = session?.user || null;
+
       safeSetState(() => {
-        setIsLoggedIn(Boolean(session));
-        setAdminUser(session?.user || null);
+        setIsLoggedIn(Boolean(sessionUser));
+        setAdminUser(sessionUser);
         setSessionChecked(true);
       });
 
-      if (session?.user) {
-        const userId = session.user.id;
+      if (sessionUser) {
+        const userId = String(sessionUser.id);
 
         if (lastProfileUserIdRef.current !== userId) {
           scheduleAdminProfileLoad(userId);
         }
       } else {
         cancelScheduledProfileLoad();
-        profileFetchIdRef.current += 1;
         lastProfileUserIdRef.current = null;
-
-        safeSetState(() => {
-          setAdminProfile(null);
-          setProfileLoading(false);
-          setProfileError("");
-          setProfileRetryCount(0);
-        });
+        invalidateProfileLoads();
+        resetProfileState();
       }
     });
 
     return () => {
       mountedRef.current = false;
       cancelScheduledProfileLoad();
-      profileFetchIdRef.current += 1;
-
-      if (subscription) subscription.unsubscribe();
+      lastProfileUserIdRef.current = null;
+      invalidateProfileLoads();
+      subscription?.unsubscribe();
     };
-  }, []);
+  }, [
+    cancelScheduledProfileLoad,
+    invalidateProfileLoads,
+    loadAdminProfile,
+    resetProfileState,
+    safeSetState,
+    scheduleAdminProfileLoad,
+  ]);
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
+  const handleLogin = useCallback(
+    async (event) => {
+      event.preventDefault();
 
-    try {
-      const { data, error } = await withTimeout(
-        supabase.auth.signInWithPassword({ email, password }),
-        "Login"
-      );
+      try {
+        const { data, error } = await withTimeout(
+          supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          }),
+          "Login"
+        );
 
-      if (error) {
-        alert(error.message);
-        return;
-      }
+        if (error) {
+          alert(error.message);
+          return;
+        }
 
-      if (data.user) {
+        if (data.user) {
+          safeSetState(() => {
+            setAdminUser(data.user);
+            setIsLoggedIn(true);
+          });
+        }
+
         safeSetState(() => {
-          setAdminUser(data.user);
-          setIsLoggedIn(true);
+          setEmail("");
+          setPassword("");
         });
-
-        // Do not load the profile here as well.
-        // SIGNED_IN will trigger the listener above, which schedules it.
+      } catch (error) {
+        console.error("Login failed:", error);
+        alert("Login request timed out or failed. Check internet and try again.");
       }
+    },
+    [email, password, safeSetState]
+  );
 
-      safeSetState(() => {
-        setEmail("");
-        setPassword("");
-      });
-    } catch (error) {
-      console.error("Login failed:", error);
-      alert("Login request timed out or failed. Check internet and try again.");
-    }
-  };
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     cancelScheduledProfileLoad();
-    profileFetchIdRef.current += 1;
     lastProfileUserIdRef.current = null;
+    invalidateProfileLoads();
 
     try {
       await withTimeout(supabase.auth.signOut(), "Logout");
@@ -274,16 +365,25 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
       setIsLoggedIn(false);
       setSessionChecked(true);
       setAdminUser(null);
-      setAdminProfile(null);
-      setProfileLoading(false);
-      setProfileError("");
-      setProfileRetryCount(0);
+      setEmail("");
+      setPassword("");
     });
 
-    if (typeof onLogoutCleanup === "function") {
-      onLogoutCleanup();
+    resetProfileState();
+
+    if (typeof onLogoutCleanupRef.current === "function") {
+      try {
+        onLogoutCleanupRef.current();
+      } catch (error) {
+        console.error("Logout cleanup failed:", error);
+      }
     }
-  };
+  }, [
+    cancelScheduledProfileLoad,
+    invalidateProfileLoads,
+    resetProfileState,
+    safeSetState,
+  ]);
 
   return {
     isLoggedIn,

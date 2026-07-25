@@ -1,27 +1,55 @@
-export function getCrmCounts({ inquiries = [], appointments = [] }) {
-  const inquiryNewCount = inquiries.filter(
-    (inquiry) => (inquiry.status || "new") === "new"
-  ).length;
+function normalize(value = "") {
+  return String(value ?? "").trim().toLowerCase();
+}
 
-  const inquiryContactedCount = inquiries.filter(
-    (inquiry) => inquiry.status === "contacted"
-  ).length;
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
 
-  const appointmentPendingCount = appointments.filter(
-    (appointment) => (appointment.status || "pending") === "pending"
-  ).length;
+function isSameLocalDay(value, referenceDate) {
+  if (!value) return false;
 
-  const appointmentConfirmedCount = appointments.filter(
-    (appointment) => appointment.status === "confirmed"
-  ).length;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
 
-  const appointmentCompletedCount = appointments.filter(
-    (appointment) => appointment.status === "completed"
-  ).length;
+  return (
+    date.getFullYear() === referenceDate.getFullYear() &&
+    date.getMonth() === referenceDate.getMonth() &&
+    date.getDate() === referenceDate.getDate()
+  );
+}
 
-  const appointmentCancelledCount = appointments.filter(
-    (appointment) => appointment.status === "cancelled"
-  ).length;
+export function getCrmCounts({ inquiries = [], appointments = [] } = {}) {
+  let inquiryNewCount = 0;
+  let inquiryContactedCount = 0;
+
+  let appointmentPendingCount = 0;
+  let appointmentConfirmedCount = 0;
+  let appointmentCompletedCount = 0;
+  let appointmentCancelledCount = 0;
+
+  for (const inquiry of safeArray(inquiries)) {
+    const status = normalize(inquiry?.status || "new");
+
+    if (status === "new") inquiryNewCount += 1;
+    else if (status === "contacted") inquiryContactedCount += 1;
+  }
+
+  for (const appointment of safeArray(appointments)) {
+    const status = normalize(appointment?.status || "pending");
+
+    if (status === "pending") appointmentPendingCount += 1;
+    else if (status === "confirmed") appointmentConfirmedCount += 1;
+    else if (
+      status === "completed" ||
+      status === "complete" ||
+      status === "done"
+    ) {
+      appointmentCompletedCount += 1;
+    } else if (status === "cancelled" || status === "canceled") {
+      appointmentCancelledCount += 1;
+    }
+  }
 
   return {
     inquiryNewCount,
@@ -33,20 +61,26 @@ export function getCrmCounts({ inquiries = [], appointments = [] }) {
   };
 }
 
-export function getTodayCounts({ inquiries = [], appointments = [] }) {
-  const todayDate = new Date().toDateString();
+export function getTodayCounts({
+  inquiries = [],
+  appointments = [],
+} = {}) {
+  const today = new Date();
 
-  const todayInquiriesCount = inquiries.filter((inquiry) =>
-    inquiry.created_at
-      ? new Date(inquiry.created_at).toDateString() === todayDate
-      : false
-  ).length;
+  let todayInquiriesCount = 0;
+  let todayAppointmentsCount = 0;
 
-  const todayAppointmentsCount = appointments.filter((appointment) =>
-    appointment.created_at
-      ? new Date(appointment.created_at).toDateString() === todayDate
-      : false
-  ).length;
+  for (const inquiry of safeArray(inquiries)) {
+    if (isSameLocalDay(inquiry?.created_at, today)) {
+      todayInquiriesCount += 1;
+    }
+  }
+
+  for (const appointment of safeArray(appointments)) {
+    if (isSameLocalDay(appointment?.created_at, today)) {
+      todayAppointmentsCount += 1;
+    }
+  }
 
   return {
     todayInquiriesCount,

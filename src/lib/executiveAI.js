@@ -1,5 +1,20 @@
 import { supabase } from "./supabaseClient";
 
+const RISK_SAVE_TIMEOUT_MS = 12000;
+const RISK_FETCH_TIMEOUT_MS = 12000;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const COMPLETED_DOCUMENT_STATUSES = new Set([
+  "completed",
+  "approved",
+  "uploaded",
+  "verified",
+  "received",
+]);
+
+const COMPLETED_TASK_STATUSES = new Set(["completed", "done", "closed"]);
+
 function clampScore(value) {
   return Math.max(0, Math.min(100, Math.round(Number(value || 0))));
 }
@@ -14,9 +29,7 @@ function normalizeText(value = "") {
 }
 
 function normalizeStatus(value = "") {
-  return normalizeText(value)
-    .replace(/\s+/g, "_")
-    .replace(/-/g, "_");
+  return normalizeText(value).replace(/\s+/g, "_").replace(/-/g, "_");
 }
 
 function getStudentName(student = {}) {
@@ -33,13 +46,27 @@ function getStudentType(student = {}) {
   return student.student_type || student.__leadType || student.type || "inquiry";
 }
 
-function getDaysSince(dateValue) {
+function getDaysSince(dateValue, nowMs = Date.now()) {
   if (!dateValue) return null;
 
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return null;
+  const time = new Date(dateValue).getTime();
+  if (!Number.isFinite(time)) return null;
 
-  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor((nowMs - time) / DAY_MS);
+}
+
+async function withTimeout(promise, message, timeoutMs) {
+  let timer;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function getDocumentReadiness(student = {}) {
@@ -55,10 +82,12 @@ function getDocumentReadiness(student = {}) {
     };
   }
 
-  const completed = documents.filter((doc) => {
+  let completed = 0;
+
+  for (const doc of documents) {
     const status = normalizeStatus(doc.status || doc.document_status);
-    return ["completed", "approved", "uploaded", "verified", "received"].includes(status);
-  }).length;
+    if (COMPLETED_DOCUMENT_STATUSES.has(status)) completed += 1;
+  }
 
   const percent = Math.round((completed / documents.length) * 100);
 
@@ -70,16 +99,16 @@ function getDocumentReadiness(student = {}) {
       percent >= 90
         ? "documents_completed"
         : percent > 0
-        ? "documents_partial"
-        : "documents_pending",
+          ? "documents_partial"
+          : "documents_pending",
     health:
       percent >= 90
         ? "strong"
         : percent >= 60
-        ? "good"
-        : percent >= 30
-        ? "weak"
-        : "critical",
+          ? "good"
+          : percent >= 30
+            ? "weak"
+            : "critical",
   };
 }
 
@@ -95,14 +124,18 @@ function getTaskHealth(student = {}) {
       overdue: overdueTasks,
       completed: 0,
       completionPercent: 0,
-      health: overdueTasks > 0 ? "critical" : pendingTasks > 0 ? "weak" : "empty",
+      health:
+        overdueTasks > 0 ? "critical" : pendingTasks > 0 ? "weak" : "empty",
     };
   }
 
-  const completed = tasks.filter((task) => {
-    const status = normalizeStatus(task.status);
-    return ["completed", "done", "closed"].includes(status);
-  }).length;
+  let completed = 0;
+
+  for (const task of tasks) {
+    if (COMPLETED_TASK_STATUSES.has(normalizeStatus(task.status))) {
+      completed += 1;
+    }
+  }
 
   const completionPercent = Math.round((completed / tasks.length) * 100);
 
@@ -116,19 +149,25 @@ function getTaskHealth(student = {}) {
       overdueTasks > 0
         ? "critical"
         : pendingTasks > 5
-        ? "weak"
-        : completionPercent >= 75
-        ? "strong"
-        : completionPercent >= 40
-        ? "good"
-        : "weak",
+          ? "weak"
+          : completionPercent >= 75
+            ? "strong"
+            : completionPercent >= 40
+              ? "good"
+              : "weak",
   };
 }
 
 function getUniversityHealth(student = {}) {
-  const dream = number(student.dream_university_count ?? student.dream_universities_count);
-  const target = number(student.target_university_count ?? student.target_universities_count);
-  const safe = number(student.safe_university_count ?? student.safe_universities_count);
+  const dream = number(
+    student.dream_university_count ?? student.dream_universities_count
+  );
+  const target = number(
+    student.target_university_count ?? student.target_universities_count
+  );
+  const safe = number(
+    student.safe_university_count ?? student.safe_universities_count
+  );
   const total = number(student.university_plan_count || dream + target + safe);
 
   const hasPlan = student.has_university_plan === true || total > 0;
@@ -141,12 +180,18 @@ function getUniversityHealth(student = {}) {
     total,
     hasPlan,
     balanced,
-    health: !hasPlan ? "missing" : balanced ? "strong" : safe === 0 ? "risky" : "partial",
+    health: !hasPlan
+      ? "missing"
+      : balanced
+        ? "strong"
+        : safe === 0
+          ? "risky"
+          : "partial",
   };
 }
 
 function getApplicationHealth({ applicationStatus, offerStatus, applicationCount }) {
-  const startedStatuses = [
+  const startedStatuses = new Set([
     "started",
     "in_progress",
     "draft",
@@ -167,26 +212,38 @@ function getApplicationHealth({ applicationStatus, offerStatus, applicationCount
     "cas_pending",
     "cas_issued",
     "enrolled",
-  ];
+  ]);
 
-  const submittedStatuses = ["applied", "submitted", "under_review", "review", "processing"];
-  const offerReceivedStatuses = [
+  const submittedStatuses = new Set([
+    "applied",
+    "submitted",
+    "under_review",
+    "review",
+    "processing",
+  ]);
+
+  const offerReceivedStatuses = new Set([
     "offer_received",
     "offer",
     "received",
     "conditional_offer",
     "unconditional_offer",
-  ];
-  const offerAcceptedStatuses = ["offer_accepted", "accepted", "confirmed"];
+  ]);
 
-  const started = startedStatuses.includes(applicationStatus) || applicationCount > 0;
-  const submitted = submittedStatuses.includes(applicationStatus);
+  const offerAcceptedStatuses = new Set([
+    "offer_accepted",
+    "accepted",
+    "confirmed",
+  ]);
+
+  const started = startedStatuses.has(applicationStatus) || applicationCount > 0;
+  const submitted = submittedStatuses.has(applicationStatus);
   const offerReceived =
-    offerReceivedStatuses.includes(applicationStatus) ||
-    offerReceivedStatuses.includes(offerStatus);
+    offerReceivedStatuses.has(applicationStatus) ||
+    offerReceivedStatuses.has(offerStatus);
   const offerAccepted =
-    offerAcceptedStatuses.includes(applicationStatus) ||
-    offerAcceptedStatuses.includes(offerStatus);
+    offerAcceptedStatuses.has(applicationStatus) ||
+    offerAcceptedStatuses.has(offerStatus);
 
   const casPending = applicationStatus === "cas_pending";
   const casIssued = applicationStatus === "cas_issued";
@@ -204,29 +261,34 @@ function getApplicationHealth({ applicationStatus, offerStatus, applicationCount
     health: enrolled
       ? "success"
       : !started
-      ? "not_started"
-      : offerAccepted || casIssued
-      ? "conversion_ready"
-      : offerReceived
-      ? "strong"
-      : submitted
-      ? "active"
-      : "started",
+        ? "not_started"
+        : offerAccepted || casIssued
+          ? "conversion_ready"
+          : offerReceived
+            ? "strong"
+            : submitted
+              ? "active"
+              : "started",
   };
 }
 
 function getVisaHealth({ visaStatus, applicationHealth }) {
-  const pending = [
+  const pending = new Set([
     "pending",
     "visa_pending",
     "submitted",
     "under_review",
     "review",
     "processing",
-  ].includes(visaStatus);
+  ]).has(visaStatus);
 
-  const approved = ["visa_approved", "approved"].includes(visaStatus);
-  const rejected = ["rejected", "visa_rejected", "refused", "visa_refused"].includes(visaStatus);
+  const approved = new Set(["visa_approved", "approved"]).has(visaStatus);
+  const rejected = new Set([
+    "rejected",
+    "visa_rejected",
+    "refused",
+    "visa_refused",
+  ]).has(visaStatus);
 
   const needed =
     applicationHealth.offerAccepted ||
@@ -244,23 +306,24 @@ function getVisaHealth({ visaStatus, applicationHealth }) {
     health: approved
       ? "approved"
       : rejected
-      ? "rejected"
-      : pending
-      ? "pending"
-      : needed
-      ? "not_started"
-      : "not_required_yet",
+        ? "rejected"
+        : pending
+          ? "pending"
+          : needed
+            ? "not_started"
+            : "not_required_yet",
   };
 }
 
 function getJourneyStage({
   applicationStatus,
   offerStatus,
-  visaStatus,
   applicationHealth,
   visaHealth,
 }) {
-  if (applicationHealth.enrolled || applicationStatus === "enrolled") return "enrolled";
+  if (applicationHealth.enrolled || applicationStatus === "enrolled") {
+    return "enrolled";
+  }
 
   if (visaHealth.approved) return "visa_approved";
   if (visaHealth.rejected) return "visa_rejected";
@@ -268,7 +331,6 @@ function getJourneyStage({
 
   if (applicationHealth.casIssued) return "cas_issued";
   if (applicationHealth.casPending) return "cas_pending";
-
   if (applicationHealth.offerAccepted) return "offer_accepted";
   if (applicationHealth.offerReceived) return "offer_received";
 
@@ -296,18 +358,21 @@ function getExecutiveCategory({
   universityHealth,
 }) {
   if (journeyStage === "visa_rejected") return "Critical Risk";
-  if (visaStatus === "rejected" || visaStatus === "visa_rejected") return "Critical Risk";
+  if (visaStatus === "rejected" || visaStatus === "visa_rejected") {
+    return "Critical Risk";
+  }
   if (offerStatus === "rejected") return "Needs Attention";
   if (finalRiskScore >= 85) return "Critical Risk";
 
-  if (journeyStage === "visa_approved" || journeyStage === "enrolled") return "Success Story";
+  if (journeyStage === "visa_approved" || journeyStage === "enrolled") {
+    return "Success Story";
+  }
   if (applicationStatus === "enrolled") return "Success Story";
 
   if (
-    journeyStage === "offer_accepted" ||
-    journeyStage === "cas_pending" ||
-    journeyStage === "cas_issued" ||
-    journeyStage === "visa_pending"
+    ["offer_accepted", "cas_pending", "cas_issued", "visa_pending"].includes(
+      journeyStage
+    )
   ) {
     return "Conversion Ready";
   }
@@ -362,7 +427,11 @@ function getAutomationSignals({
     automationActions.push("missing_safe_university");
   }
 
-  if (["offer_received", "offer_accepted", "cas_pending", "cas_issued"].includes(journeyStage)) {
+  if (
+    ["offer_received", "offer_accepted", "cas_pending", "cas_issued"].includes(
+      journeyStage
+    )
+  ) {
     automationActions.push("conversion_follow_up");
   }
 
@@ -386,16 +455,20 @@ function getAutomationSignals({
       automationActions.length >= 5
         ? "heavy"
         : automationActions.length >= 3
-        ? "medium"
-        : automationActions.length > 0
-        ? "light"
-        : "none",
+          ? "medium"
+          : automationActions.length > 0
+            ? "light"
+            : "none",
     approval_likely:
       finalRiskScore >= 65 ||
       finalOpportunityScore >= 80 ||
-      ["offer_accepted", "cas_pending", "cas_issued", "visa_pending", "visa_rejected"].includes(
-        journeyStage
-      ),
+      [
+        "offer_accepted",
+        "cas_pending",
+        "cas_issued",
+        "visa_pending",
+        "visa_rejected",
+      ].includes(journeyStage),
   };
 }
 
@@ -411,7 +484,6 @@ export function calculateExecutiveRisk(student = {}) {
   const visaStatus = normalizeStatus(student.visa_status);
 
   const applicationCount = number(student.application_count);
-
   const documentReadiness = getDocumentReadiness(student);
   const taskHealth = getTaskHealth(student);
   const universityHealth = getUniversityHealth(student);
@@ -425,17 +497,18 @@ export function calculateExecutiveRisk(student = {}) {
   const journeyStage = getJourneyStage({
     applicationStatus,
     offerStatus,
-    visaStatus,
     applicationHealth,
     visaHealth,
   });
 
-  const daysSinceCreated = getDaysSince(student.created_at);
+  const nowMs = Date.now();
+  const daysSinceCreated = getDaysSince(student.created_at, nowMs);
   const daysSinceUpdated = getDaysSince(
     student.updated_at ||
       student.last_updated_at ||
       student.gpt_analyzed_at ||
-      student.created_at
+      student.created_at,
+    nowMs
   );
 
   if (!applicationHealth.started) {
@@ -443,7 +516,12 @@ export function calculateExecutiveRisk(student = {}) {
     riskReasons.push("No application started");
   }
 
-  if (applicationHealth.started && !applicationHealth.submitted && daysSinceCreated >= 14) {
+  if (
+    applicationHealth.started &&
+    !applicationHealth.submitted &&
+    daysSinceCreated !== null &&
+    daysSinceCreated >= 14
+  ) {
     riskScore += 8;
     riskReasons.push("Application started but not submitted");
   }
@@ -507,7 +585,11 @@ export function calculateExecutiveRisk(student = {}) {
     riskReasons.push("Visa rejected");
   }
 
-  if (applicationHealth.offerAccepted && !visaHealth.approved && !visaHealth.pending) {
+  if (
+    applicationHealth.offerAccepted &&
+    !visaHealth.approved &&
+    !visaHealth.pending
+  ) {
     riskScore += 10;
     opportunityScore += 20;
     riskReasons.push("Visa not started after accepted offer");
@@ -525,7 +607,9 @@ export function calculateExecutiveRisk(student = {}) {
     riskReasons.push(`Partial document readiness (${documentReadiness.percent}%)`);
   } else {
     opportunityScore += 15;
-    opportunityReasons.push(`Strong document readiness (${documentReadiness.percent}%)`);
+    opportunityReasons.push(
+      `Strong document readiness (${documentReadiness.percent}%)`
+    );
   }
 
   if (!universityHealth.hasPlan) {
@@ -564,7 +648,9 @@ export function calculateExecutiveRisk(student = {}) {
 
   if (taskHealth.total > 0 && taskHealth.completionPercent >= 75) {
     opportunityScore += 10;
-    opportunityReasons.push(`Strong task completion (${taskHealth.completionPercent}%)`);
+    opportunityReasons.push(
+      `Strong task completion (${taskHealth.completionPercent}%)`
+    );
   }
 
   if (
@@ -585,7 +671,11 @@ export function calculateExecutiveRisk(student = {}) {
     riskReasons.push(`Low recent activity (${daysSinceUpdated} days)`);
   }
 
-  if (daysSinceCreated !== null && daysSinceCreated <= 7 && opportunityScore > riskScore) {
+  if (
+    daysSinceCreated !== null &&
+    daysSinceCreated <= 7 &&
+    opportunityScore > riskScore
+  ) {
     opportunityScore += 6;
     opportunityReasons.push("Fresh active student profile");
   }
@@ -700,99 +790,116 @@ export function calculateExecutiveRisk(student = {}) {
     automation_pressure: automation.automation_pressure,
     approval_likely: automation.approval_likely,
 
-    generated_at: new Date().toISOString(),
+    generated_at: new Date(nowMs).toISOString(),
   };
 }
 
 export function calculatePortfolioHealth(students = []) {
-  const scored = students.map((student) => ({
-    student,
-    executive: calculateExecutiveRisk(student),
-  }));
+  const rows = Array.isArray(students) ? students : [];
+  const scored = new Array(rows.length);
 
-  const total = scored.length;
-  const countBy = (fn) => scored.filter(fn).length;
-
-  const critical = countBy((item) => item.executive.risk_level === "Critical");
-  const high = countBy((item) => item.executive.risk_level === "High");
-  const medium = countBy((item) => item.executive.risk_level === "Medium");
-
-  const executivePriority = countBy((item) => item.executive.priority_level === "Executive");
-  const conversionReady = countBy((item) => item.executive.executive_category === "Conversion Ready");
-  const successStories = countBy((item) => item.executive.executive_category === "Success Story");
-  const highOpportunity = countBy((item) => item.executive.executive_category === "High Opportunity");
-  const applicationReady = countBy((item) => item.executive.executive_category === "Application Ready");
-
-  const automationCandidates = countBy((item) => item.executive.automation_candidate);
-  const approvalLikely = countBy((item) => item.executive.approval_likely);
-  const heavyAutomation = countBy((item) => item.executive.automation_pressure === "heavy");
-  const mediumAutomation = countBy((item) => item.executive.automation_pressure === "medium");
+  const counters = {
+    critical: 0,
+    high: 0,
+    medium: 0,
+    executivePriority: 0,
+    conversionReady: 0,
+    successStories: 0,
+    highOpportunity: 0,
+    applicationReady: 0,
+    automationCandidates: 0,
+    approvalLikely: 0,
+    heavyAutomation: 0,
+    mediumAutomation: 0,
+  };
 
   const applicationHealth = {
-    notStarted: countBy((item) => item.executive.diagnostics.application_health === "not_started"),
-    started: countBy((item) => item.executive.diagnostics.application_started),
-    submitted: countBy((item) => item.executive.diagnostics.application_submitted),
-    offerReceived: countBy((item) => item.executive.diagnostics.offer_received),
-    offerAccepted: countBy((item) => item.executive.diagnostics.offer_accepted),
-    casPending: countBy((item) => item.executive.diagnostics.cas_pending),
-    casIssued: countBy((item) => item.executive.diagnostics.cas_issued),
+    notStarted: 0,
+    started: 0,
+    submitted: 0,
+    offerReceived: 0,
+    offerAccepted: 0,
+    casPending: 0,
+    casIssued: 0,
   };
 
-  const visaHealth = {
-    needed: countBy((item) => item.executive.diagnostics.visa_needed),
-    pending: countBy((item) => item.executive.diagnostics.visa_pending),
-    approved: countBy((item) => item.executive.diagnostics.visa_approved),
-    rejected: countBy((item) => item.executive.diagnostics.visa_rejected),
-  };
+  const visaHealth = { needed: 0, pending: 0, approved: 0, rejected: 0 };
+  const documentHealth = { strong: 0, good: 0, weak: 0, critical: 0, missing: 0 };
+  const universityHealth = { strong: 0, partial: 0, risky: 0, missing: 0 };
+  const taskHealth = { strong: 0, good: 0, weak: 0, critical: 0, empty: 0 };
 
-  const documentHealth = {
-    strong: countBy((item) => item.executive.diagnostics.document_health === "strong"),
-    good: countBy((item) => item.executive.diagnostics.document_health === "good"),
-    weak: countBy((item) => item.executive.diagnostics.document_health === "weak"),
-    critical: countBy((item) => item.executive.diagnostics.document_health === "critical"),
-    missing: countBy((item) => item.executive.diagnostics.document_health === "missing"),
-  };
+  let riskTotal = 0;
+  let opportunityTotal = 0;
 
-  const universityHealth = {
-    strong: countBy((item) => item.executive.diagnostics.university_health === "strong"),
-    partial: countBy((item) => item.executive.diagnostics.university_health === "partial"),
-    risky: countBy((item) => item.executive.diagnostics.university_health === "risky"),
-    missing: countBy((item) => item.executive.diagnostics.university_health === "missing"),
-  };
+  for (let index = 0; index < rows.length; index += 1) {
+    const student = rows[index];
+    const executive = calculateExecutiveRisk(student);
+    const item = { student, executive };
+    scored[index] = item;
 
-  const taskHealth = {
-    strong: countBy((item) => item.executive.diagnostics.task_health === "strong"),
-    good: countBy((item) => item.executive.diagnostics.task_health === "good"),
-    weak: countBy((item) => item.executive.diagnostics.task_health === "weak"),
-    critical: countBy((item) => item.executive.diagnostics.task_health === "critical"),
-    empty: countBy((item) => item.executive.diagnostics.task_health === "empty"),
-  };
+    riskTotal += executive.risk_score;
+    opportunityTotal += executive.opportunity_score;
 
-  const averageRisk = total
-    ? Math.round(scored.reduce((sum, item) => sum + item.executive.risk_score, 0) / total)
-    : 0;
+    if (executive.risk_level === "Critical") counters.critical += 1;
+    else if (executive.risk_level === "High") counters.high += 1;
+    else if (executive.risk_level === "Medium") counters.medium += 1;
 
-  const averageOpportunity = total
-    ? Math.round(scored.reduce((sum, item) => sum + item.executive.opportunity_score, 0) / total)
-    : 0;
+    if (executive.priority_level === "Executive") counters.executivePriority += 1;
+    if (executive.executive_category === "Conversion Ready") counters.conversionReady += 1;
+    if (executive.executive_category === "Success Story") counters.successStories += 1;
+    if (executive.executive_category === "High Opportunity") counters.highOpportunity += 1;
+    if (executive.executive_category === "Application Ready") counters.applicationReady += 1;
+
+    if (executive.automation_candidate) counters.automationCandidates += 1;
+    if (executive.approval_likely) counters.approvalLikely += 1;
+    if (executive.automation_pressure === "heavy") counters.heavyAutomation += 1;
+    if (executive.automation_pressure === "medium") counters.mediumAutomation += 1;
+
+    const d = executive.diagnostics;
+
+    if (d.application_health === "not_started") applicationHealth.notStarted += 1;
+    if (d.application_started) applicationHealth.started += 1;
+    if (d.application_submitted) applicationHealth.submitted += 1;
+    if (d.offer_received) applicationHealth.offerReceived += 1;
+    if (d.offer_accepted) applicationHealth.offerAccepted += 1;
+    if (d.cas_pending) applicationHealth.casPending += 1;
+    if (d.cas_issued) applicationHealth.casIssued += 1;
+
+    if (d.visa_needed) visaHealth.needed += 1;
+    if (d.visa_pending) visaHealth.pending += 1;
+    if (d.visa_approved) visaHealth.approved += 1;
+    if (d.visa_rejected) visaHealth.rejected += 1;
+
+    if (Object.hasOwn(documentHealth, d.document_health)) {
+      documentHealth[d.document_health] += 1;
+    }
+    if (Object.hasOwn(universityHealth, d.university_health)) {
+      universityHealth[d.university_health] += 1;
+    }
+    if (Object.hasOwn(taskHealth, d.task_health)) {
+      taskHealth[d.task_health] += 1;
+    }
+  }
+
+  const total = scored.length;
 
   return {
     total,
-    critical,
-    high,
-    medium,
-    executivePriority,
-    conversionReady,
-    successStories,
-    highOpportunity,
-    applicationReady,
-    averageRisk,
-    averageOpportunity,
+    critical: counters.critical,
+    high: counters.high,
+    medium: counters.medium,
+    executivePriority: counters.executivePriority,
+    conversionReady: counters.conversionReady,
+    successStories: counters.successStories,
+    highOpportunity: counters.highOpportunity,
+    applicationReady: counters.applicationReady,
+    averageRisk: total ? Math.round(riskTotal / total) : 0,
+    averageOpportunity: total ? Math.round(opportunityTotal / total) : 0,
 
-    automationCandidates,
-    approvalLikely,
-    heavyAutomation,
-    mediumAutomation,
+    automationCandidates: counters.automationCandidates,
+    approvalLikely: counters.approvalLikely,
+    heavyAutomation: counters.heavyAutomation,
+    mediumAutomation: counters.mediumAutomation,
 
     applicationHealth,
     visaHealth,
@@ -800,12 +907,15 @@ export function calculatePortfolioHealth(students = []) {
     universityHealth,
     taskHealth,
 
-    rankedByRisk: [...scored].sort((a, b) => b.executive.risk_score - a.executive.risk_score),
+    rankedByRisk: [...scored].sort(
+      (a, b) => b.executive.risk_score - a.executive.risk_score
+    ),
     rankedByOpportunity: [...scored].sort(
       (a, b) => b.executive.opportunity_score - a.executive.opportunity_score
     ),
     rankedByAutomationPressure: [...scored].sort(
-      (a, b) => b.executive.automation_action_count - a.executive.automation_action_count
+      (a, b) =>
+        b.executive.automation_action_count - a.executive.automation_action_count
     ),
     rankedByApplicationHealth: [...scored].sort(
       (a, b) =>
@@ -825,12 +935,17 @@ export function calculatePortfolioHealth(students = []) {
         offer_accepted: 1,
       };
 
-      return (rank[b.executive.journey_stage] || 0) - (rank[a.executive.journey_stage] || 0);
+      return (
+        (rank[b.executive.journey_stage] || 0) -
+        (rank[a.executive.journey_stage] || 0)
+      );
     }),
   };
 }
 
 function buildExecutiveRiskPayload(executive = {}, includeRichDiagnostics = true) {
+  const diagnostics = executive.diagnostics || {};
+
   const payload = {
     student_id: executive.student_id,
     student_type: executive.student_type,
@@ -850,31 +965,30 @@ function buildExecutiveRiskPayload(executive = {}, includeRichDiagnostics = true
     summary: executive.summary,
     generated_at: executive.generated_at,
 
-    document_readiness_percent: executive.diagnostics?.document_readiness_percent || 0,
-    task_completion_percent: executive.diagnostics?.task_completion_percent || 0,
-    pending_tasks_count: executive.diagnostics?.pending_tasks_count || 0,
-    overdue_tasks_count: executive.diagnostics?.overdue_tasks_count || 0,
-    university_plan_count: executive.diagnostics?.university_plan_count || 0,
+    document_readiness_percent: diagnostics.document_readiness_percent || 0,
+    task_completion_percent: diagnostics.task_completion_percent || 0,
+    pending_tasks_count: diagnostics.pending_tasks_count || 0,
+    overdue_tasks_count: diagnostics.overdue_tasks_count || 0,
+    university_plan_count: diagnostics.university_plan_count || 0,
     has_balanced_university_plan:
-      executive.diagnostics?.has_balanced_university_plan || false,
-    days_since_updated: executive.diagnostics?.days_since_updated ?? null,
+      diagnostics.has_balanced_university_plan || false,
+    days_since_updated: diagnostics.days_since_updated ?? null,
   };
 
   if (!includeRichDiagnostics) return payload;
 
   return {
     ...payload,
+    journey_stage: diagnostics.journey_stage || executive.journey_stage || "not_started",
+    application_health: diagnostics.application_health || "",
+    visa_health: diagnostics.visa_health || "",
+    document_health: diagnostics.document_health || "",
+    task_health: diagnostics.task_health || "",
+    university_health: diagnostics.university_health || "",
 
-    journey_stage: executive.diagnostics?.journey_stage || executive.journey_stage || "not_started",
-    application_health: executive.diagnostics?.application_health || "",
-    visa_health: executive.diagnostics?.visa_health || "",
-    document_health: executive.diagnostics?.document_health || "",
-    task_health: executive.diagnostics?.task_health || "",
-    university_health: executive.diagnostics?.university_health || "",
-
-    safe_university_count: executive.diagnostics?.safe_university_count || 0,
-    target_university_count: executive.diagnostics?.target_university_count || 0,
-    dream_university_count: executive.diagnostics?.dream_university_count || 0,
+    safe_university_count: diagnostics.safe_university_count || 0,
+    target_university_count: diagnostics.target_university_count || 0,
+    dream_university_count: diagnostics.dream_university_count || 0,
 
     automation_candidate: executive.automation_candidate || false,
     automation_action_count: executive.automation_action_count || 0,
@@ -884,13 +998,17 @@ function buildExecutiveRiskPayload(executive = {}, includeRichDiagnostics = true
 }
 
 async function upsertExecutiveRiskPayload(payload) {
-  return await supabase
-    .from("ai_student_risk_scores")
-    .upsert(payload, {
-      onConflict: "student_id,student_type",
-    })
-    .select()
-    .single();
+  return withTimeout(
+    supabase
+      .from("ai_student_risk_scores")
+      .upsert(payload, {
+        onConflict: "student_id,student_type",
+      })
+      .select()
+      .single(),
+    "Executive risk score save timed out.",
+    RISK_SAVE_TIMEOUT_MS
+  );
 }
 
 export async function saveExecutiveRiskScore(student = {}) {
@@ -900,32 +1018,38 @@ export async function saveExecutiveRiskScore(student = {}) {
 
   const executive = calculateExecutiveRisk(student);
 
-  let payload = buildExecutiveRiskPayload(executive, true);
-  let { data, error } = await upsertExecutiveRiskPayload(payload);
+  try {
+    let payload = buildExecutiveRiskPayload(executive, true);
+    let { data, error } = await upsertExecutiveRiskPayload(payload);
 
-  if (error) {
-    console.warn(
-      "Executive rich diagnostics save failed. Retrying with safe base payload:",
-      error
-    );
+    if (error) {
+      console.warn(
+        "Executive rich diagnostics save failed. Retrying with safe base payload:",
+        error
+      );
 
-    payload = buildExecutiveRiskPayload(executive, false);
-    const retry = await upsertExecutiveRiskPayload(payload);
-    data = retry.data;
-    error = retry.error;
+      payload = buildExecutiveRiskPayload(executive, false);
+      const retry = await upsertExecutiveRiskPayload(payload);
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error) {
+      console.error("Executive risk score save failed:", error);
+    }
+
+    return { data, error, executive };
+  } catch (error) {
+    console.error("Executive risk score save timed out/failed:", error);
+    return { data: null, error, executive };
   }
-
-  if (error) {
-    console.error("Executive risk score save failed:", error);
-  }
-
-  return { data, error, executive };
 }
 
 export async function generateExecutivePortfolio(students = []) {
-  const portfolio = calculatePortfolioHealth(students);
+  const rows = Array.isArray(students) ? students : [];
+  const portfolio = calculatePortfolioHealth(rows);
 
-  for (const student of students) {
+  for (const student of rows) {
     await saveExecutiveRiskScore(student);
   }
 
@@ -933,16 +1057,25 @@ export async function generateExecutivePortfolio(students = []) {
 }
 
 export async function fetchExecutiveRiskScores() {
-  const { data, error } = await supabase
-    .from("ai_student_risk_scores")
-    .select("*")
-    .order("risk_score", { ascending: false });
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from("ai_student_risk_scores")
+        .select("*")
+        .order("risk_score", { ascending: false }),
+      "Executive risk scores fetch timed out.",
+      RISK_FETCH_TIMEOUT_MS
+    );
 
-  if (error) {
-    console.error("Executive risk scores fetch failed:", error);
+    if (error) {
+      console.error("Executive risk scores fetch failed:", error);
+    }
+
+    return { data: Array.isArray(data) ? data : [], error };
+  } catch (error) {
+    console.error("Executive risk scores fetch timed out/failed:", error);
+    return { data: [], error };
   }
-
-  return { data: data || [], error };
 }
 
 export function buildExecutiveAutomationPortfolio(students = []) {

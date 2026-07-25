@@ -1,9 +1,12 @@
 export function getLatestRecords({
   inquiries = [],
   appointments = [],
-}) {
+} = {}) {
+  const safeInquiries = Array.isArray(inquiries) ? inquiries : [];
+  const safeAppointments = Array.isArray(appointments) ? appointments : [];
+
   return {
-    latestInquiry: inquiries[0],
-    latestAppointment: appointments[0],
+    latestInquiry: safeInquiries[0],
+    latestAppointment: safeAppointments[0],
   };
 }

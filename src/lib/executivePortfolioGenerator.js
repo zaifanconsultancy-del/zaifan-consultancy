@@ -17,6 +17,20 @@ function number(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+async function withTimeout(promise, message, timeoutMs = 12000) {
+  let timer;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function groupByStudent(items = []) {
   const map = new Map();
 
@@ -298,12 +312,12 @@ async function loadTable(tableName, options = {}) {
     query = query.order(options.orderBy, { ascending: options.ascending ?? false });
   }
 
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`${tableName} load timed out.`)), 12000);
-  });
-
   try {
-    const result = await Promise.race([query, timeoutPromise]);
+    const result = await withTimeout(
+      query,
+      `${tableName} load timed out.`,
+      12000
+    );
 
     return {
       data: result.data || [],
@@ -416,25 +430,16 @@ export async function generateExecutiveScoresForStudents(students = []) {
         "inquiry",
     };
 
-    const saveTimeout = new Promise((_, reject) => {
-      setTimeout(
-        () =>
-          reject(
-            new Error(
-              `Saving executive score timed out for ${
-                normalizedStudent.full_name || normalizedStudent.name || normalizedStudent.id
-              }.`
-            )
-          ),
+    try {
+      const { data, error, executive } = await withTimeout(
+        saveExecutiveRiskScore(normalizedStudent),
+        `Saving executive score timed out for ${
+          normalizedStudent.full_name ||
+          normalizedStudent.name ||
+          normalizedStudent.id
+        }.`,
         12000
       );
-    });
-
-    try {
-      const { data, error, executive } = await Promise.race([
-        saveExecutiveRiskScore(normalizedStudent),
-        saveTimeout,
-      ]);
 
       if (error) {
         failed.push({

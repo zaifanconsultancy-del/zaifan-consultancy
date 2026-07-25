@@ -1,31 +1,71 @@
 import { supabase } from "../../lib/supabaseClient";
 
-export async function fetchAssignmentsForLeadTypeRows(leadType, ids = []) {
-  if (!ids.length) {
+function normalizeLeadType(value = "") {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function normalizeIds(ids = []) {
+  if (!Array.isArray(ids)) return [];
+
+  const seen = new Set();
+  const normalized = [];
+
+  for (const id of ids) {
+    if (id === null || id === undefined) continue;
+
+    const value = String(id).trim();
+    if (!value || seen.has(value)) continue;
+
+    seen.add(value);
+    normalized.push(value);
+  }
+
+  return normalized;
+}
+
+export async function fetchAssignmentsForLeadTypeRows(
+  leadType,
+  ids = []
+) {
+  const normalizedLeadType = normalizeLeadType(leadType);
+  const normalizedIds = normalizeIds(ids);
+
+  if (!normalizedLeadType || normalizedIds.length === 0) {
     return { data: [], error: null };
   }
 
   return supabase
     .from("lead_assignments")
     .select("*")
-    .eq("lead_type", leadType)
-    .in(
-      "lead_id",
-      ids.map((id) => String(id))
-    );
+    .eq("lead_type", normalizedLeadType)
+    .in("lead_id", normalizedIds);
 }
 
 export function getUniqueAssignments(assignments = []) {
+  if (!Array.isArray(assignments) || assignments.length === 0) {
+    return [];
+  }
+
   const uniqueAssignments = [];
   const seen = new Set();
 
   for (const assignment of assignments) {
-    const key = `${assignment.lead_type}-${assignment.lead_id}`;
+    if (!assignment) continue;
 
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniqueAssignments.push(assignment);
-    }
+    const leadType = normalizeLeadType(assignment.lead_type);
+    const leadId =
+      assignment.lead_id === null || assignment.lead_id === undefined
+        ? ""
+        : String(assignment.lead_id).trim();
+
+    if (!leadType || !leadId) continue;
+
+    const key = `${leadType}-${leadId}`;
+
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    uniqueAssignments.push(assignment);
   }
 
   return uniqueAssignments;

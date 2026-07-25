@@ -1,84 +1,146 @@
+const CLOSED_REMINDER_STATUSES = new Set([
+  "completed",
+  "complete",
+  "done",
+  "closed",
+  "cancelled",
+  "canceled",
+]);
+
+function normalize(value = "") {
+  return String(value ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function startOfLocalDayMs(value = new Date()) {
+  const date = value instanceof Date ? new Date(value) : new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+function getSortTime(value) {
+  const time = new Date(value || 0).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
 export function buildReminderNotifications(reminders = []) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const todayMs = startOfLocalDayMs(now);
+  const notifications = [];
 
-  return reminders
-    .filter((reminder) => reminder.status !== "completed")
-    .map((reminder) => {
-      const dueDate = reminder.due_date ? new Date(reminder.due_date) : null;
+  for (const reminder of safeArray(reminders)) {
+    if (CLOSED_REMINDER_STATUSES.has(normalize(reminder.status))) {
+      continue;
+    }
 
-      if (dueDate) {
-        dueDate.setHours(0, 0, 0, 0);
-      }
+    const dueDateMs = reminder.due_date
+      ? startOfLocalDayMs(reminder.due_date)
+      : null;
 
-      const isOverdue = dueDate && dueDate < today;
-      const isToday = dueDate && dueDate.getTime() === today.getTime();
+    const isOverdue = dueDateMs !== null && dueDateMs < todayMs;
+    const isToday = dueDateMs !== null && dueDateMs === todayMs;
 
-      return {
-        id: `reminder-${reminder.id}`,
-        type: isOverdue ? "overdue_reminder" : "follow_up_reminder",
-        title: isOverdue ? "Overdue follow-up" : "Follow-up reminder",
-        message:
-          reminder.title ||
-          reminder.note ||
-          "A student follow-up needs attention.",
-        priority: isOverdue ? "high" : isToday ? "medium" : "normal",
-        createdAt: reminder.created_at || reminder.due_date || new Date().toISOString(),
-        studentId: reminder.student_id,
-        studentType: reminder.student_type,
-        raw: reminder,
-      };
+    notifications.push({
+      id: `reminder-${reminder.id}`,
+      type: isOverdue ? "overdue_reminder" : "follow_up_reminder",
+      title: isOverdue ? "Overdue follow-up" : "Follow-up reminder",
+      message:
+        reminder.title ||
+        reminder.note ||
+        reminder.notes ||
+        "A student follow-up needs attention.",
+      priority: isOverdue ? "high" : isToday ? "medium" : "normal",
+      createdAt: reminder.created_at || reminder.due_date || nowIso,
+      studentId: reminder.student_id,
+      studentType: reminder.student_type,
+      raw: reminder,
     });
+  }
+
+  return notifications;
 }
 
 export function buildAppointmentNotifications(appointments = []) {
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const todayMs = startOfLocalDayMs(now);
+  const notifications = [];
 
-  return appointments
-    .filter((appointment) => appointment.date === today)
-    .map((appointment) => ({
+  for (const appointment of safeArray(appointments)) {
+    const appointmentDate =
+      appointment.appointment_date ||
+      appointment.date ||
+      appointment.preferred_date;
+
+    if (!appointmentDate || startOfLocalDayMs(appointmentDate) !== todayMs) {
+      continue;
+    }
+
+    notifications.push({
       id: `appointment-${appointment.id}`,
       type: "appointment_today",
       title: "Appointment today",
-      message: `${appointment.name || "Student"} has an appointment today.`,
+      message: `${
+        appointment.full_name ||
+        appointment.name ||
+        appointment.student_name ||
+        "Student"
+      } has an appointment today.`,
       priority: "medium",
-      createdAt: appointment.created_at || new Date().toISOString(),
+      createdAt: appointment.created_at || appointmentDate || nowIso,
       studentId: appointment.id,
       studentType: "appointment",
       raw: appointment,
-    }));
+    });
+  }
+
+  return notifications;
 }
 
 export function buildLeadNotifications(inquiries = [], appointments = []) {
-  const inquiryNotifications = inquiries
-    .filter((lead) => lead.priority === "vip" || lead.priority === "high")
-    .map((lead) => ({
-      id: `lead-inquiry-${lead.id}`,
-      type: "priority_lead",
-      title: "High priority inquiry",
-      message: `${lead.name || "A student"} is marked as ${lead.priority?.toUpperCase()}.`,
-      priority: lead.priority === "vip" ? "urgent" : "high",
-      createdAt: lead.created_at || new Date().toISOString(),
-      studentId: lead.id,
-      studentType: "inquiry",
-      raw: lead,
-    }));
+  const nowIso = new Date().toISOString();
+  const notifications = [];
 
-  const appointmentNotifications = appointments
-    .filter((lead) => lead.priority === "vip" || lead.priority === "high")
-    .map((lead) => ({
-      id: `lead-appointment-${lead.id}`,
-      type: "priority_appointment",
-      title: "High priority appointment",
-      message: `${lead.name || "A student"} is marked as ${lead.priority?.toUpperCase()}.`,
-      priority: lead.priority === "vip" ? "urgent" : "high",
-      createdAt: lead.created_at || new Date().toISOString(),
-      studentId: lead.id,
-      studentType: "appointment",
-      raw: lead,
-    }));
+  const appendPriorityLead = (lead, studentType) => {
+    const priority = normalize(lead.priority);
 
-  return [...inquiryNotifications, ...appointmentNotifications];
+    if (priority !== "vip" && priority !== "high") return;
+
+    const isAppointment = studentType === "appointment";
+
+    notifications.push({
+      id: `lead-${studentType}-${lead.id}`,
+      type: isAppointment ? "priority_appointment" : "priority_lead",
+      title: isAppointment
+        ? "High priority appointment"
+        : "High priority inquiry",
+      message: `${
+        lead.full_name || lead.name || lead.student_name || "A student"
+      } is marked as ${priority.toUpperCase()}.`,
+      priority: priority === "vip" ? "urgent" : "high",
+      createdAt: lead.created_at || nowIso,
+      studentId: lead.id,
+      studentType,
+      raw: lead,
+    });
+  };
+
+  for (const lead of safeArray(inquiries)) {
+    appendPriorityLead(lead, "inquiry");
+  }
+
+  for (const lead of safeArray(appointments)) {
+    appendPriorityLead(lead, "appointment");
+  }
+
+  return notifications;
 }
 
 export function buildCrmNotifications({
@@ -92,7 +154,9 @@ export function buildCrmNotifications({
     ...buildLeadNotifications(inquiries, appointments),
   ];
 
-  return notifications.sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  notifications.sort(
+    (a, b) => getSortTime(b.createdAt) - getSortTime(a.createdAt)
   );
+
+  return notifications;
 }

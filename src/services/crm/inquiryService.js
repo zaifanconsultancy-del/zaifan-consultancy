@@ -1,5 +1,12 @@
 import { supabase } from "../../lib/supabaseClient";
 
+function missingIdError(action) {
+  return {
+    data: null,
+    error: new Error(`Missing inquiry ID for ${action}.`),
+  };
+}
+
 export async function fetchInquiryRows() {
   return supabase
     .from("inquiries")
@@ -8,13 +15,49 @@ export async function fetchInquiryRows() {
 }
 
 export async function deleteInquiryRow(id) {
+  if (id === null || id === undefined || String(id).trim() === "") {
+    return missingIdError("delete");
+  }
+
   return supabase.from("inquiries").delete().eq("id", id);
 }
 
 export async function updateInquiryStatusRow(id, status) {
-  return supabase.from("inquiries").update({ status }).eq("id", id);
+  if (id === null || id === undefined || String(id).trim() === "") {
+    return missingIdError("status update");
+  }
+
+  const nextStatus = String(status ?? "").trim();
+
+  if (!nextStatus) {
+    return {
+      data: null,
+      error: new Error("Missing inquiry status."),
+    };
+  }
+
+  return supabase
+    .from("inquiries")
+    .update({ status: nextStatus })
+    .eq("id", id);
 }
 
 export async function updateInquiryPriorityRow(id, priority) {
-  return supabase.from("inquiries").update({ priority }).eq("id", id);
+  if (id === null || id === undefined || String(id).trim() === "") {
+    return missingIdError("priority update");
+  }
+
+  const nextPriority = String(priority ?? "").trim();
+
+  if (!nextPriority) {
+    return {
+      data: null,
+      error: new Error("Missing inquiry priority."),
+    };
+  }
+
+  return supabase
+    .from("inquiries")
+    .update({ priority: nextPriority })
+    .eq("id", id);
 }

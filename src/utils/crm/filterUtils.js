@@ -1,38 +1,63 @@
 export function normalizeFilterValue(value) {
-  return String(value || "")
+  return String(value ?? "")
     .trim()
     .toLowerCase()
-    .replaceAll("-", "_")
-    .replaceAll(" ", "_");
+    .replace(/[\s-]+/g, "_");
+}
+
+function normalizeSearchValue(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function matchesSearch(searchText, values) {
+  if (!searchText) return true;
+
+  for (const value of values) {
+    if (normalizeSearchValue(value).includes(searchText)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function filterInquiries({
   inquiries = [],
   search = "",
   statusFilter = "All",
-}) {
-  const searchText = search.toLowerCase();
+} = {}) {
+  const searchText = normalizeSearchValue(search);
   const filterValue = normalizeFilterValue(statusFilter);
+  const showAll = filterValue === "all";
 
-  return inquiries.filter((inquiry) => {
-    const status = inquiry.status || "new";
-    const priority = inquiry.priority || "low";
-
-    const matchesSearch =
-      inquiry.full_name?.toLowerCase().includes(searchText) ||
-      inquiry.email?.toLowerCase().includes(searchText) ||
-      inquiry.phone?.toLowerCase().includes(searchText) ||
-      priority.toLowerCase().includes(searchText) ||
-      inquiry.country?.toLowerCase().includes(searchText) ||
-      inquiry.city?.toLowerCase().includes(searchText) ||
-      inquiry.field_of_interest?.toLowerCase().includes(searchText) ||
-      inquiry.study_level?.toLowerCase().includes(searchText) ||
-      inquiry.assigned_admin_name?.toLowerCase().includes(searchText);
+  return safeArray(inquiries).filter((inquiry) => {
+    const status = normalizeFilterValue(inquiry?.status || "new");
+    const priority = normalizeFilterValue(inquiry?.priority || "low");
 
     const matchesStatus =
-      statusFilter === "All" || status === filterValue || priority === filterValue;
+      showAll || status === filterValue || priority === filterValue;
 
-    return matchesSearch && matchesStatus;
+    if (!matchesStatus) return false;
+
+    return matchesSearch(searchText, [
+      inquiry?.full_name,
+      inquiry?.name,
+      inquiry?.email,
+      inquiry?.phone,
+      inquiry?.phone_number,
+      inquiry?.whatsapp,
+      inquiry?.priority,
+      inquiry?.country,
+      inquiry?.country_interest,
+      inquiry?.city,
+      inquiry?.field_of_interest,
+      inquiry?.study_level,
+      inquiry?.assigned_admin_name,
+    ]);
   });
 }
 
@@ -40,33 +65,43 @@ export function filterAppointments({
   appointments = [],
   search = "",
   statusFilter = "All",
-}) {
-  const searchText = search.toLowerCase();
+} = {}) {
+  const searchText = normalizeSearchValue(search);
   const filterValue = normalizeFilterValue(statusFilter);
+  const showAll = filterValue === "all";
 
-  return appointments.filter((appointment) => {
-    const status = appointment.status || "pending";
-    const appointmentStage = appointment.appointment_stage || "new_booking";
-    const priority = appointment.priority || "low";
-
-    const matchesSearch =
-      appointment.full_name?.toLowerCase().includes(searchText) ||
-      appointment.email?.toLowerCase().includes(searchText) ||
-      appointment.phone?.toLowerCase().includes(searchText) ||
-      appointment.country_interest?.toLowerCase().includes(searchText) ||
-      appointment.consultation_type?.toLowerCase().includes(searchText) ||
-      appointment.appointment_date?.toLowerCase().includes(searchText) ||
-      appointment.appointment_time?.toLowerCase().includes(searchText) ||
-      appointmentStage.toLowerCase().includes(searchText) ||
-      priority.toLowerCase().includes(searchText) ||
-      appointment.assigned_admin_name?.toLowerCase().includes(searchText);
+  return safeArray(appointments).filter((appointment) => {
+    const status = normalizeFilterValue(
+      appointment?.status || "pending"
+    );
+    const appointmentStage = normalizeFilterValue(
+      appointment?.appointment_stage || "new_booking"
+    );
+    const priority = normalizeFilterValue(
+      appointment?.priority || "low"
+    );
 
     const matchesStatus =
-      statusFilter === "All" ||
+      showAll ||
       status === filterValue ||
       appointmentStage === filterValue ||
       priority === filterValue;
 
-    return matchesSearch && matchesStatus;
+    if (!matchesStatus) return false;
+
+    return matchesSearch(searchText, [
+      appointment?.full_name,
+      appointment?.name,
+      appointment?.email,
+      appointment?.phone,
+      appointment?.phone_number,
+      appointment?.country_interest,
+      appointment?.consultation_type,
+      appointment?.appointment_date,
+      appointment?.appointment_time,
+      appointment?.appointment_stage,
+      appointment?.priority,
+      appointment?.assigned_admin_name,
+    ]);
   });
 }

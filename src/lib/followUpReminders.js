@@ -3,12 +3,25 @@ import { supabase } from "./supabaseClient";
 const REQUEST_TIMEOUT_MS = 12000;
 
 async function withTimeout(promise, message = "Request timed out.") {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS)
-    ),
-  ]);
+  let timer;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), REQUEST_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function cleanText(value = "") {
+  return String(value ?? "").trim();
+}
+
+function normalizeStudentType(value = "") {
+  return cleanText(value).toLowerCase();
 }
 
 export async function createFollowUpReminder({
@@ -20,16 +33,26 @@ export async function createFollowUpReminder({
   dueTime = null,
   adminProfile = null,
 }) {
-  if (!studentId || !studentType || !title || !dueDate) {
+  const normalizedStudentId = cleanText(studentId);
+  const normalizedStudentType = normalizeStudentType(studentType);
+  const normalizedTitle = cleanText(title);
+  const normalizedDueDate = cleanText(dueDate);
+
+  if (
+    !normalizedStudentId ||
+    !normalizedStudentType ||
+    !normalizedTitle ||
+    !normalizedDueDate
+  ) {
     return { data: null, error: new Error("Missing reminder fields") };
   }
 
   const payload = {
-    student_id: String(studentId),
-    student_type: studentType,
-    title,
-    notes,
-    due_date: dueDate,
+    student_id: normalizedStudentId,
+    student_type: normalizedStudentType,
+    title: normalizedTitle,
+    notes: cleanText(notes),
+    due_date: normalizedDueDate,
     due_time: dueTime || null,
     created_by: adminProfile?.id || null,
     created_by_name:
@@ -40,12 +63,16 @@ export async function createFollowUpReminder({
   };
 
   try {
-    const { error } = await withTimeout(
-  supabase.from("follow_up_reminders").insert(payload),
-  "Create reminder timed out."
-);
+    const { data, error } = await withTimeout(
+      supabase
+        .from("follow_up_reminders")
+        .insert(payload)
+        .select()
+        .single(),
+      "Create reminder timed out."
+    );
 
-return { data: payload, error };
+    return { data: data || payload, error };
   } catch (error) {
     return { data: null, error };
   }
@@ -61,8 +88,8 @@ export async function fetchFollowUpReminders(studentId, studentType) {
       supabase
         .from("follow_up_reminders")
         .select("*")
-        .eq("student_id", String(studentId))
-        .eq("student_type", studentType)
+        .eq("student_id", cleanText(studentId))
+        .eq("student_type", normalizeStudentType(studentType))
         .order("due_date", { ascending: true })
         .order("due_time", { ascending: true }),
       "Follow-up reminders loading timed out."

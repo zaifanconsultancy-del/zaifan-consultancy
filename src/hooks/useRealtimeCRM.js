@@ -1,21 +1,88 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
+
+const CHANNEL_NAMES = {
+  inquiries: "crm-inquiries-realtime",
+  appointments: "crm-appointments-realtime",
+  reminders: "crm-reminders-realtime",
+};
+
+const noop = () => {};
+
+function useLatestRef(value) {
+  const ref = useRef(value);
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref;
+}
 
 function useRealtimeCRM({
   enabled = true,
-  onInquiryChange = () => {},
-  onAppointmentChange = () => {},
-  onReminderChange = () => {},
-  onNotification = () => {},
-  onAnyChange = () => {},
+  onInquiryChange = noop,
+  onAppointmentChange = noop,
+  onReminderChange = noop,
+  onNotification = noop,
+  onAnyChange = noop,
 } = {}) {
   const channelsRef = useRef([]);
+  const generationRef = useRef(0);
+
+  const onInquiryChangeRef = useLatestRef(onInquiryChange);
+  const onAppointmentChangeRef = useLatestRef(onAppointmentChange);
+  const onReminderChangeRef = useLatestRef(onReminderChange);
+  const onNotificationRef = useLatestRef(onNotification);
+  const onAnyChangeRef = useLatestRef(onAnyChange);
+
+  const removeChannels = useCallback(() => {
+    generationRef.current += 1;
+
+    const channels = channelsRef.current;
+    channelsRef.current = [];
+
+    for (const channel of channels) {
+      if (!channel) continue;
+
+      try {
+        void supabase.removeChannel(channel);
+      } catch (error) {
+        console.error("Realtime channel cleanup failed:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    if (!enabled) return undefined;
+    if (!enabled) {
+      removeChannels();
+      return undefined;
+    }
+
+    removeChannels();
+    const generation = generationRef.current;
+
+    const isCurrentGeneration = () =>
+      generation === generationRef.current;
+
+    const safeNotify = (payload) => {
+      try {
+        onNotificationRef.current(payload);
+      } catch (error) {
+        console.error("Realtime notification handler failed:", error);
+      }
+    };
+
+    const safeAnyChange = (payload) => {
+      try {
+        onAnyChangeRef.current(payload);
+      } catch (error) {
+        console.error("Realtime any-change handler failed:", error);
+      }
+    };
 
     const inquiryChannel = supabase
-      .channel("crm-inquiries-realtime")
+      .channel(CHANNEL_NAMES.inquiries)
       .on(
         "postgres_changes",
         {
@@ -24,25 +91,28 @@ function useRealtimeCRM({
           table: "inquiries",
         },
         (payload) => {
-          console.log("Realtime inquiry update:", payload);
+          if (!isCurrentGeneration()) return;
 
-          onInquiryChange(payload);
-          onAnyChange({ type: "inquiry", payload });
+          try {
+            onInquiryChangeRef.current(payload);
+          } catch (error) {
+            console.error("Realtime inquiry handler failed:", error);
+          }
 
-          const eventType = payload.eventType;
+          safeAnyChange({ type: "inquiry", payload });
 
-          if (eventType === "INSERT") {
-            onNotification({
+          if (payload.eventType === "INSERT") {
+            safeNotify({
               type: "inquiry",
               level: "success",
               title: "New Inquiry",
-              message: `${payload.new?.full_name || "New lead"} entered the CRM pipeline.`,
+              message: `${
+                payload.new?.full_name || "New lead"
+              } entered the CRM pipeline.`,
               payload,
             });
-          }
-
-          if (eventType === "UPDATE") {
-            onNotification({
+          } else if (payload.eventType === "UPDATE") {
+            safeNotify({
               type: "inquiry",
               level: "info",
               title: "Inquiry Updated",
@@ -53,11 +123,16 @@ function useRealtimeCRM({
         }
       )
       .subscribe((status) => {
-        console.log("Inquiry realtime status:", status);
+        if (
+          isCurrentGeneration() &&
+          ["CHANNEL_ERROR", "TIMED_OUT"].includes(status)
+        ) {
+          console.error("Inquiry realtime subscription issue:", status);
+        }
       });
 
     const appointmentChannel = supabase
-      .channel("crm-appointments-realtime")
+      .channel(CHANNEL_NAMES.appointments)
       .on(
         "postgres_changes",
         {
@@ -66,40 +141,50 @@ function useRealtimeCRM({
           table: "appointments",
         },
         (payload) => {
-          console.log("Realtime appointment update:", payload);
+          if (!isCurrentGeneration()) return;
 
-          onAppointmentChange(payload);
-          onAnyChange({ type: "appointment", payload });
+          try {
+            onAppointmentChangeRef.current(payload);
+          } catch (error) {
+            console.error("Realtime appointment handler failed:", error);
+          }
 
-          const eventType = payload.eventType;
+          safeAnyChange({ type: "appointment", payload });
 
-          if (eventType === "INSERT") {
-            onNotification({
+          if (payload.eventType === "INSERT") {
+            safeNotify({
               type: "appointment",
               level: "success",
               title: "New Appointment",
-              message: `${payload.new?.full_name || "Student"} booked an appointment.`,
+              message: `${
+                payload.new?.full_name || "Student"
+              } booked an appointment.`,
               payload,
             });
-          }
-
-          if (eventType === "UPDATE") {
-            onNotification({
+          } else if (payload.eventType === "UPDATE") {
+            safeNotify({
               type: "appointment",
               level: "info",
               title: "Appointment Updated",
-              message: `${payload.new?.full_name || "Appointment"} was updated.`,
+              message: `${
+                payload.new?.full_name || "Appointment"
+              } was updated.`,
               payload,
             });
           }
         }
       )
       .subscribe((status) => {
-        console.log("Appointment realtime status:", status);
+        if (
+          isCurrentGeneration() &&
+          ["CHANNEL_ERROR", "TIMED_OUT"].includes(status)
+        ) {
+          console.error("Appointment realtime subscription issue:", status);
+        }
       });
 
     const reminderChannel = supabase
-      .channel("crm-reminders-realtime")
+      .channel(CHANNEL_NAMES.reminders)
       .on(
         "postgres_changes",
         {
@@ -108,25 +193,26 @@ function useRealtimeCRM({
           table: "follow_up_reminders",
         },
         (payload) => {
-          console.log("Realtime reminder update:", payload);
+          if (!isCurrentGeneration()) return;
 
-          onReminderChange(payload);
-          onAnyChange({ type: "reminder", payload });
+          try {
+            onReminderChangeRef.current(payload);
+          } catch (error) {
+            console.error("Realtime reminder handler failed:", error);
+          }
 
-          const eventType = payload.eventType;
+          safeAnyChange({ type: "reminder", payload });
 
-          if (eventType === "INSERT") {
-            onNotification({
+          if (payload.eventType === "INSERT") {
+            safeNotify({
               type: "reminder",
               level: "warning",
               title: "New Reminder",
               message: "A new follow-up reminder was created.",
               payload,
             });
-          }
-
-          if (eventType === "UPDATE") {
-            onNotification({
+          } else if (payload.eventType === "UPDATE") {
+            safeNotify({
               type: "reminder",
               level: "info",
               title: "Reminder Updated",
@@ -137,7 +223,12 @@ function useRealtimeCRM({
         }
       )
       .subscribe((status) => {
-        console.log("Reminder realtime status:", status);
+        if (
+          isCurrentGeneration() &&
+          ["CHANNEL_ERROR", "TIMED_OUT"].includes(status)
+        ) {
+          console.error("Reminder realtime subscription issue:", status);
+        }
       });
 
     channelsRef.current = [
@@ -146,37 +237,26 @@ function useRealtimeCRM({
       reminderChannel,
     ];
 
-    return () => {
-      channelsRef.current.forEach((channel) => {
-        if (channel) {
-          supabase.removeChannel(channel);
-        }
-      });
-
-      channelsRef.current = [];
-    };
+    return removeChannels;
   }, [
     enabled,
-    onInquiryChange,
-    onAppointmentChange,
-    onReminderChange,
-    onNotification,
-    onAnyChange,
+    onAnyChangeRef,
+    onAppointmentChangeRef,
+    onInquiryChangeRef,
+    onNotificationRef,
+    onReminderChangeRef,
+    removeChannels,
   ]);
 
-  return {
-    reconnectRealtime: () => {
-      channelsRef.current.forEach((channel) => {
-        if (channel) {
-          supabase.removeChannel(channel);
-        }
-      });
+  const reconnectRealtime = useCallback(() => {
+    removeChannels();
 
-      channelsRef.current = [];
-
+    if (typeof window !== "undefined") {
       window.location.reload();
-    },
-  };
+    }
+  }, [removeChannels]);
+
+  return { reconnectRealtime };
 }
 
 export default useRealtimeCRM;

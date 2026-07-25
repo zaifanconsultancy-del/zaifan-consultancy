@@ -1,156 +1,187 @@
 import { supabase } from "../lib/supabaseClient";
 
-const GPT_MODES = {
-summary: {
-label: "Smart Summary",
-category: "analysis",
-},
+const GPT_REQUEST_TIMEOUT_MS = 45000;
 
-whatsapp: {
-label: "WhatsApp Generator",
-category: "communication",
-},
+const GPT_MODES = Object.freeze({
+  summary: {
+    label: "Smart Summary",
+    category: "analysis",
+  },
 
-email: {
-label: "Email Generator",
-category: "communication",
-},
+  whatsapp: {
+    label: "WhatsApp Generator",
+    category: "communication",
+  },
 
-next_action: {
-label: "Next Action",
-category: "strategy",
-},
+  email: {
+    label: "Email Generator",
+    category: "communication",
+  },
 
-visa_risk: {
-label: "Visa Risk",
-category: "risk",
-},
+  next_action: {
+    label: "Next Action",
+    category: "strategy",
+  },
 
-call_script: {
-label: "Call Script",
-category: "communication",
-},
+  visa_risk: {
+    label: "Visa Risk",
+    category: "risk",
+  },
 
-followup_plan: {
-label: "Follow-Up Plan",
-category: "strategy",
-},
+  call_script: {
+    label: "Call Script",
+    category: "communication",
+  },
 
-scholarship: {
-label: "Scholarship Analysis",
-category: "analysis",
-},
+  followup_plan: {
+    label: "Follow-Up Plan",
+    category: "strategy",
+  },
 
-objection_analysis: {
-label: "Objection Analysis",
-category: "risk",
-},
+  scholarship: {
+    label: "Scholarship Analysis",
+    category: "analysis",
+  },
 
-counselor_strategy: {
-label: "Counselor Strategy",
-category: "strategy",
-},
-};
+  objection_analysis: {
+    label: "Objection Analysis",
+    category: "risk",
+  },
+
+  counselor_strategy: {
+    label: "Counselor Strategy",
+    category: "strategy",
+  },
+});
 
 function sanitizeArray(value) {
-return Array.isArray(value) ? value : [];
+  return Array.isArray(value) ? value : [];
 }
 
 function sanitizeObject(value) {
-return value && typeof value === "object" ? value : {};
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value
+    : {};
+}
+
+function sanitizeText(value = "", fallback = "") {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+async function withTimeout(
+  promise,
+  message = "GPT Copilot request timed out.",
+  timeoutMs = GPT_REQUEST_TIMEOUT_MS
+) {
+  let timer;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function generateGptCopilotText({
-mode = "summary",
-student = {},
-studentType = "inquiry",
-adminName = "Zaifan Consultancy Team",
+  mode = "summary",
+  student = {},
+  studentType = "inquiry",
+  adminName = "Zaifan Consultancy Team",
 
-timeline = [],
-followUps = [],
-appointments = [],
-reminders = [],
-activityLogs = [],
-documents = [],
+  timeline = [],
+  followUps = [],
+  appointments = [],
+  reminders = [],
+  activityLogs = [],
+  documents = [],
 
-leadScore = null,
-leadHealth = null,
-lastActivity = null,
-overdueStatus = null,
+  leadScore = null,
+  leadHealth = null,
+  lastActivity = null,
+  overdueStatus = null,
 
-extraContext = {},
-}) {
-const selectedMode = GPT_MODES[mode] || GPT_MODES.summary;
+  extraContext = {},
+} = {}) {
+  const normalizedMode = sanitizeText(mode, "summary");
+  const selectedMode = GPT_MODES[normalizedMode] || GPT_MODES.summary;
+  const effectiveMode = GPT_MODES[normalizedMode] ? normalizedMode : "summary";
 
-const crmContext = {
-timeline: sanitizeArray(timeline),
-followUps: sanitizeArray(followUps),
-appointments: sanitizeArray(appointments),
-reminders: sanitizeArray(reminders),
-activityLogs: sanitizeArray(activityLogs),
-documents: sanitizeArray(documents),
+  const safeStudent = sanitizeObject(student);
+  const safeStudentType = sanitizeText(studentType, "inquiry");
+  const safeAdminName = sanitizeText(
+    adminName,
+    "Zaifan Consultancy Team"
+  );
 
-leadScore,
-leadHealth,
-lastActivity,
-overdueStatus,
+  const crmContext = {
+    timeline: sanitizeArray(timeline),
+    followUps: sanitizeArray(followUps),
+    appointments: sanitizeArray(appointments),
+    reminders: sanitizeArray(reminders),
+    activityLogs: sanitizeArray(activityLogs),
+    documents: sanitizeArray(documents),
 
-generatedAt: new Date().toISOString(),
-generatedBy: adminName,
-modeCategory: selectedMode.category,
+    leadScore,
+    leadHealth,
+    lastActivity,
+    overdueStatus,
 
-extraContext: sanitizeObject(extraContext),
+    generatedAt: new Date().toISOString(),
+    generatedBy: safeAdminName,
+    modeCategory: selectedMode.category,
 
-};
+    extraContext: sanitizeObject(extraContext),
+  };
 
-const payload = {
-mode,
-modeLabel: selectedMode.label,
+  const payload = {
+    mode: effectiveMode,
+    modeLabel: selectedMode.label,
+    student: safeStudent,
+    studentType: safeStudentType,
+    adminName: safeAdminName,
+    crmContext,
+  };
 
-student,
-studentType,
+  try {
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke("zaifan-gpt-copilot", {
+        body: payload,
+      }),
+      `${selectedMode.label} request timed out.`
+    );
 
-adminName,
+    if (error) {
+      console.error("[GPT Copilot Error]", error);
+      throw new Error(
+        error.message || "Unable to contact GPT Copilot service."
+      );
+    }
 
-crmContext,
+    if (!data || data.success !== true) {
+      throw new Error(
+        data?.error || "GPT Copilot returned an invalid response."
+      );
+    }
 
-};
+    const text = sanitizeText(data.text);
 
-const startedAt = Date.now();
+    if (!text) {
+      throw new Error("GPT Copilot returned an empty response.");
+    }
 
-const { data, error } = await supabase.functions.invoke(
-"zaifan-gpt-copilot",
-{
-body: payload,
-}
-);
+    return text;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
 
-const durationMs = Date.now() - startedAt;
-
-console.log(
-`[GPT Copilot] ${selectedMode.label} completed in ${durationMs}ms`
-);
-
-if (error) {
-console.error("[GPT Copilot Error]", error);
-
-```
-throw new Error(
-  error.message ||
-    "Unable to contact GPT Copilot service."
-);
-```
-
-}
-
-if (!data?.success) {
-throw new Error(
-data?.error ||
-"GPT Copilot returned an invalid response."
-);
-}
-
-return data.text || "";
+    throw new Error("GPT Copilot request failed.");
+  }
 }
 
 export { GPT_MODES };

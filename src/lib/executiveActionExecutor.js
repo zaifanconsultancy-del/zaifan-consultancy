@@ -90,9 +90,11 @@ function buildDuplicateKey(template = {}) {
   );
 }
 
-function timeoutResult(label, timeoutMs = QUERY_TIMEOUT_MS) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
+async function withTimeout(promise, label, timeoutMs = QUERY_TIMEOUT_MS) {
+  let timer;
+
+  const timeoutPromise = new Promise((resolve) => {
+    timer = setTimeout(() => {
       resolve({
         data: null,
         error: new Error(`${label} timed out after ${timeoutMs}ms.`),
@@ -100,13 +102,13 @@ function timeoutResult(label, timeoutMs = QUERY_TIMEOUT_MS) {
       });
     }, timeoutMs);
   });
-}
 
-async function withTimeout(promise, label, timeoutMs = QUERY_TIMEOUT_MS) {
   try {
-    return await Promise.race([promise, timeoutResult(label, timeoutMs)]);
+    return await Promise.race([promise, timeoutPromise]);
   } catch (error) {
     return { data: null, error, timedOut: false };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

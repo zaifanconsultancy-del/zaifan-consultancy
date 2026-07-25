@@ -1,17 +1,38 @@
 import { REQUEST_TIMEOUT_MS } from "./constants";
 
-export function withTimeout(promise, label = "Request") {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error(`${label} timed out.`)),
-        REQUEST_TIMEOUT_MS
-      )
-    ),
-  ]);
+function normalizeDelay(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+export async function withTimeout(
+  promiseLike,
+  label = "Request",
+  timeoutMs = REQUEST_TIMEOUT_MS
+) {
+  const safeTimeoutMs = normalizeDelay(timeoutMs, REQUEST_TIMEOUT_MS);
+  let timerId;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timerId = setTimeout(() => {
+      reject(new Error(`${String(label || "Request").trim()} timed out.`));
+    }, safeTimeoutMs);
+  });
+
+  try {
+    return await Promise.race([
+      Promise.resolve(promiseLike),
+      timeoutPromise,
+    ]);
+  } finally {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+  }
 }
 
 export function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => {
+    setTimeout(resolve, normalizeDelay(ms, 0));
+  });
 }

@@ -1,3 +1,4 @@
+import { useCallback, useMemo, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 import {
@@ -18,6 +19,8 @@ import { downloadCSVFile } from "../services/crm/csvExportService";
 import { getStatusFromAppointmentStage } from "../utils/crm/index";
 import { withTimeout } from "../utils/crm/requestUtils";
 
+const sameId = (left, right) => String(left) === String(right);
+
 export default function useAdminLeadActions({
   inquiries,
   setInquiries,
@@ -26,431 +29,584 @@ export default function useAdminLeadActions({
   currentPermissions,
   logActivity,
 }) {
-  const blockAction = (message) => {
+  const pendingActionKeysRef = useRef(new Set());
+
+  const inquiryById = useMemo(
+    () => new Map(inquiries.map((item) => [String(item.id), item])),
+    [inquiries]
+  );
+
+  const appointmentById = useMemo(
+    () => new Map(appointments.map((item) => [String(item.id), item])),
+    [appointments]
+  );
+
+  const blockAction = useCallback((message) => {
     alert(message);
-  };
+  }, []);
 
-  const deleteInquiry = async (id) => {
-    if (!currentPermissions.canDelete) {
-      blockAction("Only Admin and Super Admin can delete inquiries.");
-      return;
+  const runExclusive = useCallback(async (key, action) => {
+    if (pendingActionKeysRef.current.has(key)) {
+      return { skipped: true };
     }
 
-    const confirmDelete = confirm("Delete this inquiry?");
-    if (!confirmDelete) return;
+    pendingActionKeysRef.current.add(key);
 
     try {
-      const { error } = await withTimeout(
-        deleteInquiryRow(id),
-        "Delete inquiry"
-      );
+      return await action();
+    } finally {
+      pendingActionKeysRef.current.delete(key);
+    }
+  }, []);
 
-      if (error) {
-        console.error(error);
-        alert("Failed to delete inquiry.");
+  const safeLogActivity = useCallback(
+    async (payload) => {
+      if (typeof logActivity !== "function") return;
+
+      try {
+        await logActivity(payload);
+      } catch (error) {
+        console.error("Activity logging failed:", error);
+      }
+    },
+    [logActivity]
+  );
+
+  const deleteInquiry = useCallback(
+    async (id) => {
+      if (!currentPermissions.canDelete) {
+        blockAction("Only Admin and Super Admin can delete inquiries.");
         return;
       }
 
-      setInquiries((current) =>
-        current.filter((inquiry) => inquiry.id !== id)
-      );
+      if (!confirm("Delete this inquiry?")) return;
 
-      await logActivity({
-        action: "Deleted inquiry",
-        targetType: "inquiry",
-        targetId: id,
-        details: "Inquiry deleted",
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Delete inquiry request timed out or failed.");
-    }
-  };
+      await runExclusive(`inquiry:delete:${id}`, async () => {
+        try {
+          const { error } = await withTimeout(
+            deleteInquiryRow(id),
+            "Delete inquiry"
+          );
 
-  const deleteAppointment = async (id) => {
-    if (!currentPermissions.canDelete) {
-      blockAction("Only Admin and Super Admin can delete appointments.");
-      return;
-    }
+          if (error) {
+            console.error(error);
+            alert("Failed to delete inquiry.");
+            return;
+          }
 
-    const confirmDelete = confirm("Delete this appointment?");
-    if (!confirmDelete) return;
+          setInquiries((current) =>
+            current.filter((inquiry) => !sameId(inquiry.id, id))
+          );
 
-    try {
-      const { error } = await withTimeout(
-        deleteAppointmentRow(id),
-        "Delete appointment"
-      );
-
-      if (error) {
-        console.error(error);
-        alert("Failed to delete appointment.");
-        return;
-      }
-
-      setAppointments((current) =>
-        current.filter((appointment) => appointment.id !== id)
-      );
-
-      await logActivity({
-        action: "Deleted appointment",
-        targetType: "appointment",
-        targetId: id,
-        details: "Appointment deleted",
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Delete appointment request timed out or failed.");
-    }
-  };
-
-  const toggleInquiryStatus = async (id, newStatus) => {
-    if (!currentPermissions.canUpdateStatus) {
-      blockAction("You do not have permission to update inquiry status.");
-      return;
-    }
-
-    const selectedInquiry = inquiries.find((inquiry) => inquiry.id === id);
-    const oldStatus = selectedInquiry?.status || "new";
-
-    try {
-      const { error } = await withTimeout(
-        updateInquiryStatusRow(id, newStatus),
-        "Update inquiry status"
-      );
-
-      if (error) {
-        console.error(error);
-        alert("Failed to update inquiry status.");
-        return;
-      }
-
-      setInquiries((current) =>
-        current.map((inquiry) =>
-          inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
-        )
-      );
-
-      await logActivity({
-        action: "Updated inquiry pipeline",
-        targetType: "inquiry",
-        targetId: id,
-        details: `Changed inquiry stage from ${oldStatus} to ${newStatus}.`,
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Pipeline update timed out or failed.");
-    }
-  };
-
-  const updateInquiryPriority = async (id, newPriority) => {
-    if (!currentPermissions.canUpdatePriority) {
-      blockAction("You do not have permission to update inquiry priority.");
-      return;
-    }
-
-    try {
-      const { error } = await withTimeout(
-        updateInquiryPriorityRow(id, newPriority),
-        "Update inquiry priority"
-      );
-
-      if (error) {
-        console.error(error);
-        alert("Failed to update inquiry priority.");
-        return;
-      }
-
-      setInquiries((current) =>
-        current.map((inquiry) =>
-          inquiry.id === id ? { ...inquiry, priority: newPriority } : inquiry
-        )
-      );
-
-      await logActivity({
-        action: "Updated inquiry priority",
-        targetType: "inquiry",
-        targetId: id,
-        details: `Changed inquiry priority to ${newPriority}.`,
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Priority update timed out or failed.");
-    }
-  };
-
-  const updateAppointmentPriority = async (id, newPriority) => {
-    if (!currentPermissions.canUpdatePriority) {
-      blockAction("You do not have permission to update appointment priority.");
-      return;
-    }
-
-    try {
-      const { error } = await withTimeout(
-        updateAppointmentPriorityRow(id, newPriority),
-        "Update appointment priority"
-      );
-
-      if (error) {
-        console.error(error);
-        alert("Failed to update appointment priority.");
-        return;
-      }
-
-      setAppointments((current) =>
-        current.map((appointment) =>
-          appointment.id === id
-            ? { ...appointment, priority: newPriority }
-            : appointment
-        )
-      );
-
-      await logActivity({
-        action: "Updated appointment priority",
-        targetType: "appointment",
-        targetId: id,
-        details: `Changed appointment priority to ${newPriority}.`,
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Priority update timed out or failed.");
-    }
-  };
-
-  const updateAppointmentStatus = async (id, newStatus) => {
-    if (!currentPermissions.canUpdateStatus) {
-      blockAction("You do not have permission to update appointment status.");
-      return;
-    }
-
-    const selectedAppointment = appointments.find(
-      (appointment) => appointment.id === id
-    );
-
-    const oldStatus = selectedAppointment?.status || "pending";
-
-    try {
-      const { error } = await withTimeout(
-        updateAppointmentStatusRow(id, newStatus),
-        "Update appointment status"
-      );
-
-      if (error) {
-        console.error(error);
-        alert("Failed to update appointment status.");
-        return;
-      }
-
-      setAppointments((current) =>
-        current.map((appointment) =>
-          appointment.id === id
-            ? { ...appointment, status: newStatus }
-            : appointment
-        )
-      );
-
-      await logActivity({
-        action: "Updated appointment status",
-        targetType: "appointment",
-        targetId: id,
-        details: `Changed appointment status from ${oldStatus} to ${newStatus}.`,
-      });
-
-      if (newStatus === "confirmed" && oldStatus !== "confirmed") {
-        const { data: emailData, error: emailError } = await withTimeout(
-          supabase.functions.invoke("send-appointment-status-email", {
-            body: {
-              fullName: selectedAppointment?.full_name,
-              email: selectedAppointment?.email,
-              phone: selectedAppointment?.phone,
-              country: selectedAppointment?.country_interest,
-              service: selectedAppointment?.consultation_type,
-              appointmentDate: selectedAppointment?.appointment_date,
-              appointmentTime: selectedAppointment?.appointment_time,
-              status: newStatus,
-            },
-          }),
-          "Appointment status email"
-        );
-
-        console.log("STATUS EMAIL DATA:", emailData);
-        console.log("STATUS EMAIL ERROR:", emailError);
-
-        if (emailError) {
-          alert("Status updated, but confirmation email failed.");
-          return;
+          await safeLogActivity({
+            action: "Deleted inquiry",
+            targetType: "inquiry",
+            targetId: id,
+            details: "Inquiry deleted",
+          });
+        } catch (error) {
+          console.error(error);
+          alert("Delete inquiry request timed out or failed.");
         }
+      });
+    },
+    [
+      blockAction,
+      currentPermissions.canDelete,
+      runExclusive,
+      safeLogActivity,
+      setInquiries,
+    ]
+  );
 
-        alert("Appointment confirmed and confirmation email sent.");
+  const deleteAppointment = useCallback(
+    async (id) => {
+      if (!currentPermissions.canDelete) {
+        blockAction("Only Admin and Super Admin can delete appointments.");
+        return;
       }
-    } catch (error) {
-      console.error(error);
-      alert("Appointment status update timed out or failed.");
-    }
-  };
 
-  const updateAppointmentStage = async (id, newStage) => {
-    if (!currentPermissions.canUpdateAppointmentPipeline) {
-      blockAction("You do not have permission to update appointment pipeline.");
-      return;
-    }
+      if (!confirm("Delete this appointment?")) return;
 
-    const selectedAppointment = appointments.find(
-      (appointment) => String(appointment.id) === String(id)
-    );
+      await runExclusive(`appointment:delete:${id}`, async () => {
+        try {
+          const { error } = await withTimeout(
+            deleteAppointmentRow(id),
+            "Delete appointment"
+          );
 
-    const oldStage = selectedAppointment?.appointment_stage || "new_booking";
-    const nextStatus = getStatusFromAppointmentStage(newStage);
+          if (error) {
+            console.error(error);
+            alert("Failed to delete appointment.");
+            return;
+          }
 
-    setAppointments((current) =>
-      current.map((appointment) =>
-        String(appointment.id) === String(id)
-          ? {
-              ...appointment,
-              appointment_stage: newStage,
-              status: nextStatus,
+          setAppointments((current) =>
+            current.filter((appointment) => !sameId(appointment.id, id))
+          );
+
+          await safeLogActivity({
+            action: "Deleted appointment",
+            targetType: "appointment",
+            targetId: id,
+            details: "Appointment deleted",
+          });
+        } catch (error) {
+          console.error(error);
+          alert("Delete appointment request timed out or failed.");
+        }
+      });
+    },
+    [
+      blockAction,
+      currentPermissions.canDelete,
+      runExclusive,
+      safeLogActivity,
+      setAppointments,
+    ]
+  );
+
+  const toggleInquiryStatus = useCallback(
+    async (id, newStatus) => {
+      if (!currentPermissions.canUpdateStatus) {
+        blockAction("You do not have permission to update inquiry status.");
+        return;
+      }
+
+      const selectedInquiry = inquiryById.get(String(id));
+      const oldStatus = selectedInquiry?.status || "new";
+
+      if (oldStatus === newStatus) return;
+
+      await runExclusive(`inquiry:status:${id}`, async () => {
+        try {
+          const { error } = await withTimeout(
+            updateInquiryStatusRow(id, newStatus),
+            "Update inquiry status"
+          );
+
+          if (error) {
+            console.error(error);
+            alert("Failed to update inquiry status.");
+            return;
+          }
+
+          setInquiries((current) =>
+            current.map((inquiry) =>
+              sameId(inquiry.id, id)
+                ? { ...inquiry, status: newStatus }
+                : inquiry
+            )
+          );
+
+          await safeLogActivity({
+            action: "Updated inquiry pipeline",
+            targetType: "inquiry",
+            targetId: id,
+            details: `Changed inquiry stage from ${oldStatus} to ${newStatus}.`,
+          });
+        } catch (error) {
+          console.error(error);
+          alert("Pipeline update timed out or failed.");
+        }
+      });
+    },
+    [
+      blockAction,
+      currentPermissions.canUpdateStatus,
+      inquiryById,
+      runExclusive,
+      safeLogActivity,
+      setInquiries,
+    ]
+  );
+
+  const updateInquiryPriority = useCallback(
+    async (id, newPriority) => {
+      if (!currentPermissions.canUpdatePriority) {
+        blockAction("You do not have permission to update inquiry priority.");
+        return;
+      }
+
+      const selectedInquiry = inquiryById.get(String(id));
+      if (selectedInquiry?.priority === newPriority) return;
+
+      await runExclusive(`inquiry:priority:${id}`, async () => {
+        try {
+          const { error } = await withTimeout(
+            updateInquiryPriorityRow(id, newPriority),
+            "Update inquiry priority"
+          );
+
+          if (error) {
+            console.error(error);
+            alert("Failed to update inquiry priority.");
+            return;
+          }
+
+          setInquiries((current) =>
+            current.map((inquiry) =>
+              sameId(inquiry.id, id)
+                ? { ...inquiry, priority: newPriority }
+                : inquiry
+            )
+          );
+
+          await safeLogActivity({
+            action: "Updated inquiry priority",
+            targetType: "inquiry",
+            targetId: id,
+            details: `Changed inquiry priority to ${newPriority}.`,
+          });
+        } catch (error) {
+          console.error(error);
+          alert("Priority update timed out or failed.");
+        }
+      });
+    },
+    [
+      blockAction,
+      currentPermissions.canUpdatePriority,
+      inquiryById,
+      runExclusive,
+      safeLogActivity,
+      setInquiries,
+    ]
+  );
+
+  const updateAppointmentPriority = useCallback(
+    async (id, newPriority) => {
+      if (!currentPermissions.canUpdatePriority) {
+        blockAction("You do not have permission to update appointment priority.");
+        return;
+      }
+
+      const selectedAppointment = appointmentById.get(String(id));
+      if (selectedAppointment?.priority === newPriority) return;
+
+      await runExclusive(`appointment:priority:${id}`, async () => {
+        try {
+          const { error } = await withTimeout(
+            updateAppointmentPriorityRow(id, newPriority),
+            "Update appointment priority"
+          );
+
+          if (error) {
+            console.error(error);
+            alert("Failed to update appointment priority.");
+            return;
+          }
+
+          setAppointments((current) =>
+            current.map((appointment) =>
+              sameId(appointment.id, id)
+                ? { ...appointment, priority: newPriority }
+                : appointment
+            )
+          );
+
+          await safeLogActivity({
+            action: "Updated appointment priority",
+            targetType: "appointment",
+            targetId: id,
+            details: `Changed appointment priority to ${newPriority}.`,
+          });
+        } catch (error) {
+          console.error(error);
+          alert("Priority update timed out or failed.");
+        }
+      });
+    },
+    [
+      appointmentById,
+      blockAction,
+      currentPermissions.canUpdatePriority,
+      runExclusive,
+      safeLogActivity,
+      setAppointments,
+    ]
+  );
+
+  const updateAppointmentStatus = useCallback(
+    async (id, newStatus) => {
+      if (!currentPermissions.canUpdateStatus) {
+        blockAction("You do not have permission to update appointment status.");
+        return;
+      }
+
+      const selectedAppointment = appointmentById.get(String(id));
+      const oldStatus = selectedAppointment?.status || "pending";
+
+      if (oldStatus === newStatus) return;
+
+      await runExclusive(`appointment:status:${id}`, async () => {
+        try {
+          const { error } = await withTimeout(
+            updateAppointmentStatusRow(id, newStatus),
+            "Update appointment status"
+          );
+
+          if (error) {
+            console.error(error);
+            alert("Failed to update appointment status.");
+            return;
+          }
+
+          setAppointments((current) =>
+            current.map((appointment) =>
+              sameId(appointment.id, id)
+                ? { ...appointment, status: newStatus }
+                : appointment
+            )
+          );
+
+          await safeLogActivity({
+            action: "Updated appointment status",
+            targetType: "appointment",
+            targetId: id,
+            details: `Changed appointment status from ${oldStatus} to ${newStatus}.`,
+          });
+
+          if (newStatus === "confirmed" && oldStatus !== "confirmed") {
+            if (!selectedAppointment?.email) {
+              alert(
+                "Appointment confirmed, but no student email is available for the confirmation email."
+              );
+              return;
             }
-          : appointment
-      )
-    );
 
-    try {
-      const { error } = await withTimeout(
-        updateAppointmentStageRow(id, newStage, nextStatus),
-        "Update appointment pipeline"
-      );
+            const { error: emailError } = await withTimeout(
+              supabase.functions.invoke("send-appointment-status-email", {
+                body: {
+                  fullName: selectedAppointment?.full_name,
+                  email: selectedAppointment?.email,
+                  phone: selectedAppointment?.phone,
+                  country: selectedAppointment?.country_interest,
+                  service: selectedAppointment?.consultation_type,
+                  appointmentDate: selectedAppointment?.appointment_date,
+                  appointmentTime: selectedAppointment?.appointment_time,
+                  status: newStatus,
+                },
+              }),
+              "Appointment status email"
+            );
 
-      if (error) {
-        console.error("Appointment pipeline update error:", error);
+            if (emailError) {
+              console.error("Appointment status email failed:", emailError);
+              alert("Status updated, but confirmation email failed.");
+              return;
+            }
 
+            alert("Appointment confirmed and confirmation email sent.");
+          }
+        } catch (error) {
+          console.error(error);
+          alert("Appointment status update timed out or failed.");
+        }
+      });
+    },
+    [
+      appointmentById,
+      blockAction,
+      currentPermissions.canUpdateStatus,
+      runExclusive,
+      safeLogActivity,
+      setAppointments,
+    ]
+  );
+
+  const updateAppointmentStage = useCallback(
+    async (id, newStage) => {
+      if (!currentPermissions.canUpdateAppointmentPipeline) {
+        blockAction(
+          "You do not have permission to update appointment pipeline."
+        );
+        return;
+      }
+
+      const selectedAppointment = appointmentById.get(String(id));
+      const oldStage =
+        selectedAppointment?.appointment_stage || "new_booking";
+      const oldStatus = selectedAppointment?.status || "pending";
+      const nextStatus = getStatusFromAppointmentStage(newStage);
+
+      if (oldStage === newStage && oldStatus === nextStatus) return;
+
+      await runExclusive(`appointment:stage:${id}`, async () => {
         setAppointments((current) =>
           current.map((appointment) =>
-            String(appointment.id) === String(id)
+            sameId(appointment.id, id)
               ? {
                   ...appointment,
-                  appointment_stage: oldStage,
-                  status: selectedAppointment?.status || appointment.status,
+                  appointment_stage: newStage,
+                  status: nextStatus,
                 }
               : appointment
           )
         );
 
-        alert(
-          error.message ||
-            "Failed to update appointment pipeline. Check Supabase column/RLS."
-        );
-        return;
-      }
+        try {
+          const { error } = await withTimeout(
+            updateAppointmentStageRow(id, newStage, nextStatus),
+            "Update appointment pipeline"
+          );
 
-      await logActivity({
-        action: "Updated appointment pipeline",
-        targetType: "appointment",
-        targetId: id,
-        details: `Changed appointment pipeline from ${oldStage} to ${newStage}.`,
+          if (error) {
+            console.error("Appointment pipeline update error:", error);
+
+            setAppointments((current) =>
+              current.map((appointment) =>
+                sameId(appointment.id, id)
+                  ? {
+                      ...appointment,
+                      appointment_stage: oldStage,
+                      status: oldStatus,
+                    }
+                  : appointment
+              )
+            );
+
+            alert(
+              error.message ||
+                "Failed to update appointment pipeline. Check Supabase column/RLS."
+            );
+            return;
+          }
+
+          await safeLogActivity({
+            action: "Updated appointment pipeline",
+            targetType: "appointment",
+            targetId: id,
+            details: `Changed appointment pipeline from ${oldStage} to ${newStage}.`,
+          });
+        } catch (error) {
+          console.error("Appointment pipeline timeout/error:", error);
+
+          setAppointments((current) =>
+            current.map((appointment) =>
+              sameId(appointment.id, id)
+                ? {
+                    ...appointment,
+                    appointment_stage: oldStage,
+                    status: oldStatus,
+                  }
+                : appointment
+            )
+          );
+
+          alert(
+            "Appointment pipeline update timed out. If it still happens, run the appointments SQL/RLS fix."
+          );
+        }
       });
-    } catch (error) {
-      console.error("Appointment pipeline timeout/error:", error);
+    },
+    [
+      appointmentById,
+      blockAction,
+      currentPermissions.canUpdateAppointmentPipeline,
+      runExclusive,
+      safeLogActivity,
+      setAppointments,
+    ]
+  );
 
-      setAppointments((current) =>
-        current.map((appointment) =>
-          String(appointment.id) === String(id)
-            ? {
-                ...appointment,
-                appointment_stage: oldStage,
-                status: selectedAppointment?.status || appointment.status,
-              }
-            : appointment
-        )
-      );
-
-      alert(
-        "Appointment pipeline update timed out. If it still happens, run the appointments SQL/RLS fix."
-      );
-    }
-  };
-
-  const clearInquiries = async () => {
+  const clearInquiries = useCallback(async () => {
     if (!currentPermissions.canClearAll) {
       blockAction("Only Super Admin can clear all inquiries.");
       return;
     }
 
-    const confirmDelete = confirm("Are you sure you want to delete all inquiries?");
-    if (!confirmDelete) return;
+    if (!confirm("Are you sure you want to delete all inquiries?")) return;
 
-    try {
-      const { error } = await withTimeout(
-        supabase.from("inquiries").delete().neq("id", 0),
-        "Clear inquiries"
-      );
+    await runExclusive("inquiries:clear-all", async () => {
+      try {
+        const { error } = await withTimeout(
+          supabase.from("inquiries").delete().neq("id", 0),
+          "Clear inquiries"
+        );
 
-      if (error) {
+        if (error) {
+          console.error(error);
+          alert("Failed to clear inquiries.");
+          return;
+        }
+
+        setInquiries([]);
+
+        await safeLogActivity({
+          action: "Cleared all inquiries",
+          targetType: "inquiries",
+          targetId: "all",
+          details: "Super Admin cleared all inquiry records.",
+        });
+      } catch (error) {
         console.error(error);
-        alert("Failed to clear inquiries.");
-        return;
+        alert("Clear inquiries request timed out or failed.");
       }
+    });
+  }, [
+    blockAction,
+    currentPermissions.canClearAll,
+    runExclusive,
+    safeLogActivity,
+    setInquiries,
+  ]);
 
-      setInquiries([]);
-
-      await logActivity({
-        action: "Cleared all inquiries",
-        targetType: "inquiries",
-        targetId: "all",
-        details: "Super Admin cleared all inquiry records.",
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Clear inquiries request timed out or failed.");
-    }
-  };
-
-  const clearAppointments = async () => {
+  const clearAppointments = useCallback(async () => {
     if (!currentPermissions.canClearAll) {
       blockAction("Only Super Admin can clear all appointments.");
       return;
     }
 
-    const confirmDelete = confirm(
-      "Are you sure you want to delete all appointments?"
-    );
-    if (!confirmDelete) return;
+    if (!confirm("Are you sure you want to delete all appointments?")) return;
 
-    try {
-      const { error } = await withTimeout(
-        supabase.from("appointments").delete().neq("id", 0),
-        "Clear appointments"
-      );
+    await runExclusive("appointments:clear-all", async () => {
+      try {
+        const { error } = await withTimeout(
+          supabase.from("appointments").delete().neq("id", 0),
+          "Clear appointments"
+        );
 
-      if (error) {
+        if (error) {
+          console.error(error);
+          alert("Failed to clear appointments.");
+          return;
+        }
+
+        setAppointments([]);
+
+        await safeLogActivity({
+          action: "Cleared all appointments",
+          targetType: "appointments",
+          targetId: "all",
+          details: "Super Admin cleared all appointment records.",
+        });
+      } catch (error) {
         console.error(error);
-        alert("Failed to clear appointments.");
+        alert("Clear appointments request timed out or failed.");
+      }
+    });
+  }, [
+    blockAction,
+    currentPermissions.canClearAll,
+    runExclusive,
+    safeLogActivity,
+    setAppointments,
+  ]);
+
+  const downloadCSV = useCallback(
+    (filename, headers, rows) => {
+      if (!currentPermissions.canExport) {
+        blockAction("Only Admin and Super Admin can export data.");
         return;
       }
 
-      setAppointments([]);
+      downloadCSVFile(filename, headers, rows);
+    },
+    [blockAction, currentPermissions.canExport]
+  );
 
-      await logActivity({
-        action: "Cleared all appointments",
-        targetType: "appointments",
-        targetId: "all",
-        details: "Super Admin cleared all appointment records.",
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Clear appointments request timed out or failed.");
-    }
-  };
-
-  const downloadCSV = (filename, headers, rows) => {
-    if (!currentPermissions.canExport) {
-      blockAction("Only Admin and Super Admin can export data.");
-      return;
-    }
-
-    downloadCSVFile(filename, headers, rows);
-  };
-
-  const exportInquiriesToCSV = () => {
+  const exportInquiriesToCSV = useCallback(() => {
     if (!currentPermissions.canExport) {
       blockAction("Only Admin and Super Admin can export inquiries.");
       return;
@@ -498,9 +654,14 @@ export default function useAdminLeadActions({
     ]);
 
     downloadCSV("zaifan-inquiries.csv", headers, rows);
-  };
+  }, [
+    blockAction,
+    currentPermissions.canExport,
+    downloadCSV,
+    inquiries,
+  ]);
 
-  const exportAppointmentsToCSV = () => {
+  const exportAppointmentsToCSV = useCallback(() => {
     if (!currentPermissions.canExport) {
       blockAction("Only Admin and Super Admin can export appointments.");
       return;
@@ -544,7 +705,12 @@ export default function useAdminLeadActions({
     ]);
 
     downloadCSV("zaifan-appointments.csv", headers, rows);
-  };
+  }, [
+    appointments,
+    blockAction,
+    currentPermissions.canExport,
+    downloadCSV,
+  ]);
 
   return {
     deleteInquiry,

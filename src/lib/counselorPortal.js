@@ -61,6 +61,25 @@ const JOURNEY_STAGE_ORDER = [
 
 const nowIso = () => new Date().toISOString();
 
+const WRITE_TIMEOUT_MS = 12000;
+
+async function withWriteTimeout(promise, label = "Counselor write") {
+  let timer;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${WRITE_TIMEOUT_MS}ms.`)),
+      WRITE_TIMEOUT_MS
+    );
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 
 const safeString = (value, fallback = "") => {
@@ -208,11 +227,14 @@ async function insertWithFallback(table, attempts = [], fallbackPayload = {}) {
 
   for (const payload of attempts.map(cleanPayload)) {
     try {
-      const { data, error } = await supabase
-        .from(table)
-        .insert(payload)
-        .select()
-        .maybeSingle();
+      const { data, error } = await withWriteTimeout(
+        supabase
+          .from(table)
+          .insert(payload)
+          .select()
+          .maybeSingle(),
+        `${table} insert`
+      );
 
       if (!error && data) return data;
 
@@ -238,12 +260,15 @@ async function updateByIdWithFallback(table, id, attempts = [], fallbackPayload 
 
   for (const payload of attempts.map(cleanPayload)) {
     try {
-      const { data, error } = await supabase
-        .from(table)
-        .update(payload)
-        .eq("id", id)
-        .select()
-        .maybeSingle();
+      const { data, error } = await withWriteTimeout(
+        supabase
+          .from(table)
+          .update(payload)
+          .eq("id", id)
+          .select()
+          .maybeSingle(),
+        `${table} update`
+      );
 
       if (!error && data) return data;
 

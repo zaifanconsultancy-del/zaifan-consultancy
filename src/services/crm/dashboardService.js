@@ -1,10 +1,17 @@
+function safeLength(value) {
+  return Array.isArray(value) ? value.length : 0;
+}
+
 export function calculateDashboardStats({
   inquiries = [],
   appointments = [],
-}) {
+} = {}) {
+  const totalInquiries = safeLength(inquiries);
+  const totalAppointments = safeLength(appointments);
+
   return {
-    totalInquiries: inquiries.length,
-    totalAppointments: appointments.length,
-    totalLeads: inquiries.length + appointments.length,
+    totalInquiries,
+    totalAppointments,
+    totalLeads: totalInquiries + totalAppointments,
   };
 }

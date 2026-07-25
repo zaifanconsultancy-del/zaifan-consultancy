@@ -14,12 +14,9 @@ import {
 
 import { withTimeout } from "../utils/crm/requestUtils";
 
-const toLower = (value) => String(value || "").toLowerCase().trim();
+const REALTIME_REFRESH_DELAY_MS = 800;
 
-const number = (value, fallback = 0) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
+const toLower = (value) => String(value ?? "").toLowerCase().trim();
 
 const getErrorCode = (error) => String(error?.code || "").trim();
 
@@ -40,7 +37,7 @@ const isMissingColumnError = (error) => {
 
   return (
     code === "42703" ||
-    message.includes("column") && message.includes("does not exist")
+    (message.includes("column") && message.includes("does not exist"))
   );
 };
 
@@ -66,29 +63,29 @@ const isDone = (status) =>
     "executed",
   ].includes(toLower(status));
 
-const isOverdue = (dateValue) => {
+const isOverdue = (dateValue, nowMs = Date.now()) => {
   if (!dateValue) return false;
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return false;
-  return date < new Date();
+  const dateMs = new Date(dateValue).getTime();
+  return Number.isFinite(dateMs) && dateMs < nowMs;
 };
 
 const percent = (value, total) => {
-  if (!total) return 0;
-  return Math.round((Number(value || 0) / Number(total || 1)) * 100);
+  const safeTotal = Number(total || 0);
+  if (!safeTotal) return 0;
+  return Math.round((Number(value || 0) / safeTotal) * 100);
 };
 
 const getAmount = (item = {}) =>
   Number(
-    item.amount ||
-      item.total_amount ||
-      item.invoice_amount ||
-      item.paid_amount ||
-      item.payment_amount ||
-      item.receipt_amount ||
-      item.value ||
+    item.amount ??
+      item.total_amount ??
+      item.invoice_amount ??
+      item.paid_amount ??
+      item.payment_amount ??
+      item.receipt_amount ??
+      item.value ??
       0
-  );
+  ) || 0;
 
 const getRecordDate = (item = {}) =>
   item.created_at ||
@@ -102,25 +99,20 @@ const getRecordDate = (item = {}) =>
   item.generated_at ||
   null;
 
-const isWithinDays = (value, days = 30) => {
+const isWithinDays = (value, days = 30, nowMs = Date.now()) => {
   if (!value) return false;
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
+  const dateMs = new Date(value).getTime();
+  if (!Number.isFinite(dateMs)) return false;
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-
-  return date >= cutoff;
+  return dateMs >= nowMs - days * 86_400_000;
 };
 
-const isThisMonth = (value) => {
+const isThisMonth = (value, now = new Date()) => {
   if (!value) return false;
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return false;
-
-  const now = new Date();
 
   return (
     date.getFullYear() === now.getFullYear() &&
@@ -128,10 +120,18 @@ const isThisMonth = (value) => {
   );
 };
 
-const getMonthLabel = (value) => {
-  const date = new Date(value || Date.now());
+const getMonthKey = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
 
-  if (Number.isNaN(date.getTime())) return "Unknown";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const formatMonthKey = (key) => {
+  if (!key) return "Unknown";
+
+  const [year, month] = key.split("-").map(Number);
+  const date = new Date(year, month - 1, 1);
 
   return date.toLocaleString("en-GB", {
     month: "short",
@@ -150,16 +150,20 @@ const getStudentName = (item = {}) =>
 const buildMonthlyTrend = (items = [], valueResolver = getAmount, limit = 6) => {
   const buckets = new Map();
 
-  items.forEach((item) => {
-    const label = getMonthLabel(getRecordDate(item));
-    const current = buckets.get(label) || 0;
+  for (const item of items) {
+    const key = getMonthKey(getRecordDate(item));
+    if (!key) continue;
 
-    buckets.set(label, current + Number(valueResolver(item) || 0));
-  });
+    buckets.set(key, (buckets.get(key) || 0) + Number(valueResolver(item) || 0));
+  }
 
   return [...buckets.entries()]
-    .map(([label, value]) => ({ label, value }))
-    .slice(-limit);
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-limit)
+    .map(([key, value]) => ({
+      label: formatMonthKey(key),
+      value,
+    }));
 };
 
 const buildRevenueMetrics = ({
@@ -168,80 +172,76 @@ const buildRevenueMetrics = ({
   studentReceipts = [],
   counselorPaymentRequests = [],
 }) => {
-  const invoiceValue = studentInvoices.reduce(
-    (sum, invoice) => sum + getAmount(invoice),
-    0
-  );
+  const nowMs = Date.now();
+  const now = new Date(nowMs);
 
-  const paidValue = studentPayments.reduce(
-    (sum, payment) => sum + getAmount(payment),
-    0
-  );
+  let invoiceValue = 0;
+  let paidValue = 0;
+  let outstandingValue = 0;
+  let currentMonthInvoiceValue = 0;
+  let currentMonthPaidValue = 0;
+  let recentInvoiceValue = 0;
+  let recentPaymentValue = 0;
 
-  const unpaidInvoices = studentInvoices.filter((invoice) => {
-    const status = toLower(invoice.status || invoice.payment_status);
-    return !status.includes("paid") && !status.includes("complete");
-  });
+  const unpaidInvoices = [];
+  const staleInvoices = [];
+  const pendingReceipts = [];
+  const approvedReceipts = [];
+  const rejectedReceipts = [];
 
-  const outstandingValue = studentInvoices.reduce((sum, invoice) => {
-    const status = toLower(invoice.status || invoice.payment_status);
+  for (const invoice of studentInvoices) {
     const amount = getAmount(invoice);
-    const outstanding = Number(invoice.outstanding_amount || invoice.balance || 0);
+    const status = toLower(invoice.status || invoice.payment_status);
+    const date = getRecordDate(invoice);
 
-    if (status.includes("paid") || status.includes("complete")) return sum;
+    invoiceValue += amount;
 
-    return sum + (outstanding || amount);
-  }, 0);
+    if (isThisMonth(date, now)) currentMonthInvoiceValue += amount;
+    if (isWithinDays(date, 30, nowMs)) recentInvoiceValue += amount;
 
-  const pendingReceipts = studentReceipts.filter((receipt) => {
+    if (!status.includes("paid") && !status.includes("complete")) {
+      unpaidInvoices.push(invoice);
+
+      const explicitOutstanding = Number(
+        invoice.outstanding_amount ?? invoice.balance ?? 0
+      );
+
+      outstandingValue += explicitOutstanding || amount;
+
+      const dueDate =
+        invoice.due_date ||
+        invoice.invoice_due_date ||
+        invoice.created_at ||
+        invoice.updated_at;
+
+      if (isOverdue(dueDate, nowMs)) {
+        staleInvoices.push(invoice);
+      }
+    }
+  }
+
+  for (const payment of studentPayments) {
+    const amount = getAmount(payment);
+    const date = getRecordDate(payment);
+
+    paidValue += amount;
+    if (isThisMonth(date, now)) currentMonthPaidValue += amount;
+    if (isWithinDays(date, 30, nowMs)) recentPaymentValue += amount;
+  }
+
+  for (const receipt of studentReceipts) {
     const status = toLower(
       receipt.status || receipt.receipt_status || receipt.approval_status
     );
 
-    return !status.includes("approved") && !status.includes("rejected");
-  });
-
-  const approvedReceipts = studentReceipts.filter((receipt) => {
-    const status = toLower(
-      receipt.status || receipt.receipt_status || receipt.approval_status
-    );
-
-    return status.includes("approved");
-  });
-
-  const rejectedReceipts = studentReceipts.filter((receipt) => {
-    const status = toLower(
-      receipt.status || receipt.receipt_status || receipt.approval_status
-    );
-
-    return status.includes("rejected");
-  });
-
-  const currentMonthInvoiceValue = studentInvoices
-    .filter((invoice) => isThisMonth(getRecordDate(invoice)))
-    .reduce((sum, invoice) => sum + getAmount(invoice), 0);
-
-  const currentMonthPaidValue = studentPayments
-    .filter((payment) => isThisMonth(getRecordDate(payment)))
-    .reduce((sum, payment) => sum + getAmount(payment), 0);
-
-  const recentInvoiceValue = studentInvoices
-    .filter((invoice) => isWithinDays(getRecordDate(invoice), 30))
-    .reduce((sum, invoice) => sum + getAmount(invoice), 0);
-
-  const recentPaymentValue = studentPayments
-    .filter((payment) => isWithinDays(getRecordDate(payment), 30))
-    .reduce((sum, payment) => sum + getAmount(payment), 0);
-
-  const staleInvoices = unpaidInvoices.filter((invoice) => {
-    const dateValue =
-      invoice.due_date ||
-      invoice.invoice_due_date ||
-      invoice.created_at ||
-      invoice.updated_at;
-
-    return dateValue && isOverdue(dateValue);
-  });
+    if (status.includes("approved")) {
+      approvedReceipts.push(receipt);
+    } else if (status.includes("rejected")) {
+      rejectedReceipts.push(receipt);
+    } else {
+      pendingReceipts.push(receipt);
+    }
+  }
 
   const highValueOutstanding = unpaidInvoices
     .filter((invoice) => getAmount(invoice) >= 1000)
@@ -293,82 +293,84 @@ const buildRevenueMetrics = ({
 };
 
 const buildPortalUsageMetrics = ({ studentPortalAccounts = [] }) => {
-  const activeAccounts = studentPortalAccounts.filter((account) => {
+  const nowMs = Date.now();
+
+  const passwordResetRequired = [];
+  const staleAccounts = [];
+  const inactiveAccounts = [];
+  const neverLoggedIn = [];
+
+  let activeAccountsCount = 0;
+  let loginTrackedAccountsCount = 0;
+  let recentlyActiveAccountsCount = 0;
+  let activeIn30DaysCount = 0;
+
+  for (const account of studentPortalAccounts) {
     const active = account.is_active ?? account.active ?? account.status;
+    const normalizedActive = toLower(active);
+    const isActive =
+      typeof active === "boolean"
+        ? active
+        : !["inactive", "disabled", "blocked", "false"].includes(
+            normalizedActive
+          );
 
-    if (typeof active === "boolean") return active;
+    if (isActive) {
+      activeAccountsCount += 1;
+    } else {
+      inactiveAccounts.push(account);
+    }
 
-    return !["inactive", "disabled", "blocked", "false"].includes(
-      toLower(active)
-    );
-  });
+    if (account.must_change_password || account.force_password_change) {
+      passwordResetRequired.push(account);
+    }
 
-  const inactiveAccounts = studentPortalAccounts.filter((account) => {
-    const active = account.is_active ?? account.active ?? account.status;
-
-    if (typeof active === "boolean") return !active;
-
-    return ["inactive", "disabled", "blocked", "false"].includes(toLower(active));
-  });
-
-  const passwordResetRequired = studentPortalAccounts.filter(
-    (account) => account.must_change_password || account.force_password_change
-  );
-
-  const loginTrackedAccounts = studentPortalAccounts.filter(
-    (account) => account.last_login_at || account.last_login || account.last_seen_at
-  );
-
-  const recentlyActiveAccounts = studentPortalAccounts.filter((account) => {
     const lastLogin =
       account.last_login_at || account.last_login || account.last_seen_at;
 
-    return isWithinDays(lastLogin, 7);
-  });
+    if (lastLogin) {
+      loginTrackedAccountsCount += 1;
 
-  const activeIn30Days = studentPortalAccounts.filter((account) => {
-    const lastLogin =
-      account.last_login_at || account.last_login || account.last_seen_at;
+      if (isWithinDays(lastLogin, 7, nowMs)) {
+        recentlyActiveAccountsCount += 1;
+      }
 
-    return isWithinDays(lastLogin, 30);
-  });
-
-  const staleAccounts = studentPortalAccounts.filter((account) => {
-    const lastLogin =
-      account.last_login_at || account.last_login || account.last_seen_at;
-
-    return !lastLogin || !isWithinDays(lastLogin, 30);
-  });
-
-  const neverLoggedIn = studentPortalAccounts.filter((account) => {
-    const lastLogin =
-      account.last_login_at || account.last_login || account.last_seen_at;
-
-    return !lastLogin;
-  });
+      if (isWithinDays(lastLogin, 30, nowMs)) {
+        activeIn30DaysCount += 1;
+      } else {
+        staleAccounts.push(account);
+      }
+    } else {
+      neverLoggedIn.push(account);
+      staleAccounts.push(account);
+    }
+  }
 
   return {
     totalAccounts: studentPortalAccounts.length,
 
-    activeAccountsCount: activeAccounts.length,
+    activeAccountsCount,
     inactiveAccountsCount: inactiveAccounts.length,
     passwordResetRequiredCount: passwordResetRequired.length,
-    loginTrackedAccountsCount: loginTrackedAccounts.length,
-    recentlyActiveAccountsCount: recentlyActiveAccounts.length,
-    activeIn30DaysCount: activeIn30Days.length,
+    loginTrackedAccountsCount,
+    recentlyActiveAccountsCount,
+    activeIn30DaysCount,
     staleAccountsCount: staleAccounts.length,
     neverLoggedInCount: neverLoggedIn.length,
 
-    activationRate: percent(activeAccounts.length, studentPortalAccounts.length),
+    activationRate: percent(activeAccountsCount, studentPortalAccounts.length),
     loginCoverageRate: percent(
-      loginTrackedAccounts.length,
+      loginTrackedAccountsCount,
       studentPortalAccounts.length
     ),
     recentActivityRate: percent(
-      recentlyActiveAccounts.length,
+      recentlyActiveAccountsCount,
       studentPortalAccounts.length
     ),
-    monthlyActivityRate: percent(activeIn30Days.length, studentPortalAccounts.length),
+    monthlyActivityRate: percent(
+      activeIn30DaysCount,
+      studentPortalAccounts.length
+    ),
 
     portalRiskScore:
       passwordResetRequired.length +
@@ -384,53 +386,64 @@ const buildPortalUsageMetrics = ({ studentPortalAccounts = [] }) => {
 };
 
 const buildSupportMetrics = ({ supportRequests = [] }) => {
-  const openRequests = supportRequests.filter((request) => {
+  const nowMs = Date.now();
+
+  const openRequests = [];
+  const pendingResponses = [];
+  const escalatedRequests = [];
+  const recentRequests = [];
+
+  let resolvedRequestsCount = 0;
+
+  for (const request of supportRequests) {
     const status = toLower(request.status || request.request_status);
+    const priority = toLower(request.priority || request.severity);
+    const resolved =
+      status.includes("resolved") || status.includes("closed");
 
-    return !status.includes("resolved") && !status.includes("closed");
-  });
+    if (resolved) {
+      resolvedRequestsCount += 1;
+    } else {
+      openRequests.push(request);
+    }
 
-  const pendingResponses = supportRequests.filter((request) => {
-    const status = toLower(request.status || request.request_status);
-
-    return (
+    if (
       status.includes("pending") ||
       status.includes("waiting") ||
       status.includes("open")
-    );
-  });
+    ) {
+      pendingResponses.push(request);
+    }
 
-  const escalatedRequests = supportRequests.filter((request) => {
-    const status = toLower(request.status || request.request_status);
-    const priority = toLower(request.priority || request.severity);
-
-    return (
+    if (
       status.includes("escalated") ||
       priority.includes("urgent") ||
       priority.includes("high") ||
       priority.includes("critical")
-    );
-  });
+    ) {
+      escalatedRequests.push(request);
+    }
 
-  const resolvedRequests = supportRequests.filter((request) => {
-    const status = toLower(request.status || request.request_status);
-
-    return status.includes("resolved") || status.includes("closed");
-  });
-
-  const recentRequests = supportRequests.filter((request) =>
-    isWithinDays(request.created_at || request.updated_at || request.submitted_at, 7)
-  );
+    if (
+      isWithinDays(
+        request.created_at || request.updated_at || request.submitted_at,
+        7,
+        nowMs
+      )
+    ) {
+      recentRequests.push(request);
+    }
+  }
 
   return {
     totalRequests: supportRequests.length,
     openRequestsCount: openRequests.length,
     pendingResponsesCount: pendingResponses.length,
     escalatedRequestsCount: escalatedRequests.length,
-    resolvedRequestsCount: resolvedRequests.length,
+    resolvedRequestsCount,
     recentRequestsCount: recentRequests.length,
 
-    resolutionRate: percent(resolvedRequests.length, supportRequests.length),
+    resolutionRate: percent(resolvedRequestsCount, supportRequests.length),
 
     supportPressureScore:
       openRequests.length + pendingResponses.length + escalatedRequests.length * 2,
@@ -447,49 +460,55 @@ const buildAutomationMetrics = ({
   automationQueue = [],
   executiveActionQueue = [],
 }) => {
-  const allQueue = [...automationQueue, ...executiveActionQueue];
+  const successfulExecutions = [];
+  const failedExecutions = [];
+  const pendingApprovals = [];
+  const duplicateBlockedExecutions = [];
+  const queuedActions = [];
 
-  const successfulExecutions = executiveExecutionLogs.filter((log) => {
-    const status = toLower(log.status || log.execution_status || log.approval_status);
+  for (const log of executiveExecutionLogs) {
+    const status = toLower(
+      log.status || log.execution_status || log.approval_status
+    );
+    const error = log.error_message || log.error || log.failure_reason;
 
-    return (
+    if (
       status.includes("success") ||
       status.includes("executed") ||
       status.includes("completed") ||
       status.includes("approved")
-    );
-  });
+    ) {
+      successfulExecutions.push(log);
+    }
 
-  const failedExecutions = executiveExecutionLogs.filter((log) => {
-    const status = toLower(log.status || log.execution_status || log.approval_status);
-    const error = log.error_message || log.error || log.failure_reason;
+    if (status.includes("failed") || status.includes("error") || Boolean(error)) {
+      failedExecutions.push(log);
+    }
 
-    return status.includes("failed") || status.includes("error") || Boolean(error);
-  });
-
-  const pendingApprovals = executiveExecutionLogs.filter((log) => {
-    const approval = toLower(log.approval_status || log.status);
-
-    return (
-      approval.includes("pending") ||
-      approval.includes("queued") ||
-      approval.includes("waiting")
-    );
-  });
-
-  const duplicateBlockedExecutions = executiveExecutionLogs.filter(
-    (log) => log.duplicate_detected || log.duplicate_blocked
-  );
-
-  const queuedActions = allQueue.filter((item) => {
-    const status = toLower(item.status || item.approval_status);
-
-    return (
+    if (
       status.includes("pending") ||
       status.includes("queued") ||
       status.includes("waiting")
-    );
-  });
+    ) {
+      pendingApprovals.push(log);
+    }
+
+    if (log.duplicate_detected || log.duplicate_blocked) {
+      duplicateBlockedExecutions.push(log);
+    }
+  }
+
+  for (const item of [...automationQueue, ...executiveActionQueue]) {
+    const status = toLower(item.status || item.approval_status);
+
+    if (
+      status.includes("pending") ||
+      status.includes("queued") ||
+      status.includes("waiting")
+    ) {
+      queuedActions.push(item);
+    }
+  }
 
   const recentExecutions = [...executiveExecutionLogs]
     .sort((a, b) => {
@@ -541,112 +560,137 @@ const buildJourneyMetrics = ({
   studentRiskScores = [],
   followUpReminders = [],
 }) => {
-  const submittedApplications = studentApplications.filter((app) => {
-    const status = toLower(app.application_status || app.status);
+  const nowMs = Date.now();
 
-    return (
+  let submittedApplicationsCount = 0;
+  let offerReceivedCount = 0;
+  let offerAcceptedCount = 0;
+  let casIssuedCount = 0;
+  let visaSubmittedCount = 0;
+  let visaApprovedCount = 0;
+  let dreamUniversitiesCount = 0;
+  let targetUniversitiesCount = 0;
+  let safeUniversitiesCount = 0;
+
+  const casDelays = [];
+  const visaDelays = [];
+  const pendingDocuments = [];
+  const pendingTasks = [];
+  const overdueTasks = [];
+  const highRiskStudents = [];
+  const criticalRiskStudents = [];
+  const overdueReminders = [];
+
+  for (const app of studentApplications) {
+    const status = toLower(app.application_status || app.status);
+    const offer = toLower(app.offer_status || app.status);
+    const cas = toLower(app.cas_status || app.cas);
+    const visa = toLower(app.visa_status || app.visa);
+
+    if (
       status.includes("submit") ||
       status.includes("applied") ||
       status.includes("review")
-    );
-  });
+    ) {
+      submittedApplicationsCount += 1;
+    }
 
-  const offerReceived = studentApplications.filter((app) => {
-    const offer = toLower(app.offer_status || app.status);
+    if (offer.includes("received") || offer.includes("offer")) {
+      offerReceivedCount += 1;
+    }
 
-    return offer.includes("received") || offer.includes("offer");
-  });
+    if (offer.includes("accepted") || offer.includes("firm")) {
+      offerAcceptedCount += 1;
 
-  const offerAccepted = studentApplications.filter((app) => {
-    const offer = toLower(app.offer_status || app.status);
+      if (!cas.includes("issued")) {
+        casDelays.push(app);
+      }
+    }
 
-    return offer.includes("accepted") || offer.includes("firm");
-  });
+    if (cas.includes("issued")) {
+      casIssuedCount += 1;
 
-  const casIssued = studentApplications.filter((app) =>
-    toLower(app.cas_status || app.cas).includes("issued")
-  );
+      if (!visa.includes("approved")) {
+        visaDelays.push(app);
+      }
+    }
 
-  const casDelays = studentApplications.filter((app) => {
-    const offer = toLower(app.offer_status || app.status);
-    const cas = toLower(app.cas_status || app.cas);
-
-    return (offer.includes("accepted") || offer.includes("firm")) && !cas.includes("issued");
-  });
-
-  const visaSubmitted = studentApplications.filter((app) => {
-    const visa = toLower(app.visa_status || app.visa);
-
-    return (
+    if (
       visa.includes("submitted") ||
       visa.includes("processing") ||
       visa.includes("pending")
+    ) {
+      visaSubmittedCount += 1;
+    }
+
+    if (visa.includes("approved")) {
+      visaApprovedCount += 1;
+    }
+  }
+
+  for (const doc of studentDocuments) {
+    if (!isDone(doc.status || doc.document_status || doc.verification_status)) {
+      pendingDocuments.push(doc);
+    }
+  }
+
+  for (const task of studentTasks) {
+    if (!isDone(task.status || task.task_status)) {
+      pendingTasks.push(task);
+
+      if (
+        isOverdue(task.due_date || task.deadline || task.target_date, nowMs)
+      ) {
+        overdueTasks.push(task);
+      }
+    }
+  }
+
+  for (const risk of studentRiskScores) {
+    const level = toLower(risk.risk_level || risk.priority || risk.level);
+    const score = Number(
+      risk.risk_score ?? risk.score ?? risk.overall_score ?? 0
     );
-  });
 
-  const visaApproved = studentApplications.filter((app) =>
-    toLower(app.visa_status || app.visa).includes("approved")
-  );
+    if (level.includes("critical") || score >= 85) {
+      criticalRiskStudents.push(risk);
+      highRiskStudents.push(risk);
+    } else if (level.includes("high") || score >= 70) {
+      highRiskStudents.push(risk);
+    }
+  }
 
-  const visaDelays = studentApplications.filter((app) => {
-    const cas = toLower(app.cas_status || app.cas);
-    const visa = toLower(app.visa_status || app.visa);
-
-    return cas.includes("issued") && !visa.includes("approved");
-  });
-
-  const pendingDocuments = studentDocuments.filter(
-    (doc) => !isDone(doc.status || doc.document_status || doc.verification_status)
-  );
-
-  const pendingTasks = studentTasks.filter(
-    (task) => !isDone(task.status || task.task_status)
-  );
-
-  const overdueTasks = pendingTasks.filter((task) =>
-    isOverdue(task.due_date || task.deadline || task.target_date)
-  );
-
-  const highRiskStudents = studentRiskScores.filter((risk) => {
-    const level = toLower(risk.risk_level || risk.priority || risk.level);
-    const score = Number(risk.risk_score || risk.score || risk.overall_score || 0);
-
-    return level.includes("high") || level.includes("critical") || score >= 70;
-  });
-
-  const criticalRiskStudents = studentRiskScores.filter((risk) => {
-    const level = toLower(risk.risk_level || risk.priority || risk.level);
-    const score = Number(risk.risk_score || risk.score || risk.overall_score || 0);
-
-    return level.includes("critical") || score >= 85;
-  });
-
-  const overdueReminders = followUpReminders.filter((reminder) => {
+  for (const reminder of followUpReminders) {
     const dueDate = reminder.due_date || reminder.reminder_date || reminder.date;
-    return isOverdue(dueDate) && !isDone(reminder.status);
-  });
 
-  const dreamUniversities = studentUniversities.filter((uni) =>
-    toLower(uni.preference_type || uni.category || uni.type).includes("dream")
-  );
+    if (isOverdue(dueDate, nowMs) && !isDone(reminder.status)) {
+      overdueReminders.push(reminder);
+    }
+  }
 
-  const targetUniversities = studentUniversities.filter((uni) =>
-    toLower(uni.preference_type || uni.category || uni.type).includes("target")
-  );
+  for (const uni of studentUniversities) {
+    const preference = toLower(
+      uni.preference_type || uni.category || uni.type
+    );
 
-  const safeUniversities = studentUniversities.filter((uni) =>
-    toLower(uni.preference_type || uni.category || uni.type).includes("safe")
-  );
+    if (preference.includes("dream")) {
+      dreamUniversitiesCount += 1;
+    } else if (preference.includes("target")) {
+      targetUniversitiesCount += 1;
+    } else if (preference.includes("safe")) {
+      safeUniversitiesCount += 1;
+    }
+  }
 
   return {
     applicationsCount: studentApplications.length,
-    submittedApplicationsCount: submittedApplications.length,
-    offerReceivedCount: offerReceived.length,
-    offerAcceptedCount: offerAccepted.length,
-    casIssuedCount: casIssued.length,
+    submittedApplicationsCount,
+    offerReceivedCount,
+    offerAcceptedCount,
+    casIssuedCount,
     casDelaysCount: casDelays.length,
-    visaSubmittedCount: visaSubmitted.length,
-    visaApprovedCount: visaApproved.length,
+    visaSubmittedCount,
+    visaApprovedCount,
     visaDelaysCount: visaDelays.length,
 
     documentsCount: studentDocuments.length,
@@ -665,9 +709,9 @@ const buildJourneyMetrics = ({
     ),
 
     universityPlansCount: studentUniversities.length,
-    dreamUniversitiesCount: dreamUniversities.length,
-    targetUniversitiesCount: targetUniversities.length,
-    safeUniversitiesCount: safeUniversities.length,
+    dreamUniversitiesCount,
+    targetUniversitiesCount,
+    safeUniversitiesCount,
 
     highRiskStudentsCount: highRiskStudents.length,
     criticalRiskStudentsCount: criticalRiskStudents.length,
@@ -714,32 +758,34 @@ const buildNotificationMetrics = ({
     counselorPaymentRequests,
   });
 
-  const portal = buildPortalUsageMetrics({
-    studentPortalAccounts,
-  });
-
-  const support = buildSupportMetrics({
-    supportRequests,
-  });
-
+  const portal = buildPortalUsageMetrics({ studentPortalAccounts });
+  const support = buildSupportMetrics({ supportRequests });
   const automation = buildAutomationMetrics({
     executiveExecutionLogs,
     automationQueue,
     executiveActionQueue,
   });
 
-  const newInquiries = inquiries.filter((inquiry) => {
-    const status = toLower(inquiry.status || inquiry.lead_status);
-    return status.includes("new") || status.includes("pending");
-  }).length;
+  let newInquiries = 0;
+  let pendingAppointments = 0;
 
-  const pendingAppointments = appointments.filter((appointment) => {
-    const status = toLower(appointment.status || appointment.appointment_status);
-    return status.includes("pending") || status.includes("requested");
-  }).length;
+  for (const inquiry of inquiries) {
+    const status = toLower(inquiry.status || inquiry.lead_status);
+    if (status.includes("new") || status.includes("pending")) {
+      newInquiries += 1;
+    }
+  }
+
+  for (const appointment of appointments) {
+    const status = toLower(
+      appointment.status || appointment.appointment_status
+    );
+    if (status.includes("pending") || status.includes("requested")) {
+      pendingAppointments += 1;
+    }
+  }
 
   const crmAlerts = newInquiries + pendingAppointments;
-
   const executiveAlerts =
     journey.highRiskStudentsCount + journey.criticalRiskStudentsCount;
 
@@ -845,14 +891,8 @@ const buildAlertCommandCenter = ({
     counselorPaymentRequests,
   });
 
-  const portal = buildPortalUsageMetrics({
-    studentPortalAccounts,
-  });
-
-  const support = buildSupportMetrics({
-    supportRequests,
-  });
-
+  const portal = buildPortalUsageMetrics({ studentPortalAccounts });
+  const support = buildSupportMetrics({ supportRequests });
   const automation = buildAutomationMetrics({
     executiveExecutionLogs,
     automationQueue,
@@ -1012,87 +1052,109 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
 
-  const mountedRef = useRef(true);
-  const loadingRef = useRef(false);
+  const mountedRef = useRef(false);
+  const fetchGenerationRef = useRef(0);
+  const inFlightFetchRef = useRef(null);
+  const queuedRefreshRef = useRef(false);
   const realtimeTimeoutRef = useRef(null);
 
-  const safeSetState = (callback) => {
+  const safeSetState = useCallback((callback) => {
     if (mountedRef.current) callback();
-  };
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
 
     return () => {
       mountedRef.current = false;
+      fetchGenerationRef.current += 1;
+
+      if (realtimeTimeoutRef.current !== null) {
+        window.clearTimeout(realtimeTimeoutRef.current);
+        realtimeTimeoutRef.current = null;
+      }
     };
   }, []);
 
-  const safeFetchTable = useCallback(async ({
-    table,
-    label,
-    setter,
-    orderBy = "created_at",
-    ascending = false,
-    optional = false,
-  }) => {
-    const commitRows = (rows = []) => {
-      const safeRows = Array.isArray(rows) ? rows : [];
-      safeSetState(() => setter(safeRows));
-      return safeRows;
-    };
+  const safeFetchTable = useCallback(
+    async ({
+      table,
+      label,
+      setter,
+      orderBy = "created_at",
+      ascending = false,
+      optional = false,
+      generation,
+    }) => {
+      const commitRows = (rows = []) => {
+        const safeRows = Array.isArray(rows) ? rows : [];
 
-    const runQuery = async (column = orderBy) => {
-      let query = supabase.from(table).select("*");
+        if (
+          mountedRef.current &&
+          generation === fetchGenerationRef.current
+        ) {
+          setter(safeRows);
+        }
 
-      if (column) {
-        query = query.order(column, { ascending });
-      }
+        return safeRows;
+      };
 
-      return withTimeout(query, `${label} fetch`);
-    };
+      const runQuery = async (column = orderBy) => {
+        let query = supabase.from(table).select("*");
 
-    try {
-      let response = await runQuery(orderBy);
+        if (column) {
+          query = query.order(column, { ascending });
+        }
 
-      // A missing sort column should never kill the whole Admin OS.
-      // Retry the same table without ordering so the feature can remain usable.
-      if (response?.error && orderBy && isMissingColumnError(response.error)) {
-        console.warn(
-          `${label}: column "${orderBy}" is unavailable; retrying without ordering.`,
-          response.error
-        );
+        return withTimeout(query, `${label} fetch`);
+      };
 
-        response = await runQuery(null);
-      }
+      try {
+        let response = await runQuery(orderBy);
 
-      if (response?.error) {
-        if (optional && isMissingTableError(response.error)) {
+        if (response?.error && orderBy && isMissingColumnError(response.error)) {
+          console.warn(
+            `${label}: column "${orderBy}" is unavailable; retrying without ordering.`,
+            response.error
+          );
+
+          response = await runQuery(null);
+        }
+
+        if (response?.error) {
+          if (optional && isMissingTableError(response.error)) {
+            console.warn(
+              `${label}: optional table "${table}" is not present in this Supabase schema. Feature disabled safely.`
+            );
+            return commitRows([]);
+          }
+
+          console.error(formatFetchError(label, response.error), response.error);
+          commitRows([]);
+          throw response.error;
+        }
+
+        return commitRows(response?.data || []);
+      } catch (error) {
+        if (optional && isMissingTableError(error)) {
           console.warn(
             `${label}: optional table "${table}" is not present in this Supabase schema. Feature disabled safely.`
           );
           return commitRows([]);
         }
 
-        console.error(formatFetchError(label, response.error), response.error);
-        return commitRows([]);
+        if (!error?.message || !String(error.message).includes(label)) {
+          console.error(`${label} fetch timeout/error:`, error);
+        }
+
+        commitRows([]);
+        throw error;
       }
+    },
+    []
+  );
 
-      return commitRows(response?.data || []);
-    } catch (error) {
-      if (optional && isMissingTableError(error)) {
-        console.warn(
-          `${label}: optional table "${table}" is not present in this Supabase schema. Feature disabled safely.`
-        );
-        return commitRows([]);
-      }
-
-      console.error(`${label} fetch timeout/error:`, error);
-      return commitRows([]);
-    }
-  }, []);
-
-  const fetchAssignmentsForLeadType = async (leadType, ids = []) => {
+  const fetchAssignmentsForLeadType = useCallback(async (leadType, ids = []) => {
     if (!ids.length) return [];
 
     try {
@@ -1111,70 +1173,93 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
       console.error("Assignment timeout/error:", error);
       return [];
     }
-  };
+  }, []);
 
-  const fetchInquiries = async () => {
-    const { data, error } = await withTimeout(
-      fetchInquiryRows(),
-      "Inquiries fetch"
-    );
-
-    if (error) throw new Error("Failed to load inquiries.");
-
-    const inquiryRows = data || [];
-    const inquiryIds = inquiryRows.map((item) => String(item.id));
-
-    const assignments = await fetchAssignmentsForLeadType("inquiry", inquiryIds);
-
-    const mergedInquiries = inquiryRows.map((inquiry) => {
-      const assignment = assignments.find(
-        (item) => String(item.lead_id) === String(inquiry.id)
+  const fetchInquiries = useCallback(
+    async (generation) => {
+      const { data, error } = await withTimeout(
+        fetchInquiryRows(),
+        "Inquiries fetch"
       );
 
-      return {
-        ...inquiry,
-        assigned_admin_id: assignment?.assigned_admin_id || null,
-        assigned_admin_name: assignment?.assigned_admin_name || null,
-      };
-    });
+      if (error) throw new Error("Failed to load inquiries.");
 
-    safeSetState(() => setInquiries(mergedInquiries));
-    return mergedInquiries;
-  };
-
-  const fetchAppointments = async () => {
-    const { data, error } = await withTimeout(
-      fetchAppointmentRows(),
-      "Appointments fetch"
-    );
-
-    if (error) throw new Error("Failed to load appointments.");
-
-    const appointmentRows = data || [];
-    const appointmentIds = appointmentRows.map((item) => String(item.id));
-
-    const assignments = await fetchAssignmentsForLeadType(
-      "appointment",
-      appointmentIds
-    );
-
-    const mergedAppointments = appointmentRows.map((appointment) => {
-      const assignment = assignments.find(
-        (item) => String(item.lead_id) === String(appointment.id)
+      const inquiryRows = Array.isArray(data) ? data : [];
+      const inquiryIds = inquiryRows.map((item) => String(item.id));
+      const assignments = await fetchAssignmentsForLeadType(
+        "inquiry",
+        inquiryIds
       );
 
-      return {
-        ...appointment,
-        assigned_admin_id: assignment?.assigned_admin_id || null,
-        assigned_admin_name: assignment?.assigned_admin_name || null,
-      };
-    });
+      const assignmentByLeadId = new Map(
+        assignments.map((item) => [String(item.lead_id), item])
+      );
 
-    safeSetState(() => setAppointments(mergedAppointments));
-    return mergedAppointments;
-  };
+      const mergedInquiries = inquiryRows.map((inquiry) => {
+        const assignment = assignmentByLeadId.get(String(inquiry.id));
 
-  const fetchFollowUpReminders = async () => {
+        return {
+          ...inquiry,
+          assigned_admin_id: assignment?.assigned_admin_id || null,
+          assigned_admin_name: assignment?.assigned_admin_name || null,
+        };
+      });
+
+      if (
+        mountedRef.current &&
+        generation === fetchGenerationRef.current
+      ) {
+        setInquiries(mergedInquiries);
+      }
+
+      return mergedInquiries;
+    },
+    [fetchAssignmentsForLeadType]
+  );
+
+  const fetchAppointments = useCallback(
+    async (generation) => {
+      const { data, error } = await withTimeout(
+        fetchAppointmentRows(),
+        "Appointments fetch"
+      );
+
+      if (error) throw new Error("Failed to load appointments.");
+
+      const appointmentRows = Array.isArray(data) ? data : [];
+      const appointmentIds = appointmentRows.map((item) => String(item.id));
+      const assignments = await fetchAssignmentsForLeadType(
+        "appointment",
+        appointmentIds
+      );
+
+      const assignmentByLeadId = new Map(
+        assignments.map((item) => [String(item.lead_id), item])
+      );
+
+      const mergedAppointments = appointmentRows.map((appointment) => {
+        const assignment = assignmentByLeadId.get(String(appointment.id));
+
+        return {
+          ...appointment,
+          assigned_admin_id: assignment?.assigned_admin_id || null,
+          assigned_admin_name: assignment?.assigned_admin_name || null,
+        };
+      });
+
+      if (
+        mountedRef.current &&
+        generation === fetchGenerationRef.current
+      ) {
+        setAppointments(mergedAppointments);
+      }
+
+      return mergedAppointments;
+    },
+    [fetchAssignmentsForLeadType]
+  );
+
+  const fetchFollowUpReminders = useCallback(async (generation) => {
     try {
       const { data, error } = await withTimeout(
         fetchFollowUpReminderRows(),
@@ -1186,219 +1271,255 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
         return [];
       }
 
-      const rows = data || [];
-      safeSetState(() => setFollowUpReminders(rows));
+      const rows = Array.isArray(data) ? data : [];
+
+      if (
+        mountedRef.current &&
+        generation === fetchGenerationRef.current
+      ) {
+        setFollowUpReminders(rows);
+      }
+
       return rows;
     } catch (error) {
       console.error("Follow-up reminders fetch timeout/error:", error);
-      safeSetState(() => setFollowUpReminders([]));
-      return [];
-    }
-  };
 
-  const fetchStudentApplications = async () =>
-    safeFetchTable({
-      table: "student_applications",
-      label: "Student applications",
-      setter: setStudentApplications,
-      // Do not assume generated_at exists. Most application rows already
-      // expose created_at/updated_at, and safeFetchTable will retry without
-      // ordering if the selected sort column is unavailable.
-      orderBy: "created_at",
-    });
-
-  const fetchStudentDocuments = async () =>
-    safeFetchTable({
-      table: "student_documents",
-      label: "Student documents",
-      setter: setStudentDocuments,
-      orderBy: "created_at",
-    });
-
-  const fetchStudentTasks = async () =>
-    safeFetchTable({
-      table: "student_tasks",
-      label: "Student tasks",
-      setter: setStudentTasks,
-      orderBy: "created_at",
-    });
-
-  const fetchStudentUniversities = async () =>
-    safeFetchTable({
-      table: "student_universities",
-      label: "Student universities",
-      setter: setStudentUniversities,
-      orderBy: "created_at",
-    });
-
-  const fetchStudentRiskScores = async () =>
-    safeFetchTable({
-      table: "ai_student_risk_scores",
-      label: "Student risk scores",
-      setter: setStudentRiskScores,
-      orderBy: "generated_at",
-    });
-
-  const fetchStudentInvoices = async () =>
-    safeFetchTable({
-      table: "student_invoices",
-      label: "Student invoices",
-      setter: setStudentInvoices,
-      orderBy: "created_at",
-    });
-
-  const fetchStudentPayments = async () =>
-    safeFetchTable({
-      table: "student_payments",
-      label: "Student payments",
-      setter: setStudentPayments,
-      orderBy: "created_at",
-    });
-
-  const fetchStudentReceipts = async () =>
-    safeFetchTable({
-      table: "student_receipts",
-      label: "Student receipts",
-      setter: setStudentReceipts,
-      orderBy: "created_at",
-    });
-
-  const fetchStudentPortalAccounts = async () =>
-    safeFetchTable({
-      table: "student_portal_accounts",
-      label: "Student portal accounts",
-      setter: setStudentPortalAccounts,
-      orderBy: "created_at",
-    });
-
-  const fetchSupportRequests = async () =>
-    safeFetchTable({
-      table: "student_support_requests",
-      label: "Student support requests",
-      setter: setSupportRequests,
-      orderBy: "created_at",
-    });
-
-  const fetchCounselorPaymentRequests = async () =>
-    safeFetchTable({
-      table: "counselor_payment_requests",
-      label: "Counselor payment requests",
-      setter: setCounselorPaymentRequests,
-      orderBy: "created_at",
-    });
-
-  const fetchExecutiveExecutionLogs = async () =>
-    safeFetchTable({
-      table: "executive_execution_logs",
-      label: "Executive execution logs",
-      setter: setExecutiveExecutionLogs,
-      orderBy: "executed_at",
-    });
-
-  const fetchAutomationQueue = async () => {
-    // Current Supabase schema does not contain public.executive_action_queue.
-    // Preserve the public hook shape for downstream components without
-    // repeatedly firing a guaranteed 404/PGRST205 request.
-    safeSetState(() => setExecutiveActionQueue([]));
-    return [];
-  };
-
-  const fetchLegacyAutomationQueue = async () => {
-    // Legacy public.automation_queue is not part of the current Zaifan schema.
-    // Keep this compatibility array empty until a real queue table is introduced.
-    safeSetState(() => setAutomationQueue([]));
-    return [];
-  };
-
-  const fetchAllData = useCallback(async ({ silent = false } = {}) => {
-    if (loadingRef.current) return;
-
-    loadingRef.current = true;
-
-    safeSetState(() => {
-      setLoadError("");
-      if (!silent) setLoading(true);
-    });
-
-    try {
-      const results = await Promise.allSettled([
-        fetchInquiries(),
-        fetchAppointments(),
-        fetchFollowUpReminders(),
-
-        fetchStudentApplications(),
-        fetchStudentDocuments(),
-        fetchStudentTasks(),
-        fetchStudentUniversities(),
-        fetchStudentRiskScores(),
-
-        fetchStudentInvoices(),
-        fetchStudentPayments(),
-        fetchStudentReceipts(),
-        fetchStudentPortalAccounts(),
-        fetchSupportRequests(),
-        fetchCounselorPaymentRequests(),
-        fetchExecutiveExecutionLogs(),
-
-        fetchAutomationQueue(),
-        fetchLegacyAutomationQueue(),
-      ]);
-
-      const failed = results.filter((result) => result.status === "rejected");
-
-      if (failed.length > 0) {
-        console.error("Admin fetch failures:", failed);
-
-        safeSetState(() => {
-          setLoadError(
-            "Some core admin data could not load. The Admin OS is still running with the data that succeeded."
-          );
-        });
-      } else {
-        safeSetState(() => setLoadError(""));
+      if (
+        mountedRef.current &&
+        generation === fetchGenerationRef.current
+      ) {
+        setFollowUpReminders([]);
       }
-    } catch (error) {
-      console.error("Fetch all data crash:", error);
 
-      safeSetState(() => {
-        setLoadError("Admin refresh timed out. Check your internet and retry.");
-      });
-    } finally {
-      loadingRef.current = false;
-      safeSetState(() => setLoading(false));
+      return [];
     }
   }, []);
 
-  const queueRealtimeRefresh = useCallback(() => {
-    clearTimeout(realtimeTimeoutRef.current);
+  const fetchAllData = useCallback(
+    async ({ silent = false } = {}) => {
+      if (inFlightFetchRef.current) {
+        queuedRefreshRef.current = true;
+        return inFlightFetchRef.current;
+      }
 
-    realtimeTimeoutRef.current = setTimeout(() => {
+      const generation = fetchGenerationRef.current + 1;
+      fetchGenerationRef.current = generation;
+
+      safeSetState(() => {
+        setLoadError("");
+        if (!silent) setLoading(true);
+      });
+
+      const runFetch = async () => {
+        try {
+          const results = await Promise.allSettled([
+            fetchInquiries(generation),
+            fetchAppointments(generation),
+            fetchFollowUpReminders(generation),
+
+            safeFetchTable({
+              table: "student_applications",
+              label: "Student applications",
+              setter: setStudentApplications,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_documents",
+              label: "Student documents",
+              setter: setStudentDocuments,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_tasks",
+              label: "Student tasks",
+              setter: setStudentTasks,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_universities",
+              label: "Student universities",
+              setter: setStudentUniversities,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "ai_student_risk_scores",
+              label: "Student risk scores",
+              setter: setStudentRiskScores,
+              orderBy: "generated_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_invoices",
+              label: "Student invoices",
+              setter: setStudentInvoices,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_payments",
+              label: "Student payments",
+              setter: setStudentPayments,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_receipts",
+              label: "Student receipts",
+              setter: setStudentReceipts,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_portal_accounts",
+              label: "Student portal accounts",
+              setter: setStudentPortalAccounts,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "student_support_requests",
+              label: "Student support requests",
+              setter: setSupportRequests,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "counselor_payment_requests",
+              label: "Counselor payment requests",
+              setter: setCounselorPaymentRequests,
+              orderBy: "created_at",
+              generation,
+            }),
+            safeFetchTable({
+              table: "executive_execution_logs",
+              label: "Executive execution logs",
+              setter: setExecutiveExecutionLogs,
+              orderBy: "executed_at",
+              generation,
+            }),
+            Promise.resolve().then(() => {
+              if (
+                mountedRef.current &&
+                generation === fetchGenerationRef.current
+              ) {
+                setExecutiveActionQueue([]);
+                setAutomationQueue([]);
+              }
+              return [];
+            }),
+          ]);
+
+          const failed = results.filter(
+            (result) => result.status === "rejected"
+          );
+
+          if (
+            !mountedRef.current ||
+            generation !== fetchGenerationRef.current
+          ) {
+            return;
+          }
+
+          if (failed.length > 0) {
+            console.error("Admin fetch failures:", failed);
+
+            setLoadError(
+              "Some core admin data could not load. The Admin OS is still running with the data that succeeded."
+            );
+          } else {
+            setLoadError("");
+          }
+        } catch (error) {
+          console.error("Fetch all data crash:", error);
+
+          if (
+            mountedRef.current &&
+            generation === fetchGenerationRef.current
+          ) {
+            setLoadError(
+              "Admin refresh timed out. Check your internet and retry."
+            );
+          }
+        } finally {
+          if (
+            mountedRef.current &&
+            generation === fetchGenerationRef.current
+          ) {
+            setLoading(false);
+          }
+        }
+      };
+
+      const promise = runFetch();
+      inFlightFetchRef.current = promise;
+
+      try {
+        await promise;
+      } finally {
+        if (inFlightFetchRef.current === promise) {
+          inFlightFetchRef.current = null;
+        }
+
+        if (
+          queuedRefreshRef.current &&
+          mountedRef.current &&
+          isLoggedIn &&
+          adminProfile
+        ) {
+          queuedRefreshRef.current = false;
+          void fetchAllData({ silent: true });
+        }
+      }
+    },
+    [
+      adminProfile,
+      fetchAppointments,
+      fetchFollowUpReminders,
+      fetchInquiries,
+      isLoggedIn,
+      safeFetchTable,
+      safeSetState,
+    ]
+  );
+
+  const queueRealtimeRefresh = useCallback(() => {
+    if (realtimeTimeoutRef.current !== null) {
+      window.clearTimeout(realtimeTimeoutRef.current);
+    }
+
+    realtimeTimeoutRef.current = window.setTimeout(() => {
+      realtimeTimeoutRef.current = null;
       void fetchAllData({ silent: true });
-    }, 800);
+    }, REALTIME_REFRESH_DELAY_MS);
   }, [fetchAllData]);
 
   useRealtimeCRM({
     enabled: isLoggedIn && !!adminProfile,
-
-    onInquiryChange: queueRealtimeRefresh,
-    onAppointmentChange: queueRealtimeRefresh,
-    onReminderChange: queueRealtimeRefresh,
     onAnyChange: queueRealtimeRefresh,
   });
 
   useEffect(() => {
     if (isLoggedIn && adminProfile) {
       void fetchAllData();
+    } else {
+      fetchGenerationRef.current += 1;
+      queuedRefreshRef.current = false;
     }
   }, [isLoggedIn, adminProfile?.id, fetchAllData]);
 
-  useEffect(() => {
-    return () => {
-      clearTimeout(realtimeTimeoutRef.current);
-    };
-  }, []);
+  const clearLocalData = useCallback(() => {
+    fetchGenerationRef.current += 1;
+    queuedRefreshRef.current = false;
 
-  const clearLocalData = () => {
+    if (realtimeTimeoutRef.current !== null) {
+      window.clearTimeout(realtimeTimeoutRef.current);
+      realtimeTimeoutRef.current = null;
+    }
+
     safeSetState(() => {
       setInquiries([]);
       setAppointments([]);
@@ -1424,7 +1545,7 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
       setLoading(false);
       setLoadError("");
     });
-  };
+  }, [safeSetState]);
 
   const revenueMetrics = useMemo(
     () =>
@@ -1443,18 +1564,12 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
   );
 
   const portalUsageMetrics = useMemo(
-    () =>
-      buildPortalUsageMetrics({
-        studentPortalAccounts,
-      }),
+    () => buildPortalUsageMetrics({ studentPortalAccounts }),
     [studentPortalAccounts]
   );
 
   const supportMetrics = useMemo(
-    () =>
-      buildSupportMetrics({
-        supportRequests,
-      }),
+    () => buildSupportMetrics({ supportRequests }),
     [supportRequests]
   );
 
@@ -1568,6 +1683,16 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
     ]
   );
 
+  const schemaCapabilities = useMemo(
+    () => ({
+      studentApplications: true,
+      automationQueue: false,
+      executiveActionQueue: false,
+      automationSource: "executive_execution_logs",
+    }),
+    []
+  );
+
   return {
     inquiries,
     setInquiries,
@@ -1595,12 +1720,7 @@ export default function useAdminDashboardData({ isLoggedIn, adminProfile }) {
     automationQueue,
     executiveActionQueue,
 
-    schemaCapabilities: {
-      studentApplications: true,
-      automationQueue: false,
-      executiveActionQueue: false,
-      automationSource: "executive_execution_logs",
-    },
+    schemaCapabilities,
 
     revenueMetrics,
     portalUsageMetrics,
