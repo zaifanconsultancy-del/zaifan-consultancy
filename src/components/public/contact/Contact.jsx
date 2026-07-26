@@ -218,8 +218,6 @@ ${formData.message}
       lead_source: sourceLabel,
     };
 
-    const whatsappWindow = window.open("", "_blank");
-
     const { error } = await supabase.from("inquiries").insert([formData]);
 
     if (error) {
@@ -227,31 +225,20 @@ ${formData.message}
       setSubmissionError(
         "Your inquiry could not be submitted right now. Please message us on WhatsApp or try again."
       );
-
-      if (whatsappWindow) {
-        whatsappWindow.location.href = `https://wa.me/923305718131?text=${encodeURIComponent(
-          buildWhatsAppMessage(formData)
-        )}`;
-      }
-
       setIsSubmitting(false);
       return;
     }
 
     try {
-      await supabase.functions.invoke("send-email", {
+      const { error: emailError } = await supabase.functions.invoke("send-email", {
         body: formData,
       });
+
+      if (emailError) {
+        console.error("Email notification failed:", emailError);
+      }
     } catch (err) {
       console.error("Email notification failed:", err);
-    }
-
-    const whatsappLink = `https://wa.me/923305718131?text=${encodeURIComponent(
-      buildWhatsAppMessage(formData)
-    )}`;
-
-    if (whatsappWindow) {
-      whatsappWindow.location.href = whatsappLink;
     }
 
     setLastInquiryName(formData.full_name);
