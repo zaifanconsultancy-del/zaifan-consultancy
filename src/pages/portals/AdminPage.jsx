@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
 import AdminLogin from "../../components/admin/AdminLogin";
-const AdminHeader = lazy(() => import("../../components/admin/AdminHeader"));
+import AdminHeader from "../../components/admin/AdminHeader";
 const AdminStats = lazy(() => import("../../components/admin/AdminStats"));
 const NotificationCenter = lazy(() => import("../../components/admin/NotificationCenter"));
 import AdminSidebar from "../../components/admin/AdminSidebar";
@@ -32,7 +32,7 @@ const PipelinePage = lazy(() =>
   import("../../components/admin/pages/PipelinePage")
 );
 
-import useAdminAuth from "../../hooks/useAdminAuth";
+import useAdminAuthHook from "../../hooks/useAdminAuth";
 import useAdminDashboardData from "../../hooks/useAdminDashboardData";
 import useAdminActivityLogger from "../../hooks/useAdminActivityLogger";
 import useAdminLeadActions from "../../hooks/useAdminLeadActions";
@@ -134,7 +134,16 @@ function AdminPage() {
   const cardClass = ADMIN_CARD_CLASS;
   const inputClass = ADMIN_INPUT_CLASS;
 
-  const auth = useAdminAuth();
+  const auth = useAdminAuthHook();
+
+  if (
+    import.meta.env.DEV &&
+    (!auth || typeof auth !== "object" || Array.isArray(auth))
+  ) {
+    throw new Error(
+      "useAdminAuth must be called as a React hook and return the Admin auth state object."
+    );
+  }
 
   const {
     isLoggedIn,

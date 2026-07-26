@@ -26,6 +26,24 @@ const TABLES = {
   supportRequests: "student_support_requests",
 };
 
+export const STUDENT_PORTAL_REALTIME_TABLES = Object.freeze([
+  TABLES.applications,
+  TABLES.documents,
+  TABLES.tasks,
+  TABLES.communications,
+  TABLES.universities,
+  TABLES.invoices,
+  TABLES.payments,
+  TABLES.receipts,
+  TABLES.counselorPaymentRequests,
+  TABLES.supportRequests,
+  TABLES.timeline,
+]);
+
+export function getStudentPortalRealtimeTables() {
+  return [...STUDENT_PORTAL_REALTIME_TABLES];
+}
+
 const EMPTY_COUNTS = {
   applications: 0,
   documents: 0,
@@ -104,12 +122,16 @@ function sanitizePhone(value = "") {
 }
 
 function normalizePortalStudent(row = {}, sourceType = "inquiry") {
+  const personId = String(row?.person_id || "").trim();
+
   return {
     ...row,
     id: row.id,
     student_type: sourceType,
     __leadType: sourceType,
-    portal_student_key: `${sourceType}-${row.id}`,
+    person_id: personId || row?.person_id || null,
+    portal_student_key: personId || `${sourceType}-${row.id}`,
+    identity_key: personId || `${sourceType}:${row.id}`,
   };
 }
 
@@ -136,6 +158,28 @@ function uniqueRows(rows = []) {
         .map((item) => [item.id || item.uuid || JSON.stringify(item), item])
     ).values()
   );
+}
+
+function rowMatchesStudentIdentity(row = {}, student = {}) {
+  const rowStudentId = String(row?.student_id ?? "").trim();
+  const expectedIds = getStudentIdVariants(student).map((value) =>
+    String(value ?? "").trim()
+  );
+
+  if (rowStudentId && expectedIds.length && !expectedIds.includes(rowStudentId)) {
+    return false;
+  }
+
+  const rowType = normalize(row?.student_type);
+  const expectedType = normalize(getStudentType(student));
+
+  // Legacy rows may not have student_type. Keep those for backward compatibility,
+  // but never expose a row that explicitly declares a different student type.
+  if (rowType && expectedType && rowType !== expectedType) {
+    return false;
+  }
+
+  return true;
 }
 
 function getStudentIdVariants(student = {}) {
@@ -334,6 +378,105 @@ export function getStudentId(student = {}) {
   return String(student.id || student.student_id || "").trim();
 }
 
+export function getStudentPersonId(student = {}) {
+  return String(student?.person_id || student?.personId || "").trim();
+}
+
+function normalizeIdentitySource(row = {}, sourceType = "inquiry") {
+  return {
+    id: row?.id,
+    student_id: row?.id,
+    student_type: sourceType,
+    person_id: row?.person_id || null,
+    full_name: row?.full_name || row?.name || "",
+    email: row?.email || "",
+    phone: row?.phone || "",
+    created_at: row?.created_at || null,
+  };
+}
+
+export async function getStudentIdentitySources(student = {}) {
+  const currentId = getStudentId(student);
+  const currentType = getStudentType(student);
+  const personId = getStudentPersonId(student);
+
+  const fallback = currentId
+    ? [
+        normalizeIdentitySource(
+          {
+            ...student,
+            id: currentId,
+            person_id: personId || student?.person_id || null,
+          },
+          currentType
+        ),
+      ]
+    : [];
+
+  if (!personId) return fallback;
+
+  const queries = [
+    safeQuery(
+      supabase
+        .from(TABLES.inquiries)
+        .select("id, person_id, full_name, email, phone, created_at")
+        .eq("person_id", personId)
+        .order("created_at", { ascending: true }),
+      [],
+      DATA_TIMEOUT_MS,
+      "identity inquiry sources"
+    ),
+    safeQuery(
+      supabase
+        .from(TABLES.appointments)
+        .select("id, person_id, full_name, email, phone, created_at")
+        .eq("person_id", personId)
+        .order("created_at", { ascending: true }),
+      [],
+      DATA_TIMEOUT_MS,
+      "identity appointment sources"
+    ),
+  ];
+
+  const results = await Promise.allSettled(queries);
+
+  const sources = [
+    ...(results[0]?.status === "fulfilled"
+      ? (results[0].value || []).map((row) =>
+          normalizeIdentitySource(row, "inquiry")
+        )
+      : []),
+    ...(results[1]?.status === "fulfilled"
+      ? (results[1].value || []).map((row) =>
+          normalizeIdentitySource(row, "appointment")
+        )
+      : []),
+  ];
+
+  const uniqueSources = Array.from(
+    new Map(
+      sources.map((source) => [
+        `${source.student_type}:${String(source.student_id)}`,
+        source,
+      ])
+    ).values()
+  );
+
+  return uniqueSources.length ? uniqueSources : fallback;
+}
+
+async function getStudentReferencePairs(student = {}) {
+  const sources = await getStudentIdentitySources(student);
+
+  return sources
+    .map((source) => ({
+      studentId: String(source.student_id ?? source.id ?? "").trim(),
+      studentType: normalize(source.student_type || "inquiry"),
+      personId: String(source.person_id || getStudentPersonId(student) || "").trim(),
+    }))
+    .filter((source) => source.studentId);
+}
+
 async function runSearchQuery(buildQuery, label = "") {
   try {
     return await safeQuery(buildQuery(), [], SEARCH_TIMEOUT_MS, label);
@@ -401,33 +544,24 @@ async function searchStudentsInSource(source, clean) {
   );
 }
 
-async function countByStudent(table, student, { matchStudentType = false, label = "" } = {}) {
-  const studentIds = getStudentIdVariants(student);
-  const studentType = getStudentType(student);
+async function countByStudent(
+  table,
+  student,
+  { matchStudentType = false, label = "" } = {}
+) {
+  // Count unique records across every inquiry/appointment source that belongs
+  // to the same permanent person_id. Using the normal row loader prevents
+  // double-counting when inquiry and appointment numeric IDs happen to match.
+  const rows = await fetchByStudent(table, student, {
+    orderBy: null,
+    ascending: false,
+    limit: null,
+    matchStudentType,
+    label: `${label || table} count`,
+    timeoutMs: COUNT_TIMEOUT_MS,
+  });
 
-  if (!studentIds.length) return 0;
-
-  const results = await Promise.allSettled(
-    studentIds.map((studentId) => {
-      let query = supabase
-        .from(table)
-        .select("id", { count: "exact", head: true })
-        .eq("student_id", studentId);
-
-      if (matchStudentType && studentType) {
-        query = query.eq("student_type", studentType);
-      }
-
-      return safeCount(query, label || table);
-    })
-  );
-
-  return Math.max(
-    0,
-    ...results.map((result) =>
-      result.status === "fulfilled" ? Number(result.value || 0) : 0
-    )
-  );
+  return rows.length;
 }
 
 export async function getPortalDataCountsForStudent(student = {}) {
@@ -489,6 +623,47 @@ export async function enrichStudentsWithPortalCounts(students = []) {
   );
 }
 
+function groupStudentsByPerson(students = []) {
+  const groups = new Map();
+
+  for (const student of students.filter(Boolean)) {
+    const personId = getStudentPersonId(student);
+    const key = personId || `${getStudentType(student)}:${getStudentId(student)}`;
+    const current = groups.get(key) || [];
+
+    current.push(student);
+    groups.set(key, current);
+  }
+
+  return [...groups.values()].map((group) => {
+    const sorted = [...group].sort((a, b) => {
+      const aInquiry = getStudentType(a) === "inquiry" ? 1 : 0;
+      const bInquiry = getStudentType(b) === "inquiry" ? 1 : 0;
+
+      if (aInquiry !== bInquiry) return bInquiry - aInquiry;
+
+      const aDate = new Date(a.created_at || a.appointment_date || 0).getTime();
+      const bDate = new Date(b.created_at || b.appointment_date || 0).getTime();
+
+      return aDate - bDate;
+    });
+
+    const representative = sorted[0];
+
+    return {
+      ...representative,
+      identity_sources: sorted.map((item) => ({
+        id: item.id,
+        student_id: item.id,
+        student_type: getStudentType(item),
+        person_id: getStudentPersonId(item) || null,
+        created_at: item.created_at || null,
+      })),
+      identity_source_count: sorted.length,
+    };
+  });
+}
+
 export async function findStudentsForPortal(identifier = "") {
   const clean = String(identifier || "").trim();
 
@@ -511,6 +686,8 @@ export async function findStudentsForPortal(identifier = "") {
   let students = uniqueById(
     results.flatMap((result) => (result.status === "fulfilled" ? result.value : []))
   );
+
+  students = groupStudentsByPerson(students);
 
   if (!students.length) {
     return {
@@ -556,12 +733,11 @@ async function fetchByStudent(table, student, options = {}) {
     timeoutMs = DATA_TIMEOUT_MS,
   } = options;
 
-  const studentIds = getStudentIdVariants(student);
-  const studentType = getStudentType(student);
+  const references = await getStudentReferencePairs(student);
 
-  if (!studentIds.length) return [];
+  if (!references.length) return [];
 
-  const attempts = studentIds.map((studentId) => {
+  const attempts = references.map(({ studentId, studentType }) => {
     let query = supabase.from(table).select("*").eq("student_id", studentId);
 
     if (matchStudentType && studentType) {
@@ -571,15 +747,41 @@ async function fetchByStudent(table, student, options = {}) {
     if (orderBy) query = query.order(orderBy, { ascending });
     if (limit) query = query.limit(limit);
 
-    return safeQuery(query, [], timeoutMs, `${label} id:${studentId}`);
+    return safeQuery(
+      query,
+      [],
+      timeoutMs,
+      `${label} ${studentType}:${studentId}`
+    );
   });
 
   const results = await Promise.allSettled(attempts);
 
-  return uniqueRows(
-    results.flatMap((result) =>
-      result.status === "fulfilled" ? result.value || [] : []
+  const validPairs = new Set(
+    references.map(
+      ({ studentId, studentType }) =>
+        `${normalize(studentType)}:${String(studentId)}`
     )
+  );
+
+  return uniqueRows(
+    results
+      .flatMap((result) =>
+        result.status === "fulfilled" ? result.value || [] : []
+      )
+      .filter((row) => {
+        const rowId = String(row?.student_id ?? "").trim();
+        const rowType = normalize(row?.student_type);
+
+        if (!rowId) return true;
+        if (!rowType) {
+          return references.some(
+            ({ studentId }) => String(studentId) === rowId
+          );
+        }
+
+        return validPairs.has(`${rowType}:${rowId}`);
+      })
   );
 }
 
@@ -627,15 +829,17 @@ async function fetchPaymentRows(table, student, options = {}) {
 
   const rows = uniqueRows([...strictRows, ...fallbackRows]);
 
-  console.log("STUDENT PORTAL PAYMENT FETCH", {
-    table,
-    label,
-    studentId: getStudentId(student),
-    studentType: getStudentType(student),
-    strictRows: strictRows.length,
-    fallbackRows: fallbackRows.length,
-    mergedRows: rows.length,
-  });
+  if (import.meta.env?.DEV) {
+    console.debug("STUDENT PORTAL PAYMENT FETCH", {
+      table,
+      label,
+      studentId: getStudentId(student),
+      studentType: getStudentType(student),
+      strictRows: strictRows.length,
+      fallbackRows: fallbackRows.length,
+      mergedRows: rows.length,
+    });
+  }
 
   return rows;
 }
@@ -891,7 +1095,7 @@ export async function fetchStudentPortalData(student) {
   const savedCounts = student.portalCounts || {};
   const counts = mergeCounts(rowCounts, savedCounts);
 
-  console.log("PORTAL DATA DEBUG", {
+  if (import.meta.env?.DEV) console.debug("PORTAL DATA DEBUG", {
     student,
     studentId: getStudentId(student),
     studentType: getStudentType(student),
@@ -1227,6 +1431,60 @@ export function buildPortalDiagnostics(
   };
 }
 
+export function buildStudentTeamBridge(student = {}, data = {}) {
+  const summary = buildPortalSummary(student, data);
+  const diagnostics = buildPortalDiagnostics(student, data);
+
+  const adminVisibleRecords =
+    summary.applicationsCount +
+    summary.documentsCount +
+    summary.tasksCount +
+    summary.invoicesCount +
+    summary.paymentsCount +
+    summary.receiptsCount +
+    summary.supportRequestsCount;
+
+  const counselorVisibleRecords =
+    summary.applicationsCount +
+    summary.tasksCount +
+    summary.communicationsCount +
+    summary.supportRequestsCount +
+    summary.counselorPaymentRequestsCount;
+
+  return {
+    studentId: summary.studentId,
+    studentType: summary.studentType,
+    admin: {
+      connected: adminVisibleRecords > 0,
+      visibleRecords: adminVisibleRecords,
+      applications: summary.applicationsCount,
+      documents: summary.documentsCount,
+      tasks: summary.tasksCount,
+      finance:
+        summary.invoicesCount + summary.paymentsCount + summary.receiptsCount,
+      support: summary.supportRequestsCount,
+    },
+    counselor: {
+      connected: counselorVisibleRecords > 0,
+      visibleRecords: counselorVisibleRecords,
+      applications: summary.applicationsCount,
+      tasks: summary.tasksCount,
+      communications: summary.communicationsCount,
+      support: summary.supportRequestsCount,
+      paymentRequests: summary.counselorPaymentRequestsCount,
+    },
+    student: {
+      portalRecords: Number(data?.counts?.total || 0),
+      openTasks: summary.pendingTasksCount,
+      openSupport: summary.openSupportRequestsCount,
+      pendingReceipts: summary.pendingReceiptsCount,
+      outstandingAmount: summary.outstandingAmount,
+    },
+    workflowCoverage: diagnostics.workflowCoverage,
+    missingWorkflowLinks: diagnostics.missing,
+  };
+}
+
 export async function uploadStudentReceipt({
   student,
   invoiceId = null,
@@ -1351,32 +1609,52 @@ async function fetchMappedStudentForAccount(account = {}) {
 }
 
 export async function fetchStudentPortalAccountForStudent(student = {}) {
-  const studentId = getStudentId(student);
-  const studentType = getStudentType(student);
+  const references = await getStudentReferencePairs(student);
 
-  if (!studentId) {
+  if (!references.length) {
     return {
       account: null,
       error: new Error("Student record is missing."),
     };
   }
 
-  const account = await safeSingle(
-    supabase
-      .from(TABLES.accounts)
-      .select(
-        "id, email, student_id, student_type, is_active, must_change_password, password_changed_at, last_login_at, created_at, updated_at"
-      )
-      .eq("student_id", studentId)
-      .eq("student_type", studentType)
-      .maybeSingle(),
-    null,
-    LOGIN_TIMEOUT_MS,
-    "student portal account lookup"
+  const attempts = references.map(({ studentId, studentType }) =>
+    safeQuery(
+      supabase
+        .from(TABLES.accounts)
+        .select(
+          "id, email, student_id, student_type, is_active, must_change_password, password_changed_at, last_login_at, created_at, updated_at"
+        )
+        .eq("student_id", studentId)
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      [],
+      LOGIN_TIMEOUT_MS,
+      `portal account ${studentType}:${studentId}`
+    )
   );
 
+  const results = await Promise.allSettled(attempts);
+  const accounts = uniqueRows(
+    results.flatMap((result) =>
+      result.status === "fulfilled" ? result.value || [] : []
+    )
+  ).sort((a, b) => {
+    const aActive = a?.is_active === false ? 0 : 1;
+    const bActive = b?.is_active === false ? 0 : 1;
+
+    if (aActive !== bActive) return bActive - aActive;
+
+    return (
+      new Date(b?.updated_at || b?.created_at || 0).getTime() -
+      new Date(a?.updated_at || a?.created_at || 0).getTime()
+    );
+  });
+
   return {
-    account,
+    account: accounts[0] || null,
+    accounts,
     error: null,
   };
 }
@@ -1440,6 +1718,20 @@ export async function createStudentPortalAccount({
   adminProfile = null,
 }) {
   try {
+    const existingAccountResult = await fetchStudentPortalAccountForStudent(student);
+
+    if (existingAccountResult?.account) {
+      return {
+        success: true,
+        account: existingAccountResult.account,
+        data: null,
+        message:
+          "This student already has a portal account linked through the same permanent Zaifan identity.",
+        error: null,
+        reusedExistingAccount: true,
+      };
+    }
+
     const payload = buildAccountPayloadFromStudent(student, {
       email,
       mustChangePassword,
@@ -1730,11 +2022,23 @@ export async function changeStudentPortalPassword({
     };
   }
 
-  const { data, error } = await supabase.rpc("change_student_portal_password", {
-    p_account_id: accountId,
-    p_current_password: currentPassword,
-    p_new_password: newPassword,
-  });
+  const { data, error, timedOut } = await withTimeout(
+    supabase.rpc("change_student_portal_password", {
+      p_account_id: accountId,
+      p_current_password: currentPassword,
+      p_new_password: newPassword,
+    }),
+    "Password change timed out.",
+    ACCOUNT_TIMEOUT_MS
+  );
+
+  if (timedOut) {
+    return {
+      success: false,
+      message: "Password change timed out. Please try again.",
+      error: new Error("Password change timed out."),
+    };
+  }
 
   if (error) {
     return {

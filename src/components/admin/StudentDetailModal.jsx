@@ -198,6 +198,12 @@ function StudentDetailModal({
       "inquiry"
   );
 
+  const personId = String(
+    workingStudent?.person_id || student?.person_id || ""
+  ).trim();
+
+  // Keep source identity for record-specific status/stage actions.
+  // person_id is used separately to unify Student 360 data and portal access.
   const studentIdentity = `${String(studentId || "")}:${studentType}`;
 
   const safePermissions = useMemo(
@@ -308,36 +314,20 @@ function StudentDetailModal({
     setPortalAccountLoading(true);
 
     try {
-      const idVariants = getStudentIdVariants();
-      const typeVariants = [...new Set(getStudentTypeVariants())];
-
-      const attempts = idVariants.map((idValue) =>
-        supabase
-          .from("student_portal_accounts")
-          .select("*")
-          .eq("student_id", idValue)
-          .in("student_type", typeVariants.length ? typeVariants : [studentType])
-          .order("created_at", { ascending: false })
-          .limit(1)
-      );
-
-      const results = await Promise.all(attempts);
+      const result = await studentPortalApi.fetchStudentPortalAccountForStudent({
+        ...workingStudent,
+        id: studentId,
+        student_type: studentType,
+        person_id: personId || workingStudent?.person_id || null,
+      });
 
       if (portalRequestRef.current !== requestId) return null;
 
-      const successfulRows = results.flatMap((result) => result.data || []);
-      const firstError = results.find((result) => result.error)?.error;
+      if (result?.error) throw result.error;
 
-      if (!successfulRows.length && firstError) {
-        throw firstError;
-      }
-
-      const account = normalizePortalAccount(successfulRows[0] || null);
-
-      if (portalRequestRef.current !== requestId) return account;
+      const account = normalizePortalAccount(result?.account || null);
 
       setPortalAccount(account);
-
       setPortalAccountForm((prev) => ({
         ...prev,
         email: account?.email || studentEmail || prev.email,
@@ -356,7 +346,7 @@ function StudentDetailModal({
               type: "warning",
               message:
                 error?.message ||
-                "Portal account could not be loaded for this student identity.",
+                "Portal account could not be loaded for this permanent student identity.",
             }
       );
       return null;
@@ -366,12 +356,12 @@ function StudentDetailModal({
       }
     }
   }, [
-    getStudentIdVariants,
-    getStudentTypeVariants,
     normalizePortalAccount,
+    personId,
     studentEmail,
     studentId,
     studentType,
+    workingStudent,
   ]);
 
   const callPortalApi = async (functionName, payload = {}) => {
@@ -386,6 +376,8 @@ function StudentDetailModal({
       student_id: studentId,
       studentType,
       student_type: studentType,
+      personId,
+      person_id: personId || workingStudent?.person_id || null,
       email: portalAccountForm.email || studentEmail,
       password:
         payload.password ||
@@ -532,6 +524,7 @@ function StudentDetailModal({
         metadata: {
           portal_account_id: portalAccount?.id || accountFromResult?.id || null,
           email: emailToUse,
+          person_id: personId || null,
         },
       });
 
@@ -579,6 +572,48 @@ function StudentDetailModal({
     const idVariants = getStudentIdVariants();
     const typeVariants = [...new Set(getStudentTypeVariants())];
 
+    let identitySources = [];
+
+    try {
+      identitySources = await studentPortalApi.getStudentIdentitySources({
+        ...workingStudent,
+        id: studentId,
+        student_type: studentType,
+        person_id: personId || workingStudent?.person_id || null,
+      });
+    } catch (identityError) {
+      console.warn(
+        "Permanent identity sources could not be resolved; using current source only.",
+        identityError?.message || identityError
+      );
+    }
+
+    const sourceReferences =
+      Array.isArray(identitySources) && identitySources.length
+        ? identitySources.map((source) => ({
+            id: source.student_id ?? source.id,
+            type: normalize(source.student_type || "inquiry"),
+          }))
+        : idVariants.flatMap((idValue) =>
+            (typeVariants.length ? typeVariants : [studentType]).map(
+              (typeValue) => ({
+                id: idValue,
+                type: normalize(typeValue),
+              })
+            )
+          );
+
+    const uniqueSourceReferences = Array.from(
+      new Map(
+        sourceReferences
+          .filter((item) => item.id !== null && item.id !== undefined && item.id !== "")
+          .map((item) => [
+            `${item.type}:${String(item.id)}`,
+            item,
+          ])
+      ).values()
+    );
+
     const isMissingStudentTypeColumn = (error) => {
       const message = String(error?.message || "").toLowerCase();
       return (
@@ -600,11 +635,11 @@ function StudentDetailModal({
       } = options;
 
       const runQueries = async (typed) => {
-        const attempts = idVariants.map((idValue) => {
+        const attempts = uniqueSourceReferences.map(({ id: idValue, type: sourceType }) => {
           let query = supabase.from(table).select(select).eq("student_id", idValue);
 
-          if (typed && typeVariants.length > 0) {
-            query = query.in("student_type", typeVariants);
+          if (typed && sourceType) {
+            query = query.eq("student_type", sourceType);
           }
 
           if (orderBy) {
@@ -845,8 +880,10 @@ function StudentDetailModal({
   }, [
     getStudentIdVariants,
     getStudentTypeVariants,
+    personId,
     studentId,
     studentType,
+    workingStudent,
   ]);
 
   useEffect(() => {

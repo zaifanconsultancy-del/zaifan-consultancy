@@ -1,0 +1,7 @@
+C:\Users\mhuza\Zaifan-Consultancy\zaifan-consultancy\src\components\admin\StudentDetailModal.jsx
+C:\Users\mhuza\Zaifan-Consultancy\zaifan-consultancy\src\hooks\useAdminDashboardData.js
+C:\Users\mhuza\Zaifan-Consultancy\zaifan-consultancy\src\lib\executiveActionExecutor.js
+C:\Users\mhuza\Zaifan-Consultancy\zaifan-consultancy\src\lib\executiveActionTemplates.js
+C:\Users\mhuza\Zaifan-Consultancy\zaifan-consultancy\src\lib\executiveAutomationEngine.js
+C:\Users\mhuza\Zaifan-Consultancy\zaifan-consultancy\src\lib\platformVerificationEngine.js
+C:\Users\mhuza\Zaifan-Consultancy\zaifan-consultancy\src\lib\studentPortal.js

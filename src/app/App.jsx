@@ -42,8 +42,8 @@ const AdminPage = lazy(() => import("../pages/portals/AdminPage"));
 const StudentPortalPage = lazy(() =>
   import("../pages/portals/StudentPortalPage")
 );
-const CounselorPortalPage = lazy(() =>
-  import("../pages/portals/CounselorPortalPage")
+const CounselorPortalGate = lazy(() =>
+  import("../pages/portals/CounselorPortalGate")
 );
 
 const MOTION = {
@@ -312,7 +312,7 @@ function App() {
                   path="/counselor"
                   element={
                     <PageTransition>
-                      <CounselorPortalPage />
+                      <CounselorPortalGate />
                     </PageTransition>
                   }
                 />

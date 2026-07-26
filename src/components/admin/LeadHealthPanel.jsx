@@ -121,9 +121,16 @@ function LeadHealthPanel({
     };
   }, [studentInsights]);
 
-  const healthy = { length: healthMetrics.healthy };
-  const attention = { length: healthMetrics.attention };
-  const risk = { length: healthMetrics.risk };
+  const healthyStudents = studentInsights.filter(
+    (item) => item.health === "healthy"
+  );
+  const attentionStudents = studentInsights.filter(
+    (item) => item.health === "attention"
+  );
+  const riskStudents = studentInsights.filter(
+    (item) => item.health === "risk"
+  );
+
   const noApplication = { length: healthMetrics.noApplication };
   const offerStage = { length: healthMetrics.offerStage };
   const visaStage = { length: healthMetrics.visaStage };
@@ -202,21 +209,21 @@ function LeadHealthPanel({
   const cards = [
     {
       label: "Healthy",
-      value: healthy.length,
+      value: healthyStudents.length,
       icon: ShieldCheck,
       color: "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
       description: "Strong journey progress.",
     },
     {
       label: "Attention",
-      value: attention.length,
+      value: attentionStudents.length,
       icon: HeartPulse,
       color: "border-[#F59E0B] bg-[#FFF7ED] text-amber-800",
       description: "Needs counselor monitoring.",
     },
     {
       label: "At Risk",
-      value: risk.length,
+      value: riskStudents.length,
       icon: AlertTriangle,
       color: "border-[#FB7185] bg-[#FFF4F4] text-red-700",
       description: "Journey blockers detected.",
@@ -258,7 +265,7 @@ function LeadHealthPanel({
     },
   ];
 
-  const watchlist = [...risk, ...attention]
+  const watchlist = [...riskStudents, ...attentionStudents]
     .sort((a, b) => b.riskWeight - a.riskWeight)
     .slice(0, 10);
 
@@ -478,9 +485,9 @@ function LeadHealthPanel({
 
         <InfoBox icon={Activity} title="System Reading">
           <p>
-            {risk.length > 0
+            {riskStudents.length > 0
               ? "Student journey blockers need immediate counselor review."
-              : attention.length > healthy.length
+              : attentionStudents.length > healthyStudents.length
               ? "Student OS is active, but many students still need monitoring."
               : "Student OS health is currently strong."}
           </p>

@@ -12,10 +12,14 @@ import {
   findStudentsForPortal,
   loginStudentPortalAccount,
   changeStudentPortalPassword,
+  getStudentPortalRealtimeTables,
 } from "../../lib/studentPortal";
 
 const SESSION_KEY = "zaifan_student_portal_session_v2";
-const AUTO_REFRESH_COOLDOWN_MS = 8000;
+const AUTO_REFRESH_COOLDOWN_MS = 5000;
+const REALTIME_REFRESH_DEBOUNCE_MS = 650;
+
+const STUDENT_REALTIME_TABLES = getStudentPortalRealtimeTables();
 
 const EMPTY_PORTAL_DATA = {
   applications: [],
@@ -267,6 +271,9 @@ function StudentPortalPage() {
   const restoreStartedRef = useRef(false);
   const activeLoadIdRef = useRef(0);
   const lastAutoRefreshAtRef = useRef(0);
+  const realtimeRefreshTimerRef = useRef(null);
+  const refreshInFlightRef = useRef(false);
+  const latestPortalDataRef = useRef(EMPTY_PORTAL_DATA);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -285,6 +292,10 @@ function StudentPortalPage() {
   const [restoringSession, setRestoringSession] = useState(true);
 
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    latestPortalDataRef.current = portalData;
+  }, [portalData]);
 
   const hasStudent = useMemo(() => Boolean(student?.id), [student]);
 
@@ -578,40 +589,66 @@ const loadOverviewData = useCallback(async (nextStudent, options = {}) => {
     });
   }
 
-async function handleRefresh(options = {}) {
-  if (!student?.id || loadingData) return EMPTY_PORTAL_DATA;
+const handleRefresh = useCallback(
+    async (options = {}) => {
+      if (!student?.id) return EMPTY_PORTAL_DATA;
 
-  const now = Date.now();
+      if (refreshInFlightRef.current && options.auto) {
+        return latestPortalDataRef.current;
+      }
 
-  if (options.auto) {
-    const elapsed = now - Number(lastAutoRefreshAtRef.current || 0);
-    if (elapsed < AUTO_REFRESH_COOLDOWN_MS) return portalData;
-    lastAutoRefreshAtRef.current = now;
-  }
+      const now = Date.now();
 
-  const loadId = activeLoadIdRef.current + 1;
-  activeLoadIdRef.current = loadId;
+      if (options.auto) {
+        const elapsed = now - Number(lastAutoRefreshAtRef.current || 0);
+        if (elapsed < AUTO_REFRESH_COOLDOWN_MS) {
+          return latestPortalDataRef.current;
+        }
+        lastAutoRefreshAtRef.current = now;
+      }
 
-  if (!options.silent) setError("");
+      const loadId = activeLoadIdRef.current + 1;
+      activeLoadIdRef.current = loadId;
+      refreshInFlightRef.current = true;
 
-  const overviewData = await loadOverviewData(student, {
-    keepError: true,
-  });
+      if (!options.silent) setError("");
 
-  if (!mountedRef.current || activeLoadIdRef.current !== loadId) return overviewData;
+      try {
+        const overviewData = await loadOverviewData(student, {
+          keepError: true,
+        });
 
-  const fullData = await loadPortalData(student, {
-    keepError: true,
-    merge: true,
-  });
+        if (!mountedRef.current || activeLoadIdRef.current !== loadId) {
+          return overviewData;
+        }
 
-  loadLinkedAccount(student, {
-    save: true,
-    mode: sessionMode,
-  });
+        const fullData = await loadPortalData(student, {
+          keepError: true,
+          merge: true,
+        });
 
-  return fullData;
-}
+        if (mountedRef.current && activeLoadIdRef.current === loadId) {
+          void loadLinkedAccount(student, {
+            save: true,
+            mode: sessionMode,
+          });
+        }
+
+        return fullData;
+      } finally {
+        if (activeLoadIdRef.current === loadId) {
+          refreshInFlightRef.current = false;
+        }
+      }
+    },
+    [
+      loadLinkedAccount,
+      loadOverviewData,
+      loadPortalData,
+      sessionMode,
+      student,
+    ]
+  );
 
   useEffect(() => {
     if (!student?.id) return undefined;
@@ -628,7 +665,7 @@ async function handleRefresh(options = {}) {
       window.removeEventListener("focus", handleFocusRefresh);
       document.removeEventListener("visibilitychange", handleFocusRefresh);
     };
-  }, [student?.id, loadingData, sessionMode]);
+  }, [handleRefresh, student?.id]);
 
   useEffect(() => {
     if (!student?.id) return undefined;
@@ -636,18 +673,25 @@ async function handleRefresh(options = {}) {
     const studentId = String(student.id || student.student_id || "").trim();
     if (!studentId) return undefined;
 
-    const studentType = student.student_type || student.__leadType || student.type || sessionMode || "inquiry";
-    const refreshFromRealtime = () => handleRefresh({ auto: true, silent: true });
-    const channel = supabase.channel(`student-portal-live-${studentType}-${studentId}`);
+    const studentType =
+      student.student_type || student.__leadType || student.type || "inquiry";
 
-    [
-      "student_support_requests",
-      "student_receipts",
-      "student_payments",
-      "student_invoices",
-      "counselor_payment_requests",
-      "crm_timeline",
-    ].forEach((table) => {
+    const scheduleRealtimeRefresh = () => {
+      if (realtimeRefreshTimerRef.current) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+      }
+
+      realtimeRefreshTimerRef.current = window.setTimeout(() => {
+        realtimeRefreshTimerRef.current = null;
+        handleRefresh({ auto: true, silent: true });
+      }, REALTIME_REFRESH_DEBOUNCE_MS);
+    };
+
+    const channel = supabase.channel(
+      `student-os-bridge-${studentType}-${studentId}`
+    );
+
+    STUDENT_REALTIME_TABLES.forEach((table) => {
       channel.on(
         "postgres_changes",
         {
@@ -656,20 +700,34 @@ async function handleRefresh(options = {}) {
           table,
           filter: `student_id=eq.${studentId}`,
         },
-        refreshFromRealtime
+        scheduleRealtimeRefresh
       );
     });
 
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
-        console.log("Student portal live sync connected", { studentId, studentType });
+        console.info("Student OS bridge connected", {
+          studentId,
+          studentType,
+          tables: STUDENT_REALTIME_TABLES.length,
+        });
       }
     });
 
     return () => {
+      if (realtimeRefreshTimerRef.current) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+        realtimeRefreshTimerRef.current = null;
+      }
       supabase.removeChannel(channel);
     };
-  }, [student?.id, sessionMode, loadingData]);
+  }, [
+    handleRefresh,
+    student?.id,
+    student?.student_type,
+    student?.__leadType,
+    student?.type,
+  ]);
   async function handlePasswordChange({ currentPassword, newPassword }) {
   if (!account?.id && !account?.account_id) {
     return {

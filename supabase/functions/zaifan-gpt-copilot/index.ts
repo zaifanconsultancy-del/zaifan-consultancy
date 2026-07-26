@@ -36,74 +36,74 @@ const MODE_CONFIG: Record<
     label: string;
     category: "analysis" | "communication" | "strategy" | "risk";
     maxOutputTokens: number;
-    temperature: number;
+    reasoningEffort: "none" | "low" | "medium" | "high";
   }
 > = {
   summary: {
     label: "Smart Summary",
     category: "analysis",
     maxOutputTokens: 1400,
-    temperature: 0.35,
+    reasoningEffort: "low",
   },
   whatsapp: {
     label: "WhatsApp Generator",
     category: "communication",
     maxOutputTokens: 700,
-    temperature: 0.4,
+    reasoningEffort: "none",
   },
   email: {
     label: "Email Generator",
     category: "communication",
     maxOutputTokens: 1000,
-    temperature: 0.35,
+    reasoningEffort: "none",
   },
   next_action: {
     label: "Next Action",
     category: "strategy",
     maxOutputTokens: 1200,
-    temperature: 0.3,
+    reasoningEffort: "low",
   },
   visa_risk: {
     label: "Visa Risk",
     category: "risk",
     maxOutputTokens: 1400,
-    temperature: 0.25,
+    reasoningEffort: "medium",
   },
   call_script: {
     label: "Call Script",
     category: "communication",
     maxOutputTokens: 1300,
-    temperature: 0.4,
+    reasoningEffort: "low",
   },
   followup_plan: {
     label: "7-Day Follow-Up Plan",
     category: "strategy",
     maxOutputTokens: 1400,
-    temperature: 0.35,
+    reasoningEffort: "low",
   },
   scholarship: {
     label: "Scholarship Analysis",
     category: "analysis",
     maxOutputTokens: 1200,
-    temperature: 0.3,
+    reasoningEffort: "low",
   },
   objection_analysis: {
     label: "Objection Analysis",
     category: "risk",
     maxOutputTokens: 1200,
-    temperature: 0.3,
+    reasoningEffort: "medium",
   },
   counselor_strategy: {
     label: "Counselor Strategy",
     category: "strategy",
     maxOutputTokens: 1400,
-    temperature: 0.35,
+    reasoningEffort: "medium",
   },
   lead_reanalysis: {
     label: "Fast Lead Reanalysis",
     category: "analysis",
     maxOutputTokens: 650,
-    temperature: 0.2,
+    reasoningEffort: "none",
   },
 };
 
@@ -116,7 +116,15 @@ Deno.serve(async (req) => {
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") || "gpt-5.5";
+
+    // Optional tier overrides let production change models without another deploy.
+    // The old global OPENAI_MODEL secret is intentionally ignored by this router.
+    const OPENAI_MODEL_LUNA =
+      Deno.env.get("OPENAI_MODEL_LUNA") || "gpt-5.6-luna";
+    const OPENAI_MODEL_TERRA =
+      Deno.env.get("OPENAI_MODEL_TERRA") || "gpt-5.6-terra";
+    const OPENAI_MODEL_SOL =
+      Deno.env.get("OPENAI_MODEL_SOL") || "gpt-5.6-sol";
 
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is missing.");
@@ -134,6 +142,12 @@ Deno.serve(async (req) => {
     } = body || {};
 
     const selectedMode = MODE_CONFIG[mode] || MODE_CONFIG.summary;
+
+    const selectedModel = selectModelForMode(mode, {
+      luna: OPENAI_MODEL_LUNA,
+      terra: OPENAI_MODEL_TERRA,
+      sol: OPENAI_MODEL_SOL,
+    });
 
     const promptInput: PromptInput = {
       mode,
@@ -153,9 +167,11 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: OPENAI_MODEL,
+        model: selectedModel,
         input: prompt,
-        temperature: selectedMode.temperature,
+        reasoning: {
+          effort: selectedMode.reasoningEffort,
+        },
         max_output_tokens: selectedMode.maxOutputTokens,
       }),
     });
@@ -175,7 +191,8 @@ Deno.serve(async (req) => {
       mode,
       modeLabel: selectedMode.label,
       category: selectedMode.category,
-      model: OPENAI_MODEL,
+      model: selectedModel,
+      reasoningEffort: selectedMode.reasoningEffort,
       durationMs,
       text: text || "No AI response generated.",
       usage: result?.usage || null,
@@ -192,6 +209,47 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+function selectModelForMode(
+  mode: GptMode,
+  models: {
+    luna: string;
+    terra: string;
+    sol: string;
+  }
+) {
+  // Cheapest tier: high-volume or mostly templated work.
+  const lunaModes = new Set([
+    "lead_reanalysis",
+    "whatsapp",
+    "email",
+  ]);
+
+  // Balanced tier: everyday counselor intelligence.
+  const terraModes = new Set([
+    "summary",
+    "next_action",
+    "call_script",
+    "followup_plan",
+    "scholarship",
+  ]);
+
+  // Frontier tier: reserve the expensive model for higher-stakes reasoning.
+  const solModes = new Set([
+    "visa_risk",
+    "objection_analysis",
+    "counselor_strategy",
+  ]);
+
+  if (solModes.has(mode)) return models.sol;
+  if (terraModes.has(mode)) return models.terra;
+  if (lunaModes.has(mode)) return models.luna;
+
+  // Unknown/new modes default to Terra rather than Sol to avoid surprise cost.
+  // A legacy OPENAI_MODEL secret is intentionally NOT allowed to override
+  // routing, because that would silently put every request on one model.
+  return models.terra;
+}
 
 function jsonResponse(payload: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(payload), {

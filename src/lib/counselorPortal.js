@@ -135,6 +135,7 @@ const containsUrgentWord = (...values) => {
 
 const buildRecordId = (record = {}, prefix = "record") =>
   pickFirst(
+    record.person_id,
     record.id,
     record.student_id,
     record.inquiry_id,
@@ -150,6 +151,7 @@ function normalizeKey(value) {
 
 function hasAnyKey(record = {}, keySet = new Set()) {
   const possibleKeys = [
+    record.person_id,
     record.student_id,
     record.inquiry_id,
     record.appointment_id,
@@ -173,6 +175,7 @@ function buildStudentKeySet(students = []) {
 
   safeArray(students).forEach((student) => {
     [
+      student.person_id,
       student.id,
       student.student_id,
       student.inquiry_id,
@@ -207,91 +210,84 @@ function cleanPayload(payload = {}) {
   );
 }
 
-function localResult(table, payload = {}, extra = {}) {
-  return {
-    id:
-      payload.id ||
-      `${table}_local_${Date.now()}_${Math.random()
-        .toString(36)
-        .slice(2, 7)}`,
-    ...payload,
-    ...extra,
-    _local_fallback: true,
-    _fallback_reason:
-      "Supabase write skipped after schema-safe attempts failed.",
-  };
+function buildWriteError(table, operation, errors = []) {
+  const detail = errors.filter(Boolean).join(" | ");
+  const error = new Error(
+    detail
+      ? `${operation} failed for ${table}. ${detail}`
+      : `${operation} failed for ${table}. No row was returned. Check RLS, table schema, and record access.`
+  );
+
+  error.name = "CounselorPortalWriteError";
+  error.table = table;
+  error.operation = operation;
+  error.causes = [...errors];
+
+  return error;
 }
 
-async function insertWithFallback(table, attempts = [], fallbackPayload = {}) {
+async function insertWithFallback(table, attempts = []) {
   const errors = [];
 
   for (const payload of attempts.map(cleanPayload)) {
+    if (!Object.keys(payload).length) continue;
+
     try {
       const { data, error } = await withWriteTimeout(
-        supabase
-          .from(table)
-          .insert(payload)
-          .select()
-          .maybeSingle(),
+        supabase.from(table).insert(payload).select().maybeSingle(),
         `${table} insert`
       );
 
       if (!error && data) return data;
 
-      if (!error) return payload;
+      const message =
+        error?.message ||
+        "Insert returned no row. The write may be blocked by RLS or a schema mismatch.";
 
-      errors.push(error.message);
-      console.warn(`${table} insert attempt skipped:`, error.message, payload);
+      errors.push(message);
+      console.warn(`${table} insert attempt skipped:`, message);
     } catch (error) {
-      errors.push(error.message);
-      console.warn(`${table} insert attempt failed:`, error.message, payload);
+      const message = error?.message || String(error);
+      errors.push(message);
+      console.warn(`${table} insert attempt failed:`, message);
     }
   }
 
-  console.warn(`${table} all insert attempts failed:`, errors.join(" | "));
-
-  return localResult(table, cleanPayload(fallbackPayload), {
-    _write_errors: errors,
-  });
+  throw buildWriteError(table, "Insert", errors);
 }
 
-async function updateByIdWithFallback(table, id, attempts = [], fallbackPayload = {}) {
+async function updateByIdWithFallback(table, id, attempts = []) {
+  if (id === null || id === undefined || String(id).trim() === "") {
+    throw buildWriteError(table, "Update", ["A valid record id is required."]);
+  }
+
   const errors = [];
 
   for (const payload of attempts.map(cleanPayload)) {
+    if (!Object.keys(payload).length) continue;
+
     try {
       const { data, error } = await withWriteTimeout(
-        supabase
-          .from(table)
-          .update(payload)
-          .eq("id", id)
-          .select()
-          .maybeSingle(),
+        supabase.from(table).update(payload).eq("id", id).select().maybeSingle(),
         `${table} update`
       );
 
       if (!error && data) return data;
 
-      if (!error) {
-        return {
-          id,
-          ...payload,
-        };
-      }
+      const message =
+        error?.message ||
+        "Update matched no visible row. Check the record id and RLS update/select policies.";
 
-      errors.push(error.message);
-      console.warn(`${table} update attempt skipped:`, error.message, payload);
+      errors.push(message);
+      console.warn(`${table} update attempt skipped:`, message);
     } catch (error) {
-      errors.push(error.message);
-      console.warn(`${table} update attempt failed:`, error.message, payload);
+      const message = error?.message || String(error);
+      errors.push(message);
+      console.warn(`${table} update attempt failed:`, message);
     }
   }
 
-  console.warn(`${table} all update attempts failed:`, errors.join(" | "));
-
-  return localResult(table, { id, ...cleanPayload(fallbackPayload) }, {
-    _write_errors: errors,
-  });
+  throw buildWriteError(table, "Update", errors);
 }
 
 export function normalizeCounselorProfile(profile = {}) {
@@ -646,67 +642,85 @@ export function getNextBestCounselorAction(student = {}, related = {}) {
 
 function groupRelatedByStudent(snapshot = {}) {
   const students = safeArray(snapshot.students);
+  const bundles = students.map((student) => ({
+    student,
+    applications: [],
+    universities: [],
+    documents: [],
+    tasks: [],
+    support: [],
+    communications: [],
+    timeline: [],
+  }));
 
-  const aliasesFor = (student = {}) =>
-    [
-      student.id,
-      student.student_id,
-      student.inquiry_id,
-      student.appointment_id,
-      student.email,
-      student.student_email,
-      student.phone,
-      student.mobile,
-      student.whatsapp,
+  if (!bundles.length) return bundles;
+
+  const aliasMap = new Map();
+
+  bundles.forEach((bundle, index) => {
+    const aliases = [
+      bundle.student.person_id,
+      bundle.student.id,
+      bundle.student.student_id,
+      bundle.student.inquiry_id,
+      bundle.student.appointment_id,
+      bundle.student.email,
+      bundle.student.student_email,
+      bundle.student.lead_email,
+      bundle.student.phone,
+      bundle.student.student_phone,
+      bundle.student.mobile,
+      bundle.student.whatsapp,
     ]
       .filter(Boolean)
       .map(normalizeKey);
 
-  const matchesStudent = (record = {}, aliases = []) => {
-    const recordKeys = [
-      record.student_id,
-      record.inquiry_id,
-      record.appointment_id,
-      record.email,
-      record.student_email,
-      record.phone,
-      record.mobile,
-      record.whatsapp,
-    ]
-      .filter(Boolean)
-      .map(normalizeKey);
+    aliases.forEach((alias) => {
+      const indexes = aliasMap.get(alias) || [];
+      if (!indexes.includes(index)) indexes.push(index);
+      aliasMap.set(alias, indexes);
+    });
+  });
 
-    return recordKeys.some((key) => aliases.includes(key));
+  const assignRecords = (records, key) => {
+    safeArray(records).forEach((record) => {
+      const recordKeys = [
+        record.person_id,
+        record.student_id,
+        record.inquiry_id,
+        record.appointment_id,
+        record.email,
+        record.student_email,
+        record.lead_email,
+        record.phone,
+        record.student_phone,
+        record.mobile,
+        record.whatsapp,
+      ]
+        .filter(Boolean)
+        .map(normalizeKey);
+
+      const matchedIndexes = new Set();
+
+      recordKeys.forEach((recordKey) => {
+        safeArray(aliasMap.get(recordKey)).forEach((index) => matchedIndexes.add(index));
+      });
+
+      matchedIndexes.forEach((index) => {
+        bundles[index][key].push(record);
+      });
+    });
   };
 
-  return students.map((student) => {
-    const aliases = aliasesFor(student);
+  assignRecords(snapshot.applications, "applications");
+  assignRecords(snapshot.universities, "universities");
+  assignRecords(snapshot.documents, "documents");
+  assignRecords(snapshot.tasks, "tasks");
+  assignRecords(snapshot.support, "support");
+  assignRecords(snapshot.communications, "communications");
+  assignRecords(snapshot.timeline, "timeline");
 
-    return {
-      student,
-      applications: safeArray(snapshot.applications).filter((record) =>
-        matchesStudent(record, aliases)
-      ),
-      universities: safeArray(snapshot.universities).filter((record) =>
-        matchesStudent(record, aliases)
-      ),
-      documents: safeArray(snapshot.documents).filter((record) =>
-        matchesStudent(record, aliases)
-      ),
-      tasks: safeArray(snapshot.tasks).filter((record) =>
-        matchesStudent(record, aliases)
-      ),
-      support: safeArray(snapshot.support).filter((record) =>
-        matchesStudent(record, aliases)
-      ),
-      communications: safeArray(snapshot.communications).filter((record) =>
-        matchesStudent(record, aliases)
-      ),
-      timeline: safeArray(snapshot.timeline).filter((record) =>
-        matchesStudent(record, aliases)
-      ),
-    };
-  });
+  return bundles;
 }
 
 export function buildPriorityStudentQueue(studentsOrSnapshot = []) {
@@ -1241,27 +1255,31 @@ export function buildCounselorExecutiveBrief(snapshot = {}) {
   };
 }
 
-async function safeSelect(table, queryBuilder, fallback = []) {
+async function safeSelect(table, queryBuilder, fallback = [], diagnostics = null) {
   try {
     const baseQuery = supabase.from(table);
     const query = queryBuilder ? queryBuilder(baseQuery) : baseQuery.select("*");
     const { data, error } = await query;
 
     if (error) {
-      console.warn(`Counselor Portal skipped ${table}:`, error.message);
+      const message = error.message || String(error);
+      console.warn(`Counselor Portal skipped ${table}:`, message);
+      diagnostics?.push({ table, message });
       return fallback;
     }
 
     return safeArray(data);
   } catch (error) {
-    console.warn(`Counselor Portal failed ${table}:`, error);
+    const message = error?.message || String(error);
+    console.warn(`Counselor Portal failed ${table}:`, message);
+    diagnostics?.push({ table, message });
     return fallback;
   }
 }
 
 function buildAssignmentFilter(profile = {}) {
-  const counselorId = profile.counselorId;
-  const email = profile.email;
+  const counselorId = safeString(profile.counselorId).trim();
+  const email = safeString(profile.email).trim();
   const filters = [];
 
   if (counselorId) {
@@ -1280,41 +1298,72 @@ function buildAssignmentFilter(profile = {}) {
   return filters.join(",");
 }
 
-async function fetchAssignedStudents(profile) {
+async function fetchAssignedStudents(profile, diagnostics = []) {
   const assignmentFilter = buildAssignmentFilter(profile);
 
-  if (assignmentFilter) {
-    const filteredStudents = await safeSelect(COUNSELOR_TABLES.students, (table) =>
-      table.select("*").or(assignmentFilter).limit(250)
-    );
+  if (!assignmentFilter) {
+    diagnostics.push({
+      table: "assignment",
+      message:
+        "Counselor identity has no id or email, so assigned records cannot be safely scoped.",
+    });
 
-    if (filteredStudents.length > 0) {
-      return {
-        records: filteredStudents,
-        scope: "assigned-students",
-      };
-    }
+    return {
+      records: [],
+      scope: "missing-counselor-identity",
+    };
   }
 
-  const students = await safeSelect(COUNSELOR_TABLES.students, (table) =>
-    table.select("*").limit(250)
-  );
+  const [students, inquiries] = await Promise.all([
+    safeSelect(
+      COUNSELOR_TABLES.students,
+      (table) => table.select("*").or(assignmentFilter).limit(250),
+      [],
+      diagnostics
+    ),
+    safeSelect(
+      COUNSELOR_TABLES.inquiries,
+      (table) => table.select("*").or(assignmentFilter).limit(250),
+      [],
+      diagnostics
+    ),
+  ]);
 
-  const inquiries = await safeSelect(COUNSELOR_TABLES.inquiries, (table) =>
-    table.select("*").limit(250)
+  const normalizedRecords = [...students, ...inquiries].map((record) => ({
+    ...record,
+    source_table:
+      record.source_table ||
+      (record.inquiry_id || record.lead_status ? "inquiries" : "students"),
+  }));
+
+  // person_id is the canonical human identity. Prefer the richer students row
+  // when both a students row and an inquiries row represent the same person.
+  normalizedRecords.sort((a, b) => {
+    const aStudent = a.source_table === "students" ? 1 : 0;
+    const bStudent = b.source_table === "students" ? 1 : 0;
+    return bStudent - aStudent;
+  });
+
+  const records = uniqueBy(
+    normalizedRecords,
+    (record) =>
+      normalizeKey(
+        pickFirst(
+          record.person_id,
+          record.student_id,
+          record.inquiry_id,
+          record.appointment_id,
+          record.email,
+          record.student_email,
+          record.phone,
+          buildRecordId(record, "student")
+        )
+      )
   );
 
   return {
-    records: uniqueBy(
-      [...students, ...inquiries].map((record) => ({
-        ...record,
-        source_table:
-          record.source_table ||
-          (record.inquiry_id || record.lead_status ? "inquiries" : "students"),
-      })),
-      (record) => buildRecordId(record, "student")
-    ),
-    scope: "fallback-all-students",
+    records,
+    scope: records.length ? "assigned-records" : "assigned-empty",
   };
 }
 
@@ -1337,7 +1386,8 @@ function buildAssignedSnapshot(rawSnapshot = {}) {
 
 export async function fetchCounselorPortalSnapshot({ counselor } = {}) {
   const profile = normalizeCounselorProfile(counselor);
-  const assigned = await fetchAssignedStudents(profile);
+  const readErrors = [];
+  const assigned = await fetchAssignedStudents(profile, readErrors);
   const students = assigned.records;
 
   const [
@@ -1350,14 +1400,14 @@ export async function fetchCounselorPortalSnapshot({ counselor } = {}) {
     appointmentsRaw,
     timelineRaw,
   ] = await Promise.all([
-    safeSelect(COUNSELOR_TABLES.applications, (table) => table.select("*").limit(500)),
-    safeSelect(COUNSELOR_TABLES.universities, (table) => table.select("*").limit(500)),
-    safeSelect(COUNSELOR_TABLES.documents, (table) => table.select("*").limit(500)),
-    safeSelect(COUNSELOR_TABLES.tasks, (table) => table.select("*").limit(500)),
-    safeSelect(COUNSELOR_TABLES.support, (table) => table.select("*").limit(300)),
-    safeSelect(COUNSELOR_TABLES.communications, (table) => table.select("*").limit(500)),
-    safeSelect(COUNSELOR_TABLES.appointments, (table) => table.select("*").limit(300)),
-    safeSelect(COUNSELOR_TABLES.timeline, (table) => table.select("*").limit(500)),
+    safeSelect(COUNSELOR_TABLES.applications, (table) => table.select("*").limit(500), [], readErrors),
+    safeSelect(COUNSELOR_TABLES.universities, (table) => table.select("*").limit(500), [], readErrors),
+    safeSelect(COUNSELOR_TABLES.documents, (table) => table.select("*").limit(500), [], readErrors),
+    safeSelect(COUNSELOR_TABLES.tasks, (table) => table.select("*").limit(500), [], readErrors),
+    safeSelect(COUNSELOR_TABLES.support, (table) => table.select("*").limit(300), [], readErrors),
+    safeSelect(COUNSELOR_TABLES.communications, (table) => table.select("*").limit(500), [], readErrors),
+    safeSelect(COUNSELOR_TABLES.appointments, (table) => table.select("*").limit(300), [], readErrors),
+    safeSelect(COUNSELOR_TABLES.timeline, (table) => table.select("*").limit(500), [], readErrors),
   ]);
 
   const rawSnapshot = {
@@ -1382,17 +1432,26 @@ export async function fetchCounselorPortalSnapshot({ counselor } = {}) {
       rawCommunications: communicationsRaw.length,
       rawAppointments: appointmentsRaw.length,
       rawTimeline: timelineRaw.length,
+      readErrors,
+      hasReadErrors: readErrors.length > 0,
+      assignmentScope: assigned.scope,
     },
   };
 
   const snapshot = buildAssignedSnapshot(rawSnapshot);
+  const priorityStudents = buildPriorityStudentQueue(snapshot);
+  const metrics = buildCounselorPortalMetrics(snapshot);
+  const workload = buildCounselorWorkloadAnalytics(snapshot);
+  const performance = buildCounselorPerformanceAnalytics(snapshot);
+  const executiveBrief = buildCounselorExecutiveBrief(snapshot);
 
   return {
     ...snapshot,
-    metrics: buildCounselorPortalMetrics(snapshot),
-    workload: buildCounselorWorkloadAnalytics(snapshot),
-    performance: buildCounselorPerformanceAnalytics(snapshot),
-    executiveBrief: buildCounselorExecutiveBrief(snapshot),
+    priorityStudents,
+    metrics,
+    workload,
+    performance,
+    executiveBrief,
   };
 }
 
@@ -2158,10 +2217,18 @@ export async function executeCounselorDailySweep({
   snapshot,
   counselor,
 }) {
-  const students = buildPriorityStudentQueue(snapshot);
+  const students = buildPriorityStudentQueue(snapshot)
+    .filter(
+      (student) =>
+        student.riskScore >= 80 ||
+        student.opportunityScore >= 75 ||
+        student.stalledDays >= 14
+    )
+    .slice(0, 25);
+
   const results = [];
 
-  for (const student of students.slice(0, 25)) {
+  for (const student of students) {
     try {
       const triggered = await executeCounselorStudentReview({
         student,
@@ -2172,9 +2239,17 @@ export async function executeCounselorDailySweep({
         studentId: student.id,
         studentName: student.name,
         triggered,
+        ok: true,
       });
     } catch (error) {
       console.error("Daily counselor sweep failed", student.name, error);
+      results.push({
+        studentId: student.id,
+        studentName: student.name,
+        triggered: [],
+        ok: false,
+        error: error?.message || String(error),
+      });
     }
   }
 

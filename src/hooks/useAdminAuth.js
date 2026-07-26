@@ -14,6 +14,11 @@ import {
 
 import { wait, withTimeout } from "../utils/crm/requestUtils";
 
+function normalizeUserId(value) {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
+}
+
 export default function useAdminAuth({ onLogoutCleanup } = {}) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -30,7 +35,7 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
   const mountedRef = useRef(false);
   const profileFetchIdRef = useRef(0);
   const scheduledProfileTimerRef = useRef(null);
-  const lastProfileUserIdRef = useRef(null);
+  const lastProfileUserIdRef = useRef("");
   const inFlightProfileRef = useRef(new Map());
   const onLogoutCleanupRef = useRef(onLogoutCleanup);
 
@@ -54,25 +59,31 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
     inFlightProfileRef.current.clear();
   }, []);
 
-  const resetProfileState = useCallback(() => {
-    safeSetState(() => {
-      setAdminProfile(null);
-      setProfileLoading(false);
-      setProfileError("");
-      setProfileRetryCount(0);
-    });
-  }, [safeSetState]);
+  const resetProfileState = useCallback(
+    ({ preserveProfile = false } = {}) => {
+      safeSetState(() => {
+        if (!preserveProfile) {
+          setAdminProfile(null);
+        }
+
+        setProfileLoading(false);
+        setProfileError("");
+        setProfileRetryCount(0);
+      });
+    },
+    [safeSetState]
+  );
 
   const loadAdminProfile = useCallback(
     async (userId, options = {}) => {
-      if (!userId) return null;
+      const normalizedUserId = normalizeUserId(userId);
+      if (!normalizedUserId) return null;
 
       const { force = false } = options;
-      const normalizedUserId = String(userId);
 
       if (!force) {
-        const existingPromise = inFlightProfileRef.current.get(normalizedUserId);
-        if (existingPromise) return existingPromise;
+        const existing = inFlightProfileRef.current.get(normalizedUserId);
+        if (existing) return existing;
       }
 
       const requestPromise = (async () => {
@@ -87,12 +98,14 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
           setProfileError("");
           setProfileRetryCount(0);
 
-          if (force) {
-            setAdminProfile(null);
-          } else if (cachedProfile) {
-            setAdminProfile(cachedProfile);
+          // Never destroy a working Admin OS while a live profile refresh runs.
+          // Keep the current/cached profile mounted until a definitive result arrives.
+          if (cachedProfile) {
+            setAdminProfile((current) => current || cachedProfile);
           }
         });
+
+        let lastError = null;
 
         for (let attempt = 1; attempt <= PROFILE_RETRY_LIMIT; attempt += 1) {
           if (
@@ -134,37 +147,22 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
               return data;
             }
 
-            if (attempt < PROFILE_RETRY_LIMIT) {
-              await wait(PROFILE_RETRY_DELAY_MS * attempt);
-            }
+            lastError = new Error("Admin profile row was not returned.");
           } catch (error) {
+            lastError = error;
             console.error("Admin profile timeout/error:", error);
+          }
 
-            if (
-              !mountedRef.current ||
-              profileFetchIdRef.current !== fetchId ||
-              lastProfileUserIdRef.current !== normalizedUserId
-            ) {
-              return null;
-            }
+          if (
+            !mountedRef.current ||
+            profileFetchIdRef.current !== fetchId ||
+            lastProfileUserIdRef.current !== normalizedUserId
+          ) {
+            return null;
+          }
 
-            if (attempt < PROFILE_RETRY_LIMIT) {
-              await wait(PROFILE_RETRY_DELAY_MS * attempt);
-              continue;
-            }
-
-            if (cachedProfile) {
-              safeSetState(() => {
-                setAdminProfile(cachedProfile);
-                setProfileLoading(false);
-                setProfileError(
-                  "Using cached admin profile because the live profile check timed out."
-                );
-                setProfileRetryCount(0);
-              });
-
-              return cachedProfile;
-            }
+          if (attempt < PROFILE_RETRY_LIMIT) {
+            await wait(PROFILE_RETRY_DELAY_MS * attempt);
           }
         }
 
@@ -176,11 +174,25 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
           return null;
         }
 
+        if (cachedProfile) {
+          safeSetState(() => {
+            setAdminProfile(cachedProfile);
+            setProfileLoading(false);
+            setProfileError(
+              "Using cached admin profile because the live profile check is temporarily unavailable."
+            );
+            setProfileRetryCount(0);
+          });
+
+          return cachedProfile;
+        }
+
         safeSetState(() => {
           setAdminProfile(null);
           setProfileLoading(false);
           setProfileError(
-            "Admin profile could not be verified after multiple attempts."
+            lastError?.message ||
+              "Admin profile could not be verified after multiple attempts."
           );
           setProfileRetryCount(0);
         });
@@ -207,14 +219,16 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
 
   const scheduleAdminProfileLoad = useCallback(
     (userId, options = {}) => {
-      if (!userId) return;
+      const normalizedUserId = normalizeUserId(userId);
+      if (!normalizedUserId) return;
 
       cancelScheduledProfileLoad();
 
       scheduledProfileTimerRef.current = window.setTimeout(() => {
         scheduledProfileTimerRef.current = null;
+
         if (!mountedRef.current) return;
-        void loadAdminProfile(userId, options);
+        void loadAdminProfile(normalizedUserId, options);
       }, 0);
     },
     [cancelScheduledProfileLoad, loadAdminProfile]
@@ -236,14 +250,17 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
         const sessionUser = data.session?.user || null;
 
         if (sessionUser) {
+          const userId = normalizeUserId(sessionUser.id);
+
           safeSetState(() => {
             setIsLoggedIn(true);
             setAdminUser(sessionUser);
           });
 
-          await loadAdminProfile(sessionUser.id);
+          await loadAdminProfile(userId);
         } else {
-          lastProfileUserIdRef.current = null;
+          cancelScheduledProfileLoad();
+          lastProfileUserIdRef.current = "";
           invalidateProfileLoads();
 
           safeSetState(() => {
@@ -256,7 +273,8 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
       } catch (error) {
         console.error("Session check failed:", error);
 
-        lastProfileUserIdRef.current = null;
+        cancelScheduledProfileLoad();
+        lastProfileUserIdRef.current = "";
         invalidateProfileLoads();
 
         safeSetState(() => {
@@ -274,7 +292,9 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Keep this callback synchronous. Supabase warns against awaiting another
+      // auth/database request directly inside onAuthStateChange.
       const sessionUser = session?.user || null;
 
       safeSetState(() => {
@@ -284,23 +304,44 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
       });
 
       if (sessionUser) {
-        const userId = String(sessionUser.id);
+        const userId = normalizeUserId(sessionUser.id);
 
-        if (lastProfileUserIdRef.current !== userId) {
+        // getSession() already handles the initial profile load.
+        // TOKEN_REFRESHED / repeated SIGNED_IN for the same user must not
+        // restart the Admin profile gate or make the UI disappear.
+        if (
+          lastProfileUserIdRef.current !== userId &&
+          !inFlightProfileRef.current.has(userId)
+        ) {
           scheduleAdminProfileLoad(userId);
+        } else if (
+          event === "TOKEN_REFRESHED" ||
+          event === "INITIAL_SESSION"
+        ) {
+          safeSetState(() => {
+            setProfileLoading(false);
+          });
         }
-      } else {
-        cancelScheduledProfileLoad();
-        lastProfileUserIdRef.current = null;
-        invalidateProfileLoads();
-        resetProfileState();
+
+        return;
       }
+
+      cancelScheduledProfileLoad();
+      lastProfileUserIdRef.current = "";
+      invalidateProfileLoads();
+
+      safeSetState(() => {
+        setAdminProfile(null);
+        setProfileLoading(false);
+        setProfileError("");
+        setProfileRetryCount(0);
+      });
     });
 
     return () => {
       mountedRef.current = false;
       cancelScheduledProfileLoad();
-      lastProfileUserIdRef.current = null;
+      lastProfileUserIdRef.current = "";
       invalidateProfileLoads();
       subscription?.unsubscribe();
     };
@@ -317,10 +358,17 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
     async (event) => {
       event.preventDefault();
 
+      const normalizedEmail = email.trim();
+
+      if (!normalizedEmail || !password) {
+        alert("Enter your admin email and password.");
+        return;
+      }
+
       try {
         const { data, error } = await withTimeout(
           supabase.auth.signInWithPassword({
-            email: email.trim(),
+            email: normalizedEmail,
             password,
           }),
           "Login"
@@ -335,7 +383,11 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
           safeSetState(() => {
             setAdminUser(data.user);
             setIsLoggedIn(true);
+            setSessionChecked(true);
           });
+
+          // The SIGNED_IN listener schedules the profile load.
+          // Do not perform the same Supabase profile request twice.
         }
 
         safeSetState(() => {
@@ -352,7 +404,7 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
 
   const logout = useCallback(async () => {
     cancelScheduledProfileLoad();
-    lastProfileUserIdRef.current = null;
+    lastProfileUserIdRef.current = "";
     invalidateProfileLoads();
 
     try {
@@ -367,9 +419,11 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
       setAdminUser(null);
       setEmail("");
       setPassword("");
+      setAdminProfile(null);
+      setProfileLoading(false);
+      setProfileError("");
+      setProfileRetryCount(0);
     });
-
-    resetProfileState();
 
     if (typeof onLogoutCleanupRef.current === "function") {
       try {
@@ -378,12 +432,7 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
         console.error("Logout cleanup failed:", error);
       }
     }
-  }, [
-    cancelScheduledProfileLoad,
-    invalidateProfileLoads,
-    resetProfileState,
-    safeSetState,
-  ]);
+  }, [cancelScheduledProfileLoad, invalidateProfileLoads, safeSetState]);
 
   return {
     isLoggedIn,
