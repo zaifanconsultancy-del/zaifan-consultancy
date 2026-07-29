@@ -1,145 +1,894 @@
-import React, { useMemo, useState } from 'react';
-import AgentNetworkCenter from './AgentNetworkCenter';
-import UniversityPartnerCenter from './UniversityPartnerCenter';
-import CommissionCenter from './CommissionCenter';
-import PartnerPerformance from './PartnerPerformance';
-import PartnerAnalytics from './PartnerAnalytics';
+import React, { useMemo, useState } from "react";
+import {
+  Activity,
+  BadgeCheck,
+  Building2,
+  CircleDollarSign,
+  Handshake,
+  Network,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Target,
+  University,
+  UsersRound,
+  X,
+} from "lucide-react";
 
-const partners = [
-  { id: 'AG-001', name: 'Lahore Study Link', type: 'Agent', country: 'Pakistan', status: 'Active', students: 42, revenue: 1850000, conversion: 34, risk: 'Low', owner: 'Ayesha Khan', lastActivity: 'Today' },
-  { id: 'AG-002', name: 'Karachi Global Admissions', type: 'Agent', country: 'Pakistan', status: 'Review', students: 28, revenue: 1190000, conversion: 27, risk: 'Medium', owner: 'Bilal Ahmed', lastActivity: 'Yesterday' },
-  { id: 'UN-001', name: 'Northbridge University', type: 'University', country: 'UK', status: 'Active', students: 63, revenue: 4200000, conversion: 41, risk: 'Low', owner: 'Sara Malik', lastActivity: '2 days ago' },
-  { id: 'UN-002', name: 'Maple State College', type: 'University', country: 'Canada', status: 'Active', students: 31, revenue: 2400000, conversion: 32, risk: 'Low', owner: 'Hamza Ali', lastActivity: 'Today' },
-  { id: 'AG-003', name: 'Punjab Student Desk', type: 'Agent', country: 'Pakistan', status: 'Paused', students: 11, revenue: 370000, conversion: 16, risk: 'High', owner: 'Nimra Shah', lastActivity: '9 days ago' },
-];
+import AgentNetworkCenter from "./AgentNetworkCenter";
+import UniversityPartnerCenter from "./UniversityPartnerCenter";
+import CommissionCenter from "./CommissionCenter";
+import PartnerPerformance from "./PartnerPerformance";
+import PartnerAnalytics from "./PartnerAnalytics";
 
-const updates = [
-  { title: 'Commission reconciliation completed', detail: '18 partner payouts matched with invoices.', severity: 'success' },
-  { title: 'University intake update', detail: 'Northbridge September intake deadline moved forward.', severity: 'warning' },
-  { title: 'Agent compliance review', detail: 'Punjab Student Desk requires document verification audit.', severity: 'danger' },
-  { title: 'New partner opportunity', detail: 'Maple State College requested counselor training session.', severity: 'info' },
-];
-
-function currency(value) {
-  return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(value);
+function safeArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
-export default function PartnerOSDashboard({ compact = false }) {
-  const [activeView, setActiveView] = useState('overview');
-  const [search, setSearch] = useState('');
-  const [type, setType] = useState('All');
+function safeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
-  const filteredPartners = useMemo(() => {
-    return partners.filter((partner) => {
-      const matchesType = type === 'All' || partner.type === type;
-      const text = `${partner.name} ${partner.country} ${partner.owner} ${partner.status}`.toLowerCase();
-      return matchesType && text.includes(search.toLowerCase());
-    });
-  }, [search, type]);
+function lower(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
 
-  const metrics = useMemo(() => {
-    const totalRevenue = partners.reduce((sum, partner) => sum + partner.revenue, 0);
-    const totalStudents = partners.reduce((sum, partner) => sum + partner.students, 0);
-    const active = partners.filter((partner) => partner.status === 'Active').length;
-    const avgConversion = Math.round(partners.reduce((sum, partner) => sum + partner.conversion, 0) / partners.length);
-    return { totalRevenue, totalStudents, active, avgConversion };
-  }, []);
+function money(value) {
+  return new Intl.NumberFormat("en-PK", {
+    style: "currency",
+    currency: "PKR",
+    maximumFractionDigits: 0,
+  }).format(safeNumber(value));
+}
 
-  const tabs = [
-    ['overview', 'Overview'],
-    ['agents', 'Agent Network'],
-    ['universities', 'University Partners'],
-    ['commissions', 'Commissions'],
-    ['performance', 'Performance'],
-    ['analytics', 'Analytics'],
-  ];
+function percent(value) {
+  return `${Math.round(safeNumber(value))}%`;
+}
 
-  const renderOverview = () => (
-    <div className="space-y-6">
-      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <MetricCard label="Partner Revenue" value={currency(metrics.totalRevenue)} note="Across active partner channels" />
-        <MetricCard label="Partner Students" value={metrics.totalStudents} note="Assigned or referred students" />
-        <MetricCard label="Active Partners" value={metrics.active} note={`${partners.length} total tracked partners`} />
-        <MetricCard label="Avg Conversion" value={`${metrics.avgConversion}%`} note="Inquiry to application conversion" />
-      </section>
-
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        <div className="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900">Partner Command Table</h3>
-              <p className="text-sm text-slate-500">Live partner health, contribution, risk, and ownership.</p>
-            </div>
-            <div className="flex gap-2">
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search partners..." className="px-3 py-2 border border-slate-200 rounded-xl text-sm" />
-              <select value={type} onChange={(event) => setType(event.target.value)} className="px-3 py-2 border border-slate-200 rounded-xl text-sm">
-                <option>All</option><option>Agent</option><option>University</option>
-              </select>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead><tr className="text-left text-slate-500 border-b"><th className="py-3">Partner</th><th>Status</th><th>Students</th><th>Revenue</th><th>Conversion</th><th>Risk</th><th>Owner</th></tr></thead>
-              <tbody>
-                {filteredPartners.map((partner) => (
-                  <tr key={partner.id} className="border-b last:border-0 hover:bg-slate-50">
-                    <td className="py-3"><div className="font-semibold text-slate-900">{partner.name}</div><div className="text-xs text-slate-500">{partner.id} · {partner.type} · {partner.country}</div></td>
-                    <td><Badge tone={partner.status === 'Active' ? 'green' : partner.status === 'Review' ? 'amber' : 'red'}>{partner.status}</Badge></td>
-                    <td>{partner.students}</td>
-                    <td>{currency(partner.revenue)}</td>
-                    <td>{partner.conversion}%</td>
-                    <td><Badge tone={partner.risk === 'Low' ? 'green' : partner.risk === 'Medium' ? 'amber' : 'red'}>{partner.risk}</Badge></td>
-                    <td><div>{partner.owner}</div><div className="text-xs text-slate-400">{partner.lastActivity}</div></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Partner Health Feed</h3>
-          <div className="space-y-3">
-            {updates.map((item) => <UpdateCard key={item.title} item={item} />)}
-          </div>
-        </div>
-      </section>
-
-      {!compact && <PartnerAnalytics compact />}
-    </div>
-  );
+function isReadyStatus(status = "") {
+  const value = lower(status);
 
   return (
-    <div className="p-4 md:p-6 bg-slate-50 min-h-screen">
-      <header className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <p className="text-sm uppercase tracking-wide text-indigo-600 font-semibold">Zaifan Enterprise OS</p>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-950">Partner OS</h1>
-          <p className="text-slate-600 mt-1">Agent network, university partners, commissions, partner performance, and executive analytics.</p>
+    value.includes("active") ||
+    value.includes("approved") ||
+    value.includes("live") ||
+    value.includes("verified")
+  );
+}
+
+function isReviewStatus(status = "") {
+  const value = lower(status);
+
+  return (
+    value.includes("review") ||
+    value.includes("pending") ||
+    value.includes("paused") ||
+    value.includes("hold") ||
+    value.includes("inactive")
+  );
+}
+
+function partnerType(partner = {}) {
+  const value = lower(
+    partner.type ||
+      partner.partner_type ||
+      partner.partnerType ||
+      partner.category
+  );
+
+  if (
+    value.includes("university") ||
+    value.includes("college") ||
+    value.includes("institution")
+  ) {
+    return "University";
+  }
+
+  if (
+    value.includes("agent") ||
+    value.includes("agency") ||
+    value.includes("recruit")
+  ) {
+    return "Agent";
+  }
+
+  return partner.type || partner.partner_type || "Other";
+}
+
+function getPartnerName(partner = {}) {
+  return (
+    partner.name ||
+    partner.partner_name ||
+    partner.partnerName ||
+    partner.organization_name ||
+    partner.organizationName ||
+    "Unnamed partner"
+  );
+}
+
+function getPartnerCountry(partner = {}) {
+  return (
+    partner.country ||
+    partner.destination_country ||
+    partner.destinationCountry ||
+    partner.base_country ||
+    partner.baseCountry ||
+    "Not recorded"
+  );
+}
+
+function getPartnerOwner(partner = {}) {
+  return (
+    partner.owner ||
+    partner.owner_name ||
+    partner.ownerName ||
+    partner.account_manager ||
+    partner.accountManager ||
+    "Not assigned"
+  );
+}
+
+function getPartnerStudents(partner = {}) {
+  return safeNumber(
+    partner.students ??
+      partner.student_count ??
+      partner.studentCount ??
+      partner.referred_students ??
+      partner.referredStudents
+  );
+}
+
+function getPartnerRevenue(partner = {}) {
+  return safeNumber(
+    partner.revenue ??
+      partner.partner_revenue ??
+      partner.partnerRevenue ??
+      partner.collected_revenue ??
+      partner.collectedRevenue
+  );
+}
+
+function getPartnerConversion(partner = {}) {
+  const explicit =
+    partner.conversion ??
+    partner.conversion_rate ??
+    partner.conversionRate;
+
+  if (explicit !== null && explicit !== undefined && explicit !== "") {
+    const value = Number(explicit);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  const leads = safeNumber(
+    partner.leads ??
+      partner.referred_leads ??
+      partner.referredLeads
+  );
+
+  const applications = safeNumber(
+    partner.applications ??
+      partner.application_count ??
+      partner.applicationCount
+  );
+
+  if (leads <= 0) return null;
+  return Math.round((applications / leads) * 100);
+}
+
+function statusTone(status = "") {
+  if (isReadyStatus(status)) {
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  }
+
+  if (isReviewStatus(status)) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  return "border-[#C9D7E6] bg-[#FFF8EF] text-slate-600";
+}
+
+function riskTone(risk = "") {
+  const value = lower(risk);
+
+  if (value.includes("high") || value.includes("critical")) {
+    return "border-[#FB7185] bg-[#FFF4F4] text-red-700";
+  }
+
+  if (value.includes("medium")) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  if (value.includes("low")) {
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  }
+
+  return "border-[#C9D7E6] bg-[#FFF8EF] text-slate-600";
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone = "blue",
+  icon: Icon,
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#123865] bg-[#123865]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+    violet: "border-[#9B6CFF] bg-[#F8F5FF]",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <article
+      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <StatusPill label="Network Health" value="91%" />
-          <StatusPill label="Payout Readiness" value="96%" />
+
+        {Icon ? (
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+              dark
+                ? "border-white/20 bg-white/10 text-orange-200"
+                : "border-[#123865]/15 bg-white text-[#123865]"
+            }`}
+          >
+            <Icon size={16} />
+          </div>
+        ) : null}
+      </div>
+
+      <p
+        className={`mt-2 text-xs font-semibold leading-5 ${
+          dark ? "text-slate-200" : "text-slate-600"
+        }`}
+      >
+        {helper}
+      </p>
+
+      {badge ? (
+        <span
+          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+            dark
+              ? "border-white/20 bg-white/10 text-white"
+              : "border-[#C9D7E6] bg-white text-slate-600"
+          }`}
+        >
+          {badge}
+        </span>
+      ) : null}
+    </article>
+  );
+}
+
+function PartnerRow({ partner }) {
+  const conversion = getPartnerConversion(partner);
+  const status = partner.status || "Unknown";
+  const risk = partner.risk || "Not measured";
+
+  return (
+    <article className="rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#F97316]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(18rem,1.4fr)_10rem_9rem_10rem_10rem_11rem] xl:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="min-w-0 [overflow-wrap:anywhere] font-black text-[#10233F]">
+              {getPartnerName(partner)}
+            </p>
+
+            <span
+              className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
+                status
+              )}`}
+            >
+              {status}
+            </span>
+          </div>
+
+          <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
+            {[
+              partner.id,
+              partnerType(partner),
+              getPartnerCountry(partner),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Students
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {getPartnerStudents(partner)}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Conversion
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {conversion === null ? "Not measured" : percent(conversion)}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Revenue
+          </p>
+          <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+            {getPartnerRevenue(partner) > 0
+              ? money(getPartnerRevenue(partner))
+              : "Not linked"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Risk
+          </p>
+          <span
+            className={`mt-1 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${riskTone(
+              risk
+            )}`}
+          >
+            {risk}
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Owner
+          </p>
+          <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+            {getPartnerOwner(partner)}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export default function PartnerOSDashboard({
+  compact = false,
+  snapshot = {},
+  adminProfile,
+  onRefresh,
+}) {
+  const [activeView, setActiveView] = useState("overview");
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("All");
+
+  const partners = useMemo(
+    () =>
+      safeArray(
+        snapshot.partners ||
+          snapshot.partnerRecords ||
+          snapshot.organizations
+      ),
+    [snapshot]
+  );
+
+  const agents = useMemo(
+    () =>
+      safeArray(
+        snapshot.agents ||
+          snapshot.agentPartners ||
+          partners.filter((partner) => partnerType(partner) === "Agent")
+      ),
+    [snapshot, partners]
+  );
+
+  const universities = useMemo(
+    () =>
+      safeArray(
+        snapshot.universityPartners ||
+          snapshot.universities ||
+          partners.filter(
+            (partner) => partnerType(partner) === "University"
+          )
+      ),
+    [snapshot, partners]
+  );
+
+  const commissions = useMemo(
+    () =>
+      safeArray(
+        snapshot.commissions ||
+          snapshot.partnerCommissions
+      ),
+    [snapshot]
+  );
+
+  const performance = useMemo(
+    () =>
+      safeArray(
+        snapshot.performance ||
+          snapshot.partnerPerformance
+      ),
+    [snapshot]
+  );
+
+  const analytics = useMemo(
+    () => snapshot.analytics || snapshot.partnerAnalytics || {},
+    [snapshot]
+  );
+
+  const filteredPartners = useMemo(() => {
+    const needle = lower(search);
+
+    return partners.filter((partner) => {
+      if (type !== "All" && partnerType(partner) !== type) {
+        return false;
+      }
+
+      if (!needle) return true;
+
+      return [
+        getPartnerName(partner),
+        getPartnerCountry(partner),
+        getPartnerOwner(partner),
+        partner.status,
+        partner.risk,
+        partnerType(partner),
+      ]
+        .map(lower)
+        .join(" ")
+        .includes(needle);
+    });
+  }, [partners, search, type]);
+
+  const metrics = useMemo(() => {
+    const active = partners.filter((partner) =>
+      isReadyStatus(partner.status)
+    ).length;
+
+    const review = partners.filter((partner) =>
+      isReviewStatus(partner.status)
+    ).length;
+
+    const totalStudents = partners.reduce(
+      (sum, partner) => sum + getPartnerStudents(partner),
+      0
+    );
+
+    const totalRevenue = partners.reduce(
+      (sum, partner) => sum + getPartnerRevenue(partner),
+      0
+    );
+
+    const measurableConversions = partners
+      .map(getPartnerConversion)
+      .filter((value) => value !== null);
+
+    const avgConversion = measurableConversions.length
+      ? Math.round(
+          measurableConversions.reduce((sum, value) => sum + value, 0) /
+            measurableConversions.length
+        )
+      : null;
+
+    return {
+      active,
+      review,
+      totalStudents,
+      totalRevenue,
+      avgConversion,
+      measuredConversionCount: measurableConversions.length,
+    };
+  }, [partners]);
+
+  const views = [
+    { key: "overview", label: "Overview", icon: Activity },
+    { key: "agents", label: "Agent Network", icon: Network },
+    { key: "universities", label: "University Partners", icon: University },
+    { key: "commissions", label: "Commissions", icon: CircleDollarSign },
+    { key: "performance", label: "Performance", icon: Target },
+    { key: "analytics", label: "Analytics", icon: BarChart3Fallback },
+  ];
+
+  const currentView =
+    views.find((view) => view.key === activeView) || views[0];
+
+  const filtersActive = Boolean(search.trim()) || type !== "All";
+
+  function clearFilters() {
+    setSearch("");
+    setType("All");
+  }
+
+  return (
+    <div className="min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5">
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+                <Handshake size={12} />
+                Partner OS
+              </span>
+
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Relationship management
+              </span>
+
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Evidence first
+              </span>
+            </div>
+
+            <h1 className="mt-3 text-3xl font-black text-white">
+              Partner Relationship Command
+            </h1>
+
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              University relationships, recruitment partners, commissions,
+              performance and partner analytics. Zaifan no longer pre-populates
+              fake agents, universities, students, revenue or partner-health
+              percentages just to make this workspace look active.
+            </p>
+          </div>
+
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Current Workspace
+            </p>
+
+            <p className="mt-2 text-2xl font-black">
+              {currentView.label}
+            </p>
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+              {adminProfile?.email
+                ? `Admin partner view for ${adminProfile.email}`
+                : "Admin partner relationship workspace"}
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {partners.length} partners
+              </span>
+
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {metrics.active} active
+              </span>
+            </div>
+          </div>
         </div>
       </header>
 
-      <nav className="flex gap-2 overflow-x-auto mb-6 pb-1">
-        {tabs.map(([key, label]) => (
-          <button key={key} onClick={() => setActiveView(key)} className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap border ${activeView === key ? 'bg-slate-950 text-white border-slate-950' : 'bg-white text-slate-700 border-slate-200'}`}>{label}</button>
-        ))}
+      <nav className="flex flex-col gap-3 rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-wrap gap-2">
+          {views.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveView(key)}
+              aria-pressed={activeView === key}
+              className={`inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-xs font-black transition ${
+                activeView === key
+                  ? "border-[#F97316] bg-[#FF5A0A] text-white"
+                  : "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F] hover:border-[#F97316]"
+              }`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {onRefresh ? (
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white transition hover:bg-[#245886]"
+          >
+            <RefreshCw size={13} />
+            Refresh Partners
+          </button>
+        ) : null}
       </nav>
 
-      {activeView === 'overview' && renderOverview()}
-      {activeView === 'agents' && <AgentNetworkCenter compact={compact} />}
-      {activeView === 'universities' && <UniversityPartnerCenter compact={compact} />}
-      {activeView === 'commissions' && <CommissionCenter compact={compact} />}
-      {activeView === 'performance' && <PartnerPerformance compact={compact} />}
-      {activeView === 'analytics' && <PartnerAnalytics compact={compact} />}
+      {activeView === "overview" ? (
+        <>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              label="Partner Records"
+              value={partners.length}
+              helper={`${agents.length} agent/recruitment partner${
+                agents.length === 1 ? "" : "s"
+              } · ${universities.length} university partner${
+                universities.length === 1 ? "" : "s"
+              }.`}
+              tone="navy"
+              icon={Handshake}
+              badge="Network"
+            />
+
+            <MetricCard
+              label="Active Partners"
+              value={metrics.active}
+              helper={`${metrics.review} currently require review, hold or follow-up.`}
+              tone={metrics.review > 0 ? "amber" : "green"}
+              icon={BadgeCheck}
+            />
+
+            <MetricCard
+              label="Partner Students"
+              value={metrics.totalStudents}
+              helper="Students explicitly attributed to partner records."
+              tone="blue"
+              icon={UsersRound}
+            />
+
+            <MetricCard
+              label="Avg Conversion"
+              value={
+                metrics.avgConversion === null
+                  ? "—"
+                  : percent(metrics.avgConversion)
+              }
+              helper={
+                metrics.avgConversion === null
+                  ? "Not measured until real conversion evidence exists."
+                  : `Average across ${metrics.measuredConversionCount} measurable partner record${
+                      metrics.measuredConversionCount === 1 ? "" : "s"
+                    }.`
+              }
+              tone={
+                metrics.avgConversion === null ? "blue" : "violet"
+              }
+              icon={Target}
+              badge={
+                metrics.avgConversion === null
+                  ? "Not measured"
+                  : "Measured"
+              }
+            />
+          </div>
+
+          <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+            <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                  Partner Command
+                </p>
+                <h2 className="mt-1 text-xl font-black text-[#10233F]">
+                  Relationship portfolio
+                </h2>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  Search and review the real partner records currently supplied
+                  to Partner OS.
+                </p>
+              </div>
+
+              {!compact ? (
+                <div className="grid gap-2 sm:grid-cols-[minmax(14rem,1fr)_10rem_auto]">
+                  <label className="relative block">
+                    <Search
+                      size={15}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Search partner..."
+                      className="min-h-10 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-xs font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#F97316]"
+                    />
+                  </label>
+
+                  <select
+                    value={type}
+                    onChange={(event) => setType(event.target.value)}
+                    className="min-h-10 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none focus:border-[#F97316]"
+                  >
+                    <option>All</option>
+                    <option>Agent</option>
+                    <option>University</option>
+                    <option>Other</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    disabled={!filtersActive}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-slate-700 disabled:opacity-40"
+                  >
+                    <X size={13} />
+                    Clear
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="space-y-2.5">
+              {(compact
+                ? filteredPartners.slice(0, 4)
+                : filteredPartners
+              ).length ? (
+                (compact
+                  ? filteredPartners.slice(0, 4)
+                  : filteredPartners
+                ).map((partner, index) => (
+                  <PartnerRow
+                    key={
+                      partner.id ||
+                      `${getPartnerName(partner)}-${index}`
+                    }
+                    partner={partner}
+                  />
+                ))
+              ) : (
+                <div className="rounded-[1.4rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-8 text-center">
+                  <Handshake
+                    size={24}
+                    className="mx-auto text-orange-700"
+                  />
+                  <p className="mt-3 font-black text-[#10233F]">
+                    {partners.length
+                      ? "No partners match these filters."
+                      : "No real partner records yet."}
+                  </p>
+                  <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                    {partners.length
+                      ? "Clear or change the partner filters."
+                      : "Connect genuine university/recruitment partner records before Zaifan reports partner revenue, conversion, health or performance."}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {!compact ? (
+            <div className="grid gap-3 lg:grid-cols-3">
+              <div className="rounded-[1.35rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-4">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck
+                    size={17}
+                    className="mt-0.5 shrink-0 text-emerald-700"
+                  />
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                      Relationship Integrity
+                    </p>
+                    <p className="mt-1 font-black text-[#10233F]">
+                      Agent ≠ entire Partner OS
+                    </p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                      Agents are one partner channel. Universities, commissions
+                      and relationship performance remain first-class Partner OS
+                      domains.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[1.35rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4">
+                <div className="flex items-start gap-3">
+                  <Building2
+                    size={17}
+                    className="mt-0.5 shrink-0 text-blue-700"
+                  />
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                      Portfolio Boundary
+                    </p>
+                    <p className="mt-1 font-black text-[#10233F]">
+                      No fake partner network
+                    </p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                      Missing universities or agents stay absent rather than
+                      being replaced with template organisations.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[1.35rem] border-[3px] border-[#F59E0B] bg-[#FFF8E8] p-4">
+                <div className="flex items-start gap-3">
+                  <CircleDollarSign
+                    size={17}
+                    className="mt-0.5 shrink-0 text-amber-700"
+                  />
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                      Revenue Boundary
+                    </p>
+                    <p className="mt-1 font-black text-[#10233F]">
+                      Relationship ≠ attributed revenue
+                    </p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                      Partner revenue is shown only when it is explicitly linked
+                      to partner records or a real commission/revenue workflow.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {!compact ? (
+            <PartnerAnalytics
+              compact
+              partners={partners}
+              records={analytics.records}
+              analytics={analytics}
+            />
+          ) : null}
+        </>
+      ) : null}
+
+      {activeView === "agents" ? (
+        <AgentNetworkCenter
+          compact={compact}
+          records={agents}
+          partners={partners}
+        />
+      ) : null}
+
+      {activeView === "universities" ? (
+        <UniversityPartnerCenter
+          compact={compact}
+          records={universities}
+          partners={partners}
+        />
+      ) : null}
+
+      {activeView === "commissions" ? (
+        <CommissionCenter
+          compact={compact}
+          records={commissions}
+          partners={partners}
+        />
+      ) : null}
+
+      {activeView === "performance" ? (
+        <PartnerPerformance
+          compact={compact}
+          records={performance}
+          partners={partners}
+        />
+      ) : null}
+
+      {activeView === "analytics" ? (
+        <PartnerAnalytics
+          compact={compact}
+          partners={partners}
+          records={analytics.records}
+          analytics={analytics}
+        />
+      ) : null}
     </div>
   );
 }
 
-function MetricCard({ label, value, note }) { return <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><p className="text-sm text-slate-500">{label}</p><div className="text-2xl font-bold text-slate-950 mt-2">{value}</div><p className="text-xs text-slate-500 mt-2">{note}</p></div>; }
-function StatusPill({ label, value }) { return <div className="bg-white rounded-xl border border-slate-200 px-4 py-3"><p className="text-xs text-slate-500">{label}</p><p className="font-bold text-slate-900">{value}</p></div>; }
-function Badge({ tone, children }) { const tones = { green: 'bg-emerald-50 text-emerald-700 border-emerald-200', amber: 'bg-amber-50 text-amber-700 border-amber-200', red: 'bg-red-50 text-red-700 border-red-200' }; return <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-semibold ${tones[tone] || tones.green}`}>{children}</span>; }
-function UpdateCard({ item }) { return <div className="border border-slate-200 rounded-xl p-3"><p className="font-semibold text-slate-900 text-sm">{item.title}</p><p className="text-xs text-slate-500 mt-1">{item.detail}</p></div>; }
+// Local icon alias keeps the nav readable without importing a heavy chart library.
+function BarChart3Fallback(props) {
+  return <Activity {...props} />;
+}

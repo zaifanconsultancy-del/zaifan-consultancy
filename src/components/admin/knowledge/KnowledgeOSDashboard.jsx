@@ -1,246 +1,805 @@
 import React, { useMemo, useState } from "react";
-import { BookOpen, ClipboardList, GraduationCap, Landmark, ShieldCheck, Search, Activity, AlertTriangle, TrendingUp, Users, RefreshCw, FileText, CheckCircle2, Clock, BarChart3, Layers, Filter, Sparkles } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  BadgeCheck,
+  BookOpen,
+  ClipboardList,
+  Database,
+  FileText,
+  GraduationCap,
+  Landmark,
+  Layers,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from "lucide-react";
+
 import SOPCenter from "./SOPCenter";
 import TrainingKnowledgeBase from "./TrainingKnowledgeBase";
 import UniversityKnowledgeHub from "./UniversityKnowledgeHub";
 import VisaKnowledgeHub from "./VisaKnowledgeHub";
 import PolicyKnowledgeHub from "./PolicyKnowledgeHub";
 
-const knowledgeModules = [
+const KNOWLEDGE_MODULES = [
   { key: "overview", label: "Overview", icon: BookOpen },
   { key: "sop", label: "SOP Center", icon: ClipboardList },
   { key: "training", label: "Training Center", icon: GraduationCap },
   { key: "university", label: "University Hub", icon: Landmark },
   { key: "visa", label: "Visa Hub", icon: ShieldCheck },
-  { key: "policy", label: "Policy Hub", icon: FileText }
+  { key: "policy", label: "Policy Hub", icon: FileText },
 ];
 
-const knowledgeItems = [
-  { id: "SOP-001", title: "Inquiry to Application Conversion SOP", module: "SOP", category: "Admissions", owner: "Counselor Ops", status: "Approved", priority: "Critical", updatedAt: "2026-06-10", views: 184, health: 97, tags: ["inquiry", "application", "conversion"], summary: "Standard workflow for moving qualified inquiries into active applications with required checks." },
-  { id: "SOP-014", title: "CAS Readiness Checklist", module: "SOP", category: "CAS", owner: "Application Team", status: "Approved", priority: "Critical", updatedAt: "2026-06-09", views: 143, health: 95, tags: ["CAS", "offer", "deposit"], summary: "Verification sequence before CAS request, including offer acceptance, payment proof, and document validation." },
-  { id: "TRN-006", title: "Counselor Portal Operating Guide", module: "Training", category: "Internal Training", owner: "Training Lead", status: "Live", priority: "High", updatedAt: "2026-06-08", views: 221, health: 92, tags: ["counselor", "portal", "tasks"], summary: "Role-based guide for daily counselor actions, student follow-up, and escalation handling." },
-  { id: "UNI-021", title: "UK University Intake Rules", module: "University", category: "University Rules", owner: "University Desk", status: "Review", priority: "High", updatedAt: "2026-06-07", views: 118, health: 84, tags: ["UK", "intake", "requirements"], summary: "Current intake, deadline, deposit, and offer conditions used by planning and application teams." },
-  { id: "VISA-011", title: "Pakistan Student Visa Evidence Matrix", module: "Visa", category: "Visa Evidence", owner: "Visa Desk", status: "Approved", priority: "Critical", updatedAt: "2026-06-11", views: 176, health: 96, tags: ["visa", "Pakistan", "evidence"], summary: "Evidence checklist for funds, sponsor documents, CAS, accommodation, and interview readiness." },
-  { id: "POL-004", title: "Document Handling & Compliance Policy", module: "Policy", category: "Compliance", owner: "Compliance OS", status: "Approved", priority: "Critical", updatedAt: "2026-06-06", views: 99, health: 93, tags: ["documents", "privacy", "compliance"], summary: "Internal policy for document collection, verification, visibility, retention, and staff access." },
-  { id: "TRN-019", title: "Executive AI Recovery Queue Training", module: "Training", category: "Executive AI", owner: "Automation Lead", status: "Draft", priority: "Medium", updatedAt: "2026-06-05", views: 64, health: 76, tags: ["executive", "automation", "recovery"], summary: "How managers should read recovery queues, broken-stage metrics, and verification snapshots." }
-];
+function safeArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
 
-const recentUpdates = [
-  { title: "Visa evidence matrix refreshed", owner: "Visa Desk", type: "Visa", date: "2026-06-11", impact: "High" },
-  { title: "CAS readiness SOP approved", owner: "Application Team", type: "SOP", date: "2026-06-09", impact: "Critical" },
-  { title: "Counselor training guide updated", owner: "Training Lead", type: "Training", date: "2026-06-08", impact: "Medium" },
-  { title: "University intake rulebook needs review", owner: "University Desk", type: "University", date: "2026-06-07", impact: "High" }
-];
+function lower(value) {
+  return String(value || "").trim().toLowerCase();
+}
 
-function StatCard({ label, value, subtext, icon: Icon, tone = "blue" }) {
-  const tones = {
-    blue: "bg-blue-50 text-blue-700 border-blue-100",
-    green: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    amber: "bg-amber-50 text-amber-700 border-amber-100",
-    red: "bg-red-50 text-red-700 border-red-100",
-    purple: "bg-purple-50 text-purple-700 border-purple-100"
-  };
+function safeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function readyStatus(status = "") {
+  const value = lower(status);
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-          <h3 className="mt-1 text-2xl font-bold text-slate-900">{value}</h3>
-          <p className="mt-1 text-xs text-slate-500">{subtext}</p>
+    value.includes("approved") ||
+    value.includes("live") ||
+    value.includes("active") ||
+    value.includes("published")
+  );
+}
+
+function reviewStatus(status = "") {
+  const value = lower(status);
+  return (
+    value.includes("review") ||
+    value.includes("draft") ||
+    value.includes("expired") ||
+    value.includes("stale")
+  );
+}
+
+function hasMetric(item = {}, key = "health") {
+  return (
+    item?.[key] !== null &&
+    item?.[key] !== undefined &&
+    Number.isFinite(Number(item[key]))
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone = "blue",
+  icon: Icon,
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#173F6B] bg-[#173F6B]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+    violet: "border-[#9B6CFF] bg-[#F8F5FF]",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <article
+      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+
+          <p
+            className={`mt-2 break-words text-2xl font-black leading-tight ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
         </div>
-        <div className={`rounded-2xl border p-3 ${tones[tone] || tones.blue}`}><Icon size={22} /></div>
+
+        {Icon ? (
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+              dark
+                ? "border-white/20 bg-white/10 text-orange-200"
+                : "border-[#173F6B]/15 bg-white text-[#173F6B]"
+            }`}
+          >
+            <Icon size={16} />
+          </div>
+        ) : null}
       </div>
-    </div>
+
+      <p
+        className={`mt-2 text-xs font-semibold leading-5 ${
+          dark ? "text-slate-200" : "text-slate-600"
+        }`}
+      >
+        {helper}
+      </p>
+
+      {badge ? (
+        <span
+          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+            dark
+              ? "border-white/20 bg-white/10 text-white"
+              : "border-[#C9D7E6] bg-white text-slate-600"
+          }`}
+        >
+          {badge}
+        </span>
+      ) : null}
+    </article>
   );
 }
 
 function StatusPill({ status }) {
-  const map = {
-    Approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Live: "bg-blue-50 text-blue-700 border-blue-200",
-    Review: "bg-amber-50 text-amber-700 border-amber-200",
-    Draft: "bg-slate-50 text-slate-600 border-slate-200"
-  };
-  return <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${map[status] || map.Draft}`}>{status}</span>;
-}
+  const value = lower(status);
 
-function KnowledgeOverview({ filteredItems, activeCategory, setActiveCategory, searchTerm, setSearchTerm }) {
-  const metrics = useMemo(() => {
-    const total = knowledgeItems.length;
-    const approved = knowledgeItems.filter((item) => ["Approved", "Live"].includes(item.status)).length;
-    const review = knowledgeItems.filter((item) => item.status === "Review").length;
-    const avgHealth = Math.round(knowledgeItems.reduce((sum, item) => sum + item.health, 0) / total);
-    return { total, approved, review, avgHealth };
-  }, []);
+  let className =
+    "border-[#C9D7E6] bg-[#FFF8EE] text-slate-600";
 
-  const categories = useMemo(() => ["All", ...Array.from(new Set(knowledgeItems.map((item) => item.category)))], []);
-  const moduleCounts = useMemo(() => knowledgeItems.reduce((acc, item) => ({ ...acc, [item.module]: (acc[item.module] || 0) + 1 }), {}), []);
+  if (readyStatus(value)) {
+    className =
+      "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  } else if (reviewStatus(value)) {
+    className =
+      "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Knowledge Assets" value={metrics.total} subtext="SOPs, policies, guides and hubs" icon={Layers} tone="blue" />
-        <StatCard label="Approved / Live" value={metrics.approved} subtext="Ready for team execution" icon={CheckCircle2} tone="green" />
-        <StatCard label="Needs Review" value={metrics.review} subtext="Rules or docs requiring attention" icon={AlertTriangle} tone="amber" />
-        <StatCard label="Health Score" value={`${metrics.avgHealth}%`} subtext="Freshness, ownership and usage" icon={Activity} tone="purple" />
-      </div>
+    <span
+      className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${className}`}
+    >
+      {status || "Unknown"}
+    </span>
+  );
+}
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Knowledge Command Center</h2>
-              <p className="text-sm text-slate-500">Search, filter and monitor operational knowledge across the enterprise OS.</p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search knowledge..." className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-blue-400" />
+function KnowledgeOverview({
+  items,
+  searchTerm,
+  setSearchTerm,
+  activeCategory,
+  setActiveCategory,
+  compact,
+}) {
+  const categories = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        items
+          .map((item) => String(item.category || "").trim())
+          .filter(Boolean)
+      ),
+    ],
+    [items]
+  );
+
+  const filteredItems = useMemo(() => {
+    const term = lower(searchTerm);
+
+    return items.filter((item) => {
+      if (
+        activeCategory !== "All" &&
+        String(item.category || "") !== activeCategory
+      ) {
+        return false;
+      }
+
+      if (!term) return true;
+
+      return [
+        item.id,
+        item.title,
+        item.summary,
+        item.owner,
+        item.category,
+        item.module,
+        ...safeArray(item.tags),
+      ]
+        .map(lower)
+        .join(" ")
+        .includes(term);
+    });
+  }, [items, searchTerm, activeCategory]);
+
+  const readyCount = items.filter((item) =>
+    readyStatus(item.status)
+  ).length;
+
+  const reviewCount = items.filter((item) =>
+    reviewStatus(item.status)
+  ).length;
+
+  const measurableHealth = items.filter((item) =>
+    hasMetric(item, "health")
+  );
+
+  const avgHealth = measurableHealth.length
+    ? Math.round(
+        measurableHealth.reduce(
+          (sum, item) => sum + safeNumber(item.health),
+          0
+        ) / measurableHealth.length
+      )
+    : null;
+
+  const moduleCounts = useMemo(
+    () =>
+      items.reduce((acc, item) => {
+        const key = item.module || "Other";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {}),
+    [items]
+  );
+
+  return (
+    <div className="space-y-5">
+      {!compact ? (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Knowledge Assets"
+            value={items.length}
+            helper="Connected SOP, training, university, visa and policy records."
+            tone="navy"
+            icon={Layers}
+            badge="Real records"
+          />
+
+          <MetricCard
+            label="Ready to Use"
+            value={readyCount}
+            helper="Assets whose recorded status is approved, live, active or published."
+            tone="green"
+            icon={BadgeCheck}
+          />
+
+          <MetricCard
+            label="Needs Review"
+            value={reviewCount}
+            helper="Draft, review, expired or stale knowledge requiring attention."
+            tone={reviewCount > 0 ? "amber" : "green"}
+            icon={AlertTriangle}
+          />
+
+          <MetricCard
+            label="Health"
+            value={avgHealth === null ? "—" : `${avgHealth}%`}
+            helper={
+              avgHealth === null
+                ? "No measurable health evidence is connected yet."
+                : `Average across ${measurableHealth.length} measurable asset${
+                    measurableHealth.length === 1 ? "" : "s"
+                  }.`
+            }
+            tone={avgHealth === null ? "blue" : "violet"}
+            icon={Activity}
+            badge={avgHealth === null ? "Not measured" : "Measured"}
+          />
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(18rem,0.75fr)]">
+        <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white">
+          <div className="border-b-2 border-[#E1E8F0] p-4 sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                  Knowledge Directory
+                </p>
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
+                  Search connected knowledge
+                </h3>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  Zaifan no longer treats placeholder policies, rules or training
+                  records as operational truth.
+                </p>
               </div>
-              <select value={activeCategory} onChange={(e) => setActiveCategory(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400">
-                {categories.map((category) => <option key={category}>{category}</option>)}
-              </select>
+
+              <div className="grid gap-2 sm:grid-cols-[minmax(14rem,1fr)_auto_auto]">
+                <label className="relative block">
+                  <Search
+                    size={15}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+
+                  <input
+                    value={searchTerm}
+                    onChange={(event) =>
+                      setSearchTerm(event.target.value)
+                    }
+                    placeholder="Search knowledge..."
+                    className="min-h-10 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-10 pr-3 text-xs font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#F97316]"
+                  />
+                </label>
+
+                <select
+                  value={activeCategory}
+                  onChange={(event) =>
+                    setActiveCategory(event.target.value)
+                  }
+                  className="min-h-10 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none focus:border-[#F97316]"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setActiveCategory("All");
+                  }}
+                  disabled={
+                    !searchTerm.trim() && activeCategory === "All"
+                  }
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 text-xs font-black text-slate-700 disabled:opacity-40"
+                >
+                  <X size={12} />
+                  Clear
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Asset</th>
-                  <th className="px-4 py-3">Owner</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Health</th>
-                  <th className="px-4 py-3">Updated</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+          <div className="p-4 sm:p-5">
+            {filteredItems.length ? (
+              <div className="space-y-2.5">
                 {filteredItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-900">{item.title}</div>
-                      <div className="text-xs text-slate-500">{item.id} · {item.module} · {item.category}</div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{item.owner}</td>
-                    <td className="px-4 py-3"><StatusPill status={item.status} /></td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-20 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-slate-800" style={{ width: `${item.health}%` }} /></div>
-                        <span className="text-xs font-semibold text-slate-700">{item.health}%</span>
+                  <article
+                    key={item.id || item.title}
+                    className="rounded-[1.2rem] border-2 border-[#E1E8F0] bg-[#FFFDF8] p-3 transition hover:border-[#F97316]"
+                  >
+                    <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="min-w-0 [overflow-wrap:anywhere] font-black text-[#10233F]">
+                            {item.title || "Untitled knowledge asset"}
+                          </p>
+                          <StatusPill status={item.status} />
+                        </div>
+
+                        <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
+                          {[item.id, item.module, item.category, item.owner]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+
+                        {item.summary ? (
+                          <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+                            {item.summary}
+                          </p>
+                        ) : null}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">{item.updatedAt}</td>
-                  </tr>
+
+                      <div className="flex flex-wrap gap-2 lg:justify-end">
+                        {item.updatedAt || item.updated ? (
+                          <span className="rounded-full border-2 border-[#C9D7E6] bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+                            Updated {item.updatedAt || item.updated}
+                          </span>
+                        ) : null}
+
+                        <span className="rounded-full border-2 border-[#60A5FA] bg-[#F2F7FF] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.06em] text-blue-700">
+                          {hasMetric(item, "health")
+                            ? `${safeNumber(item.health)}% health`
+                            : "Health not measured"}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </div>
+            ) : (
+              <div className="rounded-[1.4rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFFDF8] p-8 text-center">
+                <BookOpen size={24} className="mx-auto text-orange-700" />
 
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900">Knowledge Health</h3>
-              <RefreshCw size={16} className="text-slate-400" />
-            </div>
-            <div className="space-y-3">
-              {Object.entries(moduleCounts).map(([module, count]) => (
-                <div key={module} className="rounded-2xl bg-slate-50 p-3">
-                  <div className="flex items-center justify-between text-sm"><span className="font-semibold text-slate-700">{module}</span><span className="text-slate-500">{count} assets</span></div>
-                  <div className="mt-2 h-2 rounded-full bg-white"><div className="h-2 rounded-full bg-blue-500" style={{ width: `${Math.min(100, count * 18)}%` }} /></div>
-                </div>
-              ))}
-            </div>
-          </div>
+                <p className="mt-3 font-black text-[#10233F]">
+                  No knowledge assets found
+                </p>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="font-bold text-slate-900">Recent Updates</h3>
-            <div className="mt-4 space-y-3">
-              {recentUpdates.map((update) => (
-                <div key={update.title} className="flex items-start gap-3 rounded-2xl border border-slate-100 p-3">
-                  <div className="rounded-xl bg-blue-50 p-2 text-blue-700"><Clock size={15} /></div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-slate-800">{update.title}</div>
-                    <div className="text-xs text-slate-500">{update.owner} · {update.date} · {update.impact} impact</div>
+                <p className="mx-auto mt-2 max-w-xl text-xs font-semibold leading-5 text-slate-600">
+                  {items.length
+                    ? "Clear or change the search filters."
+                    : "Connect real knowledge records before using this workspace for operational decisions."}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <section className="rounded-[1.55rem] border-[3px] border-[#173F6B] bg-[#173F6B] p-4 text-white">
+            <div className="flex items-center gap-2">
+              <Database size={16} className="text-orange-300" />
+              <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-300">
+                Domain Coverage
+              </p>
+            </div>
+
+            <p className="mt-2 text-2xl font-black">
+              {Object.keys(moduleCounts).length}/5
+            </p>
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-slate-200">
+              Knowledge domains with at least one connected asset.
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {["SOP", "Training", "University", "Visa", "Policy"].map(
+                (module) => (
+                  <div
+                    key={module}
+                    className="flex items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3 py-2"
+                  >
+                    <span className="text-xs font-black">{module}</span>
+                    <span className="text-xs font-semibold text-slate-300">
+                      {moduleCounts[module] || 0}
+                    </span>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
-          </div>
-        </div>
-      </div>
+          </section>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
-          <div className="flex items-center gap-2"><BarChart3 size={18} className="text-blue-600" /><h3 className="font-bold text-slate-900">Knowledge Analytics</h3></div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl bg-slate-50 p-4"><div className="text-xs text-slate-500">Total Views</div><div className="mt-1 text-2xl font-bold text-slate-900">1,005</div><div className="mt-1 text-xs text-emerald-600">+18% this week</div></div>
-            <div className="rounded-2xl bg-slate-50 p-4"><div className="text-xs text-slate-500">Team Adoption</div><div className="mt-1 text-2xl font-bold text-slate-900">89%</div><div className="mt-1 text-xs text-emerald-600">+7% vs last cycle</div></div>
-            <div className="rounded-2xl bg-slate-50 p-4"><div className="text-xs text-slate-500">Review SLA</div><div className="mt-1 text-2xl font-bold text-slate-900">2.3d</div><div className="mt-1 text-xs text-amber-600">1 overdue item</div></div>
-          </div>
-        </div>
-        <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white shadow-sm">
-          <div className="flex items-center gap-2"><Sparkles size={18} /><h3 className="font-bold">AI Knowledge Signals</h3></div>
-          <p className="mt-3 text-sm text-slate-300">Recommended next action: update university intake rules and convert Executive AI recovery training from draft to live.</p>
-          <button className="mt-5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900">Open Review Queue</button>
-        </div>
+          <section className="rounded-[1.55rem] border-[3px] border-[#F59E0B] bg-[#FFF8E8] p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle
+                size={17}
+                className="mt-0.5 shrink-0 text-amber-700"
+              />
+
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.11em] text-slate-500">
+                  Decision Boundary
+                </p>
+                <p className="mt-1 font-black text-[#10233F]">
+                  Knowledge is evidence, not authority
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  University, visa, policy and SOP records must not override a
+                  current official source when a record is stale, draft or
+                  unverified.
+                </p>
+              </div>
+            </div>
+          </section>
+        </aside>
       </div>
     </div>
   );
 }
 
-export default function KnowledgeOSDashboard({ compact = false, adminProfile = null }) {
+export default function KnowledgeOSDashboard({
+  compact = false,
+  adminProfile = null,
+  snapshot = {},
+  onRefresh,
+}) {
   const [activeModule, setActiveModule] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
-  const filteredItems = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    return knowledgeItems.filter((item) => {
-      const matchesTerm = !term || [item.title, item.summary, item.owner, item.category, item.module, ...item.tags].join(" ").toLowerCase().includes(term);
-      const matchesCategory = activeCategory === "All" || item.category === activeCategory;
-      return matchesTerm && matchesCategory;
-    });
-  }, [searchTerm, activeCategory]);
+  const knowledge = useMemo(() => {
+    const data =
+      snapshot && typeof snapshot === "object" ? snapshot : {};
 
-  const renderActiveModule = () => {
-    if (activeModule === "sop") return <SOPCenter compact={compact} />;
-    if (activeModule === "training") return <TrainingKnowledgeBase compact={compact} />;
-    if (activeModule === "university") return <UniversityKnowledgeHub compact={compact} />;
-    if (activeModule === "visa") return <VisaKnowledgeHub compact={compact} />;
-    if (activeModule === "policy") return <PolicyKnowledgeHub compact={compact} />;
-    return <KnowledgeOverview filteredItems={filteredItems} activeCategory={activeCategory} setActiveCategory={setActiveCategory} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />;
-  };
+    const sop = safeArray(data.sops || data.sopRecords);
+    const training = safeArray(
+      data.training || data.trainingRecords || data.courses
+    );
+    const university = safeArray(
+      data.universityRules || data.universityKnowledge
+    );
+    const visa = safeArray(data.visaGuides || data.visaKnowledge);
+    const policy = safeArray(data.policies || data.policyRecords);
+
+    const providedItems = safeArray(
+      data.items || data.knowledgeItems || data.assets
+    );
+
+    const items = [
+      ...sop.map((item) => ({
+        ...item,
+        module: item.module || "SOP",
+      })),
+      ...training.map((item) => ({
+        ...item,
+        module: item.module || "Training",
+      })),
+      ...university.map((item) => ({
+        ...item,
+        module: item.module || "University",
+      })),
+      ...visa.map((item) => ({
+        ...item,
+        module: item.module || "Visa",
+      })),
+      ...policy.map((item) => ({
+        ...item,
+        module: item.module || "Policy",
+      })),
+      ...providedItems,
+    ];
+
+    return {
+      sop,
+      training,
+      university,
+      visa,
+      policy,
+      items,
+      connectedDomains: [
+        sop.length > 0,
+        training.length > 0,
+        university.length > 0,
+        visa.length > 0,
+        policy.length > 0,
+      ].filter(Boolean).length,
+    };
+  }, [snapshot]);
+
+  const currentModule =
+    KNOWLEDGE_MODULES.find((item) => item.key === activeModule) ||
+    KNOWLEDGE_MODULES[0];
+
+  function renderActiveModule() {
+    if (activeModule === "sop") {
+      return <SOPCenter compact={compact} records={knowledge.sop} />;
+    }
+
+    if (activeModule === "training") {
+      return (
+        <TrainingKnowledgeBase
+          compact={compact}
+          records={knowledge.training}
+        />
+      );
+    }
+
+    if (activeModule === "university") {
+      return (
+        <UniversityKnowledgeHub
+          compact={compact}
+          records={knowledge.university}
+        />
+      );
+    }
+
+    if (activeModule === "visa") {
+      return (
+        <VisaKnowledgeHub
+          compact={compact}
+          records={knowledge.visa}
+        />
+      );
+    }
+
+    if (activeModule === "policy") {
+      return (
+        <PolicyKnowledgeHub
+          compact={compact}
+          records={knowledge.policy}
+        />
+      );
+    }
+
+    return (
+      <KnowledgeOverview
+        items={knowledge.items}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        compact={compact}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 text-slate-900 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-sm font-semibold text-blue-700"><BookOpen size={17} /> Zaifan Enterprise Knowledge OS</div>
-              <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">Knowledge Command Center</h1>
-              <p className="mt-2 max-w-3xl text-sm text-slate-500">Central operating layer for SOPs, training, university rules, visa guidance, policies, search, knowledge health, recent updates, and executive analytics.</p>
+    <div className="min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#173F6B] bg-[#FFF8EE] p-4 shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5">
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#173F6B] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+                <BookOpen size={12} />
+                Knowledge OS
+              </span>
+
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                {knowledge.connectedDomains}/5 connected domains
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-              <div className="rounded-2xl bg-slate-50 p-3"><div className="text-xs text-slate-500">Mode</div><div className="font-bold">{compact ? "Compact" : "Full"}</div></div>
-              <div className="rounded-2xl bg-slate-50 p-3"><div className="text-xs text-slate-500">User</div><div className="font-bold">{adminProfile?.name || "Executive"}</div></div>
-              <div className="rounded-2xl bg-slate-50 p-3"><div className="text-xs text-slate-500">Coverage</div><div className="font-bold">94%</div></div>
-              <div className="rounded-2xl bg-slate-50 p-3"><div className="text-xs text-slate-500">Risk</div><div className="font-bold text-amber-600">Low</div></div>
+
+            <h1 className="mt-3 text-3xl font-black text-white">
+              Knowledge Command Center
+            </h1>
+
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Governed operating knowledge for SOPs, staff training, university
+              rules, visa guidance and internal policy. Missing knowledge remains
+              missing instead of being replaced with convincing template data.
+            </p>
+          </div>
+
+          <div className="bg-[#E96512] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Current Workspace
+            </p>
+
+            <p className="mt-2 text-2xl font-black">
+              {currentModule.label}
+            </p>
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+              {adminProfile?.name || adminProfile?.full_name
+                ? `Signed in as ${
+                    adminProfile.name || adminProfile.full_name
+                  }`
+                : "Admin knowledge workspace"}
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {knowledge.items.length} connected assets
+              </span>
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                Evidence first
+              </span>
             </div>
           </div>
         </div>
+      </header>
 
-        <div className="flex gap-2 overflow-x-auto rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
-          {knowledgeModules.map(({ key, label, icon: Icon }) => (
-            <button key={key} onClick={() => setActiveModule(key)} className={`flex shrink-0 items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ${activeModule === key ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>
-              <Icon size={16} /> {label}
+      <nav className="flex flex-col gap-3 rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-wrap gap-2">
+          {KNOWLEDGE_MODULES.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveModule(key)}
+              aria-pressed={activeModule === key}
+              className={`inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-xs font-black transition ${
+                activeModule === key
+                  ? "border-[#F97316] bg-[#F05A0D] text-white"
+                  : "border-[#C9D7E6] bg-[#FFF8EE] text-[#10233F] hover:border-[#F97316]"
+              }`}
+            >
+              <Icon size={14} />
+              {label}
             </button>
           ))}
         </div>
 
-        {renderActiveModule()}
-      </div>
+        {onRefresh ? (
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#173F6B] bg-[#173F6B] px-4 text-xs font-black text-white transition hover:bg-[#245886]"
+          >
+            <RefreshCw size={13} />
+            Refresh Knowledge
+          </button>
+        ) : null}
+      </nav>
+
+      {knowledge.items.length === 0 ? (
+        <div className="flex items-start gap-3 rounded-[1.35rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4">
+          <Database
+            size={18}
+            className="mt-0.5 shrink-0 text-blue-700"
+          />
+
+          <div>
+            <p className="font-black text-[#10233F]">
+              Knowledge sources are not connected yet
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              The old template records are intentionally not treated as
+              operational truth. Connect real SOP, training, university, visa and
+              policy records before Zaifan relies on this workspace.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {renderActiveModule()}
+
+      {!compact ? (
+        <section className="grid gap-3 lg:grid-cols-3">
+          <div className="rounded-[1.35rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-4">
+            <div className="flex items-start gap-3">
+              <BadgeCheck
+                size={17}
+                className="mt-0.5 shrink-0 text-emerald-700"
+              />
+
+              <div>
+                <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                  Knowledge Integrity
+                </p>
+                <p className="mt-1 font-black text-[#10233F]">
+                  Real records only
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  Template policies, fake training completion and invented
+                  university rules are not accepted as operational evidence.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.35rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4">
+            <div className="flex items-start gap-3">
+              <ShieldCheck
+                size={17}
+                className="mt-0.5 shrink-0 text-blue-700"
+              />
+
+              <div>
+                <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                  Decision Safety
+                </p>
+                <p className="mt-1 font-black text-[#10233F]">
+                  Freshness matters
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  Visa and university requirements should retain source, owner
+                  and review-date evidence.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.35rem] border-[3px] border-[#F59E0B] bg-[#FFF8E8] p-4">
+            <div className="flex items-start gap-3">
+              <Sparkles
+                size={17}
+                className="mt-0.5 shrink-0 text-amber-700"
+              />
+
+              <div>
+                <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                  AI Boundary
+                </p>
+                <p className="mt-1 font-black text-[#10233F]">
+                  AI may assist, not invent
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  AI can help staff find knowledge, but the underlying rule or
+                  policy must remain linked to a real source.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

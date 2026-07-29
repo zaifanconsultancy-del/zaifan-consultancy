@@ -7,11 +7,47 @@ function missingIdError(action) {
   };
 }
 
+function toTimestamp(value) {
+  if (!value) return 0;
+
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function sortNewestFirst(rows = []) {
+  return [...rows].sort((a, b) => {
+    const aTime = toTimestamp(
+      a?.created_at ||
+        a?.submitted_at ||
+        a?.updated_at
+    );
+
+    const bTime = toTimestamp(
+      b?.created_at ||
+        b?.submitted_at ||
+        b?.updated_at
+    );
+
+    return bTime - aTime;
+  });
+}
+
 export async function fetchInquiryRows() {
-  return supabase
+  // Fetch first, sort locally.
+  // This avoids turning a missing/renamed timestamp column into an empty Admin CRM.
+  const { data, error } = await supabase
     .from("inquiries")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*");
+
+  if (error) {
+    console.error("Inquiry rows fetch failed:", error);
+    return { data: null, error };
+  }
+
+  return {
+    data: sortNewestFirst(Array.isArray(data) ? data : []),
+    error: null,
+  };
 }
 
 export async function deleteInquiryRow(id) {

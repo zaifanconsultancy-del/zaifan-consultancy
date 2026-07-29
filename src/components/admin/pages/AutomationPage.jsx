@@ -1,4 +1,4 @@
-import CrmAutomationPanel from "../CrmAutomationPanel";
+import CrmAutomationPanel from "../workspaces/leads-crm/CrmAutomationPanel";
 
 function AutomationPage({ cardClass, inquiries = [], appointments = [] }) {
   return (

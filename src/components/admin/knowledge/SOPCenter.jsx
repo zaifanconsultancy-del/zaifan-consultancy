@@ -1,69 +1,601 @@
 import React, { useMemo, useState } from "react";
-import { ClipboardList, CheckCircle2, AlertTriangle, Clock, Search, Filter, Plus, FileCheck2, Workflow, Users, BarChart3 } from "lucide-react";
+import {
+  AlertTriangle,
+  BadgeCheck,
+  ClipboardList,
+  Clock3,
+  Database,
+  Search,
+  ShieldCheck,
+  Workflow,
+  X,
+} from "lucide-react";
 
-const sopRecords = [
-  { code: "SOP-001", title: "Inquiry Qualification & Assignment", department: "Admissions", owner: "Counselor Ops", stage: "Inquiry", status: "Approved", priority: "Critical", steps: 9, completion: 98, lastReview: "2026-06-10", nextReview: "2026-07-10" },
-  { code: "SOP-002", title: "University Shortlist Creation", department: "University Desk", owner: "Planning Team", stage: "Planning", status: "Approved", priority: "High", steps: 8, completion: 94, lastReview: "2026-06-08", nextReview: "2026-07-08" },
-  { code: "SOP-014", title: "CAS Readiness & Request Workflow", department: "Application", owner: "CAS Desk", stage: "CAS", status: "Approved", priority: "Critical", steps: 12, completion: 96, lastReview: "2026-06-09", nextReview: "2026-07-09" },
-  { code: "SOP-022", title: "Student Receipt Approval Flow", department: "Finance", owner: "Payment OS", stage: "Payment", status: "Live", priority: "High", steps: 7, completion: 91, lastReview: "2026-06-07", nextReview: "2026-07-07" },
-  { code: "SOP-031", title: "Escalation and Recovery Queue Handling", department: "Executive", owner: "Verification OS", stage: "Recovery", status: "Review", priority: "Critical", steps: 10, completion: 82, lastReview: "2026-06-05", nextReview: "2026-06-19" }
-];
-
-const workflowStages = ["Inquiry", "Planning", "Application", "Offer", "CAS", "Visa", "Payment", "Portal", "Recovery"];
-
-function Badge({ children, tone = "slate" }) {
-  const styles = { slate: "bg-slate-50 text-slate-700 border-slate-200", green: "bg-emerald-50 text-emerald-700 border-emerald-200", amber: "bg-amber-50 text-amber-700 border-amber-200", red: "bg-red-50 text-red-700 border-red-200", blue: "bg-blue-50 text-blue-700 border-blue-200" };
-  return <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${styles[tone]}`}>{children}</span>;
+function safeArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
-export default function SOPCenter({ compact = false }) {
-  const [query, setQuery] = useState("");
-  const [stage, setStage] = useState("All");
+function safeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
-  const filtered = useMemo(() => sopRecords.filter((sop) => {
-    const matchesQuery = !query || [sop.code, sop.title, sop.department, sop.owner, sop.stage].join(" ").toLowerCase().includes(query.toLowerCase());
-    const matchesStage = stage === "All" || sop.stage === stage;
-    return matchesQuery && matchesStage;
-  }), [query, stage]);
+function lower(value) {
+  return String(value || "").trim().toLowerCase();
+}
 
-  const metrics = useMemo(() => ({
-    total: sopRecords.length,
-    approved: sopRecords.filter((x) => ["Approved", "Live"].includes(x.status)).length,
-    review: sopRecords.filter((x) => x.status === "Review").length,
-    avgCompletion: Math.round(sopRecords.reduce((sum, x) => sum + x.completion, 0) / sopRecords.length)
-  }), []);
+function readyStatus(status = "") {
+  const value = lower(status);
+  return (
+    value.includes("approved") ||
+    value.includes("live") ||
+    value.includes("active") ||
+    value.includes("published")
+  );
+}
+
+function reviewStatus(status = "") {
+  const value = lower(status);
+  return (
+    value.includes("review") ||
+    value.includes("draft") ||
+    value.includes("expired") ||
+    value.includes("stale")
+  );
+}
+
+function priorityTone(priority = "") {
+  const value = lower(priority);
+
+  if (value.includes("critical")) {
+    return "border-[#FB7185] bg-[#FFF4F4] text-red-700";
+  }
+
+  if (value.includes("high")) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  return "border-[#60A5FA] bg-[#F2F7FF] text-blue-700";
+}
+
+function statusTone(status = "") {
+  if (readyStatus(status)) {
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  }
+
+  if (reviewStatus(status)) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  return "border-[#C9D7E6] bg-[#FFF8EE] text-slate-600";
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone = "blue",
+  icon: Icon,
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#173F6B] bg-[#173F6B]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+    violet: "border-[#9B6CFF] bg-[#F8F5FF]",
+  };
+
+  const dark = tone === "navy";
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><ClipboardList className="text-blue-600" /><div className="mt-3 text-2xl font-black">{metrics.total}</div><div className="text-sm text-slate-500">Active SOPs</div></div>
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><CheckCircle2 className="text-emerald-600" /><div className="mt-3 text-2xl font-black">{metrics.approved}</div><div className="text-sm text-slate-500">Approved / Live</div></div>
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><AlertTriangle className="text-amber-600" /><div className="mt-3 text-2xl font-black">{metrics.review}</div><div className="text-sm text-slate-500">Review Queue</div></div>
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><BarChart3 className="text-purple-600" /><div className="mt-3 text-2xl font-black">{metrics.avgCompletion}%</div><div className="text-sm text-slate-500">Execution Readiness</div></div>
+    <article
+      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
+        </div>
+
+        {Icon ? (
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+              dark
+                ? "border-white/20 bg-white/10 text-orange-200"
+                : "border-[#173F6B]/15 bg-white text-[#173F6B]"
+            }`}
+          >
+            <Icon size={16} />
+          </div>
+        ) : null}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div><h2 className="text-lg font-black text-slate-900">SOP Center</h2><p className="text-sm text-slate-500">Operational procedures mapped to the full student journey and executive recovery workflows.</p></div>
-            <div className="flex gap-2">
-              <div className="relative"><Search className="absolute left-3 top-2.5 text-slate-400" size={16} /><input value={query} onChange={(e) => setQuery(e.target.value)} className="rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none" placeholder="Search SOPs" /></div>
-              <select value={stage} onChange={(e) => setStage(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none"><option>All</option>{workflowStages.map((x) => <option key={x}>{x}</option>)}</select>
+      <p
+        className={`mt-2 text-xs font-semibold leading-5 ${
+          dark ? "text-slate-200" : "text-slate-600"
+        }`}
+      >
+        {helper}
+      </p>
+
+      {badge ? (
+        <span
+          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+            dark
+              ? "border-white/20 bg-white/10 text-white"
+              : "border-[#C9D7E6] bg-white text-slate-600"
+          }`}
+        >
+          {badge}
+        </span>
+      ) : null}
+    </article>
+  );
+}
+
+function SopRow({ sop }) {
+  const completion =
+    sop.completion !== null &&
+    sop.completion !== undefined &&
+    Number.isFinite(Number(sop.completion))
+      ? Math.max(0, Math.min(100, Number(sop.completion)))
+      : null;
+
+  const nextReview =
+    sop.nextReview ||
+    sop.next_review ||
+    sop.review_due_at ||
+    sop.reviewDueAt ||
+    null;
+
+  return (
+    <article className="rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#F97316]">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(18rem,1.4fr)_11rem_10rem_12rem] lg:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="min-w-0 [overflow-wrap:anywhere] font-black text-[#10233F]">
+              {sop.title || "Untitled SOP"}
+            </p>
+
+            <span
+              className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
+                sop.status
+              )}`}
+            >
+              {sop.status || "Unknown"}
+            </span>
+
+            {sop.priority ? (
+              <span
+                className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${priorityTone(
+                  sop.priority
+                )}`}
+              >
+                {sop.priority}
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
+            {[sop.code || sop.id, sop.department, sop.owner]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+
+          {sop.summary || sop.description ? (
+            <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+              {sop.summary || sop.description}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Journey Stage
+          </p>
+          <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+            {sop.stage || "Not mapped"}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Readiness
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {completion === null ? "Not measured" : `${Math.round(completion)}%`}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Next Review
+          </p>
+          <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+            {nextReview || "Not scheduled"}
+          </p>
+        </div>
+      </div>
+
+      {completion !== null ? (
+        <div className="mt-3">
+          <div className="h-2 overflow-hidden rounded-full bg-[#DDE7F0]">
+            <div
+              className="h-full rounded-full bg-[#173F6B] transition-[width] duration-500"
+              style={{ width: `${completion}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+export default function SOPCenter({
+  compact = false,
+  records = [],
+}) {
+  const [query, setQuery] = useState("");
+  const [stage, setStage] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  const sops = useMemo(() => safeArray(records), [records]);
+
+  const stages = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        sops
+          .map((sop) => String(sop.stage || "").trim())
+          .filter(Boolean)
+      ),
+    ],
+    [sops]
+  );
+
+  const statuses = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        sops
+          .map((sop) => String(sop.status || "").trim())
+          .filter(Boolean)
+      ),
+    ],
+    [sops]
+  );
+
+  const filtered = useMemo(() => {
+    const search = lower(query);
+
+    return sops.filter((sop) => {
+      if (stage !== "All" && String(sop.stage || "") !== stage) {
+        return false;
+      }
+
+      if (
+        statusFilter !== "All" &&
+        String(sop.status || "") !== statusFilter
+      ) {
+        return false;
+      }
+
+      if (!search) return true;
+
+      return [
+        sop.code,
+        sop.id,
+        sop.title,
+        sop.department,
+        sop.owner,
+        sop.stage,
+        sop.status,
+        sop.priority,
+        sop.summary,
+        sop.description,
+      ]
+        .map(lower)
+        .join(" ")
+        .includes(search);
+    });
+  }, [sops, query, stage, statusFilter]);
+
+  const visible = compact ? filtered.slice(0, 5) : filtered;
+
+  const ready = sops.filter((sop) =>
+    readyStatus(sop.status)
+  ).length;
+
+  const review = sops.filter((sop) =>
+    reviewStatus(sop.status)
+  ).length;
+
+  const measurable = sops.filter(
+    (sop) =>
+      sop.completion !== null &&
+      sop.completion !== undefined &&
+      Number.isFinite(Number(sop.completion))
+  );
+
+  const avgCompletion = measurable.length
+    ? Math.round(
+        measurable.reduce(
+          (sum, sop) => sum + safeNumber(sop.completion),
+          0
+        ) / measurable.length
+      )
+    : null;
+
+  const mappedStages = new Set(
+    sops
+      .map((sop) => String(sop.stage || "").trim())
+      .filter(Boolean)
+  );
+
+  const filtersActive =
+    Boolean(query.trim()) ||
+    stage !== "All" ||
+    statusFilter !== "All";
+
+  function clearFilters() {
+    setQuery("");
+    setStage("All");
+    setStatusFilter("All");
+  }
+
+  return (
+    <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
+      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+        <div className="bg-[#173F6B] p-5 text-white sm:p-6">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+            <ClipboardList size={12} />
+            SOP Control
+          </div>
+
+          <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">
+            Standard Operating Procedures
+          </h2>
+
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+            Controlled procedures mapped to real Zaifan workflows. Missing SOPs,
+            review schedules and readiness evidence stay missing instead of being
+            replaced by template percentages.
+          </p>
+        </div>
+
+        <div className="bg-[#E96512] p-5 text-white sm:p-6">
+          <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+            Procedure Coverage
+          </p>
+
+          <p className="mt-2 text-3xl font-black">
+            {sops.length}
+          </p>
+
+          <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+            {ready} ready · {review} requiring review · {mappedStages.size} mapped stage
+            {mappedStages.size === 1 ? "" : "s"}.
+          </p>
+
+          <span className="mt-3 inline-flex rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+            Records only
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-5 p-4 sm:p-5">
+        {!compact ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              label="SOP Records"
+              value={sops.length}
+              helper="Connected procedure records in the current knowledge snapshot."
+              tone="navy"
+              icon={ClipboardList}
+              badge="Procedures"
+            />
+
+            <MetricCard
+              label="Ready"
+              value={ready}
+              helper="Approved, live, active or published procedures."
+              tone="green"
+              icon={BadgeCheck}
+            />
+
+            <MetricCard
+              label="Needs Review"
+              value={review}
+              helper="Draft, review, expired or stale procedure records."
+              tone={review > 0 ? "amber" : "green"}
+              icon={AlertTriangle}
+            />
+
+            <MetricCard
+              label="Readiness"
+              value={avgCompletion === null ? "—" : `${avgCompletion}%`}
+              helper={
+                avgCompletion === null
+                  ? "No measurable SOP readiness evidence is connected."
+                  : `Average across ${measurable.length} measurable SOP${
+                      measurable.length === 1 ? "" : "s"
+                    }.`
+              }
+              tone={avgCompletion === null ? "blue" : "violet"}
+              icon={Workflow}
+              badge={avgCompletion === null ? "Not measured" : "Measured"}
+            />
+          </div>
+        ) : null}
+
+        {!compact ? (
+          <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto]">
+            <label className="relative block">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search SOP, owner, department, stage..."
+                className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              />
+            </label>
+
+            <select
+              value={stage}
+              onChange={(event) => setStage(event.target.value)}
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-black text-[#10233F] outline-none focus:border-[#F97316]"
+            >
+              {stages.map((item) => (
+                <option key={item} value={item}>
+                  {item === "All" ? "All Stages" : item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(event.target.value)
+              }
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-black text-[#10233F] outline-none focus:border-[#F97316]"
+            >
+              {statuses.map((item) => (
+                <option key={item} value={item}>
+                  {item === "All" ? "All Statuses" : item}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={!filtersActive}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <X size={13} />
+              Clear
+            </button>
+          </div>
+        ) : null}
+
+        <div className="space-y-2.5">
+          {visible.length ? (
+            visible.map((sop) => (
+              <SopRow
+                key={sop.code || sop.id || sop.title}
+                sop={sop}
+              />
+            ))
+          ) : (
+            <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+                <ClipboardList size={24} />
+              </div>
+
+              <h3 className="mt-4 text-xl font-black text-[#10233F]">
+                No SOP records found
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                {filtersActive
+                  ? "Clear or change the SOP filters."
+                  : "Connect real SOP records before Zaifan relies on procedure coverage or readiness."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {!compact ? (
+          <div className="grid gap-3 lg:grid-cols-3">
+            <div className="rounded-[1.35rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck
+                  size={17}
+                  className="mt-0.5 shrink-0 text-emerald-700"
+                />
+
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                    Procedure Integrity
+                  </p>
+                  <p className="mt-1 font-black text-[#10233F]">
+                    Controlled records only
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                    SOP counts and readiness should come from real procedure
+                    records, not hardcoded examples.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4">
+              <div className="flex items-start gap-3">
+                <Clock3
+                  size={17}
+                  className="mt-0.5 shrink-0 text-blue-700"
+                />
+
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                    Review Discipline
+                  </p>
+                  <p className="mt-1 font-black text-[#10233F]">
+                    Dates must be real
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                    Missing review dates remain unscheduled instead of being
+                    replaced with invented deadlines.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border-[3px] border-[#F59E0B] bg-[#FFF8E8] p-4">
+              <div className="flex items-start gap-3">
+                <Database
+                  size={17}
+                  className="mt-0.5 shrink-0 text-amber-700"
+                />
+
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                    Workflow Boundary
+                  </p>
+                  <p className="mt-1 font-black text-[#10233F]">
+                    Coverage ≠ execution
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                    Having an SOP does not prove staff followed it. Execution
+                    evidence belongs in workflow and audit systems.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">SOP</th><th className="px-4 py-3">Stage</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Readiness</th><th className="px-4 py-3">Review</th></tr></thead>
-              <tbody className="divide-y divide-slate-100">{filtered.map((sop) => <tr key={sop.code} className="hover:bg-slate-50"><td className="px-4 py-3"><div className="font-bold text-slate-900">{sop.title}</div><div className="text-xs text-slate-500">{sop.code} · {sop.department} · {sop.owner}</div></td><td className="px-4 py-3"><Badge tone="blue">{sop.stage}</Badge></td><td className="px-4 py-3"><Badge tone={sop.status === "Review" ? "amber" : "green"}>{sop.status}</Badge></td><td className="px-4 py-3"><div className="flex items-center gap-2"><div className="h-2 w-20 rounded bg-slate-100"><div className="h-2 rounded bg-slate-900" style={{ width: `${sop.completion}%` }} /></div><span className="text-xs font-bold">{sop.completion}%</span></div></td><td className="px-4 py-3 text-slate-500">{sop.nextReview}</td></tr>)}</tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2"><Workflow className="text-blue-600" size={18} /><h3 className="font-black">Journey Coverage</h3></div><div className="mt-4 grid grid-cols-2 gap-2">{workflowStages.map((x) => <div key={x} className="rounded-2xl bg-slate-50 p-3 text-sm"><div className="font-bold text-slate-800">{x}</div><div className="text-xs text-slate-500">{sopRecords.some((s) => s.stage === x) ? "Covered" : "Pending"}</div></div>)}</div></div>
-          {!compact && <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2"><Users className="text-purple-600" size={18} /><h3 className="font-black">Ownership Matrix</h3></div><div className="mt-4 space-y-3">{["Counselor Ops", "Planning Team", "CAS Desk", "Payment OS", "Verification OS"].map((owner) => <div key={owner} className="flex justify-between rounded-2xl bg-slate-50 p-3 text-sm"><span className="font-semibold">{owner}</span><span className="text-slate-500">{sopRecords.filter((x) => x.owner === owner).length} SOP</span></div>)}</div></div>}
-        </div>
+        ) : null}
       </div>
-    </div>
+    </section>
   );
 }

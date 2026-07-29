@@ -1,32 +1,38 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
-import AdminLogin from "../../components/admin/AdminLogin";
-import AdminHeader from "../../components/admin/AdminHeader";
-const AdminStats = lazy(() => import("../../components/admin/AdminStats"));
-const NotificationCenter = lazy(() => import("../../components/admin/NotificationCenter"));
-import AdminSidebar from "../../components/admin/AdminSidebar";
-const CommandPalette = lazy(() => import("../../components/admin/CommandPalette"));
+import AdminLogin from "../../components/admin/workspaces/core/AdminLogin";
+import AdminSidebar from "../../components/admin/workspaces/core/AdminSidebar";
+const CommandPalette = lazy(() => import("../../components/admin/workspaces/core/CommandPalette"));
 
+const AdminHomePage = lazy(() =>
+  import("../../components/admin/pages/AdminHomePage")
+);
+const StudentDirectoryPage = lazy(() =>
+  import("../../components/admin/pages/StudentDirectoryPage")
+);
+const CommunicationsPage = lazy(() =>
+  import("../../components/admin/pages/CommunicationsPage")
+);
+const OperationsPage = lazy(() =>
+  import("../../components/admin/pages/OperationsPage")
+);
+const TeamPage = lazy(() =>
+  import("../../components/admin/pages/TeamPage")
+);
+const SystemPage = lazy(() =>
+  import("../../components/admin/pages/SystemPage")
+);
+const EnterprisePage = lazy(() =>
+  import("../../components/admin/pages/EnterprisePage")
+);
 const AnalyticsPage = lazy(() =>
   import("../../components/admin/pages/AnalyticsPage")
 );
 const FollowUpsPage = lazy(() =>
   import("../../components/admin/pages/FollowUpsPage")
 );
-const AutomationPage = lazy(() =>
-  import("../../components/admin/pages/AutomationPage")
-);
 const MyLeadsPage = lazy(() =>
   import("../../components/admin/pages/MyLeadsPage")
-);
-const ActivityLogsPage = lazy(() =>
-  import("../../components/admin/pages/ActivityLogsPage")
-);
-const AdminManagementPage = lazy(() =>
-  import("../../components/admin/pages/AdminManagementPage")
-);
-const SettingsPage = lazy(() =>
-  import("../../components/admin/pages/SettingsPage")
 );
 const PipelinePage = lazy(() =>
   import("../../components/admin/pages/PipelinePage")
@@ -47,16 +53,18 @@ import {
   roleLabels,
 } from "../../utils/crm/index";
 
-import { shouldShowStats } from "../../utils/crm/dashboardFilters";
 import { PROFILE_RETRY_LIMIT } from "../../utils/crm/constants";
 import { supabase } from "../../lib/supabaseClient";
 import { generateGptCopilotText } from "../../services/gptCopilotService";
 import { enrichLeadWithAi } from "../../services/aiLeadEngine";
+import {
+  DEFAULT_ADMIN_TAB,
+  normalizeAdminTab,
+} from "../../components/admin/workspaces/core/adminNavigation";
 
 const ADMIN_ACTIVE_TAB_KEY = "zaifan_admin_active_tab";
 const ADMIN_ANALYTICS_SECTION_KEY = "zaifan_admin_analytics_section";
 const ADMIN_SCROLL_KEY = "zaifan_admin_scroll_y";
-const ADMIN_OVERVIEW_COLLAPSED_KEY = "zaifan_admin_overview_collapsed";
 
 const ADMIN_CARD_CLASS =
   "group relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white p-5 text-[#0b2a57] shadow-[0_12px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_46px_rgba(15,23,42,0.10)] sm:p-6";
@@ -72,17 +80,15 @@ function getStoredValue(key, fallback) {
 
 function AdminPage() {
   const [activeTab, setActiveTab] = useState(() =>
-    getStoredValue(ADMIN_ACTIVE_TAB_KEY, "inquiries")
+    normalizeAdminTab(
+      getStoredValue(ADMIN_ACTIVE_TAB_KEY, DEFAULT_ADMIN_TAB)
+    )
   );
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [activeAnalyticsSection, setActiveAnalyticsSection] = useState(() =>
     getStoredValue(ADMIN_ANALYTICS_SECTION_KEY, "ai-executive")
   );
-  const [overviewCollapsed, setOverviewCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem(ADMIN_OVERVIEW_COLLAPSED_KEY) === "1";
-  });
   const [aiReanalysisState, setAiReanalysisState] = useState({
     loading: false,
     leadId: null,
@@ -90,6 +96,14 @@ function AdminPage() {
     message: "",
     error: "",
   });
+
+  useEffect(() => {
+    const normalizedTab = normalizeAdminTab(activeTab);
+
+    if (normalizedTab !== activeTab) {
+      setActiveTab(normalizedTab);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -105,14 +119,6 @@ function AdminPage() {
       activeAnalyticsSection
     );
   }, [activeAnalyticsSection]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    sessionStorage.setItem(
-      ADMIN_OVERVIEW_COLLAPSED_KEY,
-      overviewCollapsed ? "1" : "0"
-    );
-  }, [overviewCollapsed]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -578,7 +584,6 @@ function AdminPage() {
   );
 
   const statusOptions = useMemo(() => getStatusOptions(activeTab), [activeTab]);
-  const showOverviewStats = useMemo(() => shouldShowStats(activeTab), [activeTab]);
 
   const adminCommandMetrics = useMemo(() => {
     const openSupport = supportRequests.filter(
@@ -734,146 +739,6 @@ function AdminPage() {
 
         <main className="min-w-0 flex-1 overflow-hidden px-3 py-4 sm:px-5 sm:py-5 xl:px-7 2xl:px-9">
           <div className="mx-auto w-full max-w-[1800px]">
-            <div className="sticky top-2 z-40 mb-3 flex items-center justify-between gap-3 rounded-[1.15rem] border-2 border-orange-300 bg-[#fff8ee]/95 px-3 py-2.5 shadow-[0_8px_24px_rgba(15,35,63,0.10)] backdrop-blur-md sm:px-4">
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
-                  Workspace Focus
-                </p>
-                <p className="truncate text-xs font-bold text-[#10233f] sm:text-sm">
-                  {overviewCollapsed
-                    ? "Overview hidden — working area moved to the top."
-                    : "Overview visible — hide it to reach the active workspace instantly."}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setOverviewCollapsed((current) => !current);
-                  window.requestAnimationFrame(() => {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  });
-                }}
-                className={`shrink-0 rounded-xl border-2 px-4 py-2 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${
-                  overviewCollapsed
-                    ? "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
-                    : "border-[#234e78] bg-[#123865] text-white hover:bg-[#0d2d50]"
-                }`}
-              >
-                {overviewCollapsed ? "Show Overview" : "Hide Overview"}
-              </button>
-            </div>
-
-            {!overviewCollapsed && (
-            <>
-            <div className="relative mb-6 overflow-hidden rounded-[2rem] border-2 border-orange-400 bg-[#173f69] text-white shadow-[0_24px_70px_rgba(16,49,86,0.16)]">
-              <div className="grid lg:grid-cols-[minmax(0,1fr)_380px]">
-                <div className="relative p-5 sm:p-7">
-                  <div className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
-                  <div className="pointer-events-none absolute -bottom-28 right-10 h-56 w-56 rounded-full bg-[#2f6ea8]/25 blur-3xl" />
-
-                  <div className="relative">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                        System online
-                      </span>
-
-                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white">
-                        GPT Coverage {aiCoverageStats.percent}%
-                      </span>
-                    </div>
-
-                    <h2 className="mt-4 truncate text-3xl font-black tracking-[-0.035em] text-white sm:text-4xl">
-                      Welcome back, {adminProfile.full_name || "Admin User"}
-                    </h2>
-
-                    <p className="mt-2 max-w-3xl text-[15px] font-semibold leading-6 text-white/85">
-                      Operating as{" "}
-                      <span className="font-black text-[#ff8a2a]">
-                        {roleLabels[role] || role}
-                      </span>
-                      . Your workspace is ready.
-                    </p>
-                  </div>
-                </div>
-
-                <aside className="relative border-t-2 border-orange-300/50 bg-[#ff5a0a] p-5 text-white lg:border-l-2 lg:border-t-0 lg:border-orange-300/50 sm:p-6">
-                  <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-
-                  <div className="relative">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/90">
-                      Operator permissions
-                    </p>
-                    <h3 className="mt-2 text-2xl font-black text-white">
-                      {roleLabels[role] || role}
-                    </h3>
-                    <p className="mt-1 text-xs font-bold text-white/85">
-                      Live access controls for this session
-                    </p>
-
-                    <div className="mt-5 grid grid-cols-3 gap-2">
-                      <PermissionPill
-                        label="Delete"
-                        enabled={currentPermissions.canDelete}
-                        dark
-                      />
-                      <PermissionPill
-                        label="Export"
-                        enabled={currentPermissions.canExport}
-                        dark
-                      />
-                      <PermissionPill
-                        label="Clear all"
-                        enabled={currentPermissions.canClearAll}
-                        dark
-                      />
-                    </div>
-                  </div>
-                </aside>
-              </div>
-
-              <div className="border-t border-orange-200/80 bg-[#fff8f1] p-4 sm:p-5">
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-                  <AdminCommandMetric
-                    label="Student leads"
-                    value={adminCommandMetrics.totalLeads}
-                    detail="Unified inquiry + appointment portfolio"
-                  />
-                  <AdminCommandMetric
-                    label="Pending appointments"
-                    value={adminCommandMetrics.pendingAppointments}
-                    detail="Consultations awaiting action"
-                    tone="orange"
-                  />
-                  <AdminCommandMetric
-                    label="Open tasks"
-                    value={adminCommandMetrics.pendingTasks}
-                    detail="Student operations still active"
-                    tone="blue"
-                  />
-                  <AdminCommandMetric
-                    label="Support queue"
-                    value={adminCommandMetrics.openSupport}
-                    detail="Unresolved student requests"
-                    tone={adminCommandMetrics.openSupport ? "red" : "green"}
-                  />
-                  <AdminCommandMetric
-                    label="Portal accounts"
-                    value={adminCommandMetrics.activePortalAccounts}
-                    detail="Active Student OS access"
-                    tone="green"
-                  />
-                  <AdminCommandMetric
-                    label="GPT coverage"
-                    value={`${adminCommandMetrics.gptCoverage}%`}
-                    detail="Leads with stored GPT intelligence"
-                    tone="orange"
-                  />
-                </div>
-              </div>
-            </div>
-
             {aiReanalysisState.message && (
               <SystemNotice tone="success">
                 {aiReanalysisState.message}
@@ -906,82 +771,18 @@ function AdminPage() {
               </div>
             )}
 
-            <div className="zaifan-admin-embedded-dark relative z-20 mb-6 overflow-visible">
-              <AdminHeader
-              inquiries={inquiries}
-              appointments={appointments}
-              appointmentPendingCount={appointmentPendingCount}
-              fetchAllData={fetchAllData}
-              activeTab={activeTab}
-              exportInquiriesToCSV={exportInquiriesToCSV}
-              exportAppointmentsToCSV={exportAppointmentsToCSV}
-              logout={handleLogout}
-              clearInquiries={clearInquiries}
-              clearAppointments={clearAppointments}
-              role={role}
-              adminProfile={adminProfile}
-              permissions={currentPermissions}
-              studentApplications={studentApplications}
-              studentDocuments={studentDocuments}
-              studentTasks={studentTasks}
-              studentUniversities={studentUniversities}
-              studentRiskScores={studentRiskScores}
-              studentInvoices={studentInvoices}
-              studentPayments={studentPayments}
-              studentReceipts={studentReceipts}
-              studentPortalAccounts={studentPortalAccounts}
-              supportRequests={supportRequests}
-              counselorPaymentRequests={counselorPaymentRequests}
-              executiveExecutionLogs={executiveExecutionLogs}
-              setActiveTab={setActiveTab}
-              setActiveAnalyticsSection={setActiveAnalyticsSection}
-            />
-            </div>
-
-            {showOverviewStats && (
-              <div className="mb-4 flex flex-col gap-1 px-1 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-orange-600">Live operating picture</p>
-                  <h2 className="mt-1 text-2xl font-black tracking-tight text-[#0b2a57] sm:text-3xl">What needs attention right now</h2>
-                </div>
-                <p className="max-w-xl text-sm font-medium leading-6 text-slate-600">A focused view of CRM pressure, student readiness, finance, access and support signals.</p>
-              </div>
-            )}
-
-            {showOverviewStats && (
-              <Suspense fallback={<AdminInsightLoader />}>
-                <>
-                <div className="zaifan-admin-embedded-dark mb-4">
-                <NotificationCenter
+            <Suspense fallback={<AdminModuleLoader />}>
+              {activeTab === "home" ? (
+                <AdminHomePage
                   cardClass={cardClass}
-                  inquiryNewCount={inquiryNewCount}
-                  appointmentPendingCount={appointmentPendingCount}
-                  appointmentConfirmedCount={appointmentConfirmedCount}
                   role={role}
+                  roleLabel={roleLabels[role] || role}
+                  adminProfile={adminProfile}
                   permissions={currentPermissions}
-                  studentApplications={studentApplications}
-                  studentDocuments={studentDocuments}
-                  studentTasks={studentTasks}
-                  studentUniversities={studentUniversities}
-                  studentRiskScores={studentRiskScores}
-                  studentInvoices={studentInvoices}
-                  studentPayments={studentPayments}
-                  studentReceipts={studentReceipts}
-                  studentPortalAccounts={studentPortalAccounts}
-                  supportRequests={supportRequests}
-                  counselorPaymentRequests={counselorPaymentRequests}
-                  executiveExecutionLogs={executiveExecutionLogs}
-                  setActiveTab={setActiveTab}
-                  setActiveAnalyticsSection={setActiveAnalyticsSection}
-                />
-                </div>
-
-                <AdminStats
-                  cardClass={cardClass}
                   inquiries={inquiries}
+                  appointments={appointments}
                   inquiryNewCount={inquiryNewCount}
                   inquiryContactedCount={inquiryContactedCount}
-                  appointments={appointments}
                   appointmentPendingCount={appointmentPendingCount}
                   appointmentConfirmedCount={appointmentConfirmedCount}
                   appointmentCompletedCount={appointmentCompletedCount}
@@ -998,40 +799,134 @@ function AdminPage() {
                   supportRequests={supportRequests}
                   counselorPaymentRequests={counselorPaymentRequests}
                   executiveExecutionLogs={executiveExecutionLogs}
+                  adminCommandMetrics={adminCommandMetrics}
+                  aiCoverageStats={aiCoverageStats}
+                  fetchAllData={fetchAllData}
+                  exportInquiriesToCSV={exportInquiriesToCSV}
+                  exportAppointmentsToCSV={exportAppointmentsToCSV}
+                  clearInquiries={clearInquiries}
+                  clearAppointments={clearAppointments}
+                  logout={handleLogout}
+                  setActiveTab={setActiveTab}
+                  setActiveAnalyticsSection={setActiveAnalyticsSection}
                 />
-                </>
-              </Suspense>
-            )}
-
-            </>
-            )}
-
-            <Suspense fallback={<AdminModuleLoader />}>
-              {activeTab === "followups" ? (
-                <FollowUpsPage cardClass={cardClass} />
-              ) : activeTab === "automation" ? (
-                <AutomationPage
-                  cardClass={cardClass}
+              ) : activeTab === "students" ? (
+                <StudentDirectoryPage
                   inquiries={inquiries}
                   appointments={appointments}
+                  studentPortalAccounts={studentPortalAccounts}
+                  adminProfile={adminProfile}
+                  permissions={currentPermissions}
+                  updateInquiryPriority={updateInquiryPriority}
+                  updateAppointmentPriority={updateAppointmentPriority}
+                  updateAppointmentStatus={updateAppointmentStatus}
+                  updateAppointmentStage={updateAppointmentStage}
+                  toggleInquiryStatus={toggleInquiryStatus}
+                  deleteInquiry={deleteInquiry}
+                  deleteAppointment={deleteAppointment}
+                />
+              ) : activeTab === "followups" ? (
+                <FollowUpsPage cardClass={cardClass} />
+              ) : [
+                "communications",
+                "communication-email",
+                "communication-whatsapp",
+                "communication-calls-meetings",
+                "communication-notifications",
+                "communication-analytics",
+              ].includes(activeTab) ? (
+                <CommunicationsPage
+                  workspaceMode={activeTab}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                  followUpReminders={followUpReminders}
+                  adminProfile={adminProfile}
+                  setActiveTab={setActiveTab}
+                  toggleInquiryStatus={toggleInquiryStatus}
+                  updateAppointmentStatus={updateAppointmentStatus}
+                />
+              ) : [
+                "operations-tasks",
+                "operations-automation",
+                "operations-actions",
+              ].includes(activeTab) ? (
+                <OperationsPage
+                  workspaceMode={activeTab}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                  followUpReminders={followUpReminders}
+                  studentTasks={studentTasks}
+                  setActiveTab={setActiveTab}
+                  toggleInquiryStatus={toggleInquiryStatus}
+                  updateAppointmentStatus={updateAppointmentStatus}
                 />
               ) : activeTab === "my-leads" ? (
                 <MyLeadsPage
                   cardClass={cardClass}
                   adminProfile={adminProfile}
                 />
-              ) : activeTab === "activity-logs" ? (
-                <ActivityLogsPage cardClass={cardClass} />
-              ) : activeTab === "admin-management" ? (
-                <AdminManagementPage
+              ) : [
+                "enterprise-finance",
+                "enterprise-marketing",
+                "enterprise-partners",
+                "enterprise-agents",
+                "enterprise-compliance",
+                "enterprise-hr",
+              ].includes(activeTab) ? (
+                <EnterprisePage
+                  workspaceMode={activeTab}
+                  adminProfile={adminProfile}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                  followUpReminders={followUpReminders}
+                  studentApplications={studentApplications}
+                  studentDocuments={studentDocuments}
+                  studentTasks={studentTasks}
+                  studentUniversities={studentUniversities}
+                  studentInvoices={studentInvoices}
+                  studentPayments={studentPayments}
+                  counselorPaymentRequests={counselorPaymentRequests}
+                />
+              ) : [
+                "system-overview",
+                "system-activity",
+                "system-settings",
+              ].includes(activeTab) ? (
+                <SystemPage
+                  workspaceMode={activeTab}
                   cardClass={cardClass}
+                  role={role}
+                  roleLabel={roleLabels[role] || role}
+                  adminProfile={adminProfile}
+                  permissions={currentPermissions}
+                  setActiveTab={setActiveTab}
+                />
+              ) : [
+                "team-command",
+                "team-workload",
+                "team-performance",
+                "team-access",
+              ].includes(activeTab) ? (
+                <TeamPage
+                  workspaceMode={activeTab}
+                  cardClass={cardClass}
+                  inquiries={inquiries}
+                  appointments={appointments}
+                  followUpReminders={followUpReminders}
                   role={role}
                   adminProfile={adminProfile}
                   permissions={currentPermissions}
                 />
-              ) : activeTab === "analytics" ? (
+              ) : [
+                "ai-command",
+                "crm-analytics",
+                "risk-intelligence",
+                "executive-intelligence",
+              ].includes(activeTab) ? (
                 <AnalyticsPage
+                  workspaceMode={activeTab}
                   cardClass={cardClass}
+                  adminProfile={adminProfile}
                   inquiries={inquiries}
                   appointments={appointments}
                   followUpReminders={followUpReminders}
@@ -1057,11 +952,6 @@ function AdminPage() {
                   supportRequests={supportRequests}
                   counselorPaymentRequests={counselorPaymentRequests}
                   executiveExecutionLogs={executiveExecutionLogs}
-                />
-              ) : activeTab === "settings" ? (
-                <SettingsPage
-                  cardClass={cardClass}
-                  currentPermissions={currentPermissions}
                 />
               ) : (
                 <PipelinePage
@@ -1102,80 +992,6 @@ function AdminPage() {
 
 
 
-function AdminCommandMetric({ label, value, detail, tone = "slate" }) {
-  const tones = {
-    slate: "border-orange-300 bg-[#fff8f1]",
-    orange: "border-orange-300 bg-[#fff7ef]",
-    blue: "border-blue-300 bg-[#eef6ff]",
-    red: "border-rose-300 bg-[#fff1f3]",
-    green: "border-emerald-300 bg-[#ecfbf4]",
-  };
-
-  const values = {
-    slate: "text-[#102b4c]",
-    orange: "text-[#c93208]",
-    blue: "text-[#164fa3]",
-    red: "text-[#c42145]",
-    green: "text-[#087f5b]",
-  };
-
-  return (
-    <div
-      className={`rounded-2xl border-2 p-3.5 shadow-[0_4px_10px_rgba(16,43,76,0.06)] ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#63738a]">
-        {label}
-      </p>
-      <p className={`mt-1.5 text-xl font-black ${values[tone] || values.slate}`}>
-        {value}
-      </p>
-      <p className="mt-1 text-[11px] leading-4 text-[#415674]">{detail}</p>
-    </div>
-  );
-}
-
-function AdminInsightLoader() {
-  return (
-    <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {[0, 1, 2, 3].map((item) => (
-        <div
-          key={item}
-          className="h-28 animate-pulse rounded-[1.4rem] border border-slate-200 bg-white shadow-sm"
-        />
-      ))}
-    </div>
-  );
-}
-
-function PermissionPill({ label, enabled, dark = false }) {
-  if (dark) {
-    return (
-      <div
-        className={`whitespace-nowrap rounded-xl border px-2.5 py-2.5 text-center text-[9px] font-black uppercase tracking-[0.06em] ${
-          enabled
-            ? "border-white/45 bg-white/15 text-white"
-            : "border-white/20 bg-[#173f69]/25 text-white/55"
-        }`}
-      >
-        {label}: {enabled ? "Yes" : "No"}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`whitespace-nowrap rounded-xl border px-3 py-2 text-center text-[11px] font-extrabold uppercase tracking-[0.08em] ${
-        enabled
-          ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-700"
-          : "border-slate-200 bg-slate-50 text-slate-400"
-      }`}
-    >
-      {label}: {enabled ? "Yes" : "No"}
-    </div>
-  );
-}
 
 function SystemNotice({ tone = "success", children }) {
   const toneClass =

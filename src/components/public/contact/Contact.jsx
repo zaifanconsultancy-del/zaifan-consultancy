@@ -716,7 +716,7 @@ ${formData.message}
           </div>
         </div>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-8 hidden gap-3 md:grid md:grid-cols-2 lg:grid-cols-5">
           {bottomStrip.map((item, index) => {
             const Icon = item.icon;
 

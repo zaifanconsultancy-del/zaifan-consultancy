@@ -525,7 +525,7 @@ export default function Hero() {
                   <h3 className="text-xs font-black leading-tight">
                     {card.title}
                   </h3>
-                  <p className="mt-1 text-[10px] font-semibold leading-4 text-[#17335f]">
+                  <p className="mt-1 text-[8px] font-semibold leading-[1.3] text-[#17335f] sm:text-[10px] sm:leading-4">
                     {card.text}
                   </p>
                 </div>
@@ -534,22 +534,22 @@ export default function Hero() {
           </SoftCard>
 
           <SoftCard className="col-span-12 p-4 lg:col-span-7">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-black tracking-[-0.02em]">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="min-w-0 text-[14px] font-black tracking-[-0.02em] sm:text-base">
                 Choose your adventure 🗺️
               </h2>
               <button
                 type="button"
                 onClick={() => goToRoute("/services")}
-                className={`hero-motion-safe rounded-full bg-orange-50 px-4 py-1.5 text-[11px] font-black text-[#ff4b12] hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+                className={`hero-motion-safe shrink-0 rounded-full bg-orange-50 px-2.5 py-1.5 text-[9px] font-black text-[#ff4b12] sm:px-4 sm:text-[11px] hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
               >
                 See Full Process
               </button>
             </div>
 
-            <div className="relative grid grid-cols-5 items-start gap-4">
+            <div className="relative grid grid-cols-5 items-start gap-1 sm:gap-4">
               <svg
-                className="pointer-events-none absolute left-[12%] top-[36px] h-6 w-[76%]"
+                className="pointer-events-none absolute left-[12%] top-[25px] h-5 w-[76%] sm:top-[36px] sm:h-6"
                 viewBox="0 0 760 40"
                 preserveAspectRatio="none"
                 aria-hidden="true"
@@ -565,9 +565,9 @@ export default function Hero() {
 
               {adventureSteps.map((step, index) => (
                 <div key={step.title} className="relative z-10 text-center">
-                  <div className="relative mx-auto h-[82px] w-[82px]">
+                  <div className="relative mx-auto h-[52px] w-[52px] sm:h-[82px] sm:w-[82px]">
                     <div
-                      className={`hero-motion-safe grid h-full w-full place-items-center rounded-full bg-orange-50 text-3xl shadow-inner hover:scale-105 ${INTERACTIVE_TRANSITION}`}
+                      className={`hero-motion-safe grid h-full w-full place-items-center rounded-full bg-orange-50 text-xl shadow-inner sm:text-3xl hover:scale-105 ${INTERACTIVE_TRANSITION}`}
                     >
                       {index === 0 ? (
                         <img
@@ -577,7 +577,7 @@ export default function Hero() {
                           height="1536"
                           loading="lazy"
                           decoding="async"
-                          className="h-[90px] w-[90px] object-contain drop-shadow-xl"
+                          className="h-[58px] w-[58px] object-contain drop-shadow-xl sm:h-[90px] sm:w-[90px]"
                         />
                       ) : (
                         <span>{step.icon}</span>

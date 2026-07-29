@@ -306,7 +306,7 @@ function ItalyReasonPanel() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-4">
         {whyItalyReasons.map((item) => {
           const Icon = item.icon;
 
@@ -329,7 +329,7 @@ function ItalyReasonPanel() {
         })}
       </div>
 
-      <div className="rounded-[30px] bg-white/86 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100">
+      <div className="hidden rounded-[30px] bg-white/86 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 md:block">
         <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-[#ff4b12]">
           The Italy Journey With Zaifan
         </p>
@@ -359,7 +359,7 @@ function ItalyReasonPanel() {
         </div>
       </div>
 
-      <div className="grid gap-4 rounded-[30px] bg-white/86 p-5 shadow-[0_18px_45px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="hidden gap-4 rounded-[30px] bg-white/86 p-5 shadow-[0_18px_45px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 md:grid md:grid-cols-2 xl:grid-cols-4">
   {focusStats.map((item) => {
     const Icon = item.icon;
 

@@ -1,4 +1,4 @@
-import AdminManagement from "../AdminManagement";
+import AdminManagement from "../workspaces/core/AdminManagement";
 
 function AdminManagementPage({
   cardClass,

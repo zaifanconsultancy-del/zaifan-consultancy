@@ -18,6 +18,12 @@ import { downloadCSVFile } from "../services/crm/csvExportService";
 
 import { getStatusFromAppointmentStage } from "../utils/crm/index";
 import { withTimeout } from "../utils/crm/requestUtils";
+import {
+  buildStudentNotification,
+  confirmStudentNotificationPreview,
+  prepareStudentNotification,
+  sendPreparedStudentNotification,
+} from "../services/studentNotificationService";
 
 const sameId = (left, right) => String(left) === String(right);
 
@@ -70,6 +76,61 @@ export default function useAdminLeadActions({
       }
     },
     [logActivity]
+  );
+
+  const prepareProtectedAppointmentChange = useCallback(
+    async (preview) => {
+      if (!preview) {
+        return {
+          confirmed: true,
+          previewToken: null,
+          confirmationText: "",
+        };
+      }
+
+      // Important UX rule: show the human confirmation first. Token creation is
+      // a network request and must never delay the preview/confirmation popup.
+      const confirmation = confirmStudentNotificationPreview(preview);
+
+      if (!confirmation.confirmed) {
+        return {
+          confirmed: false,
+          previewToken: null,
+          confirmationText: confirmation.confirmationText || "",
+        };
+      }
+
+      if (!preview.sendable) {
+        return {
+          confirmed: true,
+          previewToken: null,
+          confirmationText: confirmation.confirmationText || "",
+        };
+      }
+
+      try {
+        const prepared = await prepareStudentNotification(preview);
+
+        return {
+          confirmed: true,
+          previewToken: prepared.previewToken,
+          confirmationText: confirmation.confirmationText || "",
+        };
+      } catch (error) {
+        console.error("Appointment notification preview failed:", error);
+        alert(
+          error?.message ||
+            "The student notification security check could not be prepared. The appointment was not changed."
+        );
+
+        return {
+          confirmed: false,
+          previewToken: null,
+          confirmationText: confirmation.confirmationText || "",
+        };
+      }
+    },
+    []
   );
 
   const deleteInquiry = useCallback(
@@ -339,6 +400,25 @@ export default function useAdminLeadActions({
 
       if (oldStatus === newStatus) return;
 
+      const preview = buildStudentNotification({
+        domain: "appointment",
+        student: selectedAppointment || {},
+        entity: selectedAppointment || {},
+        previous: {
+          ...(selectedAppointment || {}),
+          status: oldStatus,
+        },
+        next: {
+          ...(selectedAppointment || {}),
+          status: newStatus,
+        },
+        relatedType: "appointment",
+        relatedId: id,
+      });
+
+      const protection = await prepareProtectedAppointmentChange(preview);
+      if (!protection.confirmed) return;
+
       await runExclusive(`appointment:status:${id}`, async () => {
         try {
           const { error } = await withTimeout(
@@ -367,37 +447,29 @@ export default function useAdminLeadActions({
             details: `Changed appointment status from ${oldStatus} to ${newStatus}.`,
           });
 
-          if (newStatus === "confirmed" && oldStatus !== "confirmed") {
-            if (!selectedAppointment?.email) {
+          if (preview?.sendable) {
+            try {
+              const delivery = await sendPreparedStudentNotification({
+                preview,
+                previewToken: protection.previewToken,
+                confirmationText: protection.confirmationText,
+              });
+
               alert(
-                "Appointment confirmed, but no student email is available for the confirmation email."
+                delivery?.communicationWarning
+                  ? `Appointment updated and email sent. ${delivery.communicationWarning}`
+                  : "Appointment updated and student email sent."
               );
-              return;
+            } catch (emailError) {
+              console.error("Appointment notification failed:", emailError);
+              alert(
+                "Appointment status was updated, but the student email failed. Review Communications before retrying."
+              );
             }
-
-            const { error: emailError } = await withTimeout(
-              supabase.functions.invoke("send-appointment-status-email", {
-                body: {
-                  fullName: selectedAppointment?.full_name,
-                  email: selectedAppointment?.email,
-                  phone: selectedAppointment?.phone,
-                  country: selectedAppointment?.country_interest,
-                  service: selectedAppointment?.consultation_type,
-                  appointmentDate: selectedAppointment?.appointment_date,
-                  appointmentTime: selectedAppointment?.appointment_time,
-                  status: newStatus,
-                },
-              }),
-              "Appointment status email"
+          } else if (preview && !preview.sendable) {
+            alert(
+              "Appointment updated. No usable student email was available, so no email was sent."
             );
-
-            if (emailError) {
-              console.error("Appointment status email failed:", emailError);
-              alert("Status updated, but confirmation email failed.");
-              return;
-            }
-
-            alert("Appointment confirmed and confirmation email sent.");
           }
         } catch (error) {
           console.error(error);
@@ -409,6 +481,7 @@ export default function useAdminLeadActions({
       appointmentById,
       blockAction,
       currentPermissions.canUpdateStatus,
+      prepareProtectedAppointmentChange,
       runExclusive,
       safeLogActivity,
       setAppointments,
@@ -431,6 +504,27 @@ export default function useAdminLeadActions({
       const nextStatus = getStatusFromAppointmentStage(newStage);
 
       if (oldStage === newStage && oldStatus === nextStatus) return;
+
+      const preview = buildStudentNotification({
+        domain: "appointment",
+        student: selectedAppointment || {},
+        entity: selectedAppointment || {},
+        previous: {
+          ...(selectedAppointment || {}),
+          status: oldStatus,
+          appointment_stage: oldStage,
+        },
+        next: {
+          ...(selectedAppointment || {}),
+          status: nextStatus,
+          appointment_stage: newStage,
+        },
+        relatedType: "appointment",
+        relatedId: id,
+      });
+
+      const protection = await prepareProtectedAppointmentChange(preview);
+      if (!protection.confirmed) return;
 
       await runExclusive(`appointment:stage:${id}`, async () => {
         setAppointments((current) =>
@@ -479,6 +573,31 @@ export default function useAdminLeadActions({
             targetId: id,
             details: `Changed appointment pipeline from ${oldStage} to ${newStage}.`,
           });
+
+          if (preview?.sendable) {
+            try {
+              const delivery = await sendPreparedStudentNotification({
+                preview,
+                previewToken: protection.previewToken,
+                confirmationText: protection.confirmationText,
+              });
+
+              if (delivery?.communicationWarning) {
+                alert(
+                  `Appointment pipeline updated and email sent. ${delivery.communicationWarning}`
+                );
+              }
+            } catch (emailError) {
+              console.error("Appointment pipeline notification failed:", emailError);
+              alert(
+                "Appointment pipeline was updated, but the student email failed. Review Communications before retrying."
+              );
+            }
+          } else if (preview && !preview.sendable) {
+            alert(
+              "Appointment pipeline updated. No usable student email was available, so no email was sent."
+            );
+          }
         } catch (error) {
           console.error("Appointment pipeline timeout/error:", error);
 
@@ -504,6 +623,7 @@ export default function useAdminLeadActions({
       appointmentById,
       blockAction,
       currentPermissions.canUpdateAppointmentPipeline,
+      prepareProtectedAppointmentChange,
       runExclusive,
       safeLogActivity,
       setAppointments,

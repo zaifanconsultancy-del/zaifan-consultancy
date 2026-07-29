@@ -1,4 +1,4 @@
-import MyLeadsPanel from "../MyLeadsPanel";
+import MyLeadsPanel from "../workspaces/leads-crm/MyLeadsPanel";
 
 function MyLeadsPage({
   cardClass,

@@ -4,6 +4,7 @@ const COUNSELOR_TABLES = {
   students: "students",
   inquiries: "inquiries",
   appointments: "appointments",
+  assignments: "lead_assignments",
   applications: "student_applications",
   universities: "student_universities",
   documents: "student_documents",
@@ -1221,13 +1222,15 @@ export function buildCounselorPerformanceAnalytics(snapshot = {}) {
     offersAccepted,
     casIssued,
     performanceGrade:
-      conversionRate >= 65 && activationRate >= 80
-        ? "Excellent"
-        : conversionRate >= 45 && activationRate >= 65
-          ? "Strong"
-          : conversionRate >= 25
-            ? "Developing"
-            : "Needs Attention",
+      students.length === 0
+        ? "Not Assessed"
+        : conversionRate >= 65 && activationRate >= 80
+          ? "Excellent"
+          : conversionRate >= 45 && activationRate >= 65
+            ? "Strong"
+            : conversionRate >= 25
+              ? "Developing"
+              : "Needs Attention",
   };
 }
 
@@ -1299,9 +1302,10 @@ function buildAssignmentFilter(profile = {}) {
 }
 
 async function fetchAssignedStudents(profile, diagnostics = []) {
-  const assignmentFilter = buildAssignmentFilter(profile);
+  const counselorId = safeString(profile?.counselorId).trim();
+  const counselorEmail = safeString(profile?.email).trim();
 
-  if (!assignmentFilter) {
+  if (!counselorId && !counselorEmail) {
     diagnostics.push({
       table: "assignment",
       message:
@@ -1314,35 +1318,88 @@ async function fetchAssignedStudents(profile, diagnostics = []) {
     };
   }
 
-  const [students, inquiries] = await Promise.all([
-    safeSelect(
-      COUNSELOR_TABLES.students,
-      (table) => table.select("*").or(assignmentFilter).limit(250),
+  let assignments = [];
+
+  if (counselorId) {
+    assignments = await safeSelect(
+      COUNSELOR_TABLES.assignments,
+      (table) =>
+        table
+          .select("*")
+          .eq("assigned_user_id", counselorId)
+          .order("created_at", { ascending: false })
+          .limit(500),
       [],
       diagnostics
-    ),
-    safeSelect(
-      COUNSELOR_TABLES.inquiries,
-      (table) => table.select("*").or(assignmentFilter).limit(250),
+    );
+  }
+
+  // Email is only a fallback for legacy/migration safety. The canonical
+  // ownership key is the authenticated human UUID; portal role does not duplicate ownership.
+  if (!assignments.length && counselorEmail) {
+    assignments = await safeSelect(
+      COUNSELOR_TABLES.assignments,
+      (table) =>
+        table
+          .select("*")
+          .ilike("assigned_user_name", counselorEmail)
+          .order("created_at", { ascending: false })
+          .limit(500),
       [],
       diagnostics
-    ),
+    );
+  }
+
+  if (!assignments.length) {
+    return {
+      records: [],
+      scope: "assigned-empty",
+    };
+  }
+
+  const inquiryIds = assignments
+    .filter((row) => normalizeKey(row.lead_type) === "inquiry")
+    .map((row) => safeString(row.lead_id).trim())
+    .filter(Boolean);
+
+  const appointmentIds = assignments
+    .filter((row) => normalizeKey(row.lead_type) === "appointment")
+    .map((row) => safeString(row.lead_id).trim())
+    .filter(Boolean);
+
+  const [inquiries, appointments] = await Promise.all([
+    inquiryIds.length
+      ? safeSelect(
+          COUNSELOR_TABLES.inquiries,
+          (table) => table.select("*").in("id", inquiryIds).limit(500),
+          [],
+          diagnostics
+        )
+      : [],
+    appointmentIds.length
+      ? safeSelect(
+          COUNSELOR_TABLES.appointments,
+          (table) => table.select("*").in("id", appointmentIds).limit(500),
+          [],
+          diagnostics
+        )
+      : [],
   ]);
 
-  const normalizedRecords = [...students, ...inquiries].map((record) => ({
-    ...record,
-    source_table:
-      record.source_table ||
-      (record.inquiry_id || record.lead_status ? "inquiries" : "students"),
-  }));
-
-  // person_id is the canonical human identity. Prefer the richer students row
-  // when both a students row and an inquiries row represent the same person.
-  normalizedRecords.sort((a, b) => {
-    const aStudent = a.source_table === "students" ? 1 : 0;
-    const bStudent = b.source_table === "students" ? 1 : 0;
-    return bStudent - aStudent;
-  });
+  const normalizedRecords = [
+    ...safeArray(inquiries).map((record) => ({
+      ...record,
+      inquiry_id: record.inquiry_id || record.id,
+      source_table: "inquiries",
+      assignment_owner_id: counselorId,
+    })),
+    ...safeArray(appointments).map((record) => ({
+      ...record,
+      appointment_id: record.appointment_id || record.id,
+      source_table: "appointments",
+      assignment_owner_id: counselorId,
+    })),
+  ];
 
   const records = uniqueBy(
     normalizedRecords,
@@ -1363,7 +1420,7 @@ async function fetchAssignedStudents(profile, diagnostics = []) {
 
   return {
     records,
-    scope: records.length ? "assigned-records" : "assigned-empty",
+    scope: records.length ? "assigned-records" : "assignment-record-missing",
   };
 }
 

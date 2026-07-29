@@ -18,8 +18,8 @@ import {
   WandSparkles,
 } from "lucide-react";
 
-import SearchToolbar from "../SearchToolbar";
-import DashboardContent from "../DashboardContent";
+import SearchToolbar from "../workspaces/core/SearchToolbar";
+import DashboardContent from "../workspaces/core/DashboardContent";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -178,202 +178,95 @@ function PipelinePage({
     <div className="space-y-5">
       <motion.section
         {...motionProps}
-        className="relative overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-[#fff8ef] p-5 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-6 xl:p-7"
+        className="overflow-hidden rounded-[2rem] border-[3px] border-orange-400 bg-[#FFF8EF] shadow-[0_18px_50px_rgba(23,36,61,.10)]"
       >
-        <div className="pointer-events-none absolute right-[-90px] top-[-90px] h-64 w-64 rounded-full bg-orange-100/70 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-[-120px] left-[22%] h-56 w-56 rounded-full bg-amber-50 blur-3xl" />
-
-        <div className="relative">
-          <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-start 2xl:justify-between">
-            <div className="max-w-4xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
-                  <Sparkles size={12} />
-                  {pipelineMeta.eyebrow}
-                </span>
-
-                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
-                  <Database size={12} />
-                  Single source of truth
-                </span>
-
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
-                  <ShieldCheck size={12} />
-                  Role-aware actions
-                </span>
-              </div>
-
-              <div className="mt-5 flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-[0_12px_28px_rgba(249,115,22,0.2)]">
-                  <PipelineIcon size={24} strokeWidth={2.1} />
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_330px]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.14em] text-white">
+                    <PipelineIcon size={14} />
+                    {pipelineMeta.eyebrow}
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.14em] text-white">
+                    <Database size={14} /> Live CRM Queue
+                  </span>
                 </div>
 
-                <div className="min-w-0">
-                  <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl xl:text-[2.2rem]">
-                    {pipelineMeta.title}
-                  </h1>
+                <h1 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                  {pipelineMeta.title}
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+                  {pipelineMeta.description}
+                </p>
 
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500 sm:text-[15px]">
-                    {pipelineMeta.description}
-                  </p>
+                <div className="mt-5 grid max-w-3xl gap-2 sm:grid-cols-3">
+                  <HeroMetric label="Visible Queue" value={visibleCount} />
+                  <HeroMetric label="Active Cases" value={metrics.activeCount} />
+                  <HeroMetric label="High Priority" value={metrics.urgentCount} />
                 </div>
               </div>
-            </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 2xl:w-[420px]">
-              <WorkspaceSignal
-                icon={BrainCircuit}
-                label="Local intelligence"
-                value="Always active"
-                tone="violet"
-              />
-
-              <WorkspaceSignal
-                icon={WandSparkles}
-                label="GPT intelligence"
-                value={
-                  aiReanalysisState.loading
-                    ? "Analyzing now"
-                    : "Manual & saved"
-                }
-                tone="orange"
-                active={aiReanalysisState.loading}
-              />
-
-              <WorkspaceSignal
-                icon={Layers3}
-                label="Executive context"
-                value={`${completeAllLeads.length} records`}
-                tone="blue"
-              />
-
-              <WorkspaceSignal
-                icon={Target}
-                label="GPT coverage"
-                value={`${metrics.gptPercent}%`}
-                tone="emerald"
-              />
+              <div className="grid w-full gap-2 sm:grid-cols-2 xl:w-[360px]">
+                <WorkspaceSignal icon={BrainCircuit} label="Local Intelligence" value="Always active" tone="navy" />
+                <WorkspaceSignal icon={WandSparkles} label="GPT Intelligence" value={aiReanalysisState.loading ? "Analyzing now" : "Manual & saved"} tone="orange" active={aiReanalysisState.loading} />
+                <WorkspaceSignal icon={Layers3} label="Executive Context" value={`${completeAllLeads.length} records`} tone="blue" />
+                <WorkspaceSignal icon={Target} label="GPT Coverage" value={`${metrics.gptPercent}%`} tone="emerald" />
+              </div>
             </div>
           </div>
 
-          <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard
-              icon={FileSearch}
-              label="Visible records"
-              value={visibleCount}
-              detail={`of ${totalCount} in this pipeline`}
-              tone="slate"
-            />
+          <aside className="border-t-[3px] border-orange-300 bg-[#FF5A0A] p-5 text-white lg:border-l-[3px] lg:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[.18em] text-white">Pipeline Health</p>
+            <div className="mt-3 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-3xl font-black text-white">{metrics.urgentCount > 0 ? "Needs action" : "On track"}</p>
+                <p className="mt-1 text-xs font-bold text-white">{metrics.urgentCount} high-priority record{metrics.urgentCount === 1 ? "" : "s"} in this queue.</p>
+              </div>
+              <Sparkles size={28} />
+            </div>
+            <div className="mt-5 rounded-2xl border border-white/35 bg-white/10 p-4">
+              <p className="text-[9px] font-black uppercase tracking-[.12em] text-white">Pipeline Total</p>
+              <p className="mt-1 text-2xl font-black text-white">{totalCount}</p>
+            </div>
+          </aside>
+        </div>
 
-            <MetricCard
-              icon={Activity}
-              label="Active cases"
-              value={metrics.activeCount}
-              detail="currently in motion"
-              tone="blue"
-            />
+        <div className="p-4 sm:p-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricCard icon={FileSearch} label="Visible records" value={visibleCount} detail={`of ${totalCount} in this pipeline`} tone="navy" />
+            <MetricCard icon={Activity} label="Active cases" value={metrics.activeCount} detail="currently in motion" tone="blue" />
+            <MetricCard icon={CircleAlert} label="High priority" value={metrics.urgentCount} detail="need closer attention" tone="orange" />
+            <MetricCard icon={Gauge} label="Completed" value={metrics.completedCount} detail="closed or converted" tone="emerald" />
+          </div>
 
-            <MetricCard
-              icon={CircleAlert}
-              label="High priority"
-              value={metrics.urgentCount}
-              detail="need closer attention"
-              tone="orange"
-            />
-
-            <MetricCard
-              icon={Gauge}
-              label="Completed"
-              value={metrics.completedCount}
-              detail="closed or converted"
-              tone="emerald"
-            />
+          <div className="mt-4 rounded-[1.5rem] border-2 border-[#123865] bg-white p-3 sm:p-4">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Search size={15} className="text-[#FF5A0A]" />
+                  <p className="text-[9px] font-black uppercase tracking-[.14em] text-[#FF5A0A]">Find & Filter</p>
+                </div>
+                <p className="mt-1 text-sm font-black text-[#10233F]">Pipeline controls</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full border-2 border-slate-300 bg-slate-50 px-3 py-1 text-[9px] font-black uppercase tracking-[.1em] text-slate-600">Showing {visibleCount}</span>
+                {statusFilter !== "All" ? <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-[9px] font-black uppercase tracking-[.1em] text-orange-700">{statusFilter}</span> : null}
+              </div>
+            </div>
+            <SearchToolbar activeTab={activeTab} search={search} setSearch={setSearch} statusOptions={statusOptions} statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
           </div>
         </div>
       </motion.section>
 
-      <motion.section
-        {...motionProps}
-        transition={
-          shouldReduceMotion
-            ? undefined
-            : { duration: 0.45, delay: 0.04, ease: EASE }
-        }
-        className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-300 bg-[#fff8ef] p-4 shadow-[0_12px_32px_rgba(15,35,63,0.07)] sm:p-5"
-      >
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Search size={16} className="text-orange-500" />
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
-                Find & filter
-              </p>
-            </div>
-
-            <h2 className="mt-1 text-lg font-black text-slate-900">
-              Pipeline controls
-            </h2>
-
-            <p className="mt-1 text-xs leading-5 text-slate-400">
-              Search students quickly and narrow the workspace by the statuses
-              that matter right now.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em]">
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-500">
-              Showing {visibleCount}
-            </span>
-
-            {statusFilter !== "All" && (
-              <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-orange-700">
-                Filter: {statusFilter}
-              </span>
-            )}
-
-            {search ? (
-              <span className="max-w-[220px] truncate rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-blue-700">
-                Search: {search}
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        <SearchToolbar
-          activeTab={activeTab}
-          search={search}
-          setSearch={setSearch}
-          statusOptions={statusOptions}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
-      </motion.section>
-
-      <div className="flex flex-col gap-2 rounded-[1.3rem] border-2 border-[#c8d8e8] bg-[#edf4fb] px-4 py-3 text-xs text-[#35506f] sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Bot size={15} className="text-orange-500" />
-          <span>
-            Local AI supports prioritization automatically. GPT remains a
-            deliberate, saved action for deeper student intelligence.
-          </span>
-        </div>
-
-        <div className="shrink-0 font-bold text-slate-400">
-          {adminProfile?.full_name || "Admin"} · {role || "staff"}
-        </div>
+      <div className="flex flex-col gap-2 rounded-[1.3rem] border-2 border-[#123865] bg-[#edf3f9] px-4 py-3 text-xs font-semibold text-[#35506f] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2"><Bot size={15} className="text-[#FF5A0A]" /><span>Local AI supports prioritization automatically. GPT remains a deliberate, saved action for deeper student intelligence.</span></div>
+        <div className="shrink-0 font-black text-[#123865]">{adminProfile?.full_name || "Admin"} · {role || "staff"}</div>
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
-          transition={{
-            duration: shouldReduceMotion ? 0 : 0.38,
-            ease: EASE,
-          }}
-        >
+        <motion.div key={activeTab} initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }} transition={{ duration: shouldReduceMotion ? 0 : 0.38, ease: EASE }}>
           <DashboardContent
             loading={loading}
             activeTab={activeTab}
@@ -402,74 +295,28 @@ function PipelinePage({
   );
 }
 
-function WorkspaceSignal({
-  icon: Icon,
-  label,
-  value,
-  tone = "slate",
-  active = false,
-}) {
-  const toneClass =
-    tone === "orange"
-      ? "border-orange-200 bg-orange-50 text-orange-700"
-      : tone === "violet"
-      ? "border-violet-200 bg-violet-50 text-violet-700"
-      : tone === "blue"
-      ? "border-blue-200 bg-blue-50 text-blue-700"
-      : tone === "emerald"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-slate-200 bg-slate-50 text-slate-600";
-
+function WorkspaceSignal({ icon: Icon, label, value, tone = "navy", active = false }) {
+  const toneClass = tone === "orange" ? "border-orange-200 bg-orange-50 text-orange-700" : tone === "blue" ? "border-blue-200 bg-blue-50 text-blue-700" : tone === "emerald" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-white/35 bg-white/10 text-white";
   return (
-    <div
-      className={`rounded-[1.2rem] border-2 p-3.5 shadow-[0_5px_14px_rgba(15,35,63,0.04)] ${toneClass} ${
-        active ? "animate-pulse" : ""
-      }`}
-    >
+    <div className={`rounded-[1.2rem] border-2 p-3.5 shadow-[0_5px_14px_rgba(15,35,63,0.08)] ${toneClass} ${active ? "animate-pulse" : ""}`}>
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/75 shadow-sm">
-          <Icon size={17} strokeWidth={2.1} />
-        </div>
-
-        <div className="min-w-0">
-          <p className="truncate text-[9px] font-black uppercase tracking-[0.13em] opacity-70">
-            {label}
-          </p>
-          <p className="mt-0.5 truncate text-xs font-black">{value}</p>
-        </div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone === "navy" ? "bg-white text-[#123865]" : "bg-white"} shadow-sm`}><Icon size={17} strokeWidth={2.1} /></div>
+        <div className="min-w-0"><p className="truncate text-[9px] font-black uppercase tracking-[0.13em] opacity-80">{label}</p><p className="mt-0.5 truncate text-xs font-black">{value}</p></div>
       </div>
     </div>
   );
 }
 
-function MetricCard({ icon: Icon, label, value, detail, tone = "slate" }) {
-  const toneClass =
-    tone === "blue"
-      ? "border-blue-100 bg-blue-50/70 text-blue-700"
-      : tone === "orange"
-      ? "border-orange-100 bg-orange-50/80 text-orange-700"
-      : tone === "emerald"
-      ? "border-emerald-100 bg-emerald-50/70 text-emerald-700"
-      : "border-orange-200 bg-[#fff3e5] text-slate-700";
+function HeroMetric({ label, value }) {
+  return <div className="rounded-2xl border border-white/25 bg-white/10 px-4 py-3"><p className="text-[8px] font-black uppercase tracking-[.12em] text-white">{label}</p><p className="mt-1 text-2xl font-black text-white">{value}</p></div>;
+}
 
+function MetricCard({ icon: Icon, label, value, detail, tone = "navy" }) {
+  const toneClass = tone === "blue" ? "border-blue-400 bg-blue-50 text-blue-700" : tone === "orange" ? "border-orange-400 bg-orange-50 text-orange-700" : tone === "emerald" ? "border-emerald-400 bg-emerald-50 text-emerald-700" : "border-[#123865] bg-[#edf3f9] text-[#123865]";
   return (
-    <div
-      className={`rounded-[1.35rem] border-2 p-4 shadow-[0_6px_16px_rgba(15,35,63,0.04)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md ${toneClass}`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm">
-          <Icon size={17} strokeWidth={2.1} />
-        </div>
-
-        <span className="text-2xl font-black tracking-tight text-slate-950">
-          {value}
-        </span>
-      </div>
-
-      <p className="mt-4 text-[10px] font-black uppercase tracking-[0.14em] opacity-75">
-        {label}
-      </p>
-      <p className="mt-1 text-xs font-medium opacity-65">{detail}</p>
+    <div className={`rounded-[1.35rem] border-[3px] p-4 transition hover:-translate-y-.5 ${toneClass}`}>
+      <div className="flex items-center justify-between gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-xl border border-current/15 bg-white shadow-sm"><Icon size={17} strokeWidth={2.1} /></div><span className="text-2xl font-black tracking-tight">{value}</span></div>
+      <p className="mt-4 text-[9px] font-black uppercase tracking-[.1em]">{label}</p><p className="mt-1 text-xs font-semibold opacity-75">{detail}</p>
     </div>
   );
 }

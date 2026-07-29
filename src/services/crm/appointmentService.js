@@ -24,11 +24,50 @@ function validateText(value, label) {
   };
 }
 
+function toTimestamp(value) {
+  if (!value) return 0;
+
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function sortNewestFirst(rows = []) {
+  return [...rows].sort((a, b) => {
+    const aTime = toTimestamp(
+      a?.created_at ||
+        a?.submitted_at ||
+        a?.appointment_date ||
+        a?.updated_at
+    );
+
+    const bTime = toTimestamp(
+      b?.created_at ||
+        b?.submitted_at ||
+        b?.appointment_date ||
+        b?.updated_at
+    );
+
+    return bTime - aTime;
+  });
+}
+
 export async function fetchAppointmentRows() {
-  return supabase
+  // Fetch first, sort locally.
+  // This avoids a missing/renamed created_at column causing the whole Admin view
+  // to receive an empty appointments array.
+  const { data, error } = await supabase
     .from("appointments")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*");
+
+  if (error) {
+    console.error("Appointment rows fetch failed:", error);
+    return { data: null, error };
+  }
+
+  return {
+    data: sortNewestFirst(Array.isArray(data) ? data : []),
+    error: null,
+  };
 }
 
 export async function deleteAppointmentRow(id) {

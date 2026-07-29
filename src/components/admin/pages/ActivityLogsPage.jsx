@@ -1,4 +1,4 @@
-import AdminActivityLogs from "../AdminActivityLogs";
+import AdminActivityLogs from "../workspaces/core/AdminActivityLogs";
 
 function ActivityLogsPage({ cardClass }) {
   return <AdminActivityLogs cardClass={cardClass} />;

@@ -1,31 +1,696 @@
 import React, { useMemo, useState } from "react";
-import { FileText, ShieldCheck, Search, Lock, AlertTriangle, CheckCircle2, Scale, History, Users, ClipboardList, Eye } from "lucide-react";
+import {
+  AlertTriangle,
+  BadgeCheck,
+  ClipboardList,
+  Database,
+  Eye,
+  FileText,
+  History,
+  Lock,
+  Scale,
+  Search,
+  ShieldCheck,
+  UsersRound,
+  X,
+} from "lucide-react";
 
-const policies = [
-  { id: "POL-001", title: "Student Data Access Policy", domain: "Data", owner: "Compliance OS", status: "Approved", risk: "Low", coverage: 97, updated: "2026-06-10", appliesTo: "All Staff" },
-  { id: "POL-004", title: "Document Handling & Retention Policy", domain: "Documents", owner: "Compliance OS", status: "Approved", risk: "Low", coverage: 93, updated: "2026-06-06", appliesTo: "Counselor + Admin" },
-  { id: "POL-009", title: "Payment Verification Policy", domain: "Finance", owner: "Finance OS", status: "Live", risk: "Medium", coverage: 88, updated: "2026-06-07", appliesTo: "Finance Team" },
-  { id: "POL-013", title: "Automation Approval Policy", domain: "Automation", owner: "Automation OS", status: "Review", risk: "High", coverage: 79, updated: "2026-06-05", appliesTo: "Managers" },
-  { id: "POL-018", title: "Partner Communication Standard", domain: "Partner", owner: "Partner OS", status: "Draft", risk: "Medium", coverage: 71, updated: "2026-06-04", appliesTo: "Partner Team" }
-];
+function safeArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
 
-function Metric({ icon: Icon, label, value, note }) { return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><Icon className="text-blue-600"/><div className="mt-3 text-2xl font-black">{value}</div><div className="text-sm font-bold">{label}</div><div className="text-xs text-slate-500">{note}</div></div>; }
-function Status({ value }) { const tone = value === "Approved" || value === "Live" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : value === "Review" ? "border-amber-200 bg-amber-50 text-amber-700" : "border-slate-200 bg-slate-50 text-slate-600"; return <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${tone}`}>{value}</span>; }
-function Risk({ value }) { const tone = value === "High" ? "border-red-200 bg-red-50 text-red-700" : value === "Medium" ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"; return <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${tone}`}>{value}</span>; }
+function safeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
-export default function PolicyKnowledgeHub({ compact = false }) {
+function lower(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function readyStatus(status = "") {
+  const value = lower(status);
+  return (
+    value.includes("approved") ||
+    value.includes("live") ||
+    value.includes("active") ||
+    value.includes("published") ||
+    value.includes("verified")
+  );
+}
+
+function reviewStatus(status = "") {
+  const value = lower(status);
+  return (
+    value.includes("review") ||
+    value.includes("draft") ||
+    value.includes("expired") ||
+    value.includes("stale") ||
+    value.includes("unverified")
+  );
+}
+
+function hasCoverage(policy = {}) {
+  return (
+    policy.coverage !== null &&
+    policy.coverage !== undefined &&
+    Number.isFinite(Number(policy.coverage))
+  );
+}
+
+function clampPercent(value) {
+  return Math.max(0, Math.min(100, safeNumber(value)));
+}
+
+function statusTone(status = "") {
+  if (readyStatus(status)) {
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  }
+
+  if (reviewStatus(status)) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  return "border-[#C9D7E6] bg-[#FFF8EE] text-slate-600";
+}
+
+function riskTone(risk = "") {
+  const value = lower(risk);
+
+  if (value.includes("high") || value.includes("critical")) {
+    return "border-[#FB7185] bg-[#FFF4F4] text-red-700";
+  }
+
+  if (value.includes("medium")) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  if (value.includes("low")) {
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  }
+
+  return "border-[#C9D7E6] bg-[#FFF8EE] text-slate-600";
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone = "blue",
+  icon: Icon,
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#173F6B] bg-[#173F6B]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+    violet: "border-[#9B6CFF] bg-[#F8F5FF]",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <article
+      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
+        </div>
+
+        {Icon ? (
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+              dark
+                ? "border-white/20 bg-white/10 text-orange-200"
+                : "border-[#173F6B]/15 bg-white text-[#173F6B]"
+            }`}
+          >
+            <Icon size={16} />
+          </div>
+        ) : null}
+      </div>
+
+      <p
+        className={`mt-2 text-xs font-semibold leading-5 ${
+          dark ? "text-slate-200" : "text-slate-600"
+        }`}
+      >
+        {helper}
+      </p>
+
+      {badge ? (
+        <span
+          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+            dark
+              ? "border-white/20 bg-white/10 text-white"
+              : "border-[#C9D7E6] bg-white text-slate-600"
+          }`}
+        >
+          {badge}
+        </span>
+      ) : null}
+    </article>
+  );
+}
+
+function PolicyRow({ policy }) {
+  const coverageAvailable = hasCoverage(policy);
+  const coverage = coverageAvailable
+    ? clampPercent(policy.coverage)
+    : null;
+
+  const updated =
+    policy.updated ||
+    policy.updated_at ||
+    policy.updatedAt ||
+    policy.last_reviewed_at ||
+    policy.lastReviewedAt ||
+    null;
+
+  const source =
+    policy.source ||
+    policy.source_url ||
+    policy.sourceUrl ||
+    policy.document_url ||
+    policy.documentUrl ||
+    null;
+
+  return (
+    <article className="rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#F97316]">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(19rem,1.5fr)_11rem_10rem_12rem] lg:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="min-w-0 [overflow-wrap:anywhere] font-black text-[#10233F]">
+              {policy.title || "Untitled policy"}
+            </p>
+
+            <span
+              className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
+                policy.status
+              )}`}
+            >
+              {policy.status || "Unknown"}
+            </span>
+
+            {policy.risk ? (
+              <span
+                className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${riskTone(
+                  policy.risk
+                )}`}
+              >
+                {policy.risk}
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
+            {[
+              policy.id,
+              policy.domain,
+              policy.owner ? `Owner: ${policy.owner}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+
+          {policy.summary || policy.description ? (
+            <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+              {policy.summary || policy.description}
+            </p>
+          ) : null}
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span
+              className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.06em] ${
+                source
+                  ? "border-[#34D399] bg-[#F0FFF8] text-emerald-700"
+                  : "border-[#F59E0B] bg-[#FFF8E8] text-amber-800"
+              }`}
+            >
+              {source ? "Policy source linked" : "Source not recorded"}
+            </span>
+
+            {policy.appliesTo || policy.applies_to ? (
+              <span className="rounded-full border-2 border-[#60A5FA] bg-[#F2F7FF] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.06em] text-blue-700">
+                Applies to: {policy.appliesTo || policy.applies_to}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Domain
+          </p>
+          <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+            {policy.domain || "Not recorded"}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Coverage
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {coverage === null ? "Not measured" : `${coverage}%`}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Last Reviewed
+          </p>
+          <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+            {updated || "Not recorded"}
+          </p>
+        </div>
+      </div>
+
+      {coverage !== null ? (
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#DDE7F0]">
+          <div
+            className="h-full rounded-full bg-[#173F6B] transition-[width] duration-500"
+            style={{ width: `${coverage}%` }}
+          />
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+export default function PolicyKnowledgeHub({
+  compact = false,
+  records = [],
+}) {
   const [query, setQuery] = useState("");
-  const [domain, setDomain] = useState("All");
-  const domains = ["All", ...new Set(policies.map(p => p.domain))];
-  const visible = useMemo(() => policies.filter(p => (domain === "All" || p.domain === domain) && (!query || Object.values(p).join(" ").toLowerCase().includes(query.toLowerCase()))), [query, domain]);
-  const avgCoverage = Math.round(policies.reduce((s,p)=>s+p.coverage,0)/policies.length);
+  const [domainFilter, setDomainFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [riskFilter, setRiskFilter] = useState("All");
 
-  return <div className="space-y-6">
-    <div className="grid gap-4 md:grid-cols-4"><Metric icon={FileText} label="Policies" value={policies.length} note="Controlled documents"/><Metric icon={ShieldCheck} label="Approved/Live" value={policies.filter(p=>p.status==='Approved'||p.status==='Live').length} note="Ready policies"/><Metric icon={AlertTriangle} label="High Risk" value={policies.filter(p=>p.risk==='High').length} note="Requires executive review"/><Metric icon={Scale} label="Coverage" value={`${avgCoverage}%`} note="Policy readiness"/></div>
-    <div className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><h2 className="text-lg font-black">Policy Knowledge Hub</h2><p className="text-sm text-slate-500">Compliance-ready policy center for data, documents, payments, automation approvals and partner standards.</p></div><div className="flex gap-2"><div className="relative"><Search className="absolute left-3 top-2.5 text-slate-400" size={16}/><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search policies" className="rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none"/></div><select value={domain} onChange={(e)=>setDomain(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none">{domains.map(d=><option key={d}>{d}</option>)}</select></div></div>
-      <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Policy</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Risk</th><th className="px-4 py-3">Coverage</th><th className="px-4 py-3">Applies To</th></tr></thead><tbody className="divide-y divide-slate-100">{visible.map(p=><tr key={p.id} className="hover:bg-slate-50"><td className="px-4 py-3"><div className="font-black">{p.title}</div><div className="text-xs text-slate-500">{p.id} · {p.domain} · {p.owner} · Updated {p.updated}</div></td><td className="px-4 py-3"><Status value={p.status}/></td><td className="px-4 py-3"><Risk value={p.risk}/></td><td className="px-4 py-3"><div className="flex items-center gap-2"><div className="h-2 w-20 rounded bg-slate-100"><div className="h-2 rounded bg-slate-900" style={{width:`${p.coverage}%`}}/></div><span className="text-xs font-bold">{p.coverage}%</span></div></td><td className="px-4 py-3 text-slate-500">{p.appliesTo}</td></tr>)}</tbody></table></div></div>
-      <div className="space-y-6"><div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="font-black">Compliance Controls</h3><div className="mt-4 space-y-3">{[{i:Lock,t:"Access controls",n:"Role-based visibility"},{i:History,t:"Review history",n:"Every policy has owner/date"},{i:Eye,t:"Audit visibility",n:"Ready for executive audit"},{i:ClipboardList,t:"Approval queue",n:"1 high-priority review"}].map(({i:Icon,t,n})=><div key={t} className="flex gap-3 rounded-2xl bg-slate-50 p-3"><Icon size={16} className="text-blue-600"/><div><div className="font-bold text-sm">{t}</div><div className="text-xs text-slate-500">{n}</div></div></div>)}</div></div>{!compact && <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="font-black">Policy Actions</h3><div className="mt-4 space-y-3"><button className="w-full rounded-2xl bg-slate-900 p-3 text-sm font-bold text-white">Open Approval Queue</button><button className="w-full rounded-2xl border border-slate-200 p-3 text-sm font-bold text-slate-700">Export Compliance Pack</button></div></div>}</div>
-    </div>
-  </div>;
+  const policies = useMemo(() => safeArray(records), [records]);
+
+  const domains = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        policies
+          .map((policy) => String(policy.domain || "").trim())
+          .filter(Boolean)
+      ),
+    ],
+    [policies]
+  );
+
+  const statuses = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        policies
+          .map((policy) => String(policy.status || "").trim())
+          .filter(Boolean)
+      ),
+    ],
+    [policies]
+  );
+
+  const risks = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        policies
+          .map((policy) => String(policy.risk || "").trim())
+          .filter(Boolean)
+      ),
+    ],
+    [policies]
+  );
+
+  const filtered = useMemo(() => {
+    const search = lower(query);
+
+    return policies.filter((policy) => {
+      if (
+        domainFilter !== "All" &&
+        String(policy.domain || "") !== domainFilter
+      ) {
+        return false;
+      }
+
+      if (
+        statusFilter !== "All" &&
+        String(policy.status || "") !== statusFilter
+      ) {
+        return false;
+      }
+
+      if (
+        riskFilter !== "All" &&
+        String(policy.risk || "") !== riskFilter
+      ) {
+        return false;
+      }
+
+      if (!search) return true;
+
+      return [
+        policy.id,
+        policy.title,
+        policy.domain,
+        policy.owner,
+        policy.status,
+        policy.risk,
+        policy.appliesTo,
+        policy.applies_to,
+        policy.summary,
+        policy.description,
+      ]
+        .map(lower)
+        .join(" ")
+        .includes(search);
+    });
+  }, [
+    policies,
+    query,
+    domainFilter,
+    statusFilter,
+    riskFilter,
+  ]);
+
+  const visible = compact ? filtered.slice(0, 5) : filtered;
+
+  const ready = policies.filter((policy) =>
+    readyStatus(policy.status)
+  ).length;
+
+  const needsReview = policies.filter((policy) =>
+    reviewStatus(policy.status)
+  ).length;
+
+  const highRisk = policies.filter((policy) =>
+    ["high", "critical"].some((value) =>
+      lower(policy.risk).includes(value)
+    )
+  ).length;
+
+  const measurable = policies.filter(hasCoverage);
+
+  const avgCoverage = measurable.length
+    ? Math.round(
+        measurable.reduce(
+          (sum, policy) => sum + Number(policy.coverage),
+          0
+        ) / measurable.length
+      )
+    : null;
+
+  const sourceLinked = policies.filter(
+    (policy) =>
+      policy.source ||
+      policy.source_url ||
+      policy.sourceUrl ||
+      policy.document_url ||
+      policy.documentUrl
+  ).length;
+
+  const filtersActive =
+    Boolean(query.trim()) ||
+    domainFilter !== "All" ||
+    statusFilter !== "All" ||
+    riskFilter !== "All";
+
+  function clearFilters() {
+    setQuery("");
+    setDomainFilter("All");
+    setStatusFilter("All");
+    setRiskFilter("All");
+  }
+
+  return (
+    <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
+      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+        <div className="bg-[#173F6B] p-5 text-white sm:p-6">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+            <FileText size={12} />
+            Policy Governance
+          </div>
+
+          <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">
+            Policy Knowledge Hub
+          </h2>
+
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+            Controlled internal policy records with ownership, scope, risk,
+            source and review evidence. Zaifan does not treat placeholder policy
+            examples as approved governance.
+          </p>
+        </div>
+
+        <div className="bg-[#E96512] p-5 text-white sm:p-6">
+          <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+            Connected Policies
+          </p>
+
+          <p className="mt-2 text-3xl font-black">
+            {policies.length}
+          </p>
+
+          <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+            {ready} ready · {needsReview} requiring review · {sourceLinked} source-linked.
+          </p>
+
+          <span className="mt-3 inline-flex rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+            Governance evidence only
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-5 p-4 sm:p-5">
+        {!compact ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              label="Policy Records"
+              value={policies.length}
+              helper="Connected controlled policy records."
+              tone="navy"
+              icon={FileText}
+              badge="Policies"
+            />
+
+            <MetricCard
+              label="Ready"
+              value={ready}
+              helper="Approved, live, active, published or verified policies."
+              tone="green"
+              icon={BadgeCheck}
+            />
+
+            <MetricCard
+              label="High Risk"
+              value={highRisk}
+              helper="Policies explicitly marked high or critical risk."
+              tone={highRisk > 0 ? "red" : "green"}
+              icon={AlertTriangle}
+            />
+
+            <MetricCard
+              label="Coverage"
+              value={avgCoverage === null ? "—" : `${avgCoverage}%`}
+              helper={
+                avgCoverage === null
+                  ? "No measurable policy-coverage evidence is connected."
+                  : `Average across ${measurable.length} measurable polic${
+                      measurable.length === 1 ? "y" : "ies"
+                    }.`
+              }
+              tone={avgCoverage === null ? "blue" : "violet"}
+              icon={Scale}
+              badge={avgCoverage === null ? "Not measured" : "Measured"}
+            />
+          </div>
+        ) : null}
+
+        {!compact ? (
+          <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto_auto]">
+            <label className="relative block">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search policy, owner, domain, scope..."
+                className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              />
+            </label>
+
+            <select
+              value={domainFilter}
+              onChange={(event) => setDomainFilter(event.target.value)}
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-black text-[#10233F] outline-none focus:border-[#F97316]"
+            >
+              {domains.map((item) => (
+                <option key={item} value={item}>
+                  {item === "All" ? "All Domains" : item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={riskFilter}
+              onChange={(event) => setRiskFilter(event.target.value)}
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-black text-[#10233F] outline-none focus:border-[#F97316]"
+            >
+              {risks.map((item) => (
+                <option key={item} value={item}>
+                  {item === "All" ? "All Risk Levels" : item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(event.target.value)
+              }
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-black text-[#10233F] outline-none focus:border-[#F97316]"
+            >
+              {statuses.map((item) => (
+                <option key={item} value={item}>
+                  {item === "All" ? "All Statuses" : item}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={!filtersActive}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <X size={13} />
+              Clear
+            </button>
+          </div>
+        ) : null}
+
+        <div className="space-y-2.5">
+          {visible.length ? (
+            visible.map((policy) => (
+              <PolicyRow
+                key={policy.id || policy.title}
+                policy={policy}
+              />
+            ))
+          ) : (
+            <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+                <FileText size={24} />
+              </div>
+
+              <h3 className="mt-4 text-xl font-black text-[#10233F]">
+                No policy records found
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                {filtersActive
+                  ? "Clear or change the policy filters."
+                  : "Connect real controlled policies before Zaifan reports governance coverage or approval readiness."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {!compact ? (
+          <div className="grid gap-3 lg:grid-cols-3">
+            <div className="rounded-[1.35rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-4">
+              <div className="flex items-start gap-3">
+                <Lock
+                  size={17}
+                  className="mt-0.5 shrink-0 text-emerald-700"
+                />
+
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                    Access Integrity
+                  </p>
+                  <p className="mt-1 font-black text-[#10233F]">
+                    Scope should be explicit
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                    Policy applicability and visibility should be defined through
+                    real role and access controls.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4">
+              <div className="flex items-start gap-3">
+                <History
+                  size={17}
+                  className="mt-0.5 shrink-0 text-blue-700"
+                />
+
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                    Review History
+                  </p>
+                  <p className="mt-1 font-black text-[#10233F]">
+                    Dates must be recorded
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                    Missing review dates remain unknown instead of being replaced
+                    with invented compliance schedules.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border-[3px] border-[#F59E0B] bg-[#FFF8E8] p-4">
+              <div className="flex items-start gap-3">
+                <Eye
+                  size={17}
+                  className="mt-0.5 shrink-0 text-amber-700"
+                />
+
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+                    Governance Boundary
+                  </p>
+                  <p className="mt-1 font-black text-[#10233F]">
+                    Policy record ≠ compliance proof
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                    A published policy does not prove staff followed it. Real
+                    compliance evidence belongs in audit and verification logs.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
 }

@@ -303,13 +303,13 @@ export default function MoreWaysWeHelp() {
           </div>
         </motion.div>
 
-        <div className="relative mx-auto -mb-8 mt-6 flex justify-center sm:-mb-12 lg:-mb-16">
+        <div className="relative mx-auto -mb-5 mt-4 flex justify-center sm:-mb-12 sm:mt-6 lg:-mb-16">
           <img
             src={mascotImage}
             alt="Zaifan student mascot"
             loading="lazy"
             decoding="async"
-            className="relative z-10 h-[280px] w-auto object-contain sm:h-[360px] lg:h-[430px]"
+            className="relative z-10 h-[190px] w-auto object-contain sm:h-[360px] lg:h-[430px]"
           />
         </div>
 
@@ -369,7 +369,7 @@ export default function MoreWaysWeHelp() {
               <button
                 type="button"
                 onClick={prevSlide}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus-visible:ring-4 focus:ring-orange-100 sm:h-11 sm:w-11"
                 aria-label="Previous service"
               >
                 <ArrowLeft size={20} />
@@ -395,10 +395,10 @@ export default function MoreWaysWeHelp() {
                 >
                   <Link
                     to={services[index].link}
-                    className="group flex min-h-[430px] flex-col items-center justify-center rounded-[30px] border border-orange-100 bg-white p-7 text-center shadow-[0_24px_60px_rgba(251,146,60,0.20)] transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
+                    className="group flex min-h-[350px] flex-col items-center justify-center rounded-[24px] border border-orange-100 bg-white p-4 text-center shadow-[0_24px_60px_rgba(251,146,60,0.20)] transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-4 focus:ring-orange-100 sm:min-h-[430px] sm:rounded-[30px] sm:p-7"
                   >
                     <div
-                      className={`mb-4 grid h-12 w-12 place-items-center rounded-2xl ${services[index].soft}`}
+                      className={`mb-2 grid h-10 w-10 place-items-center rounded-xl sm:mb-4 sm:h-12 sm:w-12 sm:rounded-2xl ${services[index].soft}`}
                       style={{ color: services[index].accent }}
                     >
                       {React.createElement(services[index].icon, { size: 23 })}
@@ -409,22 +409,22 @@ export default function MoreWaysWeHelp() {
                       alt={services[index].title}
                       loading="lazy"
                       decoding="async"
-                      className="mb-5 h-[180px] w-full object-contain transition-all duration-300 group-hover:scale-105"
+                      className="mb-2 h-[105px] w-full object-contain transition-all duration-300 group-hover:scale-105 sm:mb-5 sm:h-[180px]"
                     />
 
-                    <h3 className="text-2xl font-black leading-tight text-[#071f50]">
+                    <h3 className="text-[20px] font-black leading-tight text-[#071f50] sm:text-2xl">
                       {services[index].title}
                     </h3>
 
-                    <p className="mx-auto mt-4 max-w-xs text-base font-semibold leading-7 text-slate-600">
+                    <p className="mx-auto mt-2 max-w-xs text-[12px] font-semibold leading-5 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
                       {services[index].desc}
                     </p>
 
-                    <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    <div className="mt-3 flex flex-wrap justify-center gap-1.5 sm:mt-5 sm:gap-2">
                       {services[index].wins.map((win) => (
                         <span
                           key={win}
-                          className="rounded-full bg-orange-50 px-3 py-1.5 text-[11px] font-black text-orange-700"
+                          className="rounded-full bg-orange-50 px-2 py-1 text-[9px] font-black text-orange-700 sm:px-3 sm:py-1.5 sm:text-[11px]"
                         >
                           {win}
                         </span>
@@ -432,7 +432,7 @@ export default function MoreWaysWeHelp() {
                     </div>
 
                     <div
-                      className="mx-auto mt-7 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-black text-white"
+                      className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-black text-white sm:mt-7 sm:px-5 sm:py-3 sm:text-sm"
                       style={{ backgroundColor: services[index].accent }}
                     >
                       Explore Service
@@ -445,7 +445,7 @@ export default function MoreWaysWeHelp() {
               <button
                 type="button"
                 onClick={nextSlide}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg focus:outline-none focus-visible:ring-4 focus:ring-orange-100 sm:h-11 sm:w-11"
                 aria-label="Next service"
               >
                 <ArrowRight size={20} />
@@ -453,7 +453,7 @@ export default function MoreWaysWeHelp() {
             </div>
           </div>
 
-          <div className="mx-auto mt-6 max-w-md">
+          <div className="mx-auto mt-4 max-w-md sm:mt-6">
             <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-orange-100">
               <div
                 key={`${index}-${isPaused}`}
@@ -484,7 +484,7 @@ export default function MoreWaysWeHelp() {
           </div>
         </div>
 
-        <div className="relative z-20 mx-auto mt-12 grid max-w-7xl gap-5 rounded-[34px] border border-orange-100 bg-white p-6 shadow-[0_18px_55px_rgba(251,146,60,0.12)] md:grid-cols-2 lg:grid-cols-4">
+        <div className="relative z-20 mx-auto mt-12 hidden max-w-7xl gap-5 rounded-[34px] border border-orange-100 bg-white p-6 shadow-[0_18px_55px_rgba(251,146,60,0.12)] md:grid md:grid-cols-2 lg:grid-cols-4">
           {trustItems.map((item) => {
             const Icon = item.icon;
 

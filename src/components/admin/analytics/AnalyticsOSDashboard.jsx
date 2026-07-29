@@ -353,6 +353,34 @@ export default function AnalyticsOSDashboard({
   snapshot,
   adminProfile,
   onRefresh,
+
+  // Optional Analytics OS enrichment contract.
+  // These keep the parent backward-compatible while allowing the upgraded
+  // child workspaces to receive real history, targets, forecasts, BI and reports.
+  analyticsData,
+  kpiTargets,
+  previousMetrics,
+  history,
+  geography,
+  counselorBreakdown,
+  sourceBreakdown,
+  programBreakdown,
+  universityBreakdown,
+  opportunitySignals,
+  riskSignals,
+  forecasts,
+  forecastAssumptions,
+  forecastSource,
+  reports,
+  reportArchive,
+  reportDistribution,
+  executiveSnapshots,
+  reportingSource,
+
+  // Optional real reporting actions.
+  onGenerateReport,
+  onOpenReport,
+  onDistributeReport,
 }) {
   const [
     activeView,
@@ -370,13 +398,169 @@ export default function AnalyticsOSDashboard({
   ] = useState("");
 
   const analytics =
-    useMemo(
-      () =>
-        buildAnalyticsOSData(
-          snapshot || {}
-        ),
-      [snapshot]
-    );
+    useMemo(() => {
+      const base = buildAnalyticsOSData(snapshot || {});
+      const supplied =
+        analyticsData && typeof analyticsData === "object"
+          ? analyticsData
+          : {};
+
+      return {
+        ...base,
+        ...supplied,
+
+        // Never lose the deterministic current metrics generated from snapshot.
+        // Explicit analyticsData.metrics may enrich/override individual fields.
+        metrics: {
+          ...base.metrics,
+          ...(supplied.metrics || {}),
+        },
+
+        kpiTargets:
+          supplied.kpiTargets ??
+          kpiTargets ??
+          snapshot?.kpiTargets ??
+          snapshot?.analytics?.kpiTargets,
+
+        previousMetrics:
+          supplied.previousMetrics ??
+          previousMetrics ??
+          snapshot?.previousMetrics ??
+          snapshot?.analytics?.previousMetrics,
+
+        history:
+          supplied.history ??
+          history ??
+          snapshot?.history ??
+          snapshot?.analytics?.history,
+
+        geography:
+          supplied.geography ??
+          geography ??
+          snapshot?.geography ??
+          snapshot?.analytics?.geography,
+
+        counselorBreakdown:
+          supplied.counselorBreakdown ??
+          counselorBreakdown ??
+          snapshot?.counselorBreakdown ??
+          snapshot?.analytics?.counselorBreakdown,
+
+        sourceBreakdown:
+          supplied.sourceBreakdown ??
+          sourceBreakdown ??
+          snapshot?.sourceBreakdown ??
+          snapshot?.analytics?.sourceBreakdown,
+
+        programBreakdown:
+          supplied.programBreakdown ??
+          programBreakdown ??
+          snapshot?.programBreakdown ??
+          snapshot?.analytics?.programBreakdown,
+
+        universityBreakdown:
+          supplied.universityBreakdown ??
+          universityBreakdown ??
+          snapshot?.universityBreakdown ??
+          snapshot?.analytics?.universityBreakdown,
+
+        opportunitySignals:
+          supplied.opportunitySignals ??
+          opportunitySignals ??
+          snapshot?.opportunitySignals ??
+          snapshot?.analytics?.opportunitySignals,
+
+        riskSignals:
+          supplied.riskSignals ??
+          riskSignals ??
+          snapshot?.riskSignals ??
+          snapshot?.analytics?.riskSignals,
+
+        forecasts:
+          supplied.forecasts ??
+          forecasts ??
+          snapshot?.forecasts ??
+          snapshot?.analytics?.forecasts,
+
+        forecastAssumptions:
+          supplied.forecastAssumptions ??
+          forecastAssumptions ??
+          snapshot?.forecastAssumptions ??
+          snapshot?.analytics?.forecastAssumptions,
+
+        forecastSource:
+          supplied.forecastSource ??
+          forecastSource ??
+          snapshot?.forecastSource ??
+          snapshot?.analytics?.forecastSource,
+
+        reports:
+          supplied.reports ??
+          reports ??
+          snapshot?.reports ??
+          snapshot?.analytics?.reports,
+
+        reportArchive:
+          supplied.reportArchive ??
+          reportArchive ??
+          snapshot?.reportArchive ??
+          snapshot?.analytics?.reportArchive,
+
+        reportDistribution:
+          supplied.reportDistribution ??
+          reportDistribution ??
+          snapshot?.reportDistribution ??
+          snapshot?.analytics?.reportDistribution,
+
+        executiveSnapshots:
+          supplied.executiveSnapshots ??
+          executiveSnapshots ??
+          snapshot?.executiveSnapshots ??
+          snapshot?.analytics?.executiveSnapshots,
+
+        reportingSource:
+          supplied.reportingSource ??
+          reportingSource ??
+          snapshot?.reportingSource ??
+          snapshot?.analytics?.reportingSource,
+
+        updatedAt:
+          supplied.updatedAt ??
+          snapshot?.updatedAt ??
+          snapshot?.analytics?.updatedAt,
+
+        generatedAt:
+          supplied.generatedAt ??
+          snapshot?.generatedAt ??
+          snapshot?.analytics?.generatedAt,
+
+        lastUpdated:
+          supplied.lastUpdated ??
+          snapshot?.lastUpdated ??
+          snapshot?.analytics?.lastUpdated,
+      };
+    }, [
+      snapshot,
+      analyticsData,
+      kpiTargets,
+      previousMetrics,
+      history,
+      geography,
+      counselorBreakdown,
+      sourceBreakdown,
+      programBreakdown,
+      universityBreakdown,
+      opportunitySignals,
+      riskSignals,
+      forecasts,
+      forecastAssumptions,
+      forecastSource,
+      reports,
+      reportArchive,
+      reportDistribution,
+      executiveSnapshots,
+      reportingSource,
+    ]);
 
   const views = [
     {
@@ -466,7 +650,7 @@ export default function AnalyticsOSDashboard({
             </h1>
 
             <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-white/90">
-              KPI, forecasting, trend analysis, executive reporting and business intelligence from the current Zaifan operating snapshot.
+              One connected executive analytics system for current KPIs, business intelligence, historical trends, evidence-based forecasts and leadership reporting.
             </p>
 
             {adminProfile?.email ? (
@@ -769,8 +953,8 @@ export default function AnalyticsOSDashboard({
                   detail="Leadership reporting"
                 />
                 <CoverageRow
-                  label="Read-only Shell"
-                  detail="No backend mutations performed here"
+                  label="Analytics Data Contract"
+                  detail="History, targets, BI, forecasts and reports can be wired through this anchor"
                 />
               </div>
             </OverviewCard>
@@ -810,6 +994,9 @@ export default function AnalyticsOSDashboard({
       "reports" ? (
         <ExecutiveReportingPanel
           analytics={analytics}
+          onGenerateReport={onGenerateReport}
+          onOpenReport={onOpenReport}
+          onDistributeReport={onDistributeReport}
         />
       ) : null}
 
@@ -826,7 +1013,7 @@ export default function AnalyticsOSDashboard({
             </p>
 
             <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-              This parent dashboard remains a deterministic, read-only analytics shell. KPI, BI, forecasting, trend and reporting logic stays inside the existing child panels. No backend mutations are performed by this component.
+              This parent dashboard is the Analytics OS anchor: it builds the deterministic current snapshot, safely merges optional historical, KPI, BI, forecast and reporting inputs, and routes them into the connected child workspaces. It performs no backend mutation by itself; reporting mutations only run through explicitly supplied handlers.
             </p>
           </div>
         </div>
