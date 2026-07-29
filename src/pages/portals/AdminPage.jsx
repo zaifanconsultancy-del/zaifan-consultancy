@@ -4,9 +4,7 @@ import AdminLogin from "../../components/admin/workspaces/core/AdminLogin";
 import AdminSidebar from "../../components/admin/workspaces/core/AdminSidebar";
 const CommandPalette = lazy(() => import("../../components/admin/workspaces/core/CommandPalette"));
 
-const AdminHomePage = lazy(() =>
-  import("../../components/admin/pages/AdminHomePage")
-);
+import AdminHomePage from "../../components/admin/pages/AdminHomePage";
 const StudentDirectoryPage = lazy(() =>
   import("../../components/admin/pages/StudentDirectoryPage")
 );
@@ -96,6 +94,15 @@ function AdminPage() {
     message: "",
     error: "",
   });
+  const [adminEntryHoldDone, setAdminEntryHoldDone] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setAdminEntryHoldDone(true);
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const normalizedTab = normalizeAdminTab(activeTab);
@@ -615,27 +622,16 @@ function AdminPage() {
     aiCoverageStats.percent,
   ]);
 
-  if (!sessionChecked || (profileLoading && !adminProfile)) {
+  if (
+    !sessionChecked ||
+    (profileLoading && !adminProfile) ||
+    (isLoggedIn && !adminEntryHoldDone)
+  ) {
     return (
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#fff7ef] px-6 text-[#0b2a57]">
-        <div className="relative z-10 w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_30px_100px_rgba(15,23,42,0.12)]">
-          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
-
-          <h1 className="text-2xl font-black text-[#0b2a57]">
-            Checking Admin Role
-          </h1>
-
-          <p className="mt-3 text-sm text-slate-500">
-            Please wait while Zaifan CRM verifies your permissions.
-          </p>
-
-          {profileRetryCount > 0 && (
-            <p className="mt-3 text-xs text-orange-600">
-              Profile check attempt {profileRetryCount}/{PROFILE_RETRY_LIMIT}
-            </p>
-          )}
-        </div>
-      </section>
+      <AdminEntryLoader
+        retryCount={profileRetryCount}
+        retryLimit={PROFILE_RETRY_LIMIT}
+      />
     );
   }
 
@@ -771,7 +767,7 @@ function AdminPage() {
               </div>
             )}
 
-            <Suspense fallback={<AdminModuleLoader />}>
+            <Suspense fallback={null}>
               {activeTab === "home" ? (
                 <AdminHomePage
                   cardClass={cardClass}
@@ -993,6 +989,63 @@ function AdminPage() {
 
 
 
+function AdminEntryLoader({ retryCount = 0, retryLimit = 0 }) {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#FFF8EF] px-6 text-[#10233F]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF5A0A]/[0.045] blur-3xl" />
+      </div>
+
+      <div className="relative z-10 flex w-full max-w-[430px] flex-col items-center text-center">
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-[1.7rem] border border-[#FF5A0A]/20 bg-white shadow-[0_18px_55px_rgba(16,35,63,0.08)]">
+          <div className="absolute h-12 w-12 animate-spin rounded-full border-[3px] border-[#123865]/10 border-t-[#FF5A0A]" />
+
+          <svg
+            viewBox="0 0 24 24"
+            className="relative h-6 w-6 text-[#123865]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 17h16" />
+            <path d="M6.5 17V9.5L12 6l5.5 3.5V17" />
+            <path d="M9 17v-4h6v4" />
+            <path d="M8 7.6V5h8v2.6" />
+          </svg>
+        </div>
+
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#123865]/10 bg-white/80 px-3.5 py-1.5 shadow-sm">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF5A0A]" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#123865]/70">
+            Zaifan Admin OS
+          </span>
+        </div>
+
+        <h1 className="mt-4 text-2xl font-black tracking-[-0.025em] text-[#10233F]">
+          Opening Admin workspace
+        </h1>
+
+        <p className="mt-2 max-w-[350px] text-sm font-medium leading-6 text-[#58708D]">
+          Verifying your session and preparing the Admin command center.
+        </p>
+
+        <p className="mt-5 text-[10px] font-black uppercase tracking-[0.16em] text-[#123865]/45">
+          Preparing secure workspace
+        </p>
+
+        {retryCount > 0 && retryLimit > 0 && (
+          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] text-[#FF5A0A]">
+            Profile check {retryCount}/{retryLimit}
+          </p>
+        )}
+      </div>
+    </main>
+  );
+}
+
 function SystemNotice({ tone = "success", children }) {
   const toneClass =
     tone === "error"
@@ -1006,22 +1059,6 @@ function SystemNotice({ tone = "success", children }) {
       className={`mb-5 rounded-[1.4rem] border p-4 text-sm shadow-sm ${toneClass}`}
     >
       {children}
-    </div>
-  );
-}
-
-function AdminModuleLoader() {
-  return (
-    <div className="flex min-h-[320px] items-center justify-center rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.04)]">
-      <div className="text-center">
-        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
-        <p className="mt-4 text-sm font-black text-slate-800">
-          Opening workspace
-        </p>
-        <p className="mt-1 text-xs text-slate-400">
-          Loading only the module you need.
-        </p>
-      </div>
     </div>
   );
 }

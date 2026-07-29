@@ -63,186 +63,53 @@ function LaunchStep({ index, title, detail, active = false, complete = false }) 
 }
 
 function AuthLoader({
-  title = "Preparing Counselor OS",
-  detail = "Checking your secure Zaifan session and counselor permissions.",
+  title = "Opening Counselor workspace",
+  detail = "Verifying your session and preparing Counselor OS.",
   phase = "session",
 }) {
-  const sessionComplete = phase === "permissions" || phase === "workspace";
-  const permissionComplete = phase === "workspace";
+  const phaseLabel =
+    phase === "session"
+      ? "Checking secure session"
+      : phase === "permissions"
+        ? "Verifying counselor access"
+        : "Opening counselor workspace";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#fff4e8] px-4 py-5 text-[#071d43] sm:px-6 sm:py-8 lg:px-8">
-      <div className="pointer-events-none absolute -left-24 top-10 h-80 w-80 rounded-full bg-orange-200/45 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-[28rem] w-[28rem] rounded-full bg-[#d8e8f4]/80 blur-3xl" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#FFF8EF] px-6 text-[#10233F]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF5A0A]/[0.045] blur-3xl" />
+      </div>
 
-      <div className="relative mx-auto min-h-[calc(100vh-2.5rem)] max-w-7xl overflow-hidden rounded-[2.25rem] border-2 border-[#17324d] bg-[#fffaf1] shadow-[0_30px_100px_rgba(23,50,77,0.14)] sm:min-h-[calc(100vh-4rem)]">
-        <div className="grid min-h-[inherit] lg:grid-cols-[0.88fr_1.12fr]">
-          <section className="relative overflow-hidden bg-[#17324d] p-6 text-white sm:p-8 lg:p-10">
-            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border-[40px] border-white/[0.04]" />
-            <div className="pointer-events-none absolute -bottom-28 -left-24 h-72 w-72 rounded-full bg-orange-500/10 blur-2xl" />
-
-            <div className="relative flex h-full flex-col">
-              <BrandMark />
-
-              <div className="my-auto py-8 sm:py-10">
-                <span className="inline-flex rounded-full border border-orange-300/30 bg-orange-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-orange-200">
-                  Secure Counselor Launch
-                </span>
-
-                <h1 className="mt-5 max-w-xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-                  Your counselor workspace is getting ready.
-                </h1>
-
-                <p className="mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">
-                  Zaifan is checking your session, counselor authorization and
-                  workspace access before loading assigned students and operations.
-                </p>
-
-                <div className="mt-7 grid gap-3">
-                  <LaunchStep
-                    index="1"
-                    title="Secure session"
-                    detail="Confirming your Supabase authentication session."
-                    active={phase === "session"}
-                    complete={sessionComplete}
-                  />
-                  <LaunchStep
-                    index="2"
-                    title="Counselor permission"
-                    detail="Verifying that this account is allowed into Counselor OS."
-                    active={phase === "permissions"}
-                    complete={permissionComplete}
-                  />
-                  <LaunchStep
-                    index="3"
-                    title="Workspace handoff"
-                    detail="Opening the counselor-scoped operational dashboard."
-                    active={phase === "workspace"}
-                  />
-                </div>
-              </div>
-
-              <p className="text-xs font-medium text-white/40">
-                Authorised Zaifan Consultancy staff only.
-              </p>
-            </div>
-          </section>
-
-          <section className="flex items-center p-6 sm:p-8 lg:p-12">
-            <div className="mx-auto w-full max-w-2xl">
-              <div className="rounded-[2rem] border-2 border-orange-200 bg-[#fffdf8] p-6 shadow-[0_20px_60px_rgba(23,50,77,0.08)] sm:p-8">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-orange-600">
-                      Counselor Access
-                    </p>
-                    <h2 className="mt-2 text-3xl font-black tracking-tight text-[#102b4c] sm:text-4xl">
-                      {title}
-                    </h2>
-                  </div>
-
-                  <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
-                    <div className="absolute inset-0 animate-ping rounded-full border-2 border-orange-300/40" />
-                    <div className="absolute inset-1 animate-spin rounded-full border-4 border-orange-100 border-t-orange-500" />
-                    <div className="relative h-3 w-3 rounded-full bg-orange-500 shadow-[0_0_0_6px_rgba(249,115,22,0.12)]" />
-                  </div>
-                </div>
-
-                <p className="mt-5 max-w-xl text-sm leading-6 text-[#607487]">
-                  {detail}
-                </p>
-
-                <div className="mt-7 overflow-hidden rounded-2xl border-2 border-[#d8b892] bg-[#fff7ea]">
-                  <div className="flex items-center justify-between gap-3 border-b border-[#ead3b7] px-4 py-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#7c6041]">
-                      Launch Progress
-                    </p>
-                    <p className="text-xs font-black text-orange-700">
-                      {phase === "session"
-                        ? "Step 1 of 3"
-                        : phase === "permissions"
-                          ? "Step 2 of 3"
-                          : "Step 3 of 3"}
-                    </p>
-                  </div>
-
-                  <div className="p-4">
-                    <div className="h-2.5 overflow-hidden rounded-full bg-orange-100">
-                      <div
-                        className="h-full rounded-full bg-orange-500 transition-[width] duration-500 ease-out"
-                        style={{
-                          width:
-                            phase === "session"
-                              ? "34%"
-                              : phase === "permissions"
-                                ? "68%"
-                                : "100%",
-                        }}
-                      />
-                    </div>
-
-                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                      {[
-                        ["Session", phase !== "session"],
-                        ["Role", phase === "workspace"],
-                        ["Workspace", false],
-                      ].map(([label, done], index) => {
-                        const activeIndex =
-                          phase === "session" ? 0 : phase === "permissions" ? 1 : 2;
-
-                        return (
-                          <div
-                            key={label}
-                            className={`rounded-xl border px-3 py-2 text-center text-[10px] font-black uppercase tracking-[0.12em] ${
-                              index < activeIndex || done
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : index === activeIndex
-                                  ? "border-orange-300 bg-orange-50 text-orange-700"
-                                  : "border-[#d6e0e7] bg-[#f8fbfd] text-[#7d8d9a]"
-                            }`}
-                          >
-                            {index < activeIndex || done ? "✓ " : ""}
-                            {label}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-[#d6e0e7] bg-[#f8fbfd] p-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#7d8d9a]">
-                      Security
-                    </p>
-                    <p className="mt-2 text-sm font-black text-[#102b4c]">
-                      Supabase Auth
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-[#607487]">
-                      Session and counselor role are checked before the portal mounts.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
-                      Workspace
-                    </p>
-                    <p className="mt-2 text-sm font-black text-[#102b4c]">
-                      Counselor-scoped OS
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-[#607487]">
-                      Assigned students and counselor operations load only after access is verified.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <p className="mt-4 text-center text-xs font-semibold text-[#7d8d9a]">
-                Please keep this tab open while Zaifan completes the secure handoff.
-              </p>
-            </div>
-          </section>
+      <div className="relative z-10 flex w-full max-w-[430px] flex-col items-center text-center">
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-[1.7rem] border border-[#FF5A0A]/20 bg-white shadow-[0_18px_55px_rgba(16,35,63,0.08)]">
+          <div className="absolute h-12 w-12 animate-spin rounded-full border-[3px] border-[#123865]/10 border-t-[#FF5A0A]" />
+          <img
+            src={loadingLogo}
+            alt=""
+            aria-hidden="true"
+            className="relative h-7 w-7 object-contain"
+            decoding="async"
+          />
         </div>
+
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#123865]/10 bg-white/80 px-3.5 py-1.5 shadow-sm">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF5A0A]" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#123865]/70">
+            Zaifan Counselor OS
+          </span>
+        </div>
+
+        <h1 className="mt-4 text-2xl font-black tracking-[-0.025em] text-[#10233F]">
+          {title}
+        </h1>
+
+        <p className="mt-2 max-w-[350px] text-sm font-medium leading-6 text-[#58708D]">
+          {detail}
+        </p>
+
+        <p className="mt-5 text-[10px] font-black uppercase tracking-[0.16em] text-[#123865]/45">
+          {phaseLabel}
+        </p>
       </div>
     </main>
   );

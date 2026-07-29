@@ -4314,9 +4314,9 @@ const journeyProgress = roadmap.length
           {activeTab === "deadlines" ? (
             <div className="space-y-5">
               <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
-                <div className="flex flex-col gap-4 border-b-[3px] border-amber-400 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-4 border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
                       Student Deadline Command
                     </p>
                     <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
@@ -4332,7 +4332,7 @@ const journeyProgress = roadmap.length
                     <button
                       type="button"
                       onClick={() => setActiveTab("actions")}
-                      className="rounded-xl border border-amber-300/50 bg-amber-400/15 px-4 py-2.5 text-xs font-black text-amber-100 transition hover:bg-amber-400/25"
+                      className="rounded-xl border border-orange-300/50 bg-orange-400/15 px-4 py-2.5 text-xs font-black text-orange-100 transition hover:bg-orange-400/25"
                     >
                       Open Action Center
                     </button>
@@ -4375,19 +4375,21 @@ const journeyProgress = roadmap.length
               </section>
 
               <section className="grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
-                <div className="rounded-[1.6rem] border-2 border-amber-300 bg-amber-50/70 p-5 shadow-sm">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-700">
-                    Deadline Readiness
-                  </p>
-                  <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                    Stay ahead of the next stage
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-[#607487]">
-                    Low readiness can turn a future date into an urgent problem. Keep applications,
-                    documents, tasks, CAS and visa preparation moving early.
-                  </p>
+                <div className="overflow-hidden rounded-[1.6rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                  <div className="border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
+                      Deadline Readiness
+                    </p>
+                    <h3 className="mt-1 text-xl font-black text-[#17324d]">
+                      Stay ahead of the next stage
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[#607487]">
+                      Low readiness can turn a future date into an urgent problem. Keep applications,
+                      documents, tasks, CAS and visa preparation moving early.
+                    </p>
+                  </div>
 
-                  <div className="mt-5 space-y-4">
+                  <div className="space-y-4 p-5">
                     <ProgressRow label="Application Readiness" value={readiness.applicationReadiness} />
                     <ProgressRow label="CAS Readiness" value={readiness.casReadiness} />
                     <ProgressRow label="Visa Readiness" value={readiness.visaReadiness} />

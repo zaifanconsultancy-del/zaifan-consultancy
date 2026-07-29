@@ -99,10 +99,44 @@ function StudentPortalAuth({
       (student) => Number(student.portalCounts?.total || 0) > 0
     ).length;
 
+    const rankedMatches = matches
+      .map((student, index) => {
+        const rawTimestamp =
+          student.created_at ||
+          student.appointment_date ||
+          student.updated_at ||
+          null;
+        const parsedTimestamp = rawTimestamp ? new Date(rawTimestamp).getTime() : NaN;
+
+        return {
+          student,
+          index,
+          timestamp: Number.isFinite(parsedTimestamp) ? parsedTimestamp : -Infinity,
+        };
+      })
+      .sort((a, b) => {
+        if (b.timestamp !== a.timestamp) return b.timestamp - a.timestamp;
+
+        const aId = Number(a.student.id || a.student.student_id);
+        const bId = Number(b.student.id || b.student.student_id);
+        if (Number.isFinite(aId) && Number.isFinite(bId) && bId !== aId) {
+          return bId - aId;
+        }
+
+        return a.index - b.index;
+      });
+
+    const latestStudent = rankedMatches[0]?.student || null;
+
     return {
       total: matches.length,
       withData,
-      empty: Math.max(matches.length - withData, 0),
+      latestStudent,
+      latestId:
+        latestStudent?.id ||
+        latestStudent?.student_id ||
+        latestStudent?.portal_student_id ||
+        null,
     };
   }, [matches]);
 
@@ -401,8 +435,8 @@ function StudentPortalAuth({
                     Choose your Student ID
                   </h3>
                   <p className="mt-1 max-w-2xl text-[10px] leading-5 text-[#64798a] sm:text-[11px]">
-                    We found {matchSummary.total} matching records. Check the Student ID,
-                    name, record type, status and date, then open the correct workspace.
+                    We found {matchSummary.total} matching records. The newest record is
+                    marked Latest so you can identify your most recent submission quickly.
                   </p>
                 </div>
               </div>
@@ -425,14 +459,14 @@ function StudentPortalAuth({
                   tone="navy"
                 />
                 <RecordPickerStat
+                  label="Latest"
+                  value={matchSummary.latestId ? `#${matchSummary.latestId}` : "—"}
+                  tone="orange"
+                />
+                <RecordPickerStat
                   label="Connected"
                   value={matchSummary.withData}
                   tone="green"
-                />
-                <RecordPickerStat
-                  label="Older Records"
-                  value={matchSummary.empty}
-                  tone="orange"
                 />
               </div>
             </div>
@@ -442,6 +476,7 @@ function StudentPortalAuth({
                 {matches.map((student, index) => {
                   const hasPortalData =
                     Number(student.portalCounts?.total || 0) > 0;
+                  const isLatest = student === matchSummary.latestStudent;
                   const studentType = formatType(student.student_type);
                   const status = getStatus(student);
                   const date = formatDate(
@@ -465,27 +500,56 @@ function StudentPortalAuth({
                         onSelectMatch(student);
                       }}
                       className={`group relative overflow-hidden rounded-[1.25rem] border-2 bg-white p-4 text-left shadow-[0_6px_18px_rgba(8,45,80,0.05)] hover:-translate-y-0.5 hover:border-[#ff9a63] hover:shadow-[0_14px_32px_rgba(80,50,24,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${TRANSITION} ${
-                        hasPortalData
-                          ? "border-emerald-200"
-                          : "border-[#ead7c5]"
+                        isLatest
+                          ? "border-[#ff9a63] ring-2 ring-orange-100"
+                          : hasPortalData
+                            ? "border-emerald-200"
+                            : "border-[#ead7c5]"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <div
-                            className={`flex h-12 min-w-12 shrink-0 items-center justify-center rounded-xl border px-2 text-sm font-black ${
-                              hasPortalData
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-[#f1c59e] bg-[#fff7ef] text-[#ff4b13]"
-                            }`}
-                          >
+                      {isLatest ? (
+                        <div
+                          className="absolute left-4 top-0 z-10 flex h-[74px] w-[58px] flex-col items-center bg-gradient-to-b from-[#8b5cf6] to-[#6d28d9] px-1 pt-2 text-white shadow-[0_8px_18px_rgba(109,40,217,0.28)]"
+                          style={{
+                            clipPath:
+                              "polygon(0 0, 100% 0, 100% 86%, 50% 100%, 0 86%)",
+                          }}
+                          aria-label={`Latest record #${studentId}`}
+                        >
+                          <Sparkles size={13} strokeWidth={2.4} />
+                          <span className="mt-1 text-[7px] font-black uppercase tracking-[0.11em]">
+                            Latest
+                          </span>
+                          <span className="mt-0.5 text-[11px] font-black leading-none">
                             #{studentId}
-                          </div>
+                          </span>
+                        </div>
+                      ) : null}
+
+                      <div className="flex items-start justify-between gap-3">
+                        <div
+                          className={`flex min-w-0 items-start gap-3 ${
+                            isLatest ? "pl-[68px]" : ""
+                          }`}
+                        >
+                          {!isLatest ? (
+                            <div
+                              className={`flex h-12 min-w-12 shrink-0 items-center justify-center rounded-xl border px-2 text-sm font-black ${
+                                hasPortalData
+                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  : "border-[#f1c59e] bg-[#fff7ef] text-[#ff4b13]"
+                              }`}
+                            >
+                              #{studentId}
+                            </div>
+                          ) : null}
 
                           <div className="min-w-0">
-                            <p className="truncate text-[13px] font-black text-[#082d50]">
-                              {getName(student)}
-                            </p>
+                            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                              <p className="min-w-0 truncate text-[13px] font-black text-[#082d50]">
+                                {getName(student)}
+                              </p>
+                            </div>
                             <div className="mt-1.5 flex flex-wrap gap-1.5">
                               <span className="rounded-full border border-[#c9d8e3] bg-[#f4f8fb] px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.09em] text-[#31536d]">
                                 {studentType}
@@ -537,8 +601,8 @@ function StudentPortalAuth({
             <div className="flex shrink-0 items-start gap-2 border-t border-[#efd3ba] bg-[#fffdf9] px-4 py-3 text-[9px] leading-4 text-[#718493] sm:px-6">
               <ShieldCheck size={12} className="mt-0.5 shrink-0 text-[#ff4b13]" />
               <p>
-                Older records may contain historical contact details. Student ID, record type,
-                status and date are the safest details to compare before opening a record.
+                The Latest badge marks the newest matching record. Older records may contain
+                historical contact details, so compare Student ID, type, status and date before opening.
               </p>
             </div>
           </div>

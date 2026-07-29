@@ -363,22 +363,31 @@ function CounselorAnalyticsPanel({ performance, workload, executiveBrief, snapsh
   const communicationCoverage = derived.students ? Math.min(100, Math.round((derived.communications / derived.students) * 100)) : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="overflow-hidden rounded-[2rem] border-2 border-[#17324d] bg-[#17324d] p-6 text-white shadow-[0_18px_60px_rgba(23,50,77,0.16)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-orange-300">Performance Analytics</p>
-            <h2 className="mt-2 text-3xl font-black text-white">Counselor Analytics Dashboard</h2>
-            <p className="mt-2 max-w-4xl text-sm font-medium leading-6 text-white/75">
-              Separate analytics view for activation, conversion, visa progress, task completion, communication coverage, support pressure, and counselor performance health.
-            </p>
-          </div>
-          <div className="rounded-3xl border-2 border-orange-300 bg-orange-500 px-6 py-4 text-center shadow-lg">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-white/80">Grade</p>
-            <p className="mt-2 text-3xl font-black text-white">{performance?.performanceGrade || "Pending"}</p>
-          </div>
+    <section className="rounded-[1.8rem] border-2 border-[#173f69] bg-[#fffaf2] p-4 shadow-[0_18px_55px_rgba(16,43,76,0.08)] sm:p-5">
+      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">
+            Performance Intelligence
+          </p>
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-[#102b4c] sm:text-3xl">
+            Counselor Analytics
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#607487]">
+            Activation, conversion, visa movement, task completion, communication coverage and operating pressure in one counselor view.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2 text-sm font-black text-white">
+            {derived.students} students
+          </span>
+          <span className="rounded-xl border-2 border-orange-300 bg-orange-50 px-4 py-2 text-sm font-black text-orange-700">
+            Grade {performance?.performanceGrade || "Pending"}
+          </span>
         </div>
       </div>
+
+      <div className="space-y-6">
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AnalyticsStat label="Activation" value={formatPercent(performance?.activationRate)} helper="students beyond not-started stage" tone="cyan" />
@@ -434,7 +443,8 @@ function CounselorAnalyticsPanel({ performance, workload, executiveBrief, snapsh
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -690,8 +700,32 @@ export default function CounselorPortalDashboard({
     }
 
     return (
-      <div>
+      <section className="rounded-[1.8rem] border-2 border-[#173f69] bg-[#fffaf2] p-4 shadow-[0_18px_55px_rgba(16,43,76,0.08)] sm:p-5">
+        <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">
+              Counselor Command Center
+            </p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight text-[#102b4c] sm:text-3xl">
+              Operational Overview
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#607487]">
+              Priority students, workload pressure, support, communication and appointments in one working view.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2 text-sm font-black text-white">
+              {safeNumber(metrics?.assignedStudents)} students
+            </span>
+            <span className="rounded-xl border-2 border-orange-300 bg-orange-50 px-4 py-2 text-sm font-black text-orange-700">
+              {portalHealth.label}
+            </span>
+          </div>
+        </div>
+
         <CommandStrip workload={workload} performance={performance} executiveBrief={executiveBrief} onJump={jumpTo} />
+
         <div className="grid gap-5 xl:grid-cols-[1.4fr_0.9fr]">
           <AssignedStudentsWorkspace
             snapshot={snapshot}
@@ -713,7 +747,7 @@ export default function CounselorPortalDashboard({
             <CounselorAppointmentsWorkspace snapshot={snapshot} counselor={counselor} compact />
           </div>
         </div>
-      </div>
+      </section>
     );
   };
 
@@ -812,7 +846,7 @@ export default function CounselorPortalDashboard({
 
       <div className="sticky top-3 z-30 mb-5 overflow-hidden rounded-[1.35rem] border-2 border-[#d8b892] bg-[#fffdf8]/95 shadow-[0_10px_30px_rgba(15,23,42,0.07)] backdrop-blur-xl">
         <div
-          className="flex items-center gap-2 overflow-x-auto px-2.5 py-2.5 [scrollbar-color:#d8b892_transparent] [scrollbar-width:thin]"
+          className="flex flex-wrap items-center gap-2 px-2.5 py-2.5"
           role="tablist"
           aria-label="Counselor workspaces"
         >

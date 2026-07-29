@@ -292,29 +292,17 @@ function App() {
 
                 <Route
                   path="/admin"
-                  element={
-                    <PageTransition>
-                      <AdminPage />
-                    </PageTransition>
-                  }
+                  element={<AdminPage />}
                 />
 
                 <Route
                   path="/student"
-                  element={
-                    <PageTransition>
-                      <StudentPortalPage />
-                    </PageTransition>
-                  }
+                  element={<StudentPortalPage />}
                 />
 
                 <Route
                   path="/counselor"
-                  element={
-                    <PageTransition>
-                      <CounselorPortalGate />
-                    </PageTransition>
-                  }
+                  element={<CounselorPortalGate />}
                 />
 
                 <Route
