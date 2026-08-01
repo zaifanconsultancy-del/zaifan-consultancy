@@ -1,4 +1,4 @@
-// StaffLeaderboard V10 — Safe Unified Four-Card Fix
+// StaffLeaderboard PARTNER OS EXTREME — Executive Team Ranking Command
 // src/components/admin/StaffLeaderboard.jsx
 //
 // Maximum pass:
@@ -280,12 +280,12 @@ function StaffLeaderboard({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="space-y-5 text-[#10233f]"
+      className="min-w-0 space-y-4 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4"
     >
-      <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_40px_rgba(15,35,63,0.09)] sm:p-4">
-        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_48px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
           <div
-            className="min-w-0 bg-[#123865] p-5 sm:p-6"
+            className="min-w-0 bg-[#123865] p-5 sm:p-6 lg:p-7"
             style={{ color: "#FFFFFF" }}
           >
             <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
@@ -303,7 +303,7 @@ function StaffLeaderboard({
             </div>
 
             <h2
-              className="mt-3 text-2xl font-black tracking-tight sm:text-3xl"
+              className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl"
               style={{ color: "#FFFFFF" }}
             >
               Team Performance Ranking
@@ -319,7 +319,7 @@ function StaffLeaderboard({
           </div>
 
           <div
-            className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 sm:p-6 xl:border-l-[3px] xl:border-t-0"
+            className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7"
             style={{ color: "#FFFFFF" }}
           >
             {topPerformer ? (
@@ -366,7 +366,7 @@ function StaffLeaderboard({
         </div>
       </section>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <TeamMetric
           label="Active Staff"
           value={activeStaff.length}
@@ -406,13 +406,13 @@ function StaffLeaderboard({
 
       {leaderboard.length === 0 ? (
         <div
-          className={`${cardClass} rounded-[2rem] border-[3px] border-slate-300 bg-white p-8 text-center shadow-[0_8px_24px_rgba(15,35,63,0.04)]`}
+          className={`${cardClass} min-w-0 rounded-[1.6rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-8 text-center shadow-[0_8px_24px_rgba(18,56,101,0.05)]`}
         >
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50">
             <Users className="h-8 w-8 text-orange-700" />
           </div>
 
-          <h3 className="mt-4 text-xl font-black text-[#10233f]">
+          <h3 className="mt-4 text-xl font-black text-[#10233F]">
             No staff data available
           </h3>
 
@@ -424,10 +424,10 @@ function StaffLeaderboard({
       ) : (
         <>
           <section
-            className={`${cardClass} rounded-[1.55rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)]`}
+            className={`${cardClass} min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_9px_24px_rgba(18,56,101,0.05)]`}
           >
-            <div className="grid min-w-0 gap-3 lg:grid-cols-2 2xl:grid-cols-[minmax(18rem,1fr)_repeat(4,minmax(9.5rem,auto))]">
-              <label className="relative block">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+              <label className="relative block min-w-0">
                 <Search
                   size={16}
                   className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -437,7 +437,7 @@ function StaffLeaderboard({
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search staff, tier, workload..."
-                  className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                  className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                 />
               </label>
 
@@ -446,7 +446,7 @@ function StaffLeaderboard({
                 onChange={(event) =>
                   setTierFilter(event.target.value)
                 }
-                className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+                className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               >
                 <option value="all">All Tiers</option>
                 <option value="elite">Elite</option>
@@ -460,7 +460,7 @@ function StaffLeaderboard({
                 onChange={(event) =>
                   setWorkloadFilter(event.target.value)
                 }
-                className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+                className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               >
                 <option value="all">All Workloads</option>
                 <option value="heavy">Heavy</option>
@@ -472,7 +472,7 @@ function StaffLeaderboard({
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value)}
-                className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+                className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               >
                 <option value="score">Sort: Score</option>
                 <option value="conversion">Sort: Progression</option>
@@ -484,7 +484,7 @@ function StaffLeaderboard({
                 type="button"
                 onClick={resetControls}
                 disabled={!hasActiveFilters}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:bg-orange-50 hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <X size={13} />
                 Reset
@@ -499,22 +499,22 @@ function StaffLeaderboard({
           </section>
 
           <div
-            className={`${cardClass} rounded-[2rem] border-[3px] border-[#F97316] bg-[#FFFDF8] p-4 shadow-[0_8px_24px_rgba(15,35,63,0.05)] sm:p-5`}
+            className={`${cardClass} min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:p-5`}
           >
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-5 flex min-w-0 flex-col gap-3 rounded-[1.3rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 text-white sm:flex-row sm:items-end sm:justify-between">
               <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-200">
                   Staff Rankings
                 </p>
-                <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 text-xl font-black text-white">
                   CRM Performance Ranking
                 </h3>
-                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-200">
                   Full-width staff cards keep scoring, progression and workload readable instead of squeezing them beside an insight rail.
                 </p>
               </div>
 
-              <span className="w-fit shrink-0 rounded-full border-2 border-[#F59E0B] bg-[#FFF7ED] px-4 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-orange-700">
+              <span className="w-fit shrink-0 rounded-full border-2 border-white/25 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-white">
                 {activeStaff.length} active staff
               </span>
             </div>
@@ -532,7 +532,7 @@ function StaffLeaderboard({
               ) : (
                 <div className="rounded-[1.3rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
                   <Search className="mx-auto h-8 w-8 text-orange-700" />
-                  <h4 className="mt-3 font-black text-[#10233f]">
+                  <h4 className="mt-3 font-black text-[#10233F]">
                     No matching staff
                   </h4>
                   <p className="mt-2 text-sm font-semibold text-slate-600">
@@ -543,7 +543,7 @@ function StaffLeaderboard({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
             <UnifiedInsightCard
               cardClass={cardClass}
               icon={Crown}
@@ -853,16 +853,16 @@ function StaffRow({
         duration: reduceMotion ? 0 : 0.24,
         delay: reduceMotion ? 0 : Math.min(index * 0.03, 0.18),
       }}
-      className={`group min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition duration-300 hover:-translate-y-0.5 ${
+      className={`group min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_7px_20px_rgba(18,56,101,0.05)] transition duration-300 hover:-translate-y-0.5 hover:shadow-md ${
         top
-          ? "border-[#F97316]"
+          ? "border-[#FF5A0A]"
           : staff.isActive
           ? "border-[#D1DCE7] hover:border-[#F59E0B]"
           : "border-slate-300 bg-slate-50"
       }`}
     >
       <div className="min-w-0 p-4 sm:p-5">
-        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-4">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <div
               className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black ${getRankStyle(
@@ -883,7 +883,7 @@ function StaffRow({
 
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <h4 className="break-words text-lg font-black leading-6 text-[#10233f]">
+                <h4 className="break-words text-lg font-black leading-6 text-[#10233F]">
                   {staff.name}
                 </h4>
 
@@ -907,15 +907,15 @@ function StaffRow({
             </div>
           </div>
 
-          <div className={`w-fit shrink-0 rounded-xl border-2 px-4 py-2.5 ${
+          <div className={`w-full min-w-0 rounded-xl border-2 px-4 py-2.5 sm:w-fit ${
             top
-              ? "border-[#F97316] bg-[#E96512] text-white"
-              : "border-[#C9D7E6] bg-[#FFF8EE] text-[#10233f]"
+              ? "border-[#FF5A0A] bg-[#E96512] text-white"
+              : "border-[#C9D7E6] bg-[#FFF8EE] text-[#10233F]"
           }`}>
             <p className={`text-[8px] font-black uppercase tracking-[0.1em] ${top ? "text-white" : "text-slate-500"}`}>
               Performance Score
             </p>
-            <p className={`mt-1 text-2xl font-black ${top ? "text-white" : "text-[#10233f]"}`}>
+            <p className={`mt-1 text-2xl font-black ${top ? "text-white" : "text-[#10233F]"}`}>
               {staff.totalScore}
             </p>
           </div>
@@ -968,11 +968,11 @@ function TeamMetric({
       ? "border-[#34D399] bg-[#F0FFF8]"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-[#F97316] bg-[#FFF4E8]";
+      : "border-[#FF5A0A] bg-[#FFF4E8]";
 
   return (
     <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_5px_14px_rgba(15,35,63,0.04)] ${style}`}
+      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
       style={{
         color: dark ? "#FFFFFF" : "#10233F",
       }}
@@ -1020,7 +1020,7 @@ function TeamMetric({
 
 function Tag({ value }) {
   return (
-    <span className="rounded-full border-2 border-slate-300 bg-[#fffaf2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-slate-600">
+    <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-slate-600">
       {value}
     </span>
   );
@@ -1041,7 +1041,7 @@ function MiniMetric({
       ? "border-[#34D399] bg-[#F0FFF8]"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-[#F97316] bg-[#FFF4E8]";
+      : "border-[#FF5A0A] bg-[#FFF4E8]";
 
   return (
     <div
@@ -1093,16 +1093,16 @@ function UnifiedInsightCard({
 }) {
   const themes = {
     orange: {
-      border: "border-[#F97316]",
+      border: "border-[#FF5A0A]",
       surface: "bg-[#FFF4E8]",
-      accent: "bg-[#F97316]",
-      iconBorder: "border-[#F97316]/45",
+      accent: "bg-[#FF5A0A]",
+      iconBorder: "border-[#FF5A0A]/45",
       iconText: "text-[#D94F08]",
-      badge: "border-[#F97316]/45 bg-white text-[#C2410C]",
-      statBorder: "border-[#F97316]/30",
+      badge: "border-[#FF5A0A]/45 bg-white text-[#C2410C]",
+      statBorder: "border-[#FF5A0A]/30",
       statSurface: "bg-white/75",
       statValue: "text-[#C2410C]",
-      footerBorder: "border-[#F97316]/25",
+      footerBorder: "border-[#FF5A0A]/25",
       footerSurface: "bg-white/70",
       footerText: "text-[#9A3412]",
     },
@@ -1136,7 +1136,7 @@ function UnifiedInsightCard({
     },
     amber: {
       border: "border-[#F59E0B]",
-      surface: "bg-[#FFF7ED]",
+      surface: "bg-[#FFF4E8]",
       accent: "bg-[#F59E0B]",
       iconBorder: "border-[#F59E0B]/45",
       iconText: "text-[#B45309]",
@@ -1154,7 +1154,7 @@ function UnifiedInsightCard({
 
   return (
     <div
-      className={`${cardClass} relative flex min-w-0 flex-col overflow-hidden rounded-[1.6rem] border-[3px] p-4 shadow-[0_8px_24px_rgba(15,35,63,0.055)] ${theme.border} ${theme.surface}`}
+      className={`${cardClass} relative flex min-w-0 flex-col overflow-hidden rounded-[1.5rem] border-[3px] p-4 shadow-[0_8px_24px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${theme.border} ${theme.surface}`}
     >
       <div className={`absolute inset-x-0 top-0 h-1.5 ${theme.accent}`} />
 
@@ -1170,7 +1170,7 @@ function UnifiedInsightCard({
             {eyebrow}
           </p>
 
-          <h3 className="mt-1 whitespace-normal break-normal text-lg font-black leading-6 text-[#10233f]">
+          <h3 className="mt-1 whitespace-normal break-normal text-lg font-black leading-6 text-[#10233F]">
             {title}
           </h3>
         </div>

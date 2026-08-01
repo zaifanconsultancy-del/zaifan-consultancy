@@ -65,7 +65,7 @@ function statusTone(status = "") {
     return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
   }
 
-  return "border-[#C9D7E6] bg-[#FFF8EE] text-slate-600";
+  return "border-[#C9D7E6] bg-[#FFF8EF] text-slate-600";
 }
 
 function confidenceTone(value) {
@@ -93,7 +93,7 @@ function MetricCard({
   badge = "",
 }) {
   const tones = {
-    navy: "border-[#173F6B] bg-[#173F6B]",
+    navy: "border-[#123865] bg-[#123865]",
     blue: "border-[#60A5FA] bg-[#F2F7FF]",
     green: "border-[#34D399] bg-[#F0FFF8]",
     amber: "border-[#F59E0B] bg-[#FFF8E8]",
@@ -120,7 +120,7 @@ function MetricCard({
           </p>
 
           <p
-            className={`mt-2 break-words text-2xl font-black ${
+            className={`mt-2 whitespace-normal break-normal text-2xl font-black [overflow-wrap:normal] [word-break:normal] ${
               dark ? "text-white" : "text-[#10233F]"
             }`}
           >
@@ -133,7 +133,7 @@ function MetricCard({
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
               dark
                 ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-[#173F6B]/15 bg-white text-[#173F6B]"
+                : "border-[#123865]/15 bg-white text-[#123865]"
             }`}
           >
             <Icon size={16} />
@@ -187,7 +187,7 @@ function RuleRow({ rule }) {
     null;
 
   return (
-    <article className="rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#F97316]">
+    <article className="rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)] transition hover:-translate-y-0.5 hover:border-[#F97316]">
       <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(19rem,1.5fr)_12rem_10rem_11rem] lg:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -240,7 +240,7 @@ function RuleRow({ rule }) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
           <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
             Destination
           </p>
@@ -263,7 +263,7 @@ function RuleRow({ rule }) {
           </span>
         </div>
 
-        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EE] px-3 py-2.5">
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
           <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
             Last Verified
           </p>
@@ -276,7 +276,7 @@ function RuleRow({ rule }) {
       {confidence !== null ? (
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#DDE7F0]">
           <div
-            className="h-full rounded-full bg-[#173F6B] transition-[width] duration-500"
+            className="h-full rounded-full bg-[#123865] transition-[width] duration-500"
             style={{ width: `${confidence}%` }}
           />
         </div>
@@ -427,7 +427,7 @@ export default function UniversityKnowledgeHub({
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
       <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
-        <div className="bg-[#173F6B] p-5 text-white sm:p-6">
+        <div className="bg-[#123865] p-5 text-white sm:p-6">
           <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <Landmark size={12} />
             University Knowledge
@@ -444,7 +444,7 @@ export default function UniversityKnowledgeHub({
           </p>
         </div>
 
-        <div className="bg-[#E96512] p-5 text-white sm:p-6">
+        <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
           <p className="text-[9px] font-black uppercase tracking-[0.12em]">
             Connected Rules
           </p>
@@ -568,7 +568,7 @@ export default function UniversityKnowledgeHub({
               type="button"
               onClick={clearFilters}
               disabled={!filtersActive}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X size={13} />
               Clear

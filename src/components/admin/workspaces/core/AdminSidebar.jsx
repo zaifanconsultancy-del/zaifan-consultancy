@@ -209,7 +209,7 @@ function AdminSidebar({
                 Zaifan OS
               </span>
               <span className="h-1 w-1 rounded-full bg-white/25" />
-              <span className="truncate text-[8px] font-black uppercase tracking-[0.18em] text-white/45">
+              <span className="truncate text-[8px] font-black uppercase tracking-[0.18em] text-white/85">
                 Admin
               </span>
             </div>
@@ -219,7 +219,7 @@ function AdminSidebar({
             </p>
           </div>
 
-          <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-white/80 sm:flex">
+          <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-white sm:flex">
             <span className={`h-1.5 w-1.5 rounded-full ${currentRole.dot}`} />
             {currentRole.shortLabel}
           </div>
@@ -250,13 +250,13 @@ function AdminSidebar({
             >
               <SidebarAmbient />
 
-              <div className="relative flex items-center justify-between border-b border-white/[0.08] px-4 py-4">
+              <div className="relative flex items-center justify-between border-b border-white/[0.16] bg-white/[0.02] px-4 py-4">
                 <BrandBlock compact />
 
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-white/80 transition hover:border-orange-300/50 hover:bg-white/[0.1] hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.07] text-white/90 transition hover:border-orange-300/50 hover:bg-white/[0.1] hover:text-white"
                   aria-label="Close navigation"
                 >
                   <X size={17} />
@@ -306,7 +306,7 @@ function AdminSidebar({
         <SidebarAmbient />
 
         <div
-          className={`relative border-b border-white/[0.08] ${
+          className={`relative border-b border-white/[0.16] bg-white/[0.02] ${
             desktopCollapsed ? "px-3 py-3.5" : "px-4 py-4"
           }`}
         >
@@ -320,7 +320,7 @@ function AdminSidebar({
             <button
               type="button"
               onClick={() => setDesktopCollapsed((current) => !current)}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.055] text-white/75 transition hover:border-orange-300/50 hover:bg-white/[0.11] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.055] text-white/75 transition hover:border-orange-300/50 hover:bg-white/[0.11] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50"
               aria-label={
                 desktopCollapsed
                   ? "Expand admin sidebar"
@@ -357,7 +357,7 @@ function AdminSidebar({
           {!desktopCollapsed ? (
             <div className="mb-3 flex items-center gap-2 px-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-              <p className="min-w-0 truncate text-[9px] font-black uppercase tracking-[0.12em] text-white/40">
+              <p className="min-w-0 truncate text-[9px] font-black uppercase tracking-[0.12em] text-white/85">
                 {activeItem?.label || "Workspace"}
               </p>
             </div>
@@ -459,7 +459,7 @@ function BrandBlock({ compact = false, collapsed = false }) {
           </span>
         </div>
 
-        <p className="mt-0.5 truncate text-[9px] font-black uppercase tracking-[0.14em] text-white/38">
+        <p className="mt-0.5 truncate text-[9px] font-black uppercase tracking-[0.14em] text-slate-300">
           Operations Console
         </p>
       </div>
@@ -494,7 +494,7 @@ function ProfileCard({
   }
 
   return (
-    <div className="mb-3 overflow-hidden rounded-[15px] border border-white/[0.08] bg-white/[0.045] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <div className="mb-3 overflow-hidden rounded-[15px] border border-white/[0.14] bg-white/[0.045] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <div className="flex items-center gap-3">
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${currentRole.avatar}`}
@@ -506,7 +506,7 @@ function ProfileCard({
           <p className="truncate text-[13px] font-black text-white">
             {firstName}
           </p>
-          <p className="mt-0.5 truncate text-[9px] font-semibold text-white/38">
+          <p className="mt-0.5 truncate text-[9px] font-medium text-slate-300">
             {currentRole.description}
           </p>
         </div>
@@ -556,15 +556,15 @@ function Navigation({
           {!collapsed ? (
             <div className="mb-1.5 flex items-center justify-between gap-3 px-1.5">
               <div className="min-w-0">
-                <p className="text-[8px] font-black uppercase tracking-[0.16em] text-orange-200/90">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-200">
                   {zone.label}
                 </p>
-                <p className="mt-0.5 truncate text-[8px] font-semibold text-white/25">
+                <p className="mt-0.5 truncate text-[8px] font-medium text-slate-300">
                   {zone.description}
                 </p>
               </div>
 
-              <span className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[7px] font-black text-white/30">
+              <span className="shrink-0 rounded-full border border-white/[0.14] bg-white/[0.04] px-2 py-0.5 text-[7px] font-black text-orange-100">
                 {zone.groups.reduce(
                   (sum, group) => sum + group.items.length,
                   0
@@ -601,10 +601,10 @@ function Navigation({
                           aria-current={isActive ? "page" : undefined}
                           className={`group relative mx-auto flex h-11 w-11 items-center justify-center rounded-xl border transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50 ${
                             item.locked
-                              ? "cursor-not-allowed border-white/[0.04] bg-white/[0.02] text-white/20 opacity-55"
+                              ? "cursor-not-allowed border-white/[0.04] bg-white/[0.02] text-slate-400 opacity-55"
                               : isActive
                               ? "border-orange-300/70 bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-[0_9px_20px_rgba(249,115,22,0.22)]"
-                              : "border-transparent bg-transparent text-white/55 hover:border-white/[0.08] hover:bg-white/[0.06] hover:text-white"
+                              : "border-transparent bg-transparent text-white/75 hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
                           }`}
                         >
                           <ItemIcon size={17} strokeWidth={2.1} />
@@ -619,7 +619,7 @@ function Navigation({
                 <div
                   key={group.id}
                   className={`relative rounded-xl transition ${
-                    groupActive ? "bg-white/[0.035]" : ""
+                    groupActive ? "bg-white/[0.055]" : ""
                   }`}
                 >
                   {groupActive ? (
@@ -633,7 +633,7 @@ function Navigation({
                     className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition ${
                       groupActive
                         ? "text-orange-100"
-                        : "text-white/58 hover:bg-white/[0.04] hover:text-white"
+                        : "text-white/85 hover:bg-white/[0.07] hover:text-white"
                     }`}
                   >
                     <span
@@ -646,13 +646,13 @@ function Navigation({
                       {group.title}
                     </span>
 
-                    <span className="text-[7px] font-black text-white/22">
+                    <span className="text-[7px] font-black text-slate-400">
                       {group.items.length}
                     </span>
 
                     <ChevronDown
                       size={12}
-                      className={`shrink-0 text-white/30 transition duration-200 ${
+                      className={`shrink-0 text-slate-300 transition duration-200 ${
                         groupOpen ? "rotate-180" : ""
                       }`}
                     />
@@ -685,19 +685,19 @@ function Navigation({
                                 aria-current={isActive ? "page" : undefined}
                                 className={`group relative flex min-h-[40px] w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300/50 ${
                                   item.locked
-                                    ? "cursor-not-allowed border-transparent bg-transparent text-white/20 opacity-55"
+                                    ? "cursor-not-allowed border-transparent bg-transparent text-slate-400 opacity-55"
                                     : isActive
-                                    ? "border-orange-300/55 bg-gradient-to-r from-orange-500/95 to-orange-500/80 text-white shadow-[0_7px_18px_rgba(249,115,22,0.18)]"
-                                    : "border-transparent bg-transparent text-white/76 hover:border-white/[0.07] hover:bg-white/[0.055]"
+                                    ? "border-orange-300/80 bg-gradient-to-r from-[#FF6A18] to-[#E85B10] text-white shadow-[0_10px_24px_rgba(255,90,10,0.30)]"
+                                    : "border-transparent bg-transparent text-white/90 hover:border-white/15 hover:bg-white/[0.085]"
                                 }`}
                               >
                                 <span
                                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition duration-200 ${
                                     item.locked
-                                      ? "border-white/[0.04] bg-white/[0.02] text-white/18"
+                                      ? "border-white/[0.04] bg-white/[0.02] text-slate-400"
                                       : isActive
-                                      ? "border-white/20 bg-white/10 text-white"
-                                      : "border-white/[0.07] bg-white/[0.04] text-orange-100/90 group-hover:bg-white/[0.08] group-hover:text-white"
+                                      ? "border-white/30 bg-white/15 text-white"
+                                      : "border-white/[0.14] bg-white/[0.07] text-orange-200 group-hover:bg-white/[0.12] group-hover:text-white"
                                   }`}
                                 >
                                   <ItemIcon size={15} strokeWidth={2.05} />
@@ -706,13 +706,13 @@ function Navigation({
                                 <span className="min-w-0 flex-1">
                                   <span
                                     className={`block truncate text-[11px] font-extrabold ${
-                                      item.locked ? "text-white/22" : "text-white"
+                                      item.locked ? "text-slate-400" : "text-white"
                                     }`}
                                   >
                                     {item.label}
                                   </span>
 
-                                  <span className="mt-0.5 block truncate text-[8px] font-semibold text-white/30">
+                                  <span className="mt-0.5 block truncate text-[8px] font-medium text-slate-300">
                                     {item.description}
                                   </span>
                                 </span>
@@ -724,7 +724,7 @@ function Navigation({
                                       ? "opacity-10"
                                       : isActive
                                       ? "text-white/80"
-                                      : "text-white/18 group-hover:translate-x-0.5 group-hover:text-orange-200"
+                                      : "text-slate-400 group-hover:translate-x-0.5 group-hover:text-orange-200"
                                   }`}
                                 />
                               </button>
@@ -747,14 +747,14 @@ function Navigation({
 function SidebarFooter({ openWebsite, logout, collapsed = false }) {
   if (collapsed) {
     return (
-      <div className="relative border-t border-white/[0.08] bg-[#0C294D]/95 px-2 py-3">
+      <div className="relative border-t border-white/[0.16] bg-[#0A2748]/98 px-2 py-3">
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={openWebsite}
             title="Open public website"
             aria-label="Open public website"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.045] text-white/70 transition hover:border-orange-300/50 hover:bg-white/[0.09] hover:text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.14] bg-white/[0.045] text-white/85 transition hover:border-orange-300/50 hover:bg-white/[0.09] hover:text-white"
           >
             <ExternalLink size={16} />
           </button>
@@ -764,7 +764,7 @@ function SidebarFooter({ openWebsite, logout, collapsed = false }) {
             onClick={logout}
             title="Sign out"
             aria-label="Sign out"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.045] text-white/70 transition hover:border-orange-300/50 hover:bg-white/[0.09] hover:text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.14] bg-white/[0.045] text-white/85 transition hover:border-orange-300/50 hover:bg-white/[0.09] hover:text-white"
           >
             <LogOut size={16} />
           </button>
@@ -774,12 +774,12 @@ function SidebarFooter({ openWebsite, logout, collapsed = false }) {
   }
 
   return (
-    <div className="relative border-t border-white/[0.08] bg-[#0C294D]/96 px-3 py-3">
+    <div className="relative border-t border-white/[0.16] bg-[#0A2748]/98 px-3 py-3 shadow-[0_-10px_28px_rgba(3,18,38,0.20)]">
       <div className="grid gap-2">
         <button
           type="button"
           onClick={openWebsite}
-          className="group flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5 text-left transition hover:border-orange-300/45 hover:bg-white/[0.08]"
+          className="group flex w-full items-center justify-between rounded-xl border border-white/[0.16] bg-white/[0.065] px-3 py-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition hover:border-orange-300/55 hover:bg-white/[0.10]"
         >
           <span className="flex min-w-0 items-center gap-2.5">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-orange-300/50 bg-orange-500 text-white">
@@ -790,7 +790,7 @@ function SidebarFooter({ openWebsite, logout, collapsed = false }) {
               <span className="block truncate text-[11px] font-black text-white">
                 Open public website
               </span>
-              <span className="mt-0.5 block truncate text-[8px] font-semibold text-white/28">
+              <span className="mt-0.5 block truncate text-[8px] font-medium text-slate-300">
                 zaifanconsultancy.com
               </span>
             </span>
@@ -798,16 +798,16 @@ function SidebarFooter({ openWebsite, logout, collapsed = false }) {
 
           <ChevronRight
             size={13}
-            className="shrink-0 text-white/20 transition group-hover:translate-x-0.5 group-hover:text-orange-200"
+            className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-orange-200"
           />
         </button>
 
         <button
           type="button"
           onClick={logout}
-          className="group flex w-full items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5 text-left transition hover:border-white/15 hover:bg-white/[0.08]"
+          className="group flex w-full items-center gap-2.5 rounded-xl border border-white/[0.16] bg-white/[0.065] px-3 py-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition hover:border-white/25 hover:bg-white/[0.10]"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-white/70 transition group-hover:text-white">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.14] bg-white/[0.04] text-white/85 transition group-hover:text-white">
             <LogOut size={14} />
           </span>
 
@@ -815,14 +815,14 @@ function SidebarFooter({ openWebsite, logout, collapsed = false }) {
             <span className="block truncate text-[11px] font-black text-white">
               Sign out
             </span>
-            <span className="mt-0.5 block truncate text-[8px] font-semibold text-white/28">
+            <span className="mt-0.5 block truncate text-[8px] font-medium text-slate-300">
               Securely end this session
             </span>
           </span>
         </button>
       </div>
 
-      <div className="mt-2.5 flex items-center justify-between px-1 text-[7px] font-black uppercase tracking-[0.12em] text-white/18">
+      <div className="mt-2.5 flex items-center justify-between px-1 text-[7px] font-black uppercase tracking-[0.12em] text-slate-400/90">
         <span>Zaifan Consultancy</span>
         <span>Internal</span>
       </div>

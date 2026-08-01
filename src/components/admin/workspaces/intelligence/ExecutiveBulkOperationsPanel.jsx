@@ -1,5 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleGauge,
+  Clock3,
+  Crown,
+  FileWarning,
+  Gauge,
+  History,
+  Layers3,
+  Play,
+  RefreshCw,
+  RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Users,
+  Workflow,
+  XCircle,
+  Zap,
+} from "lucide-react";
+import {
   buildExecutionAnalytics,
   buildQueueHealthAnalytics,
   executeBulkExecutiveActions,
@@ -373,6 +399,8 @@ function buildRecoveryOperatingModel({ scores = [], platformStudents = [], verif
   }
 }
 
+// ExecutiveOperationsCenter V5 PARTNER OS EXTREME — Protected Bulk Operations
+
 function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionExecuted, platformStudents = [], verificationSnapshot = null }) {
   const [executing, setExecuting] = useState(false);
   const [activeExecution, setActiveExecution] = useState("");
@@ -579,370 +607,1197 @@ function ExecutiveOperationsCenter({ scores = [], adminProfile = null, onActionE
     }
   };
 
+
+  const previewRows =
+    activeMode === "recovery"
+      ? selectedRecoveryQueue
+      : selectedStudents;
+
+  const visiblePreviewRows = showAllPreview
+    ? previewRows
+    : previewRows.slice(0, 8);
+
+  const successRate =
+    queueHealth.successRate ||
+    executionAnalytics.successRate ||
+    0;
+
+  const commandStatus =
+    recoveryModel.error || logsError
+      ? "Attention"
+      : executing
+        ? "Executing"
+        : successRate >= 85
+          ? "Stable"
+          : successRate >= 60
+            ? "Watch"
+            : "Intervention";
+
   return (
-    <div className="space-y-5" aria-busy={executing || logsLoading}>
-      <div className="rounded-[2rem] border-[3px] border-[#E9802D]/45 bg-[#FFFDF8] p-6 shadow-[0_20px_55px_rgba(23,36,61,0.08)]">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">Executive Operations Center V4</p>
-            <h2 className="mt-2 text-3xl font-black text-[#17243D]">Verification + Recovery Automation Command Layer</h2>
-            <p className="mt-2 max-w-5xl text-sm leading-6 text-[#667085]">
-              Batch execution, broken workflow scanning, CAS/Visa/Payment/Portal recovery queues, approval pressure, duplicate protection, and production-hardening visibility for Student OS.
+    <div
+      className="min-w-0 space-y-5"
+      aria-busy={executing || logsLoading}
+    >
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <CommandChip icon={Workflow}>
+                Executive Operations V5
+              </CommandChip>
+              <CommandChip icon={ShieldCheck}>
+                Human Controlled
+              </CommandChip>
+              <CommandChip icon={Layers3}>
+                Live Executor
+              </CommandChip>
+            </div>
+
+            <h2 className="mt-4 max-w-5xl break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
+              Verification & Recovery Automation Command Layer
+            </h2>
+
+            <p className="mt-3 max-w-5xl break-words text-sm font-semibold leading-6 text-slate-100">
+              Govern batch execution, broken-workflow scanning, CAS, visa,
+              payment and portal recovery, approval pressure, duplicate
+              protection and production-hardening visibility for Student OS.
             </p>
+
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkCommandMetric
+                label="Students"
+                value={analytics.totalStudents}
+              />
+              <DarkCommandMetric
+                label="Broken Workflows"
+                value={recoveryModel.scanner.totalIssues}
+              />
+              <DarkCommandMetric
+                label="Queue Pressure"
+                value={queueHealth.queuePressure}
+              />
+              <DarkCommandMetric
+                label="Recovery Actions"
+                value={recoveryModel.recovery.totalActions}
+              />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={loadLogs}
-              disabled={executing || logsLoading}
-              className="rounded-full border border-[#243A60]/18 bg-white px-5 py-2 text-sm font-bold text-[#596579] transition hover:border-[#E9802D]/40 hover:text-[#B84F0E] disabled:opacity-50"
-            >
-              {logsLoading ? "Refreshing..." : "Refresh Queue"}
-            </button>
-            <button
-              type="button"
-              onClick={() => executeBulk("recovery")}
-              disabled={executing || !recoveryModel.recovery.totalActions}
-              className="rounded-full border border-[#E9802D]/40 bg-[#FFF1E3] px-5 py-2 text-sm font-black text-[#B84F0E] transition hover:bg-[#D96C1F] hover:text-white disabled:opacity-50"
-            >
-              {activeExecution === "recovery" ? "Processing Recovery..." : "Execute Recovery"}
-            </button>
+
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <div className="flex items-center gap-2">
+              <CircleGauge size={18} />
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                Automation Command Health
+              </p>
+            </div>
+
+            <p className="mt-3 text-5xl font-black text-white">
+              {successRate}%
+            </p>
+
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+              {commandStatus}
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeCommandMetric
+                label="Critical Queue"
+                value={analytics.criticalStudents}
+              />
+              <OrangeCommandMetric
+                label="Failed"
+                value={analytics.failedActions}
+              />
+              <OrangeCommandMetric
+                label="Pending"
+                value={queueHealth.pendingCount}
+              />
+              <OrangeCommandMetric
+                label="Duplicates"
+                value={queueHealth.duplicateBlockedCount}
+              />
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <button
+                type="button"
+                onClick={loadLogs}
+                disabled={executing || logsLoading}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <RefreshCw
+                  size={14}
+                  className={logsLoading ? "animate-spin" : ""}
+                />
+                {logsLoading ? "Refreshing..." : "Refresh Queue"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => executeBulk("recovery")}
+                disabled={
+                  executing ||
+                  !recoveryModel.recovery.totalActions
+                }
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0F3158] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <Workflow size={14} />
+                {activeExecution === "recovery"
+                  ? "Processing..."
+                  : "Execute Recovery"}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Students" value={analytics.totalStudents} />
-        <MetricCard label="Critical Queue" value={analytics.criticalStudents} tone="red" />
-        <MetricCard label="Executive Queue" value={analytics.executiveStudents} tone="navy" />
-        <MetricCard label="Conversion Ready" value={analytics.conversionReady} tone="green" />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Broken Workflows" value={recoveryModel.scanner.totalIssues} tone={recoveryModel.scanner.critical ? "red" : "navy"} />
-        <MetricCard label="Critical Recovery" value={recoveryModel.scanner.critical} tone="red" />
-        <MetricCard label="Recovery Actions" value={recoveryModel.recovery.totalActions} tone="orange" />
-        <MetricCard label="Broken Stages" value={recoveryModel.scanner.brokenStages} tone="navy" />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Approval Pressure" value={analytics.approvalRequired} tone="orange" />
-        <MetricCard label="Failed Actions" value={analytics.failedActions} tone="red" />
-        <MetricCard label="Queue Pressure" value={queueHealth.queuePressure} tone="navy" />
-        <MetricCard label="Success Rate" value={`${queueHealth.successRate || executionAnalytics.successRate || 0}%`} tone="green" />
-      </div>
+        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+          <CommandSummaryCard
+            label="Executive Queue"
+            value={analytics.executiveStudents}
+            detail="High-risk or high-opportunity command records."
+            tone="navy"
+            icon={Crown}
+          />
+          <CommandSummaryCard
+            label="Conversion Ready"
+            value={analytics.conversionReady}
+            detail="Students positioned for next-stage conversion."
+            tone="green"
+            icon={TrendingUp}
+          />
+          <CommandSummaryCard
+            label="Approval Pressure"
+            value={analytics.approvalRequired}
+            detail="Records likely requiring protected approval."
+            tone="orange"
+            icon={ShieldAlert}
+          />
+          <CommandSummaryCard
+            label="Broken Stages"
+            value={recoveryModel.scanner.brokenStages}
+            detail="Journey stages with detected workflow breaks."
+            tone={
+              recoveryModel.scanner.brokenStages
+                ? "red"
+                : "green"
+            }
+            icon={FileWarning}
+          />
+        </div>
+      </section>
 
       {message ? (
-        <div className="rounded-[1.5rem] border border-[#E9802D]/40 bg-[#FFF1E3] p-4 text-sm font-bold text-[#B84F0E]">
+        <StatusMessage
+          tone={result?.failed ? "warning" : "info"}
+          icon={result?.failed ? AlertTriangle : Sparkles}
+        >
           {message}
-        </div>
+        </StatusMessage>
       ) : null}
 
       {logsError || recoveryModel.error ? (
-        <div className="rounded-[1.5rem] border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm font-bold text-[#A8342F]">
+        <StatusMessage tone="danger" icon={XCircle}>
           {logsError || recoveryModel.error}
-        </div>
+        </StatusMessage>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <ActionButton title="Execute Critical Queue" description="Create immediate action tasks for critical-risk students." onClick={() => executeBulk("critical")} busy={executing} active={activeExecution === "critical"} tone="red" />
-        <ActionButton title="Execute Executive Queue" description="Run executive-priority student movement actions." onClick={() => executeBulk("executive")} busy={executing} active={activeExecution === "executive"} tone="navy" />
-        <ActionButton title="Execute Conversion Queue" description="Execute conversion-ready calls, reminders, and tasks." onClick={() => executeBulk("conversion")} busy={executing} active={activeExecution === "conversion"} tone="green" />
-        <ActionButton title="Retry Failed Actions" description="Rebuild and retry failed automation items from logs." onClick={() => executeBulk("retry")} busy={executing} active={activeExecution === "retry"} tone="orange" />
-        <ActionButton title="Approve + Execute Batch" description="Run the approval-selected batch through the executor after reviewing the queue preview." onClick={() => executeBulk("approve")} busy={executing} active={activeExecution === "approve"} tone="navy" />
-        <ActionButton title="Execute Recovery Workflows" description="Run generated workflow recovery actions from CAS, Visa, Payment and Portal queues." onClick={() => executeBulk("recovery")} busy={executing} active={activeExecution === "recovery"} unavailable={!recoveryModel.recovery.totalActions} tone="red" />
+      <PartnerSection
+        eyebrow="Protected Execution"
+        title="Bulk command actions"
+        description="Every command uses the real executor, saved templates, duplicate protection and current Admin identity."
+        icon={Zap}
+        badge={`${analytics.totalStudents} portfolio records`}
+      >
+        <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <ActionButton
+            title="Execute Critical Queue"
+            description="Create immediate intervention tasks for critical-risk students."
+            onClick={() => executeBulk("critical")}
+            busy={executing}
+            active={activeExecution === "critical"}
+            tone="red"
+            icon={ShieldAlert}
+          />
+
+          <ActionButton
+            title="Execute Executive Queue"
+            description="Run executive-priority movement actions for the leadership queue."
+            onClick={() => executeBulk("executive")}
+            busy={executing}
+            active={activeExecution === "executive"}
+            tone="navy"
+            icon={Crown}
+          />
+
+          <ActionButton
+            title="Execute Conversion Queue"
+            description="Run conversion-ready calls, reminders and next-step tasks."
+            onClick={() => executeBulk("conversion")}
+            busy={executing}
+            active={activeExecution === "conversion"}
+            tone="green"
+            icon={TrendingUp}
+          />
+
+          <ActionButton
+            title="Retry Failed Actions"
+            description="Rebuild and retry failed automation items from saved execution logs."
+            onClick={() => executeBulk("retry")}
+            busy={executing}
+            active={activeExecution === "retry"}
+            tone="orange"
+            icon={RotateCcw}
+          />
+
+          <ActionButton
+            title="Approve + Execute Batch"
+            description="Run the reviewed approval queue through the protected executor."
+            onClick={() => executeBulk("approve")}
+            busy={executing}
+            active={activeExecution === "approve"}
+            tone="navy"
+            icon={CheckCircle2}
+          />
+
+          <ActionButton
+            title="Execute Recovery Workflows"
+            description="Run generated CAS, visa, payment and portal recovery actions."
+            onClick={() => executeBulk("recovery")}
+            busy={executing}
+            active={activeExecution === "recovery"}
+            unavailable={!recoveryModel.recovery.totalActions}
+            tone="red"
+            icon={Workflow}
+          />
+        </div>
+      </PartnerSection>
+
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(20rem,0.92fr)]">
+        <PartnerSection
+          eyebrow="Broken Workflow Scanner"
+          title="Production-hardening scan"
+          description="Detect missing journey links, stale execution risk, broken stages and synchronization failures."
+          icon={Gauge}
+          badge={formatLabel(
+            recoveryModel.scanner.health_status
+          )}
+        >
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <SmallMetric
+              label="Scanned Students"
+              value={recoveryModel.scanner.scannedStudents}
+            />
+            <SmallMetric
+              label="Critical"
+              value={recoveryModel.scanner.critical}
+              tone="red"
+            />
+            <SmallMetric
+              label="High"
+              value={recoveryModel.scanner.high}
+              tone="orange"
+            />
+            <SmallMetric
+              label="Medium"
+              value={recoveryModel.scanner.medium}
+              tone="yellow"
+            />
+            <SmallMetric
+              label="Broken Stages"
+              value={recoveryModel.scanner.brokenStages}
+              tone="navy"
+            />
+            <SmallMetric
+              label="Generated Actions"
+              value={recoveryModel.recovery.totalActions}
+              tone="green"
+            />
+          </div>
+        </PartnerSection>
+
+        <PartnerSection
+          eyebrow="Recovery Queues"
+          title="CAS, visa, payment and portal"
+          description="Select the operating queue used by recovery preview and execution."
+          icon={Workflow}
+          badge={`${selectedRecoveryQueue.length} selected`}
+          accent
+        >
+          <QueueTabs
+            items={["all", "cas", "visa", "payment", "portal"]}
+            active={activeRecoveryQueue}
+            onChange={setActiveRecoveryQueue}
+          />
+
+          <div className="mt-4 grid min-w-0 grid-cols-2 gap-3">
+            <SmallMetric
+              label="CAS"
+              value={
+                recoveryModel.recovery.casQueue?.length || 0
+              }
+              tone="orange"
+            />
+            <SmallMetric
+              label="Visa"
+              value={
+                recoveryModel.recovery.visaQueue?.length || 0
+              }
+              tone="red"
+            />
+            <SmallMetric
+              label="Payment"
+              value={
+                recoveryModel.recovery.paymentQueue?.length || 0
+              }
+              tone="navy"
+            />
+            <SmallMetric
+              label="Portal"
+              value={
+                recoveryModel.recovery.portalQueue?.length || 0
+              }
+              tone="green"
+            />
+          </div>
+        </PartnerSection>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <div className="rounded-[1.75rem] border-2 border-[#C2413B]/30 bg-[#FFF7F5] p-5">
-          <SectionHeader eyebrow="Broken Workflow Scanner" title="Production-hardening scan" description="Detects broken journey records, missing CAS/Visa/Payment/Portal links, sync failures, timeline gaps, and stale execution risk." />
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <SmallMetric label="Health" value={formatLabel(recoveryModel.scanner.health_status)} />
-            <SmallMetric label="Scanned" value={recoveryModel.scanner.scannedStudents} />
-            <SmallMetric label="Critical" value={recoveryModel.scanner.critical} />
-            <SmallMetric label="High" value={recoveryModel.scanner.high} />
-            <SmallMetric label="Medium" value={recoveryModel.scanner.medium} />
-            <SmallMetric label="Actions" value={recoveryModel.recovery.totalActions} />
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(19rem,0.82fr)_minmax(0,1.18fr)]">
+        <PartnerSection
+          eyebrow="Queue Health"
+          title="Automation operating condition"
+          description="Live pending, failure, completion, duplicate and approval pressure."
+          icon={Activity}
+          badge={`${successRate}% success`}
+        >
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+            <SmallMetric
+              label="Pending"
+              value={queueHealth.pendingCount}
+              tone="orange"
+            />
+            <SmallMetric
+              label="Failed"
+              value={queueHealth.failedCount}
+              tone="red"
+            />
+            <SmallMetric
+              label="Completed"
+              value={queueHealth.completedCount}
+              tone="green"
+            />
+            <SmallMetric
+              label="Duplicates"
+              value={queueHealth.duplicateBlockedCount}
+              tone="navy"
+            />
+            <SmallMetric
+              label="Throughput"
+              value={executionAnalytics.total}
+            />
+            <SmallMetric
+              label="Approval SLA"
+              value={
+                queueHealth.approvalSlaLabel || "Healthy"
+              }
+              tone="green"
+            />
           </div>
-        </div>
 
-        <div className="rounded-[1.75rem] border-2 border-[#17446F]/25 bg-[#F5F8FC] p-5">
-          <SectionHeader eyebrow="Recovery Queues" title="CAS / Visa / Payment / Portal" description="Generated from the scanner and ready for executive approval/execution." />
-          <div className="mt-4 flex flex-wrap gap-2">
-            {["all", "cas", "visa", "payment", "portal"].map((queue) => (
-              <button
-                key={queue}
-                type="button"
-                onClick={() => setActiveRecoveryQueue(queue)}
-                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeRecoveryQueue === queue ? "bg-[#E9802D] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#E9802D]/40 hover:text-[#B84F0E]"}`}
-              >
-                {formatLabel(queue)}
-              </button>
-            ))}
+          <div className="mt-4">
+            <HealthProgress
+              label="Execution Success"
+              value={successRate}
+            />
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <SmallMetric label="CAS" value={recoveryModel.recovery.casQueue?.length || 0} />
-            <SmallMetric label="Visa" value={recoveryModel.recovery.visaQueue?.length || 0} />
-            <SmallMetric label="Payment" value={recoveryModel.recovery.paymentQueue?.length || 0} />
-            <SmallMetric label="Portal" value={recoveryModel.recovery.portalQueue?.length || 0} />
-          </div>
-        </div>
-      </div>
+        </PartnerSection>
 
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
-          <SectionHeader eyebrow="Queue Health" title="Automation operating condition" description="Live pressure from pending, failed, duplicate-blocked, and completed execution logs." />
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <SmallMetric label="Pending" value={queueHealth.pendingCount} />
-            <SmallMetric label="Failed" value={queueHealth.failedCount} />
-            <SmallMetric label="Completed" value={queueHealth.completedCount} />
-            <SmallMetric label="Duplicates" value={queueHealth.duplicateBlockedCount} />
-            <SmallMetric label="Throughput" value={executionAnalytics.total} />
-            <SmallMetric label="Approval SLA" value={queueHealth.approvalSlaLabel || "Healthy"} />
-          </div>
-        </div>
+        <PartnerSection
+          eyebrow="Batch Execution History"
+          title="Recent protected execution feed"
+          description="Review completions, failures, duplicate blocks and saved audit evidence."
+          icon={History}
+          badge={`${logs.length} logs`}
+        >
+          <button
+            type="button"
+            onClick={() =>
+              setShowExecutionHistory((value) => !value)
+            }
+            aria-expanded={showExecutionHistory}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-white px-4 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
+          >
+            {showExecutionHistory ? (
+              <ChevronUp size={14} />
+            ) : (
+              <ChevronDown size={14} />
+            )}
+            {showExecutionHistory
+              ? "Hide Execution History"
+              : "Open Execution History"}
+          </button>
 
-        <div className="rounded-[1.75rem] border-2 border-[#243A60]/20 bg-[#FFFDF8] p-5 shadow-[0_12px_32px_rgba(23,36,61,0.05)]">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <SectionHeader eyebrow="Batch Execution History" title="Recent automation execution feed" description="Latest completion, failure, and duplicate-protection events." />
-            <button
-              type="button"
-              onClick={() => setShowExecutionHistory((value) => !value)}
-              className="shrink-0 rounded-xl border-2 border-[#243A60]/20 bg-white px-3 py-2 text-xs font-black text-[#17243D] transition hover:border-[#E9802D]/55 hover:text-[#B84F0E]"
-              aria-expanded={showExecutionHistory}
-            >
-              {showExecutionHistory ? "Hide history" : `Show history (${logs.length})`}
-            </button>
-          </div>
           {showExecutionHistory ? (
-            <div className="mt-5 max-h-[34rem] space-y-3 overflow-y-auto pr-1">
+            <div className="mt-4 max-h-[34rem] space-y-3 overflow-y-auto pr-1">
               {logs.slice(0, 12).map((log, index) => (
-                <LogRow key={log.id || `${log.template_key}-${index}`} log={log} />
+                <LogRow
+                  key={
+                    log.id ||
+                    `${log.template_key}-${index}`
+                  }
+                  log={log}
+                />
               ))}
-              {!logs.length ? <EmptyState text="No execution logs found yet." /> : null}
+
+              {!logs.length ? (
+                <EmptyState text="No execution logs found yet." />
+              ) : null}
             </div>
           ) : (
-            <div className="mt-4 rounded-xl border border-dashed border-[#243A60]/20 bg-white/70 px-4 py-3 text-xs font-bold text-[#667085]">
-              History is collapsed to keep the command center compact. Open it when you need audit detail.
-            </div>
+            <CompactNotice
+              icon={Clock3}
+              title="History collapsed"
+              detail="Open the audit feed only when execution detail is required."
+            />
           )}
-        </div>
+        </PartnerSection>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[1.75rem] border-2 border-[#17446F]/25 bg-[#F5F8FC] p-5">
-          <SectionHeader eyebrow="Selected Queue" title={`${activeMode === "recovery" ? formatLabel(activeRecoveryQueue) : formatLabel(activeMode)} queue preview`} description="Switch between queues before executing a batch command." />
-          <div className="mt-4 flex flex-wrap gap-2">
-            {["critical", "executive", "conversion", "approval", "failed", "recovery"].map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setActiveMode(mode)}
-                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeMode === mode ? "bg-[#E9802D] text-white" : "border border-[#243A60]/18 bg-white text-[#7A8392] hover:border-[#E9802D]/40 hover:text-[#B84F0E]"}`}
-              >
-                {formatLabel(mode)}
-              </button>
-            ))}
-          </div>
-          <div className="mt-5 space-y-3">
-            {(activeMode === "recovery" ? selectedRecoveryQueue : selectedStudents).slice(0, 10).map((item, index) => (
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(20rem,0.92fr)]">
+        <PartnerSection
+          eyebrow="Selected Queue"
+          title={`${
+            activeMode === "recovery"
+              ? formatLabel(activeRecoveryQueue)
+              : formatLabel(activeMode)
+          } queue preview`}
+          description="Inspect the exact queue before running a protected batch command."
+          icon={Target}
+          badge={`${previewRows.length} records`}
+        >
+          <QueueTabs
+            items={[
+              "critical",
+              "executive",
+              "conversion",
+              "approval",
+              "failed",
+              "recovery",
+            ]}
+            active={activeMode}
+            onChange={setActiveMode}
+          />
+
+          <div className="mt-4 space-y-3">
+            {visiblePreviewRows.map((item, index) =>
               activeMode === "recovery" ? (
-                <IssueRow key={item.id || index} issue={item} />
+                <IssueRow
+                  key={item.id || index}
+                  issue={item}
+                />
               ) : (
-                <StudentRow key={`${item.student_id || item.id || item.template_key || index}-${index}`} item={item} mode={activeMode} />
+                <StudentRow
+                  key={`${
+                    item.student_id ||
+                    item.id ||
+                    item.template_key ||
+                    index
+                  }-${index}`}
+                  item={item}
+                  mode={activeMode}
+                />
               )
-            ))}
-            {!(activeMode === "recovery" ? selectedRecoveryQueue : selectedStudents).length ? <EmptyState text="No students/logs/issues in this queue right now." /> : null}
-          </div>
-        </div>
+            )}
 
-        <div className="rounded-[1.75rem] border-2 border-[#C2413B]/30 bg-[#FFF7F5] p-5">
-          <SectionHeader eyebrow="Recovery Center" title="Failure prediction and recovery" description="Uses failed logs, duplicate blocks, scanner issues, risk pressure, and stale queue data to show where automation needs attention." />
-          <div className="mt-5 space-y-3">
-            <RecoveryRow title="Broken workflow issues" value={recoveryModel.scanner.totalIssues} detail="Scanner output from student journey data, verification snapshot, and operating records." tone="red" />
-            <RecoveryRow title="Generated actions" value={recoveryModel.recovery.totalActions} detail="Automatic recovery workflows ready for approval/execution." tone="navy" />
-            <RecoveryRow title="Failed action retry" value={analytics.failedActions} detail="Retry only uses logs with saved original templates. Older logs without templates are skipped safely." tone="red" />
-            <RecoveryRow title="Duplicate protection" value={queueHealth.duplicateBlockedCount} detail="Blocks repeated task/reminder/draft creation for the same student action key." tone="navy" />
-            <RecoveryRow title="Critical pressure" value={analytics.criticalStudents} detail="High-risk students that should be cleared before normal queue execution." tone="red" />
-            <RecoveryRow title="Queue aging" value={queueHealth.oldestPendingAgeLabel || "Clear"} detail="Oldest pending/approval item based on available created/executed timestamps." tone="orange" />
+            {!previewRows.length ? (
+              <EmptyState text="No students, logs or recovery issues are available in this queue." />
+            ) : null}
           </div>
-        </div>
+
+          {previewRows.length > 8 ? (
+            <button
+              type="button"
+              onClick={() =>
+                setShowAllPreview((value) => !value)
+              }
+              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-4 text-xs font-black text-orange-800 transition hover:-translate-y-0.5 hover:bg-white"
+            >
+              {showAllPreview ? (
+                <ChevronUp size={14} />
+              ) : (
+                <ChevronDown size={14} />
+              )}
+              {showAllPreview
+                ? "Show Compact Preview"
+                : `Show All ${previewRows.length} Records`}
+            </button>
+          ) : null}
+        </PartnerSection>
+
+        <PartnerSection
+          eyebrow="Recovery Center"
+          title="Failure prediction and recovery"
+          description="Understand the pressure behind workflow breaks, retries, duplicates and queue aging."
+          icon={ShieldAlert}
+          badge={commandStatus}
+          accent
+        >
+          <div className="space-y-3">
+            <RecoveryRow
+              title="Broken workflow issues"
+              value={recoveryModel.scanner.totalIssues}
+              detail="Scanner output from student journey data, verification snapshots and operating records."
+              tone="red"
+            />
+            <RecoveryRow
+              title="Generated actions"
+              value={recoveryModel.recovery.totalActions}
+              detail="Recovery workflows prepared for protected review and execution."
+              tone="navy"
+            />
+            <RecoveryRow
+              title="Failed action retry"
+              value={analytics.failedActions}
+              detail="Only logs with saved original templates are retried; incomplete historical logs are skipped safely."
+              tone="red"
+            />
+            <RecoveryRow
+              title="Duplicate protection"
+              value={queueHealth.duplicateBlockedCount}
+              detail="Repeated tasks, reminders and drafts are blocked by student action key."
+              tone="navy"
+            />
+            <RecoveryRow
+              title="Critical pressure"
+              value={analytics.criticalStudents}
+              detail="Critical students should be reviewed before normal queue execution."
+              tone="red"
+            />
+            <RecoveryRow
+              title="Queue aging"
+              value={
+                queueHealth.oldestPendingAgeLabel || "Clear"
+              }
+              detail="Oldest pending or approval-controlled item based on available timestamps."
+              tone="orange"
+            />
+          </div>
+        </PartnerSection>
       </div>
 
-      <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
-        <SectionHeader eyebrow="Workflow Failure Heatmap" title="Stage-level recovery pressure" description="Broken stage counts from the generated workflow report." />
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {Object.entries(recoveryModel.report.heatmap || {}).map(([stage, count]) => (
-            <SmallMetric key={stage} label={formatLabel(stage)} value={count} />
+      <PartnerSection
+        eyebrow="Workflow Failure Heatmap"
+        title="Stage-level recovery pressure"
+        description="Broken-stage counts generated by the workflow report."
+        icon={FileWarning}
+        badge={`${
+          Object.keys(recoveryModel.report.heatmap || {})
+            .length
+        } stages`}
+      >
+        <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {Object.entries(
+            recoveryModel.report.heatmap || {}
+          ).map(([stage, count]) => (
+            <SmallMetric
+              key={stage}
+              label={formatLabel(stage)}
+              value={count}
+              tone={count ? "red" : "green"}
+            />
           ))}
-          {!Object.keys(recoveryModel.report.heatmap || {}).length ? <EmptyState text="No broken stages detected from available data." /> : null}
+
+          {!Object.keys(
+            recoveryModel.report.heatmap || {}
+          ).length ? (
+            <EmptyState text="No broken stages detected from the available operating data." />
+          ) : null}
         </div>
-      </div>
+      </PartnerSection>
 
       {result ? (
-        <div className="rounded-[1.75rem] border border-[#243A60]/18 bg-white p-5">
-          <SectionHeader eyebrow="Last Batch Result" title="Execution summary" description="Compact result from the last bulk operation." />
-          <div className="mt-4 grid gap-3 md:grid-cols-4">
-            <SmallMetric label="Total" value={result.total || 0} />
-            <SmallMetric label="Completed" value={result.successful || 0} />
-            <SmallMetric label="Failed" value={result.failed || 0} />
-            <SmallMetric label="Duplicate Blocked" value={result.duplicateBlocked || 0} />
+        <PartnerSection
+          eyebrow="Last Batch Result"
+          title="Protected execution summary"
+          description="Compact outcome from the most recent bulk operation."
+          icon={CheckCircle2}
+          badge={result.error ? "Execution error" : "Latest result"}
+        >
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <SmallMetric
+              label="Total"
+              value={result.total || 0}
+            />
+            <SmallMetric
+              label="Completed"
+              value={result.successful || 0}
+              tone="green"
+            />
+            <SmallMetric
+              label="Failed"
+              value={result.failed || 0}
+              tone="red"
+            />
+            <SmallMetric
+              label="Duplicate Blocked"
+              value={result.duplicateBlocked || 0}
+              tone="orange"
+            />
           </div>
-        </div>
+        </PartnerSection>
       ) : null}
     </div>
   );
 }
 
-function MetricCard({ label, value, tone = "default" }) {
+function PartnerSection({
+  eyebrow,
+  title,
+  description,
+  icon: Icon = Sparkles,
+  badge = "",
+  accent = false,
+  children,
+}) {
   return (
-    <div className={`min-w-0 rounded-[1.4rem] border-2 p-4 shadow-[0_8px_22px_rgba(23,36,61,0.05)] ${getToneStyle(tone)}`}>
-      <p className="break-words text-[10px] font-black uppercase tracking-[0.14em] text-[#53657D]">{label}</p>
-      <p className="mt-2 break-words text-3xl font-black leading-none text-[#10233F]">{value}</p>
+    <section
+      className={`min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)] ${
+        accent
+          ? "border-[#FF5A0A]"
+          : "border-[#123865]"
+      }`}
+    >
+      <div
+        className={`flex min-w-0 flex-col gap-3 border-b-[3px] px-5 py-4 sm:flex-row sm:items-start sm:justify-between ${
+          accent
+            ? "border-[#FF5A0A] bg-[#FFF4E8]"
+            : "border-[#FF5A0A] bg-[#123865] text-white"
+        }`}
+      >
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${
+              accent
+                ? "border-[#FF5A0A] bg-white text-orange-700"
+                : "border-white/25 bg-white/10 text-orange-200"
+            }`}
+          >
+            <Icon size={17} />
+          </span>
+
+          <div className="min-w-0">
+            <p
+              className={`text-[9px] font-black uppercase tracking-[0.14em] ${
+                accent
+                  ? "text-orange-700"
+                  : "text-orange-200"
+              }`}
+            >
+              {eyebrow}
+            </p>
+
+            <h3
+              className={`mt-1 break-words text-xl font-black ${
+                accent
+                  ? "text-[#10233F]"
+                  : "text-white"
+              }`}
+            >
+              {title}
+            </h3>
+
+            {description ? (
+              <p
+                className={`mt-1 max-w-4xl break-words text-xs font-semibold leading-5 ${
+                  accent
+                    ? "text-slate-600"
+                    : "text-slate-200"
+                }`}
+              >
+                {description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        {badge ? (
+          <span
+            className={`w-fit shrink-0 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${
+              accent
+                ? "border-[#FF5A0A] bg-white text-orange-700"
+                : "border-white/25 bg-white/10 text-white"
+            }`}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function CommandChip({ icon: Icon, children }) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+      <Icon size={11} className="shrink-0 text-orange-200" />
+      <span className="truncate">{children}</span>
+    </span>
+  );
+}
+
+function DarkCommandMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value}
+      </p>
     </div>
   );
 }
 
-function SmallMetric({ label, value }) {
+function OrangeCommandMetric({ label, value }) {
   return (
-    <div className="min-w-0 rounded-[1.2rem] border-2 border-[#C8D5E4] bg-[#F7FAFD] p-4">
-      <p className="break-words text-[10px] font-black uppercase tracking-[0.14em] text-[#53657D]">{label}</p>
-      <p className="mt-2 break-words text-2xl font-black leading-tight text-[#10233F]">{value}</p>
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value}
+      </p>
     </div>
   );
 }
 
-function ActionButton({ title, description, onClick, busy = false, active = false, unavailable = false, tone = "default" }) {
+function CommandSummaryCard({
+  label,
+  value,
+  detail,
+  tone = "navy",
+  icon: Icon,
+}) {
+  return (
+    <article
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${getToneStyle(
+        tone
+      )}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
+            {label}
+          </p>
+          <p className="mt-2 text-3xl font-black leading-none text-[#10233F]">
+            {value}
+          </p>
+        </div>
+
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865] shadow-sm">
+          <Icon size={16} />
+        </span>
+      </div>
+
+      <p className="mt-3 break-words text-[10px] font-semibold leading-4 text-slate-600">
+        {detail}
+      </p>
+    </article>
+  );
+}
+
+function SmallMetric({
+  label,
+  value,
+  tone = "default",
+}) {
+  return (
+    <div
+      className={`min-w-0 rounded-[1.15rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(
+        tone
+      )}`}
+    >
+      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
+        {label}
+      </p>
+      <p className="mt-2 break-words text-2xl font-black leading-tight text-[#10233F]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ActionButton({
+  title,
+  description,
+  onClick,
+  busy = false,
+  active = false,
+  unavailable = false,
+  tone = "default",
+  icon: Icon = Play,
+}) {
   const disabled = busy || unavailable;
+
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-busy={active}
-      className={`group min-h-[142px] rounded-[1.45rem] border-2 p-5 text-left shadow-[0_10px_28px_rgba(23,36,61,0.055)] transition duration-200 ${
-        disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(23,36,61,0.11)]"
+      className={`group min-h-[10.5rem] min-w-0 rounded-[1.35rem] border-[3px] p-5 text-left shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition duration-200 ${
+        disabled
+          ? "cursor-not-allowed opacity-55"
+          : "cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(18,56,101,0.12)]"
       } ${getToneStyle(tone)}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#B84F0E]">Executable Command</p>
-          <h3 className="mt-2 break-words text-base font-black leading-5 text-[#10233F]">
-            {active ? "Processing this command..." : unavailable ? "No actions available" : title}
-          </h3>
-        </div>
-        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${
-          active ? "border-[#E9802D] bg-[#E9802D] text-white" :
-          unavailable ? "border-[#C8D5E4] bg-white text-[#667085]" :
-          "border-[#17446F]/25 bg-white/80 text-[#17446F]"
-        }`}>
-          {active ? "Running" : unavailable ? "Empty" : "Run"}
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/85 text-[#123865] shadow-sm">
+          <Icon
+            size={17}
+            className={active ? "animate-pulse" : ""}
+          />
+        </span>
+
+        <span className="shrink-0 rounded-full border-2 border-white bg-white/85 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em] text-[#123865] shadow-sm">
+          {active
+            ? "Running"
+            : unavailable
+              ? "Empty"
+              : "Protected"}
         </span>
       </div>
-      <p className="mt-3 break-words text-sm font-semibold leading-5 text-[#596A80]">{description}</p>
+
+      <p className="mt-4 text-[8px] font-black uppercase tracking-[0.12em] text-orange-700">
+        Executable Command
+      </p>
+
+      <h4 className="mt-1 break-words text-base font-black leading-5 text-[#10233F]">
+        {active
+          ? "Processing this command..."
+          : unavailable
+            ? "No actions available"
+            : title}
+      </h4>
+
+      <p className="mt-2 break-words text-xs font-semibold leading-5 text-slate-600">
+        {description}
+      </p>
     </button>
   );
 }
 
-function SectionHeader({ eyebrow, title, description }) {
+function QueueTabs({ items, active, onChange }) {
   return (
-    <div>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#B84F0E]/80">{eyebrow}</p>
-      <h3 className="mt-1 text-xl font-black text-[#17243D]">{title}</h3>
-      {description ? <p className="mt-1 text-sm leading-6 text-[#7A8392]">{description}</p> : null}
+    <div className="flex min-w-0 flex-wrap gap-2">
+      {items.map((item) => {
+        const selected = active === item;
+
+        return (
+          <button
+            key={item}
+            type="button"
+            onClick={() => onChange(item)}
+            aria-pressed={selected}
+            className={`rounded-xl border-2 px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] transition ${
+              selected
+                ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-sm"
+                : "border-[#C9D7E6] bg-white text-[#123865] hover:border-[#123865] hover:bg-[#F2F7FF]"
+            }`}
+          >
+            {formatLabel(item)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function HealthProgress({ label, value }) {
+  const clean = Math.max(
+    0,
+    Math.min(100, number(value))
+  );
+
+  return (
+    <div className="min-w-0 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-black text-[#10233F]">
+          {label}
+        </span>
+        <span className="text-sm font-black text-orange-700">
+          {clean}%
+        </span>
+      </div>
+
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+        <div
+          className="h-full rounded-full bg-[#FF5A0A]"
+          style={{ width: `${clean}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StatusMessage({
+  tone = "info",
+  icon: Icon = Sparkles,
+  children,
+}) {
+  const classes =
+    tone === "danger"
+      ? "border-red-400 bg-red-50 text-red-800"
+      : tone === "warning"
+        ? "border-amber-400 bg-amber-50 text-amber-900"
+        : "border-blue-400 bg-blue-50 text-blue-800";
+
+  return (
+    <div
+      className={`flex min-w-0 items-start gap-3 rounded-[1.35rem] border-[3px] p-4 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${classes}`}
+    >
+      <Icon size={17} className="mt-0.5 shrink-0" />
+      <span className="min-w-0 break-words">{children}</span>
+    </div>
+  );
+}
+
+function CompactNotice({ icon: Icon, title, detail }) {
+  return (
+    <div className="mt-4 flex min-w-0 items-start gap-3 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]">
+        <Icon size={15} />
+      </span>
+
+      <div className="min-w-0">
+        <p className="text-sm font-black text-[#10233F]">
+          {title}
+        </p>
+        <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+          {detail}
+        </p>
+      </div>
     </div>
   );
 }
 
 function LogRow({ log = {} }) {
   const status = normalize(log.status);
+
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
+    <article className="min-w-0 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A]">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-black text-[#17243D]">{log.student_name || log.metadata?.title || "Executive Action"}</p>
-          <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(log.action_type)} • {formatLabel(log.priority)} • {log.executed_at ? new Date(log.executed_at).toLocaleString() : "No time"}</p>
+          <p className="break-words font-black text-[#10233F]">
+            {log.student_name ||
+              log.metadata?.title ||
+              "Executive Action"}
+          </p>
+          <p className="mt-1 break-words text-xs font-semibold text-slate-500">
+            {formatLabel(log.action_type)} •{" "}
+            {formatLabel(log.priority)} •{" "}
+            {log.executed_at
+              ? new Date(
+                  log.executed_at
+                ).toLocaleString()
+              : "No time"}
+          </p>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${status === "failed" ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]" : status === "duplicate_blocked" ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]" : "border-[#E9802D]/30 bg-[#FFF1E3] text-[#B84F0E]"}`}>
-          {formatLabel(status)}
-        </span>
+
+        <StatusBadge
+          label={formatLabel(status)}
+          tone={
+            status === "failed"
+              ? "red"
+              : status === "duplicate_blocked"
+                ? "orange"
+                : "green"
+          }
+        />
       </div>
-      {log.error_message ? <p className="mt-2 text-xs leading-5 text-[#A8342F]">{log.error_message}</p> : null}
-    </div>
+
+      {log.error_message ? (
+        <p className="mt-2 break-words text-xs font-semibold leading-5 text-red-700">
+          {log.error_message}
+        </p>
+      ) : null}
+    </article>
   );
 }
 
-function StudentRow({ item = {}, mode = "critical" }) {
-  if (mode === "failed") return <LogRow log={item} />;
+function StudentRow({
+  item = {},
+  mode = "critical",
+}) {
+  if (mode === "failed") {
+    return <LogRow log={item} />;
+  }
 
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <article className="min-w-0 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A]">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-black text-[#17243D]">{getStudentName(item)}</p>
-          <p className="mt-1 text-xs text-[#7A8392]">{formatLabel(getJourneyStage(item))} • {item.executive_category || "Standard"}</p>
+          <p className="break-words font-black text-[#10233F]">
+            {getStudentName(item)}
+          </p>
+          <p className="mt-1 break-words text-xs font-semibold text-slate-500">
+            {formatLabel(getJourneyStage(item))} •{" "}
+            {item.executive_category || "Standard"}
+          </p>
         </div>
+
         <div className="flex flex-wrap gap-2">
-          <Badge label={`Risk ${number(item.risk_score)}`} tone={number(item.risk_score) >= 85 ? "red" : "default"} />
-          <Badge label={`Opp ${number(item.opportunity_score)}`} tone={number(item.opportunity_score) >= 80 ? "green" : "default"} />
+          <StatusBadge
+            label={`Risk ${number(item.risk_score)}`}
+            tone={
+              number(item.risk_score) >= 85
+                ? "red"
+                : "navy"
+            }
+          />
+          <StatusBadge
+            label={`Opp ${number(
+              item.opportunity_score
+            )}`}
+            tone={
+              number(item.opportunity_score) >= 80
+                ? "green"
+                : "navy"
+            }
+          />
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
 function IssueRow({ issue = {} }) {
   return (
-    <div className="rounded-2xl border-2 border-[#C2413B]/30 bg-[#FFF7F5] p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <article className="min-w-0 rounded-[1.15rem] border-[3px] border-red-300 bg-red-50 p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-black text-[#17243D]">{issue.title || "Workflow Issue"}</p>
-          <p className="mt-1 text-xs text-[#7A8392]">{issue.student_name || "Unknown Student"} • {formatLabel(issue.stage)} • {formatLabel(issue.issue_type)}</p>
-          <p className="mt-2 text-xs leading-5 text-[#7A8392]">{issue.recommendation || issue.description}</p>
+          <p className="break-words font-black text-[#10233F]">
+            {issue.title || "Workflow Issue"}
+          </p>
+          <p className="mt-1 break-words text-xs font-semibold text-slate-500">
+            {issue.student_name || "Unknown Student"} •{" "}
+            {formatLabel(issue.stage)} •{" "}
+            {formatLabel(issue.issue_type)}
+          </p>
+          <p className="mt-2 break-words text-xs font-semibold leading-5 text-slate-600">
+            {issue.recommendation || issue.description}
+          </p>
         </div>
+
         <div className="flex flex-wrap gap-2">
-          <Badge label={formatLabel(issue.severity)} tone={issue.severity === "critical" ? "red" : "default"} />
-          {issue.blocking ? <Badge label="Blocking" tone="red" /> : null}
+          <StatusBadge
+            label={formatLabel(issue.severity)}
+            tone={
+              issue.severity === "critical"
+                ? "red"
+                : "orange"
+            }
+          />
+          {issue.blocking ? (
+            <StatusBadge label="Blocking" tone="red" />
+          ) : null}
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
-function RecoveryRow({ title, value, detail, tone = "default" }) {
+function RecoveryRow({
+  title,
+  value,
+  detail,
+  tone = "default",
+}) {
   return (
-    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-black text-[#17243D]">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-[#7A8392]">{detail}</p>
+    <article
+      className={`min-w-0 rounded-[1.15rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(
+        tone
+      )}`}
+    >
+      <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="break-words font-black text-[#10233F]">
+            {title}
+          </p>
+          <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
+            {detail}
+          </p>
         </div>
-        <p className="text-2xl font-black text-[#17243D]">{value}</p>
+        <p className="shrink-0 text-2xl font-black text-[#10233F]">
+          {value}
+        </p>
       </div>
-    </div>
+    </article>
   );
 }
 
-function Badge({ label, tone = "default" }) {
-  return <span className={`rounded-full border px-3 py-1 text-xs font-black ${getBadgeStyle(tone)}`}>{label}</span>;
+function StatusBadge({ label, tone = "navy" }) {
+  return (
+    <span
+      className={`w-fit shrink-0 rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${getBadgeStyle(
+        tone
+      )}`}
+    >
+      {label}
+    </span>
+  );
 }
 
 function EmptyState({ text }) {
-  return <div className="rounded-2xl border border-dashed border-[#243A60]/18 bg-white p-5 text-sm text-[#8992A1]">{text}</div>;
+  return (
+    <div className="rounded-[1.15rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-5 text-sm font-semibold text-slate-500">
+      {text}
+    </div>
+  );
 }
 
 function getToneStyle(tone = "default") {
-  if (tone === "red") return "border-[#FF8F94] bg-[#FFF4F3]";
-  if (tone === "green") return "border-[#55D9AA] bg-[#EEFBF5]";
-  if (tone === "navy") return "border-[#17446F] bg-[#EEF4FA]";
-  if (tone === "orange") return "border-[#FF9A4A] bg-[#FFF5EC]";
-  return "border-[#C8D5E4] bg-[#F8FAFD]";
+  if (tone === "red") {
+    return "border-red-400 bg-red-50";
+  }
+
+  if (tone === "green") {
+    return "border-emerald-400 bg-emerald-50";
+  }
+
+  if (tone === "navy") {
+    return "border-[#123865] bg-[#F2F7FF]";
+  }
+
+  if (tone === "orange") {
+    return "border-[#FF5A0A] bg-[#FFF4E8]";
+  }
+
+  if (tone === "yellow") {
+    return "border-amber-400 bg-amber-50";
+  }
+
+  return "border-[#C9D7E6] bg-white";
 }
 
-function getBadgeStyle(tone = "default") {
-  if (tone === "red") return "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
-  if (tone === "green") return "border-[#E9802D]/30 bg-[#FFF1E3] text-[#B84F0E]";
-  return "border-[#243A60]/18 bg-white text-[#667085]";
+function getBadgeStyle(tone = "navy") {
+  if (tone === "red") {
+    return "border-red-300 bg-red-50 text-red-700";
+  }
+
+  if (tone === "green") {
+    return "border-emerald-300 bg-emerald-50 text-emerald-700";
+  }
+
+  if (tone === "orange") {
+    return "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
+  }
+
+  return "border-[#123865] bg-[#F2F7FF] text-[#123865]";
 }
 
 export default ExecutiveOperationsCenter;

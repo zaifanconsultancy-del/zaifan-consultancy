@@ -1,3 +1,4 @@
+// StudentNotificationComposer PARTNER OS EXTREME — Protected Student Communication Command
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -181,7 +182,6 @@ function StudentNotificationComposer({
       return;
     }
 
-    // Instant UI: show preview now, prepare signed security token in background.
     setPending({
       preview,
       previewToken: null,
@@ -271,7 +271,7 @@ function StudentNotificationComposer({
         <button
           type="button"
           onClick={openComposer}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[3px] border-[#123865] bg-[#123865] px-4 text-sm font-black text-white shadow-[0_8px_18px_rgba(18,56,101,0.16)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#0d2b50]"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[3px] border-[#FF5A0A] bg-[#123865] px-4 text-sm font-black text-white shadow-[0_10px_24px_rgba(18,56,101,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
         >
           <Mail size={16} />
           {buttonLabel}
@@ -279,7 +279,8 @@ function StudentNotificationComposer({
 
         {feedback ? (
           <div
-            className={`absolute right-0 top-[calc(100%+8px)] z-[1500] w-[min(360px,90vw)] rounded-xl border-2 px-3 py-2.5 text-xs font-bold leading-5 shadow-xl ${
+            role={feedbackTone === "error" ? "alert" : "status"}
+            className={`absolute right-0 top-[calc(100%+8px)] z-[1500] w-[min(380px,90vw)] rounded-[1.15rem] border-[3px] px-4 py-3 text-xs font-bold leading-5 shadow-[0_18px_45px_rgba(18,56,101,0.18)] ${
               feedbackTone === "error"
                 ? "border-red-300 bg-red-50 text-red-900"
                 : "border-emerald-300 bg-emerald-50 text-emerald-900"
@@ -291,19 +292,19 @@ function StudentNotificationComposer({
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-[1600] overflow-y-auto bg-[#10233f]/70 px-3 py-4 backdrop-blur-sm sm:px-5 sm:py-6">
+        <div className="fixed inset-0 z-[1600] overflow-y-auto bg-[#10233F]/78 px-3 py-4 backdrop-blur-md sm:px-5 sm:py-6">
           <div className="mx-auto flex min-h-full w-full max-w-2xl items-center justify-center">
             <section
               role="dialog"
               aria-modal="true"
-              className="w-full overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-[#fff8ef] shadow-[0_30px_100px_rgba(15,35,63,0.34)]"
+              className="w-full min-w-0 overflow-hidden rounded-[2rem] border-[4px] border-[#123865] bg-[#FFF8EF] shadow-[0_34px_110px_rgba(15,35,63,0.40)]"
             >
-              <header className="relative bg-[#123865] p-5 text-white sm:p-6">
-                <div className="absolute inset-x-0 top-0 h-1.5 bg-orange-500" />
+              <header className="relative border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white sm:p-6">
+                <div className="absolute inset-x-8 top-0 h-1 rounded-b-full bg-[#FF5A0A]" />
 
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10">
+                <div className="flex min-w-0 items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 shadow-inner">
                       <Send size={18} />
                     </span>
 
@@ -311,10 +312,10 @@ function StudentNotificationComposer({
                       <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-200">
                         Student 360 Communication
                       </p>
-                      <h3 className="mt-1 text-xl font-black text-white sm:text-2xl">
+                      <h3 className="mt-1 break-words text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
                         Notify Student
                       </h3>
-                      <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-white/90">
+                      <p className="mt-2 max-w-xl break-words text-sm font-semibold leading-6 text-slate-100">
                         Compose a deliberate student-facing update. Nothing is
                         sent until the protected preview is reviewed and confirmed.
                       </p>
@@ -325,7 +326,7 @@ function StudentNotificationComposer({
                     type="button"
                     onClick={() => !sending && setOpen(false)}
                     disabled={sending}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/15 disabled:opacity-50"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:opacity-50"
                     aria-label="Close composer"
                   >
                     <X size={16} />
@@ -333,7 +334,7 @@ function StudentNotificationComposer({
                 </div>
               </header>
 
-              <div className="space-y-4 p-5 sm:p-6">
+              <div className="min-w-0 space-y-4 bg-[#FFF8EF] p-5 sm:p-6">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Info
                     label="Student"
@@ -353,7 +354,7 @@ function StudentNotificationComposer({
                   <select
                     value={category}
                     onChange={(event) => resetTemplate(event.target.value)}
-                    className="mt-2 h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-black text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className="mt-2 h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                   >
                     {CATEGORY_OPTIONS.map(([value, label]) => (
                       <option key={value} value={value}>
@@ -371,7 +372,7 @@ function StudentNotificationComposer({
                     value={subject}
                     onChange={(event) => setSubject(event.target.value)}
                     maxLength={180}
-                    className="mt-2 h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-bold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className="mt-2 h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-bold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                   />
                 </label>
 
@@ -384,14 +385,14 @@ function StudentNotificationComposer({
                     onChange={(event) => setMessage(event.target.value)}
                     rows={8}
                     maxLength={5000}
-                    className="mt-2 w-full resize-y rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className="mt-2 min-w-0 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                   />
                   <div className="mt-1 text-right text-[10px] font-bold text-slate-400">
                     {message.length}/5000
                   </div>
                 </label>
 
-                <div className="flex items-start gap-3 rounded-2xl border-2 border-blue-300 bg-blue-50 p-4 text-blue-900">
+                <div className="flex min-w-0 items-start gap-3 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-4 text-blue-900 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
                   <ShieldCheck size={18} className="mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-black">
@@ -407,7 +408,8 @@ function StudentNotificationComposer({
 
                 {feedback ? (
                   <div
-                    className={`flex items-start gap-2 rounded-xl border-2 p-3 text-xs font-bold leading-5 ${
+                    role={feedbackTone === "error" ? "alert" : "status"}
+                    className={`flex min-w-0 items-start gap-2 rounded-xl border-[3px] p-3 text-xs font-bold leading-5 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${
                       feedbackTone === "error"
                         ? "border-red-300 bg-red-50 text-red-900"
                         : "border-emerald-300 bg-emerald-50 text-emerald-900"
@@ -422,12 +424,12 @@ function StudentNotificationComposer({
                   </div>
                 ) : null}
 
-                <div className="grid gap-2 border-t border-orange-200 pt-4 sm:grid-cols-2">
+                <div className="grid min-w-0 gap-2 border-t-[3px] border-[#FFB37A] pt-4 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
                     disabled={sending}
-                    className="h-12 rounded-xl border-2 border-slate-300 bg-white text-sm font-black text-[#10233f] hover:border-orange-300 hover:bg-orange-50 disabled:opacity-50"
+                    className="h-12 rounded-xl border-2 border-[#C9D7E6] bg-white text-sm font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -441,7 +443,7 @@ function StudentNotificationComposer({
                       !subject.trim() ||
                       !message.trim()
                     }
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 text-sm font-black text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-45"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] text-sm font-black text-white shadow-[0_10px_24px_rgba(255,90,10,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     <ShieldCheck size={16} />
                     Review Email
@@ -466,10 +468,10 @@ function StudentNotificationComposer({
 function Info({ label, value, danger = false }) {
   return (
     <div
-      className={`rounded-2xl border-2 p-4 ${
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${
         danger
           ? "border-red-300 bg-red-50"
-          : "border-slate-300 bg-white"
+          : "border-[#C9D7E6] bg-white"
       }`}
     >
       <p className="text-[10px] font-black uppercase tracking-[0.13em] text-slate-500">
@@ -477,7 +479,7 @@ function Info({ label, value, danger = false }) {
       </p>
       <p
         className={`mt-2 break-words text-sm font-black leading-6 ${
-          danger ? "text-red-800" : "text-[#10233f]"
+          danger ? "text-red-800" : "text-[#10233F]"
         }`}
       >
         {value || "—"}

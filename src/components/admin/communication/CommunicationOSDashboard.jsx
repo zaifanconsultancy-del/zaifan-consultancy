@@ -1,4 +1,4 @@
-// CommunicationOSDashboard V3 EXTREME — Zaifan Communication OS
+// CommunicationOSDashboard V5 PARTNER OS NO-OVERFLOW — Zaifan Communication OS
 // Full replacement for:
 // src/components/admin/communication/CommunicationOSDashboard.jsx
 //
@@ -9,6 +9,8 @@
 // - communication telemetry remains unavailable until explicitly supplied
 // - campaign creation only appears when a real handler exists
 // - unified Zaifan navy/orange/cream Admin OS visual language
+// - responsive communication portfolio rows with fully contained metadata boxes
+// - Owner, Date, Priority, Channel and Type never extend beyond the record card
 //
 // Supported props:
 // compact?: boolean
@@ -37,40 +39,24 @@
 import React, { useMemo, useState } from "react";
 import {
   Activity,
-  BarChart3,
   CalendarDays,
   CheckCircle2,
   Clock3,
   Database,
-  FileText,
-  Info,
   Mail,
   MessageCircle,
   Phone,
   Plus,
+  RefreshCw,
   Search,
   Send,
   ShieldCheck,
-  Sparkles,
   Users,
   Video,
   X,
 } from "lucide-react";
 
-import EmailCenter from "./EmailCenter";
-import WhatsAppCenter from "./WhatsAppCenter";
-import CallCenter from "./CallCenter";
-import MeetingCenter from "./MeetingCenter";
-import CommunicationAnalytics from "./CommunicationAnalytics";
 
-const TABS = [
-  { id: "overview", label: "Overview", icon: Sparkles },
-  { id: "email", label: "Email", icon: Mail },
-  { id: "whatsapp", label: "WhatsApp", icon: MessageCircle },
-  { id: "calls", label: "Calls", icon: Phone },
-  { id: "meetings", label: "Meetings", icon: Video },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-];
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -275,15 +261,406 @@ function deriveChannelRows({
   ];
 }
 
+function statusTone(status = "") {
+  const value = normalize(status);
+
+  if (
+    ["sent", "delivered", "completed", "resolved", "active", "confirmed"].some(
+      (token) => value.includes(token)
+    )
+  ) {
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  }
+
+  if (
+    ["failed", "rejected", "cancelled", "canceled", "blocked", "overdue"].some(
+      (token) => value.includes(token)
+    )
+  ) {
+    return "border-[#FB7185] bg-[#FFF4F4] text-red-700";
+  }
+
+  if (
+    ["pending", "open", "scheduled", "queued", "review"].some((token) =>
+      value.includes(token)
+    )
+  ) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  return "border-[#60A5FA] bg-[#F2F7FF] text-blue-700";
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone = "blue",
+  icon: Icon,
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#123865] bg-[#123865]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+    orange: "border-[#F97316] bg-[#FFF4EA]",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <article
+      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
+        </div>
+
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+            dark
+              ? "border-white/20 bg-white/10 text-orange-200"
+              : "border-[#123865]/15 bg-white text-[#123865]"
+          }`}
+        >
+          <Icon size={16} />
+        </div>
+      </div>
+
+      <p
+        className={`mt-2 text-xs font-semibold leading-5 ${
+          dark ? "text-slate-200" : "text-slate-600"
+        }`}
+      >
+        {helper}
+      </p>
+
+      {badge ? (
+        <span
+          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+            dark
+              ? "border-white/20 bg-white/10 text-white"
+              : "border-[#C9D7E6] bg-white text-slate-600"
+          }`}
+        >
+          {badge}
+        </span>
+      ) : null}
+    </article>
+  );
+}
+
+function buildCommunicationPortfolio({
+  inquiries,
+  appointments,
+  reminders,
+  updates,
+  campaigns,
+}) {
+  const inquiryRows = inquiries.map((record, index) => ({
+    id: record.id || `inquiry-${index}`,
+    type: "Lead",
+    title: getRecordName(record),
+    channel:
+      getRecordEmail(record) && getRecordPhone(record)
+        ? "Email + Phone"
+        : getRecordEmail(record)
+          ? "Email"
+          : getRecordPhone(record)
+            ? "Phone"
+            : "Not contact-ready",
+    status: record.status || record.stage || "Open",
+    priority: record.priority || record.lead_priority || "Normal",
+    owner:
+      record.owner ||
+      record.assigned_to ||
+      record.counselor_name ||
+      record.assigned_counselor ||
+      "Unassigned",
+    date: getRecordDate(record),
+    detail:
+      record.message ||
+      record.notes ||
+      record.country_interest ||
+      record.service_interest ||
+      "CRM inquiry record",
+    source: "Inquiries",
+    record,
+  }));
+
+  const appointmentRows = appointments.map((record, index) => ({
+    id: record.id || `appointment-${index}`,
+    type: "Meeting",
+    title: getRecordName(record),
+    channel: record.consultation_type || "Appointment",
+    status: record.status || record.appointment_stage || "Scheduled",
+    priority: record.priority || "Normal",
+    owner:
+      record.owner ||
+      record.assigned_to ||
+      record.counselor_name ||
+      "Unassigned",
+    date: getRecordDate(record),
+    detail:
+      record.notes ||
+      record.message ||
+      `${record.appointment_date || "Date not recorded"}${
+        record.appointment_time ? ` · ${record.appointment_time}` : ""
+      }`,
+    source: "Appointments",
+    record,
+  }));
+
+  const reminderRows = reminders.map((record, index) => ({
+    id: record.id || `reminder-${index}`,
+    type: "Follow-Up",
+    title:
+      record.title ||
+      record.subject ||
+      getRecordName(record) ||
+      "Follow-up reminder",
+    channel: record.channel || record.method || "Follow-up",
+    status: record.status || "Open",
+    priority: record.priority || "Normal",
+    owner:
+      record.owner ||
+      record.assigned_to ||
+      record.counselor_name ||
+      "Unassigned",
+    date: getRecordDate(record),
+    detail: record.notes || record.detail || "Follow-up reminder",
+    source: "Follow-up reminders",
+    record,
+  }));
+
+  const updateRows = updates.map((record, index) => ({
+    id: record.id || `update-${index}`,
+    type: "Update",
+    title: record.title || "Communication update",
+    channel: record.channel || "System",
+    status: record.status || "Recorded",
+    priority: record.priority || "Normal",
+    owner: record.owner || record.team || "System",
+    date: record.created_at || record.updated_at || record.date || null,
+    detail:
+      record.detail ||
+      record.description ||
+      record.impact ||
+      "Communication event",
+    source: record.source || "Communication events",
+    record,
+  }));
+
+  const campaignRows = campaigns.map((record, index) => ({
+    id: record.id || `campaign-${index}`,
+    type: "Campaign",
+    title: record.title || record.name || "Campaign",
+    channel: record.channel || "Multi-channel",
+    status: record.status || "Unknown",
+    priority: record.priority || "Normal",
+    owner: record.owner || record.team || "Unassigned",
+    date:
+      record.created_at ||
+      record.updated_at ||
+      record.scheduled_at ||
+      record.date ||
+      null,
+    detail:
+      record.description ||
+      record.detail ||
+      "Connected communication campaign",
+    source: record.source || "Campaigns",
+    record,
+  }));
+
+  return [
+    ...inquiryRows,
+    ...appointmentRows,
+    ...reminderRows,
+    ...updateRows,
+    ...campaignRows,
+  ].sort((a, b) => {
+    const aTime = a.date ? new Date(a.date).getTime() : 0;
+    const bTime = b.date ? new Date(b.date).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
+function formatDate(value) {
+  if (!value) return "Not recorded";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not recorded";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function CommunicationRow({ item }) {
+  const Icon =
+    item.type === "Lead"
+      ? Users
+      : item.type === "Meeting"
+        ? Video
+        : item.type === "Follow-Up"
+          ? Clock3
+          : item.type === "Campaign"
+            ? Send
+            : Activity;
+
+  return (
+    <article className="rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#F97316]">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(15rem,1.45fr)_repeat(5,minmax(0,1fr))] xl:items-stretch">
+        <div className="min-w-0">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-[#F2F7FF] text-[#123865]">
+              <Icon size={17} />
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="min-w-0 [overflow-wrap:anywhere] font-black text-[#10233F]">
+                  {item.title}
+                </p>
+
+                <span
+                  className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
+                    item.status
+                  )}`}
+                >
+                  {item.status}
+                </span>
+              </div>
+
+              <p className="mt-1 line-clamp-2 text-[11px] font-semibold leading-4 text-slate-500">
+                {item.detail}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Type
+          </p>
+          <p className="mt-1 truncate text-xs font-black text-[#10233F]" title={String(item.type || "")}>{item.type}</p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Channel
+          </p>
+          <p
+            className="mt-1 truncate text-xs font-black text-[#10233F]"
+            title={String(item.channel || "")}
+          >
+            {item.channel}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Priority
+          </p>
+          <p
+            className="mt-1 truncate text-xs font-black text-[#10233F]"
+            title={String(item.priority || "")}
+          >
+            {item.priority}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Date
+          </p>
+          <p
+            className="mt-1 truncate text-xs font-black text-[#10233F]"
+            title={formatDate(item.date)}
+          >
+            {formatDate(item.date)}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Owner
+          </p>
+          <p
+            className="mt-1 truncate text-xs font-black text-[#10233F]"
+            title={String(item.owner || "")}
+          >
+            {item.owner}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function IntegrityCard({ icon: Icon, eyebrow, title, helper, tone = "blue" }) {
+  const tones = {
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+  };
+
+  return (
+    <div className={`rounded-[1.35rem] border-[3px] p-4 ${tones[tone]}`}>
+      <div className="flex items-start gap-3">
+        <Icon
+          size={17}
+          className={`mt-0.5 shrink-0 ${
+            tone === "green"
+              ? "text-emerald-700"
+              : tone === "amber"
+                ? "text-amber-700"
+                : "text-blue-700"
+          }`}
+        />
+        <div>
+          <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+            {eyebrow}
+          </p>
+          <p className="mt-1 font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {helper}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CommunicationOSDashboard({
   compact = false,
   adminProfile = null,
-
   inquiries = [],
   appointments = [],
   followUpReminders = [],
   communicationData = {},
-
   onCreateCampaign,
   onOpenRecord,
   onOpenWhatsApp,
@@ -291,14 +668,24 @@ export default function CommunicationOSDashboard({
   onOpenCall,
   onOpenMeeting,
 }) {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [recordType, setRecordType] = useState("All");
 
   const safeInquiries = useMemo(() => safeArray(inquiries), [inquiries]);
   const safeAppointments = useMemo(() => safeArray(appointments), [appointments]);
   const safeReminders = useMemo(
     () => safeArray(followUpReminders),
     [followUpReminders]
+  );
+
+  const recentUpdates = useMemo(
+    () => safeArray(communicationData?.recentUpdates),
+    [communicationData?.recentUpdates]
+  );
+
+  const campaigns = useMemo(
+    () => safeArray(communicationData?.campaigns),
+    [communicationData?.campaigns]
   );
 
   const channelRows = useMemo(
@@ -312,32 +699,18 @@ export default function CommunicationOSDashboard({
     [safeInquiries, safeAppointments, safeReminders, communicationData]
   );
 
-  const recentUpdates = useMemo(
-    () => safeArray(communicationData?.recentUpdates),
-    [communicationData?.recentUpdates]
-  );
-
-  const campaigns = useMemo(
-    () => safeArray(communicationData?.campaigns),
-    [communicationData?.campaigns]
-  );
-
   const totals = useMemo(() => {
     const totalCrmRecords = safeInquiries.length + safeAppointments.length;
     const openCrmRecords = [...safeInquiries, ...safeAppointments].filter(
       isOpenLike
     ).length;
-
     const urgentRecords = [...safeInquiries, ...safeAppointments].filter(
       isPriority
     ).length;
-
     const dueFollowUps = safeReminders.filter(isDueReminder).length;
-
     const emailReady = safeInquiries.filter((record) =>
       getRecordEmail(record)
     ).length;
-
     const phoneReady = safeInquiries.filter((record) =>
       getRecordPhone(record)
     ).length;
@@ -352,72 +725,55 @@ export default function CommunicationOSDashboard({
     };
   }, [safeInquiries, safeAppointments, safeReminders]);
 
-  const queryText = normalize(query);
-
-  const filteredChannelRows = useMemo(
+  const portfolio = useMemo(
     () =>
-      channelRows.filter((row) =>
-        normalize(
-          [
-            row.channel,
-            row.owner,
-            row.risk,
-            row.source,
-            row.volume,
-            row.open,
-          ]
-            .filter((value) => hasValue(value))
-            .join(" ")
-        ).includes(queryText)
-      ),
-    [channelRows, queryText]
+      buildCommunicationPortfolio({
+        inquiries: safeInquiries,
+        appointments: safeAppointments,
+        reminders: safeReminders,
+        updates: recentUpdates,
+        campaigns,
+      }),
+    [safeInquiries, safeAppointments, safeReminders, recentUpdates, campaigns]
   );
 
-  const filteredUpdates = useMemo(
-    () =>
-      recentUpdates.filter((item) =>
-        normalize(
-          [
-            item.title,
-            item.channel,
-            item.status,
-            item.impact,
-            item.detail,
-            item.source,
-          ]
-            .filter(Boolean)
-            .join(" ")
-        ).includes(queryText)
-      ),
-    [recentUpdates, queryText]
-  );
+  const filteredPortfolio = useMemo(() => {
+    const needle = normalize(search);
 
-  const updatedAt =
-    communicationData?.updatedAt ||
-    communicationData?.generatedAt ||
-    communicationData?.lastUpdated ||
-    null;
+    return portfolio.filter((item) => {
+      if (recordType !== "All" && item.type !== recordType) return false;
+      if (!needle) return true;
 
+      return [
+        item.title,
+        item.channel,
+        item.status,
+        item.priority,
+        item.owner,
+        item.source,
+        item.type,
+      ]
+        .map(normalize)
+        .join(" ")
+        .includes(needle);
+    });
+  }, [portfolio, search, recordType]);
+
+  const filtersActive = Boolean(search.trim()) || recordType !== "All";
   const hasCreateCampaign = typeof onCreateCampaign === "function";
+  const hasHubActions =
+    hasCreateCampaign || typeof communicationData?.onRefresh === "function";
 
-  const childProps = {
-    compact,
-    inquiries: safeInquiries,
-    appointments: safeAppointments,
-    followUpReminders: safeReminders,
-    communicationData,
-    adminProfile,
-    onOpenRecord,
-    onOpenWhatsApp,
-    onOpenEmail,
-    onOpenCall,
-    onOpenMeeting,
-  };
+
+  function clearFilters() {
+    setSearch("");
+    setRecordType("All");
+  }
 
   if (compact) {
     return (
       <section className="overflow-hidden rounded-[1.5rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-        <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white">
+        <div className="flex items-center justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-3 text-white">
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.13em] text-orange-300">
               Zaifan Enterprise OS
@@ -426,26 +782,23 @@ export default function CommunicationOSDashboard({
               Communication OS
             </h2>
           </div>
-
           <MessageCircle size={18} />
         </div>
 
         <div className="grid gap-3 p-4 sm:grid-cols-2">
-          <CompactMetric
+          <MetricCard
             label="CRM Records"
             value={totals.totalCrmRecords}
+            helper="Inquiry and appointment records."
+            tone="navy"
+            icon={Users}
           />
-          <CompactMetric
+          <MetricCard
             label="Follow-Ups"
             value={totals.dueFollowUps}
-          />
-          <CompactMetric
-            label="Email Ready"
-            value={totals.emailReady}
-          />
-          <CompactMetric
-            label="Phone Ready"
-            value={totals.phoneReady}
+            helper="Open communication follow-ups."
+            tone="orange"
+            icon={Clock3}
           />
         </div>
       </section>
@@ -453,598 +806,240 @@ export default function CommunicationOSDashboard({
   }
 
   return (
-    <section className="space-y-4 p-3 sm:space-y-5 sm:p-5">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_18px_48px_rgba(23,36,61,0.09)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <HeaderChip icon={MessageCircle} label="Communication OS" />
-              <HeaderChip icon={ShieldCheck} label="Real CRM Context" />
-              <HeaderChip
-                icon={Database}
-                label={`${totals.totalCrmRecords} CRM records`}
-              />
-            </div>
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+                <MessageCircle size={12} />
+                Communication OS
+              </span>
 
-            <div className="mt-4 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-              <div className="max-w-4xl">
-                <h1 className="text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
-                  Communication Command Center
-                </h1>
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Relationship communication
+              </span>
 
-                <p className="mt-2 text-sm font-semibold leading-6 text-white/90 sm:text-[15px]">
-                  Coordinate email, WhatsApp, callbacks, appointments and
-                  follow-up actions from real Zaifan CRM records. Channel
-                  telemetry remains unavailable until an actual communication
-                  integration supplies it.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[430px]">
-                <DarkMetric label="CRM Records" value={totals.totalCrmRecords} />
-                <DarkMetric label="Open" value={totals.openCrmRecords} />
-                <DarkMetric label="Urgent" value={totals.urgentRecords} />
-                <DarkMetric label="Follow-Ups" value={totals.dueFollowUps} />
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                  Communication readiness
-                </p>
-
-                <p className="mt-3 text-4xl font-black leading-none text-white">
-                  {totals.emailReady + totals.phoneReady}
-                </p>
-
-                <p className="mt-2 text-xs font-black uppercase tracking-[0.09em] text-white">
-                  contact-ready records
-                </p>
-              </div>
-
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10">
-                <Activity size={22} />
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Evidence first
               </span>
             </div>
 
-            <div className="mt-5 rounded-2xl border-2 border-white/25 bg-white/10 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[9px] font-black uppercase tracking-[0.09em] text-white">
-                  Data freshness
-                </span>
-                <Clock3 size={13} />
-              </div>
+            <h1 className="mt-3 text-3xl font-black text-white">
+              Communication Command Center
+            </h1>
 
-              <p className="mt-2 text-xs font-black text-white">
-                {formatTimestamp(updatedAt)}
-              </p>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Email, WhatsApp, callbacks, appointments, campaigns and follow-up
+              activity from real Zaifan CRM records. Missing channel telemetry
+              remains unavailable instead of becoming fabricated health or
+              response metrics.
+            </p>
+          </div>
 
-              <p className="mt-1 text-[10px] font-semibold leading-4 text-white/85">
-                CRM availability can be derived locally. Response times,
-                delivery rates and channel health require real telemetry.
-              </p>
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Current Workspace
+            </p>
+
+            <p className="mt-2 text-2xl font-black">Communication Overview</p>
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+              {adminProfile?.email
+                ? `Admin communication view for ${adminProfile.email}`
+                : "Admin communication operations workspace"}
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {totals.totalCrmRecords} CRM records
+              </span>
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {totals.dueFollowUps} follow-ups
+              </span>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EE] p-3">
-        <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)_auto]">
-          <div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:pb-0">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const active = activeTab === tab.id;
+      {hasHubActions ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {hasCreateCampaign ? (
+            <button
+              type="button"
+              onClick={onCreateCampaign}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#F97316] bg-[#FF5A0A] px-4 text-xs font-black text-white transition hover:bg-[#E94F00]"
+            >
+              <Plus size={13} />
+              Create Campaign
+            </button>
+          ) : null}
 
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  aria-pressed={active}
-                  className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl border-2 px-4 text-[10px] font-black uppercase tracking-[0.06em] transition ${
-                    active
-                      ? "border-[#123865] bg-[#123865] text-white"
-                      : "border-slate-300 bg-white text-[#10233F] hover:border-orange-400 hover:bg-orange-50"
-                  }`}
-                >
-                  <Icon size={14} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="relative">
-            <Search
-              size={17}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-            />
-
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search channels, updates, sources or owners..."
-              aria-label="Search Communication OS"
-              className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-            />
-
-            {query ? (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                aria-label="Clear Communication OS search"
-                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#123865]"
-              >
-                <X size={16} />
-              </button>
-            ) : null}
-          </div>
-
-          <button
-            type="button"
-            onClick={onCreateCampaign}
-            disabled={!hasCreateCampaign}
-            title={
-              hasCreateCampaign
-                ? "Create communication campaign"
-                : "Campaign creation is not connected"
-            }
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
-          >
-            <Plus size={15} />
-            {hasCreateCampaign ? "Create Campaign" : "Campaigns Not Connected"}
-          </button>
+          {typeof communicationData?.onRefresh === "function" ? (
+            <button
+              type="button"
+              onClick={communicationData.onRefresh}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white transition hover:bg-[#245886]"
+            >
+              <RefreshCw size={13} />
+              Refresh
+            </button>
+          ) : null}
         </div>
-      </div>
-
-      {activeTab === "overview" ? (
-        <OverviewWorkspace
-          totals={totals}
-          channelRows={filteredChannelRows}
-          updates={filteredUpdates}
-          allUpdates={recentUpdates}
-          campaigns={campaigns}
-          query={queryText}
-          onClear={() => setQuery("")}
-          communicationData={communicationData}
-        />
       ) : null}
 
-      {activeTab === "email" ? <EmailCenter {...childProps} /> : null}
-      {activeTab === "whatsapp" ? <WhatsAppCenter {...childProps} /> : null}
-      {activeTab === "calls" ? <CallCenter {...childProps} /> : null}
-      {activeTab === "meetings" ? <MeetingCenter {...childProps} /> : null}
-      {activeTab === "analytics" ? (
-        <CommunicationAnalytics {...childProps} />
-      ) : null}
-
-      <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck
-              size={18}
-              className="mt-0.5 shrink-0 text-[#123865]"
+      <>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              label="CRM Records"
+              value={totals.totalCrmRecords}
+              helper={`${totals.openCrmRecords} currently remain open across inquiries and appointments.`}
+              tone="navy"
+              icon={Users}
+              badge="CRM context"
             />
-            <div>
-              <p className="font-black text-[#10233F]">
-                Communication integrity
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                This anchor no longer invents conversation volumes, response
-                times, channel health, campaign impact or automation coverage.
-              </p>
-            </div>
-          </div>
-        </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
-          <div className="flex items-start gap-3">
-            <Database
-              size={18}
-              className="mt-0.5 shrink-0 text-orange-700"
+            <MetricCard
+              label="Open Follow-Ups"
+              value={totals.dueFollowUps}
+              helper="Reminders not marked completed or cancelled."
+              tone={totals.dueFollowUps ? "amber" : "green"}
+              icon={Clock3}
+              badge="Action queue"
             />
-            <div>
-              <p className="font-black text-[#10233F]">
-                Real-data anchor
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                Child modules now receive CRM records, appointments and
-                follow-ups through one shared Communication OS contract.
-              </p>
-            </div>
+
+            <MetricCard
+              label="Email Ready"
+              value={totals.emailReady}
+              helper="Inquiry records with a usable email address."
+              tone="blue"
+              icon={Mail}
+              badge="Contactability"
+            />
+
+            <MetricCard
+              label="Phone Ready"
+              value={totals.phoneReady}
+              helper="Inquiry records with a phone or WhatsApp-capable contact."
+              tone="green"
+              icon={Phone}
+              badge="Contactability"
+            />
           </div>
-        </div>
-      </footer>
-    </section>
-  );
-}
 
-function OverviewWorkspace({
-  totals,
-  channelRows,
-  updates,
-  allUpdates,
-  campaigns,
-  query,
-  onClear,
-  communicationData,
-}) {
-  const telemetryConnected =
-    safeArray(communicationData?.channelMetrics).length > 0;
-
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={Users}
-          label="CRM Records"
-          value={formatCount(totals.totalCrmRecords)}
-          detail="Current inquiry + appointment records available to Communication OS."
-          tone="navy"
-        />
-        <MetricCard
-          icon={Clock3}
-          label="Open Follow-Ups"
-          value={formatCount(totals.dueFollowUps)}
-          detail="Follow-up reminders not marked completed or cancelled."
-          tone="orange"
-        />
-        <MetricCard
-          icon={Mail}
-          label="Email Ready"
-          value={formatCount(totals.emailReady)}
-          detail="Inquiry records with an email address available."
-          tone="blue"
-        />
-        <MetricCard
-          icon={Phone}
-          label="Phone Ready"
-          value={formatCount(totals.phoneReady)}
-          detail="Inquiry records with a phone/WhatsApp-capable contact value."
-          tone="green"
-        />
-      </div>
-
-      {!telemetryConnected ? (
-        <InlineNotice
-          icon={Info}
-          title="Channel telemetry is not connected yet"
-          detail="Communication OS can use real CRM contact availability today, but response time, delivery rate, health score and conversation volume remain unavailable until a channel integration supplies them."
-        />
-      ) : null}
-
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-          <SectionHeader
-            eyebrow="Channel Command"
-            title="Communication Readiness"
-            description="Real CRM availability plus supplied telemetry where it exists."
-            icon={Activity}
-            count={channelRows.length}
-          />
-
-          <div className="p-4 sm:p-5">
-            {channelRows.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-sm">
-                  <thead>
-                    <tr>
-                      {[
-                        "Channel",
-                        "Available / Volume",
-                        "Open",
-                        "Response",
-                        "Owner",
-                        "Risk",
-                        "Health",
-                        "Source",
-                      ].map((heading) => (
-                        <th
-                          key={heading}
-                          className="border-b-2 border-slate-300 bg-[#F7F1E8] px-3 py-3 text-[9px] font-black uppercase tracking-[0.08em] text-slate-600"
-                        >
-                          {heading}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {channelRows.map((row) => (
-                      <tr key={row.id}>
-                        <td className="border-b border-slate-200 px-3 py-3 font-black text-[#10233F]">
-                          {row.channel}
-                        </td>
-                        <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
-                          {formatCount(row.volume)}
-                        </td>
-                        <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
-                          {formatCount(row.open)}
-                        </td>
-                        <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
-                          {hasValue(row.response) ? row.response : "—"}
-                        </td>
-                        <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
-                          {row.owner || "—"}
-                        </td>
-                        <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
-                          {row.risk || "—"}
-                        </td>
-                        <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
-                          {hasValue(row.health) ? `${safeNumber(row.health)}%` : "—"}
-                        </td>
-                        <td className="border-b border-slate-200 px-3 py-3 text-[10px] font-semibold text-slate-500">
-                          {row.source || "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+            <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                  Communication Command
+                </p>
+                <h2 className="mt-1 text-xl font-black text-[#10233F]">
+                  Relationship communication portfolio
+                </h2>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  Search and review real leads, meetings, follow-ups, updates and
+                  campaigns supplied to Communication OS.
+                </p>
               </div>
-            ) : (
-              <EmptyState
-                title="No communication channels match this search"
-                text="Try another search term."
-                onClear={onClear}
-              />
-            )}
-          </div>
-        </section>
 
-        <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
-          <SectionHeader
-            eyebrow="System Activity"
-            title="Recent Communication Updates"
-            description="Only supplied communication events are displayed."
-            icon={Send}
-            count={updates.length}
-          />
+              <div className="grid gap-2 sm:grid-cols-[minmax(14rem,1fr)_10rem_auto]">
+                <label className="relative block">
+                  <Search
+                    size={15}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search communication..."
+                    className="min-h-10 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-xs font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#F97316]"
+                  />
+                </label>
 
-          <div className="p-4">
-            {!allUpdates.length ? (
-              <EmptyState
-                title="No communication event feed connected"
-                text="The old fake campaign updates have been removed. Supply communicationData.recentUpdates when real communication events are logged."
-              />
-            ) : updates.length ? (
-              <div className="space-y-3">
-                {updates.map((item, index) => (
-                  <UpdateCard
-                    key={item.id || item.title || index}
+                <select
+                  value={recordType}
+                  onChange={(event) => setRecordType(event.target.value)}
+                  className="min-h-10 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none focus:border-[#F97316]"
+                >
+                  <option>All</option>
+                  <option>Lead</option>
+                  <option>Meeting</option>
+                  <option>Follow-Up</option>
+                  <option>Update</option>
+                  <option>Campaign</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  disabled={!filtersActive}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-slate-700 disabled:opacity-40"
+                >
+                  <X size={13} />
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {filteredPortfolio.length ? (
+                filteredPortfolio.map((item) => (
+                  <CommunicationRow
+                    key={`${item.type}-${item.id}`}
                     item={item}
                   />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No updates match this search"
-                text="Try another search term."
-                onClear={query ? onClear : undefined}
-              />
-            )}
-          </div>
-        </section>
-      </div>
-
-      <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-        <SectionHeader
-          eyebrow="Campaign Layer"
-          title="Connected Campaigns"
-          description="Campaigns appear only when a real campaign source supplies them."
-          icon={FileText}
-          count={campaigns.length}
-        />
-
-        <div className="p-4">
-          {campaigns.length ? (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {campaigns.map((item, index) => (
-                <CampaignCard
-                  key={item.id || item.title || index}
-                  item={item}
-                />
-              ))}
+                ))
+              ) : (
+                <div className="rounded-[1.4rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-8 text-center">
+                  <MessageCircle
+                    size={24}
+                    className="mx-auto text-orange-700"
+                  />
+                  <p className="mt-3 font-black text-[#10233F]">
+                    {portfolio.length
+                      ? "No communication records match these filters."
+                      : "No real communication records yet."}
+                  </p>
+                  <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                    {portfolio.length
+                      ? "Clear or change the communication filters."
+                      : "Connect genuine CRM, appointment, follow-up, event or campaign records before Communication OS reports operational activity."}
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
-            <EmptyState
-              title="No communication campaigns connected"
-              text="This workspace does not create placeholder campaigns or fake campaign impact."
+          </section>
+
+          <div className="grid gap-3 lg:grid-cols-3">
+            <IntegrityCard
+              icon={ShieldCheck}
+              eyebrow="Communication Integrity"
+              title="No fake channel health"
+              helper="Response times, delivery rates and channel-health percentages remain unavailable until real telemetry supplies them."
+              tone="green"
             />
-          )}
-        </div>
-      </section>
+
+            <IntegrityCard
+              icon={Database}
+              eyebrow="Data Boundary"
+              title={`${channelRows.length} channel source${
+                channelRows.length === 1 ? "" : "s"
+              } visible`}
+              helper="CRM contactability is derived from real records; channel telemetry is shown only when explicitly supplied."
+              tone="blue"
+            />
+
+            <IntegrityCard
+              icon={CheckCircle2}
+              eyebrow="Action Boundary"
+              title={`${totals.urgentRecords} urgent record${
+                totals.urgentRecords === 1 ? "" : "s"
+              }`}
+              helper="Priority pressure comes only from explicit CRM priority values, not invented campaign urgency."
+              tone={totals.urgentRecords ? "amber" : "green"}
+            />
+          </div>
+      </>
     </div>
   );
-}
-
-function HeaderChip({ icon: Icon, label }) {
-  return (
-    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-white">
-      <Icon size={11} className="shrink-0" />
-      <span className="truncate">{label}</span>
-    </span>
-  );
-}
-
-function DarkMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {formatCount(value)}
-      </p>
-    </div>
-  );
-}
-
-function CompactMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
-      <p className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-[#10233F]">
-        {formatCount(value)}
-      </p>
-    </div>
-  );
-}
-
-function MetricCard({ icon: Icon, label, value, detail, tone }) {
-  return (
-    <article className={`rounded-[1.3rem] border-[3px] p-4 ${toneClass(tone)}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-        </div>
-
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70 text-[#123865]">
-          <Icon size={17} />
-        </span>
-      </div>
-
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-    </article>
-  );
-}
-
-function SectionHeader({ eyebrow, title, description, icon: Icon, count }) {
-  return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white">
-      <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
-          {eyebrow}
-        </p>
-        <h2 className="mt-1 text-lg font-black text-white">{title}</h2>
-        <p className="mt-1 text-xs font-semibold leading-5 text-white/80">
-          {description}
-        </p>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2">
-        <span className="rounded-lg border-2 border-white/20 bg-white/10 px-2.5 py-1 text-xs font-black text-white">
-          {count}
-        </span>
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10">
-          <Icon size={17} />
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function InlineNotice({ icon: Icon, title, detail }) {
-  return (
-    <div className="rounded-[1.25rem] border-[3px] border-blue-300 bg-blue-50 p-4">
-      <div className="flex items-start gap-3">
-        <Icon size={18} className="mt-0.5 shrink-0 text-blue-700" />
-        <div>
-          <p className="font-black text-[#10233F]">{title}</p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-            {detail}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function UpdateCard({ item }) {
-  return (
-    <article className="rounded-xl border-2 border-orange-300 bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-black text-[#10233F]">
-            {item.title || "Communication update"}
-          </p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-            {item.detail || item.description || item.impact || "No detail supplied."}
-          </p>
-        </div>
-
-        {item.status ? (
-          <span className="shrink-0 rounded-lg border-2 border-slate-300 bg-slate-50 px-2.5 py-1 text-[8px] font-black uppercase text-slate-600">
-            {item.status}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {item.channel ? <MetaChip label={`Channel: ${item.channel}`} /> : null}
-        {item.source ? <MetaChip label={`Source: ${item.source}`} /> : null}
-      </div>
-    </article>
-  );
-}
-
-function CampaignCard({ item }) {
-  return (
-    <article className="rounded-xl border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-black text-[#10233F]">
-            {item.title || item.name || "Campaign"}
-          </p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-            {item.description || item.detail || "No campaign description supplied."}
-          </p>
-        </div>
-
-        <Send size={17} className="shrink-0 text-[#123865]" />
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {item.status ? <MetaChip label={`Status: ${item.status}`} /> : null}
-        {item.channel ? <MetaChip label={`Channel: ${item.channel}`} /> : null}
-        {item.source ? <MetaChip label={`Source: ${item.source}`} /> : null}
-      </div>
-    </article>
-  );
-}
-
-function MetaChip({ label }) {
-  return (
-    <span className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[8px] font-black text-slate-600">
-      {label}
-    </span>
-  );
-}
-
-function EmptyState({ title, text, onClear }) {
-  return (
-    <div className="rounded-[1.25rem] border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-      <Info size={20} className="mx-auto text-orange-600" />
-      <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
-      <p className="mx-auto mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600">
-        {text}
-      </p>
-
-      {onClear ? (
-        <button
-          type="button"
-          onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
-        >
-          Clear search
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
-function toneClass(tone) {
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
-  if (tone === "green") return "border-emerald-400 bg-emerald-50";
-  if (tone === "blue") return "border-blue-400 bg-blue-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
 }

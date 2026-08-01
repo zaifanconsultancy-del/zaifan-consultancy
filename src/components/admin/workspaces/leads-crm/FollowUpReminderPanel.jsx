@@ -809,7 +809,7 @@ function FollowUpReminderPanel({
         "closed",
       ].includes(normalized)
     ) {
-      return "border-orange-300 bg-orange-50 text-orange-800";
+      return "border-emerald-300 bg-emerald-50 text-emerald-800";
     }
 
     if (
@@ -858,11 +858,11 @@ function FollowUpReminderPanel({
   ];
 
   return (
-    <section className="space-y-5">
-      <div className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#FFFDF8] shadow-[0_16px_42px_rgba(15,35,63,0.07)]">
-        <div className="grid xl:grid-cols-[1.3fr_0.7fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-6">
-            <div className="flex flex-wrap items-center gap-2">
+    <section className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <div className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.28fr)_minmax(20rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <HeaderChip
                 icon={CalendarClock}
                 label="Follow-Up Operations"
@@ -874,11 +874,11 @@ function FollowUpReminderPanel({
               />
             </div>
 
-            <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">
+            <h2 className="mt-4 max-w-4xl break-words text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl lg:text-[2.15rem]">
               Student Reminder Workspace
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Create, track, complete, reopen, cancel, and safely delete follow-up
               reminders while keeping the student CRM timeline updated.
             </p>
@@ -906,7 +906,7 @@ function FollowUpReminderPanel({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:p-7 xl:border-l-[3px] xl:border-t-0">
             <div className="flex items-center gap-2">
               <Clock3 size={18} />
 
@@ -958,9 +958,9 @@ function FollowUpReminderPanel({
         </div>
       </div>
 
-      <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
-        <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
             <Plus size={20} />
           </div>
 
@@ -969,7 +969,7 @@ function FollowUpReminderPanel({
               Create Reminder
             </p>
 
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Schedule the next counselor follow-up
             </h3>
 
@@ -980,7 +980,7 @@ function FollowUpReminderPanel({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2">
           <label className="grid gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-600">
               Reminder Title
@@ -994,7 +994,7 @@ function FollowUpReminderPanel({
                 )
               }
               placeholder="e.g. Call student about missing passport"
-              className="rounded-xl border-2 border-slate-300 bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </label>
 
@@ -1013,7 +1013,7 @@ function FollowUpReminderPanel({
                     event.target.value
                   )
                 }
-                className="rounded-xl border-2 border-slate-300 bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
 
@@ -1030,7 +1030,7 @@ function FollowUpReminderPanel({
                     event.target.value
                   )
                 }
-                className="rounded-xl border-2 border-slate-300 bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
           </div>
@@ -1049,7 +1049,7 @@ function FollowUpReminderPanel({
               )
             }
             placeholder="Add context, documents needed, call objective, or next-step notes."
-            className="min-h-[110px] w-full resize-y rounded-[1.25rem] border-2 border-slate-300 bg-[#FFFDF8] p-4 text-sm font-semibold leading-6 text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+            className="min-h-[110px] w-full resize-y rounded-[1.25rem] border-2 border-[#C9D7E6] bg-[#FFFDF8] p-4 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           />
         </label>
 
@@ -1084,7 +1084,7 @@ function FollowUpReminderPanel({
               void addReminder()
             }
             disabled={!canCreate}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-5 text-sm font-black text-white shadow-[0_8px_20px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-sm font-black text-white shadow-[0_8px_20px_rgba(255,90,10,0.20)] transition hover:-translate-y-0.5 hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {saving ? (
               <RefreshCw
@@ -1126,14 +1126,14 @@ function FollowUpReminderPanel({
         />
       ) : null}
 
-      <section className="rounded-[1.6rem] border-[3px] border-slate-300 bg-[#FFFDF8] p-5 shadow-[0_12px_32px_rgba(15,35,63,0.05)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="min-w-0 rounded-[1.7rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_14px_36px_rgba(18,56,101,0.07)]">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
               Student Queue
             </p>
 
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Follow-up Reminders
             </h3>
 
@@ -1152,7 +1152,7 @@ function FollowUpReminderPanel({
               void loadReminders()
             }
             disabled={loading}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-[#10233f] transition hover:border-orange-300 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white transition hover:bg-[#245886] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
               size={14}
@@ -1169,8 +1169,8 @@ function FollowUpReminderPanel({
           </button>
         </div>
 
-        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
-          <label className="relative">
+        <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <label className="relative min-w-0">
             <Search
               size={15}
               className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
@@ -1184,7 +1184,7 @@ function FollowUpReminderPanel({
                 )
               }
               placeholder="Search title, notes, creator, date..."
-              className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] py-2.5 pl-10 pr-4 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </label>
 
@@ -1205,12 +1205,12 @@ function FollowUpReminderPanel({
                   }
                   className={`rounded-xl border-2 px-3 py-2 text-[10px] font-black uppercase tracking-[0.06em] transition ${
                     filter === key
-                      ? "border-orange-600 bg-orange-500 text-white"
+                      ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-sm"
                       : key ===
                           "overdue" &&
                         count > 0
                       ? "border-red-300 bg-red-50 text-red-700"
-                      : "border-slate-300 bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-orange-50"
                   }`}
                 >
                   {label} {count}
@@ -1291,7 +1291,7 @@ function FollowUpReminderPanel({
                       key={
                         reminder.id
                       }
-                      className={`rounded-[1.4rem] border-[3px] bg-white p-4 transition sm:p-5 ${
+                      className={`min-w-0 rounded-[1.45rem] border-[3px] bg-white p-4 shadow-[0_7px_20px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${
                         dueBadge ===
                         "Overdue"
                           ? "border-red-300"
@@ -1301,7 +1301,7 @@ function FollowUpReminderPanel({
                           : "border-slate-300 hover:border-orange-300"
                       }`}
                     >
-                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                      <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="break-words font-black text-[#10233f]">
@@ -1375,7 +1375,7 @@ function FollowUpReminderPanel({
                           </div>
                         </div>
 
-                        <div className="flex shrink-0 flex-wrap gap-2 xl:max-w-[320px] xl:justify-end">
+                        <div className="flex min-w-0 shrink-0 flex-wrap gap-2 xl:max-w-[330px] xl:justify-end">
                           {!isDone &&
                           !isCancelled ? (
                             <>
@@ -1622,6 +1622,7 @@ function FeedbackBanner({
         type="button"
         onClick={onClose}
         aria-label="Dismiss message"
+        className="rounded-lg p-1 transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
       >
         <X size={15} />
       </button>
@@ -1658,14 +1659,14 @@ function ActionButton({
       ? "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
       : tone === "orange"
       ? "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
-      : "border-slate-300 bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50";
+      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-orange-50";
 
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-45 ${style}`}
+      className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-45 ${style}`}
     >
       <Icon size={14} />
       {label}
@@ -1675,7 +1676,7 @@ function ActionButton({
 
 function LoadingState() {
   return (
-    <div className="rounded-xl border-[3px] border-slate-300 bg-white p-5">
+    <div className="rounded-xl border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-5">
       <div className="flex items-center gap-3">
         <RefreshCw
           size={17}
@@ -1694,7 +1695,7 @@ function EmptyState({
   filter,
 }) {
   return (
-    <div className="rounded-xl border-[3px] border-dashed border-orange-300 bg-white p-7 text-center">
+    <div className="rounded-xl border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-7 text-center">
       <CheckCircle2
         size={26}
         className="mx-auto text-orange-600"

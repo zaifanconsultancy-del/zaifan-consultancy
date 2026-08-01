@@ -1,4 +1,4 @@
-// ActivityTimeline V4 MAXIMUM — Framed CRM Activity Command Feed
+// ActivityTimeline PARTNER OS EXTREME V6 — CRM Activity Command Center
 // src/components/admin/ActivityTimeline.jsx
 //
 // Maximum pass:
@@ -278,28 +278,28 @@ function ActivityTimeline({
 
   return (
     <section
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4`}
+      className={`${cardClass} min-w-0 space-y-5 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4`}
     >
-      <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
-        <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.10)] xl:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-orange-300/30 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white">
               <Activity size={12} />
               CRM Activity Feed
             </span>
           </div>
 
-          <h2 className="mt-3 break-words text-2xl font-black leading-tight text-white sm:text-3xl">
+          <h2 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
             Recent CRM Activity
           </h2>
 
-          <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
             Live inquiry and appointment activity from the parent Admin CRM data.
             This feed is intentionally read-only so analytics never duplicates or
             mutates Supabase records.
           </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
             <HeroStat label="Total" value={stats.total} />
             <HeroStat label="Last 24h" value={stats.last24h} />
             <HeroStat label="Assigned" value={stats.assigned} />
@@ -307,7 +307,7 @@ function ActivityTimeline({
           </div>
         </div>
 
-        <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:p-7 xl:border-l-[3px] xl:border-t-0">
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
             Attention Snapshot
           </p>
@@ -324,10 +324,10 @@ function ActivityTimeline({
         </div>
       </div>
 
-      <div className="min-w-0 space-y-4 bg-[#FFF8EE] px-1 pb-1 pt-5 sm:pt-6">
-        <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#F97316] bg-[#FFFDF8] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
+      <div className="min-w-0 space-y-4">
+        <section className="min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal size={14} className="text-orange-700" />
+            <SlidersHorizontal size={14} className="text-[#FF5A0A]" />
             <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
               Activity Controls
             </p>
@@ -346,14 +346,14 @@ function ActivityTimeline({
                   setPage(1);
                 }}
                 placeholder="Search student, owner, status, country, program..."
-                className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </div>
 
             <select
               value={typeFilter}
               onChange={updateFilter(setTypeFilter)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All types</option>
               <option value="inquiry">Inquiries</option>
@@ -363,7 +363,7 @@ function ActivityTimeline({
             <select
               value={statusFilter}
               onChange={updateFilter(setStatusFilter)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All statuses</option>
               {statusOptions.map((status) => (
@@ -376,7 +376,7 @@ function ActivityTimeline({
             <select
               value={priorityFilter}
               onChange={updateFilter(setPriorityFilter)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All priority</option>
               <option value="vip">VIP</option>
@@ -388,7 +388,7 @@ function ActivityTimeline({
             <select
               value={ownershipFilter}
               onChange={updateFilter(setOwnershipFilter)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All ownership</option>
               <option value="assigned">Assigned</option>
@@ -398,7 +398,7 @@ function ActivityTimeline({
             <select
               value={sortMode}
               onChange={updateFilter(setSortMode)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -409,7 +409,7 @@ function ActivityTimeline({
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex h-11 min-w-0 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] transition hover:border-[#F97316] hover:bg-[#FFF4E8]"
+              className="inline-flex h-11 min-w-0 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
             >
               <Filter size={14} />
               Reset
@@ -428,7 +428,7 @@ function ActivityTimeline({
                 setPageSize(Number(event.target.value));
                 setPage(1);
               }}
-              className="h-9 w-fit shrink-0 rounded-lg border-2 border-[#B9C9D9] bg-white px-2 text-[11px] font-black text-[#10233f] outline-none focus:border-[#F97316]"
+              className="h-9 w-fit shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-2 text-[11px] font-black text-[#10233F] outline-none focus:border-[#FF5A0A]"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>
@@ -450,7 +450,7 @@ function ActivityTimeline({
             text="The CRM has records, but none match the current search and filters."
           />
         ) : (
-          <div className="grid gap-3 xl:grid-cols-2">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
             {pagedActivities.map((activity, index) => (
               <ActivityCard
                 key={activity.id}
@@ -494,18 +494,24 @@ function ActivityCard({ activity, index, shouldReduceMotion }) {
         duration: shouldReduceMotion ? 0 : 0.28,
         delay: shouldReduceMotion ? 0 : Math.min(index * 0.025, 0.18),
       }}
-      className={`group min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.05)] transition ${
-        isHot
-          ? "border-[#FB7185] hover:border-red-500"
-          : "border-[#D1DCE7] hover:border-[#F97316]"
-      }`}
+      className="group relative min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 pl-5 shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_12px_30px_rgba(18,56,101,0.09)]"
     >
+      <div
+        className={`absolute inset-y-0 left-0 w-1.5 ${
+          activity.priority === "vip" || activity.priority === "high"
+            ? "bg-[#FB7185]"
+            : activity.priority === "medium"
+              ? "bg-[#FF5A0A]"
+              : "bg-[#60A5FA]"
+        }`}
+      />
+
       <div className="flex items-start gap-3">
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 ${
             activity.type === "appointment"
               ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-              : "border-orange-300 bg-orange-50 text-orange-800"
+              : "border-[#60A5FA] bg-[#F2F7FF] text-blue-700"
           }`}
         >
           <TypeIcon size={17} />
@@ -515,7 +521,7 @@ function ActivityCard({ activity, index, shouldReduceMotion }) {
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               label={activity.typeLabel}
-              tone={activity.type === "appointment" ? "green" : "orange"}
+              tone={activity.type === "appointment" ? "green" : "blue"}
             />
             <Badge label={pretty(activity.status)} tone={getStatusTone(activity.status)} />
             <Badge label={pretty(activity.priority)} tone={getPriorityTone(activity.priority)} />
@@ -523,7 +529,7 @@ function ActivityCard({ activity, index, shouldReduceMotion }) {
 
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <h3 className="break-words text-base font-black leading-5 text-[#10233f]">
+              <h3 className="break-words text-base font-black leading-5 text-[#10233F]">
                 {activity.name}
               </h3>
               <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
@@ -541,12 +547,12 @@ function ActivityCard({ activity, index, shouldReduceMotion }) {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2">
             <span
               className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-[10px] font-black ${
                 isAssigned
                   ? "border-blue-300 bg-blue-50 text-blue-800"
-                  : "border-orange-300 bg-orange-50 text-orange-800"
+                  : "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]"
               }`}
             >
               {isAssigned ? <UserRoundCheck size={12} /> : <UsersRound size={12} />}
@@ -572,17 +578,17 @@ function ActivityCard({ activity, index, shouldReduceMotion }) {
 
 function Badge({ label, tone = "slate" }) {
   const styles = {
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
     red: "border-red-300 bg-red-50 text-red-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
     violet: "border-violet-300 bg-violet-50 text-violet-800",
-    slate: "border-slate-300 bg-slate-50 text-slate-700",
+    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-slate-700",
   };
 
   return (
     <span
-      className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${
+      className={`max-w-full rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${
         styles[tone] || styles.slate
       }`}
     >
@@ -592,7 +598,7 @@ function Badge({ label, tone = "slate" }) {
 }
 
 function getPriorityTone(priority) {
-  if (priority === "vip") return "violet";
+  if (priority === "vip") return "red";
   if (priority === "high") return "red";
   if (priority === "medium") return "orange";
   return "slate";
@@ -601,14 +607,14 @@ function getPriorityTone(priority) {
 function getStatusTone(status) {
   if (["contacted", "confirmed", "completed"].includes(status)) return "green";
   if (["cancelled", "rejected"].includes(status)) return "red";
-  if (["pending", "new"].includes(status)) return "orange";
+  if (["pending", "new"].includes(status)) return "blue";
   if (["in_progress", "processing"].includes(status)) return "blue";
   return "slate";
 }
 
 function HeroStat({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">
         {label}
       </p>
@@ -619,7 +625,7 @@ function HeroStat({ label, value }) {
 
 function OrangeStat({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">
         {label}
       </p>
@@ -630,9 +636,9 @@ function OrangeStat({ label, value }) {
 
 function EmptyState({ title, text }) {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-8 text-center">
-      <Clock3 size={30} className="mx-auto text-orange-600" />
-      <h3 className="mt-3 text-lg font-black text-[#10233f]">{title}</h3>
+    <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-8 text-center shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
+      <Clock3 size={30} className="mx-auto text-[#FF5A0A]" />
+      <h3 className="mt-3 text-lg font-black text-[#10233F]">{title}</h3>
       <p className="mx-auto mt-2 max-w-xl text-sm font-medium leading-6 text-slate-600">
         {text}
       </p>
@@ -642,18 +648,18 @@ function EmptyState({ title, text }) {
 
 function Pagination({ page, totalPages, onPrevious, onNext }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFFDF8] p-3">
+    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-3 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
       <button
         type="button"
         onClick={onPrevious}
         disabled={page <= 1}
-        className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <ChevronLeft size={14} />
         Previous
       </button>
 
-      <p className="text-xs font-black text-[#10233f]">
+      <p className="text-xs font-black text-[#10233F]">
         Page {page} of {totalPages}
       </p>
 
@@ -661,7 +667,7 @@ function Pagination({ page, totalPages, onPrevious, onNext }) {
         type="button"
         onClick={onNext}
         disabled={page >= totalPages}
-        className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-40"
       >
         Next
         <ChevronRight size={14} />

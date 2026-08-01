@@ -524,7 +524,7 @@ export default function PartnerOSDashboard({
   }
 
   return (
-    <div className="min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
       <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
         <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">

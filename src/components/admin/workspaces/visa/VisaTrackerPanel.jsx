@@ -1,4 +1,4 @@
-// VisaTrackerPanel V7 MAXIMUM — Visa Operations Center
+// VisaTrackerPanel PARTNER OS EXTREME V8 — Executive Visa Operations Center
 // src/components/admin/VisaTrackerPanel.jsx
 // Maximum Zaifan Admin OS pass. Preserves the mature V6 Visa OS feature set while
 // hardening async reliability, student-context switching, validation, audit writes,
@@ -1686,93 +1686,113 @@ function VisaTrackerPanel({
   };
 
   return (
-    <div className="space-y-4 bg-[#fffaf4] p-3 text-[#10233f] sm:p-4 lg:p-5">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
       <StudentNotificationPreviewModal
         pending={pendingNotification}
         busy={notificationBusy}
         onCancel={() => !notificationBusy && setPendingNotification(null)}
         onConfirm={confirmPendingNotification}
       />
-      {/* COMMAND CENTER */}
-      <section className="rounded-[1.7rem] border-[3px] border-orange-500 bg-white p-4 shadow-[0_12px_32px_rgba(121,72,40,0.08)] sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
-                Visa OS
+      {/* PARTNER OS VISA COMMAND CENTER */}
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                <Stamp size={12} />
+                Visa Operations OS
               </span>
-              <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
+
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                <University size={12} />
                 Student #{studentId || "—"}
               </span>
             </div>
 
-            <h2 className="mt-2 text-2xl font-black text-[#10233f]">
+            <h2 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Visa Operations Center
             </h2>
 
-            <p className="mt-1 max-w-3xl text-sm font-medium text-slate-600">
-              One visa case, one linked application, one source of truth for readiness,
-              appointments, financial evidence, risk and decision tracking.
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
+              One visa case, one linked application and one operational source
+              of truth for readiness, appointments, finance, risk and decisions.
             </p>
+
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              <HeroMetric label="Readiness" value={`${readiness}%`} />
+              <HeroMetric label="Missing" value={requirementStats.missing} />
+              <HeroMetric label="Review" value={requirementStats.review} />
+              <HeroMetric label="Risk" value={calculatedRisk.level} />
+              <HeroMetric
+                label="Appointment"
+                value={
+                  form.appointment_date
+                    ? formatDate(form.appointment_date)
+                    : "Not set"
+                }
+              />
+              <HeroMetric label="Status" value={pretty(form.visa_status)} />
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <StudentNotificationComposer
-              student={student}
-              context="visa"
-              buttonLabel="Send Visa Update"
-              compact
-            />
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Visa Command Actions
+            </p>
 
-            {applications.length > 0 &&
-            availableApplicationsForNewVisa.length === 0 ? (
-              <div className="flex max-w-[310px] flex-col gap-1">
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">
+              Notify the student, create a new Visa Case or refresh every linked
+              application, document and operational source.
+            </p>
+
+            <div className="mt-4 grid min-w-0 gap-2">
+              <div className="[&>div>button]:min-h-11 [&>div>button]:w-full [&>div>button]:justify-center [&>div>button]:rounded-xl [&>div>button]:border-2 [&>div>button]:border-white/30 [&>div>button]:bg-[#123865] [&>div>button]:px-4 [&>div>button]:text-xs [&>div>button]:font-black [&>div>button]:text-white [&>div>button]:shadow-sm [&>div>button]:hover:border-white [&>div>button]:hover:bg-[#0d2b50]">
+                <StudentNotificationComposer
+                  student={student}
+                  context="visa"
+                  buttonLabel="Send Visa Update"
+                  compact
+                />
+              </div>
+
+              {applications.length > 0 &&
+              availableApplicationsForNewVisa.length === 0 ? (
+                <div className="rounded-xl border-2 border-white/30 bg-white/10 p-3">
+                  <div className="inline-flex min-h-10 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-3 text-xs font-black text-white">
+                    <BadgeCheck size={15} />
+                    All Applications Linked
+                  </div>
+                  <p className="mt-2 text-[10px] font-bold leading-4 text-orange-50">
+                    Archive a case or create another university application to
+                    add a new Visa Case.
+                  </p>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  disabled
-                  title="Every current university application already has an active Visa Case."
-                  className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border-2 border-slate-400 bg-slate-100 px-3.5 py-2.5 text-xs font-black text-slate-700"
+                  onClick={beginNewVisaCase}
+                  title="Create a Visa Case for an application without one."
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
                 >
-                  <BadgeCheck size={15} />
-                  All Applications Linked
+                  <Plus size={15} />
+                  New Visa Case
                 </button>
+              )}
 
-                <p className="px-1 text-[10px] font-bold leading-4 text-slate-500">
-                  Every application already has an active Visa Case. Archive a
-                  case or create another university application to add a new one.
-                </p>
-              </div>
-            ) : (
               <button
                 type="button"
-                onClick={beginNewVisaCase}
-                title="Create a Visa Case for an application without one."
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-3.5 py-2.5 text-xs font-black text-white transition hover:bg-orange-600"
+                onClick={loadCoreData}
+                disabled={loading}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Plus size={15} />
-                New Visa Case
+                <RefreshCw
+                  size={15}
+                  className={loading ? "animate-spin" : ""}
+                />
+                {loading ? "Refreshing..." : "Refresh Visa OS"}
               </button>
-            )}
-
-            <button
-              type="button"
-              onClick={loadCoreData}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2.5 text-xs font-black text-[#10233f] disabled:opacity-50"
-            >
-              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-              Refresh
-            </button>
+            </div>
           </div>
-        </div>
-
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
-          <Metric label="Readiness" value={`${readiness}%`} icon={BadgeCheck} tone="green" />
-          <Metric label="Missing" value={requirementStats.missing} icon={FileWarning} tone="red" />
-          <Metric label="Review" value={requirementStats.review} icon={FileCheck2} tone="blue" />
-          <Metric label="Risk" value={calculatedRisk.level} icon={ShieldAlert} tone={calculatedRisk.level === "Low" ? "green" : calculatedRisk.level === "Medium" ? "orange" : "red"} />
-          <Metric label="Appointment" value={form.appointment_date ? formatDate(form.appointment_date) : "Not set"} icon={CalendarClock} tone="orange" />
-          <Metric label="Status" value={pretty(form.visa_status)} icon={Stamp} tone="slate" />
         </div>
       </section>
 
@@ -1790,7 +1810,7 @@ function VisaTrackerPanel({
 
       {/* CASE SWITCHER */}
       {visaCases.length > 0 ? (
-        <section className="rounded-[1.5rem] border-[3px] border-orange-300 bg-white p-3">
+        <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
             <div className="relative flex-1">
               <Search
@@ -1801,7 +1821,7 @@ function VisaTrackerPanel({
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Find visa case..."
-                className="h-10 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold outline-none focus:border-orange-400"
+                className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </div>
 
@@ -1811,8 +1831,8 @@ function VisaTrackerPanel({
                 onClick={() => setShowArchived(false)}
                 className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${
                   !showArchived
-                    ? "border-orange-500 bg-orange-50 text-orange-800"
-                    : "border-slate-300 bg-white text-slate-600"
+                    ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800 shadow-sm"
+                    : "border-[#C9D7E6] bg-white text-slate-600 hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
                 }`}
               >
                 Active
@@ -1823,8 +1843,8 @@ function VisaTrackerPanel({
                 onClick={() => setShowArchived(true)}
                 className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${
                   showArchived
-                    ? "border-[#0b2a57] bg-[#0b2a57]"
-                    : "border-slate-300 bg-white text-slate-600"
+                    ? "border-[#123865] bg-[#123865]"
+                    : "border-[#C9D7E6] bg-white text-slate-600 hover:border-[#123865] hover:bg-[#F2F7FF]"
                 }`}
                 style={{ color: showArchived ? "#ffffff" : undefined }}
               >
@@ -1844,7 +1864,7 @@ function VisaTrackerPanel({
             ))}
 
             {!filteredCases.length ? (
-              <div className="min-w-full rounded-xl border-2 border-dashed border-slate-300 bg-[#fffaf4] px-4 py-4 text-center text-xs font-bold text-slate-500">
+              <div className="min-w-full rounded-xl border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] px-4 py-4 text-center text-xs font-bold text-slate-500">
                 {search
                   ? "No Visa Cases match this search."
                   : showArchived
@@ -1857,8 +1877,8 @@ function VisaTrackerPanel({
       ) : null}
 
       {/* ACTIVE CASE HEADER */}
-      <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white lg:flex-row lg:items-start lg:justify-between sm:p-6">
           <div className="min-w-0">
             <div className="flex flex-wrap gap-2">
               <StatusBadge value={form.visa_stage} />
@@ -1870,11 +1890,11 @@ function VisaTrackerPanel({
               ) : null}
             </div>
 
-            <h3 className="mt-3 truncate text-2xl font-black text-[#10233f]">
+            <h3 className="mt-3 break-words text-2xl font-black leading-tight text-white sm:text-3xl">
               {form.case_name || form.source_university_name || "New Visa Case"}
             </h3>
 
-            <p className="mt-1 text-sm font-semibold text-slate-600">
+            <p className="mt-1 text-sm font-semibold text-slate-200">
               {activeApplication
                 ? `${activeApplication.program || "Program not set"} · ${
                     activeApplication.country || form.country || "Italy"
@@ -1895,7 +1915,7 @@ function VisaTrackerPanel({
                 <button
                   type="button"
                   onClick={restoreVisaCase}
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-blue-400 bg-blue-50 px-3 py-2 text-xs font-black text-blue-800"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-3.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8]"
                 >
                   <RotateCcw size={14} />
                   Restore
@@ -1905,7 +1925,7 @@ function VisaTrackerPanel({
                   type="button"
                   onClick={permanentlyDeleteVisaCase}
                   disabled={savingKeys.size > 0}
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-red-500 bg-red-50 px-3 py-2 text-xs font-black text-red-800 disabled:opacity-50"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-red-200/60 bg-red-400/10 px-3.5 text-xs font-black text-red-100 transition hover:-translate-y-0.5 hover:bg-red-400/20 disabled:opacity-50"
                 >
                   <X size={14} />
                   Delete Permanently
@@ -1915,7 +1935,7 @@ function VisaTrackerPanel({
               <button
                 type="button"
                 onClick={archiveVisaCase}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-400 bg-slate-100 px-3 py-2 text-xs font-black text-slate-700"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-white/25 bg-white/10 px-3.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/15"
               >
                 <Archive size={14} />
                 Archive
@@ -1926,7 +1946,7 @@ function VisaTrackerPanel({
               type="button"
               onClick={saveVisaCase}
               disabled={savingKeys.size > 0}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-700 bg-orange-500 px-4 py-2 text-xs font-black text-white disabled:opacity-50"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md disabled:opacity-50"
             >
               {savingKeys.size > 0 ? (
                 <LoaderCircle size={14} className="animate-spin" />
@@ -1938,7 +1958,7 @@ function VisaTrackerPanel({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-4">
           <CompactStat label="Readiness" value={`${readiness}%`} icon={BadgeCheck} />
           <CompactStat label="Requirements" value={`${requirementStats.ready}/${requirementStats.total}`} icon={FileCheck2} />
           <CompactStat
@@ -1956,7 +1976,7 @@ function VisaTrackerPanel({
       </section>
 
       {/* TABS */}
-      <div className="grid grid-cols-2 gap-2 rounded-[1.3rem] border-[3px] border-orange-300 bg-white p-2 sm:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-2 gap-2 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-2 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:grid-cols-4">
         {[
           ["overview", "Overview"],
           ["requirements", `Requirements (${requirementStats.missing})`],
@@ -1969,8 +1989,8 @@ function VisaTrackerPanel({
             onClick={() => setActiveTab(value)}
             className={`rounded-xl border-2 px-3 py-2.5 text-xs font-black ${
               activeTab === value
-                ? "border-[#0b2a57] bg-[#0b2a57]"
-                : "border-slate-300 bg-white text-slate-600"
+                ? "border-[#123865] bg-[#123865] shadow-sm"
+                : "border-[#C9D7E6] bg-white text-slate-600 hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
             }`}
             style={{ color: activeTab === value ? "#ffffff" : undefined }}
           >
@@ -2019,13 +2039,13 @@ function VisaTrackerPanel({
       {/* ADD REQUIREMENT */}
       {showAddRequirement ? (
         <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-[1.6rem] border-[3px] border-orange-400 bg-[#fffaf4] p-5">
+          <div className="w-full max-w-xl rounded-[1.75rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.30)]">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">
                   Visa Requirement
                 </p>
-                <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
                   Add operational requirement
                 </h3>
               </div>
@@ -2033,7 +2053,7 @@ function VisaTrackerPanel({
               <button
                 type="button"
                 onClick={() => setShowAddRequirement(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-slate-500"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#C9D7E6] bg-white text-slate-500 transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
               >
                 <X size={17} />
               </button>
@@ -2099,7 +2119,7 @@ function VisaTrackerPanel({
               <button
                 type="button"
                 onClick={() => setShowAddRequirement(false)}
-                className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-700"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-xs font-black text-slate-700"
               >
                 Cancel
               </button>
@@ -2108,7 +2128,7 @@ function VisaTrackerPanel({
                 type="button"
                 onClick={addRequirement}
                 disabled={!requirementDraft.requirement_name.trim()}
-                className="rounded-xl border-2 border-orange-700 bg-orange-500 px-4 py-2.5 text-xs font-black text-white disabled:opacity-40"
+                className="rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md disabled:opacity-40"
               >
                 Add Requirement
               </button>
@@ -2121,10 +2141,10 @@ function VisaTrackerPanel({
 }
 
 const inputClass =
-  "h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
+  "h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 const textareaClass =
-  "w-full resize-y rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
+  "w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 function OverviewTab({
   form,
@@ -2203,11 +2223,11 @@ function OverviewTab({
             </p>
           </Field>
 
-          <div className="rounded-2xl border-2 border-orange-300 bg-[#fffaf4] p-3">
+          <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)]">
             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-orange-700">
               Linked Offer Context
             </p>
-            <p className="mt-2 text-sm font-black text-[#10233f]">
+            <p className="mt-2 text-sm font-black text-[#10233F]">
               {activeApplication?.university || "No application selected"}
             </p>
             <p className="mt-1 text-xs font-semibold text-slate-600">
@@ -2251,10 +2271,10 @@ function OverviewTab({
           />
         </div>
 
-        <div className="mt-4 rounded-2xl border-2 border-slate-300 bg-white p-4">
+        <div className="mt-4 min-w-0 rounded-[1.4rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
           <div className="flex flex-wrap items-center gap-2">
             <ShieldAlert size={17} className="text-orange-600" />
-            <h4 className="text-sm font-black text-[#10233f]">
+            <h4 className="text-sm font-black text-[#10233F]">
               Operational Risk Intelligence
             </h4>
             <RiskBadge value={calculatedRisk.level} />
@@ -2269,7 +2289,7 @@ function OverviewTab({
               {calculatedRisk.reasons.map((reason) => (
                 <span
                   key={reason}
-                  className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[10px] font-black text-orange-800"
+                  className="rounded-full border border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-[10px] font-black text-orange-800"
                 >
                   {reason}
                 </span>
@@ -2427,10 +2447,10 @@ function OverviewTab({
         subtitle="Visa-specific money evidence, sponsor information and visa fee."
       >
         <div className="grid gap-4 xl:grid-cols-2">
-          <div className="rounded-2xl border-2 border-orange-300 bg-[#fffaf4] p-4">
+          <div className="rounded-2xl border-2 border-[#FF5A0A] bg-[#FFF8EF] p-4">
             <div className="flex items-center gap-2">
               <WalletCards size={17} className="text-orange-600" />
-              <h4 className="text-sm font-black text-[#10233f]">Visa Fee</h4>
+              <h4 className="text-sm font-black text-[#10233F]">Visa Fee</h4>
             </div>
 
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -2489,10 +2509,10 @@ function OverviewTab({
             </div>
           </div>
 
-          <div className="rounded-2xl border-2 border-orange-300 bg-[#fffaf4] p-4">
+          <div className="rounded-2xl border-2 border-[#FF5A0A] bg-[#FFF8EF] p-4">
             <div className="flex items-center gap-2">
               <Landmark size={17} className="text-orange-600" />
-              <h4 className="text-sm font-black text-[#10233f]">
+              <h4 className="text-sm font-black text-[#10233F]">
                 Financial Evidence
               </h4>
             </div>
@@ -2742,7 +2762,7 @@ function RequirementsTab({
           <button
             type="button"
             onClick={onSync}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-[#0b2a57] bg-[#0b2a57] px-3 py-2 text-xs font-black"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2 text-xs font-black"
             style={{ color: "#ffffff" }}
           >
             <RefreshCw size={14} style={{ color: "#ffffff" }} />
@@ -2752,7 +2772,7 @@ function RequirementsTab({
           <button
             type="button"
             onClick={onAdd}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-3 py-2 text-xs font-black text-white"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-[#FFF4E8]0 px-3 py-2 text-xs font-black text-white"
           >
             <Plus size={14} />
             Add Requirement
@@ -2761,15 +2781,15 @@ function RequirementsTab({
       }
     >
       {loading ? (
-        <div className="rounded-2xl border-2 border-slate-300 bg-slate-50 p-5 text-center">
+        <div className="rounded-2xl border-2 border-[#C9D7E6] bg-slate-50 p-5 text-center">
           <LoaderCircle size={22} className="mx-auto animate-spin text-orange-500" />
         </div>
       ) : null}
 
       {!loading && requirements.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-7 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-7 text-center">
           <FileCheck2 size={30} className="mx-auto text-orange-400" />
-          <p className="mt-3 text-sm font-black text-[#10233f]">
+          <p className="mt-3 text-sm font-black text-[#10233F]">
             No visa requirements yet
           </p>
         </div>
@@ -2787,18 +2807,18 @@ function RequirementsTab({
           return (
             <div
               key={requirement.id}
-              className="rounded-2xl border-2 border-slate-300 bg-white p-4"
+              className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)]"
             >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="font-black text-[#10233f]">
+                    <h4 className="font-black text-[#10233F]">
                       {requirement.requirement_name}
                     </h4>
 
                     <RequirementStatus value={requirement.status} />
 
-                    <span className="rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-600">
+                    <span className="rounded-full border border-[#C9D7E6] bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-600">
                       {requirement.requirement_category}
                     </span>
                   </div>
@@ -2889,7 +2909,7 @@ function HistoryTab({ events, loading, onRefresh }) {
           type="button"
           onClick={onRefresh}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-[#10233f]"
+          className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-xs font-black text-[#10233F]"
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           Refresh
@@ -2897,9 +2917,9 @@ function HistoryTab({ events, loading, onRefresh }) {
       }
     >
       {events.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-7 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-7 text-center">
           <History size={28} className="mx-auto text-orange-400" />
-          <p className="mt-3 text-sm font-black text-[#10233f]">
+          <p className="mt-3 text-sm font-black text-[#10233F]">
             No visa events recorded yet
           </p>
         </div>
@@ -2908,11 +2928,11 @@ function HistoryTab({ events, loading, onRefresh }) {
           {events.map((event) => (
             <div
               key={event.id}
-              className="rounded-2xl border-2 border-slate-300 bg-white p-4"
+              className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)]"
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-black text-[#10233f]">
+                  <p className="text-sm font-black text-[#10233F]">
                     {event.event_label || pretty(event.event_type)}
                   </p>
 
@@ -2948,17 +2968,17 @@ function VisaCaseCard({ visa, active, onClick }) {
       onClick={onClick}
       className={`min-w-[250px] rounded-2xl border-2 p-3 text-left transition ${
         active
-          ? "border-orange-500 bg-orange-50"
-          : "border-slate-300 bg-white hover:border-orange-300"
+          ? "border-orange-500 bg-[#FFF4E8]"
+          : "border-[#C9D7E6] bg-white hover:border-[#FF5A0A]"
       }`}
     >
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-600">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-600">
           <Stamp size={16} />
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-black text-[#10233f]">
+          <p className="truncate text-sm font-black text-[#10233F]">
             {visa.case_name || visa.source_university_name || "Visa Case"}
           </p>
           <p className="mt-1 truncate text-xs font-semibold text-slate-500">
@@ -2967,7 +2987,7 @@ function VisaCaseCard({ visa, active, onClick }) {
 
           <div className="mt-2 flex flex-wrap gap-1.5">
             <StatusBadge value={visa.visa_stage} compact />
-            <span className="rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase text-slate-600">
+            <span className="rounded-full border border-[#C9D7E6] bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase text-slate-600">
               {visa.country || "Italy"}
             </span>
           </div>
@@ -3014,10 +3034,10 @@ function findBestDocumentMatch(names, documents) {
 
 function Section({ title, subtitle, action = null, children }) {
   return (
-    <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4 sm:p-5">
+    <section className="rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-lg font-black text-[#10233f]">{title}</h3>
+          <h3 className="text-lg font-black text-[#10233F]">{title}</h3>
           {subtitle ? (
             <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
           ) : null}
@@ -3033,7 +3053,7 @@ function Section({ title, subtitle, action = null, children }) {
 function Field({ label, className = "", children }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+      <span className="mb-1.5 block text-xs font-black text-[#10233F]">
         {label}
       </span>
       {children}
@@ -3087,8 +3107,8 @@ function DateTimeField({ label, value, onChange }) {
 
 function ToggleCard({ label, checked, onChange }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 border-slate-300 bg-white px-3 py-2.5">
-      <span className="text-sm font-black text-[#10233f]">{label}</span>
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2.5">
+      <span className="text-sm font-black text-[#10233F]">{label}</span>
       <input
         type="checkbox"
         checked={checked}
@@ -3133,10 +3153,25 @@ function Feedback({ tone, onClose, children }) {
   );
 }
 
+function HeroMetric({ label, value }) {
+  return (
+    <div className="flex min-w-0 flex-col rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="min-w-0 break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] text-white">
+        {label}
+      </p>
+
+      <p className="mt-1 flex min-h-[2.5rem] min-w-0 items-center whitespace-normal break-words text-[clamp(0.95rem,1.15vw,1.25rem)] font-black leading-[1.08] text-white [overflow-wrap:anywhere]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-300 bg-white text-[#10233f]",
-    orange: "border-orange-400 bg-orange-50 text-orange-800",
+    slate: "border-[#C9D7E6] bg-white text-[#10233F]",
+    orange: "border-orange-400 bg-[#FFF4E8] text-orange-800",
     green: "border-emerald-400 bg-emerald-50 text-emerald-800",
     blue: "border-blue-400 bg-blue-50 text-blue-800",
     red: "border-red-400 bg-red-50 text-red-800",
@@ -3164,9 +3199,9 @@ function Metric({ label, value, icon: Icon, tone = "slate" }) {
 
 function CompactStat({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-300 bg-[#fffaf4] text-[#10233f]",
+    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F]",
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
   };
 
   return (
@@ -3189,7 +3224,7 @@ function CompactStat({ label, value, icon: Icon, tone = "slate" }) {
 function StatusBadge({ value, compact = false }) {
   return (
     <span
-      className={`rounded-full border border-orange-300 bg-orange-50 font-black uppercase text-orange-800 ${
+      className={`rounded-full border border-[#FF5A0A] bg-[#FFF4E8] font-black uppercase text-orange-800 ${
         compact ? "px-2 py-0.5 text-[8px]" : "px-2.5 py-1 text-[9px]"
       }`}
     >
@@ -3205,7 +3240,7 @@ function RiskBadge({ value }) {
     normalized.includes("critical") || normalized.includes("high")
       ? "border-red-400 bg-red-50 text-red-800"
       : normalized.includes("medium")
-      ? "border-orange-400 bg-orange-50 text-orange-800"
+      ? "border-orange-400 bg-[#FFF4E8] text-orange-800"
       : "border-emerald-300 bg-emerald-50 text-emerald-800";
 
   return (

@@ -1,4 +1,4 @@
-// CounselorPerformanceAI V4 MAXIMUM — Counselor Intelligence & Performance OS
+// CounselorPerformanceAI PARTNER OS EXTREME — Executive Counselor Performance Command
 // src/components/admin/CounselorPerformanceAI.jsx
 //
 // Maximum pass:
@@ -305,11 +305,11 @@ function CounselorPerformanceAI({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="space-y-5"
+      className="min-w-0 space-y-4 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4"
     >
-      <section className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.07)]">
-        <div className="grid xl:grid-cols-[1.18fr_0.82fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-6">
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_48px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.18fr)_minmax(18rem,0.82fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
                 <Sparkles size={12} />
@@ -322,11 +322,11 @@ function CounselorPerformanceAI({
               </span>
             </div>
 
-            <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
+            <h2 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Counselor Performance Intelligence
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Compare workload, conversion handling, priority ownership and
               contactability across live inquiry and appointment assignments.
             </p>
@@ -351,7 +351,7 @@ function CounselorPerformanceAI({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
             <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
               Team Signal
             </p>
@@ -378,7 +378,7 @@ function CounselorPerformanceAI({
         </div>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <Metric
           icon={Users}
           label="Counselors"
@@ -412,8 +412,8 @@ function CounselorPerformanceAI({
         />
       </div>
 
-      <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-300 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.05)]">
-        <div className="bg-[#123865] p-5 text-white sm:p-6">
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
@@ -431,7 +431,7 @@ function CounselorPerformanceAI({
           </div>
         </div>
 
-        <div className="bg-[#fff8ee] p-4 sm:p-5">
+        <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
           {model.counselors.length === 0 ? (
             <EmptyState />
           ) : (
@@ -469,13 +469,13 @@ function CounselorRow({
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.12),
       }}
-      className={`overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_8px_20px_rgba(15,35,63,0.04)] ${
-        index === 0 ? "border-orange-400" : "border-slate-300"
+      className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
+        index === 0 ? "border-[#FF5A0A]" : "border-slate-300"
       }`}
     >
-      <div className="grid xl:grid-cols-[1fr_auto]">
+      <div className="grid min-w-0">
         <div className="p-4 sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-4">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span
@@ -485,7 +485,7 @@ function CounselorRow({
                 </span>
 
                 <div>
-                  <h4 className="font-black text-[#10233f]">
+                  <h4 className="font-black text-[#10233F]">
                     {counselor.name}
                   </h4>
 
@@ -527,7 +527,7 @@ function CounselorRow({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[410px]">
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <SmallMetric
                 label="Leads"
                 value={counselor.leads}
@@ -547,7 +547,7 @@ function CounselorRow({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
+          <div className="mt-4 grid min-w-0 gap-3">
             <ReasonBlock
               title="Positive Signals"
               items={counselor.reasons}
@@ -561,12 +561,12 @@ function CounselorRow({
               empty="No major warning detected."
             />
 
-            <div className={`rounded-xl border-2 p-4 lg:min-w-[160px] ${tier.scoreBox}`}>
+            <div className={`min-w-0 rounded-xl border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${tier.scoreBox}`}>
               <p className="text-[8px] font-black uppercase tracking-[0.1em]">
                 Performance Score
               </p>
 
-              <p className="mt-1 text-3xl font-black text-[#10233f]">
+              <p className="mt-1 text-3xl font-black text-[#10233F]">
                 {counselor.score}
               </p>
 
@@ -584,18 +584,18 @@ function CounselorRow({
                 duration: reduceMotion ? 0 : 0.55,
                 delay: reduceMotion ? 0 : 0.04,
               }}
-              className="h-full rounded-full bg-orange-500"
+              className="h-full rounded-full bg-[#FF5A0A]"
             />
           </div>
         </div>
 
-        <div className="flex min-w-[120px] items-center justify-center border-t-2 border-slate-200 bg-[#fffaf4] p-4 xl:border-l-2 xl:border-t-0">
-          <div className="text-center">
+        <div className="border-t-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4">
+          <div className="flex min-w-0 items-center justify-between gap-3 text-left">
             <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
               Rank
             </p>
 
-            <p className="mt-1 text-3xl font-black text-[#10233f]">
+            <p className="mt-1 text-3xl font-black text-[#10233F]">
               #{index + 1}
             </p>
 
@@ -618,7 +618,7 @@ function Metric({
 }) {
   const styles = {
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     blue:
       "border-blue-300 bg-blue-50 text-blue-800",
     green:
@@ -631,7 +631,7 @@ function Metric({
 
   return (
     <div
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)] ${
+      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
         styles[tone] || styles.orange
       }`}
     >
@@ -641,7 +641,7 @@ function Metric({
             {label}
           </p>
 
-          <p className="mt-2 text-3xl font-black text-[#10233f]">
+          <p className="mt-2 text-3xl font-black text-[#10233F]">
             {value}
           </p>
         </div>
@@ -663,12 +663,12 @@ function SmallMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-[#fffaf4] px-3 py-3 text-center">
+    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-3 text-center">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-1 text-xl font-black text-[#10233f]">
+      <p className="mt-1 text-xl font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -684,7 +684,7 @@ function SignalBadge({
     green:
       "border-emerald-300 bg-emerald-50 text-emerald-800",
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     amber:
       "border-amber-300 bg-amber-50 text-amber-900",
     red:
@@ -713,7 +713,7 @@ function ReasonBlock({
 }) {
   return (
     <div
-      className={`rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-xl border-[3px] p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${
         positive
           ? "border-emerald-300 bg-emerald-50"
           : "border-amber-300 bg-amber-50"
@@ -756,7 +756,7 @@ function DarkMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -773,7 +773,7 @@ function OrangeMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -787,12 +787,12 @@ function OrangeMetric({
 
 function EmptyState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-dashed border-slate-300 bg-white p-8 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-8 text-center">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
         <Users size={22} />
       </div>
 
-      <h3 className="mt-4 text-lg font-black text-[#10233f]">
+      <h3 className="mt-4 text-lg font-black text-[#10233F]">
         No assigned counselor data yet
       </h3>
 
@@ -806,14 +806,14 @@ function EmptyState() {
 
 function MethodologyNote() {
   return (
-    <div className="rounded-[1.4rem] border-[3px] border-blue-300 bg-blue-50 p-4">
+    <div className="rounded-[1.45rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-blue-300 bg-white text-blue-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-[#123865] text-white">
           <BarChart3 size={17} />
         </div>
 
         <div>
-          <p className="text-sm font-black text-[#10233f]">
+          <p className="text-sm font-black text-[#10233F]">
             How the score works
           </p>
 
@@ -834,7 +834,7 @@ function getTier(score) {
     return {
       label: "Excellent",
       rankBox:
-        "border-orange-400 bg-orange-500 text-white",
+        "border-[#FF5A0A] bg-[#FF5A0A] text-white",
       scoreBox:
         "border-emerald-300 bg-emerald-50 text-emerald-800",
     };

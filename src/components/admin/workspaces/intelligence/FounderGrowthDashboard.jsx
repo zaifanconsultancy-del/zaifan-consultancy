@@ -836,13 +836,13 @@ function FounderMetricCard({
 }) {
   const tones = {
     orange:
-      "border-orange-400 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF4EA] text-[#9B3E08]",
     amber:
       "border-amber-400 bg-amber-50 text-amber-900",
     red:
       "border-red-400 bg-red-50 text-red-800",
     navy:
-      "border-[#234E78] bg-[#EEF4FA] text-[#123865]",
+      "border-[#123865] bg-[#EEF4FA] text-[#123865]",
     green:
       "border-emerald-400 bg-emerald-50 text-emerald-800",
     blue:
@@ -857,9 +857,9 @@ function FounderMetricCard({
 
   return (
     <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] p-4 shadow-[0_10px_26px_rgba(23,36,61,0.06)] ${style}`}
+      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${style}`}
     >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-80" />
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -867,7 +867,7 @@ function FounderMetricCard({
             {label}
           </p>
 
-          <p className="mt-3 break-words text-3xl font-black leading-none tracking-[-0.025em] text-[#10233F]">
+          <p className="mt-3 break-words text-2xl font-black leading-none tracking-[-0.025em] text-[#10233F] sm:text-3xl">
             {value}
           </p>
         </div>
@@ -900,13 +900,13 @@ function FounderRecommendationCard({
 }) {
   const tones = {
     orange:
-      "border-orange-400 bg-orange-50",
+      "border-[#FF5A0A] bg-[#FFF4EA]",
     amber:
       "border-amber-400 bg-amber-50",
     red:
       "border-red-400 bg-red-50",
     navy:
-      "border-[#234E78] bg-[#EEF4FA]",
+      "border-[#123865] bg-[#EEF4FA]",
     green:
       "border-emerald-400 bg-emerald-50",
   };
@@ -915,19 +915,19 @@ function FounderRecommendationCard({
     tone === "red"
       ? "border-red-300 text-red-700"
       : tone === "navy"
-      ? "border-[#234E78] text-[#123865]"
+      ? "border-[#123865] text-[#123865]"
       : tone === "green"
       ? "border-emerald-300 text-emerald-700"
-      : "border-orange-300 text-orange-700";
+      : "border-[#FFB38A] text-[#B84F0E]";
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[1.45rem] border-[3px] p-4 shadow-[0_9px_24px_rgba(23,36,61,0.055)] ${
+      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
         tones[tone] ||
         tones.orange
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 bg-white ${iconTone}`}>
           <Icon size={17} />
         </div>
@@ -1182,10 +1182,10 @@ export default function FounderGrowthDashboard({
   ];
 
   return (
-    <section className="space-y-5">
-      <div className="rounded-[2rem] border-[3px] border-orange-400 bg-[#FFF8EE] p-3 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-4">
-        <div className="grid overflow-hidden rounded-[1.65rem] border-2 border-[#234E78] xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
+    <section className="min-w-0 space-y-5">
+      <div className="min-w-0 space-y-3">
+        <div className="grid min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)] xl:grid-cols-[minmax(0,1.4fr)_minmax(19rem,0.6fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderChip
                 icon={
@@ -1204,20 +1204,20 @@ export default function FounderGrowthDashboard({
               Business Intelligence Command
             </h1>
 
-            <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-white">
+            <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-200">
               Growth, revenue, counselor productivity, market demand, conversion
               funnel, stalled workload, and 30/60/90-day planning from the
               existing Zaifan Student OS data layer.
             </p>
 
             {adminProfile?.email ? (
-              <p className="mt-3 text-xs font-semibold text-white">
+              <p className="mt-3 text-xs font-semibold text-slate-300">
                 Founder view for{" "}
                 {adminProfile.email}
               </p>
             ) : null}
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <DarkMetric
                 label="Students"
                 value={
@@ -1248,7 +1248,7 @@ export default function FounderGrowthDashboard({
             </div>
           </div>
 
-          <div className="border-t-2 border-orange-300 bg-orange-500 p-5 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-center gap-2">
               <CircleGauge
                 size={18}
@@ -1267,7 +1267,7 @@ export default function FounderGrowthDashboard({
               {health.label}
             </p>
 
-            <div className="mt-4 h-3 overflow-hidden rounded-full border border-white/25 bg-white/10">
+            <div className="mt-4 h-3 overflow-hidden rounded-full border-2 border-white/25 bg-white/10">
               <div
                 className="h-full rounded-full bg-white transition-all duration-500"
                 style={{
@@ -1282,9 +1282,9 @@ export default function FounderGrowthDashboard({
           </div>
         </div>
 
-        <div className="mt-3 rounded-[1.35rem] border-2 border-orange-200 bg-[#FFFDF8] p-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-wrap gap-2">
+        <div className="min-w-0">
+          <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-wrap gap-2">
               {views.map((view) => {
                 const Icon =
                   view.icon;
@@ -1302,7 +1302,7 @@ export default function FounderGrowthDashboard({
                       activeView ===
                       view.key
                         ? "border-[#123865] bg-[#123865] text-white shadow-[0_7px_16px_rgba(18,56,101,0.14)]"
-                        : "border-slate-300 bg-white text-[#10233f] hover:border-orange-400 hover:bg-orange-50"
+                        : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4EA]"
                     }`}
                   >
                     <Icon
@@ -1323,7 +1323,7 @@ export default function FounderGrowthDashboard({
                 disabled={
                   refreshing
                 }
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-50 px-4 text-xs font-black text-orange-800 transition hover:border-orange-500 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#FFB38A] bg-[#FFF4EA] px-4 text-xs font-black text-[#9B3E08] transition hover:border-[#FF5A0A] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw
                   size={14}
@@ -1345,14 +1345,14 @@ export default function FounderGrowthDashboard({
 
       {refreshError ? (
         <div className="rounded-[1.3rem] border-[3px] border-red-300 bg-red-50 p-4">
-          <div className="flex items-start gap-3">
+          <div className="flex min-w-0 items-start gap-3">
             <AlertTriangle
               size={17}
               className="mt-0.5 shrink-0 text-red-700"
             />
 
             <div>
-              <p className="font-black text-[#10233f]">
+              <p className="font-black text-[#10233F]">
                 Founder Growth refresh failed
               </p>
 
@@ -1367,7 +1367,7 @@ export default function FounderGrowthDashboard({
       {activeView ===
       "overview" ? (
         <>
-          <div className="grid gap-3 rounded-[1.7rem] border-[3px] border-[#234E78] bg-[#FFF8EE] p-4 md:grid-cols-3">
+          <div className="grid min-w-0 gap-3 rounded-[1.6rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 md:grid-cols-3 shadow-[0_9px_24px_rgba(15,35,63,0.06)]">
             <FounderGuideCard
               label="Business health"
               value={`${growth.businessHealth}/100`}
@@ -1388,7 +1388,7 @@ export default function FounderGrowthDashboard({
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
             <FounderMetricCard
               label="Students"
               value={
@@ -1464,7 +1464,7 @@ export default function FounderGrowthDashboard({
             />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
             <GrowthFunnelPanel
               growth={growth}
               compact
@@ -1488,7 +1488,7 @@ export default function FounderGrowthDashboard({
               )
             }
           >
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
               {recommendations.map(
                 (item) => (
                   <FounderRecommendationCard
@@ -1502,7 +1502,7 @@ export default function FounderGrowthDashboard({
             </div>
           </FounderDisclosure>
 
-          <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
             <CounselorLeaderboardPanel
               growth={growth}
               compact
@@ -1576,15 +1576,15 @@ export default function FounderGrowthDashboard({
         />
       ) : null}
 
-      <div className="rounded-[1.4rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
-        <div className="flex items-start gap-3">
+      <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#F2F7FC] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)]">
+        <div className="flex min-w-0 items-start gap-3">
           <ShieldCheck
             size={17}
-            className="mt-0.5 shrink-0 text-orange-700"
+            className="mt-0.5 shrink-0 text-[#B84F0E]"
           />
 
           <div>
-            <p className="font-black text-[#10233f]">
+            <p className="font-black text-[#10233F]">
               Founder analytics scope
             </p>
 
@@ -1608,14 +1608,14 @@ function FounderGuideCard({
   tone = "navy",
 }) {
   const tones = {
-    navy: "border-[#234E78] bg-[#EEF4FA]",
-    orange: "border-orange-400 bg-orange-50",
+    navy: "border-[#123865] bg-[#EEF4FA]",
+    orange: "border-[#FF5A0A] bg-[#FFF4EA]",
     red: "border-red-400 bg-red-50",
     green: "border-emerald-400 bg-emerald-50",
   };
 
   return (
-    <div className={`rounded-[1.35rem] border-[3px] p-4 ${tones[tone] || tones.navy}`}>
+    <div className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.045)] ${tones[tone] || tones.navy}`}>
       <p className="text-[9px] font-black uppercase tracking-[0.11em] text-[#10233F]">
         {label}
       </p>
@@ -1641,26 +1641,26 @@ function FounderDisclosure({
   const red = tone === "red";
 
   return (
-    <section className={`overflow-hidden rounded-[1.8rem] border-[3px] bg-[#FFF8EE] shadow-[0_10px_28px_rgba(23,36,61,0.06)] ${
-      red ? "border-red-400" : "border-[#234E78]"
+    <section className={`min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] bg-[#FFF8EF] shadow-[0_10px_28px_rgba(15,35,63,0.07)] ${
+      red ? "border-red-400" : "border-[#123865]"
     }`}>
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-4 border-b-[3px] px-5 py-4 text-left text-white transition ${
+        className={`flex w-full min-w-0 items-center justify-between gap-4 border-b-[3px] px-4 py-3.5 text-left text-white transition sm:px-5 ${
           red
             ? "border-red-300 bg-[#8F2530] hover:bg-[#7A1F29]"
-            : "border-orange-400 bg-[#123865] hover:bg-[#0F3158]"
+            : "border-[#FF5A0A] bg-[#123865] hover:bg-[#0F3158]"
         }`}
       >
         <div>
           <p className={`text-[9px] font-black uppercase tracking-[0.14em] ${
-            red ? "text-red-100" : "text-orange-300"
+            red ? "text-red-100" : "text-[#FFB38A]"
           }`}>
             {eyebrow}
           </p>
-          <h3 className="mt-0.5 text-xl font-black text-white">{title}</h3>
+          <h3 className="mt-0.5 text-lg font-black text-white sm:text-xl">{title}</h3>
           <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-white/80">
             {description}
           </p>
@@ -1671,7 +1671,7 @@ function FounderDisclosure({
         </span>
       </button>
 
-      {open ? <div className="p-4 sm:p-5">{children}</div> : null}
+      {open ? <div className="min-w-0 p-4 sm:p-5">{children}</div> : null}
     </section>
   );
 }
@@ -1681,7 +1681,7 @@ function HeaderChip({
   label,
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-white">
+    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-[#FFB38A]">
       <Icon size={11} />
       {label}
     </span>
@@ -1693,7 +1693,7 @@ function DarkMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
       <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
         {label}
       </p>
@@ -1710,7 +1710,7 @@ function StalledStudentPanel({
 }) {
   return (
     <section className="rounded-[1.5rem] border-[3px] border-red-400 bg-[#FFF8F6] p-4 sm:p-5">
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-3 lg:grid-cols-2">
         {students.map(
           (student) => (
             <div
@@ -1718,11 +1718,11 @@ function StalledStudentPanel({
                 student.id ||
                 student.name
               }
-              className="rounded-[1.2rem] border-2 border-red-300 bg-white p-4 shadow-[0_7px_18px_rgba(194,65,59,0.045)]"
+              className="min-w-0 rounded-[1.15rem] border-[3px] border-red-300 bg-white p-4 shadow-[0_7px_18px_rgba(194,65,59,0.045)]"
             >
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_90px]">
+              <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_90px]">
                 <div className="min-w-0">
-                  <p className="break-words font-black leading-5 text-[#10233f]">
+                  <p className="break-words font-black leading-5 text-[#10233F]">
                     {student.name}
                   </p>
 
@@ -1741,7 +1741,7 @@ function StalledStudentPanel({
                 </div>
               </div>
 
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
                 <StalledFact label="Stage" value={student.stage} />
                 <StalledFact label="Owner" value={student.counselor} />
               </div>
@@ -1755,11 +1755,11 @@ function StalledStudentPanel({
 
 function StalledFact({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-slate-200 bg-[#F8FAFC] px-3 py-2">
+    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2.5">
       <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
         {label}
       </p>
-      <p className="mt-1 break-words text-xs font-black text-[#243A60]">
+      <p className="mt-1 break-words text-xs font-black text-[#123865]">
         {value || "—"}
       </p>
     </div>

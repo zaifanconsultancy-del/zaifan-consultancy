@@ -1,4 +1,4 @@
-// DashboardAnalytics V5 MAXIMUM — Italy-First Executive CRM Analytics
+// DashboardAnalytics PARTNER OS V5 MAXIMUM — Italy-First Executive CRM Analytics
 // src/components/admin/DashboardAnalytics.jsx
 //
 // Maximum pass:
@@ -687,7 +687,7 @@ function DashboardAnalytics({
         )}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.45fr_0.9fr]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[1.45fr_0.9fr]">
         <ChartPanel
           cardClass={cardClass}
           eyebrow="Weekly CRM Analytics"
@@ -820,7 +820,7 @@ function DashboardAnalytics({
         </ChartPanel>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-3">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-3">
         <ChartPanel
           cardClass={cardClass}
           eyebrow="Lead Priority"
@@ -1011,7 +1011,7 @@ function DashboardAnalytics({
         </ChartPanel>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[1.08fr_0.92fr]">
         <ItalyFocusPanel
           cardClass={cardClass}
           data={model.italyInterest}
@@ -1066,7 +1066,7 @@ function AnalyticsCard({
             {label}
           </p>
 
-          <p className="mt-2 text-3xl font-black text-[#10233f]">
+          <p className="mt-2 text-3xl font-black text-[#10233F]">
             {value}
           </p>
         </div>
@@ -1120,7 +1120,7 @@ function ChartPanel({
       </div>
 
       <div className="min-h-[280px] bg-[#FFF8EE] p-3 pt-4 sm:p-4">
-        <div className="h-full min-h-[250px] rounded-[1.3rem] border-2 border-slate-300 bg-white p-3">
+        <div className="h-full min-h-[250px] rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-3">
           {children}
         </div>
       </div>
@@ -1154,11 +1154,11 @@ function ItalyFocusPanel({
 
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
+                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#FFB38A]">
                   Italy-First CRM
                 </p>
 
-                <span className="rounded-full border-2 border-orange-300/40 bg-orange-400/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-orange-200">
+                <span className="rounded-full border-2 border-[#FFB38A]/40 bg-[#FF7B32]/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-orange-200">
                   Active Destination
                 </span>
               </div>
@@ -1175,9 +1175,9 @@ function ItalyFocusPanel({
         </div>
 
         <div className="bg-[#FFF8EE] p-4">
-          <div className="grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-[1.15fr_0.85fr]">
             <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4E8] p-4">
-              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
                 Italy Leads
               </p>
 
@@ -1186,7 +1186,7 @@ function ItalyFocusPanel({
                   {italyLeads}
                 </p>
 
-                <span className="shrink-0 rounded-full border-2 border-[#F97316] bg-white px-3 py-1 text-sm font-black text-orange-700">
+                <span className="shrink-0 rounded-full border-2 border-[#F97316] bg-white px-3 py-1 text-sm font-black text-[#B84F0E]">
                   {share}%
                 </span>
               </div>
@@ -1195,7 +1195,7 @@ function ItalyFocusPanel({
                 Share of CRM records that currently contain a destination value.
               </p>
 
-              <div className="mt-4 h-3 overflow-hidden rounded-full border border-orange-200 bg-white">
+              <div className="mt-4 h-3 overflow-hidden rounded-full border border-[#FFD0B5] bg-white">
                 <div
                   className="h-full rounded-full bg-[#E96512]"
                   style={{ width: `${Math.max(0, Math.min(100, share))}%` }}
@@ -1232,7 +1232,7 @@ function ItalyFocusPanel({
             />
           </div>
 
-          <div className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3">
+          <div className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-3">
             <p className="text-xs font-semibold leading-5 text-slate-600">
               Zaifan is currently operating Italy-first, so Germany, Canada, Turkey and other destinations are intentionally excluded from this Admin demand panel.
             </p>
@@ -1250,7 +1250,7 @@ function ItalyMiniMetric({
 }) {
   const tones = {
     orange:
-      "border-[#F97316] bg-[#FFF4E8] text-orange-700",
+      "border-[#F97316] bg-[#FFF4E8] text-[#B84F0E]",
     blue:
       "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
     green:
@@ -1312,7 +1312,7 @@ function InsightPanel({
 
       <div className="space-y-3 bg-[#FFF8EE] p-4">
         {data.length === 0 ? (
-          <div className="rounded-[1.2rem] border-2 border-dashed border-slate-300 bg-white p-6 text-center">
+          <div className="rounded-[1.2rem] border-2 border-dashed border-[#C9D7E6] bg-white p-6 text-center">
             <p className="text-sm font-semibold text-slate-600">
               {emptyText}
             </p>
@@ -1325,7 +1325,7 @@ function InsightPanel({
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-[#10233f]">
+                  <p className="truncate text-sm font-black text-[#10233F]">
                     #{index + 1} {item.name}
                   </p>
 
@@ -1364,7 +1364,7 @@ function LegendList({ data }) {
       {data.map((item) => (
         <div
           key={item.name}
-          className="flex items-center justify-between rounded-xl border-2 border-slate-300 bg-white px-3 py-2"
+          className="flex items-center justify-between rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-2"
         >
           <div className="flex items-center gap-2">
             <span
@@ -1379,7 +1379,7 @@ function LegendList({ data }) {
             </span>
           </div>
 
-          <span className="text-xs font-black text-[#10233f]">
+          <span className="text-xs font-black text-[#10233F]">
             {item.value}
           </span>
         </div>
@@ -1393,12 +1393,12 @@ function MiniStat({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-center">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-3 text-center">
       <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-black text-[#10233f]">
+      <p className="mt-1 text-sm font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -1419,9 +1419,9 @@ function CustomTooltip({
   }
 
   return (
-    <div className="rounded-xl border-2 border-orange-300 bg-white px-4 py-3 text-xs shadow-[0_14px_36px_rgba(15,35,63,0.14)]">
+    <div className="rounded-xl border-2 border-[#FFB38A] bg-white px-4 py-3 text-xs shadow-[0_14px_36px_rgba(15,35,63,0.14)]">
       {label ? (
-        <p className="mb-2 font-black text-orange-700">
+        <p className="mb-2 font-black text-[#B84F0E]">
           {label}
         </p>
       ) : null}
@@ -1434,7 +1434,7 @@ function CustomTooltip({
               className="font-semibold text-slate-600"
             >
               {item.name}:{" "}
-              <span className="font-black text-[#10233f]">
+              <span className="font-black text-[#10233F]">
                 {item.value}
               </span>
             </p>
@@ -1448,7 +1448,7 @@ function CustomTooltip({
 function ChartEmptyState({ text }) {
   return (
     <div className="flex min-h-[240px] flex-col items-center justify-center px-6 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
         <BarChart3 size={22} />
       </div>
 
@@ -1493,7 +1493,7 @@ function MethodologyNote() {
         </div>
 
         <div>
-          <p className="text-sm font-black text-[#10233f]">
+          <p className="text-sm font-black text-[#10233F]">
             Analytics methodology
           </p>
 
@@ -1728,12 +1728,12 @@ function getToneStyle(tone) {
   const styles = {
     orange: {
       card:
-        "border-orange-300 bg-orange-50 text-orange-800",
+        "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]",
       icon:
-        "border-orange-300 text-orange-700",
+        "border-[#FFB38A] text-[#B84F0E]",
       badge:
-        "border-orange-300 bg-orange-50 text-orange-800",
-      bar: "bg-orange-500",
+        "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]",
+      bar: "bg-[#FF5A0A]",
     },
     green: {
       card:

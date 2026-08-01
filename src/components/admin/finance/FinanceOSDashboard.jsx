@@ -11,6 +11,11 @@ import {
   FileWarning,
   Landmark,
   RefreshCw,
+  Search,
+  X,
+  ReceiptText,
+  ArrowUpRight,
+  ArrowDownRight,
   ShieldCheck,
   Sparkles,
   TrendingDown,
@@ -960,20 +965,305 @@ function ModuleUnavailable({ title, message, icon: Icon = Database }) {
   );
 }
 
+
+function financeRecordStatusTone(status = "") {
+  const value = lower(status);
+
+  if (
+    value.includes("paid") ||
+    value.includes("confirmed") ||
+    value.includes("completed") ||
+    value.includes("cleared") ||
+    value.includes("settled")
+  ) {
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
+  }
+
+  if (
+    value.includes("overdue") ||
+    value.includes("failed") ||
+    value.includes("rejected") ||
+    value.includes("cancel")
+  ) {
+    return "border-[#FB7185] bg-[#FFF4F4] text-red-700";
+  }
+
+  if (
+    value.includes("pending") ||
+    value.includes("due") ||
+    value.includes("review") ||
+    value.includes("estimated")
+  ) {
+    return "border-[#F59E0B] bg-[#FFF8E8] text-amber-800";
+  }
+
+  return "border-[#60A5FA] bg-[#F2F7FF] text-blue-700";
+}
+
+function getFinanceRecordDate(record = {}) {
+  return (
+    record.date ||
+    record.due_date ||
+    record.paid_at ||
+    record.payment_date ||
+    record.invoice_date ||
+    record.created_at ||
+    record.createdAt ||
+    null
+  );
+}
+
+function formatDate(value) {
+  if (!value) return "Date unavailable";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function buildFinancePortfolio(finance) {
+  const currency = finance.currency;
+
+  const invoices = safeArray(finance.raw?.invoices).map((record, index) => ({
+    id: record.id || `invoice-${index}`,
+    type: "Invoice",
+    title:
+      record.invoice_number ||
+      record.reference ||
+      record.title ||
+      record.student_name ||
+      record.customer_name ||
+      "Invoice record",
+    party:
+      record.student_name ||
+      record.customer_name ||
+      record.client_name ||
+      record.email ||
+      "Linked student/client",
+    amount: getAmount(record),
+    currency: getCurrency(record) || currency,
+    status: record.status || record.invoice_status || "Recorded",
+    date: getFinanceRecordDate(record),
+    direction: "in",
+    source: record,
+  }));
+
+  const payments = safeArray(finance.raw?.payments).map((record, index) => ({
+    id: record.id || `payment-${index}`,
+    type: "Payment",
+    title:
+      record.reference ||
+      record.payment_reference ||
+      record.student_name ||
+      record.customer_name ||
+      "Payment record",
+    party:
+      record.student_name ||
+      record.customer_name ||
+      record.client_name ||
+      record.email ||
+      "Linked student/client",
+    amount: getAmount(record),
+    currency: getCurrency(record) || currency,
+    status: record.status || record.payment_status || "Recorded",
+    date: getFinanceRecordDate(record),
+    direction: "in",
+    source: record,
+  }));
+
+  const expenses = safeArray(finance.expenseRows).map((record, index) => ({
+    id: record.id || `expense-row-${index}`,
+    type: "Expense",
+    title: record.title || record.category || "Expense record",
+    party: record.category || "Operating expense",
+    amount: number(record.amount),
+    currency: cleanCurrency(record.currency) || currency,
+    status: record.status || "Recorded",
+    date: record.date || null,
+    direction: "out",
+    source: record,
+  }));
+
+  const commissions = safeArray(finance.commissionRows).map((record, index) => ({
+    id: record.id || `commission-row-${index}`,
+    type: "Commission",
+    title: record.partner || "Commission record",
+    party: record.student || record.type || "Linked partner",
+    amount: number(record.amount),
+    currency: cleanCurrency(record.currency) || currency,
+    status: record.status || "Pending",
+    date: record.date || null,
+    direction: "out",
+    estimated: Boolean(record.estimated),
+    source: record,
+  }));
+
+  return [...invoices, ...payments, ...expenses, ...commissions].sort((a, b) => {
+    const aTime = a.date ? new Date(a.date).getTime() : 0;
+    const bTime = b.date ? new Date(b.date).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
+function FinancePortfolioRow({ record }) {
+  const incoming = record.direction === "in";
+
+  return (
+    <article className="rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#F97316]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(18rem,1.5fr)_10rem_11rem_10rem_11rem] xl:items-center">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${
+                incoming
+                  ? "border-[#34D399] bg-[#F0FFF8] text-emerald-700"
+                  : "border-[#FB7185] bg-[#FFF4F4] text-red-700"
+              }`}
+            >
+              {incoming ? (
+                <ArrowDownRight size={17} />
+              ) : (
+                <ArrowUpRight size={17} />
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="break-words font-black text-[#10233F]">
+                  {record.title}
+                </p>
+
+                <span
+                  className={`rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${financeRecordStatusTone(
+                    record.status
+                  )}`}
+                >
+                  {record.status || "Unknown"}
+                </span>
+              </div>
+
+              <p className="mt-1 break-words text-xs font-semibold text-slate-500">
+                {record.party}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] px-2.5 py-1 text-[8px] font-black text-slate-600">
+              <ReceiptText size={11} />
+              {record.type}
+            </span>
+
+            {record.estimated ? (
+              <span className="rounded-lg border-2 border-[#F59E0B] bg-[#FFF8E8] px-2.5 py-1 text-[8px] font-black text-amber-800">
+                Estimate only
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Type
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {record.type}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Amount
+          </p>
+          <p
+            className={`mt-1 truncate text-xs font-black ${
+              incoming ? "text-emerald-700" : "text-red-700"
+            }`}
+          >
+            {money(record.amount, record.currency)}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Currency
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {record.currency || "Unknown"}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+          <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+            Date
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {formatDate(record.date)}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function Overview({ finance }) {
+  const [search, setSearch] = useState("");
+  const [recordType, setRecordType] = useState("All");
+
   const totals = finance.totals;
   const currency = finance.currency;
 
-  return (
-    <div className="space-y-5">
-      <DataQualityStrip finance={finance} />
+  const portfolio = useMemo(
+    () => buildFinancePortfolio(finance),
+    [finance]
+  );
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+  const filteredPortfolio = useMemo(() => {
+    const needle = lower(search);
+
+    return portfolio.filter((record) => {
+      if (recordType !== "All" && record.type !== recordType) {
+        return false;
+      }
+
+      if (!needle) return true;
+
+      return [
+        record.title,
+        record.party,
+        record.type,
+        record.status,
+        record.currency,
+      ]
+        .map(lower)
+        .join(" ")
+        .includes(needle);
+    });
+  }, [portfolio, search, recordType]);
+
+  const filtersActive = Boolean(search.trim()) || recordType !== "All";
+
+  function clearFilters() {
+    setSearch("");
+    setRecordType("All");
+  }
+
+  return (
+    <>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Collected"
           value={money(totals.collected, currency)}
-          helper="Confirmed payments / paid invoice evidence."
-          tone="green"
+          helper="Confirmed payments and paid-invoice evidence."
+          tone="navy"
           icon={Banknote}
           badge="Recorded"
         />
@@ -981,35 +1271,28 @@ function Overview({ finance }) {
         <MetricCard
           label="Outstanding"
           value={money(totals.outstanding, currency)}
-          helper={`${money(totals.overdue, currency)} overdue`}
-          tone="amber"
+          helper={`${money(totals.overdue, currency)} currently overdue.`}
+          tone={totals.overdue > 0 ? "amber" : "blue"}
           icon={Clock3}
           badge="Receivable"
         />
 
         <MetricCard
-          label="Expenses"
-          value={money(totals.totalExpenses, currency)}
-          helper="Recorded operating expenses."
+          label="Operating Outflow"
+          value={money(
+            totals.totalExpenses + totals.totalCommissions,
+            currency
+          )}
+          helper={`${money(
+            totals.totalExpenses,
+            currency
+          )} expenses · ${money(
+            totals.totalCommissions,
+            currency
+          )} recorded commissions.`}
           tone="red"
           icon={TrendingDown}
-          badge="Recorded"
-        />
-
-        <MetricCard
-          label="Commissions"
-          value={money(totals.totalCommissions, currency)}
-          helper={
-            totals.estimatedCommissions > 0
-              ? `${money(
-                  totals.estimatedCommissions,
-                  currency
-                )} additional estimated exposure`
-              : "Recorded commission payouts/exposure."
-          }
-          tone="violet"
-          icon={CircleDollarSign}
-          badge={totals.estimatedCommissions > 0 ? "Recorded + estimate separated" : "Recorded"}
+          badge="Recorded only"
         />
 
         <MetricCard
@@ -1018,57 +1301,141 @@ function Overview({ finance }) {
           helper={
             totals.margin === null
               ? "Margin unavailable without collected revenue."
-              : `${totals.margin}% recorded operating margin`
+              : `${totals.margin}% recorded operating margin.`
           }
           tone={totals.netProfit >= 0 ? "green" : "red"}
           icon={totals.netProfit >= 0 ? TrendingUp : TrendingDown}
           badge="Operational"
         />
+      </div>
 
-        <MetricCard
-          label="Health"
-          value={
-            totals.healthAvailable && Number.isFinite(totals.healthScore)
-              ? `${totals.healthScore}%`
-              : "Unavailable"
-          }
-          helper={totals.healthReason}
+      <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.11em] text-[#B84F0E]">
+              Financial Command
+            </p>
+            <h2 className="mt-1 text-xl font-black text-[#10233F]">
+              Transaction portfolio
+            </h2>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              Search and review the real invoices, payments, expenses and
+              commission records currently supplied to Finance OS.
+            </p>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-[minmax(14rem,1fr)_10rem_auto]">
+            <label className="relative block">
+              <Search
+                size={15}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search finance record..."
+                className="min-h-10 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-xs font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#F97316]"
+              />
+            </label>
+
+            <select
+              value={recordType}
+              onChange={(event) => setRecordType(event.target.value)}
+              className="min-h-10 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none focus:border-[#F97316]"
+            >
+              <option>All</option>
+              <option>Invoice</option>
+              <option>Payment</option>
+              <option>Expense</option>
+              <option>Commission</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={!filtersActive}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-slate-700 disabled:opacity-40"
+            >
+              <X size={13} />
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          {filteredPortfolio.length ? (
+            filteredPortfolio.map((record) => (
+              <FinancePortfolioRow
+                key={`${record.type}-${record.id}`}
+                record={record}
+              />
+            ))
+          ) : (
+            <div className="rounded-[1.4rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-8 text-center">
+              <WalletCards size={24} className="mx-auto text-[#B84F0E]" />
+              <p className="mt-3 font-black text-[#10233F]">
+                {portfolio.length
+                  ? "No finance records match these filters."
+                  : "No real finance records yet."}
+              </p>
+              <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                {portfolio.length
+                  ? "Clear or change the finance filters."
+                  : "Connect genuine invoices, payments, expenses or commissions before Finance OS reports transaction activity."}
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <QualityCard
+          icon={Database}
+          eyebrow="Finance Evidence"
+          value={`${finance.completeness.financeSourceCount}/4 sources`}
+          helper="Invoices, payments, expenses and commissions remain independently measurable."
           tone={
-            !totals.healthAvailable
-              ? "blue"
-              : totals.healthScore >= 70
-                ? "green"
-                : totals.healthScore >= 45
-                  ? "amber"
-                  : "red"
+            finance.completeness.financeSourceCount >= 3
+              ? "green"
+              : finance.completeness.financeSourceCount >= 1
+                ? "amber"
+                : "red"
           }
-          icon={ShieldCheck}
-          badge="Evidence-based"
+        />
+
+        <QualityCard
+          icon={Sparkles}
+          eyebrow="Forecast Boundary"
+          value={`${finance.completeness.pipelineSourceCount}/4 stages`}
+          helper="Applications, offers, CAS and visas support estimates only; they are not booked revenue."
+          tone={
+            finance.completeness.pipelineSourceCount >= 3
+              ? "green"
+              : finance.completeness.pipelineSourceCount >= 1
+                ? "amber"
+                : "red"
+          }
+        />
+
+        <QualityCard
+          icon={finance.warnings.length ? AlertTriangle : BadgeCheck}
+          eyebrow="Integrity Status"
+          value={
+            finance.warnings.length
+              ? `${finance.warnings.length} warning${
+                  finance.warnings.length === 1 ? "" : "s"
+                }`
+              : "Clean"
+          }
+          helper={
+            finance.warnings.length
+              ? "Uncertainty stays visible instead of being converted into fake money."
+              : "No major finance-data integrity warnings detected."
+          }
+          tone={finance.warnings.length ? "amber" : "green"}
         />
       </div>
-
-      <IntegrityBanner finance={finance} />
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <CashflowCommandCenter finance={finance} compact />
-
-        {finance.forecast.available ? (
-          <RevenueForecastPanel finance={finance} compact />
-        ) : (
-          <ModuleUnavailable
-            title="Revenue forecast unavailable"
-            message={finance.forecast.reason}
-            icon={TrendingUp}
-          />
-        )}
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ProfitLossPanel finance={finance} compact />
-
-        <FinancialHealthPanel finance={finance} compact />
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -1160,9 +1527,9 @@ export default function FinanceOSDashboard({
   };
 
   return (
-    <div className="space-y-5 text-[#10233F]">
-      <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_18px_50px_rgba(15,35,63,0.10)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
@@ -1170,113 +1537,93 @@ export default function FinanceOSDashboard({
                 Finance OS
               </span>
 
-              <span className="rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
                 {finance.currency}
               </span>
 
-              <span className="rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
-                {finance.completeness.financeSourceCount}/4 finance sources
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Evidence first
               </span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+            <h1 className="mt-3 text-3xl font-black text-white">
               Financial Command Center
             </h1>
 
-            <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-slate-200">
-              Real-data-first operating finance for collections, receivables,
-              expenses, commissions, profit, forecast evidence and business
-              health. Missing data stays missing instead of being replaced by
-              fake money.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Collections, receivables, expenses, commissions, operating
+              profit, forecast evidence and financial health. Missing data
+              remains missing instead of being replaced by fake money.
             </p>
-
-            {adminProfile?.email ? (
-              <p className="mt-4 text-xs font-bold text-orange-200">
-                Finance workspace for {adminProfile.email}
-              </p>
-            ) : null}
           </div>
 
-          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
-            <div className="flex items-center gap-2">
-              <ActiveViewIcon size={17} />
-              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                Current Workspace
-              </p>
-            </div>
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Current Workspace
+            </p>
 
-            <p className="mt-3 text-2xl font-black text-white">
+            <p className="mt-2 text-2xl font-black">
               {VIEW_CONFIG.find((view) => view.key === activeView)?.label}
             </p>
 
             <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
-              {finance.metadata.accountingBasis}
+              {adminProfile?.email
+                ? `Admin finance view for ${adminProfile.email}`
+                : "Admin financial operations workspace"}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {finance.completeness.financeSourceCount}/4 sources
+              </span>
+
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
                 {finance.warnings.length
-                  ? `${finance.warnings.length} integrity warning${
+                  ? `${finance.warnings.length} warning${
                       finance.warnings.length === 1 ? "" : "s"
                     }`
                   : "Integrity clear"}
               </span>
-
-              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white">
-                Forecast = estimate
-              </span>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <nav
-        aria-label="Finance OS modules"
-        className="sticky top-3 z-20 rounded-[1.7rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_12px_34px_rgba(15,35,63,0.08)]"
-      >
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {VIEW_CONFIG.map((view) => {
-            const Icon = view.icon;
-            const active = activeView === view.key;
-
-            return (
-              <button
-                key={view.key}
-                type="button"
-                onClick={() => setActiveView(view.key)}
-                aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border-2 px-3.5 py-2 text-xs font-black transition ${
-                  active
-                    ? "border-[#F97316] bg-[#FF5A0A] text-white shadow-[0_6px_16px_rgba(249,115,22,0.18)]"
-                    : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4E8]"
-                }`}
-              >
-                <Icon size={14} />
-                {view.label}
-              </button>
-            );
-          })}
-
-          {onRefresh ? (
+      <nav className="flex flex-col gap-3 rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-wrap gap-2">
+          {VIEW_CONFIG.map(({ key, label, icon: Icon }) => (
             <button
+              key={key}
               type="button"
-              onClick={onRefresh}
-              className="ml-auto inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:border-[#F97316]"
+              onClick={() => setActiveView(key)}
+              aria-pressed={activeView === key}
+              className={`inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-xs font-black transition ${
+                activeView === key
+                  ? "border-[#F97316] bg-[#FF5A0A] text-white"
+                  : "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F] hover:border-[#F97316]"
+              }`}
             >
-              <RefreshCw size={14} />
-              Refresh Finance
+              <Icon size={14} />
+              {label}
             </button>
-          ) : null}
+          ))}
         </div>
+
+        {onRefresh ? (
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white transition hover:bg-[#245886]"
+          >
+            <RefreshCw size={13} />
+            Refresh Finance
+          </button>
+        ) : null}
       </nav>
 
       {finance.currencyMeta.mixed ? (
         <div className="flex items-start gap-3 rounded-[1.35rem] border-[3px] border-[#FB7185] bg-[#FFF4F4] p-4">
-          <AlertTriangle
-            size={18}
-            className="mt-0.5 shrink-0 text-red-700"
-          />
-
+          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-red-700" />
           <div>
             <p className="font-black text-[#10233F]">
               Mixed-currency finance evidence detected

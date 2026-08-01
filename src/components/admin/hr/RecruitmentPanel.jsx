@@ -41,7 +41,7 @@ function stageTone(stage = "") {
   }
 
   if (value.includes("interview")) {
-    return "border-[#60A5FA] bg-[#F2F7FF] text-violet-700";
+    return "border-[#60A5FA] bg-[#F2F7FF] text-blue-700";
   }
 
   if (value.includes("screen")) {
@@ -136,7 +136,7 @@ function MetricCard({
 
       {badge ? (
         <span
-          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+          className={`mt-3 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
             dark
               ? "border-white/20 bg-white/10 text-white"
               : "border-[#C9D7E6] bg-white text-slate-600"
@@ -153,11 +153,11 @@ function CandidateRow({ candidate }) {
   const scoreAvailable = hasScore(candidate);
 
   return (
-    <article className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-[#F97316]">
+    <article className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-[#F97316]">
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_13rem_10rem_10rem] xl:items-center">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] text-[#B84F0E]">
               <UserRoundPlus size={17} />
             </div>
 
@@ -187,7 +187,7 @@ function CandidateRow({ candidate }) {
             Stage
           </p>
           <span
-            className={`mt-1 inline-flex w-fit rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${stageTone(
+            className={`mt-1 inline-flex w-fit rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${stageTone(
               candidate.stage
             )}`}
           >
@@ -200,7 +200,7 @@ function CandidateRow({ candidate }) {
             Match Evidence
           </p>
           <span
-            className={`mt-1 inline-flex w-fit rounded-full border-2 px-2.5 py-1 text-[9px] font-black ${scoreTone(
+            className={`mt-1 inline-flex w-fit rounded-lg border-2 px-2.5 py-1 text-[9px] font-black ${scoreTone(
               scoreAvailable ? candidate.score : null
             )}`}
           >
@@ -333,9 +333,9 @@ export default function RecruitmentPanel({ hr = {} }) {
 
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
-      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <div className="bg-[#123865] p-5 text-white sm:p-6">
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-[#F97316]/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <BriefcaseBusiness size={12} />
             Recruitment
           </div>
@@ -479,7 +479,7 @@ export default function RecruitmentPanel({ hr = {} }) {
             type="button"
             onClick={clearFilters}
             disabled={!filtersActive}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-[#B84F0E] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X size={13} />
             Clear
@@ -496,7 +496,7 @@ export default function RecruitmentPanel({ hr = {} }) {
             ))
           ) : (
             <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#C9D7E6] bg-[#FFFDF8] text-[#B84F0E]">
                 <UserRoundPlus size={24} />
               </div>
 

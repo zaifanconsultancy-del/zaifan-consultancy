@@ -46,7 +46,7 @@ function toneClass(tone = "neutral") {
     navy: "border-[#123865] bg-[#123865]",
     amber: "border-[#F59E0B] bg-[#FFF8E8]",
     blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    violet: "border-[#9B6CFF] bg-[#F8F5FF]",
+    violet: "border-[#60A5FA] bg-[#F2F7FF]",
   };
 
   return map[tone] || map.neutral;
@@ -93,7 +93,7 @@ function PnLRow({
 
           {badge ? (
             <span
-              className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${
+              className={`rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${
                 dark
                   ? "border-white/20 bg-white/10 text-white"
                   : "border-[#C9D7E6] bg-white text-slate-600"
@@ -237,9 +237,9 @@ export default function ProfitLossPanel({
 
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
-      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <div className="bg-[#123865] p-5 text-white sm:p-6">
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-[#F97316]/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <Calculator size={12} />
             Profit & Loss
           </div>

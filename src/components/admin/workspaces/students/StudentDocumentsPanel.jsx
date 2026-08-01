@@ -1,4 +1,4 @@
-// StudentDocumentsPanel V14 — Docked Inspector + Persistent Workspace State
+// StudentDocumentsPanel PARTNER OS EXTREME V6 — White Utility Actions
 // Functional overhaul:
 // - true multi-file document blocks (without destructive replacement)
 // - multi-select upload
@@ -2075,120 +2075,169 @@ function StudentDocumentsPanel({
   };
 
   return (
-    <div className="space-y-4 bg-[#fffaf4] p-3 text-[#10233f] sm:p-4 lg:p-5">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
       <StudentNotificationPreviewModal
         pending={pendingNotification}
         busy={notificationBusy}
         onCancel={() => !notificationBusy && setPendingNotification(null)}
         onConfirm={confirmPendingNotification}
       />
-      {/* COMMAND BAR */}
-      <section className="rounded-[1.5rem] border-[3px] border-orange-500 bg-white p-4 shadow-[0_12px_32px_rgba(121,72,40,0.08)] sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0">
-            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
+      {/* PARTNER OS DOCUMENT STRATEGY CENTER */}
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(17rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white">
                 <FolderOpen size={12} />
                 Student Master File
               </span>
 
-              <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
                 Student #{studentId || "—"}
               </span>
             </div>
 
-            <h2 className="mt-2 text-xl font-black tracking-tight text-[#10233f] sm:text-2xl">
-              Document Operations
+            <h2 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
+              Document Operations Center
             </h2>
 
-            <p className="mt-1 text-sm font-medium text-slate-600">
-              Real files, real statuses and direct actions. Add as many files
-              and document blocks as the case needs.
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
+              Control the complete student document vault: upload files, verify
+              evidence, manage recovery, inspect history, track expiry and keep
+              every document action audit-safe.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <StudentNotificationComposer
-              student={student}
-              context="document"
-              buttonLabel="Send Document Update"
-              compact
-            />
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Document Strategy Actions
+            </p>
 
-            <button
-              type="button"
-              onClick={() => {
-                setShowHistory(true);
-                void reloadHistory();
-              }}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-[#0b2a57] bg-[#0b2a57] px-3.5 py-2.5 text-xs font-black transition hover:bg-[#123d75]"
-              style={{ color: "#ffffff" }}
-            >
-              <History size={15} style={{ color: "#ffffff" }} />
-              <span style={{ color: "#ffffff" }}>History</span>
-            </button>
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">
+              Notify the student, add a document type, inspect history, recover
+              deleted files or refresh the live vault before changing evidence.
+            </p>
 
-            <button
-              type="button"
-              onClick={() => {
-                setShowDeleted((current) => !current);
-                clearSelection();
-              }}
-              className={`inline-flex items-center gap-2 rounded-xl border-2 px-3.5 py-2.5 text-xs font-black transition ${
-                showDeleted
-                  ? "border-[#0b2a57] bg-[#0b2a57]"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <Undo2
-                size={15}
-                style={{ color: showDeleted ? "#ffffff" : undefined }}
-              />
-              <span style={{ color: showDeleted ? "#ffffff" : undefined }}>
-                Recovery {counts.deleted ? `(${counts.deleted})` : ""}
-              </span>
-            </button>
+            <div className="mt-4 min-w-0 space-y-2.5">
+              <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                <div className="[&>div>button]:min-h-11 [&>div>button]:w-full [&>div>button]:justify-center [&>div>button]:whitespace-nowrap [&>div>button]:rounded-xl [&>div>button]:border-2 [&>div>button]:border-white/35 [&>div>button]:bg-[#123865] [&>div>button]:px-4 [&>div>button]:text-xs [&>div>button]:font-black [&>div>button]:text-white [&>div>button]:shadow-sm [&>div>button]:hover:border-white [&>div>button]:hover:bg-[#0d2b50]">
+                  <StudentNotificationComposer
+                    student={student}
+                    context="document"
+                    buttonLabel="Send Update"
+                    compact
+                  />
+                </div>
 
-            <button
-              type="button"
-              onClick={() => setShowAddType(true)}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-400 bg-orange-50 px-3.5 py-2.5 text-xs font-black text-orange-700 transition hover:bg-orange-100"
-            >
-              <Plus size={15} />
-              Add Document Type
-            </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddType(true)}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 active:translate-y-0"
+                >
+                  <Plus size={15} />
+                  Add Type
+                </button>
+              </div>
 
-            <button
-              type="button"
-              onClick={loadDocuments}
-              disabled={loading || savingKeys.size > 0}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-400 bg-white px-3.5 py-2.5 text-xs font-black text-[#10233f] transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw
-                size={15}
-                className={loading ? "animate-spin" : ""}
-              />
-              Refresh
-            </button>
+              <div className="grid min-w-0 grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowHistory(true);
+                    void reloadHistory();
+                  }}
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-white bg-white px-2.5 text-[10px] font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
+                >
+                  <History size={14} />
+                  <span className="hidden sm:inline">History</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleted((current) => !current);
+                    clearSelection();
+                  }}
+                  aria-pressed={showDeleted}
+                  className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border-2 px-2.5 text-[10px] font-black shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 ${
+                    showDeleted
+                      ? "border-[#123865] bg-[#123865] text-white"
+                      : "border-white bg-white text-[#123865] hover:bg-[#FFF4E8]"
+                  }`}
+                >
+                  <Undo2 size={14} />
+                  <span className="hidden sm:inline">Recovery</span>
+                  {counts.deleted ? (
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[8px] ${
+                        showDeleted
+                          ? "bg-white/15 text-white"
+                          : "bg-[#123865]/10 text-[#123865]"
+                      }`}
+                    >
+                      {counts.deleted}
+                    </span>
+                  ) : null}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={loadDocuments}
+                  disabled={loading || savingKeys.size > 0}
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-white bg-white px-2.5 text-[10px] font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw
+                    size={14}
+                    className={loading ? "animate-spin" : ""}
+                  />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="grid min-w-0 gap-2 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <Metric label="Files" value={counts.total} icon={Files} />
-          <Metric label="Verified" value={counts.verified} icon={BadgeCheck} tone="green" />
-          <Metric label="Review" value={counts.received} icon={CircleAlert} tone="blue" />
-          <Metric label="Rejected" value={counts.rejected} icon={XCircle} tone="red" />
-          <Metric label="Expiring" value={counts.expiring} icon={CalendarClock} tone="orange" />
-          <Metric label="Verified rate" value={`${verifiedRate}%`} icon={ShieldCheck} tone="orange" />
+          <Metric
+            label="Verified"
+            value={counts.verified}
+            icon={BadgeCheck}
+            tone="green"
+          />
+          <Metric
+            label="Review"
+            value={counts.received}
+            icon={CircleAlert}
+            tone="blue"
+          />
+          <Metric
+            label="Rejected"
+            value={counts.rejected}
+            icon={XCircle}
+            tone="red"
+          />
+          <Metric
+            label="Expiring"
+            value={counts.expiring}
+            icon={CalendarClock}
+            tone="orange"
+          />
+          <Metric
+            label="Verified Rate"
+            value={`${verifiedRate}%`}
+            icon={ShieldCheck}
+            tone="orange"
+          />
         </div>
       </section>
 
       {savingKeys.size > 0 ? (
         <div
-          className="flex items-center gap-3 rounded-2xl border-[3px] border-[#071f50] bg-[#0b2a57] px-4 py-3 shadow-[0_10px_28px_rgba(7,31,80,0.18)]"
+          className="flex min-w-0 items-center gap-3 rounded-[1.2rem] border-2 border-[#FF5A0A] bg-[#123865] px-4 py-3 shadow-[0_10px_28px_rgba(18,56,101,0.18)]"
           style={{ color: "#ffffff" }}
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-orange-400 bg-[#173b70]">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#173b70]">
             <LoaderCircle
               size={17}
               className="animate-spin"
@@ -2215,7 +2264,7 @@ function StudentDocumentsPanel({
 
       {/* FEEDBACK */}
       {error ? (
-        <div className="flex items-start gap-3 rounded-2xl border-2 border-red-400 bg-red-50 p-4 text-sm font-bold text-red-800">
+        <div className="flex min-w-0 items-start gap-3 rounded-[1.2rem] border-2 border-[#FB7185] bg-[#FFF4F4] p-4 text-sm font-bold text-red-800 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
           <CircleAlert className="mt-0.5 shrink-0" size={17} />
           <span className="min-w-0 flex-1">{error}</span>
           <button
@@ -2230,7 +2279,7 @@ function StudentDocumentsPanel({
       ) : null}
 
       {successMessage ? (
-        <div className="flex flex-col gap-3 rounded-2xl border-2 border-emerald-400 bg-emerald-50 p-4 text-sm font-bold text-emerald-800 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-col gap-3 rounded-[1.2rem] border-2 border-[#34D399] bg-[#F0FFF8] p-4 text-sm font-bold text-emerald-800 shadow-[0_8px_22px_rgba(18,56,101,0.05)] sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <CheckCircle2 className="mt-0.5 shrink-0" size={17} />
             <span className="min-w-0 flex-1">{successMessage}</span>
@@ -2241,7 +2290,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={undoLastAction}
-                className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#0b2a57] bg-[#0b2a57] px-3 py-2 text-xs font-black transition hover:bg-[#123d75]"
+                className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2 text-[11px] font-black transition hover:bg-[#315B88]"
                 style={{ color: "#ffffff" }}
               >
                 <RotateCcw size={14} style={{ color: "#ffffff" }} />
@@ -2262,11 +2311,11 @@ function StudentDocumentsPanel({
       ) : null}
 
       {selectedIds.size > 0 ? (
-        <section className="rounded-[1.35rem] border-[3px] border-[#0b2a57] bg-white p-3 shadow-sm">
+        <section className="min-w-0 rounded-[1.2rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3 shadow-[0_6px_18px_rgba(18,56,101,0.04)]">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2">
-              <ListChecks size={17} className="text-[#0b2a57]" />
-              <span className="text-sm font-black text-[#0b2a57]">
+              <ListChecks size={17} className="text-[#123865]" />
+              <span className="text-sm font-black text-[#123865]">
                 {selectedIds.size} selected
               </span>
             </div>
@@ -2275,7 +2324,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={bulkDownload}
-                className="rounded-xl border-2 border-orange-400 bg-orange-50 px-3 py-2 text-xs font-black text-orange-800"
+                className="rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-2 text-[11px] font-black text-orange-800"
               >
                 Download selected
               </button>
@@ -2283,7 +2332,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={() => bulkChangeStatus("verified")}
-                className="rounded-xl border-2 border-emerald-400 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-800"
+                className="rounded-xl border-2 border-emerald-400 bg-emerald-50 px-3 py-2 text-[11px] font-black text-emerald-800"
               >
                 Verify selected
               </button>
@@ -2291,7 +2340,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={() => bulkChangeStatus("archived")}
-                className="rounded-xl border-2 border-slate-400 bg-slate-100 px-3 py-2 text-xs font-black text-slate-700"
+                className="rounded-xl border-2 border-slate-400 bg-slate-100 px-3 py-2 text-[11px] font-black text-slate-700"
               >
                 Archive selected
               </button>
@@ -2299,7 +2348,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={() => bulkChangeStatus("received")}
-                className="rounded-xl border-2 border-blue-400 bg-blue-50 px-3 py-2 text-xs font-black text-blue-800"
+                className="rounded-xl border-2 border-blue-400 bg-blue-50 px-3 py-2 text-[11px] font-black text-blue-800"
               >
                 Return to review
               </button>
@@ -2307,7 +2356,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={bulkSoftDelete}
-                className="rounded-xl border-2 border-red-400 bg-red-50 px-3 py-2 text-xs font-black text-red-800"
+                className="rounded-xl border-2 border-red-400 bg-red-50 px-3 py-2 text-[11px] font-black text-red-800"
               >
                 Move to recovery
               </button>
@@ -2315,7 +2364,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={clearSelection}
-                className="rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[11px] font-black text-slate-700"
               >
                 Clear
               </button>
@@ -2325,8 +2374,8 @@ function StudentDocumentsPanel({
       ) : null}
 
       {/* SEARCH / FILTER */}
-      <section className="rounded-[1.35rem] border-[3px] border-orange-300 bg-white p-3 shadow-sm">
-        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_180px]">
+      <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+        <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_190px]">
           <label className="relative block">
             <Search
               size={16}
@@ -2337,14 +2386,14 @@ function StudentDocumentsPanel({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search document types, files, notes..."
-              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-10 pr-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-10 pr-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </label>
 
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-black text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+            className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">All statuses</option>
             <option value="received">Received</option>
@@ -2359,13 +2408,13 @@ function StudentDocumentsPanel({
       {/* DOCUMENT BLOCKS */}
       <section className="space-y-3">
         {loading && documents.length === 0 ? (
-          <div className="flex min-h-[220px] items-center justify-center rounded-[1.5rem] border-2 border-orange-300 bg-white">
+          <div className="flex min-h-[220px] items-center justify-center rounded-[1.35rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] shadow-inner">
             <div className="text-center">
               <LoaderCircle
                 size={28}
                 className="mx-auto animate-spin text-orange-500"
               />
-              <p className="mt-3 text-sm font-black text-[#10233f]">
+              <p className="mt-3 text-sm font-black text-[#10233F]">
                 Loading student files
               </p>
             </div>
@@ -2373,9 +2422,9 @@ function StudentDocumentsPanel({
         ) : null}
 
         {!loading && filteredBlocks.length === 0 ? (
-          <div className="rounded-[1.5rem] border-2 border-dashed border-orange-300 bg-white p-8 text-center">
+          <div className="rounded-[1.35rem] border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-8 text-center">
             <File size={32} className="mx-auto text-orange-400" />
-            <h3 className="mt-3 text-lg font-black text-[#10233f]">
+            <h3 className="mt-3 text-lg font-black text-[#10233F]">
               No matching document blocks
             </h3>
             <p className="mt-1 text-sm text-slate-500">
@@ -2400,21 +2449,21 @@ function StudentDocumentsPanel({
           return (
             <article
               key={block.name}
-              className="overflow-hidden rounded-[1.5rem] border-[3px] border-orange-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)]"
+              className="min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:border-[#FF5A0A] hover:shadow-[0_12px_28px_rgba(18,56,101,0.08)]"
             >
-              <div className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
+              <div className="flex min-w-0 flex-col gap-3 border-b-2 border-[#FFB37A] bg-[#FFF8EF] p-3.5 lg:flex-row lg:items-center">
                 <button
                   type="button"
                   onClick={() => toggleBlock(block.name)}
                   className="flex min-w-0 flex-1 items-center gap-3 text-left"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-600">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
                     <FolderOpen size={19} />
                   </span>
 
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-base font-black text-[#10233f]">
+                      <span className="break-words text-base font-black text-[#10233F]">
                         {block.name}
                       </span>
 
@@ -2440,7 +2489,7 @@ function StudentDocumentsPanel({
                 </button>
 
                 <label
-                  className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-orange-400 bg-orange-500 px-3.5 py-2.5 text-xs font-black text-white transition hover:bg-orange-600 ${
+                  className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-3 py-2 text-[11px] font-black text-white transition hover:bg-orange-600 ${
                     isUploading ? "pointer-events-none opacity-50" : ""
                   }`}
                 >
@@ -2466,11 +2515,11 @@ function StudentDocumentsPanel({
               </div>
 
               {isExpanded ? (
-                <div className="border-t-2 border-orange-200 bg-[#fffaf4] p-3 sm:p-4">
+                <div className="border-t-2 border-orange-200 bg-[#FFF8EF] p-3 sm:p-4">
                   {block.files.length === 0 ? (
-                    <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-white p-6 text-center">
+                    <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-white p-6 text-center">
                       <FilePlus2 size={26} className="mx-auto text-orange-400" />
-                      <p className="mt-2 text-sm font-black text-[#10233f]">
+                      <p className="mt-2 text-sm font-black text-[#10233F]">
                         No files in this block yet
                       </p>
                       <p className="mt-1 text-xs font-medium text-slate-600">
@@ -2530,13 +2579,13 @@ function StudentDocumentsPanel({
       {/* ADD CUSTOM TYPE */}
       {showAddType ? (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[1.6rem] border-2 border-orange-400 bg-[#fffaf4] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.28)]">
+          <div className="w-full max-w-md rounded-[1.6rem] border-2 border-[#FF5A0A] bg-[#FFF8EF] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.28)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
                   Student Master File
                 </p>
-                <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
                   Add Document Type
                 </h3>
               </div>
@@ -2544,7 +2593,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={() => setShowAddType(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-slate-500 transition hover:text-orange-600"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-white text-slate-500 transition hover:text-orange-600"
               >
                 <X size={17} />
               </button>
@@ -2552,26 +2601,26 @@ function StudentDocumentsPanel({
 
             <div className="mt-5 space-y-3">
               <label className="block">
-                <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+                <span className="mb-1.5 block text-[11px] font-black text-[#10233F]">
                   Document type
                 </span>
                 <input
                   value={customTypeName}
                   onChange={(event) => setCustomTypeName(event.target.value)}
                   placeholder="e.g. CIMEA Verification"
-                  className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                  className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+                <span className="mb-1.5 block text-[11px] font-black text-[#10233F]">
                   Group
                 </span>
                 <input
                   value={customTypeGroup}
                   onChange={(event) => setCustomTypeGroup(event.target.value)}
                   placeholder="e.g. Italy Admission"
-                  className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                  className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                 />
               </label>
             </div>
@@ -2580,7 +2629,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={() => setShowAddType(false)}
-                className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-600"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-[11px] font-black text-slate-600"
               >
                 Cancel
               </button>
@@ -2588,7 +2637,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={addCustomType}
-                className="rounded-xl border-2 border-orange-600 bg-orange-500 px-4 py-2.5 text-xs font-black text-white transition hover:bg-orange-600"
+                className="rounded-xl border-2 border-orange-600 bg-[#FF5A0A] px-4 py-2.5 text-[11px] font-black text-white transition hover:bg-orange-600"
               >
                 Add Block
               </button>
@@ -2600,13 +2649,13 @@ function StudentDocumentsPanel({
       {/* DOCUMENT INSPECTOR */}
       {metadataTarget ? (
         <div className="fixed inset-3 z-[1210] flex justify-end pointer-events-none sm:bottom-4 sm:left-auto sm:right-4 sm:top-28 sm:w-[min(94vw,38rem)]">
-          <aside className="pointer-events-auto flex h-full w-full flex-col overflow-hidden rounded-[1.6rem] border-[4px] border-[#0b2a57] bg-[#fffaf4] shadow-[-24px_18px_70px_rgba(15,23,42,0.24)]">
-            <div className="flex items-start justify-between gap-3 border-b-2 border-orange-300 bg-white p-4 sm:p-5">
+          <aside className="pointer-events-auto flex h-full w-full flex-col overflow-hidden rounded-[1.6rem] border-[4px] border-[#123865] bg-[#FFF8EF] shadow-[-24px_18px_70px_rgba(15,23,42,0.24)]">
+            <div className="flex items-start justify-between gap-3 border-b-2 border-[#FF5A0A] bg-white p-4 sm:p-5">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
                   Document Inspector
                 </p>
-                <h3 className="mt-1 truncate text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 truncate text-xl font-black text-[#10233F]">
                   {getFileName(metadataTarget)}
                 </h3>
                 <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -2617,7 +2666,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={() => setMetadataTarget(null)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-slate-500"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-white text-slate-500"
                 title="Close inspector"
               >
                 <X size={17} />
@@ -2626,7 +2675,7 @@ function StudentDocumentsPanel({
 
             <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3 py-2">
-                <span className="text-xs font-black text-emerald-800">
+                <span className="text-[11px] font-black text-emerald-800">
                   Changes stay visible here after saving.
                 </span>
                 <span className="rounded-full border border-emerald-300 bg-white px-2 py-1 text-[9px] font-black uppercase text-emerald-700">
@@ -2674,7 +2723,7 @@ function StudentDocumentsPanel({
               </div>
 
               {metadataTarget.rejection_reason ? (
-                <div className="mt-4 rounded-2xl border-2 border-red-300 bg-red-50 p-4">
+                <div className="mt-4 rounded-[1.3rem] border-[3px] border-[#FB7185] bg-[#FFF4F4] p-4">
                   <p className="text-[10px] font-black uppercase tracking-[0.14em] text-red-700">
                     Rejection reason
                   </p>
@@ -2684,17 +2733,17 @@ function StudentDocumentsPanel({
                 </div>
               ) : null}
 
-              <div className="mt-5 rounded-[1.35rem] border-2 border-orange-300 bg-white p-4">
+              <div className="mt-5 rounded-[1.35rem] border-2 border-[#FF5A0A] bg-white p-4">
                 <div className="flex items-center gap-2">
                   <CalendarClock size={17} className="text-orange-600" />
-                  <h4 className="text-sm font-black text-[#10233f]">
+                  <h4 className="text-sm font-black text-[#10233F]">
                     Editable document details
                   </h4>
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <label className="block sm:col-span-2">
-                    <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+                    <span className="mb-1.5 block text-[11px] font-black text-[#10233F]">
                       Category
                     </span>
                     <input
@@ -2705,12 +2754,12 @@ function StudentDocumentsPanel({
                           document_category: event.target.value,
                         }))
                       }
-                      className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400"
+                      className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none focus:border-[#FF5A0A]"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+                    <span className="mb-1.5 block text-[11px] font-black text-[#10233F]">
                       Issue date
                     </span>
                     <input
@@ -2722,12 +2771,12 @@ function StudentDocumentsPanel({
                           issue_date: event.target.value,
                         }))
                       }
-                      className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400"
+                      className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none focus:border-[#FF5A0A]"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+                    <span className="mb-1.5 block text-[11px] font-black text-[#10233F]">
                       Expiry date
                     </span>
                     <input
@@ -2739,12 +2788,12 @@ function StudentDocumentsPanel({
                           expiry_date: event.target.value,
                         }))
                       }
-                      className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400"
+                      className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none focus:border-[#FF5A0A]"
                     />
                   </label>
 
                   <label className="block sm:col-span-2">
-                    <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+                    <span className="mb-1.5 block text-[11px] font-black text-[#10233F]">
                       Internal notes
                     </span>
                     <textarea
@@ -2756,7 +2805,7 @@ function StudentDocumentsPanel({
                           notes: event.target.value,
                         }))
                       }
-                      className="w-full resize-none rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400"
+                      className="w-full resize-none rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold text-[#10233F] outline-none focus:border-[#FF5A0A]"
                     />
                   </label>
                 </div>
@@ -2765,7 +2814,7 @@ function StudentDocumentsPanel({
                   <button
                     type="button"
                     onClick={() => setMetadataTarget(null)}
-                    className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-700"
+                    className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-[11px] font-black text-slate-700"
                   >
                     Close
                   </button>
@@ -2773,7 +2822,7 @@ function StudentDocumentsPanel({
                   <button
                     type="button"
                     onClick={saveMetadata}
-                    className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-700 bg-orange-500 px-4 py-2.5 text-xs font-black text-white"
+                    className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-700 bg-[#FF5A0A] px-4 py-2.5 text-[11px] font-black text-white"
                   >
                     <Save size={14} />
                     Save details
@@ -2781,7 +2830,7 @@ function StudentDocumentsPanel({
                 </div>
               </div>
 
-              <div className="mt-5 rounded-[1.35rem] border-2 border-slate-300 bg-white p-4">
+              <div className="mt-5 rounded-[1.35rem] border-2 border-[#C9D7E6] bg-white p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
                   Storage reference
                 </p>
@@ -2797,13 +2846,13 @@ function StudentDocumentsPanel({
       {/* DOCUMENT HISTORY */}
       {showHistory ? (
         <div className="fixed inset-0 z-[1210] flex justify-end bg-slate-950/45 backdrop-blur-sm">
-          <div className="flex h-full w-full max-w-2xl flex-col border-l-[4px] border-[#0b2a57] bg-[#fffaf4] shadow-[-30px_0_100px_rgba(15,23,42,0.22)]">
-            <div className="flex items-center justify-between border-b-2 border-orange-300 bg-white p-4 sm:p-5">
+          <div className="flex h-full w-full max-w-2xl flex-col border-l-[4px] border-[#123865] bg-[#FFF8EF] shadow-[-30px_0_100px_rgba(15,23,42,0.22)]">
+            <div className="flex items-center justify-between border-b-2 border-[#FF5A0A] bg-white p-4 sm:p-5">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
                   Permanent Audit Trail
                 </p>
-                <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
                   Document History
                 </h3>
               </div>
@@ -2812,7 +2861,7 @@ function StudentDocumentsPanel({
                 <button
                   type="button"
                   onClick={reloadHistory}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-white"
                   title="Refresh history"
                 >
                   <RefreshCw size={16} className={historyLoading ? "animate-spin" : ""} />
@@ -2821,7 +2870,7 @@ function StudentDocumentsPanel({
                 <button
                   type="button"
                   onClick={() => setShowHistory(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-white"
                 >
                   <X size={17} />
                 </button>
@@ -2830,9 +2879,9 @@ function StudentDocumentsPanel({
 
             <div className="flex-1 overflow-y-auto p-4 sm:p-5">
               {historyEvents.length === 0 ? (
-                <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-white p-8 text-center">
+                <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-white p-8 text-center">
                   <Database size={28} className="mx-auto text-orange-500" />
-                  <p className="mt-3 text-sm font-black text-[#10233f]">
+                  <p className="mt-3 text-sm font-black text-[#10233F]">
                     No document history recorded yet
                   </p>
                 </div>
@@ -2841,11 +2890,11 @@ function StudentDocumentsPanel({
                   {historyEvents.map((event) => (
                     <div
                       key={event.id}
-                      className="rounded-2xl border-2 border-slate-300 bg-white p-4"
+                      className="rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <p className="text-sm font-black text-[#10233f]">
+                          <p className="text-sm font-black text-[#10233F]">
                             {event.event_label || event.event_type}
                           </p>
                           <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -2882,7 +2931,7 @@ function StudentDocumentsPanel({
                           ) : null}
 
                           {event.metadata.version ? (
-                            <span className="rounded-full border border-orange-300 bg-orange-50 px-2 py-1 text-[9px] font-black text-orange-700">
+                            <span className="rounded-full border border-[#FF5A0A] bg-[#FFF4E8] px-2 py-1 text-[9px] font-black text-orange-700">
                               v{event.metadata.version}
                             </span>
                           ) : null}
@@ -2900,13 +2949,13 @@ function StudentDocumentsPanel({
       {/* REJECTION */}
       {rejectionTarget ? (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-[1.6rem] border-2 border-red-400 bg-[#fffaf4] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.28)]">
+          <div className="w-full max-w-lg rounded-[1.6rem] border-2 border-red-400 bg-[#FFF8EF] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.28)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">
                   Verification Action
                 </p>
-                <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
                   Reject {getFileName(rejectionTarget)}
                 </h3>
               </div>
@@ -2921,7 +2970,7 @@ function StudentDocumentsPanel({
             </div>
 
             <label className="mt-5 block">
-              <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+              <span className="mb-1.5 block text-[11px] font-black text-[#10233F]">
                 Rejection reason
               </span>
 
@@ -2930,7 +2979,7 @@ function StudentDocumentsPanel({
                 onChange={(event) => setRejectionReason(event.target.value)}
                 placeholder="Explain exactly what needs to be corrected or replaced..."
                 rows={5}
-                className="w-full resize-none rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-red-400 focus:ring-4 focus:ring-red-100"
+                className="w-full resize-none rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-red-400 focus:ring-4 focus:ring-red-100"
               />
             </label>
 
@@ -2938,7 +2987,7 @@ function StudentDocumentsPanel({
               <button
                 type="button"
                 onClick={() => setRejectionTarget(null)}
-                className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-600"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-[11px] font-black text-slate-600"
               >
                 Cancel
               </button>
@@ -2955,7 +3004,7 @@ function StudentDocumentsPanel({
                   setRejectionTarget(null);
                   setRejectionReason("");
                 }}
-                className="rounded-xl border-2 border-red-700 bg-red-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-xl border-2 border-red-700 bg-red-600 px-4 py-2.5 text-[11px] font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Reject Document
               </button>
@@ -2969,11 +3018,11 @@ function StudentDocumentsPanel({
 
 function InspectorStat({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
       <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
         {label}
       </p>
-      <p className="mt-1 break-words text-xs font-black text-[#10233f]">
+      <p className="mt-1 break-words text-[11px] font-black text-[#10233F]">
         {value || "—"}
       </p>
     </div>
@@ -2982,28 +3031,32 @@ function InspectorStat({ label, value }) {
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-300 bg-white text-[#10233f]",
-    orange: "border-orange-400 bg-orange-50 text-orange-800",
-    green: "border-emerald-400 bg-emerald-50 text-emerald-800",
-    blue: "border-blue-400 bg-blue-50 text-blue-800",
-    red: "border-red-400 bg-red-50 text-red-800",
+    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
+    red: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
+    slate: "border-[#C9D7E6] bg-white text-[#10233F]",
   };
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-[1.15rem] border-[3px] p-3 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md ${
         tones[tone] || tones.slate
       }`}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white/70">
-        <Icon size={16} />
-      </span>
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white shadow-sm">
+          <Icon size={14} />
+        </div>
 
-      <div className="min-w-0">
-        <p className="text-lg font-black leading-none">{value}</p>
-        <p className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.1em] opacity-75">
-          {label}
-        </p>
+        <div className="min-w-0">
+          <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] opacity-70">
+            {label}
+          </p>
+          <p className="mt-1 truncate text-lg font-black text-[#10233F]">
+            {value}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -3053,7 +3106,7 @@ function DocumentRow({
       className={`rounded-2xl border-2 p-3 shadow-[0_4px_14px_rgba(15,35,63,0.035)] transition ${
         isDeleted
           ? "border-slate-400 bg-slate-100/80"
-          : "border-slate-300 bg-white hover:border-orange-400"
+          : "border-[#C9D7E6] bg-white hover:border-[#FF5A0A]"
       }`}
     >
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
@@ -3063,8 +3116,8 @@ function DocumentRow({
             onClick={onToggleSelected}
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 ${
               selected
-                ? "border-[#0b2a57] bg-[#0b2a57] text-white"
-                : "border-slate-300 bg-white text-slate-400"
+                ? "border-[#123865] bg-[#123865] text-white"
+                : "border-[#C9D7E6] bg-white text-slate-400"
             }`}
             title={selected ? "Unselect document" : "Select document"}
           >
@@ -3075,13 +3128,13 @@ function DocumentRow({
             )}
           </button>
 
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-200 bg-orange-50 text-orange-600">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-200 bg-[#FFF4E8] text-orange-600">
             <File size={17} />
           </span>
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="max-w-full truncate text-sm font-black text-[#10233f]">
+              <p className="max-w-full truncate text-sm font-black text-[#10233F]">
                 {getFileName(document)}
               </p>
 
@@ -3106,7 +3159,7 @@ function DocumentRow({
               </span>
 
               {document.document_category ? (
-                <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[9px] font-black uppercase text-orange-700">
+                <span className="rounded-full border border-orange-200 bg-[#FFF4E8] px-2 py-0.5 text-[9px] font-black uppercase text-orange-700">
                   {document.document_category}
                 </span>
               ) : null}
@@ -3117,7 +3170,7 @@ function DocumentRow({
                     expiryState.tone === "red"
                       ? "border-red-300 bg-red-50 text-red-800"
                       : expiryState.tone === "orange"
-                      ? "border-orange-400 bg-orange-50 text-orange-800"
+                      ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
                       : "border-slate-300 bg-slate-50 text-slate-600"
                   }`}
                 >
@@ -3163,7 +3216,7 @@ function DocumentRow({
                 type="button"
                 onClick={onEditDetails}
                 disabled={busy}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border-2 border-[#0b2a57] bg-white px-2.5 py-2 text-[11px] font-black text-[#0b2a57] transition hover:bg-slate-50 disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border-2 border-[#123865] bg-white px-2.5 py-2 text-[11px] font-black text-[#123865] transition hover:bg-slate-50 disabled:opacity-40"
               >
                 <CalendarClock size={13} />
                 Details
@@ -3175,7 +3228,7 @@ function DocumentRow({
                 type="button"
                 onClick={onOpen}
                 disabled={busy}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border-2 border-orange-300 sm:w-auto bg-orange-50 px-2.5 py-2 text-[11px] font-black text-orange-700 transition hover:bg-orange-100 disabled:opacity-40"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border-2 border-[#FF5A0A] sm:w-auto bg-[#FFF4E8] px-2.5 py-2 text-[11px] font-black text-orange-700 transition hover:bg-orange-100 disabled:opacity-40"
               >
                 <Eye size={13} />
                 Preview
@@ -3223,7 +3276,7 @@ function DocumentRow({
               type="button"
               onClick={() => setMenuOpen((current) => !current)}
               disabled={busy}
-              className="flex h-9 w-full items-center justify-center rounded-lg border-2 border-slate-300 sm:w-9 bg-white text-slate-500 transition hover:border-orange-300 hover:text-orange-600 disabled:opacity-40"
+              className="flex h-9 w-full items-center justify-center rounded-lg border-2 border-slate-300 sm:w-9 bg-white text-slate-500 transition hover:border-[#FF5A0A] hover:text-orange-600 disabled:opacity-40"
               aria-label="More document actions"
               title="More document actions"
             >
@@ -3231,7 +3284,7 @@ function DocumentRow({
             </button>
 
             {menuOpen ? (
-              <div className="absolute right-0 top-11 z-30 w-[min(13rem,calc(100vw-2rem))] overflow-hidden rounded-xl border-2 border-orange-300 bg-white p-1.5 shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+              <div className="absolute right-0 top-11 z-30 w-[min(13rem,calc(100vw-2rem))] overflow-hidden rounded-xl border-2 border-[#FF5A0A] bg-white p-1.5 shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
                 {!isArchived ? (
                   <>
                     {status === "rejected" ? (
@@ -3264,7 +3317,7 @@ function DocumentRow({
                       }}
                     />
 
-                    <label className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-black text-[#10233f] transition hover:bg-orange-50 hover:text-orange-700">
+                    <label className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-[11px] font-black text-[#10233F] transition hover:bg-[#FFF4E8] hover:text-orange-700">
                       <RotateCcw size={14} />
                       Replace file
                       <input
@@ -3327,10 +3380,10 @@ function MenuButton({ icon: Icon, label, onClick, tone = "default" }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-black transition ${
+      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[11px] font-black transition ${
         tone === "red"
           ? "text-red-700 hover:bg-red-50"
-          : "text-[#10233f] hover:bg-orange-50 hover:text-orange-700"
+          : "text-[#10233F] hover:bg-[#FFF4E8] hover:text-orange-700"
       }`}
     >
       <Icon size={14} />

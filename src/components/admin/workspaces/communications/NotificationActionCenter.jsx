@@ -1,5 +1,5 @@
-// NotificationActionCenter V3 MAXIMUM — CRM Action Queue
-// src/components/admin/NotificationActionCenter.jsx
+// NotificationActionCenter V7 PARTNER OS — CRM Action Queue
+// src/components/admin/workspaces/communications/NotificationActionCenter.jsx
 //
 // Maximum pass:
 // - preserves inquiry / appointment / follow-up action contracts
@@ -12,7 +12,7 @@
 // - avoids duplicate "new + priority" noise by ranking intelligently
 // - adds action feedback and guarded execution
 // - better section-opening fallbacks
-// - stronger Admin OS cream/orange/navy contrast
+// - applies the locked Partner OS navy / orange / cream visual system
 // - no backend writes added beyond existing callback actions
 // - no schema changes and no fake AI
 
@@ -242,80 +242,75 @@ function NotificationActionCenter({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="space-y-5 text-[#10233f]"
+      className="min-w-0 space-y-5 overflow-hidden rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5"
     >
-      <section className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
-        <div className="grid xl:grid-cols-[1.3fr_0.7fr]">
-          <div
-            className="bg-[#123865] p-5 sm:p-6"
-            style={{ color: "#FFFFFF" }}
-          >
-            <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
-              <Sparkles
-                size={13}
-                style={{ color: "#FDBA74" }}
-              />
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+                <BellRing size={12} />
+                Notification OS
+              </span>
 
-              <p
-                className="text-[9px] font-black uppercase tracking-[0.1em]"
-                style={{ color: "#FFFFFF" }}
-              >
-                Notification Action Center
-              </p>
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                CRM action queue
+              </span>
+
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Evidence first
+              </span>
             </div>
 
-            <h2
-              className="mt-3 text-2xl font-black tracking-tight sm:text-3xl"
-              style={{ color: "#FFFFFF" }}
-            >
-              Smart CRM Action Queue
-            </h2>
+            <h1 className="mt-3 text-3xl font-black text-white">
+              Notification & Action Command
+            </h1>
 
-            <p
-              className="mt-2 max-w-3xl text-sm font-semibold leading-6"
-              style={{ color: "#F8FAFC" }}
-            >
-              Converts CRM signals into practical counselor actions for first
-              response, appointment handling, overdue follow-ups, and priority
-              lead attention.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Turn real inquiry, appointment and follow-up signals into one
+              focused operating queue. No delivery, open-rate or messaging
+              telemetry is invented.
             </p>
           </div>
 
-          <div
-            className="bg-orange-500 p-5 sm:p-6"
-            style={{ color: "#FFFFFF" }}
-          >
-            <div className="flex items-center gap-2">
-              <BellRing size={18} />
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Current Workspace
+            </p>
 
-              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
-                Queue Pressure
-              </p>
+            <p className="mt-2 text-2xl font-black">Action Queue</p>
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+              Prioritised counselor work derived from live CRM records.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {metrics.total} actions
+              </span>
+
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em]">
+                {metrics.urgent} urgent
+              </span>
             </div>
-
-            <p className="mt-3 text-4xl font-black text-white">
-              {metrics.total}
-            </p>
-
-            <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
-              Smart Actions
-            </p>
-
-            <p className="mt-4 text-xs font-semibold leading-5 text-white">
-              {metrics.urgent} urgent · {metrics.medium} medium ·{" "}
-              {metrics.reminderActions} follow-up action
-              {metrics.reminderActions === 1 ? "" : "s"}.
-            </p>
           </div>
         </div>
-      </section>
+      </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Total Actions"
+          value={metrics.total}
+          icon={BellRing}
+          tone="navy"
+          helper="All actionable CRM signals currently in the queue."
+        />
+
         <MetricCard
           label="Urgent"
           value={metrics.urgent}
           icon={Flame}
-          tone="danger"
+          tone={metrics.urgent ? "danger" : "good"}
           helper="Needs immediate counselor attention."
         />
 
@@ -323,16 +318,8 @@ function NotificationActionCenter({
           label="Lead Actions"
           value={metrics.inquiryActions}
           icon={UserCheck}
-          tone="navy"
+          tone="blue"
           helper="Inquiry response and priority handling."
-        />
-
-        <MetricCard
-          label="Appointments"
-          value={metrics.appointmentActions}
-          icon={CalendarCheck}
-          tone="orange"
-          helper="Confirm or complete consultation bookings."
         />
 
         <MetricCard
@@ -344,232 +331,296 @@ function NotificationActionCenter({
         />
       </div>
 
-      <section
-        className={`${cardClass} rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)]`}
-      >
-        <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
-          <label className="relative block">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-
-            <input
-              value={query}
-              onChange={(event) =>
-                setQuery(event.target.value)
-              }
-              placeholder="Search student, action, category..."
-              className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-            />
-          </label>
-
-          <select
-            value={priorityFilter}
-            onChange={(event) =>
-              setPriorityFilter(event.target.value)
-            }
-            className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
-          >
-            <option value="all">All Severity</option>
-            <option value="urgent">Urgent</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-
-          <select
-            value={typeFilter}
-            onChange={(event) =>
-              setTypeFilter(event.target.value)
-            }
-            className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
-          >
-            <option value="all">All Types</option>
-            <option value="inquiry">Inquiries</option>
-            <option value="appointment">Appointments</option>
-            <option value="reminder">Follow-Ups</option>
-          </select>
-
-          <button
-            type="button"
-            onClick={clearFilters}
-            disabled={!hasActiveFilters}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <X size={13} />
-            Clear
-          </button>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-slate-500">
-            Showing {Math.min(topActions.length, 12)} of{" "}
-            {filteredActions.length} matching actions.
-          </p>
-
-          {metrics.staleLeadActions > 0 ? (
-            <span className="rounded-full border-2 border-amber-300 bg-amber-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-800">
-              {metrics.staleLeadActions} stale lead
-              {metrics.staleLeadActions === 1 ? "" : "s"}
-            </span>
-          ) : null}
-        </div>
-      </section>
-
-      {feedback ? (
-        <div className="rounded-[1.4rem] border-2 border-orange-300 bg-orange-50 p-4">
-          <div className="flex items-start gap-3">
-            <CheckCircle2
-              size={17}
-              className="mt-0.5 shrink-0 text-orange-700"
-            />
-
-            <p className="text-sm font-semibold leading-6 text-orange-900">
-              {feedback}
+      <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_30px_rgba(15,35,63,0.06)] sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+              Notification Command
+            </p>
+            <h2 className="mt-1 text-xl font-black text-[#10233F]">
+              CRM action portfolio
+            </h2>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              Search, filter and execute real inquiry, appointment and follow-up
+              actions from one operating workspace.
             </p>
           </div>
-        </div>
-      ) : null}
 
-      {topActions.length === 0 ? (
-        <div
-          className={`${cardClass} rounded-[2rem] border-[3px] border-emerald-300 bg-white p-8 text-center shadow-[0_10px_28px_rgba(15,35,63,0.05)]`}
-        >
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl border-2 border-emerald-300 bg-emerald-50">
-            <CheckCircle2 className="h-8 w-8 text-emerald-700" />
-          </div>
+          <div className="grid gap-2 sm:grid-cols-[minmax(14rem,1fr)_9rem_10rem_auto]">
+            <label className="relative block">
+              <Search
+                size={15}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search actions..."
+                className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-xs font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 hover:border-[#123865]/40 focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/10"
+              />
+            </label>
 
-          <h3 className="mt-4 text-xl font-black text-[#10233f]">
-            {hasActiveFilters
-              ? "No matching actions"
-              : "No urgent actions right now"}
-          </h3>
+            <select
+              value={priorityFilter}
+              onChange={(event) => setPriorityFilter(event.target.value)}
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#123865]/40 focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/10"
+            >
+              <option value="all">All severity</option>
+              <option value="urgent">Urgent</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
 
-          <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-            {hasActiveFilters
-              ? "Adjust the filters to see more CRM actions."
-              : "Your action queue is clean. New leads, pending appointments, stale inquiries, and overdue follow-ups will appear here."}
-          </p>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value)}
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#123865]/40 focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/10"
+            >
+              <option value="all">All types</option>
+              <option value="inquiry">Inquiries</option>
+              <option value="appointment">Appointments</option>
+              <option value="reminder">Follow-Ups</option>
+            </select>
 
-          {hasActiveFilters ? (
             <button
               type="button"
               onClick={clearFilters}
-              className="mt-5 rounded-xl bg-orange-500 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-600"
+              disabled={!hasActiveFilters}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] transition hover:border-[#123865] hover:bg-[#FFF8EF] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Reset Filters
+              <X size={13} />
+              Clear
             </button>
-          ) : null}
+          </div>
         </div>
-      ) : (
-        <div className="grid gap-4">
-          {topActions.map((action, index) => {
-            const Icon = action.icon;
-            const isRunning = runningKey === action.key;
 
-            return (
-              <motion.article
+        {feedback ? (
+          <div className="mb-3 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4EA] px-4 py-3">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[#B84F0E]" />
+              <p className="text-xs font-semibold leading-5 text-orange-900">
+                {feedback}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="space-y-2.5">
+          {topActions.length ? (
+            topActions.map((action, index) => (
+              <NotificationQueueRow
                 key={action.key}
-                initial={
-                  reduceMotion
-                    ? false
-                    : { opacity: 0, y: 12 }
-                }
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: reduceMotion ? 0 : 0.24,
-                  delay: reduceMotion ? 0 : index * 0.025,
-                }}
-                className={`${cardClass} group relative overflow-hidden rounded-[1.7rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_7px_20px_rgba(15,35,63,0.04)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300 sm:p-6`}
-              >
-                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
-
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex min-w-0 flex-1 items-start gap-4">
-                    <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 ${getPriorityStyle(
-                        action.priority
-                      )}`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${getPriorityBadge(
-                            action.priority
-                          )}`}
-                        >
-                          {action.priority}
-                        </span>
-
-                        <span className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-blue-700">
-                          {action.type}
-                        </span>
-
-                        <span className="rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-orange-700">
-                          {action.category}
-                        </span>
-
-                        {action.ageDays >= 3 ? (
-                          <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-amber-800">
-                            {action.ageDays}d old
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <h3 className="mt-3 text-xl font-black text-[#10233f]">
-                        {action.title}
-                      </h3>
-
-                      <p className="mt-1 text-sm font-black text-[#526178]">
-                        {action.name}
-                      </p>
-
-                      <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-slate-600">
-                        {action.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 flex-col gap-3 lg:w-[220px]">
-                    <button
-                      type="button"
-                      onClick={() => runAction(action)}
-                      disabled={Boolean(runningKey)}
-                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-5 text-xs font-black uppercase tracking-[0.08em] text-white shadow-[0_10px_24px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <Zap className="h-4 w-4" />
-                      {isRunning
-                        ? "Working..."
-                        : action.buttonLabel}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        openTab(
-                          action.type === "appointment"
-                            ? "appointments"
-                            : action.type === "reminder"
-                            ? "followups"
-                            : "inquiries"
-                        )
-                      }
-                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 text-xs font-black uppercase tracking-[0.08em] text-[#10233f] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Open Section
-                    </button>
-                  </div>
-                </div>
-              </motion.article>
-            );
-          })}
+                action={action}
+                index={index}
+                reduceMotion={reduceMotion}
+                runningKey={runningKey}
+                runAction={runAction}
+                openTab={openTab}
+              />
+            ))
+          ) : (
+            <div className="rounded-[1.4rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-8 text-center">
+              <CheckCircle2 size={25} className="mx-auto text-emerald-700" />
+              <p className="mt-3 font-black text-[#10233F]">
+                {hasActiveFilters
+                  ? "No actions match these filters."
+                  : "No urgent actions right now."}
+              </p>
+              <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                {hasActiveFilters
+                  ? "Clear or change the action filters."
+                  : "New leads, pending appointments, stale inquiries and overdue follow-ups will appear here."}
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </section>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <IntegrityCard
+          icon={ShieldCheck}
+          eyebrow="Queue Integrity"
+          title="CRM-derived actions only"
+          helper="The queue is built from inquiry, appointment and reminder evidence."
+          tone="green"
+        />
+
+        <IntegrityCard
+          icon={Target}
+          eyebrow="Action Coverage"
+          title={`${metrics.inquiryActions + metrics.appointmentActions + metrics.reminderActions} actionable records`}
+          helper="Only supported status updates and real section navigation are exposed."
+          tone="blue"
+        />
+
+        <IntegrityCard
+          icon={AlertTriangle}
+          eyebrow="Pressure Boundary"
+          title={`${metrics.urgent} urgent · ${metrics.medium} medium`}
+          helper="Severity comes from explicit priority, stale age, overdue dates and unresolved appointments."
+          tone={metrics.urgent ? "amber" : "green"}
+        />
+      </div>
     </motion.section>
+  );
+}
+
+
+function NotificationQueueRow({
+  action,
+  index,
+  reduceMotion,
+  runningKey,
+  runAction,
+  openTab,
+}) {
+  const Icon = action.icon;
+  const isRunning = runningKey === action.key;
+
+  return (
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.2,
+        delay: reduceMotion ? 0 : index * 0.02,
+      }}
+      className="overflow-hidden rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white shadow-[0_7px_20px_rgba(15,35,63,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_12px_28px_rgba(15,35,63,0.09)]"
+    >
+      <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_13rem]">
+        <div className="min-w-0 p-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${getPriorityStyle(
+                action.priority
+              )}`}
+            >
+              <Icon size={17} />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="min-w-0 [overflow-wrap:anywhere] font-black text-[#10233F]">
+                  {action.name}
+                </p>
+
+                <span
+                  className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${getPriorityBadge(
+                    action.priority
+                  )}`}
+                >
+                  {action.priority}
+                </span>
+              </div>
+
+              <p className="mt-1 font-black text-[#10233F]">
+                {action.title}
+              </p>
+
+              <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
+                {action.description}
+              </p>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+                  <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+                    Type
+                  </p>
+                  <p className="mt-1 truncate text-xs font-black capitalize text-[#10233F]">
+                    {action.type}
+                  </p>
+                </div>
+
+                <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+                  <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+                    Category
+                  </p>
+                  <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+                    {action.category}
+                  </p>
+                </div>
+
+                <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+                  <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+                    Age
+                  </p>
+                  <p className="mt-1 text-xs font-black text-[#10233F]">
+                    {action.ageDays ? `${action.ageDays}d old` : "New"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-col justify-center gap-2 border-t-2 border-[#E1E8F0] bg-[#F7FAFC] p-4 lg:border-l-2 lg:border-t-0">
+          <button
+            type="button"
+            onClick={() =>
+              openTab(
+                action.type === "appointment"
+                  ? "appointments"
+                  : action.type === "reminder"
+                    ? "followups"
+                    : "inquiries"
+              )
+            }
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-[10px] font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4EA] focus:outline-none focus:ring-4 focus:ring-[#FF5A0A]/10"
+          >
+            <ExternalLink size={14} />
+            Open Section
+          </button>
+
+          <button
+            type="button"
+            onClick={() => runAction(action)}
+            disabled={Boolean(runningKey)}
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-3 text-center text-[10px] font-black leading-4 text-white shadow-[0_6px_16px_rgba(18,56,101,0.18)] transition hover:border-[#FF5A0A] hover:bg-[#245886] focus:outline-none focus:ring-4 focus:ring-[#123865]/15 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Zap size={14} />
+            {isRunning ? "Working..." : action.buttonLabel}
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function IntegrityCard({ icon: Icon, eyebrow, title, helper, tone = "blue" }) {
+  const tones = {
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+  };
+
+  return (
+    <div className={`rounded-[1.35rem] border-[3px] p-4 ${tones[tone]}`}>
+      <div className="flex items-start gap-3">
+        <Icon size={17} className="mt-0.5 shrink-0 text-[#123865]" />
+        <div>
+          <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+            {eyebrow}
+          </p>
+          <p className="mt-1 font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {helper}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DarkMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {Number(value || 0).toLocaleString("en-GB")}
+      </p>
+    </div>
   );
 }
 
@@ -591,11 +642,13 @@ function MetricCard({
       ? "border-emerald-300 bg-emerald-50"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-orange-300 bg-orange-50";
+      : tone === "blue"
+      ? "border-[#60A5FA] bg-[#F2F7FF]"
+      : "border-[#FF5A0A] bg-[#FFF4EA]";
 
   return (
     <div
-      className={`rounded-[1.35rem] border-[3px] p-4 ${style}`}
+      className={`flex min-h-[176px] h-full flex-col justify-between rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${style}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -622,7 +675,7 @@ function MetricCard({
       </div>
 
       <p
-        className="mt-2 text-xs font-semibold leading-5"
+        className="mt-4 text-xs font-semibold leading-5"
         style={{ color: dark ? "#F8FAFC" : "#64748B" }}
       >
         {helper}
@@ -857,7 +910,7 @@ function getPriorityStyle(priority) {
   }
 
   if (priority === "medium") {
-    return "border-orange-300 bg-orange-50 text-orange-700";
+    return "border-[#FF5A0A] bg-[#FFF4EA] text-[#B84F0E]";
   }
 
   return "border-emerald-300 bg-emerald-50 text-emerald-700";
@@ -869,7 +922,7 @@ function getPriorityBadge(priority) {
   }
 
   if (priority === "medium") {
-    return "border-orange-300 bg-orange-50 text-orange-700";
+    return "border-[#FF5A0A] bg-[#FFF4EA] text-[#B84F0E]";
   }
 
   return "border-emerald-300 bg-emerald-50 text-emerald-700";

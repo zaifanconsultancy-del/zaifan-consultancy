@@ -108,6 +108,8 @@ const INTELLIGENCE_WORKSPACES = Object.freeze({
 const DEFAULT_INTELLIGENCE_WORKSPACE = "crm-analytics";
 
 
+// AnalyticsPage PARTNER OS EXTREME V2 — Intelligence Command Center
+
 function AnalyticsPage({
   cardClass,
   adminProfile = null,
@@ -290,13 +292,11 @@ if (effectiveAnalyticsSection === "mission-control") {
 
     if (effectiveAnalyticsSection === "kpi") {
       return (
-        <AnalyticsSection eyebrow="Performance Overview" title="KPI Analytics">
-          <CrmKpiAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-        </AnalyticsSection>
+        <CrmKpiAnalytics
+          cardClass={cardClass}
+          inquiries={inquiries}
+          appointments={appointments}
+        />
       );
     }
 
@@ -342,38 +342,32 @@ if (effectiveAnalyticsSection === "mission-control") {
 
     if (effectiveAnalyticsSection === "scoring") {
       return (
-        <AnalyticsSection eyebrow="Lead Quality" title="Lead Scoring">
-          <LeadScoringAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-        </AnalyticsSection>
+        <LeadScoringAnalytics
+          cardClass={cardClass}
+          inquiries={inquiries}
+          appointments={appointments}
+        />
       );
     }
 
     if (effectiveAnalyticsSection === "conversion") {
       return (
-        <AnalyticsSection eyebrow="Revenue Movement" title="Conversion Analytics">
-          <ConversionAnalytics
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-          />
-        </AnalyticsSection>
+        <ConversionAnalytics
+          cardClass={cardClass}
+          inquiries={inquiries}
+          appointments={appointments}
+        />
       );
     }
 
     if (effectiveAnalyticsSection === "charts") {
       return (
-        <AnalyticsSection eyebrow="Visual Intelligence" title="Luxury Charts">
-          <LuxuryAnalyticsCharts
-            cardClass={cardClass}
-            inquiries={inquiries}
-            appointments={appointments}
-            followUpReminders={followUpReminders}
-          />
-        </AnalyticsSection>
+        <LuxuryAnalyticsCharts
+          cardClass={cardClass}
+          inquiries={inquiries}
+          appointments={appointments}
+          followUpReminders={followUpReminders}
+        />
       );
     }
 
@@ -401,9 +395,10 @@ if (effectiveAnalyticsSection === "mission-control") {
 
     if (effectiveAnalyticsSection === "funnel") {
       return (
-        <AnalyticsSection eyebrow="Pipeline Health" title="Conversion Funnel">
-          <ConversionFunnelChart cardClass={cardClass} inquiries={inquiries} />
-        </AnalyticsSection>
+        <ConversionFunnelChart
+          cardClass={cardClass}
+          inquiries={inquiries}
+        />
       );
     }
 
@@ -412,7 +407,7 @@ if (effectiveAnalyticsSection === "mission-control") {
         eyebrow={workspace.eyebrow}
         title={workspace.title}
       >
-        <div className="rounded-[1.4rem] border-2 border-slate-200 bg-white p-6 text-center">
+        <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-7 text-center shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
           <p className="text-sm font-black text-[#10233F]">
             Select an intelligence module above.
           </p>
@@ -431,85 +426,62 @@ if (effectiveAnalyticsSection === "mission-control") {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.22 }}
-      className="space-y-6"
+      className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5"
     >
       <nav
         aria-label={`${workspace.title} navigation`}
-        className="sticky top-3 z-20 overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EF] shadow-[0_16px_42px_rgba(15,35,63,0.09)]"
+        className="sticky top-3 z-20 min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.12)]"
       >
-        <div className="grid xl:grid-cols-[1.3fr_0.7fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                    Intelligence
-                  </span>
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                    {workspace.eyebrow}
-                  </span>
-                </div>
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)]">
+          <div className="flex min-w-0 items-start gap-4 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-orange-200 shadow-inner">
+              <WorkspaceIcon size={19} />
+            </span>
 
-                <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
-                  {workspace.title}
-                </h2>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-white">
+                  Intelligence
+                </span>
 
-                <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
-                  {workspace.description}
-                </p>
+                <span className="rounded-full border border-[#FF5A0A]/30 bg-orange-400/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-orange-200">
+                  {workspace.eyebrow}
+                </span>
               </div>
 
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-orange-200">
-                <WorkspaceIcon size={20} />
-              </span>
-            </div>
+              <h2 className="mt-3 break-words text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
+                {workspace.title}
+              </h2>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-3">
-              <IntelligenceHeroMetric
-                label="Modules"
-                value={analyticsNavItems.length}
-              />
-              <IntelligenceHeroMetric
-                label="Active"
-                value={activeAnalyticsNavItem?.label || "Module"}
-              />
-              <IntelligenceHeroMetric
-                label="Mode"
-                value="Live CRM"
-              />
+              <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-200">
+                {workspace.description}
+              </p>
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
-              Intelligence Focus
-            </p>
-
-            <p className="mt-3 text-2xl font-black text-white sm:text-3xl">
-              {activeAnalyticsNavItem?.label || workspace.title}
-            </p>
-
-            <p className="mt-2 text-sm font-semibold leading-6 text-white">
-              Only the selected intelligence module is loaded here, keeping the
-              workspace focused and operational.
-            </p>
-
-            <div className="mt-5 rounded-2xl border border-white/30 bg-white/10 p-4">
-              <p className="text-[8px] font-black uppercase tracking-[0.14em] text-white/80">
-                Current Workspace
+          <div className="flex min-w-0 items-center justify-between gap-4 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <div className="min-w-0">
+              <p className="text-[8px] font-black uppercase tracking-[0.13em] text-orange-50">
+                Active Module
               </p>
-              <div className="mt-2 flex items-center gap-2">
-                <ActiveAnalyticsNavIcon size={16} />
-                <p className="text-sm font-black text-white">
-                  {activeAnalyticsNavItem?.label || "Intelligence Module"}
-                </p>
-              </div>
+
+              <p className="mt-2 break-words text-xl font-black text-white">
+                {activeAnalyticsNavItem?.label || workspace.title}
+              </p>
+
+              <p className="mt-1 text-[10px] font-semibold text-orange-50">
+                {analyticsNavItems.length} focused modules
+              </p>
             </div>
+
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white shadow-inner">
+              <ActiveAnalyticsNavIcon size={18} />
+            </span>
           </div>
         </div>
 
         <div className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-3 sm:p-4">
-          <div className="flex min-w-0 gap-2 overflow-x-auto">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-5">
             {analyticsNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = effectiveAnalyticsSection === item.id;
@@ -520,14 +492,45 @@ if (effectiveAnalyticsSection === "mission-control") {
                   type="button"
                   onClick={() => setActiveAnalyticsSection(item.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border-2 px-3.5 py-2.5 text-[11px] font-black transition duration-200 ${
+                  className={`group min-w-0 rounded-[1.1rem] border-[3px] px-3.5 py-3 text-left shadow-[0_5px_14px_rgba(18,56,101,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
                     isActive
-                      ? "border-orange-600 bg-orange-500 text-white shadow-[0_6px_14px_rgba(249,115,22,0.16)]"
-                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-orange-400 hover:bg-orange-50"
+                      ? "border-[#FF5A0A] bg-white text-[#10233F] shadow-[0_8px_20px_rgba(18,56,101,0.08)]"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#123865] hover:bg-[#F2F7FF]"
                   }`}
                 >
-                  <Icon size={14} />
-                  {item.label}
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+                        isActive
+                          ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
+                          : "border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]"
+                      }`}
+                    >
+                      <Icon size={14} />
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block break-words text-[10px] font-black uppercase tracking-[0.08em]">
+                        {item.label}
+                      </span>
+
+                      <span className="mt-1 block text-[8px] font-black uppercase tracking-[0.08em] text-slate-400">
+                        {isActive ? "Open module" : "View module"}
+                      </span>
+                    </span>
+                  </span>
+
+                  <span
+                    className={`mt-3 block h-1.5 overflow-hidden rounded-full ${
+                      isActive ? "bg-orange-100" : "bg-slate-100"
+                    }`}
+                  >
+                    <span
+                      className={`block h-full rounded-full transition-all duration-300 ${
+                        isActive ? "w-full bg-[#FF5A0A]" : "w-0 bg-[#123865]"
+                      } group-hover:w-full`}
+                    />
+                  </span>
                 </button>
               );
             })}
@@ -538,10 +541,11 @@ if (effectiveAnalyticsSection === "mission-control") {
       <AnimatePresence mode="wait">
         <motion.div
           key={effectiveAnalyticsSection}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.18 }}
+          className="min-w-0"
         >
           <Suspense fallback={<AnalyticsModuleLoader />}>
             {renderActiveAnalyticsSection()}
@@ -552,24 +556,11 @@ if (effectiveAnalyticsSection === "mission-control") {
   );
 }
 
-function IntelligenceHeroMetric({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-sm font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
-}
-
 function AnalyticsModuleLoader() {
   return (
-    <div className="flex min-h-[300px] items-center justify-center rounded-[1.6rem] border-[3px] border-orange-300 bg-[#FFF8EF] shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
+    <div className="flex min-h-[300px] items-center justify-center rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-6 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
       <div className="text-center">
-        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-[#FF5A0A]" />
         <p className="mt-4 text-sm font-black text-[#10233F]">Opening intelligence module</p>
         <p className="mt-1 text-xs text-slate-400">Loading only this analytics workspace.</p>
       </div>

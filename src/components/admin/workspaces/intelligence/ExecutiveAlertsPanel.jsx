@@ -1,4 +1,4 @@
-// ExecutiveAlertsPanel V3 COMMAND MAXIMUM — Syntax-Fixed Full Replacement
+// ExecutiveAlertsPanel PARTNER OS V4 EXTREME — Decision & Escalation Command
 // src/components/admin/ExecutiveAlertsPanel.jsx
 //
 // Preserves:
@@ -565,91 +565,58 @@ function ExecutiveAlertsPanel({
             ? 0
             : 0.25,
       }}
-      className="space-y-5"
+      className="min-w-0 space-y-5"
     >
-      <div className="rounded-[2rem] border-[3px] border-orange-400 bg-[#fff8ee] p-3 shadow-[0_18px_55px_rgba(23,36,61,0.08)] sm:p-4">
-        <div className="grid overflow-hidden rounded-[1.65rem] border-2 border-[#234e78] xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
-            <div className="flex flex-wrap items-center gap-2">
-              <HeaderChip
-                icon={BellRing}
-                label="Executive Alerts"
-              />
-
-              <HeaderChip
-                icon={Workflow}
-                label="Student OS Queue"
-              />
-
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <HeaderChip icon={BellRing} label="Executive Alerts" />
+              <HeaderChip icon={Workflow} label="Student OS Queue" />
               <HeaderChip
                 icon={ShieldAlert}
                 label={`${alertGroups.criticalRisks.length} Critical`}
               />
             </div>
 
-            <h2 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
+            <h2 className="mt-4 max-w-5xl break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
               Decision & Escalation Center
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
-              A concentrated operating queue for critical risk, counselor intervention,
-              conversion windows, CAS/visa pressure, stale students, documents, and tasks.
+            <p className="mt-3 max-w-5xl break-words text-sm font-semibold leading-6 text-slate-100">
+              A concentrated operating queue for critical risk, counselor
+              intervention, conversion windows, CAS/visa pressure, stale
+              students, documents and tasks.
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <NavyAlertMetric
-                label="Tracked"
-                value={
-                  scores.length
-                }
-              />
-
-              <NavyAlertMetric
-                label="Alerts"
-                value={
-                  totalAlerts
-                }
-              />
-
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <NavyAlertMetric label="Tracked" value={scores.length} />
+              <NavyAlertMetric label="Alerts" value={totalAlerts} />
               <NavyAlertMetric
                 label="Critical"
-                value={
-                  alertGroups
-                    .criticalRisks
-                    .length
-                }
+                value={alertGroups.criticalRisks.length}
               />
-
               <NavyAlertMetric
                 label="Visa / CAS"
-                value={
-                  alertGroups
-                    .visaWatch
-                    .length
-                }
+                value={alertGroups.visaWatch.length}
               />
             </div>
           </div>
 
-          <div className="border-t-2 border-orange-300 bg-orange-500 p-5 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
             <div className="flex items-center gap-2">
               <Flame size={18} />
-
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-white">
-                Command Pressure
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                Escalation Operating Position
               </p>
             </div>
 
             <p className="mt-3 text-5xl font-black text-white">
-              {
-                commandHealth.pressure
-              }
+              {commandHealth.pressure}
             </p>
 
-            <p className="mt-1 text-sm font-black uppercase text-white">
-              {
-                commandHealth.status
-              }
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+              {commandHealth.status}
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
@@ -657,87 +624,52 @@ function ExecutiveAlertsPanel({
                 label="Avg Risk"
                 value={`${commandHealth.averageRisk}/100`}
               />
-
               <OrangeAlertMetric
                 label="Opportunity"
                 value={`${commandHealth.opportunity}/100`}
               />
-
               <OrangeAlertMetric
                 label="Conversion"
-                value={
-                  alertGroups
-                    .conversionReady
-                    .length
-                }
+                value={alertGroups.conversionReady.length}
               />
-
               <OrangeAlertMetric
                 label="Stale Watch"
-                value={
-                  commandInsights
-                    .stale.length
-                }
+                value={commandInsights.stale.length}
               />
             </div>
+
+            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Command Rule
+              </p>
+              <p className="mt-1 text-xs font-black leading-5 text-white">
+                Escalate critical and visa-rejected cases first, then move
+                high-opportunity students before their conversion window closes.
+              </p>
+            </div>
+
+            {!usingExternalScores ? (
+              <button
+                type="button"
+                onClick={loadScores}
+                disabled={loading}
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <RefreshCw
+                  size={14}
+                  className={loading ? "animate-spin" : ""}
+                />
+                {loading ? "Refreshing..." : "Refresh Alerts"}
+              </button>
+            ) : (
+              <div className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-4 text-xs font-black text-white">
+                <CheckCircle2 size={14} />
+                Live Command Scores
+              </div>
+            )}
           </div>
         </div>
-
-        <div className="mt-3 flex flex-col gap-3 rounded-[1.3rem] border-2 border-orange-200 bg-[#fffdf8] p-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              label={`${totalAlerts} Alerts`}
-              danger
-            />
-
-            <Badge
-              label={`${alertGroups.criticalRisks.length} Critical`}
-              danger
-            />
-
-            <Badge
-              label={`${alertGroups.visaWatch.length} Visa/CAS`}
-              blue
-            />
-
-            <Badge
-              label={`${alertGroups.conversionReady.length} Conversion`}
-              success
-            />
-          </div>
-
-          {!usingExternalScores ? (
-            <button
-              type="button"
-              onClick={
-                loadScores
-              }
-              disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-2.5 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw
-                size={15}
-                className={
-                  loading
-                    ? "animate-spin"
-                    : ""
-                }
-              />
-
-              {loading
-                ? "Refreshing..."
-                : "Refresh Alerts"}
-            </button>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-300 bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700">
-              <CheckCircle2
-                size={15}
-              />
-              Live Command Scores
-            </span>
-          )}
-        </div>
-      </div>
+      </section>
 
       {error ? (
         <div
@@ -761,65 +693,65 @@ function ExecutiveAlertsPanel({
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <CommandAlertCard
-          icon={ShieldAlert}
-          label="Immediate Escalations"
-          value={
-            alertGroups
-              .criticalRisks
-              .length
-          }
-          detail="Critical, visa rejected, or highest-risk cases."
-          tone="red"
-        />
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Escalation Operations Board
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Leadership pressure and conversion opportunity
+            </h3>
+            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-slate-200">
+              Grouped command intelligence replaces the loose five-card alert row.
+            </p>
+          </div>
 
-        <CommandAlertCard
-          icon={UserRoundCheck}
-          label="Counselor Workload"
-          value={
-            alertGroups
-              .needsAttention
-              .length
-          }
-          detail="Cases requiring active staff review."
-          tone="orange"
-        />
+          <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+            {totalAlerts} active signals
+          </span>
+        </div>
 
-        <CommandAlertCard
-          icon={Rocket}
-          label="Conversion Window"
-          value={
-            alertGroups
-              .conversionReady
-              .length
-          }
-          detail="Students close to a strong next-stage win."
-          tone="green"
-        />
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-5">
+          <CommandAlertCard
+            icon={ShieldAlert}
+            label="Immediate Escalations"
+            value={alertGroups.criticalRisks.length}
+            detail="Critical, visa rejected or highest-risk cases."
+            tone="red"
+          />
+          <CommandAlertCard
+            icon={UserRoundCheck}
+            label="Counselor Workload"
+            value={alertGroups.needsAttention.length}
+            detail="Cases requiring active staff review."
+            tone="orange"
+          />
+          <CommandAlertCard
+            icon={Rocket}
+            label="Conversion Window"
+            value={alertGroups.conversionReady.length}
+            detail="Students close to a strong next-stage win."
+            tone="green"
+          />
+          <CommandAlertCard
+            icon={FileWarning}
+            label="Weak Documents"
+            value={commandInsights.docsWeak}
+            detail="Readiness below the operating standard."
+            tone="blue"
+          />
+          <CommandAlertCard
+            icon={Clock3}
+            label="Task Pressure"
+            value={commandInsights.taskOverload}
+            detail="Overdue or overloaded task queues."
+            tone="red"
+          />
+        </div>
+      </section>
 
-        <CommandAlertCard
-          icon={FileWarning}
-          label="Weak Documents"
-          value={
-            commandInsights.docsWeak
-          }
-          detail="Readiness below the operating standard."
-          tone="blue"
-        />
-
-        <CommandAlertCard
-          icon={Clock3}
-          label="Task Pressure"
-          value={
-            commandInsights.taskOverload
-          }
-          detail="Overdue or overloaded task queues."
-          tone="red"
-        />
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <ExecutiveMiniQueue
           title="Top Escalation Queue"
           subtitle="Highest risk first"
@@ -855,7 +787,7 @@ function ExecutiveAlertsPanel({
         />
       </div>
 
-      <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#234e78] bg-[#fff8ee] shadow-[0_10px_28px_rgba(23,36,61,0.06)]">
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
         <button
           type="button"
           onClick={() =>
@@ -867,15 +799,15 @@ function ExecutiveAlertsPanel({
           aria-expanded={
             showDetailedQueues
           }
-          className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0f3158]"
+          className="flex w-full items-center justify-between gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0f3158]"
         >
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300/60 bg-white/10 text-white">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A]/60 bg-white/10 text-white">
               <Target size={18} />
             </div>
 
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#FFB38A]">
                 Detailed Decision Queues
               </p>
 
@@ -903,7 +835,7 @@ function ExecutiveAlertsPanel({
         </button>
 
         {showDetailedQueues ? (
-          <div className="grid gap-4 p-4 xl:grid-cols-2 sm:p-5">
+          <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-2 sm:p-5">
             <AlertList
               title="Critical Risks"
               eyebrow="Immediate Action"
@@ -1075,7 +1007,7 @@ function AlertList({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-sm font-semibold text-slate-500">
+        <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-5 text-sm font-semibold text-slate-500">
           {emptyText}
         </div>
       )}
@@ -1102,11 +1034,11 @@ function AlertCard({
 
   return (
     <div
-      className={`rounded-[1.25rem] border-[3px] bg-[#fffdf8] p-4 ${getOuterBorder(
+      className={`rounded-[1.25rem] border-[3px] bg-[#FFF8EF] p-4 ${getOuterBorder(
         tone
       )}`}
     >
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_110px]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_110px]">
         <div className="min-w-0">
           <p className="break-words text-base font-black leading-5 text-[#17243D]">
             {item.student_name ||
@@ -1248,7 +1180,7 @@ function Badge({
     ? "border-blue-400 bg-blue-50 text-blue-800"
     : success
     ? "border-emerald-400 bg-emerald-50 text-emerald-800"
-    : "border-orange-400 bg-orange-50 text-orange-800";
+    : "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]";
 
   return (
     <span
@@ -1312,8 +1244,8 @@ function ExecutiveMiniQueue({
     getToneClass(tone);
 
   return (
-    <div className="overflow-hidden rounded-[1.55rem] border-[3px] border-[#234e78] bg-[#fffdf8] shadow-[0_10px_26px_rgba(23,36,61,0.055)]">
-      <div className="flex items-start justify-between gap-3 border-b-2 border-orange-300 bg-[#123865] px-4 py-4 text-white">
+    <div className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_32px_rgba(18,56,101,0.07)]">
+      <div className="flex items-start justify-between gap-3 border-b-2 border-[#FFB38A] bg-[#123865] px-4 py-4 text-white">
         <div>
           <h3 className="font-black text-white">
             {title}
@@ -1382,7 +1314,7 @@ function ExecutiveMiniQueue({
             )
           )
         ) : (
-          <p className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+          <p className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-4 text-sm font-semibold text-slate-500">
             No records.
           </p>
         )}
@@ -1401,7 +1333,7 @@ function getToneClass(
   if (
     tone === "orange"
   ) {
-    return "border-orange-400 bg-orange-50 text-orange-800";
+    return "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]";
   }
 
   if (tone === "green") {
@@ -1412,7 +1344,7 @@ function getToneClass(
     return "border-blue-400 bg-blue-50 text-blue-800";
   }
 
-  return "border-[#234e78] bg-[#edf4fb] text-[#123865]";
+  return "border-[#123865] bg-[#edf4fb] text-[#123865]";
 }
 
 function getOuterBorder(
@@ -1425,7 +1357,7 @@ function getOuterBorder(
   if (
     tone === "orange"
   ) {
-    return "border-orange-400";
+    return "border-[#FF5A0A]";
   }
 
   if (tone === "green") {
@@ -1436,7 +1368,7 @@ function getOuterBorder(
     return "border-blue-400";
   }
 
-  return "border-[#234e78]";
+  return "border-[#123865]";
 }
 
 function getListHeader(
@@ -1449,7 +1381,7 @@ function getListHeader(
   if (
     tone === "orange"
   ) {
-    return "border-orange-300 bg-orange-50 text-orange-900";
+    return "border-[#FFB38A] bg-[#FFF4E8] text-orange-900";
   }
 
   if (tone === "green") {
@@ -1460,7 +1392,7 @@ function getListHeader(
     return "border-blue-300 bg-blue-50 text-blue-900";
   }
 
-  return "border-slate-300 bg-[#edf4fb] text-[#123865]";
+  return "border-[#C9D7E6] bg-[#edf4fb] text-[#123865]";
 }
 
 

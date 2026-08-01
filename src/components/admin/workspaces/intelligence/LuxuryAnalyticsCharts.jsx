@@ -582,41 +582,48 @@ function LuxuryAnalyticsCharts({
   ];
 
   return (
-    <section className="space-y-5">
-      <div className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.06)]">
-        <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
-          <div
-            className="bg-[#123865] p-5 sm:p-6"
-            style={{ color: "#FFFFFF" }}
-          >
-            <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
-              <Crown size={13} style={{ color: "#FDBA74" }} />
+    <motion.section
+      key="luxury-analytics-charts"
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.26,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className={`${cardClass} min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 text-[#10233F] shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5`}
+    >
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+                <BarChart3 size={12} />
+                CRM Charts OS
+              </span>
 
-              <p
-                className="text-[9px] font-black uppercase tracking-[0.1em]"
-                style={{ color: "#FFFFFF" }}
-              >
-                Executive Analytics
-              </p>
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                <ShieldCheck size={12} />
+                Live Visual Evidence
+              </span>
             </div>
 
-            <h2
-              className="mt-3 text-2xl font-black tracking-tight sm:text-3xl"
-              style={{ color: "#FFFFFF" }}
-            >
-              CRM Intelligence Charts
+            <h2 className="mt-3 text-3xl font-black text-white">
+              CRM Visual Intelligence Command
             </h2>
 
-            <p
-              className="mt-2 max-w-3xl text-sm font-semibold leading-6"
-              style={{ color: "#F8FAFC" }}
-            >
-              Visual operating view for lead growth, conversion movement,
-              appointment flow, priority distribution, ownership, and follow-up
-              performance.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              One visual operating workspace for lead growth, pipeline
+              distribution, priority mix, appointment performance and follow-up
+              pressure.
+            </p>
+          </div>
+
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Trend Window
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {TREND_WINDOWS.map((days) => (
                 <button
                   key={days}
@@ -624,178 +631,307 @@ function LuxuryAnalyticsCharts({
                   onClick={() => setTrendWindow(days)}
                   className={`rounded-xl border-2 px-4 py-2 text-xs font-black transition ${
                     trendWindow === days
-                      ? "border-orange-300 bg-orange-500 text-white"
-                      : "border-white/25 bg-white/10 text-white hover:bg-white/15"
+                      ? "border-white bg-white text-[#123865]"
+                      : "border-white/30 bg-white/10 text-white hover:bg-white/15"
                   }`}
                 >
                   {days} Days
                 </button>
               ))}
             </div>
-          </div>
 
-          <div className="bg-orange-500 p-5 sm:p-6" style={{ color: "#FFFFFF" }}>
-            <div className="flex items-center gap-2">
-              <CircleGauge size={18} />
-
-              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
-                CRM Snapshot
-              </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <ChartHeroMetric label="Leads" value={metrics.totalLeads} />
+              <ChartHeroMetric
+                label="Conversion"
+                value={`${metrics.conversionRate}%`}
+              />
+              <ChartHeroMetric
+                label="Assigned"
+                value={`${metrics.assignmentRate}%`}
+              />
+              <ChartHeroMetric
+                label="Overdue"
+                value={metrics.overdueReminders}
+              />
             </div>
-
-            <p className="mt-3 text-4xl font-black text-white">
-              {metrics.conversionRate}%
-            </p>
-
-            <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
-              Inquiry Conversion
-            </p>
-
-            <p className="mt-4 text-xs font-semibold leading-5 text-white">
-              {metrics.convertedLeads} converted inquiry record
-              {metrics.convertedLeads === 1 ? "" : "s"} from{" "}
-              {safeInquiries.length} total inquiries.
-            </p>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricPill
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <PartnerChartMetric
           label="Total Leads"
           value={metrics.totalLeads}
           helper={`${safeInquiries.length} inquiries · ${safeAppointments.length} appointments`}
           icon={Target}
-          tone="orange"
+          tone="navy"
+          badge="CRM Scope"
         />
 
-        <MetricPill
+        <PartnerChartMetric
           label="High Value"
           value={metrics.totalHighValue}
-          helper="VIP + high-priority leads"
+          helper="VIP and high-priority CRM records."
           icon={Crown}
-          tone="navy"
+          tone={metrics.totalHighValue ? "amber" : "green"}
+          badge="Priority"
         />
 
-        <MetricPill
+        <PartnerChartMetric
           label="Assignment"
           value={`${metrics.assignmentRate}%`}
-          helper={`${metrics.assigned}/${metrics.totalLeads} leads owned`}
+          helper={`${metrics.assigned}/${metrics.totalLeads} leads have ownership.`}
           icon={UserRoundCheck}
-          tone={metrics.assignmentRate >= 80 ? "good" : "warning"}
+          tone={metrics.assignmentRate >= 80 ? "green" : "blue"}
+          badge="Ownership"
         />
 
-        <MetricPill
-          label="Overdue"
+        <PartnerChartMetric
+          label="Overdue Follow-Ups"
           value={metrics.overdueReminders}
-          helper="Follow-ups requiring attention"
+          helper="Reminder records currently past their due date."
           icon={AlertTriangle}
-          tone={metrics.overdueReminders ? "risk" : "good"}
-        />
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricPill
-          label="Appointment Completion"
-          value={`${metrics.appointmentCompletionRate}%`}
-          helper="Completed consultations"
-          icon={CheckCircle2}
-          tone="good"
-        />
-
-        <MetricPill
-          label="Reminder Completion"
-          value={`${metrics.reminderCompletionRate}%`}
-          helper="Completed follow-up reminders"
-          icon={ShieldCheck}
-          tone="orange"
-        />
-
-        <MetricPill
-          label="Strongest Day"
-          value={metrics.strongestDay?.day || "—"}
-          helper={
-            metrics.strongestDay
-              ? `${metrics.strongestDay.total} total CRM records`
-              : "No activity yet"
-          }
-          icon={CalendarDays}
-          tone="navy"
-        />
-
-        <MetricPill
-          label="Trend Window"
-          value={`${trendWindow}D`}
-          helper="Current chart analysis period"
-          icon={TrendingUp}
-          tone="orange"
+          tone={metrics.overdueReminders ? "red" : "green"}
+          badge="Pressure"
         />
       </div>
 
       {!hasChartData ? (
-        <div
-          className={`${cardClass} rounded-[2rem] border-[3px] border-orange-300 bg-white p-8 text-center shadow-[0_10px_28px_rgba(15,35,63,0.05)]`}
-        >
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50">
+        <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#F97316] bg-white p-9 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4EA]">
             <BarChart3 className="h-7 w-7 text-orange-700" />
           </div>
 
-          <h3 className="mt-4 text-lg font-black text-[#10233f]">
-            Charts will appear when CRM data grows
+          <h3 className="mt-4 text-lg font-black text-[#10233F]">
+            CRM charts are waiting for evidence
           </h3>
 
           <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-            Add inquiries, appointments, and reminders to activate the full
-            analytics visualization layer.
+            Inquiries, appointments and follow-up reminders will activate this
+            visual intelligence workspace.
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 xl:grid-cols-2">
-          {chartCards.map((chart, index) => {
-            const Icon = chart.icon;
+        <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+          <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                Chart Command
+              </p>
 
-            return (
-              <motion.article
-                key={chart.title}
-                initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: reduceMotion ? 0 : 0.3,
-                  delay: reduceMotion ? 0 : index * 0.04,
-                }}
-                className={`${cardClass} group relative overflow-hidden rounded-[1.8rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-400 sm:p-6`}
-              >
-                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+              <h3 className="mt-1 text-xl font-black text-[#10233F]">
+                CRM visual evidence portfolio
+              </h3>
 
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
-                      CRM Chart
-                    </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                All existing Recharts visualizations now sit inside one
+                consistent operating workspace.
+              </p>
+            </div>
 
-                    <h3 className="mt-2 text-lg font-black text-[#10233f]">
-                      {chart.title}
-                    </h3>
+            <span className="inline-flex w-fit rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-slate-600">
+              {trendWindow}-day active window
+            </span>
+          </div>
 
-                    <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
-                      {chart.subtitle}
-                    </p>
+          <div className="grid gap-4 xl:grid-cols-2">
+            {chartCards.map((chart, index) => {
+              const Icon = chart.icon;
+
+              return (
+                <motion.article
+                  key={chart.title}
+                  initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: reduceMotion ? 0 : 0.24,
+                    delay: reduceMotion ? 0 : index * 0.035,
+                  }}
+                  className="min-w-0 overflow-hidden rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8]"
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] p-4 text-white">
+                    <div className="min-w-0">
+                      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-orange-300">
+                        CRM Chart
+                      </p>
+
+                      <h4 className="mt-1 break-words text-base font-black text-white">
+                        {chart.title}
+                      </h4>
+
+                      <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-200">
+                        {chart.subtitle}
+                      </p>
+                    </div>
+
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-orange-200">
+                      <Icon size={17} />
+                    </div>
                   </div>
 
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50">
-                    <Icon className="h-5 w-5 text-orange-700" />
+                  <div className="min-w-0 overflow-hidden bg-[#FFF8EF] p-2 sm:p-3">
+                    {chart.content}
                   </div>
-                </div>
-
-                <div className="overflow-hidden rounded-[1.4rem] border-2 border-slate-300 bg-[#fffaf2] p-2 sm:p-3">
-                  {chart.content}
-                </div>
-              </motion.article>
-            );
-          })}
-        </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        </section>
       )}
-    </section>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <ChartIntegrityCard
+          icon={CheckCircle2}
+          eyebrow="Appointment Evidence"
+          title={`${metrics.appointmentCompletionRate}% completion`}
+          helper="Completed consultations divided by tracked appointments."
+          tone="green"
+        />
+
+        <ChartIntegrityCard
+          icon={ShieldCheck}
+          eyebrow="Reminder Evidence"
+          title={`${metrics.reminderCompletionRate}% completion`}
+          helper={`${metrics.overdueReminders} overdue reminder record${metrics.overdueReminders === 1 ? "" : "s"} remain visible.`}
+          tone={metrics.overdueReminders ? "amber" : "green"}
+        />
+
+        <ChartIntegrityCard
+          icon={CalendarDays}
+          eyebrow="Strongest Activity Day"
+          title={metrics.strongestDay?.day || "No activity yet"}
+          helper={
+            metrics.strongestDay
+              ? `${metrics.strongestDay.total} CRM records in the active window.`
+              : "Activity evidence will appear after dated CRM records exist."
+          }
+          tone="blue"
+        />
+      </div>
+    </motion.section>
+  );
+}
+
+
+function ChartHeroMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-orange-50">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function PartnerChartMetric({
+  label,
+  value,
+  helper,
+  icon: Icon,
+  tone = "blue",
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#123865] bg-[#123865]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <article
+      className={`flex min-h-[176px] h-full flex-col justify-between rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
+        </div>
+
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+            dark
+              ? "border-white/20 bg-white/10 text-orange-200"
+              : "border-[#123865]/15 bg-white text-[#123865]"
+          }`}
+        >
+          <Icon size={16} />
+        </div>
+      </div>
+
+      <div>
+        <p
+          className={`mt-4 text-xs font-semibold leading-5 ${
+            dark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
+          {helper}
+        </p>
+
+        {badge ? (
+          <span
+            className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+              dark
+                ? "border-white/20 bg-white/10 text-white"
+                : "border-[#C9D7E6] bg-white text-slate-600"
+            }`}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function ChartIntegrityCard({
+  icon: Icon,
+  eyebrow,
+  title,
+  helper,
+  tone = "blue",
+}) {
+  const tones = {
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+  };
+
+  return (
+    <div className={`rounded-[1.35rem] border-[3px] p-4 ${tones[tone]}`}>
+      <div className="flex items-start gap-3">
+        <Icon size={17} className="mt-0.5 shrink-0 text-[#123865]" />
+        <div>
+          <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+            {eyebrow}
+          </p>
+          <p className="mt-1 font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {helper}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

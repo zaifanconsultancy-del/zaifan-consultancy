@@ -1,4 +1,4 @@
-// UniversitySelector V4 MAX — University Recommendation Intelligence
+// UniversitySelector PARTNER OS EXTREME — University Recommendation Command
 // Purpose:
 // - discover and recommend Italy-first university options
 // - calculate transparent fit/readiness signals
@@ -686,35 +686,38 @@ function UniversitySelector({
   };
 
   return (
-    <section className="rounded-[1.75rem] border-[3px] border-orange-300 bg-white p-4 shadow-[0_10px_28px_rgba(15,35,63,0.05)] sm:p-5">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.13em] text-orange-700">
+    <section className="min-w-0 space-y-4 rounded-[2.1rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_16px_44px_rgba(18,56,101,0.10)] lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,0.75fr)]">
+        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+          <div className="flex min-w-0 flex-wrap gap-2">
+            <span className="rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.13em] text-white">
               University Intelligence
             </span>
 
-            <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
+            <span className="rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
               {preferredCountry || "Italy"} First
             </span>
           </div>
 
-          <h3 className="mt-2 text-xl font-black text-[#10233f]">
+          <h3 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
             Recommended University Options
           </h3>
 
-          <p className="mt-1 max-w-3xl text-sm font-medium text-slate-600">
+          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
             Discover relevant options, understand why they match, and send the
             best choices into the full University Planning OS.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">Recommendation Actions</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">Open the full planning workspace or refresh shortlist truth before adding another university.</p>
+          <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
           {typeof onOpenUniversityPlanning === "function" ? (
             <button
               type="button"
               onClick={onOpenUniversityPlanning}
-              className="rounded-xl border-2 border-[#0b2a57] bg-[#0b2a57] px-3.5 py-2.5 text-xs font-black shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              className="min-h-11 rounded-xl border-2 border-white/30 bg-[#123865] px-3.5 py-2.5 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
               style={{ color: "#ffffff" }}
             >
               <span style={{ color: "#ffffff" }}>
@@ -727,11 +730,12 @@ function UniversitySelector({
             type="button"
             onClick={loadExistingShortlist}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2.5 text-xs font-black text-[#10233f] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-3.5 py-2.5 text-xs font-black text-[#123865] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             Refresh
           </button>
+          </div>
         </div>
       </div>
 
@@ -747,7 +751,7 @@ function UniversitySelector({
         </Feedback>
       ) : null}
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
+      <div className="mt-4 grid min-w-0 gap-3 rounded-[1.4rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] lg:grid-cols-[minmax(0,1fr)_auto]">
         <div className="relative">
           <Search
             size={15}
@@ -758,21 +762,21 @@ function UniversitySelector({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search university, city or subject..."
-            className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+            className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           />
         </div>
 
-        <div className="rounded-xl border-2 border-orange-300 bg-[#fffaf4] px-4 py-2.5">
+        <div className="min-w-[9rem] rounded-xl border-[3px] border-[#FF5A0A] bg-[#FFF4E8] px-4 py-2.5 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
           <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
             Active shortlist
           </p>
-          <p className="mt-1 text-sm font-black text-[#10233f]">
+          <p className="mt-1 text-sm font-black text-[#10233F]">
             {existingShortlist.filter((item) => !item.is_archived).length}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <ProfileSignal label="Destination" value={preferredCountry || "Not set"} />
         <ProfileSignal label="Program" value={preferredProgram || "Not set"} />
         <ProfileSignal label="Degree" value={degreeLevel || "Not set"} />
@@ -780,7 +784,7 @@ function UniversitySelector({
       </div>
 
       {studentProfileGaps.length ? (
-        <div className="mt-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
+        <div className="mt-4 rounded-[1.35rem] border-[3px] border-[#F59E0B] bg-[#FFF7ED] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
           <div className="flex items-start gap-3">
             <AlertTriangle
               size={18}
@@ -801,20 +805,20 @@ function UniversitySelector({
       ) : null}
 
       {loading && !recommendations.length ? (
-        <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4]">
+        <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-[1.45rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF]">
           <div className="text-center">
             <LoaderCircle
               size={28}
               className="mx-auto animate-spin text-orange-500"
             />
-            <p className="mt-3 text-sm font-black text-[#10233f]">
+            <p className="mt-3 text-sm font-black text-[#10233F]">
               Loading university intelligence
             </p>
           </div>
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-3 xl:grid-cols-2">
+      <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-2">
         {recommendations.map((university) => {
           const operationKey =
             university.sourceUniversityId ||
@@ -833,10 +837,10 @@ function UniversitySelector({
       </div>
 
       {!loading && !recommendations.length ? (
-        <div className="mt-4 rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-7 text-center">
+        <div className="mt-4 rounded-[1.45rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-7 text-center">
           <Landmark size={30} className="mx-auto text-orange-400" />
 
-          <p className="mt-3 text-sm font-black text-[#10233f]">
+          <p className="mt-3 text-sm font-black text-[#10233F]">
             No matching university found
           </p>
 
@@ -846,8 +850,8 @@ function UniversitySelector({
         </div>
       ) : null}
 
-      <div className="mt-4 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4">
-        <p className="text-xs font-black text-[#10233f]">
+      <div className="mt-4 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
+        <p className="text-xs font-black text-[#10233F]">
           Recommendation responsibility
         </p>
 
@@ -863,9 +867,9 @@ function UniversitySelector({
 
 function ProfileSignal({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-[#fffaf4] px-3 py-2.5">
+    <div className="min-w-0 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white px-3 py-3 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
       <p className="text-[9px] font-black uppercase tracking-[0.11em] text-slate-500">{label}</p>
-      <p className="mt-1 truncate text-xs font-black text-[#10233f]" title={String(value)}>{value}</p>
+      <p className="mt-1 truncate text-xs font-black text-[#10233F]" title={String(value)}>{value}</p>
     </div>
   );
 }
@@ -875,16 +879,16 @@ function RecommendationCard({ university, adding, onAdd }) {
   const restorable = Boolean(university.archivedMatch) && !shortlisted;
 
   return (
-    <article className="rounded-[1.4rem] border-2 border-slate-300 bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-orange-400 hover:shadow-[0_10px_24px_rgba(15,35,63,0.07)]">
+    <article className="min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_12px_30px_rgba(18,56,101,0.09)]">
       <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-600">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
           <GraduationCap size={19} />
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <h4 className="truncate font-black text-[#10233f]">
+              <h4 className="break-words font-black text-[#10233F]">
                 {university.name}
               </h4>
 
@@ -911,7 +915,7 @@ function RecommendationCard({ university, adding, onAdd }) {
               .map((strength) => (
                 <span
                   key={strength}
-                  className="rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[9px] font-black text-slate-700"
+                  className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-2 py-0.5 text-[9px] font-black text-slate-700"
                 >
                   {strength}
                 </span>
@@ -972,7 +976,7 @@ function RecommendationCard({ university, adding, onAdd }) {
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs font-semibold text-slate-500">
           Suggested category:{" "}
-          <span className="font-black text-[#10233f]">
+          <span className="font-black text-[#10233F]">
             {pretty(categoryFromScore(university.score))}
           </span>
         </p>
@@ -981,7 +985,7 @@ function RecommendationCard({ university, adding, onAdd }) {
           <button
             type="button"
             disabled
-            className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3.5 py-2.5 text-xs font-black text-emerald-800"
+            className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl border-[3px] border-[#34D399] bg-[#F0FFF8] px-3.5 py-2.5 text-xs font-black text-emerald-800"
           >
             <Check size={14} />
             Already Shortlisted
@@ -991,7 +995,7 @@ function RecommendationCard({ university, adding, onAdd }) {
             type="button"
             onClick={onAdd}
             disabled={adding}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-orange-700 bg-orange-500 px-3.5 py-2.5 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0 disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-3.5 py-2.5 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {adding ? (
               <LoaderCircle size={14} className="animate-spin" />
@@ -1011,7 +1015,7 @@ function RecommendationCard({ university, adding, onAdd }) {
 
 function InfoBlock({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-[#fffaf4] p-3">
+    <div className="min-w-0 rounded-xl border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-3 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
       <div className="flex items-center gap-2">
         <Icon size={14} className="text-orange-600" />
 
@@ -1020,7 +1024,7 @@ function InfoBlock({ icon: Icon, label, value }) {
         </p>
       </div>
 
-      <p className="mt-2 text-xs font-black text-[#10233f]">{value}</p>
+      <p className="mt-2 text-xs font-black text-[#10233F]">{value}</p>
     </div>
   );
 }
@@ -1028,11 +1032,11 @@ function InfoBlock({ icon: Icon, label, value }) {
 function ReasonBox({ title, items, tone }) {
   const styles =
     tone === "green"
-      ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-      : "border-orange-300 bg-orange-50 text-orange-900";
+      ? "border-[#34D399] bg-[#F0FFF8] text-emerald-900"
+      : "border-[#FF5A0A] bg-[#FFF4E8] text-orange-900";
 
   return (
-    <div className={`rounded-xl border-2 p-3 ${styles}`}>
+    <div className={`min-w-0 rounded-[1.15rem] border-[3px] p-3 shadow-[0_5px_14px_rgba(18,56,101,0.04)] ${styles}`}>
       <p className="text-xs font-black">{title}</p>
 
       <div className="mt-2 space-y-1.5">
@@ -1061,11 +1065,11 @@ function FitBadge({ score, level }) {
       : score >= 65
       ? "border-blue-300 bg-blue-50 text-blue-800"
       : score >= 45
-      ? "border-orange-300 bg-orange-50 text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
       : "border-red-300 bg-red-50 text-red-800";
 
   return (
-    <div className={`rounded-xl border-2 px-3 py-2 ${style}`}>
+    <div className={`shrink-0 rounded-xl border-[3px] px-3 py-2 shadow-[0_5px_14px_rgba(18,56,101,0.04)] ${style}`}>
       <p className="text-sm font-black">{score}%</p>
       <p className="mt-0.5 text-[9px] font-black uppercase">{level} Fit</p>
     </div>
@@ -1080,13 +1084,14 @@ function Feedback({ tone, onClose, children }) {
 
   return (
     <div
-      className={`mt-4 flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${styles}`}
+      role={tone === "red" ? "alert" : "status"}
+      className={`mt-4 flex min-w-0 items-start gap-3 rounded-[1.35rem] border-[3px] p-4 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${styles}`}
     >
       <CircleAlert size={17} className="mt-0.5 shrink-0" />
 
       <div className="min-w-0 flex-1">{children}</div>
 
-      <button type="button" onClick={onClose}>
+      <button type="button" onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-current/20 bg-white/50 transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15" aria-label="Dismiss message">
         <X size={16} />
       </button>
     </div>

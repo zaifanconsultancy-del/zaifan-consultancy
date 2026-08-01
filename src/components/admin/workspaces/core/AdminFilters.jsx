@@ -1,11 +1,11 @@
-// AdminFilters V3 — Maximum CRM Workspace Tab Switcher
-// src/components/admin/AdminFilters.jsx
+// AdminFilters V4 PARTNER OS — CRM Workspace Tab Switcher
+// src/components/admin/core/AdminFilters.jsx
 //
 // Maximum pass:
 // - preserves the existing activeTab / setActiveTab API
 // - proper accessible tab semantics and keyboard navigation
 // - reduced-motion support
-// - stronger Zaifan Admin OS navy/orange/cream hierarchy
+// - locked Partner OS navy/orange/cream hierarchy
 // - mobile-safe full-width layout
 // - no fake Supabase logic: this component is a pure workspace navigation control
 
@@ -80,10 +80,10 @@ function AdminFilters({ activeTab, setActiveTab }) {
 
   return (
     <section
-      className="mb-6"
+      className="mb-6 min-w-0"
       aria-label="CRM workspace switcher"
     >
-      <div className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-white shadow-[0_10px_28px_rgba(15,35,63,0.06)]">
+      <div className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_14px_34px_rgba(15,35,63,0.09)]">
         <div className="bg-[#123865] px-4 py-3 text-white sm:px-5">
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
             CRM Workspace
@@ -105,7 +105,7 @@ function AdminFilters({ activeTab, setActiveTab }) {
           </div>
         </div>
 
-        <div className="bg-[#fff8ee] p-2 sm:p-3">
+        <div className="bg-[#FFF8EF] p-2 sm:p-3">
           <div
             role="tablist"
             aria-label="Admin CRM workspaces"
@@ -127,16 +127,16 @@ function AdminFilters({ activeTab, setActiveTab }) {
                   onClick={() => activateTab(tab.id)}
                   onKeyDown={(event) => handleKeyDown(event, index)}
                   whileTap={shouldReduceMotion ? undefined : { scale: 0.985 }}
-                  className={`relative overflow-hidden rounded-[1.35rem] border-[3px] px-4 py-4 text-left outline-none transition duration-300 focus-visible:ring-4 focus-visible:ring-orange-200 ${
+                  className={`relative overflow-hidden rounded-[1.35rem] border-[3px] px-4 py-4 text-left outline-none transition duration-300 focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/25 ${
                     active
-                      ? "border-orange-500 text-white shadow-[0_10px_24px_rgba(249,115,22,0.18)]"
-                      : "border-slate-300 bg-white text-[#10233f] hover:border-orange-400 hover:bg-orange-50"
+                      ? "border-[#FF5A0A] text-white shadow-[0_10px_24px_rgba(255,90,10,0.20)]"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4EA]"
                   }`}
                 >
                   {active ? (
                     <motion.div
                       layoutId="active-admin-tab"
-                      className="absolute inset-0 bg-orange-500"
+                      className="absolute inset-0 bg-[#FF5A0A]"
                       transition={
                         shouldReduceMotion
                           ? { duration: 0 }
@@ -151,7 +151,7 @@ function AdminFilters({ activeTab, setActiveTab }) {
                         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 ${
                           active
                             ? "border-white/25 bg-white/10 text-white"
-                            : "border-orange-300 bg-orange-50 text-orange-700"
+                            : "border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]"
                         }`}
                       >
                         <Icon size={18} />
@@ -160,7 +160,7 @@ function AdminFilters({ activeTab, setActiveTab }) {
                       <span className="min-w-0">
                         <span
                           className={`block truncate text-sm font-black ${
-                            active ? "text-white" : "text-[#10233f]"
+                            active ? "text-white" : "text-[#10233F]"
                           }`}
                         >
                           {tab.label}
@@ -188,7 +188,7 @@ function AdminFilters({ activeTab, setActiveTab }) {
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
                         active
                           ? "border-white/25 bg-white/10 text-white"
-                          : "border-slate-300 bg-white text-slate-500"
+                          : "border-[#C9D7E6] bg-white text-slate-500"
                       }`}
                       aria-hidden="true"
                     >

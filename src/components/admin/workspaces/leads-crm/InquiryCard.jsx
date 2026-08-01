@@ -1,3 +1,16 @@
+// InquiryCard PARTNER OS EXTREME V3 — Compact Framed Lead Command Record
+// src/components/admin/InquiryCard.jsx
+//
+// Complete visual redesign:
+// - preserves every prop, callback, permission check, AI enrichment, contact action,
+//   clipboard action, pipeline action, delete confirmation, compact mode and state
+// - establishes the benchmark card system for the future AppointmentCard redesign
+// - uses the locked Partner OS navy / orange / cream hierarchy
+// - removes decorative blobs, soft toy-like styling and weak nested card treatment
+// - introduces a mature command header, action rail, intelligence brief,
+//   operational controls, pipeline command strip and protected destructive action
+// - adds stronger min-w-0 containment, responsive wrapping and focus states
+
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -35,53 +48,34 @@ import {
 import { enrichLeadWithAi } from "../../../../services/aiLeadEngine";
 
 const MOTION = {
-  duration: 0.32,
+  duration: 0.28,
   ease: [0.22, 1, 0.36, 1],
 };
 
 const TRANSITION =
   "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
 
-const PRIORITY_ORDER = {
-  low: 1,
-  medium: 2,
-  high: 3,
-  vip: 4,
-};
-
 const PRIORITY_STYLES = {
   vip: {
-    badge: "border-orange-300 bg-orange-100 text-orange-800",
-    card:
-      "border-orange-200 hover:border-orange-300 hover:shadow-[0_20px_60px_rgba(124,58,237,0.08)]",
-    glow: "bg-orange-100/70 group-hover:bg-orange-200/70",
+    badge: "border-[#FF5A0A] bg-[#FFF1E8] text-orange-800",
     icon: Crown,
-    dot: "bg-orange-500",
+    dot: "bg-[#FF5A0A]",
     label: "VIP",
   },
   high: {
-    badge: "border-red-200 bg-red-50 text-red-700",
-    card:
-      "border-red-200 hover:border-red-300 hover:shadow-[0_20px_60px_rgba(239,68,68,0.08)]",
-    glow: "bg-red-100/70 group-hover:bg-red-200/70",
+    badge: "border-red-400 bg-red-50 text-red-800",
     icon: Flame,
     dot: "bg-red-500",
     label: "High",
   },
   medium: {
-    badge: "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
-    card:
-      "border-orange-200 hover:border-orange-300 hover:shadow-[0_20px_60px_rgba(255,75,18,0.08)]",
-    glow: "bg-orange-100/70 group-hover:bg-orange-200/70",
+    badge: "border-orange-300 bg-orange-50 text-orange-800",
     icon: Star,
     dot: "bg-orange-500",
     label: "Medium",
   },
   low: {
-    badge: "border-slate-200 bg-slate-50 text-slate-600",
-    card:
-      "border-slate-200 hover:border-slate-300 hover:shadow-[0_20px_60px_rgba(7,31,80,0.07)]",
-    glow: "bg-slate-100/70 group-hover:bg-slate-200/70",
+    badge: "border-slate-300 bg-slate-50 text-slate-700",
     icon: Target,
     dot: "bg-slate-400",
     label: "Low",
@@ -92,17 +86,17 @@ const ROLE_CONFIG = {
   staff: {
     label: "Staff",
     icon: UserRound,
-    badge: "border-sky-200 bg-sky-50 text-sky-700",
+    badge: "border-blue-300 bg-blue-50 text-blue-800",
   },
   admin: {
     label: "Admin",
     icon: UserCheck,
-    badge: "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
+    badge: "border-[#FF5A0A] bg-[#FFF1E8] text-orange-800",
   },
   super_admin: {
     label: "Super Admin",
     icon: Crown,
-    badge: "border-orange-200 bg-orange-50 text-orange-700",
+    badge: "border-violet-300 bg-violet-50 text-violet-800",
   },
 };
 
@@ -113,8 +107,8 @@ const PIPELINE_STAGES = [
     shortLabel: "New",
     icon: Sparkles,
     emoji: "✨",
-    badge: "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
-    dot: "bg-orange-500",
+    badge: "border-blue-300 bg-blue-50 text-blue-800",
+    dot: "bg-blue-500",
     progress: 12,
   },
   {
@@ -123,8 +117,8 @@ const PIPELINE_STAGES = [
     shortLabel: "Contacted",
     icon: Phone,
     emoji: "📞",
-    badge: "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
-    dot: "bg-orange-500",
+    badge: "border-cyan-300 bg-cyan-50 text-cyan-800",
+    dot: "bg-cyan-500",
     progress: 25,
   },
   {
@@ -133,7 +127,7 @@ const PIPELINE_STAGES = [
     shortLabel: "Docs Pending",
     icon: FileText,
     emoji: "📄",
-    badge: "border-amber-200 bg-amber-50 text-amber-700",
+    badge: "border-amber-300 bg-amber-50 text-amber-800",
     dot: "bg-amber-500",
     progress: 40,
   },
@@ -143,8 +137,8 @@ const PIPELINE_STAGES = [
     shortLabel: "Applied",
     icon: ClipboardCheck,
     emoji: "📨",
-    badge: "border-sky-200 bg-sky-50 text-sky-700",
-    dot: "bg-sky-500",
+    badge: "border-blue-300 bg-blue-50 text-blue-800",
+    dot: "bg-blue-500",
     progress: 55,
   },
   {
@@ -153,8 +147,8 @@ const PIPELINE_STAGES = [
     shortLabel: "Offer",
     icon: BadgeCheck,
     emoji: "🏆",
-    badge: "border-orange-200 bg-orange-50 text-orange-700",
-    dot: "bg-orange-500",
+    badge: "border-violet-300 bg-violet-50 text-violet-800",
+    dot: "bg-violet-500",
     progress: 70,
   },
   {
@@ -163,7 +157,7 @@ const PIPELINE_STAGES = [
     shortLabel: "Visa",
     icon: BriefcaseBusiness,
     emoji: "🛂",
-    badge: "border-cyan-200 bg-cyan-50 text-cyan-700",
+    badge: "border-cyan-300 bg-cyan-50 text-cyan-800",
     dot: "bg-cyan-500",
     progress: 85,
   },
@@ -173,8 +167,8 @@ const PIPELINE_STAGES = [
     shortLabel: "Approved",
     icon: CheckCircle2,
     emoji: "✅",
-    badge: "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
-    dot: "bg-orange-500",
+    badge: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    dot: "bg-emerald-500",
     progress: 100,
   },
 ];
@@ -190,7 +184,8 @@ function InquiryCard({
   role = "staff",
   permissions = {},
 }) {
-  const [detailsExpanded, setDetailsExpanded] = useState(!compact);
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
   const [pipelineExpanded, setPipelineExpanded] = useState(false);
   const [copiedField, setCopiedField] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -439,92 +434,77 @@ function InquiryCard({
         whileHover={{ y: -2 }}
         transition={MOTION}
         onClick={() => openModal(inquiry)}
-        className={`${cardClass} group relative cursor-pointer overflow-hidden rounded-[1.55rem] border-[3px] ${activePriority.card} !border-[#123865] hover:!border-[#FF5A0A] bg-[#FFF8EF] p-4 shadow-[0_16px_48px_rgba(7,31,80,0.07)] ${TRANSITION} sm:rounded-[2rem] sm:p-5`}
+        className={`${cardClass} group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.85rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2 shadow-[0_18px_50px_rgba(18,56,101,0.12)] ${TRANSITION} hover:border-[#FF5A0A] hover:shadow-[0_24px_65px_rgba(18,56,101,0.16)] sm:p-2.5`}
       >
-        <div
-          className={`pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full blur-3xl transition duration-700 sm:h-48 sm:w-48 ${activePriority.glow}`}
-        />
+        <div className="min-w-0 overflow-hidden rounded-[1.35rem] border-[2px] border-[#FF5A0A] bg-white">
+        <div className="min-w-0">
+          <header className="min-w-0 bg-[#123865] p-4 text-white sm:p-5">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <CommandBadge icon={GraduationCap}>
+                Student Inquiry
+              </CommandBadge>
 
-        {!assignedAdminName ? (
-          <div className="pointer-events-none absolute -left-24 top-10 h-44 w-44 rounded-full bg-orange-500/5 blur-3xl transition duration-700 group-hover:bg-orange-500/10" />
-        ) : null}
+              <span
+                className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${activeStage.badge}`}
+              >
+                <ActiveStageIcon size={11} />
+                {activeStage.shortLabel}
+              </span>
 
-        <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-[#FF5A0A] to-transparent transition duration-500 group-hover:scale-x-100" />
+              <span
+                className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${activePriority.badge}`}
+              >
+                <ActivePriorityIcon size={11} />
+                {activePriority.label}
+              </span>
+            </div>
 
-        <div className="relative">
-          <header className="border-b border-orange-100 pb-4 sm:pb-5">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300 bg-[#FFF8EF] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#FF5A0A]">
-                    <GraduationCap size={11} />
-                    Student Inquiry
-                  </span>
+            <div className="mt-3 flex min-w-0 flex-col gap-3">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+                  Lead Command Record
+                </p>
 
+                <h2 className="mt-1 min-w-0 whitespace-normal [overflow-wrap:break-word] text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
+                  {inquiry.full_name || "Unnamed Student"}
+                </h2>
+
+                <p className="mt-2 min-w-0 whitespace-normal [overflow-wrap:break-word] text-sm font-semibold leading-6 text-slate-200">
+                  {inquiry.country || "Country not provided"}
+                  <span className="mx-2 text-orange-300">·</span>
+                  {inquiry.field_of_interest ||
+                    inquiry.study_level ||
+                    "Study interest not provided"}
+                </p>
+              </div>
+
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <AssignmentBadge
+                  assignedAdminName={assignedAdminName}
+                  assignedAdminInitial={assignedAdminInitial}
+                  dark
+                />
+
+                {!compact ? (
                   <span
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${activeStage.badge}`}
+                    className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${currentRole.badge}`}
                   >
-                    <ActiveStageIcon size={11} />
-                    {activeStage.shortLabel}
+                    <CurrentRoleIcon size={11} />
+                    {currentRole.label}
                   </span>
-
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${activePriority.badge}`}
-                  >
-                    <ActivePriorityIcon size={11} />
-                    {activePriority.label}
-                  </span>
-                </div>
-
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <h2 className="break-words text-xl font-black leading-tight tracking-[-0.025em] text-[#123865] sm:text-2xl">
-                      {inquiry.full_name || "Unnamed Student"}
-                    </h2>
-
-                    <p className="mt-1 text-xs font-semibold text-[#71809a]">
-                      {inquiry.country || "Country not provided"}
-                      {" · "}
-                      {inquiry.field_of_interest ||
-                        inquiry.study_level ||
-                        "Study interest not provided"}
-                    </p>
-                  </div>
-
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <div
-                      className={`inline-flex items-center gap-2 rounded-full border-2 border-orange-300 bg-[#FFF2E8] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#c2410c] shadow-sm`}
-                    >
-                      <Bot size={11} />
-                      {aiLead.ai_tier.badge} · {aiLead.ai_score}/100
-                    </div>
-
-                    {!compact ? (
-                      <div
-                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${currentRole.badge}`}
-                      >
-                        <CurrentRoleIcon size={11} />
-                        {currentRole.label}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
+                ) : null}
               </div>
             </div>
 
             <div
-              className="mt-4 flex flex-wrap gap-2"
+              className="mt-4 flex min-w-0 flex-wrap gap-2"
               onClick={(event) => event.stopPropagation()}
             >
-              <AssignmentBadge
-                assignedAdminName={assignedAdminName}
-                assignedAdminInitial={assignedAdminInitial}
-              />
-
               {healthSignals.map((signal) => (
                 <SignalBadge
                   key={`${signal.label}-${signal.tone}`}
                   {...signal}
+                  dark
                 />
               ))}
 
@@ -533,140 +513,466 @@ function InquiryCard({
                   label="Delete locked"
                   tone="muted"
                   icon={Trash2}
+                  dark
                 />
               ) : null}
             </div>
           </header>
 
+          <aside
+            className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                  AI Lead Intelligence
+                </p>
+
+                <p className="mt-1 text-xs font-semibold text-orange-50">
+                  Evidence-led priority signal
+                </p>
+              </div>
+
+              <Bot size={23} className="shrink-0 text-white" />
+            </div>
+
+            <div className="mt-4 grid min-w-0 grid-cols-2 gap-2">
+              <OrangeMetric
+                label={aiLead.ai_tier.badge}
+                value={`${aiLead.ai_score}/100`}
+              />
+
+              <OrangeMetric
+                label="Profile Complete"
+                value={`${completeness}%`}
+              />
+            </div>
+
+            <div className="mt-3 min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Conversion Probability
+              </p>
+
+              <p className="mt-1 text-lg font-black text-white">
+                {aiLead.ai_conversion_probability}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={openRealGptWorkspace}
+              className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
+            >
+              <Bot size={15} />
+              Open AI Workspace
+              <ChevronRight size={14} />
+            </button>
+          </aside>
+        </div>
+
+        <div
+          className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-white p-3.5 sm:p-4"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                Immediate Actions
+              </p>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                Contact the student or open the complete CRM record without
+                losing this queue position.
+              </p>
+            </div>
+
+            <div className="flex min-w-0 flex-wrap gap-2 [container-type:inline-size]">
+              <QuickAction
+                label="Email"
+                icon={Mail}
+                disabled={!contactLinks.email}
+                onClick={(event) =>
+                  openExternal(event, contactLinks.email)
+                }
+              />
+
+              <QuickAction
+                label="Call"
+                icon={Phone}
+                disabled={!contactLinks.phone}
+                onClick={(event) =>
+                  openExternal(event, contactLinks.phone)
+                }
+              />
+
+              <QuickAction
+                label="WhatsApp"
+                icon={MessageCircle}
+                disabled={!contactLinks.whatsapp}
+                onClick={(event) =>
+                  openExternal(event, contactLinks.whatsapp)
+                }
+                primary
+              />
+
+              <QuickAction
+                label="Open Profile"
+                icon={Eye}
+                onClick={() => openModal(inquiry)}
+                navy
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-3"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() =>
+              setWorkspaceExpanded((current) => !current)
+            }
+            aria-expanded={workspaceExpanded}
+            className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-[3px] border-[#123865] bg-white px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+          >
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                Operational Workspace
+              </p>
+              <p className="mt-1 break-words text-xs font-semibold text-slate-600">
+                {workspaceExpanded
+                  ? "Hide counselor controls, pipeline, snapshot and record actions."
+                  : "Open counselor controls, pipeline, snapshot and record actions."}
+              </p>
+            </div>
+
+            <ChevronDown
+              size={18}
+              className={`shrink-0 text-[#123865] ${TRANSITION} ${
+                workspaceExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {workspaceExpanded ? (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={MOTION}
+              className="min-w-0 overflow-hidden"
+            >
+              <div className="min-w-0 space-y-4 bg-[#FFF8EF] p-4 sm:p-5">
           {!compact ? (
-            <section className="mt-4 grid gap-3 xl:grid-cols-[1.35fr_0.65fr]">
-              <div className="rounded-[1.35rem] border-2 border-orange-300 bg-white p-4 sm:p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FF5A0A] text-white shadow-[0_12px_26px_rgba(255,75,18,0.20)]">
-                    <WandSparkles size={19} />
+            <section className="grid min-w-0 gap-3">
+              <div className="min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_24px_rgba(18,56,101,0.05)] sm:p-5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-[#123865] text-white">
+                    <WandSparkles size={18} />
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#FF5A0A]">
-                          AI Counselor Signal
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                          Counselor Intelligence Brief
                         </p>
-                        <h3 className="mt-1 text-sm font-black text-[#123865]">
+
+                        <h3 className="mt-1 text-base font-black text-[#10233F]">
                           Recommended next move
                         </h3>
                       </div>
 
-                      <span className="rounded-full border-2 border-orange-300 bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#FF5A0A]">
-                        Conversion {aiLead.ai_conversion_probability}
+                      <span className="inline-flex shrink-0 rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-orange-800">
+                        AI score {aiLead.ai_score}
                       </span>
                     </div>
 
-                    <p className="mt-3 text-sm font-medium leading-6 text-[#526178]">
+                    <p className="mt-3 break-words text-sm font-semibold leading-6 text-slate-700">
                       {aiLead.ai_recommended_action}
                     </p>
 
-                    <p className="mt-2 text-xs leading-5 text-[#71809a]">
-                      Open the real GPT workspace for counselor-facing analysis
-                      and response drafting.
-                    </p>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      <EvidenceMetric
+                        label="Conversion Signal"
+                        value={aiLead.ai_conversion_probability}
+                        helper="AI-estimated lead movement potential"
+                      />
+
+                      <EvidenceMetric
+                        label="Profile Readiness"
+                        value={`${completeness}%`}
+                        helper={
+                          completeness >= 80
+                            ? "Enough information for detailed counseling"
+                            : "Additional student information is still needed"
+                        }
+                        success={completeness >= 80}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <MetricMiniCard
-                  label="AI Score"
-                  value={aiLead.ai_score}
-                  helper="Lead intelligence"
-                  tone="orange"
+              <div className="min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_24px_rgba(18,56,101,0.05)] sm:p-5">
+                <SectionTitle
+                  eyebrow="Lead Ownership"
+                  title="Record health"
+                  icon={ShieldAlert}
                 />
 
-                <MetricMiniCard
-                  label="Profile Completeness"
-                  value={`${completeness}%`}
-                  helper={
-                    completeness >= 80
-                      ? "Ready for detailed counseling"
-                      : "More student data would help"
-                  }
-                  tone={completeness >= 80 ? "green" : "blue"}
-                />
+                <div className="mt-4 space-y-2">
+                  <HealthRow
+                    label="Assigned owner"
+                    value={assignedAdminName || "Unassigned"}
+                    tone={assignedAdminName ? "info" : "warning"}
+                  />
+
+                  <HealthRow
+                    label="Primary contact"
+                    value={
+                      inquiry.phone || inquiry.email
+                        ? "Contact channel available"
+                        : "No contact channel"
+                    }
+                    tone={
+                      inquiry.phone || inquiry.email
+                        ? "success"
+                        : "danger"
+                    }
+                  />
+
+                  <HealthRow
+                    label="Current stage"
+                    value={activeStage.label}
+                    tone="info"
+                  />
+
+                  <HealthRow
+                    label="Record priority"
+                    value={activePriority.label}
+                    tone={
+                      priority === "high" || priority === "vip"
+                        ? "danger"
+                        : "neutral"
+                    }
+                  />
+                </div>
               </div>
             </section>
           ) : null}
 
           <section
             onClick={(event) => event.stopPropagation()}
-            className="mt-4"
+            className="grid min-w-0 gap-3"
           >
-            <div className="rounded-[1.4rem] border-2 border-orange-300 bg-white p-3 shadow-sm sm:p-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#71809a]">
-                    Quick Contact
-                  </p>
+            <ControlCard
+              label="Priority Command"
+              helper="Controls lead attention and queue ordering."
+              icon={ActivePriorityIcon}
+              iconClass={activePriority.badge}
+            >
+              <select
+                value={priority}
+                onChange={(event) =>
+                  handlePriorityUpdate(event.target.value)
+                }
+                disabled={!safePermissions.canUpdatePriority}
+                className={`mt-3 min-h-11 min-w-0 w-full max-w-full rounded-xl border-2 bg-white px-3 py-2.5 text-sm font-black outline-none transition focus:ring-4 focus:ring-orange-100 ${activePriority.badge} ${
+                  !safePermissions.canUpdatePriority
+                    ? "cursor-not-allowed opacity-60"
+                    : ""
+                }`}
+              >
+                <option value="low" className="bg-white text-[#123865]">
+                  Low
+                </option>
+                <option value="medium" className="bg-white text-[#123865]">
+                  Medium
+                </option>
+                <option value="high" className="bg-white text-[#123865]">
+                  High
+                </option>
+                <option value="vip" className="bg-white text-[#123865]">
+                  VIP
+                </option>
+              </select>
+            </ControlCard>
 
-                  <p className="mt-1 text-xs font-semibold text-[#526178]">
-                    Reach the student without opening another screen.
-                  </p>
+            <ControlCard
+              label="Pipeline Command"
+              helper="Move the student through the operational journey."
+              icon={ActiveStageIcon}
+              iconClass={activeStage.badge}
+            >
+              <select
+                value={status}
+                onChange={(event) =>
+                  handlePipelineUpdate(event.target.value)
+                }
+                disabled={!safePermissions.canUpdateStatus}
+                className={`mt-3 min-h-11 min-w-0 w-full max-w-full rounded-xl border-2 bg-white px-3 py-2.5 text-sm font-black outline-none transition focus:ring-4 focus:ring-orange-100 ${activeStage.badge} ${
+                  !safePermissions.canUpdateStatus
+                    ? "cursor-not-allowed opacity-60"
+                    : ""
+                }`}
+              >
+                {PIPELINE_STAGES.map((stage) => (
+                  <option
+                    key={stage.value}
+                    value={stage.value}
+                    className="bg-white text-[#123865]"
+                  >
+                    {stage.emoji} {stage.label}
+                  </option>
+                ))}
+              </select>
+            </ControlCard>
+          </section>
+
+          <section
+            onClick={(event) => event.stopPropagation()}
+            className="min-w-0"
+          >
+            <button
+              type="button"
+              onClick={() =>
+                setPipelineExpanded((current) => !current)
+              }
+              className="flex min-w-0 w-full items-center justify-between gap-4 rounded-t-[1.45rem] border-[3px] border-[#123865] bg-[#123865] p-4 text-left text-white transition hover:bg-[#174775] sm:p-5"
+            >
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-orange-200">
+                    <Target size={11} />
+                    Pipeline Command
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-300">
+                    {activeStage.progress}% complete
+                  </span>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <QuickAction
-                    label="Email"
-                    icon={Mail}
-                    disabled={!contactLinks.email}
-                    onClick={(event) =>
-                      openExternal(event, contactLinks.email)
-                    }
-                  />
+                <h3 className="mt-2 break-words text-lg font-black text-white">
+                  {activeStage.label}
+                </h3>
 
-                  <QuickAction
-                    label="Call"
-                    icon={Phone}
-                    disabled={!contactLinks.phone}
-                    onClick={(event) =>
-                      openExternal(event, contactLinks.phone)
-                    }
-                  />
-
-                  <QuickAction
-                    label="WhatsApp"
-                    icon={MessageCircle}
-                    disabled={!contactLinks.whatsapp}
-                    onClick={(event) =>
-                      openExternal(event, contactLinks.whatsapp)
-                    }
-                    primary
-                  />
-                </div>
+                <p className="mt-1 break-words text-xs font-semibold text-slate-300">
+                  {nextStage
+                    ? `Next operational stage: ${nextStage.label}`
+                    : "This student has reached the final pipeline stage."}
+                </p>
               </div>
+
+              <ChevronDown
+                size={19}
+                className={`shrink-0 text-orange-200 ${TRANSITION} ${
+                  pipelineExpanded ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            <div className="rounded-b-[1.45rem] border-x-[3px] border-b-[3px] border-[#123865] bg-white p-4 sm:p-5">
+              <div className="h-3 overflow-hidden rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF]">
+                <motion.div
+                  initial={false}
+                  animate={{ width: `${activeStage.progress}%` }}
+                  transition={{ duration: 0.55, ease: MOTION.ease }}
+                  className="h-full rounded-full bg-[#FF5A0A]"
+                />
+              </div>
+
+              <AnimatePresence initial={false}>
+                {pipelineExpanded ? (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={MOTION}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-5 grid min-w-0 grid-cols-2 gap-2">
+                      {PIPELINE_STAGES.map((stage) => {
+                        const StageIcon = stage.icon;
+                        const isActive =
+                          stage.value === activeStage.value;
+                        const isPassed =
+                          stage.progress < activeStage.progress;
+
+                        return (
+                          <button
+                            key={stage.value}
+                            type="button"
+                            onClick={() =>
+                              handlePipelineUpdate(stage.value)
+                            }
+                            disabled={
+                              !safePermissions.canUpdateStatus
+                            }
+                            className={`min-w-0 overflow-hidden rounded-xl border-2 p-3 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${TRANSITION} ${
+                              isActive
+                                ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-sm"
+                                : isPassed
+                                ? "border-emerald-400 bg-emerald-50 text-emerald-800"
+                                : "border-[#C9D7E6] bg-[#FFF8EF] text-slate-600 hover:border-[#FF5A0A] hover:bg-orange-50"
+                            } ${
+                              !safePermissions.canUpdateStatus
+                                ? "cursor-not-allowed opacity-60"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <StageIcon size={15} />
+
+                              {isPassed ? (
+                                <Check size={13} />
+                              ) : (
+                                <span className="text-[9px] font-black">
+                                  {stage.progress}%
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="mt-2 whitespace-normal [overflow-wrap:break-word] text-[10px] font-black leading-4">
+                              {stage.shortLabel}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </div>
           </section>
 
-          <section className="mt-4">
+          <section className="min-w-0">
             <button
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
                 setDetailsExpanded((current) => !current);
               }}
-              className={`flex w-full items-center justify-between gap-3 rounded-[1.2rem] border-2 border-orange-300 bg-[#FFF8EF] px-4 py-3 text-left hover:border-orange-200 hover:bg-[#FFF2E8] ${TRANSITION}`}
+              className="flex min-w-0 w-full items-center justify-between gap-3 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             >
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#FF5A0A]">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
                   Student Snapshot
                 </p>
 
-                <p className="mt-1 text-xs font-semibold text-[#526178]">
+                <p className="mt-1 break-words text-xs font-semibold text-slate-600">
                   Contact, destination, study interest and ownership.
                 </p>
               </div>
 
               <ChevronDown
                 size={17}
-                className={`shrink-0 text-[#FF5A0A] ${TRANSITION} ${
+                className={`shrink-0 text-orange-700 ${TRANSITION} ${
                   detailsExpanded ? "rotate-180" : ""
                 }`}
               />
@@ -681,7 +987,7 @@ function InquiryCard({
                   transition={MOTION}
                   className="overflow-hidden"
                 >
-                  <div className="grid gap-2.5 pt-3 sm:grid-cols-2 sm:gap-3">
+                  <div className="grid min-w-0 gap-3 pt-3 sm:grid-cols-2">
                     <InfoCard
                       label="Email"
                       value={inquiry.email}
@@ -724,233 +1030,88 @@ function InquiryCard({
             </AnimatePresence>
           </section>
 
-          <section
-            onClick={(event) => event.stopPropagation()}
-            className="mt-4 grid gap-3 lg:grid-cols-2"
-          >
-            <ControlCard
-              label="Priority"
-              helper="Controls lead attention and queue ordering."
-              icon={ActivePriorityIcon}
-              iconClass={activePriority.badge}
-            >
-              <select
-                value={priority}
-                onChange={(event) =>
-                  handlePriorityUpdate(event.target.value)
-                }
-                disabled={!safePermissions.canUpdatePriority}
-                className={`mt-3 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-bold outline-none focus:ring-4 focus:ring-orange-100 ${activePriority.badge} ${
-                  !safePermissions.canUpdatePriority
-                    ? "cursor-not-allowed opacity-60"
-                    : ""
-                }`}
-              >
-                <option value="low" className="bg-white text-[#123865]">
-                  Low
-                </option>
-                <option value="medium" className="bg-white text-[#123865]">
-                  Medium
-                </option>
-                <option value="high" className="bg-white text-[#123865]">
-                  High
-                </option>
-                <option value="vip" className="bg-white text-[#123865]">
-                  VIP
-                </option>
-              </select>
-            </ControlCard>
+          {!compact ? (
+            <section className="grid min-w-0 gap-3">
+              <div className="min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+                <div className="flex items-center gap-2">
+                  <MessageCircle size={15} className="text-orange-700" />
 
-            <ControlCard
-              label="Consultancy Pipeline"
-              helper="Move the student through the operational journey."
-              icon={ActiveStageIcon}
-              iconClass={activeStage.badge}
-            >
-              <select
-                value={status}
-                onChange={(event) =>
-                  handlePipelineUpdate(event.target.value)
-                }
-                disabled={!safePermissions.canUpdateStatus}
-                className={`mt-3 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-bold outline-none focus:ring-4 focus:ring-orange-100 ${activeStage.badge} ${
-                  !safePermissions.canUpdateStatus
-                    ? "cursor-not-allowed opacity-60"
-                    : ""
-                }`}
-              >
-                {PIPELINE_STAGES.map((stage) => (
-                  <option
-                    key={stage.value}
-                    value={stage.value}
-                    className="bg-white text-[#123865]"
-                  >
-                    {stage.emoji} {stage.label}
-                  </option>
-                ))}
-              </select>
-            </ControlCard>
-          </section>
-
-          <section
-            onClick={(event) => event.stopPropagation()}
-            className="mt-4"
-          >
-            <div className="overflow-hidden rounded-[1.4rem] border-2 border-orange-300 bg-[#123865] text-white shadow-[0_18px_44px_rgba(7,31,80,0.14)]">
-              <button
-                type="button"
-                onClick={() =>
-                  setPipelineExpanded((current) => !current)
-                }
-                className="flex w-full items-center justify-between gap-4 p-4 text-left sm:p-5"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb36d] ring-1 ring-white/10">
-                      <Target size={11} />
-                      Pipeline Progress
-                    </span>
-
-                    <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white/55">
-                      {activeStage.progress}% complete
-                    </span>
-                  </div>
-
-                  <h3 className="mt-2 text-lg font-black">
-                    {activeStage.label}
-                  </h3>
-
-                  <p className="mt-1 text-xs font-semibold text-white/65">
-                    {nextStage
-                      ? `Next recommended stage: ${nextStage.label}`
-                      : "This student has reached the final pipeline stage."}
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                    Student Message
                   </p>
                 </div>
 
-                <ChevronDown
-                  size={19}
-                  className={`shrink-0 text-[#ffb36d] ${TRANSITION} ${
-                    pipelineExpanded ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-                <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                  <motion.div
-                    initial={false}
-                    animate={{ width: `${activeStage.progress}%` }}
-                    transition={{ duration: 0.55, ease: MOTION.ease }}
-                    className="h-full rounded-full bg-gradient-to-r from-[#FF5A0A] via-[#ff7b1c] to-[#ffb36d]"
-                  />
-                </div>
-
-                <AnimatePresence initial={false}>
-                  {pipelineExpanded ? (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={MOTION}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-7">
-                        {PIPELINE_STAGES.map((stage) => {
-                          const StageIcon = stage.icon;
-                          const isActive =
-                            stage.value === activeStage.value;
-                          const isPassed =
-                            stage.progress < activeStage.progress;
-
-                          return (
-                            <button
-                              key={stage.value}
-                              type="button"
-                              onClick={() =>
-                                handlePipelineUpdate(stage.value)
-                              }
-                              disabled={
-                                !safePermissions.canUpdateStatus
-                              }
-                              className={`rounded-2xl border p-3 text-left ${TRANSITION} ${
-                                isActive
-                                  ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_12px_26px_rgba(255,75,18,0.20)]"
-                                  : isPassed
-                                  ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_10px_22px_rgba(255,75,18,0.18)] hover:bg-[#ff642f]"
-                                  : "border-white/10 bg-white/10 text-white/70 hover:-translate-y-0.5 hover:bg-white/14"
-                              } ${
-                                !safePermissions.canUpdateStatus
-                                  ? "cursor-not-allowed opacity-60"
-                                  : ""
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <StageIcon size={15} />
-                                {isPassed ? (
-                                  <Check size={13} />
-                                ) : (
-                                  <span className="text-[9px] font-black">
-                                    {stage.progress}%
-                                  </span>
-                                )}
-                              </div>
-
-                              <p className="mt-2 text-[10px] font-black">
-                                {stage.shortLabel}
-                              </p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </div>
-            </div>
-          </section>
-
-          {!compact ? (
-            <section className="mt-4 rounded-[1.35rem] border-2 border-orange-300 bg-[#FFF8EF] p-4 sm:p-5">
-              <div className="flex items-center gap-2">
-                <MessageCircle size={15} className="text-[#FF5A0A]" />
-
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#FF5A0A]">
-                  Student Message
+                <p className="mt-3 line-clamp-4 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-slate-700">
+                  {inquiry.message || "No message provided."}
                 </p>
               </div>
 
-              <p className="mt-3 line-clamp-4 whitespace-pre-wrap break-words text-sm font-medium leading-6 text-[#526178]">
-                {inquiry.message || "No message provided."}
-              </p>
+              <div
+                className="min-w-0 rounded-[1.3rem] border-[3px] border-[#123865] bg-[#123865] p-4 text-white sm:p-5"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex items-center gap-2">
+                  <Clipboard size={15} className="text-orange-200" />
+
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-200">
+                    Suggested Move
+                  </p>
+                </div>
+
+                <p className="mt-3 text-sm font-black text-white">
+                  {nextStage
+                    ? `Advance to ${nextStage.label}`
+                    : "Pipeline complete"}
+                </p>
+
+                {nextStage ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handlePipelineUpdate(nextStage.value)
+                    }
+                    disabled={!safePermissions.canUpdateStatus}
+                    className={`mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-white/25 bg-white/10 px-4 text-xs font-black text-white transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 ${
+                      !safePermissions.canUpdateStatus
+                        ? "cursor-not-allowed opacity-60"
+                        : ""
+                    }`}
+                  >
+                    Advance Stage
+                    <ArrowRight size={14} />
+                  </button>
+                ) : null}
+              </div>
             </section>
           ) : null}
 
           <footer
             onClick={(event) => event.stopPropagation()}
-            className="mt-4 border-t border-orange-100 pt-4 sm:mt-5 sm:pt-5"
+            className="min-w-0 rounded-[1.3rem] border-[3px] border-[#123865] bg-white p-3"
           >
-            <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
-              <button
-                type="button"
+            <div className="grid min-w-0 gap-2.5 sm:grid-cols-2">
+              <FooterAction
+                icon={Bot}
+                label="Real GPT Workspace"
                 onClick={openRealGptWorkspace}
-                className={`inline-flex items-center justify-center gap-2 rounded-full bg-[#FF5A0A] px-5 py-3 text-xs font-black text-white shadow-[0_14px_30px_rgba(255,75,18,0.18)] hover:-translate-y-1 hover:bg-[#ff642f] sm:text-sm ${TRANSITION}`}
-              >
-                <Bot size={16} />
-                Real GPT Workspace
-              </button>
+                tone="orange"
+              />
 
-              <button
-                type="button"
+              <FooterAction
+                icon={Eye}
+                label="Open CRM Profile"
                 onClick={() => openModal(inquiry)}
-                className={`inline-flex items-center justify-center gap-2 rounded-full border-2 border-orange-300 bg-white px-5 py-3 text-xs font-black text-[#123865] hover:-translate-y-1 hover:border-orange-200 hover:bg-[#FFF2E8] hover:text-[#FF5A0A] sm:text-sm ${TRANSITION}`}
-              >
-                <Eye size={16} />
-                Open CRM Profile
-              </button>
+                tone="navy"
+              />
 
               {!compact ? (
-                <button
-                  type="button"
+                <FooterAction
+                  icon={CheckCircle2}
+                  label={
+                    status === "contacted"
+                      ? "Already Contacted"
+                      : "Mark Contacted"
+                  }
                   onClick={() =>
                     handlePipelineUpdate("contacted")
                   }
@@ -958,69 +1119,37 @@ function InquiryCard({
                     !safePermissions.canUpdateStatus ||
                     status === "contacted"
                   }
-                  className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-xs font-black sm:text-sm ${TRANSITION} ${
-                    safePermissions.canUpdateStatus &&
-                    status !== "contacted"
-                      ? "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:-translate-y-1 hover:bg-emerald-100"
-                      : "cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400"
-                  }`}
-                >
-                  <CheckCircle2 size={16} />
-                  {status === "contacted"
-                    ? "Already Contacted"
-                    : "Mark Contacted"}
-                </button>
+                  tone={
+                    status === "contacted"
+                      ? "disabled"
+                      : "success"
+                  }
+                />
               ) : null}
 
               {!compact ? (
-                <button
-                  type="button"
+                <FooterAction
+                  icon={Trash2}
+                  label={
+                    safePermissions.canDelete
+                      ? "Delete Inquiry"
+                      : "Delete Locked"
+                  }
                   onClick={handleDelete}
                   disabled={!safePermissions.canDelete}
-                  className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-xs font-black sm:text-sm ${TRANSITION} ${
+                  tone={
                     safePermissions.canDelete
-                      ? "border border-red-200 bg-white text-red-700 hover:-translate-y-1 hover:bg-red-50"
-                      : "cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400"
-                  }`}
-                >
-                  <Trash2 size={16} />
-                  {safePermissions.canDelete
-                    ? "Delete Inquiry"
-                    : "Delete Locked"}
-                </button>
+                      ? "danger"
+                      : "disabled"
+                  }
+                />
               ) : null}
             </div>
-
-            {!compact && nextStage ? (
-              <div className="mt-3 flex flex-col gap-3 rounded-[1.2rem] border-2 border-orange-300 bg-[#FFF8EF] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#71809a]">
-                    Suggested workflow move
-                  </p>
-
-                  <p className="mt-1 text-xs font-bold text-[#123865]">
-                    Advance to {nextStage.label}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handlePipelineUpdate(nextStage.value)
-                  }
-                  disabled={!safePermissions.canUpdateStatus}
-                  className={`inline-flex items-center justify-center gap-2 rounded-xl border-2 border-orange-300 bg-white px-4 py-2.5 text-xs font-black text-[#FF5A0A] hover:-translate-y-0.5 hover:bg-[#FFF2E8] ${TRANSITION} ${
-                    !safePermissions.canUpdateStatus
-                      ? "cursor-not-allowed opacity-60"
-                      : ""
-                  }`}
-                >
-                  Advance Stage
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            ) : null}
           </footer>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
         </div>
       </motion.article>
 
@@ -1030,50 +1159,60 @@ function InquiryCard({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-[#123865]/35 px-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-[#123865]/55 px-4 backdrop-blur-sm"
             onClick={() => setShowDeleteConfirm(false)}
           >
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-inquiry-title"
               initial={{ opacity: 0, y: 16, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.97 }}
               transition={MOTION}
               onClick={(event) => event.stopPropagation()}
-              className="w-full max-w-md rounded-[2rem] border border-red-100 bg-white p-6 shadow-[0_28px_90px_rgba(7,31,80,0.20)]"
+              className="w-full max-w-md overflow-hidden rounded-[1.8rem] border-[3px] border-red-500 bg-white shadow-[0_28px_90px_rgba(7,31,80,0.24)]"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-                <AlertTriangle size={24} />
+              <div className="bg-[#123865] p-5 text-white">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-red-300/30 bg-red-400/10 text-red-200">
+                  <AlertTriangle size={22} />
+                </div>
+
+                <h3
+                  id="delete-inquiry-title"
+                  className="mt-4 text-2xl font-black tracking-tight text-white"
+                >
+                  Delete this inquiry?
+                </h3>
               </div>
 
-              <h3 className="mt-4 text-2xl font-black tracking-tight text-[#123865]">
-                Delete this inquiry?
-              </h3>
+              <div className="p-5 sm:p-6">
+                <p className="text-sm font-semibold leading-6 text-slate-700">
+                  This will remove{" "}
+                  <span className="font-black text-[#10233F]">
+                    {inquiry.full_name || "this student inquiry"}
+                  </span>{" "}
+                  from the CRM. Use permanent deletion only when the record
+                  should no longer exist.
+                </p>
 
-              <p className="mt-3 text-sm font-medium leading-6 text-[#526178]">
-                This will remove{" "}
-                <span className="font-black text-[#123865]">
-                  {inquiry.full_name || "this student inquiry"}
-                </span>{" "}
-                from the CRM. This action should only be used when the record is
-                truly no longer needed.
-              </p>
+                <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="rounded-xl border-2 border-[#123865] bg-white px-5 py-3 text-sm font-black text-[#123865] transition hover:bg-[#FFF8EF] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+                  >
+                    Keep Inquiry
+                  </button>
 
-              <div className="mt-6 grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className={`rounded-full border-2 border-orange-300 bg-white px-5 py-3 text-sm font-black text-[#123865] hover:bg-[#FFF2E8] ${TRANSITION}`}
-                >
-                  Keep Inquiry
-                </button>
-
-                <button
-                  type="button"
-                  onClick={confirmDelete}
-                  className={`rounded-full bg-red-600 px-5 py-3 text-sm font-black text-white hover:-translate-y-0.5 hover:bg-red-700 ${TRANSITION}`}
-                >
-                  Delete Permanently
-                </button>
+                  <button
+                    type="button"
+                    onClick={confirmDelete}
+                    className="rounded-xl border-2 border-red-600 bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
+                  >
+                    Delete Permanently
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -1083,57 +1222,139 @@ function InquiryCard({
   );
 }
 
+function CommandBadge({ icon: Icon, children }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-orange-200">
+      <Icon size={11} />
+      {children}
+    </span>
+  );
+}
+
+function OrangeMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+      <p className="break-words text-[8px] font-black uppercase tracking-[0.08em] text-white">
+        {label}
+      </p>
+
+      <p className="mt-1 break-words text-xl font-black text-white">
+        {value ?? 0}
+      </p>
+    </div>
+  );
+}
+
 function QuickAction({
   label,
   icon: Icon,
   onClick,
   disabled = false,
   primary = false,
+  navy = false,
 }) {
+  const enabledStyle = primary
+    ? "border-[#FF5A0A] bg-[#FF5A0A] text-white hover:bg-orange-600"
+    : navy
+    ? "border-[#123865] bg-[#123865] text-white hover:bg-[#174775]"
+    : "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F] hover:border-[#FF5A0A] hover:bg-orange-50";
+
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${TRANSITION} ${
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 px-4 py-2 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
         disabled
-          ? "cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400"
-          : primary
-          ? "bg-[#FF5A0A] text-white shadow-[0_10px_24px_rgba(255,75,18,0.18)] hover:-translate-y-0.5 hover:bg-[#ff642f]"
-          : "border-2 border-orange-300 bg-white text-[#123865] hover:-translate-y-0.5 hover:border-orange-200 hover:bg-[#FFF2E8] hover:text-[#FF5A0A]"
+          ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
+          : enabledStyle
       }`}
     >
       <Icon size={14} />
       {label}
+      {!disabled ? <ExternalLink size={11} className="opacity-60" /> : null}
     </button>
   );
 }
 
-function MetricMiniCard({
+function EvidenceMetric({
   label,
   value,
   helper,
-  tone = "orange",
+  success = false,
 }) {
-  const tones = {
-    orange:
-      "border-orange-300 bg-[#fff0e8] text-[#c2410c]",
-    green:
-      "border-emerald-200 bg-emerald-50 text-emerald-700",
-    blue:
-      "border-blue-200 bg-blue-50 text-blue-700",
-  };
-
   return (
-    <div className={`rounded-[1.25rem] border p-4 ${tones[tone] || tones.orange}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.16em] opacity-70">
+    <div
+      className={`min-w-0 rounded-xl border-2 p-3 ${
+        success
+          ? "border-emerald-300 bg-emerald-50"
+          : "border-[#C9D7E6] bg-[#FFF8EF]"
+      }`}
+    >
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
         {label}
       </p>
 
-      <p className="mt-2 text-2xl font-black">{value}</p>
+      <p className="mt-1 break-words text-lg font-black text-[#10233F]">
+        {value}
+      </p>
 
-      <p className="mt-1 text-[10px] font-semibold opacity-70">
+      <p className="mt-1 break-words text-[10px] font-semibold leading-4 text-slate-600">
         {helper}
+      </p>
+    </div>
+  );
+}
+
+function SectionTitle({
+  eyebrow,
+  title,
+  icon: Icon,
+}) {
+  return (
+    <div className="flex min-w-0 items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-[#123865] text-white">
+        <Icon size={16} />
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+          {eyebrow}
+        </p>
+
+        <h3 className="mt-1 text-base font-black text-[#10233F]">
+          {title}
+        </h3>
+      </div>
+    </div>
+  );
+}
+
+function HealthRow({
+  label,
+  value,
+  tone = "neutral",
+}) {
+  const tones = {
+    success: "border-emerald-300 bg-emerald-50",
+    danger: "border-red-300 bg-red-50",
+    warning: "border-amber-300 bg-amber-50",
+    info: "border-blue-300 bg-blue-50",
+    neutral: "border-[#C9D7E6] bg-[#FFF8EF]",
+  };
+
+  return (
+    <div
+      className={`flex min-w-0 items-center justify-between gap-3 rounded-xl border-2 px-3 py-2.5 ${
+        tones[tone] || tones.neutral
+      }`}
+    >
+      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
+        {label}
+      </p>
+
+      <p className="min-w-0 break-words text-right text-xs font-black text-[#10233F]">
+        {value}
       </p>
     </div>
   );
@@ -1147,20 +1368,20 @@ function ControlCard({
   children,
 }) {
   return (
-    <div className="rounded-[1.3rem] border-2 border-orange-300 bg-[#FFF8EF] p-4 hover:border-[#FF7A2F] hover:bg-white">
-      <div className="flex items-start gap-3">
+    <div className="min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A]">
+      <div className="flex min-w-0 items-start gap-3">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${iconClass}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${iconClass}`}
         >
           <Icon size={16} />
         </div>
 
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#123865]">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.1em] text-[#10233F]">
             {label}
           </p>
 
-          <p className="mt-1 text-xs font-medium leading-5 text-[#71809a]">
+          <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
             {helper}
           </p>
         </div>
@@ -1174,27 +1395,39 @@ function ControlCard({
 function AssignmentBadge({
   assignedAdminName,
   assignedAdminInitial,
+  dark = false,
 }) {
   if (!assignedAdminName) {
     return (
-      <span className="inline-flex max-w-full shrink-0 items-center gap-2 rounded-full border-2 border-orange-300 bg-[#FFF2E8] px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#FF5A0A] shadow-sm sm:px-3">
-        <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-orange-300 bg-white text-[9px]">
+      <span
+        className={`inline-flex max-w-full items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] ${
+          dark
+            ? "border-amber-300/40 bg-amber-300/10 text-amber-200"
+            : "border-amber-300 bg-amber-50 text-amber-800"
+        }`}
+      >
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-current text-[9px]">
           !
         </span>
-
-        <span className="truncate">Unassigned</span>
+        Unassigned
       </span>
     );
   }
 
   return (
-    <span className="inline-flex max-w-full shrink-0 items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-700 shadow-sm sm:px-3">
-      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-cyan-200 bg-white text-[9px] font-black text-cyan-700">
+    <span
+      className={`inline-flex max-w-full items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] ${
+        dark
+          ? "border-white/20 bg-white/10 text-white"
+          : "border-blue-300 bg-blue-50 text-blue-800"
+      }`}
+    >
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-current text-[9px]">
         {assignedAdminInitial}
       </span>
 
-      <span className="max-w-[150px] truncate sm:max-w-[220px]">
-        Assigned: {assignedAdminName}
+      <span className="max-w-[190px] truncate">
+        {assignedAdminName}
       </span>
     </span>
   );
@@ -1204,23 +1437,28 @@ function SignalBadge({
   label,
   tone = "info",
   icon: Icon,
+  dark = false,
 }) {
+  if (dark) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+        {Icon ? <Icon size={11} /> : null}
+        {label}
+      </span>
+    );
+  }
+
   const tones = {
-    danger:
-      "border-red-200 bg-red-50 text-red-700",
-    warning:
-      "border-amber-200 bg-amber-50 text-amber-700",
-    success:
-      "border-emerald-200 bg-emerald-50 text-emerald-700",
-    info:
-      "border-blue-200 bg-blue-50 text-blue-700",
-    muted:
-      "border-slate-200 bg-slate-50 text-slate-500",
+    danger: "border-red-300 bg-red-50 text-red-800",
+    warning: "border-amber-300 bg-amber-50 text-amber-800",
+    success: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    info: "border-blue-300 bg-blue-50 text-blue-800",
+    muted: "border-slate-300 bg-slate-50 text-slate-600",
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.13em] ${
+      className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${
         tones[tone] || tones.info
       }`}
     >
@@ -1238,21 +1476,21 @@ function InfoCard({
   copied = false,
 }) {
   return (
-    <div className="group/info min-w-0 rounded-[1.15rem] border border-[#123865]/20 bg-[#FFF8EF] p-3 shadow-[0_1px_0_rgba(7,31,80,0.03)] hover:-translate-y-0.5 hover:border-[#FF7A2F] hover:bg-white sm:p-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="group/info min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-3 shadow-[0_5px_16px_rgba(18,56,101,0.035)] transition hover:border-[#FF5A0A] sm:p-4">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             {Icon ? (
-              <Icon size={13} className="text-[#FF5A0A]" />
+              <Icon size={13} className="shrink-0 text-orange-700" />
             ) : null}
 
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#71809a]">
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
               {label}
             </p>
           </div>
 
-          <p className="mt-2 break-words text-sm font-semibold leading-6 text-[#526178]">
-            {value || "-"}
+          <p className="mt-2 break-words text-sm font-semibold leading-6 text-slate-700">
+            {value || "Not provided"}
           </p>
         </div>
 
@@ -1263,7 +1501,7 @@ function InfoCard({
               event.stopPropagation();
               onCopy();
             }}
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-[#71809a] opacity-100 hover:border-orange-200 hover:text-[#FF5A0A] sm:opacity-0 sm:group-hover/info:opacity-100 ${TRANSITION}`}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] text-slate-600 transition hover:border-[#FF5A0A] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             aria-label={`Copy ${label}`}
           >
             {copied ? (
@@ -1275,6 +1513,41 @@ function InfoCard({
         ) : null}
       </div>
     </div>
+  );
+}
+
+function FooterAction({
+  icon: Icon,
+  label,
+  onClick,
+  disabled = false,
+  tone = "navy",
+}) {
+  const tones = {
+    orange:
+      "border-[#FF5A0A] bg-[#FF5A0A] text-white hover:bg-orange-600",
+    navy:
+      "border-[#123865] bg-[#123865] text-white hover:bg-[#174775]",
+    success:
+      "border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600",
+    danger:
+      "border-red-300 bg-red-50 text-red-800 hover:bg-red-100",
+    disabled:
+      "border-slate-300 bg-slate-50 text-slate-400",
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl border-2 px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed ${
+        tones[tone] || tones.navy
+      }`}
+    >
+      <Icon size={15} />
+      <span className="truncate">{label}</span>
+    </button>
   );
 }
 

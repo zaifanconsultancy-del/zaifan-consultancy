@@ -1,4 +1,4 @@
-// OpportunityFeedPanel V3 MAXIMUM — Executive Opportunity Command Center
+// OpportunityFeedPanel PARTNER OS EXTREME — Compact Opportunity Command
 // src/components/admin/OpportunityFeedPanel.jsx
 //
 // Maximum pass:
@@ -436,6 +436,7 @@ function OpportunityFeedPanel({ students = [] }) {
   const [query, setQuery] = useState("");
   const [signalFilter, setSignalFilter] = useState("all");
   const [riskFilter, setRiskFilter] = useState("all");
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const analyzedStudents = useMemo(
     () =>
@@ -680,71 +681,118 @@ function OpportunityFeedPanel({ students = [] }) {
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="rounded-[1.9rem] border-[3px] border-orange-400 bg-[#fff8ee] p-3 shadow-[0_14px_36px_rgba(15,35,63,0.07)] sm:p-4"
+      className="min-w-0 bg-[#FFF8EF]"
     >
-      <div className="grid overflow-hidden rounded-[1.55rem] border-2 border-[#234e78] xl:grid-cols-[1.25fr_0.75fr]">
-        <div
-          className="bg-[#123865] p-5 sm:p-6"
-          style={{ color: "#FFFFFF" }}
-        >
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
-            <Sparkles
-              size={13}
-              style={{ color: "#FDBA74" }}
+      <div className="min-w-0 bg-[#FFF8EF] p-5 sm:p-6">
+        <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] sm:p-5">
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+                Opportunity Operations Extension
+              </p>
+
+              <h4 className="mt-1 text-lg font-black text-[#10233F] sm:text-xl">
+                Command Readiness Snapshot
+              </h4>
+
+              <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-slate-600">
+                High-value students across readiness, offers, CAS, visa
+                progression, university planning and confirmed visa outcomes.
+              </p>
+            </div>
+
+            <div className="shrink-0 rounded-[1.15rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-3 text-center sm:min-w-[140px]">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
+                Opportunity Portfolio
+              </p>
+
+              <p className="mt-1 text-3xl font-black text-[#C2410C]">
+                {opportunities.length}
+              </p>
+
+              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#53657D]">
+                Qualified cases
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <OpportunityReadinessMetric
+              label="Hot Opportunities"
+              value={command.hot.length}
+              helper="Highest strength or opportunity scores."
+              icon={Crown}
             />
 
-            <p
-              className="text-[9px] font-black uppercase tracking-[0.1em]"
-              style={{ color: "#FFFFFF" }}
-            >
-              Executive Opportunity
-            </p>
+            <OpportunityReadinessMetric
+              label="Clean Wins"
+              value={command.cleanWins.length}
+              helper="High opportunity with manageable risk."
+              icon={CheckCircle2}
+            />
+
+            <OpportunityReadinessMetric
+              label="Visa / CAS Ready"
+              value={command.visaReady.length}
+              helper="Late-stage cases ready for visa progression."
+              icon={Plane}
+            />
+
+            <OpportunityReadinessMetric
+              label="Conversion Pipeline"
+              value={metrics.conversionCount}
+              helper="Offer, CAS, visa and conversion-ready cases."
+              icon={TrendingUp}
+            />
+
+            <OpportunityReadinessMetric
+              label="Planning Opportunities"
+              value={metrics.planningCount}
+              helper="Students with useful university-plan signals."
+              icon={GraduationCap}
+            />
+
+            <OpportunityReadinessMetric
+              label="Risky Wins"
+              value={command.riskyWins.length}
+              helper="Valuable cases that still need supervision."
+              icon={AlertTriangle}
+            />
           </div>
 
-          <h3
-            className="mt-3 text-2xl font-black sm:text-3xl"
-            style={{ color: "#FFFFFF" }}
+          <button
+            type="button"
+            onClick={() =>
+              setWorkspaceExpanded((current) => !current)
+            }
+            aria-expanded={workspaceExpanded}
+            className="mt-4 flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
           >
-            Student Opportunity Feed
-          </h3>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                Opportunity Workspace
+              </p>
 
-          <p
-            className="mt-2 max-w-3xl text-sm font-semibold leading-6"
-            style={{ color: "#F8FAFC" }}
-          >
-            High-value students across readiness, offers, CAS, visa
-            progression, university planning, and confirmed visa outcomes.
-          </p>
-        </div>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                {workspaceExpanded
+                  ? "Hide portfolio boards, filters and opportunity cards."
+                  : "Open portfolio boards, filters and opportunity cards."}
+              </p>
+            </div>
 
-        <div
-          className="border-t-2 border-orange-300 bg-orange-500 p-5 xl:border-l-2 xl:border-t-0 sm:p-6"
-          style={{ color: "#FFFFFF" }}
-        >
-          <div className="flex items-center gap-2">
-            <Trophy size={18} />
-
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
-              Opportunity Portfolio
-            </p>
-          </div>
-
-          <p className="mt-3 text-4xl font-black text-white">
-            {opportunities.length}
-          </p>
-
-          <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
-            Qualified Opportunities
-          </p>
-
-          <p className="mt-4 text-xs font-semibold leading-5 text-white">
-            Avg opportunity {metrics.averageOpportunity}/100 · Avg risk{" "}
-            {metrics.averageRisk}/100.
-          </p>
-        </div>
+            <Target
+              size={17}
+              className={`shrink-0 text-[#123865] transition ${
+                workspaceExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </section>
       </div>
 
-      <div className="mt-3 rounded-[1.55rem] border-2 border-orange-200 bg-[#fff8ee] p-5 sm:p-6">
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4">
+      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_26px_rgba(18,56,101,0.05)] sm:p-5">
         <div className="mb-4 flex flex-col gap-2 rounded-[1.2rem] border-2 border-[#c8d8e8] bg-[#edf4fb] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#234e78]">
@@ -759,7 +807,7 @@ function OpportunityFeedPanel({ students = [] }) {
           </span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <OpportunityCommandCard
             label="Hot Opportunities"
             value={command.hot.length}
@@ -793,7 +841,7 @@ function OpportunityFeedPanel({ students = [] }) {
           />
         </div>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
           <PortfolioMetric
             label="Conversion Pipeline"
             value={metrics.conversionCount}
@@ -829,7 +877,7 @@ function OpportunityFeedPanel({ students = [] }) {
           />
         </div>
 
-        <div className="mt-5 grid gap-5 xl:grid-cols-3">
+        <div className="mt-5 grid min-w-0 gap-4">
           <OpportunityMiniBoard
             title="Clean Win Board"
             items={command.cleanWins.slice(0, 4)}
@@ -849,9 +897,9 @@ function OpportunityFeedPanel({ students = [] }) {
           />
         </div>
 
-        <section className="mt-5 rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)]">
-          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
-            <label className="relative block">
+        <section className="mt-5 min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(18,56,101,0.05)]">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+            <label className="relative block min-w-0">
               <Search
                 size={16}
                 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -863,7 +911,7 @@ function OpportunityFeedPanel({ students = [] }) {
                   setQuery(event.target.value)
                 }
                 placeholder="Search student, stage, signal..."
-                className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
 
@@ -872,7 +920,7 @@ function OpportunityFeedPanel({ students = [] }) {
               onChange={(event) =>
                 setSignalFilter(event.target.value)
               }
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All Signals</option>
               {availableSignalFilters.map(
@@ -889,7 +937,7 @@ function OpportunityFeedPanel({ students = [] }) {
               onChange={(event) =>
                 setRiskFilter(event.target.value)
               }
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All Risk</option>
               <option value="low">Low Risk</option>
@@ -900,7 +948,7 @@ function OpportunityFeedPanel({ students = [] }) {
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:bg-orange-50 hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             >
               <X size={13} />
               Clear
@@ -970,9 +1018,9 @@ function OpportunityFeedPanel({ students = [] }) {
                         ? 0
                         : index * 0.025,
                     }}
-                    className="cursor-default rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]"
+                    className="min-w-0 cursor-default rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(18,56,101,0.05)] transition hover:border-[#FF5A0A]"
                   >
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="flex min-w-0 flex-col gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="min-w-0 break-words text-base font-black leading-5 text-[#10233f]">
@@ -1026,7 +1074,7 @@ function OpportunityFeedPanel({ students = [] }) {
                           </div>
                         ) : null}
 
-                        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="mt-3 grid min-w-0 grid-cols-2 gap-2">
                           <MiniMetric
                             label="Documents"
                             value={`${documentReadiness}%`}
@@ -1046,7 +1094,7 @@ function OpportunityFeedPanel({ students = [] }) {
                         </div>
                       </div>
 
-                      <div className="shrink-0 rounded-[1.35rem] border-[3px] border-[#234e78] bg-[#edf4fb] p-3 xl:w-[300px]">
+                      <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-3">
                         <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#234e78]">
                           Opportunity scoring
                         </p>
@@ -1098,9 +1146,44 @@ function OpportunityFeedPanel({ students = [] }) {
           )}
         </div>
       </div>
+        </div>
+      ) : null}
     </motion.section>
   );
 }
+
+
+function OpportunityReadinessMetric({
+  label,
+  value,
+  helper,
+  icon: Icon,
+}) {
+  return (
+    <article className="min-w-0 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.035)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
+            {label}
+          </p>
+
+          <p className="mt-2 text-2xl font-black text-[#10233F]">
+            {value ?? 0}
+          </p>
+        </div>
+
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]">
+          <Icon size={14} />
+        </span>
+      </div>
+
+      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
+        {helper}
+      </p>
+    </article>
+  );
+}
+
 
 function OpportunityCommandCard({
   label,
@@ -1124,7 +1207,7 @@ function OpportunityCommandCard({
 
   return (
     <div
-      className={`rounded-[1.35rem] border-[3px] p-4 ${style}`}
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${style}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -1182,7 +1265,7 @@ function PortfolioMetric({
 
   return (
     <div
-      className={`rounded-[1.3rem] border-[3px] p-4 ${style}`}
+      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${style}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -1231,7 +1314,7 @@ function OpportunityMiniBoard({
       : "border-emerald-300 bg-emerald-50 text-emerald-700";
 
   return (
-    <div className="rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+    <div className="min-w-0 rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
       <h3 className="font-black text-[#10233f]">
         {title}
       </h3>
@@ -1253,7 +1336,7 @@ function OpportunityMiniBoard({
             ) => (
               <div
                 key={`${title}-${key}-${index}`}
-                className="rounded-xl border-2 border-slate-300 bg-[#fffaf2] p-4"
+                className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

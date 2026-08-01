@@ -1,4 +1,4 @@
-// AICommandCenter V3 EXTREME — Zaifan AI Command OS
+// AICommandCenter V9 PARTNER OS EXTREME — Executive Intelligence Command
 // Full replacement for: src/components/admin/AICommandCenter.jsx
 //
 // Production rules:
@@ -19,6 +19,8 @@
 //   generatedAt | updatedAt | lastUpdated,
 //   sourceLabel,
 // }
+// activeModule?: "command-center" | "executive-copilot" | "predictive-insights" |
+//   "workflow-intelligence" | "cross-system-intelligence" | "ai-analytics"
 // onRefresh?: async () => void
 // onInspectSignal?: ({ type, item }) => void
 // onOpenSystem?: (system) => void
@@ -30,6 +32,7 @@
 // workflow-intelligence | cross-system-intelligence | ai-analytics
 
 import React, { useMemo, useState } from "react";
+import AICommandModuleNav from "./AICommandModuleNav";
 import {
   Activity,
   AlertTriangle,
@@ -269,6 +272,7 @@ const COMMAND_MODULES = [
 
 function AICommandCenter({
   snapshot = {},
+  activeModule = "command-center",
   onRefresh,
   onInspectSignal,
   onOpenSystem,
@@ -282,6 +286,14 @@ function AICommandCenter({
   const [showRecommendations, setShowRecommendations] = useState(true);
   const [showAlerts, setShowAlerts] = useState(true);
   const [showCoverage, setShowCoverage] = useState(true);
+
+  const normalizedActiveModule = COMMAND_MODULES.some(
+    (module) => module.id === activeModule
+  )
+    ? activeModule
+    : "command-center";
+
+
 
   const risks = useMemo(
     () =>
@@ -654,44 +666,46 @@ function AICommandCenter({
   };
 
   return (
-    <section className="space-y-4 p-3 sm:space-y-5 sm:p-5">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_18px_48px_rgba(23,36,61,0.09)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.5fr)]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
-            <div className="flex flex-wrap items-center gap-2">
+    <section className="min-w-0 space-y-5 text-[#10233F]">
+      <AICommandModuleNav
+        activeModule={normalizedActiveModule}
+        onOpenModule={onOpenModule}
+      />
+
+      <header className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-5">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <HeaderChip icon={Brain} label="AI Command OS" />
               <HeaderChip icon={Shield} label="Human Controlled" />
               <HeaderChip icon={Database} label={sourceLabel} />
             </div>
 
-            <div className="mt-4 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-              <div className="max-w-4xl">
-                <h1 className="text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
-                  Zaifan Executive Intelligence Command
-                </h1>
-                <p className="mt-2 text-sm font-semibold leading-6 text-white/88 sm:text-[15px]">
-                  A single leadership surface for genuine operating signals,
-                  risk, opportunity, platform health, recommendations and
-                  connected automation intelligence.
-                </p>
-              </div>
+            <h1 className="mt-3 max-w-5xl break-words text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
+              Zaifan Executive Intelligence Command
+            </h1>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[390px]">
-                <DarkMetric label="Risks" value={risks.length} />
-                <DarkMetric label="Critical" value={criticalRiskCount} />
-                <DarkMetric label="Opportunities" value={opportunities.length} />
-                <DarkMetric label="Alerts" value={alerts.length} />
-              </div>
+            <p className="mt-2 max-w-5xl break-words text-sm font-semibold leading-5 text-slate-100">
+              A single leadership surface for genuine operating signals, risk,
+              opportunity, platform health, recommendations and connected
+              automation intelligence.
+            </p>
+
+            <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric label="Risks" value={risks.length} />
+              <DarkMetric label="Critical" value={criticalRiskCount} />
+              <DarkMetric label="Opportunities" value={opportunities.length} />
+              <DarkMetric label="Alerts" value={alerts.length} />
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <CircleGauge size={18} />
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                    Derived priority pressure
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    Intelligence Operating Position
                   </p>
                 </div>
 
@@ -699,9 +713,9 @@ function AICommandCenter({
                   {risks.length || alerts.length ? priorityPressure : "—"}
                 </p>
 
-                <p className="mt-2 text-xs font-black uppercase tracking-[0.09em] text-white">
+                <p className="mt-2 text-sm font-black uppercase tracking-[0.08em] text-white">
                   {!risks.length && !alerts.length
-                    ? "No signal payload"
+                    ? "No Signal Payload"
                     : priorityPressure >= 70
                       ? "Intervention"
                       : priorityPressure >= 35
@@ -710,18 +724,25 @@ function AICommandCenter({
                 </p>
               </div>
 
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10">
                 <Activity size={22} />
               </span>
             </div>
 
-            <div className="mt-5 rounded-2xl border-2 border-white/25 bg-white/10 p-3">
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <OrangeMetric label="Coverage" value={`${dataCoverage.connected}/${dataCoverage.total}`} />
+              <OrangeMetric label="Systems" value={providedSystemCount || "—"} />
+              <OrangeMetric label="Recommendations" value={recommendations.length} />
+              <OrangeMetric label="Visible Results" value={visibleResultCount} />
+            </div>
+
+            <div className="mt-3 rounded-xl border-2 border-white/25 bg-white/10 p-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
-                  Data coverage
+                <span className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                  Data Coverage
                 </span>
                 <strong className="text-sm font-black text-white">
-                  {dataCoverage.connected}/{dataCoverage.total}
+                  {dataCoverage.percent}%
                 </strong>
               </div>
 
@@ -733,14 +754,13 @@ function AICommandCenter({
               </div>
 
               <p className="mt-2 text-[10px] font-semibold leading-4 text-white/85">
-                {dataCoverage.percent}% of supported command inputs are
-                currently connected.
+                Only connected command inputs are shown. Missing evidence remains unavailable.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t-[3px] border-orange-300 bg-[#FFF8EE] p-3 sm:p-4">
+        <div className="border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_auto]">
             <div className="relative">
               <Search
@@ -752,7 +772,7 @@ function AICommandCenter({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search risks, opportunities, alerts, recommendations or systems..."
                 aria-label="Search AI command intelligence"
-                className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
 
               {search ? (
@@ -776,7 +796,7 @@ function AICommandCenter({
                   ? "Refresh connected intelligence"
                   : "No refresh handler is connected"
               }
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-xs font-black text-white transition hover:bg-[#E94F00] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500"
             >
               <RefreshCw
                 size={15}
@@ -792,7 +812,7 @@ function AICommandCenter({
 
           <div className="mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1">
-              <span className="flex shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+              <span className="flex shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#234E78] bg-[#F2F7FF] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
                 <Filter size={12} />
                 Filter
               </span>
@@ -805,8 +825,8 @@ function AICommandCenter({
                   aria-pressed={activeFilter === filter.id}
                   className={`shrink-0 rounded-lg border-2 px-3 py-2 text-[10px] font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                     activeFilter === filter.id
-                      ? "border-orange-500 bg-orange-500 text-white"
-                      : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                      ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
                   }`}
                 >
                   {filter.label}
@@ -826,103 +846,6 @@ function AICommandCenter({
           </div>
         </div>
       </header>
-
-      <section
-        aria-label="AI Command OS modules"
-        className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#234E78] bg-[#FFF8EE] shadow-[0_12px_30px_rgba(23,36,61,0.055)]"
-      >
-        <div className="flex flex-col gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white sm:px-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
-              AI Executive Workspace
-            </p>
-            <h2 className="mt-1 text-lg font-black text-white">
-              Command OS Modules
-            </h2>
-            <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-white/80">
-              Move between the six executive intelligence workspaces without leaving AI Executive.
-            </p>
-          </div>
-
-          <span className="w-fit rounded-lg border-2 border-white/20 bg-white/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-white">
-            6 modules
-          </span>
-        </div>
-
-        <div className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-          {COMMAND_MODULES.map((module) => {
-            const Icon = module.icon;
-            const isCurrent = module.id === "command-center";
-
-            return (
-              <button
-                key={module.id}
-                type="button"
-                disabled={isCurrent || !hasModuleNavigation}
-                onClick={() => onOpenModule?.(module.id)}
-                title={
-                  isCurrent
-                    ? "Current module"
-                    : hasModuleNavigation
-                      ? `Open ${module.label}`
-                      : `${module.label} is not wired to the parent yet`
-                }
-                className={`group min-w-0 rounded-xl border-2 p-3 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${
-                  isCurrent
-                    ? "cursor-default border-orange-500 bg-orange-500 text-white"
-                    : hasModuleNavigation
-                      ? "border-slate-300 bg-white text-[#10233F] hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-sm"
-                      : "cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 ${
-                      isCurrent
-                        ? "border-white/30 bg-white/10 text-white"
-                        : "border-[#234E78]/20 bg-[#EEF4FA] text-[#123865]"
-                    }`}
-                  >
-                    <Icon size={16} />
-                  </span>
-
-                  {isCurrent ? (
-                    <span className="rounded-md border border-white/30 bg-white/10 px-2 py-1 text-[7px] font-black uppercase tracking-[0.08em] text-white">
-                      Current
-                    </span>
-                  ) : (
-                    <ArrowRight
-                      size={14}
-                      className={hasModuleNavigation ? "text-orange-600" : "text-slate-400"}
-                    />
-                  )}
-                </div>
-
-                <p className={`mt-3 text-xs font-black ${isCurrent ? "text-white" : ""}`}>
-                  {module.label}
-                </p>
-                <p
-                  className={`mt-1 text-[9px] font-semibold leading-4 ${
-                    isCurrent ? "text-white/85" : "text-slate-600"
-                  }`}
-                >
-                  {module.description}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-
-        {!hasModuleNavigation ? (
-          <div className="border-t-2 border-slate-200 bg-[#EEF4FA] px-4 py-3">
-            <p className="flex items-start gap-2 text-[10px] font-bold leading-4 text-[#123865]">
-              <Info size={14} className="mt-0.5 shrink-0" />
-              The module rail is ready, but navigation stays safely disabled until
-              ExecutiveCommandSystem supplies the real module-switch handler.
-            </p>
-          </div>
-        ) : null}
-      </section>
 
       {refreshError ? (
         <InlineNotice
@@ -944,22 +867,39 @@ function AICommandCenter({
         />
       ) : null}
 
-      <section aria-label="Connected command metrics">
-        <SectionIntro
-          eyebrow="Operating Snapshot"
-          title="Connected business context"
-          description="Only values supplied by the parent are displayed. Missing integrations stay visibly unconnected."
-          badge={`${connectedPrimaryCount}/${primaryMetrics.length} connected`}
-        />
+      <section
+        aria-label="Connected command metrics"
+        className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#123865] bg-white shadow-[0_16px_42px_rgba(18,56,101,0.09)]"
+      >
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Operating Snapshot
+            </p>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <h2 className="mt-1 text-xl font-black text-white">
+              Connected business context
+            </h2>
+
+            <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-slate-200">
+              Only values supplied by the parent are displayed. Missing
+              integrations remain clearly unconnected.
+            </p>
+          </div>
+
+          <span className="w-fit shrink-0 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+            {connectedPrimaryCount}/{primaryMetrics.length} connected
+          </span>
+        </div>
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
           {primaryMetrics.map((item) => (
             <CommandMetricCard key={item.label} {...item} />
           ))}
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_1fr_0.95fr]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1.08fr)_minmax(20rem,0.84fr)]">
         <CommandPanel
           tone="red"
           eyebrow="Executive Risk"
@@ -1188,47 +1128,68 @@ function AICommandCenter({
         <EmptySearchResult onClear={clearSearch} />
       ) : null}
 
-      <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck
-              className="mt-0.5 shrink-0 text-[#123865]"
-              size={18}
-            />
-            <div>
-              <p className="font-black text-[#10233F]">
-                Intelligence integrity
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                This command layer does not fabricate students, revenue,
-                accuracy, system health, forecasts or business outcomes. Missing
-                inputs remain visibly unavailable. Any derived pressure score
-                uses only supplied risk and alert records.
-              </p>
-            </div>
-          </div>
-        </div>
+      <footer className="grid gap-3 lg:grid-cols-3">
+        <IntegrityEvidenceCard
+          icon={ShieldCheck}
+          eyebrow="Evidence Rule"
+          title="Intelligence integrity"
+          detail="No student, revenue, health, forecast or outcome metric is fabricated. Missing inputs remain visibly unavailable."
+          tone="blue"
+        />
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
-          <div className="flex items-start gap-3">
-            <Brain
-              className="mt-0.5 shrink-0 text-orange-700"
-              size={18}
-            />
-            <div>
-              <p className="font-black text-[#10233F]">
-                Human-controlled actions
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                Inspect/open actions only appear when the parent supplies a real
-                handler. Intelligence stays advisory until a person chooses an
-                operational action.
-              </p>
-            </div>
-          </div>
-        </div>
+        <IntegrityEvidenceCard
+          icon={Brain}
+          eyebrow="Control Rule"
+          title="Human-controlled actions"
+          detail="Inspect and open actions appear only when the parent supplies a real handler. Intelligence remains advisory."
+          tone="orange"
+        />
+
+        <IntegrityEvidenceCard
+          icon={Database}
+          eyebrow="Source Rule"
+          title="Source accountability"
+          detail={`${sourceLabel} is the declared command source. Coverage shows exactly which supported inputs are connected.`}
+          tone="navy"
+        />
       </footer>
     </section>
+  );
+}
+
+
+function IntegrityEvidenceCard({ icon: Icon, eyebrow, title, detail, tone = "navy" }) {
+  const classes =
+    tone === "orange"
+      ? "border-[#FF5A0A] bg-[#FFF4E8]"
+      : tone === "blue"
+        ? "border-blue-300 bg-blue-50"
+        : "border-[#234E78] bg-[#F2F7FF]";
+
+  const iconClasses =
+    tone === "orange"
+      ? "border-[#FF5A0A] bg-white text-[#C2410C]"
+      : tone === "blue"
+        ? "border-blue-300 bg-white text-blue-800"
+        : "border-[#234E78] bg-white text-[#123865]";
+
+  return (
+    <article className={`rounded-[1.35rem] border-[3px] p-4 ${classes}`}>
+      <div className="flex items-start gap-3">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${iconClasses}`}>
+          <Icon size={18} />
+        </span>
+        <div>
+          <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">
+            {eyebrow}
+          </p>
+          <p className="mt-1 font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {detail}
+          </p>
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -1243,18 +1204,33 @@ function HeaderChip({ icon: Icon, label }) {
 
 function DarkMetric({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2.5">
       <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
         {label}
       </p>
-      <p className="mt-1 truncate text-xl font-black text-white">{value}</p>
+      <p className="mt-1 truncate text-lg font-black text-white">{value}</p>
     </div>
   );
 }
 
+
+function OrangeMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-lg font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+
 function StatusMeta({ icon: Icon, label }) {
   return (
-    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5">
+    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#C9D7E6] bg-white px-2.5 py-1.5">
       <Icon size={12} className="shrink-0 text-[#123865]" />
       <span>{label}</span>
     </span>
@@ -1265,7 +1241,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
+        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#C2410C]">
           {eyebrow}
         </p>
         <h2 className="mt-1 text-xl font-black text-[#10233F]">{title}</h2>
@@ -1274,7 +1250,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
         </p>
       </div>
 
-      <span className="w-fit rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+      <span className="w-fit rounded-lg border-2 border-[#234E78] bg-[#F2F7FF] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
         {badge}
       </span>
     </div>
@@ -1291,9 +1267,11 @@ function CommandMetricCard({
 }) {
   return (
     <article
-      className={`relative overflow-hidden rounded-[1.45rem] border-[3px] p-4 shadow-[0_10px_28px_rgba(23,36,61,0.055)] ${toneClass(
-        connected ? tone : "muted"
-      )}`}
+      className={`relative min-w-0 overflow-hidden rounded-[1.3rem] border-[3px] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
+        connected
+          ? outerBorder(tone)
+          : "border-[#C9D7E6]"
+      }`}
     >
       <div
         className={`absolute inset-x-0 top-0 h-1.5 ${
@@ -1301,31 +1279,45 @@ function CommandMetricCard({
         }`}
       />
 
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase leading-4 tracking-[0.1em] text-[#10233F]">
+          <p className="break-words text-[8px] font-black uppercase tracking-[0.11em] text-[#53657D]">
             {label}
           </p>
+
           <p className="mt-3 break-words text-3xl font-black leading-none text-[#10233F]">
             {value}
           </p>
         </div>
 
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/80">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${
+            connected
+              ? "border-[#123865] bg-[#F2F7FF] text-[#123865]"
+              : "border-[#C9D7E6] bg-[#FFF8EF] text-slate-400"
+          }`}
+        >
           <Icon size={17} />
         </span>
       </div>
 
-      <p className="mt-3 min-h-[40px] text-xs font-semibold leading-5 text-slate-600">
+      <p className="mt-3 min-h-[40px] break-words text-xs font-semibold leading-5 text-slate-600">
         {detail}
       </p>
 
-      <div className="mt-3 flex items-center gap-1.5">
+      <div
+        className={`mt-3 flex items-center gap-2 rounded-xl border-2 px-3 py-2 ${
+          connected
+            ? "border-emerald-300 bg-emerald-50"
+            : "border-[#C9D7E6] bg-[#F7FAFC]"
+        }`}
+      >
         {connected ? (
-          <CheckCircle2 size={13} className="text-emerald-700" />
+          <CheckCircle2 size={13} className="shrink-0 text-emerald-700" />
         ) : (
-          <Database size={13} className="text-slate-500" />
+          <Database size={13} className="shrink-0 text-slate-500" />
         )}
+
         <p
           className={`text-[9px] font-black uppercase tracking-[0.09em] ${
             connected ? "text-emerald-800" : "text-slate-500"
@@ -1350,38 +1342,57 @@ function CommandPanel({
 }) {
   if (hidden) return null;
 
+  const accent =
+    tone === "red"
+      ? "border-red-400"
+      : tone === "green"
+        ? "border-emerald-400"
+        : tone === "orange"
+          ? "border-[#FF5A0A]"
+          : "border-[#123865]";
+
+  const iconTone =
+    tone === "red"
+      ? "border-red-300 bg-red-50 text-red-700"
+      : tone === "green"
+        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+        : tone === "orange"
+          ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-700"
+          : "border-blue-300 bg-blue-50 text-blue-700";
+
   return (
     <section
-      className={`overflow-hidden rounded-[1.7rem] border-[3px] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,36,61,0.06)] ${outerBorder(
-        tone
-      )}`}
+      className={`min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)] ${accent}`}
     >
-      <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white sm:px-5">
+      <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
             {eyebrow}
           </p>
-          <h2 className="mt-1 text-lg font-black text-white">{title}</h2>
-          <p className="mt-1 text-xs font-semibold leading-5 text-white/80">
+
+          <h2 className="mt-1 text-xl font-black text-white">
+            {title}
+          </h2>
+
+          <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-200">
             {description}
           </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-lg border-2 border-white/20 bg-white/10 px-2.5 py-1 text-xs font-black text-white">
+          <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-xs font-black text-white">
             {count}
           </span>
-          <span
-            className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${toneClass(
-              tone
-            )}`}
-          >
+
+          <span className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${iconTone}`}>
             <Icon size={17} />
           </span>
         </div>
       </div>
 
-      <div className="p-4">{children}</div>
+      <div className="min-h-[19rem] bg-[#FFF8EF] p-4 sm:p-5">
+        {children}
+      </div>
     </section>
   );
 }
@@ -1391,7 +1402,7 @@ function RiskCard({ risk, canInspect, onInspect }) {
 
   return (
     <article
-      className={`rounded-[1.15rem] border-[3px] bg-white p-4 ${outerBorder(
+      className={`min-w-0 rounded-[1.15rem] border-[3px] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md ${outerBorder(
         tone
       )}`}
     >
@@ -1429,7 +1440,7 @@ function RiskCard({ risk, canInspect, onInspect }) {
 
 function OpportunityCard({ item, canInspect, onInspect }) {
   return (
-    <article className="rounded-[1.15rem] border-[3px] border-emerald-400 bg-emerald-50 p-4">
+    <article className="min-w-0 rounded-[1.15rem] border-[3px] border-emerald-400 bg-emerald-50 p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -1469,61 +1480,77 @@ function SystemHealthRow({ system, canOpen, onOpen }) {
     state === "healthy"
       ? "border-emerald-300 bg-emerald-50"
       : state === "warning"
-        ? "border-orange-300 bg-orange-50"
+        ? "border-[#FF5A0A] bg-[#FFF4E8]"
         : state === "critical"
           ? "border-red-300 bg-red-50"
-          : "border-slate-300 bg-slate-50";
+          : "border-[#C9D7E6] bg-white";
 
   const badge =
     state === "healthy"
-      ? "border-emerald-300 text-emerald-800"
+      ? "border-emerald-300 bg-white text-emerald-800"
       : state === "warning"
-        ? "border-orange-300 text-orange-800"
+        ? "border-[#FF5A0A] bg-white text-[#C2410C]"
         : state === "critical"
-          ? "border-red-300 text-red-800"
-          : "border-slate-300 text-slate-600";
+          ? "border-red-300 bg-white text-red-800"
+          : "border-[#C9D7E6] bg-[#F7FAFC] text-slate-600";
 
   const body = (
     <>
-      <div className="min-w-0">
-        <p className="break-words text-sm font-black text-[#10233F]">
-          {system.name}
-        </p>
-        <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-600">
-          {system.detail}
-        </p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span
+          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+            state === "healthy"
+              ? "border-emerald-300 bg-white text-emerald-700"
+              : state === "warning"
+                ? "border-[#FF5A0A] bg-white text-orange-700"
+                : state === "critical"
+                  ? "border-red-300 bg-white text-red-700"
+                  : "border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]"
+          }`}
+        >
+          <ShieldCheck size={15} />
+        </span>
+
+        <div className="min-w-0">
+          <p className="break-words text-sm font-black text-[#10233F]">
+            {system.name}
+          </p>
+
+          <p className="mt-1 break-words text-[10px] font-semibold leading-4 text-slate-600">
+            {system.detail}
+          </p>
+        </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
         <span
-          className={`rounded-lg border-2 bg-white px-2.5 py-1 text-[8px] font-black uppercase ${badge}`}
+          className={`rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase ${badge}`}
         >
           {system.status}
         </span>
-        {canOpen ? <ArrowRight size={15} className="text-[#123865]" /> : null}
+
+        {canOpen ? (
+          <ArrowRight size={15} className="text-[#123865]" />
+        ) : null}
       </div>
     </>
   );
+
+  const className = `flex min-w-0 items-start justify-between gap-3 rounded-[1.05rem] border-2 p-3 text-left shadow-[0_4px_12px_rgba(18,56,101,0.03)] transition ${classes}`;
 
   if (canOpen) {
     return (
       <button
         type="button"
         onClick={onOpen}
-        className={`flex w-full items-start justify-between gap-3 rounded-[1.05rem] border-2 p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${classes}`}
+        className={`${className} hover:-translate-y-0.5 hover:border-[#123865] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300`}
       >
         {body}
       </button>
     );
   }
 
-  return (
-    <div
-      className={`flex items-start justify-between gap-3 rounded-[1.05rem] border-2 p-3 ${classes}`}
-    >
-      {body}
-    </div>
-  );
+  return <div className={className}>{body}</div>;
 }
 
 function CollapsibleCommandSection({
@@ -1542,7 +1569,7 @@ function CollapsibleCommandSection({
 
   return (
     <section
-      className={`overflow-hidden rounded-[1.75rem] border-[3px] bg-[#FFF8EE] shadow-[0_12px_30px_rgba(23,36,61,0.055)] ${outerBorder(
+      className={`overflow-hidden rounded-[1.75rem] border-[3px] bg-[#FFF8EF] shadow-[0_12px_30px_rgba(23,36,61,0.055)] ${outerBorder(
         tone
       )}`}
     >
@@ -1550,7 +1577,7 @@ function CollapsibleCommandSection({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-left text-white transition hover:bg-[#0F3158] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/60 sm:px-5"
+        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-4 text-left text-white transition hover:bg-[#0F3158] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/60 sm:px-5"
       >
         <div className="flex min-w-0 items-start gap-3">
           <span
@@ -1591,9 +1618,9 @@ function CollapsibleCommandSection({
 
 function RecommendationCard({ item, index, canOpen, onOpen }) {
   return (
-    <article className="rounded-[1.15rem] border-[3px] border-orange-300 bg-orange-50 p-4">
+    <article className="rounded-[1.15rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-sm font-black text-orange-800">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-white text-sm font-black text-[#C2410C]">
           {index + 1}
         </span>
 
@@ -1603,7 +1630,7 @@ function RecommendationCard({ item, index, canOpen, onOpen }) {
               {item.title}
             </p>
             {item.inherited ? (
-              <span className="rounded-md border border-orange-300 bg-white px-2 py-0.5 text-[8px] font-black uppercase text-orange-800">
+              <span className="rounded-md border border-[#FF5A0A] bg-white px-2 py-0.5 text-[8px] font-black uppercase text-[#C2410C]">
                 Opportunity review
               </span>
             ) : null}
@@ -1615,7 +1642,7 @@ function RecommendationCard({ item, index, canOpen, onOpen }) {
           </p>
 
           {item.priority ? (
-            <p className="mt-2 text-[9px] font-black uppercase tracking-[0.08em] text-orange-800">
+            <p className="mt-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#C2410C]">
               Priority: {item.priority}
             </p>
           ) : null}
@@ -1636,7 +1663,7 @@ function AlertFeedCard({ item, canInspect, onInspect }) {
 
   return (
     <article
-      className={`rounded-[1.15rem] border-[3px] bg-white p-4 ${outerBorder(
+      className={`min-w-0 rounded-[1.15rem] border-[3px] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md ${outerBorder(
         tone
       )}`}
     >
@@ -1718,7 +1745,7 @@ function AutomationMetricCard({
 
 function ReadinessCard({ icon: Icon, label, value, detail }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-4">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.09em] text-slate-500">
@@ -1737,7 +1764,7 @@ function ReadinessCard({ icon: Icon, label, value, detail }) {
 
 function SourceBadge({ source }) {
   return (
-    <span className="max-w-full truncate rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+    <span className="max-w-full truncate rounded-md border border-[#C9D7E6] bg-[#F7FAFC] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
       {source}
     </span>
   );
@@ -1790,7 +1817,7 @@ function InlineNotice({
           <button
             type="button"
             onClick={onAction}
-            className="shrink-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
           >
             {actionLabel}
           </button>
@@ -1802,30 +1829,38 @@ function InlineNotice({
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center">
-      <Sparkles className="mx-auto text-orange-600" size={20} />
-      <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
-      <p className="mx-auto mt-1 max-w-md text-xs font-semibold leading-5 text-slate-600">
-        {text}
-      </p>
+    <div className="flex min-h-[15rem] min-w-0 items-center justify-center rounded-[1.2rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-5 text-center shadow-inner">
+      <div className="max-w-md">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-[3px] border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
+          <Sparkles size={20} />
+        </span>
 
-      {onClear ? (
-        <button
-          type="button"
-          onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
-        >
-          Clear search & filters
-        </button>
-      ) : null}
+        <p className="mt-3 text-base font-black text-[#10233F]">
+          {title}
+        </p>
+
+        <p className="mx-auto mt-2 text-xs font-semibold leading-5 text-slate-600">
+          {text}
+        </p>
+
+        {onClear ? (
+          <button
+            type="button"
+            onClick={onClear}
+            className="mt-4 rounded-xl border-2 border-[#FF5A0A] bg-white px-4 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#C2410C] transition hover:bg-[#FFF4E8]"
+          >
+            Clear search & filters
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 function EmptySearchResult({ onClear }) {
   return (
-    <div className="rounded-[1.35rem] border-[3px] border-orange-300 bg-orange-50 p-5 text-center">
-      <Search className="mx-auto text-orange-700" size={22} />
+    <div className="rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-5 text-center">
+      <Search className="mx-auto text-[#C2410C]" size={22} />
       <h3 className="mt-2 font-black text-[#10233F]">
         Nothing matches the current command view
       </h3>
@@ -1836,7 +1871,7 @@ function EmptySearchResult({ onClear }) {
       <button
         type="button"
         onClick={onClear}
-        className="mt-3 rounded-lg border-2 border-orange-500 bg-orange-500 px-4 py-2 text-[10px] font-black uppercase tracking-[0.07em] text-white transition hover:bg-orange-600"
+        className="mt-3 rounded-lg border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2 text-[10px] font-black uppercase tracking-[0.07em] text-white transition hover:bg-[#E94F00]"
       >
         Reset command view
       </button>
@@ -1847,18 +1882,18 @@ function EmptySearchResult({ onClear }) {
 function toneClass(tone = "navy") {
   if (tone === "red") return "border-red-400 bg-red-50 text-red-800";
   if (tone === "orange")
-    return "border-orange-400 bg-orange-50 text-orange-800";
+    return "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]";
   if (tone === "green")
     return "border-emerald-400 bg-emerald-50 text-emerald-800";
   if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-800";
   if (tone === "muted")
-    return "border-slate-300 bg-slate-50 text-slate-500";
-  return "border-[#234E78] bg-[#EEF4FA] text-[#123865]";
+    return "border-[#C9D7E6] bg-[#F7FAFC] text-slate-500";
+  return "border-[#234E78] bg-[#F2F7FF] text-[#123865]";
 }
 
 function outerBorder(tone = "navy") {
   if (tone === "red") return "border-red-400";
-  if (tone === "orange") return "border-orange-400";
+  if (tone === "orange") return "border-[#FF5A0A]";
   if (tone === "green") return "border-emerald-400";
   if (tone === "blue") return "border-blue-400";
   return "border-[#234E78]";
@@ -1866,7 +1901,7 @@ function outerBorder(tone = "navy") {
 
 function accentBar(tone = "navy") {
   if (tone === "red") return "bg-red-500";
-  if (tone === "orange") return "bg-orange-500";
+  if (tone === "orange") return "bg-[#FF5A0A]";
   if (tone === "green") return "bg-emerald-500";
   if (tone === "blue") return "bg-blue-500";
   return "bg-[#123865]";

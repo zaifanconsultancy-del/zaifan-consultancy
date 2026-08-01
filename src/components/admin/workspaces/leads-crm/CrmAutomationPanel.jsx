@@ -1,5 +1,5 @@
-// CrmAutomationPanel V4 MAXIMUM — CRM Automation Intelligence Engine
-// src/components/admin/CrmAutomationPanel.jsx
+// CrmAutomationPanel V8 PARTNER OS EXTREME — CRM Automation Intelligence Engine
+// src/components/admin/workspaces/leads-crm/CrmAutomationPanel.jsx
 //
 // Maximum pass:
 // - preserves cardClass / inquiries / appointments API
@@ -358,79 +358,83 @@ function CrmAutomationPanel({
           1,
         ],
       }}
-      className="space-y-5"
+      className="min-w-0 space-y-5"
     >
       <section
-        className={`${cardClass} rounded-[2rem] border-[3px] border-orange-400 bg-[#fffaf4] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.07)] sm:p-4`}
+        className={`${cardClass} min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#FF5A0A] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.08)]`}
       >
-        <div className="grid overflow-hidden rounded-[1.6rem] border-2 border-[#234e78] xl:grid-cols-[1.18fr_0.82fr]">
-          <div className="bg-[#123866] p-5 text-white sm:p-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                <Workflow size={12} />
-                CRM Automation Engine
-              </span>
+        <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,0.55fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    <Workflow size={12} />
+                    CRM Automation Engine
+                  </span>
 
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                <ShieldCheck size={12} />
-                Human Review
-              </span>
-            </div>
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    <ShieldCheck size={12} />
+                    Human Review Required
+                  </span>
+                </div>
 
-            <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
-              Smart Next Actions
-            </h2>
+                <h2 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                  Smart Next Actions
+                </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
-              Scan inquiries, appointments, and follow-up reminders to surface
-              the most important workflow actions for the team.
-            </p>
+                <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-white sm:text-[15px]">
+                  Turn live inquiry, appointment, and reminder signals into a clear,
+                  review-ready operating queue for the Zaifan team.
+                </p>
+              </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkMetric
-                label="Actions"
-                value={counts.total}
-              />
-              <DarkMetric
-                label="Urgent"
-                value={counts.urgent}
-              />
-              <DarkMetric
-                label="High"
-                value={counts.high}
-              />
-              <DarkMetric
-                label="Overdue"
-                value={counts.overdueReminders}
-              />
+              <div className="grid shrink-0 grid-cols-2 gap-2 lg:w-[280px]">
+                <DarkMetric label="Actions" value={counts.total} />
+                <DarkMetric label="Urgent" value={counts.urgent} />
+                <DarkMetric label="High" value={counts.high} />
+                <DarkMetric label="Overdue" value={counts.overdueReminders} />
+              </div>
             </div>
           </div>
 
-          <div className="border-t-2 border-orange-300 bg-orange-500 p-5 text-white xl:border-l-2 xl:border-t-0 sm:p-6">
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
-              Engine Inputs
-            </p>
+          <div
+            style={{ backgroundColor: "#FF5A0A" }}
+            className="border-t-[3px] border-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
+                  Engine Health
+                </p>
+                <h3 className="mt-3 text-3xl font-black leading-none text-white">
+                  {counts.total ? "Needs review" : "Queue clear"}
+                </h3>
+                <p className="mt-2 text-xs font-bold leading-5 text-white">
+                  {counts.total
+                    ? `${counts.total} suggested actions are ready for human review.`
+                    : "No strong workflow action is currently required."}
+                </p>
+              </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-white">
+                <Sparkles size={22} />
+              </span>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
               <OrangeMetric
                 label="Inquiries"
-                value={safeArray(
-                  inquiries
-                ).length}
+                value={safeArray(inquiries).length}
               />
-
               <OrangeMetric
                 label="Appointments"
-                value={safeArray(
-                  appointments
-                ).length}
+                value={safeArray(appointments).length}
               />
-
               <OrangeMetric
-                label="Open Reminders"
+                label="Open reminders"
                 value={counts.reminders}
               />
-
               <OrangeMetric
                 label="Medium"
                 value={counts.medium}
@@ -441,22 +445,22 @@ function CrmAutomationPanel({
               type="button"
               onClick={fetchReminders}
               disabled={loading}
-              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[1rem] border-2 border-white/30 bg-white/10 px-4 text-xs font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border-2 border-white/40 bg-white px-4 text-xs font-black text-[#C73A08] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF8EF] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <RefreshCw
-                size={14}
-                className={
-                  loading
-                    ? "animate-spin"
-                    : ""
-                }
+                size={15}
+                className={loading ? "animate-spin" : ""}
               />
-
-              {loading
-                ? "Refreshing..."
-                : "Refresh Engine"}
+              {loading ? "Refreshing Engine..." : "Refresh Engine"}
             </button>
           </div>
+        </div>
+
+        <div className="grid gap-3 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:grid-cols-2 xl:grid-cols-4">
+          <AutomationStat label="Urgent actions" value={counts.urgent} tone="red" />
+          <AutomationStat label="High priority" value={counts.high} tone="amber" />
+          <AutomationStat label="Medium priority" value={counts.medium} tone="blue" />
+          <AutomationStat label="Open reminders" value={counts.reminders} tone="orange" />
         </div>
       </section>
 
@@ -495,85 +499,75 @@ function CrmAutomationPanel({
       ) : null}
 
       <section
-        className={`${cardClass} rounded-[1.65rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_8px_24px_rgba(15,35,63,0.04)]`}
+        className={`${cardClass} min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_10px_26px_rgba(15,35,63,0.06)]`}
       >
-        <div className="flex items-center gap-2">
-          <Filter
-            size={14}
-            className="text-orange-700"
-          />
+        <div className="flex flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-4 text-white sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
+              <Filter size={16} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
+                Action Command Bar
+              </p>
+              <p className="mt-1 text-sm font-black text-white">
+                Find, segment, and review the current automation queue
+              </p>
+            </div>
+          </div>
 
-          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
-            Action Controls
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-lg border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+              {filteredSuggestions.length} visible
+            </span>
+            <span className="rounded-lg border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+              {query || priorityFilter !== "all" || typeFilter !== "all"
+                ? "Filters active"
+                : "Full queue"}
+            </span>
+          </div>
         </div>
 
-        <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_170px_180px_auto]">
-          <div className="relative">
+        <div className="grid min-w-0 gap-3 p-4 sm:p-5 xl:grid-cols-[minmax(320px,1fr)_190px_200px_auto]">
+          <div className="relative min-w-0">
             <Search
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              size={16}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#234E78]"
             />
-
             <input
               value={query}
-              onChange={(event) =>
-                setQuery(
-                  event.target.value
-                )
-              }
-              placeholder="Search action title, message or student type..."
-              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search action title, message, student type, or reference..."
+              className="min-h-12 w-full min-w-0 rounded-xl border-2 border-[#B8C9DA] bg-white pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </div>
 
           <select
             value={priorityFilter}
-            onChange={(event) =>
-              setPriorityFilter(
-                event.target.value
-              )
-            }
-            className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+            onChange={(event) => setPriorityFilter(event.target.value)}
+            className="min-h-12 min-w-0 rounded-xl border-2 border-[#B8C9DA] bg-white px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
-            <option value="all">
-              All priorities
-            </option>
-            <option value="urgent">
-              Urgent
-            </option>
-            <option value="high">
-              High
-            </option>
-            <option value="medium">
-              Medium
-            </option>
+            <option value="all">All priorities</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
           </select>
 
           <select
             value={typeFilter}
-            onChange={(event) =>
-              setTypeFilter(
-                event.target.value
-              )
-            }
-            className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+            onChange={(event) => setTypeFilter(event.target.value)}
+            className="min-h-12 min-w-0 rounded-xl border-2 border-[#B8C9DA] bg-white px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
-            <option value="all">
-              All record types
-            </option>
-            <option value="inquiry">
-              Inquiries
-            </option>
-            <option value="appointment">
-              Appointments
-            </option>
+            <option value="all">All record types</option>
+            <option value="inquiry">Inquiries</option>
+            <option value="appointment">Appointments</option>
           </select>
 
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50"
+            disabled={!query && priorityFilter === "all" && typeFilter === "all"}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#0E2E55] disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-[#F7FAFC] disabled:text-slate-400"
           >
             <RefreshCw size={14} />
             Reset
@@ -621,8 +615,8 @@ function CrmAutomationPanel({
 
       {filteredSuggestions.length >
       30 ? (
-        <div className="rounded-[1.3rem] border-2 border-orange-300 bg-orange-50 p-4">
-          <p className="text-xs font-black text-orange-800">
+        <div className="rounded-[1.3rem] border-2 border-[#60A5FA] bg-[#F2F7FF] p-4">
+          <p className="text-xs font-black text-blue-700">
             Showing the first 30 matching actions of{" "}
             {filteredSuggestions.length}. Use filters to narrow the queue.
           </p>
@@ -649,9 +643,6 @@ function AutomationRow({
         item.type
     ) || "record";
 
-  const style =
-    getPriorityStyle(priority);
-
   const visibleActionReference =
     getVisibleActionReference(item, index);
 
@@ -670,92 +661,92 @@ function AutomationRow({
         y: 0,
       }}
       transition={{
-        duration:
-          reduceMotion
-            ? 0
-            : 0.22,
-        delay:
-          reduceMotion
-            ? 0
-            : Math.min(
-                index * 0.025,
-                0.12
-              ),
+        duration: reduceMotion ? 0 : 0.22,
+        delay: reduceMotion
+          ? 0
+          : Math.min(index * 0.025, 0.12),
       }}
-      className="overflow-hidden rounded-[1.65rem] border-[3px] border-slate-300 bg-white shadow-[0_10px_26px_rgba(15,35,63,0.045)] transition hover:border-orange-400 hover:shadow-[0_12px_30px_rgba(15,35,63,0.055)]"
+      className="group relative min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_10px_26px_rgba(15,35,63,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,35,63,0.10)]"
     >
-      <div className="grid xl:grid-cols-[1fr_220px]">
-        <div className="p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <PriorityBadge
-              priority={priority}
-            />
+      <div
+        className={`absolute inset-y-0 left-0 w-2 ${
+          priority === "urgent"
+            ? "bg-red-500"
+            : priority === "high"
+              ? "bg-[#FF5A0A]"
+              : "bg-[#4F9CF9]"
+        }`}
+      />
 
-            <span className="rounded-full border-2 border-blue-300 bg-blue-50 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-blue-800">
+      <div className="grid min-w-0 xl:grid-cols-[minmax(0,1fr)_290px]">
+        <div className="min-w-0 p-5 pl-7 sm:p-6 sm:pl-8">
+          <div className="flex flex-wrap items-center gap-2">
+            <PriorityBadge priority={priority} />
+
+            <span className="rounded-full border-2 border-[#60A5FA] bg-[#F2F7FF] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-blue-700">
               {studentType}
             </span>
 
-            <span className="rounded-full border-2 border-slate-300 bg-[#fffaf4] px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
-              #{index + 1}
+            <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-slate-600">
+              Queue #{index + 1}
             </span>
           </div>
 
-          <h3 className="mt-3 text-lg font-black text-[#10233f]">
-            {item.title ||
-              "Automation suggestion"}
-          </h3>
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#B84F0E]">
+                Recommended next move
+              </p>
 
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">
-            {item.message ||
-              "No automation explanation was supplied."}
-          </p>
+              <h3 className="mt-2 text-xl font-black leading-tight text-[#10233F] sm:text-2xl">
+                {item.title || "Automation suggestion"}
+              </h3>
 
-          <div
-            className={`mt-4 rounded-xl border-2 p-3 ${style.detail}`}
-          >
-            <div className="flex items-start gap-2">
-              <Target
-                size={14}
-                className="mt-0.5 shrink-0"
-              />
+              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                {item.message || "No automation explanation was supplied."}
+              </p>
+            </div>
 
-              <div>
-                <p className="text-[8px] font-black uppercase tracking-[0.1em]">
-                  Review Requirement
-                </p>
-
-                <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
-                  This is a suggested next action. A counselor/admin should review
-                  the student record before changing CRM data or contacting the student.
+            <div className="rounded-[1.15rem] border-2 border-[#C9D7E6] bg-[#F7FAFC] p-4">
+              <div className="flex items-center gap-2">
+                <Target size={15} className="text-[#123865]" />
+                <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#123865]">
+                  Review gate
                 </p>
               </div>
+              <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+                Verify the student record before changing CRM data or contacting the student.
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t-2 border-slate-200 bg-[#fffaf4] p-5 xl:border-l-2 xl:border-t-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
+        <div className="border-t-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
+          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
             Action Reference
           </p>
 
-          <p className="mt-2 text-base font-black text-orange-700">
+          <p className="mt-2 break-words text-xl font-black text-white">
             {visibleActionReference}
           </p>
 
-          <div className="mt-4 rounded-xl border-2 border-orange-300 bg-orange-50 p-3">
+          <div className="mt-5 rounded-[1rem] border-2 border-white/20 bg-white/10 p-4">
             <div className="flex items-center gap-2">
-              <Bot
-                size={14}
-                className="text-orange-700"
-              />
-
-              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
-                Local Workflow Logic
+              <Bot size={15} className="text-orange-300" />
+              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
+                Local workflow logic
               </p>
             </div>
 
-            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-              Generated from the existing CRM automation engine and reminder state.
+            <p className="mt-2 text-xs font-semibold leading-5 text-white/85">
+              Generated from live CRM records and the current follow-up reminder state.
+            </p>
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 rounded-[1rem] border-2 border-white/20 bg-white/10 p-3">
+            <ShieldCheck size={15} className="shrink-0 text-orange-300" />
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-white">
+              Human approval only
             </p>
           </div>
         </div>
@@ -777,12 +768,12 @@ function AutomationStat({
     blue:
       "border-blue-300 bg-blue-50 text-blue-800",
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]",
   };
 
   return (
     <div
-      className={`rounded-[1.3rem] border-[3px] p-4 ${
+      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_5px_14px_rgba(15,35,63,0.04)] ${
         styles[tone] ||
         styles.orange
       }`}
@@ -791,7 +782,7 @@ function AutomationStat({
         {label}
       </p>
 
-      <p className="mt-2 text-3xl font-black text-[#10233f]">
+      <p className="mt-2 text-3xl font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -806,7 +797,7 @@ function PriorityBadge({
 
   return (
     <span
-      className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${style.badge}`}
+      className={`rounded-lg border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${style.badge}`}
     >
       {priority}
     </span>
@@ -834,9 +825,9 @@ function getPriorityStyle(priority = "") {
 
   return {
     badge:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
     detail:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
   };
 }
 
@@ -879,14 +870,14 @@ function LoadingState({
 }) {
   return (
     <div
-      className={`${cardClass} rounded-[1.7rem] border-[3px] border-slate-300 bg-white p-9 text-center`}
+      className={`${cardClass} rounded-[1.7rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-9 text-center`}
     >
       <RefreshCw
         size={22}
-        className="mx-auto animate-spin text-orange-600"
+        className="mx-auto animate-spin text-[#F97316]"
       />
 
-      <h3 className="mt-4 text-lg font-black text-[#10233f]">
+      <h3 className="mt-4 text-lg font-black text-[#10233F]">
         Refreshing automation engine
       </h3>
 
@@ -902,13 +893,13 @@ function StableState({
 }) {
   return (
     <div
-      className={`${cardClass} rounded-[1.75rem] border-[3px] border-emerald-300 bg-emerald-50 p-9 text-center shadow-[0_10px_26px_rgba(15,35,63,0.04)]`}
+      className={`${cardClass} rounded-[1.75rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-9 text-center shadow-[0_10px_26px_rgba(15,35,63,0.04)]`}
     >
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-emerald-300 bg-white text-emerald-700">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#34D399] bg-white text-emerald-700">
         <CheckCircle2 size={22} />
       </div>
 
-      <h3 className="mt-4 text-xl font-black text-[#10233f]">
+      <h3 className="mt-4 text-xl font-black text-[#10233F]">
         No automation actions right now
       </h3>
 
@@ -925,14 +916,14 @@ function FilteredEmptyState({
 }) {
   return (
     <div
-      className={`${cardClass} rounded-[1.75rem] border-[3px] border-slate-300 bg-white p-9 text-center`}
+      className={`${cardClass} rounded-[1.75rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-9 text-center`}
     >
       <Search
         size={22}
-        className="mx-auto text-orange-600"
+        className="mx-auto text-[#F97316]"
       />
 
-      <h3 className="mt-4 text-lg font-black text-[#10233f]">
+      <h3 className="mt-4 text-lg font-black text-[#10233F]">
         No matching automation actions
       </h3>
 

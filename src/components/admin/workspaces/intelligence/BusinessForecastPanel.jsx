@@ -209,7 +209,7 @@ function BusinessForecastPanel({ growth = {} }) {
       initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.28 }}
-      className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.07)]"
+      className="overflow-hidden rounded-[2rem] border-[3px] border-[#FFB38A] bg-white shadow-[0_14px_36px_rgba(15,35,63,0.07)]"
     >
       <div className="grid xl:grid-cols-[1.18fr_0.82fr]">
         <div className="bg-[#123866] p-5 text-white sm:p-6">
@@ -243,7 +243,7 @@ function BusinessForecastPanel({ growth = {} }) {
           </div>
         </div>
 
-        <div className="bg-orange-500 p-5 text-white sm:p-6">
+        <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
             Forecast Readiness
           </p>
@@ -269,7 +269,7 @@ function BusinessForecastPanel({ growth = {} }) {
         </div>
       </div>
 
-      <div className="space-y-5 bg-[#fff8ee] p-4 sm:p-5">
+      <div className="space-y-5 bg-[#FFF8EF] p-4 sm:p-5">
         {!model.hasRealPipeline ? (
           <ForecastWarning />
         ) : null}
@@ -286,25 +286,25 @@ function BusinessForecastPanel({ growth = {} }) {
         </div>
 
         <div className="grid gap-3 xl:grid-cols-[1fr_0.72fr]">
-          <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4 sm:p-5">
+          <section className="rounded-[1.6rem] border-[3px] border-[#FFB38A] bg-white p-4 sm:p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#B84F0E]">
                   Pipeline Projection
                 </p>
-                <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
                   Expected Stage Movement
                 </h3>
               </div>
 
-              <span className="inline-flex w-fit rounded-full border-2 border-slate-300 bg-[#fffaf4] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
+              <span className="inline-flex w-fit rounded-full border-2 border-[#C9D7E6] bg-[#fffaf4] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-[#51627A]">
                 Weighted directional model
               </span>
             </div>
 
             <div className="mt-4 overflow-x-auto">
               <div className="min-w-[620px] space-y-3">
-                <div className="grid grid-cols-4 gap-3 rounded-xl border-2 border-slate-300 bg-[#fffaf4] p-3 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
+                <div className="grid grid-cols-4 gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#fffaf4] p-3 text-[9px] font-black uppercase tracking-[0.12em] text-[#51627A]">
                   <p>Metric</p>
                   <p className="text-center">30 Days</p>
                   <p className="text-center">60 Days</p>
@@ -334,7 +334,7 @@ function BusinessForecastPanel({ growth = {} }) {
           </section>
 
           <section className="rounded-[1.6rem] border-[3px] border-[#123866] bg-[#123866] p-5 text-white">
-            <div className="flex items-start gap-3">
+            <div className="flex min-w-0 items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
                 <Gauge size={18} />
               </div>
@@ -380,7 +380,7 @@ function BusinessForecastPanel({ growth = {} }) {
           </section>
         </div>
 
-        <section className="grid gap-3 lg:grid-cols-3">
+        <section className="grid min-w-0 gap-3 lg:grid-cols-3">
           <AssumptionCard
             icon={Landmark}
             label="Pipeline Assumption"
@@ -401,7 +401,7 @@ function BusinessForecastPanel({ growth = {} }) {
         </section>
 
         <div className="rounded-[1.45rem] border-[3px] border-amber-300 bg-amber-50 p-4">
-          <div className="flex items-start gap-3">
+          <div className="flex min-w-0 items-start gap-3">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-800" />
             <div>
               <p className="text-sm font-black text-amber-950">
@@ -431,7 +431,7 @@ function ForecastCard({
   shouldReduceMotion,
 }) {
   const tones = {
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]",
     blue: "border-blue-300 bg-blue-50 text-blue-800",
     emerald: "border-emerald-300 bg-emerald-50 text-emerald-800",
   };
@@ -448,12 +448,12 @@ function ForecastCard({
         tones[tone] || tones.orange
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.14em]">
             {label}
           </p>
-          <p className="mt-2 text-3xl font-black text-[#10233f]">
+          <p className="mt-2 text-3xl font-black text-[#10233F]">
             {value}
           </p>
         </div>
@@ -464,7 +464,7 @@ function ForecastCard({
       </div>
 
       {helper ? (
-        <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+        <p className="mt-2 text-xs font-semibold leading-5 text-[#51627A]">
           {helper}
         </p>
       ) : null}
@@ -479,11 +479,11 @@ function ForecastRow({
   month90,
 }) {
   return (
-    <div className="grid grid-cols-4 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 text-sm shadow-[0_4px_14px_rgba(15,35,63,0.03)]">
-      <p className="font-black text-[#10233f]">
+    <div className="grid grid-cols-4 gap-3 rounded-xl border-2 border-[#C9D7E6] bg-white p-4 text-sm shadow-[0_4px_14px_rgba(15,35,63,0.03)]">
+      <p className="font-black text-[#10233F]">
         {label}
       </p>
-      <p className="text-center font-black text-orange-700">
+      <p className="text-center font-black text-[#B84F0E]">
         {month30}
       </p>
       <p className="text-center font-black text-blue-700">
@@ -502,16 +502,16 @@ function AssumptionCard({
   text,
 }) {
   return (
-    <div className="rounded-[1.35rem] border-[3px] border-slate-300 bg-white p-4">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
         <Icon size={17} />
       </div>
 
-      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
+      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.13em] text-[#B84F0E]">
         {label}
       </p>
 
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+      <p className="mt-2 text-xs font-semibold leading-5 text-[#51627A]">
         {text}
       </p>
     </div>
@@ -568,17 +568,17 @@ function OrangeStat({
 
 function ForecastWarning() {
   return (
-    <div className="rounded-[1.35rem] border-[3px] border-orange-300 bg-orange-50 p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+    <div className="rounded-[1.35rem] border-[3px] border-[#FFB38A] bg-[#FFF4EA] p-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-white text-[#B84F0E]">
           <CalendarRange size={17} />
         </div>
 
         <div>
-          <p className="text-sm font-black text-[#10233f]">
+          <p className="text-sm font-black text-[#10233F]">
             Forecast is running on fallback assumptions
           </p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+          <p className="mt-1 text-xs font-semibold leading-5 text-[#51627A]">
             No meaningful application, offer, CAS or visa records are currently
             loaded. The model remains visible for system readiness, but its
             forecast should not be treated as operationally useful yet.

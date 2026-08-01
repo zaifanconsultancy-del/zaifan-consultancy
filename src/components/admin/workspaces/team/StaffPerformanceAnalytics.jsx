@@ -1,4 +1,4 @@
-// StaffPerformanceAnalytics V4 MAXIMUM — Full-Width Team Operations Intelligence
+// StaffPerformanceAnalytics PARTNER OS EXTREME — Executive Team Operations Intelligence
 // src/components/admin/StaffPerformanceAnalytics.jsx
 //
 // Maximum pass:
@@ -284,6 +284,7 @@ function StaffPerformanceAnalytics({
   const [workloadFilter, setWorkloadFilter] = useState("all");
   const [pressureFilter, setPressureFilter] = useState("all");
   const [sortBy, setSortBy] = useState("total");
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const performance = useMemo(
     () =>
@@ -434,11 +435,11 @@ function StaffPerformanceAnalytics({
       transition={{
         duration: reduceMotion ? 0 : 0.25,
       }}
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_40px_rgba(15,35,63,0.07)] sm:p-4`}
+      className={`${cardClass} min-w-0 !space-y-4 rounded-[2.2rem] !border-[4px] !border-[#123865] !bg-[#FFF8EF] !p-4 shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:!p-4`}
     >
-      <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
         <div
-          className="bg-[#123865] p-6 sm:p-8"
+          className="min-w-0 bg-[#123865] p-5 sm:p-6 lg:p-7"
           style={{ color: "#FFFFFF" }}
         >
           <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
@@ -456,7 +457,7 @@ function StaffPerformanceAnalytics({
           </div>
 
           <h2
-            className="mt-3 break-words text-2xl font-black leading-tight sm:text-3xl"
+            className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl"
             style={{ color: "#FFFFFF" }}
           >
             Staff Performance
@@ -472,7 +473,7 @@ function StaffPerformanceAnalytics({
         </div>
 
         <div
-          className="bg-orange-500 p-6 sm:p-8"
+          className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7"
           style={{ color: "#FFFFFF" }}
         >
           <div className="flex items-center gap-2">
@@ -498,8 +499,8 @@ function StaffPerformanceAnalytics({
         </div>
       </div>
 
-      <div className="min-w-0 bg-[#FFF8EE] p-4 sm:p-5">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <SummaryCard
             label="Assignment Rate"
             value={`${teamMetrics.assignmentRate}%`}
@@ -537,7 +538,7 @@ function StaffPerformanceAnalytics({
           />
         </div>
 
-        <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-3">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <InsightCard
             label="Average Workload"
             value={teamMetrics.averageWorkload}
@@ -568,9 +569,41 @@ function StaffPerformanceAnalytics({
           />
         </div>
 
-        <div className="mt-5 rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
-          <div className="grid min-w-0 gap-3 lg:grid-cols-2 2xl:grid-cols-[minmax(18rem,1fr)_repeat(4,minmax(9.5rem,auto))]">
-            <label className="relative block">
+        <section className="mt-5 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
+          <button
+            type="button"
+            onClick={() =>
+              setWorkspaceExpanded((current) => !current)
+            }
+            aria-expanded={workspaceExpanded}
+            className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+          >
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-200">
+                Team Performance Workspace
+              </p>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-200">
+                {workspaceExpanded
+                  ? "Hide filters, staff portfolio, unassigned pressure and metric definitions."
+                  : "Open filters, staff portfolio, unassigned pressure and metric definitions."}
+              </p>
+            </div>
+
+            <BarChart3
+              size={17}
+              className={`shrink-0 text-[#123865] transition ${
+                workspaceExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </section>
+
+        {workspaceExpanded ? (
+          <div className="min-w-0 space-y-4">
+        <div className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+            <label className="relative block min-w-0">
               <Search
                 size={16}
                 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -580,7 +613,7 @@ function StaffPerformanceAnalytics({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search staff, workload, pressure..."
-                className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
 
@@ -589,7 +622,7 @@ function StaffPerformanceAnalytics({
               onChange={(event) =>
                 setWorkloadFilter(event.target.value)
               }
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All Workloads</option>
               <option value="heavy">Heavy</option>
@@ -602,7 +635,7 @@ function StaffPerformanceAnalytics({
               onChange={(event) =>
                 setPressureFilter(event.target.value)
               }
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All Pressure</option>
               <option value="high">High Pressure</option>
@@ -613,7 +646,7 @@ function StaffPerformanceAnalytics({
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="total">Sort: Workload</option>
               <option value="progression">Sort: Progression</option>
@@ -626,7 +659,7 @@ function StaffPerformanceAnalytics({
               type="button"
               onClick={resetControls}
               disabled={!hasControls}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:bg-orange-50 hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X size={13} />
               Reset
@@ -639,13 +672,13 @@ function StaffPerformanceAnalytics({
           </p>
         </div>
 
-        <section className="mt-5 overflow-hidden rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
-          <div className="flex flex-col gap-3 border-b-[3px] border-[#E0E7EF] bg-[#FFF7EC] p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
+        <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+          <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] p-4 text-white sm:flex-row sm:items-end sm:justify-between sm:p-5">
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
                 Active Staff Portfolio
               </p>
-              <h3 className="mt-1 text-xl font-black text-[#10233f]">
+              <h3 className="mt-1 text-xl font-black text-white">
                 Ownership & Performance Detail
               </h3>
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
@@ -653,7 +686,7 @@ function StaffPerformanceAnalytics({
               </p>
             </div>
 
-            <span className="w-fit shrink-0 rounded-full border-2 border-[#F59E0B] bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-orange-700">
+            <span className="w-fit shrink-0 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white">
               {filteredRows.length} visible
             </span>
           </div>
@@ -671,7 +704,7 @@ function StaffPerformanceAnalytics({
             ) : (
               <div className="rounded-[1.35rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
                 <Search className="mx-auto h-8 w-8 text-orange-700" />
-                <h3 className="mt-3 font-black text-[#10233f]">
+                <h3 className="mt-3 font-black text-[#10233F]">
                   No matching staff performance
                 </h3>
                 <p className="mt-2 text-sm font-semibold text-slate-600">
@@ -682,7 +715,7 @@ function StaffPerformanceAnalytics({
           </div>
         </section>
 
-        <div className="mt-5 grid gap-4 2xl:grid-cols-[0.85fr_1.15fr]">
+        <div className="grid min-w-0 gap-4">
           <UnassignedCard
             inquiries={unassignedInquiries}
             appointments={unassignedAppointments}
@@ -692,6 +725,8 @@ function StaffPerformanceAnalytics({
 
           <MethodCard />
         </div>
+          </div>
+        ) : null}
       </div>
     </motion.section>
   );
@@ -713,11 +748,11 @@ function SummaryCard({
       ? "border-emerald-300 bg-emerald-50"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-orange-300 bg-orange-50";
+      : "border-[#FF5A0A] bg-[#FFF4E8]";
 
   return (
     <div
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_5px_14px_rgba(15,35,63,0.04)] ${style}`}
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
       style={{
         color: dark ? "#FFFFFF" : "#10233F",
       }}
@@ -770,14 +805,14 @@ function InsightCard({
   icon: Icon,
 }) {
   return (
-    <div className="min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4">
+    <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
             {label}
           </p>
 
-          <p className="mt-2 break-words text-xl font-black leading-6 text-[#10233f]">
+          <p className="mt-2 break-words text-xl font-black leading-6 text-[#10233F]">
             {value}
           </p>
         </div>
@@ -816,17 +851,17 @@ function StaffPerformanceRow({
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.15),
       }}
-      className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)] ${
-        isTop ? "border-[#F97316]" : "border-[#D1DCE7]"
+      className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_7px_20px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
+        isTop ? "border-[#FF5A0A]" : "border-[#D1DCE7]"
       }`}
     >
-      <div className="grid min-w-0 gap-0 2xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.6fr)]">
-        <div className={`min-w-0 p-4 sm:p-5 ${isTop ? "bg-[#FFF7EC]" : "bg-white"}`}>
+      <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.6fr)]">
+        <div className={`min-w-0 p-4 sm:p-5 ${isTop ? "bg-[#FFF4E8]" : "bg-white"}`}>
           <div className="flex min-w-0 items-start gap-3">
             <div
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black ${
                 isTop
-                  ? "border-[#F97316] bg-[#E96512] text-white"
+                  ? "border-[#FF5A0A] bg-[#E96512] text-white"
                   : "border-[#C9D7E6] bg-[#FFF8EE] text-[#123865]"
               }`}
             >
@@ -834,7 +869,7 @@ function StaffPerformanceRow({
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="break-words text-lg font-black leading-6 text-[#10233f]">
+              <p className="break-words text-lg font-black leading-6 text-[#10233F]">
                 {staff.name}
               </p>
 
@@ -856,7 +891,7 @@ function StaffPerformanceRow({
           </div>
         </div>
 
-        <div className="min-w-0 border-t-2 border-[#E1E8EF] p-4 sm:p-5 2xl:border-l-2 2xl:border-t-0">
+        <div className="min-w-0 border-t-2 border-[#E1E8EF] p-4 sm:p-5 lg:border-l-2 lg:border-t-0">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {metrics.map(([label, value, tone]) => (
               <StaffDetailMetric
@@ -891,7 +926,7 @@ function RowHeadlineMetric({ label, value }) {
       <p className="break-words text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
         {label}
       </p>
-      <p className="mt-1 break-words text-base font-black text-[#10233f]">
+      <p className="mt-1 break-words text-base font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -958,7 +993,7 @@ function UnassignedCard({
             Unassigned Work
           </p>
 
-          <h3 className="mt-1 text-lg font-black text-[#10233f]">
+          <h3 className="mt-1 text-lg font-black text-[#10233F]">
             {total} CRM record{total === 1 ? "" : "s"} without an owner
           </h3>
 
@@ -974,12 +1009,12 @@ function UnassignedCard({
 
 function MethodCard() {
   return (
-    <div className="rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-5">
+    <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
       <p className="text-[9px] font-black uppercase tracking-[0.08em] text-orange-700">
         Metric Definitions
       </p>
 
-      <h3 className="mt-1 text-lg font-black text-[#10233f]">
+      <h3 className="mt-1 text-lg font-black text-[#10233F]">
         What these numbers actually mean
       </h3>
 
@@ -1015,8 +1050,8 @@ function MethodCard() {
 
 function Definition({ label, text }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-[#fffaf2] p-3">
-      <p className="text-xs font-black text-[#10233f]">{label}</p>
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3">
+      <p className="text-xs font-black text-[#10233F]">{label}</p>
       <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
         {text}
       </p>

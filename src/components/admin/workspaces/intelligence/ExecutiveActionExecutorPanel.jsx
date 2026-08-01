@@ -209,7 +209,7 @@ function ExecutiveActionExecutorPanel({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#fff8ee] shadow-[0_18px_50px_rgba(15,35,63,0.08)]"
+      className="overflow-hidden rounded-[2rem] border-[3px] border-[#FFB38A] bg-[#fff8ee] shadow-[0_18px_50px_rgba(15,35,63,0.08)]"
     >
       <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
         <div className="bg-[#123865] p-5 text-white sm:p-6">
@@ -236,7 +236,7 @@ function ExecutiveActionExecutorPanel({
           </div>
         </div>
 
-        <div className="bg-orange-500 p-5 text-white sm:p-6">
+        <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
           <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
             Execution Control
           </p>
@@ -286,17 +286,17 @@ function ExecutiveActionExecutorPanel({
         ) : null}
 
         {pendingApprovalItem ? (
-          <div className="rounded-[1.4rem] border-[3px] border-orange-400 bg-orange-50 p-4 shadow-[0_10px_24px_rgba(249,115,22,0.08)]">
+          <div className="rounded-[1.4rem] border-[3px] border-[#FF5A0A] bg-[#FFF4EA] p-4 shadow-[0_10px_24px_rgba(249,115,22,0.08)]">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-white text-[#B84F0E]">
                   <ShieldCheck size={20} />
                 </span>
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-800">
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#9B3E08]">
                     Approval Required
                   </p>
-                  <h3 className="mt-1 font-black text-[#10233f]">
+                  <h3 className="mt-1 font-black text-[#10233F]">
                     {pendingApprovalItem.template.title}
                   </h3>
                   <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
@@ -309,7 +309,7 @@ function ExecutiveActionExecutorPanel({
                 <button
                   type="button"
                   onClick={() => setPendingApprovalItem(null)}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-slate-400"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-4 text-xs font-black text-slate-700 transition hover:border-slate-400"
                 >
                   <X size={14} />
                   Cancel
@@ -319,7 +319,7 @@ function ExecutiveActionExecutorPanel({
                   type="button"
                   onClick={() => executeAction(pendingApprovalItem, true)}
                   disabled={Boolean(executingKey)}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-4 text-xs font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-orange-600 bg-[#FF5A0A] px-4 text-xs font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ShieldCheck size={14} />
                   Approve & Execute
@@ -329,12 +329,12 @@ function ExecutiveActionExecutorPanel({
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3 rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#B84F0E]">
               Ranked Action Queue
             </p>
-            <p className="mt-1 text-sm font-black text-[#10233f]">
+            <p className="mt-1 text-sm font-black text-[#10233F]">
               Highest-risk and highest-opportunity actions appear first.
             </p>
           </div>
@@ -361,11 +361,11 @@ function ExecutiveActionExecutorPanel({
               />
             ))
           ) : (
-            <div className="rounded-[1.5rem] border-[3px] border-orange-300 bg-white p-7 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+            <div className="rounded-[1.5rem] border-[3px] border-[#FFB38A] bg-white p-7 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
                 <Sparkles size={23} />
               </div>
-              <p className="mt-4 font-black text-[#10233f]">
+              <p className="mt-4 font-black text-[#10233F]">
                 No executive actions ready
               </p>
               <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
@@ -408,11 +408,11 @@ function ExecutorCard({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-slate-300 bg-white text-xs font-black text-[#10233f]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-[#C9D7E6] bg-white text-xs font-black text-[#10233F]">
               {index + 1}
             </span>
 
-            <p className="font-black text-[#10233f]">{template.title}</p>
+            <p className="font-black text-[#10233F]">{template.title}</p>
 
             <Tag text={recommendation.priority} className={style.badge} />
             <Tag text={formatLabel(template.actionType)} />
@@ -421,7 +421,7 @@ function ExecutorCard({
             {requiresApproval ? (
               <Tag
                 text="Approval Required"
-                className="border-orange-300 bg-orange-50 text-orange-800"
+                className="border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]"
               />
             ) : (
               <Tag
@@ -442,7 +442,7 @@ function ExecutorCard({
             {template.description}
           </p>
 
-          <div className="mt-3 rounded-xl border-2 border-slate-300 bg-white p-3">
+          <div className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] p-3">
             <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
               Why this action exists
             </p>
@@ -472,7 +472,7 @@ function ExecutorCard({
           className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border-2 px-5 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${
             requiresApproval
               ? "border-[#123865] bg-[#123865] text-white hover:bg-[#0d2d54]"
-              : "border-orange-600 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.16)] hover:-translate-y-0.5 hover:bg-orange-600"
+              : "border-orange-600 bg-[#FF5A0A] text-white shadow-[0_8px_18px_rgba(249,115,22,0.16)] hover:-translate-y-0.5 hover:bg-orange-600"
           }`}
         >
           {executed ? (
@@ -498,14 +498,14 @@ function ExecutorCard({
 
 function MetricTile({ label, value, icon: Icon }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] p-3">
       <div className="flex items-center gap-1.5">
-        <Icon size={12} className="text-orange-700" />
+        <Icon size={12} className="text-[#B84F0E]" />
         <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
           {label}
         </p>
       </div>
-      <p className="mt-1 truncate text-xs font-black text-[#10233f]" title={String(value)}>
+      <p className="mt-1 truncate text-xs font-black text-[#10233F]" title={String(value)}>
         {value}
       </p>
     </div>
@@ -540,7 +540,7 @@ function QueueBadge({ icon: Icon, label, tone = "orange" }) {
       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865] text-white"
-      : "border-orange-300 bg-orange-50 text-orange-800";
+      : "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]";
 
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${style}`}>
@@ -647,7 +647,7 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "executive") {
     return {
-      wrapper: "border-orange-400 bg-orange-50",
+      wrapper: "border-[#FF5A0A] bg-[#FFF4EA]",
       badge: "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]",
     };
   }
@@ -661,13 +661,13 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "medium") {
     return {
-      wrapper: "border-slate-300 bg-slate-50",
+      wrapper: "border-[#C9D7E6] bg-slate-50",
       badge: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
     };
   }
 
   return {
-    wrapper: "border-slate-300 bg-white",
+    wrapper: "border-[#C9D7E6] bg-white",
     badge: "border-[#243A60]/18 bg-white text-[#7A8392]",
   };
 }

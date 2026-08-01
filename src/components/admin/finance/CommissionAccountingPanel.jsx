@@ -95,11 +95,11 @@ function typeTone(type = "") {
   }
 
   if (value.includes("agent")) {
-    return "border-[#9B6CFF] bg-[#F8F5FF] text-violet-700";
+    return "border-[#60A5FA] bg-[#F2F7FF] text-blue-700";
   }
 
   if (value.includes("partner")) {
-    return "border-[#F97316] bg-[#FFF4E8] text-orange-700";
+    return "border-[#C9D7E6] bg-[#FFFDF8] text-[#B84F0E]";
   }
 
   return "border-[#C9D7E6] bg-[#FFF8EF] text-slate-600";
@@ -115,12 +115,12 @@ function LedgerMetric({
 }) {
   const tones = {
     navy: "border-[#123865] bg-[#123865]",
-    orange: "border-[#F97316] bg-[#FFF4E8]",
+    orange: "border-[#C9D7E6] bg-[#FFFDF8]",
     green: "border-[#34D399] bg-[#F0FFF8]",
     amber: "border-[#F59E0B] bg-[#FFF8E8]",
     red: "border-[#FB7185] bg-[#FFF4F4]",
     blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    violet: "border-[#9B6CFF] bg-[#F8F5FF]",
+    violet: "border-[#60A5FA] bg-[#F2F7FF]",
   };
 
   const dark = tone === "navy";
@@ -173,7 +173,7 @@ function LedgerMetric({
 
       {badge ? (
         <span
-          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+          className={`mt-3 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
             dark
               ? "border-white/20 bg-white/10 text-white"
               : "border-[#C9D7E6] bg-white text-slate-600"
@@ -191,7 +191,7 @@ function CommissionRow({ row, currency }) {
   const estimated = Boolean(row.estimated);
 
   return (
-    <article className="rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+    <article className="rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_11rem_10rem_9rem] xl:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -200,7 +200,7 @@ function CommissionRow({ row, currency }) {
             </h4>
 
             <span
-              className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${typeTone(
+              className={`rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${typeTone(
                 row.type
               )}`}
             >
@@ -227,7 +227,7 @@ function CommissionRow({ row, currency }) {
             Evidence
           </p>
           <span
-            className={`mt-1 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${
+            className={`mt-1 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${
               estimated
                 ? "border-[#F59E0B] bg-[#FFF8E8] text-amber-800"
                 : "border-[#34D399] bg-[#F0FFF8] text-emerald-700"
@@ -242,7 +242,7 @@ function CommissionRow({ row, currency }) {
             Status
           </p>
           <span
-            className={`mt-1 inline-flex w-fit rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
+            className={`mt-1 inline-flex w-fit rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
               row.status
             )}`}
           >
@@ -257,7 +257,7 @@ function CommissionRow({ row, currency }) {
 function EmptyCommissionState({ filtered }) {
   return (
     <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#C9D7E6] bg-[#FFFDF8] text-[#B84F0E]">
         <CircleDollarSign size={24} />
       </div>
 
@@ -415,9 +415,9 @@ export default function CommissionAccountingPanel({ finance = {} }) {
 
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
-      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <div className="bg-[#123865] p-5 text-white sm:p-6">
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-[#F97316]/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <CircleDollarSign size={12} />
             Commission Accounting
           </div>
@@ -610,7 +610,7 @@ export default function CommissionAccountingPanel({ finance = {} }) {
               type="button"
               onClick={clearFilters}
               disabled={!filtersActive}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-[#B84F0E] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X size={13} />
               Clear

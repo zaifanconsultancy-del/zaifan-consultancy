@@ -1,4 +1,4 @@
-// ExecutiveScoreGeneratorPanel V4 MAXIMUM — Student OS Intelligence Generator
+// ExecutiveScoreGeneratorPanel PARTNER OS V4 MAXIMUM — Student OS Intelligence Generator
 // src/components/admin/ExecutiveScoreGeneratorPanel.jsx
 //
 // Maximum pass:
@@ -669,7 +669,7 @@ function ExecutiveScoreGeneratorPanel({
             ? 0
             : 0.26,
       }}
-      className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#FFFDF8] shadow-[0_18px_50px_rgba(23,36,61,0.08)]"
+      className="overflow-hidden rounded-[2rem] border-[3px] border-[#FFB38A] bg-[#FFFDF8] shadow-[0_18px_50px_rgba(23,36,61,0.08)]"
     >
       <div className="grid xl:grid-cols-[1.34fr_0.66fr]">
         <div className="bg-[#123865] p-5 text-white sm:p-7">
@@ -737,7 +737,7 @@ function ExecutiveScoreGeneratorPanel({
           </div>
         </div>
 
-        <div className="bg-orange-500 p-5 text-white sm:p-7">
+        <div className="bg-[#FF5A0A] p-5 text-white sm:p-7">
           <div className="flex items-center gap-2">
             <CircleGauge
               size={18}
@@ -791,21 +791,21 @@ function ExecutiveScoreGeneratorPanel({
       </div>
 
       <div className="space-y-5 p-4 sm:p-6">
-        <section className="rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-4">
+        <section className="rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
                 <Sparkles
                   size={20}
                 />
               </div>
 
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                <p className="text-[9px] font-black uppercase tracking-[0.11em] text-[#B84F0E]">
                   Generator Command
                 </p>
 
-                <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                <h3 className="mt-1 text-lg font-black text-[#10233F]">
                   Run a fresh Executive Student OS scan
                 </h3>
 
@@ -823,7 +823,7 @@ function ExecutiveScoreGeneratorPanel({
                 void runGenerator()
               }
               disabled={running}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-5 text-sm font-black text-white shadow-[0_9px_20px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-[#FF5A0A] px-5 text-sm font-black text-white shadow-[0_9px_20px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {running ? (
                 <RefreshCw
@@ -873,7 +873,7 @@ function ExecutiveScoreGeneratorPanel({
         ) : null}
 
         {result ? (
-          <div className="space-y-5">
+          <div className="min-w-0 space-y-5">
             <SectionHeader
               eyebrow="Generator Results"
               title="Run Health & Persistence"
@@ -881,7 +881,7 @@ function ExecutiveScoreGeneratorPanel({
               icon={CircleGauge}
             />
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <ResultCard
                 label="Students Scanned"
                 value={total}
@@ -950,7 +950,7 @@ function ExecutiveScoreGeneratorPanel({
               />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <ResultCard
                 label="Critical Risk"
                 value={number(
@@ -1009,7 +1009,7 @@ function ExecutiveScoreGeneratorPanel({
               />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <ResultCard
                 label="Verified Outcomes"
                 value={
@@ -1068,14 +1068,14 @@ function ExecutiveScoreGeneratorPanel({
               />
             </div>
 
-            <section className="rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-5">
+            <section className="rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-white p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#B84F0E]">
                     Journey Distribution
                   </p>
 
-                  <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                  <h3 className="mt-1 text-lg font-black text-[#10233F]">
                     Generated Student Stage Coverage
                   </h3>
 
@@ -1084,7 +1084,7 @@ function ExecutiveScoreGeneratorPanel({
                   </p>
                 </div>
 
-                <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-orange-800">
+                <span className="rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#9B3E08]">
                   {journeyCoverage}% in motion
                 </span>
               </div>
@@ -1282,7 +1282,7 @@ function ExecutiveScoreGeneratorPanel({
                 tone="gold"
                 icon={Database}
               >
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="grid min-w-0 gap-3 lg:grid-cols-2">
                   {saved
                     .slice(0, 10)
                     .map(
@@ -1366,17 +1366,17 @@ function SectionHeader({
   icon: Icon = Sparkles,
 }) {
   return (
-    <div className="flex items-start gap-3 border-l-[5px] border-orange-500 pl-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="flex items-start gap-3 border-l-[5px] border-[#FF5A0A] pl-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
         <Icon size={18} />
       </div>
 
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#B84F0E]">
           {eyebrow}
         </p>
 
-        <h3 className="mt-0.5 text-xl font-black text-[#10233f]">
+        <h3 className="mt-0.5 text-xl font-black text-[#10233F]">
           {title}
         </h3>
 
@@ -1403,14 +1403,14 @@ function StatusBox({
     <div
       className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style}`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <Icon
           size={18}
           className="mt-0.5 shrink-0"
         />
 
         <div>
-          <p className="font-black text-[#10233f]">
+          <p className="font-black text-[#10233F]">
             {title}
           </p>
 
@@ -1447,11 +1447,11 @@ function ResultCard({
 
         <Icon
           size={15}
-          className="text-orange-700"
+          className="text-[#B84F0E]"
         />
       </div>
 
-      <p className="mt-3 break-words text-3xl font-black text-[#10233f]">
+      <p className="mt-3 break-words text-3xl font-black text-[#10233F]">
         {value ?? 0}
       </p>
     </div>
@@ -1484,7 +1484,7 @@ function MiniJourney({
         {label}
       </p>
 
-      <p className="mt-2 text-2xl font-black text-[#10233f]">
+      <p className="mt-2 text-2xl font-black text-[#10233F]">
         {value ?? 0}
       </p>
     </div>
@@ -1508,13 +1508,13 @@ function DetailSection({
       className={`rounded-[1.55rem] border-[3px] p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${style}`}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-white text-[#B84F0E]">
             <Icon size={17} />
           </div>
 
           <div>
-            <p className="font-black text-[#10233f]">
+            <p className="font-black text-[#10233F]">
               {title}
             </p>
 
@@ -1531,7 +1531,7 @@ function DetailSection({
         <button
           type="button"
           onClick={onToggle}
-          className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-300 hover:bg-orange-50"
+          className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FFB38A] hover:bg-[#FFF4EA]"
           aria-expanded={open}
         >
           {open ? (
@@ -1571,7 +1571,7 @@ function IssueCard({
     <div
       className={`rounded-xl border-[3px] p-4 shadow-[0_7px_18px_rgba(23,36,61,0.04)] ${style}`}
     >
-      <p className="font-black text-[#10233f]">
+      <p className="font-black text-[#10233F]">
         {title}
       </p>
 
@@ -1614,10 +1614,10 @@ function SavedScoreCard({
     "not_started";
 
   return (
-    <div className="rounded-[1.25rem] border-[3px] border-slate-300 bg-white p-4">
+    <div className="rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="break-words font-black text-[#10233f]">
+          <p className="break-words font-black text-[#10233F]">
             {name}
           </p>
 
@@ -1632,7 +1632,7 @@ function SavedScoreCard({
           </p>
         </div>
 
-        <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-orange-800">
+        <span className="rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#9B3E08]">
           {executive.executive_category ||
             student.executive_category ||
             "Generated"}
@@ -1684,7 +1684,7 @@ function SmallMetric({
         {label}
       </p>
 
-      <p className="mt-1 font-black text-[#10233f]">
+      <p className="mt-1 font-black text-[#10233F]">
         {value ?? 0}
       </p>
     </div>
@@ -1693,12 +1693,12 @@ function SmallMetric({
 
 function EmptyGeneratorState() {
   return (
-    <div className="rounded-[1.55rem] border-[3px] border-dashed border-orange-300 bg-white p-8 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#FFB38A] bg-white p-8 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
         <Bot size={26} />
       </div>
 
-      <h3 className="mt-4 text-xl font-black text-[#10233f]">
+      <h3 className="mt-4 text-xl font-black text-[#10233F]">
         No generator run in this session
       </h3>
 
@@ -1726,10 +1726,10 @@ function getToneStyle(
   if (
     tone === "gold"
   ) {
-    return "border-orange-300 bg-orange-50 text-orange-800";
+    return "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]";
   }
 
-  return "border-slate-300 bg-white text-slate-700";
+  return "border-[#C9D7E6] bg-white text-slate-700";
 }
 
 export default ExecutiveScoreGeneratorPanel;

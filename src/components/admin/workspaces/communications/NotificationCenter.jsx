@@ -1,7 +1,7 @@
-// NotificationCenter V4 MAXIMUM — Functional Zaifan Admin OS Alert Command Center
-// src/components/admin/NotificationCenter.jsx
+// NotificationCenter V6 PARTNER OS — Functional Zaifan Admin OS Alert Command Center
+// src/components/admin/workspaces/communications/NotificationCenter.jsx
 //
-// V4 upgrade:
+// Partner OS workspace pass:
 // - preserves CRM / Student OS / finance / portal / support / automation alert aggregation
 // - fixes "Open / Follow-up / Read / Dismiss" so they are not dead UI
 // - Open routes to the most relevant Admin workspace when setActiveTab is supplied
@@ -1324,72 +1324,94 @@ function NotificationCenter({
   };
 
   return (
-    <div className="mb-5 space-y-5 rounded-[2rem] border-[3px] border-orange-300 bg-[#fff3e5] p-3 shadow-[0_18px_45px_rgba(16,43,76,0.08)] sm:p-4 xl:mb-6">
-      <div className="relative overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#123865] p-5 text-white shadow-[0_14px_34px_rgba(15,35,63,0.18)]">
+    <div className="mb-5 min-w-0 space-y-5 bg-transparent p-3 xl:mb-6">
+      <div className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_16px_42px_rgba(18,56,101,0.09)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#FF5A0A]" />
 
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-300/80 bg-orange-500/15 px-3 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-orange-400" />
-
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-200">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
                 Executive Notification Center
               </p>
             </div>
 
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
+            <h2 className="mt-4 max-w-4xl text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl lg:text-[2.15rem]">
               CRM + Student OS Alert Command Center
             </h2>
 
-            <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-white/85">
+            <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-100">
               Live alert intelligence across CRM, student journey, finance,
               portal access, support, documents, tasks, executive risk, and
               automation health.
             </p>
-          </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Badge dark>{roleLabel}</Badge>
+            <div className="mt-5 flex min-w-0 flex-wrap gap-2">
+              <Badge dark>{roleLabel}</Badge>
 
-            {permissions?.canManageAdmins && (
-              <Badge dark tone="orange">
-                Full Access
+              {permissions?.canManageAdmins && (
+                <Badge dark tone="orange">
+                  Full Access
+                </Badge>
+              )}
+
+              <Badge dark tone="green">
+                Live System
               </Badge>
-            )}
-
-            <Badge
-              dark
-              tone={
-                totalActiveAlerts > 0
-                  ? "red"
-                  : "green"
-              }
-            >
-              {totalActiveAlerts} Active Alerts
-            </Badge>
-
-            <Badge dark tone="green">
-              Live System
-            </Badge>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {actionNotice ? (
-        <div className="rounded-[1.25rem] border-2 border-orange-300 bg-orange-50 px-4 py-3 text-sm font-bold text-[#10233f] shadow-sm">
-          {actionNotice}
-        </div>
-      ) : null}
+          <aside className="min-w-0 border-t-[3px] border-[#123865] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
+              Operational Pressure
+            </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        {commandSummary.map((item, index) => (
-          <CommandSummaryCard
-            key={item.title}
-            item={item}
-            index={index}
-            cardClass={cardClass}
-          />
-        ))}
+            <p className="mt-3 text-5xl font-black leading-none text-white">
+              {totalActiveAlerts}
+            </p>
+
+            <p className="mt-2 text-sm font-black uppercase tracking-[0.08em] text-white">
+              Active alerts
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl border-2 border-white/30 bg-white/10 p-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white">
+                  Critical
+                </p>
+                <p className="mt-1 text-2xl font-black text-white">
+                  {activeVisaAlerts + activeAutomationAlerts}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border-2 border-white/30 bg-white/10 p-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white">
+                  Healthy Areas
+                </p>
+                <p className="mt-1 text-2xl font-black text-white">
+                  {commandSummary.filter((item) => Number(item.value || 0) === 0).length}
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {actionNotice ? (
+          <div className="border-t-[3px] border-[#FF5A0A] bg-[#FFF3E8] px-4 py-3 text-sm font-bold text-[#10233F]">
+            {actionNotice}
+          </div>
+        ) : null}
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-5">
+          {commandSummary.map((item, index) => (
+            <CommandSummaryCard
+              key={item.title}
+              item={item}
+              index={index}
+              cardClass={cardClass}
+            />
+          ))}
+        </div>
       </div>
 
       <AlertSection
@@ -1488,8 +1510,8 @@ function AlertSection({
   ).length;
 
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#234e78] bg-[#fff9f2] shadow-[0_10px_24px_rgba(15,35,63,0.07)]">
-      <div className="flex flex-col gap-2 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+    <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_12px_28px_rgba(15,35,63,0.08)]">
+      <div className="flex flex-col gap-2 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between sm:px-6">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
             {eyebrow}
@@ -1558,33 +1580,27 @@ function CommandSummaryCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.25,
-        delay: index * 0.04,
+        duration: 0.24,
+        delay: index * 0.035,
       }}
-      className={`${cardClass} rounded-[1.5rem] border-2 ${tone.border} ${tone.bg} p-4 shadow-[0_7px_18px_rgba(15,35,63,0.06)]`}
+      className={`${cardClass} group min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(18,56,101,0.09)] ${tone.border} ${tone.bg}`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5e7087]">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.13em] text-slate-500">
             {item.title}
           </p>
 
-          <p
-            className={`mt-2 text-3xl font-black ${tone.text}`}
-          >
+          <p className={`mt-2 text-3xl font-black leading-none ${tone.text}`}>
             {item.value}
           </p>
         </div>
 
-        <div
-          className={`flex h-12 w-12 items-center justify-center rounded-2xl border-2 ${tone.border} bg-white/75`}
-        >
-          <Icon
-            className={`h-5 w-5 ${tone.text}`}
-          />
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 bg-white shadow-[0_4px_10px_rgba(18,56,101,0.06)] transition group-hover:-translate-y-0.5 ${tone.border}`}>
+          <Icon className={`h-4.5 w-4.5 ${tone.text}`} />
         </div>
       </div>
     </motion.div>
@@ -1615,7 +1631,7 @@ function NotificationCard({
         duration: 0.32,
         delay: index * 0.035,
       }}
-      className={`${cardClass} ${tone.glow} group relative min-h-[300px] overflow-hidden rounded-[1.65rem] border-[3px] ${tone.bg} p-5 shadow-[0_8px_22px_rgba(15,35,63,0.06)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,35,63,0.10)]`}
+      className={`${cardClass} ${tone.glow} group relative min-h-[300px] overflow-hidden rounded-[1.65rem] border-[3px] ${tone.bg} p-5 shadow-[0_8px_22px_rgba(15,35,63,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_12px_30px_rgba(15,35,63,0.11)]`}
       style={{ borderColor: tone.borderColor }}
     >
       <div
@@ -1638,9 +1654,9 @@ function NotificationCard({
         <div
           className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] ${
             isRead
-              ? "border-slate-300 bg-slate-100 text-slate-500"
+              ? "border-[#C9D7E6] bg-slate-100 text-slate-500"
               : item.active
-              ? "border-orange-300 bg-orange-50 text-orange-800"
+              ? "border-[#FF5A0A] bg-[#FFF3E8] text-orange-800"
               : "border-[#b9c9da] bg-[#edf4fb] text-[#34516f]"
           }`}
         >
@@ -1700,7 +1716,7 @@ function NotificationCard({
       </div>
 
       {item.active ? (
-        <div className="mt-4 rounded-[1.1rem] border-2 border-orange-300 bg-[#fff3e5] p-3">
+        <div className="mt-4 rounded-[1.1rem] border-2 border-[#FF5A0A] bg-[#FFF8EF] p-3">
           <div className="flex items-start gap-2">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
 
@@ -1723,9 +1739,9 @@ function ActionButton({
 }) {
   const tones = {
     navy:
-      "border-[#234e78] bg-[#123865] text-white hover:bg-[#0d2d50]",
+      "border-[#123865] bg-[#123865] text-white hover:bg-[#0d2d50]",
     orange:
-      "border-orange-500 bg-orange-500 text-white hover:bg-orange-600",
+      "border-[#FF5A0A] bg-[#FF5A0A] text-white hover:bg-[#E94F08]",
     green:
       "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
     red:
@@ -1737,7 +1753,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 px-3.5 py-2.5 text-[10px] font-black uppercase tracking-[0.10em] transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-45 ${
+      className={`inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 px-3.5 py-2.5 text-[10px] shadow-[0_3px_8px_rgba(15,35,63,0.05)] font-black uppercase tracking-[0.10em] transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/25 disabled:cursor-not-allowed disabled:opacity-45 active:translate-y-px ${
         tones[tone] || tones.navy
       }`}
     >
@@ -1758,7 +1774,7 @@ function Badge({
       : tone === "green"
       ? "border-emerald-300/70 bg-emerald-500/15 text-white"
       : tone === "orange"
-      ? "border-orange-300/80 bg-orange-500/20 text-white"
+      ? "border-[#FF5A0A]/80 bg-[#FF5A0A]/20 text-white"
       : "border-white/30 bg-white/10 text-white";
 
   const lightTone =
@@ -1767,7 +1783,7 @@ function Badge({
       : tone === "green"
       ? "border-emerald-300 bg-emerald-50 text-emerald-700"
       : tone === "orange"
-      ? "border-orange-300 bg-orange-50 text-orange-700"
+      ? "border-[#FF5A0A] bg-[#FFF3E8] text-orange-700"
       : "border-[#b9c9da] bg-[#edf4fb] text-[#34516f]";
 
   return (
@@ -1788,22 +1804,22 @@ function getToneClass(
   const toneMap = {
     gold: {
       borderColor: "#fb923c",
-      bg: active ? "bg-orange-50" : "bg-[#fff8ef]",
+      bg: active ? "bg-[#FFF3E8]" : "bg-[#FFF8EF]",
       glow: active
         ? "shadow-[0_0_32px_rgba(249,115,22,0.10)]"
         : "",
       text: "text-orange-700",
-      bar: "bg-orange-500",
+      bar: "bg-[#FF5A0A]",
     },
 
     orange: {
       borderColor: "#fb923c",
-      bg: active ? "bg-[#fff3e5]" : "bg-[#fff8ef]",
+      bg: active ? "bg-[#FFF8EF]" : "bg-[#FFF8EF]",
       glow: active
         ? "shadow-[0_0_32px_rgba(251,146,60,0.10)]"
         : "",
       text: "text-orange-700",
-      bar: "bg-orange-500",
+      bar: "bg-[#FF5A0A]",
     },
 
     green: {

@@ -1,4 +1,4 @@
-// AiLeadPrioritizationPanel V4 MAXIMUM — Counselor Priority Command Engine
+// AiLeadPrioritizationPanel PARTNER OS EXTREME — Compact Counselor Priority Command
 // src/components/admin/AiLeadPrioritizationPanel.jsx
 //
 // Maximum pass:
@@ -35,7 +35,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const DAY_MS = 86400000;
 
@@ -328,6 +328,7 @@ function AiLeadPrioritizationPanel({
   appointments = [],
 }) {
   const shouldReduceMotion = useReducedMotion();
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const data = useMemo(() => {
     const source = [
@@ -395,10 +396,10 @@ function AiLeadPrioritizationPanel({
       initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.28 }}
-      className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.07)]"
+      className="min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-3"
     >
-      <div className="grid xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="bg-[#123866] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
+        <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
               <TrendingUp size={12} />
@@ -411,17 +412,17 @@ function AiLeadPrioritizationPanel({
             </span>
           </div>
 
-          <h3 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
+          <h3 className="mt-4 break-words text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
             Counselor Priority Queue
           </h3>
 
-          <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-white">
+          <p className="mt-2 max-w-2xl break-words text-sm font-semibold leading-6 text-slate-100">
             Rank the strongest next opportunities using CRM priority,
             engagement, contactability, ownership, recency and pipeline
             movement.
           </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
             <DarkMetric label="Leads Ranked" value={data.allRanked.length} />
             <DarkMetric label="Average Score" value={`${data.average}/100`} />
             <DarkMetric label="VIP" value={data.vip} />
@@ -429,7 +430,7 @@ function AiLeadPrioritizationPanel({
           </div>
         </div>
 
-        <div className="bg-orange-500 p-5 text-white sm:p-6">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-6">
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
             Queue Temperature
           </p>
@@ -447,10 +448,41 @@ function AiLeadPrioritizationPanel({
         </div>
       </div>
 
-      <div className="bg-[#fff8ee] p-4 sm:p-5">
+      <section className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Counselor Priority Workspace
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide ranked leads, scoring reasons and next actions."
+                : "Open ranked leads, scoring reasons and next actions."}
+            </p>
+          </div>
+
+          <TrendingUp
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </section>
+
+      {workspaceExpanded ? (
+        <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_26px_rgba(18,56,101,0.05)] sm:p-5">
         {data.visible.length ? (
           <>
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-4 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-700">
                   Ranked Work Queue
@@ -479,7 +511,8 @@ function AiLeadPrioritizationPanel({
         ) : (
           <EmptyState />
         )}
-      </div>
+        </div>
+      ) : null}
     </motion.section>
   );
 }
@@ -495,13 +528,13 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
         duration: shouldReduceMotion ? 0 : 0.22,
         delay: shouldReduceMotion ? 0 : Math.min(index * 0.025, 0.12),
       }}
-      className={`overflow-hidden rounded-[1.5rem] border-[3px] bg-white shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${
+      className={`min-w-0 overflow-hidden rounded-[1.4rem] border-[3px] bg-white shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
         index === 0 ? "border-orange-400" : "border-slate-300"
       }`}
     >
-      <div className="grid lg:grid-cols-[auto_minmax(0,1fr)_auto]">
+      <div className="grid min-w-0">
         <div
-          className={`flex min-w-[76px] items-center justify-center border-b-2 p-4 lg:border-b-0 lg:border-r-2 ${
+          className={`flex min-w-0 items-center justify-between border-b-2 p-3 ${
             index === 0
               ? "border-orange-400 bg-orange-500 text-white"
               : "border-slate-200 bg-[#fffaf2] text-[#10233f]"
@@ -522,7 +555,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
         </div>
 
         <div className="min-w-0 p-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex min-w-0 flex-col gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h5 className="break-words text-base font-black text-[#10233f]">
@@ -566,7 +599,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_1fr_auto]">
+          <div className="mt-4 grid min-w-0 gap-3">
             <ReasonBlock
               title="Positive Signals"
               items={lead.reasons.slice(0, 4)}
@@ -580,7 +613,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
               empty="No major warning signal."
             />
 
-            <div className="rounded-xl border-2 border-orange-300 bg-orange-50 p-3 xl:min-w-[210px]">
+            <div className="min-w-0 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] p-3">
               <p className="text-[8px] font-black uppercase tracking-[0.11em] text-orange-700">
                 Recommended Next Move
               </p>
@@ -594,8 +627,8 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-center border-t-2 border-slate-200 bg-[#fffaf2] p-4 lg:border-l-2 lg:border-t-0">
-          <div className="grid gap-2">
+        <div className="border-t-2 border-[#C9D7E6] bg-[#FFF8EF] p-4">
+          <div className="grid min-w-0 grid-cols-3 gap-2">
             <ContactFlag
               icon={Phone}
               label="Phone"
@@ -621,7 +654,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
 function ReasonBlock({ title, items = [], empty, positive = false }) {
   return (
     <div
-      className={`rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-xl border-[3px] p-3 ${
         positive
           ? "border-emerald-300 bg-emerald-50"
           : "border-amber-300 bg-amber-50"
@@ -677,10 +710,10 @@ function ContactFlag({ icon: Icon, label, ready }) {
 
 function Badge({ icon: Icon, text, tone = "blue" }) {
   const colors = {
-    red: "border-red-300 bg-red-50 text-red-700",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-700",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-700",
+    red: "border-[#FB7185] bg-[#FFF4F4] text-red-700",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
+    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
   };
 
   return (
@@ -695,7 +728,7 @@ function Badge({ icon: Icon, text, tone = "blue" }) {
 
 function DarkMetric({ label, value }) {
   return (
-    <div className="rounded-[1.1rem] border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/20 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -706,7 +739,7 @@ function DarkMetric({ label, value }) {
 
 function OrangeMetric({ label, value, icon: Icon }) {
   return (
-    <div className="rounded-[1.1rem] border-2 border-white/25 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <Icon size={15} className="text-white" />
       <p className="mt-2 text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
@@ -718,7 +751,7 @@ function OrangeMetric({ label, value, icon: Icon }) {
 
 function EmptyState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-dashed border-slate-300 bg-white p-8 text-center">
+    <div className="min-w-0 rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-8 text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
         <Target size={20} />
       </div>
@@ -738,7 +771,7 @@ function getTemperatureConfig(temperature) {
     return {
       icon: Flame,
       tone: "red",
-      scoreBox: "border-red-300 bg-red-50 text-red-700",
+      scoreBox: "border-[#FB7185] bg-[#FFF4F4] text-red-700",
     };
   }
 
@@ -746,14 +779,14 @@ function getTemperatureConfig(temperature) {
     return {
       icon: Target,
       tone: "orange",
-      scoreBox: "border-orange-300 bg-orange-50 text-orange-800",
+      scoreBox: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     };
   }
 
   return {
     icon: Snowflake,
     tone: "blue",
-    scoreBox: "border-blue-300 bg-blue-50 text-blue-700",
+    scoreBox: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
   };
 }
 

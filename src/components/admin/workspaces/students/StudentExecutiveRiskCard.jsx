@@ -1,4 +1,4 @@
-// StudentExecutiveRiskCard V3 MAXIMUM — Executive Student Intelligence
+// StudentExecutiveRiskCard PARTNER OS EXTREME — Executive Student Risk Command
 // src/components/admin/StudentExecutiveRiskCard.jsx
 //
 // Maximum pass:
@@ -422,11 +422,11 @@ function StudentExecutiveRiskCard({
   };
 
   return (
-    <section className="space-y-5 text-[#10233f]">
-      <div className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
-        <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
+    <section className="min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4">
+      <div className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_48px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div
-            className="bg-[#123865] p-5 sm:p-6"
+            className="min-w-0 bg-[#123865] p-5 sm:p-6 lg:p-7"
             style={{ color: "#FFFFFF" }}
           >
             <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
@@ -444,14 +444,14 @@ function StudentExecutiveRiskCard({
             </div>
 
             <h3
-              className="mt-3 text-2xl font-black"
+              className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl"
               style={{ color: "#FFFFFF" }}
             >
               Student Risk & Opportunity Score
             </h3>
 
             <p
-              className="mt-2 max-w-3xl text-sm font-semibold leading-6"
+              className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100"
               style={{ color: "#F8FAFC" }}
             >
               Local executive scoring based on CRM fields, application
@@ -462,7 +462,7 @@ function StudentExecutiveRiskCard({
           </div>
 
           <div
-            className="bg-orange-500 p-5 sm:p-6"
+            className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7"
             style={{ color: "#FFFFFF" }}
           >
             <div className="flex items-center gap-2">
@@ -488,7 +488,7 @@ function StudentExecutiveRiskCard({
           </div>
         </div>
 
-        <div className="space-y-5 bg-[#fff8ee] p-5 sm:p-6">
+        <div className="min-w-0 space-y-5 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-5">
           {!hasValidStudentId ? (
             <Feedback tone="warning">
               This record has no valid numeric Student OS ID. Live scoring is
@@ -510,7 +510,7 @@ function StudentExecutiveRiskCard({
             </Feedback>
           ) : null}
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <ScoreCard
               label="Risk Score"
               value={executiveScore.risk_score}
@@ -544,10 +544,10 @@ function StudentExecutiveRiskCard({
             />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
+            <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
               <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
                   <Sparkles size={18} />
                 </div>
 
@@ -556,7 +556,7 @@ function StudentExecutiveRiskCard({
                     Executive Summary
                   </p>
 
-                  <h4 className="mt-1 text-lg font-black text-[#10233f]">
+                  <h4 className="mt-1 text-lg font-black text-[#10233F]">
                     {studentName}
                   </h4>
                 </div>
@@ -580,7 +580,7 @@ function StudentExecutiveRiskCard({
                     Risk Interpretation
                   </p>
 
-                  <h4 className="mt-1 text-lg font-black text-[#10233f]">
+                  <h4 className="mt-1 text-lg font-black text-[#10233F]">
                     {riskBand.label} risk range
                   </h4>
                 </div>
@@ -592,7 +592,7 @@ function StudentExecutiveRiskCard({
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-2">
             <ReasonList
               title="Risk Reasons"
               items={
@@ -614,14 +614,14 @@ function StudentExecutiveRiskCard({
             />
           </div>
 
-          <div className="rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+            <div className="flex min-w-0 flex-col gap-4">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
                   Persistence
                 </p>
 
-                <h4 className="mt-1 text-lg font-black text-[#10233f]">
+                <h4 className="mt-1 text-lg font-black text-[#10233F]">
                   Save Current Executive Snapshot
                 </h4>
 
@@ -645,7 +645,7 @@ function StudentExecutiveRiskCard({
                 disabled={
                   saving || !hasValidStudentId
                 }
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-5 text-sm font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-45"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-sm font-black text-white shadow-[0_10px_24px_rgba(255,90,10,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-45 sm:w-fit"
               >
                 <Database size={16} />
                 {saving
@@ -655,12 +655,12 @@ function StudentExecutiveRiskCard({
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-[1.3rem] border-2 border-slate-300 bg-white p-4">
+          <div className="flex min-w-0 items-start gap-3 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
 
             <p className="text-xs font-semibold leading-5 text-slate-600">
               This card does not call GPT by itself. The live score comes from
-              <span className="font-black text-[#10233f]">
+              <span className="font-black text-[#10233F]">
                 {" "}calculateExecutiveRisk()
               </span>
               . Any GPT-related signal is only used if it already exists in the
@@ -690,7 +690,7 @@ function ScoreCard({
 
   return (
     <div
-      className={`rounded-[1.3rem] border-[3px] p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${style}`}
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
       style={{
         color: dark ? "#FFFFFF" : "#10233F",
       }}
@@ -755,16 +755,16 @@ function ReasonList({
   const style =
     tone === "red"
       ? "border-red-300 bg-red-50 text-red-800"
-      : "border-orange-300 bg-orange-50 text-orange-800";
+      : "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
 
   return (
-    <div className="rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+    <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.05)]">
       <div className="flex items-center gap-2">
         {Icon ? (
           <Icon className="h-4 w-4 text-orange-700" />
         ) : null}
 
-        <p className="font-black text-[#10233f]">
+        <p className="font-black text-[#10233F]">
           {title}
         </p>
       </div>
@@ -776,13 +776,13 @@ function ReasonList({
               key={`${title}-${index}-${String(
                 item
               ).slice(0, 30)}`}
-              className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold leading-6 ${style}`}
+              className={`min-w-0 rounded-xl border-[3px] px-4 py-3 text-sm font-semibold leading-6 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${style}`}
             >
               {item}
             </div>
           ))
         ) : (
-          <p className="rounded-xl border-2 border-dashed border-slate-300 bg-[#fffaf2] px-4 py-3 text-sm font-semibold text-slate-500">
+          <p className="rounded-xl border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] px-4 py-3 text-sm font-semibold text-slate-500">
             {emptyText}
           </p>
         )}
@@ -806,7 +806,7 @@ function Feedback({
   return (
     <div
       role="status"
-      className={`flex items-start justify-between gap-3 rounded-2xl border-2 p-4 text-sm font-semibold ${style}`}
+      className={`flex min-w-0 items-start justify-between gap-3 rounded-[1.35rem] border-[3px] p-4 text-sm font-semibold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${style}`}
     >
       <div className="flex items-start gap-2">
         {tone === "error" ||
@@ -830,7 +830,7 @@ function Feedback({
           type="button"
           onClick={onClose}
           aria-label="Dismiss message"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white/50 transition hover:bg-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-current/20 bg-white/50 transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
         >
           <X size={14} />
         </button>
@@ -860,7 +860,7 @@ function getToneStyle(tone = "") {
     return "border-blue-300 bg-blue-50";
   }
 
-  return "border-orange-300 bg-orange-50";
+  return "border-[#FF5A0A] bg-[#FFF4E8]";
 }
 
 function getBandStyle(tone = "") {
@@ -880,7 +880,7 @@ function getBandStyle(tone = "") {
     return "border-blue-300 bg-blue-50 text-blue-800";
   }
 
-  return "border-orange-300 bg-orange-50 text-orange-800";
+  return "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
 }
 
 export default StudentExecutiveRiskCard;

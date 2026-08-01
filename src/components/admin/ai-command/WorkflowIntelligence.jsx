@@ -1,4 +1,4 @@
-// WorkflowIntelligence V3 EXTREME — Zaifan AI Command OS
+// WorkflowIntelligence V5 PARTNER-OS PREMIUM — Zaifan AI Command OS
 // Full replacement for:
 // src/components/admin/ai-command/WorkflowIntelligence.jsx
 //
@@ -9,7 +9,7 @@
 // - give Overview and Analytics genuinely different views
 // - make Refresh real when onRefresh is supplied
 // - expose real optional actions for stage inspection, bottleneck review and recovery work
-// - share the same navy + orange + cream language as AICommandCenter V3
+// - share the same premium navy + orange + cream language as the Partner OS suite
 // - support mobile, tablet and wide Admin workspace layouts
 // - provide useful loading/error/empty/search/filter states
 // - preserve safe rendering when used with no props
@@ -735,20 +735,20 @@ export default function WorkflowIntelligence({
   };
 
   return (
-    <section className="space-y-4 p-3 sm:space-y-5 sm:p-5">
+    <section className="space-y-5 bg-[#FFF8EF]/40 p-3 sm:p-5 xl:p-6">
       <AICommandModuleNav activeModule="workflow-intelligence" onOpenModule={onOpenModule} />
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_18px_48px_rgba(23,36,61,0.09)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.5fr)]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
-            <div className="flex flex-wrap items-center gap-2">
+      <header className="relative overflow-hidden rounded-[2rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_22px_55px_rgba(15,35,63,0.12)]">
+        <div className="grid xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.55fr)]">
+          <div className="relative overflow-hidden bg-[#123865] p-5 text-white sm:p-7 xl:p-8">
+            <div className="relative z-10 flex flex-wrap items-center gap-2">
               <HeaderChip icon={Workflow} label="Workflow Intelligence" />
               <HeaderChip icon={ShieldCheck} label="Human Controlled" />
               <HeaderChip icon={Database} label={sourceLabel} />
             </div>
 
-            <div className="mt-4 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+            <div className="relative z-10 mt-5 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
               <div className="max-w-4xl">
-                <h1 className="text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
+                <h1 className="text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl xl:text-[2.1rem]">
                   Workflow Intelligence & Recovery
                 </h1>
 
@@ -759,7 +759,7 @@ export default function WorkflowIntelligence({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[420px]">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[440px]">
                 <DarkMetric label="Stages" value={stages.length} />
                 <DarkMetric
                   label="Bottlenecks"
@@ -779,7 +779,7 @@ export default function WorkflowIntelligence({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6 xl:p-7">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -838,7 +838,7 @@ export default function WorkflowIntelligence({
           </div>
         </div>
 
-        <div className="border-t-[3px] border-orange-300 bg-[#FFF8EE] p-3 sm:p-4">
+        <div className="border-t-[3px] border-[#F97316] bg-[linear-gradient(180deg,#FFF8EF_0%,#FFFDF8_100%)] p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)_auto]">
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {VIEW_OPTIONS.map((option) => (
@@ -850,7 +850,7 @@ export default function WorkflowIntelligence({
                   className={`min-h-12 shrink-0 rounded-xl border-2 px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                     viewMode === option.id
                       ? "border-[#123865] bg-[#123865] text-white"
-                      : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                   }`}
                 >
                   {option.label}
@@ -868,7 +868,7 @@ export default function WorkflowIntelligence({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search stages, bottlenecks, owners or recovery work..."
                 aria-label="Search workflow intelligence"
-                className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
               />
 
               {search ? (
@@ -892,7 +892,7 @@ export default function WorkflowIntelligence({
                   ? "Refresh connected workflow intelligence"
                   : "No refresh handler is connected"
               }
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-xs font-black text-white transition hover:bg-[#E94F00] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500"
             >
               <RefreshCw
                 size={15}
@@ -908,7 +908,7 @@ export default function WorkflowIntelligence({
 
           <div className="mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1">
-              <span className="flex shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+              <span className="flex shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#234E78] bg-[#F2F7FF] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
                 <ListFilter size={12} />
                 Stage filter
               </span>
@@ -921,8 +921,8 @@ export default function WorkflowIntelligence({
                   aria-pressed={stageFilter === filter.id}
                   className={`shrink-0 rounded-lg border-2 px-3 py-2 text-[10px] font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                     stageFilter === filter.id
-                      ? "border-orange-500 bg-orange-500 text-white"
-                      : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                      ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                   }`}
                 >
                   {filter.label}
@@ -961,11 +961,21 @@ export default function WorkflowIntelligence({
         />
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8] p-4 shadow-[0_14px_36px_rgba(23,36,61,0.07)] sm:p-5">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#B84F0E]">Executive Workflow Wall</p>
+            <h2 className="mt-1 text-xl font-black text-[#10233F]">Live operating health</h2>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">Four primary indicators summarise the connected workflow portfolio before deeper inspection.</p>
+          </div>
+          <span className="w-fit rounded-lg border-2 border-[#F97316] bg-[#FFF4EA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#B84F0E]">{connectedOverviewCount}/4 connected</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {overviewMetrics.map((metric) => (
           <MetricCard key={metric.label} {...metric} />
         ))}
-      </div>
+        </div>
+      </section>
 
       {viewMode === "overview" ? (
         <OverviewView
@@ -1110,8 +1120,8 @@ export default function WorkflowIntelligence({
         </div>
       </CollapsibleSection>
 
-      <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+      <footer className="grid gap-3 lg:grid-cols-3">
+        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4 shadow-[0_10px_24px_rgba(23,36,61,0.06)]">
           <div className="flex items-start gap-3">
             <ShieldCheck
               className="mt-0.5 shrink-0 text-[#123865]"
@@ -1131,10 +1141,10 @@ export default function WorkflowIntelligence({
           </div>
         </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4 shadow-[0_10px_24px_rgba(23,36,61,0.06)]">
           <div className="flex items-start gap-3">
             <Workflow
-              className="mt-0.5 shrink-0 text-orange-700"
+              className="mt-0.5 shrink-0 text-[#B84F0E]"
               size={18}
             />
             <div>
@@ -1144,6 +1154,25 @@ export default function WorkflowIntelligence({
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
                 Stage inspection, bottleneck review and recovery actions only
                 appear when their real handlers are connected by the parent.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[1.35rem] border-[3px] border-emerald-400 bg-emerald-50 p-4 shadow-[0_10px_24px_rgba(23,36,61,0.06)]">
+          <div className="flex items-start gap-3">
+            <Database
+              className="mt-0.5 shrink-0 text-emerald-700"
+              size={18}
+            />
+            <div>
+              <p className="font-black text-[#10233F]">
+                Source accountability
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                Every stage, bottleneck, recovery item and automation metric
+                remains traceable to the parent-supplied workflow snapshot.
+                Missing evidence stays visibly unavailable.
               </p>
             </div>
           </div>
@@ -1163,7 +1192,7 @@ function OverviewView({
   onClear,
 }) {
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,36,61,0.06)]">
+    <section className="overflow-hidden rounded-[1.85rem] border-[3px] border-[#234E78] bg-[#FFFDF8] shadow-[0_18px_42px_rgba(23,36,61,0.09)]">
       <SectionHeader
         eyebrow="Student Journey"
         title="Workflow Stage Health"
@@ -1197,7 +1226,7 @@ function OverviewView({
                     ].map((heading) => (
                       <th
                         key={heading || "action"}
-                        className="border-b-2 border-slate-300 bg-[#F7F1E8] px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.09em] text-slate-600"
+                        className="border-b-2 border-[#C9D7E6] bg-[#F7F1E8] px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.09em] text-slate-600"
                       >
                         {heading}
                       </th>
@@ -1271,7 +1300,7 @@ function AnalyticsView({
   }, [stages]);
 
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,36,61,0.06)]">
+    <section className="overflow-hidden rounded-[1.85rem] border-[3px] border-[#234E78] bg-[#FFFDF8] shadow-[0_18px_42px_rgba(23,36,61,0.09)]">
       <SectionHeader
         eyebrow="Workflow Analytics"
         title="Operational Pattern Analysis"
@@ -1367,11 +1396,11 @@ function AnalyticsView({
               </InsightPanel>
             </div>
 
-            <div className="rounded-[1.35rem] border-[3px] border-orange-300 bg-orange-50 p-4">
+            <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4">
               <div className="flex items-start gap-3">
                 <Info
                   size={18}
-                  className="mt-0.5 shrink-0 text-orange-700"
+                  className="mt-0.5 shrink-0 text-[#B84F0E]"
                 />
                 <div>
                   <p className="font-black text-[#10233F]">
@@ -1397,44 +1426,44 @@ function StageTableRow({ stage, canInspect, onInspect }) {
 
   return (
     <tr className="group">
-      <td className="border-b border-slate-200 px-3 py-3">
+      <td className="border-b border-[#E1E8F0] px-3 py-3">
         <div className="min-w-[150px]">
           <p className="font-black text-[#10233F]">{stage.stage}</p>
           {stage.source ? <SourceBadge source={stage.source} /> : null}
         </div>
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3">
+      <td className="border-b border-[#E1E8F0] px-3 py-3">
         <strong className="text-sm text-[#10233F]">
           {formatPercent(stage.health)}
         </strong>
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-bold text-[#10233F]">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-bold text-[#10233F]">
         {formatCount(stage.active)}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-bold text-orange-800">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-bold text-[#B84F0E]">
         {formatCount(stage.delayed)}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-bold text-red-800">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-bold text-red-800">
         {formatCount(stage.blocked)}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-bold text-[#10233F]">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-bold text-[#10233F]">
         {formatHours(stage.avgAgeHours)}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 text-xs font-semibold text-slate-600">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 text-xs font-semibold text-slate-600">
         {stage.owner || "—"}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3">
+      <td className="border-b border-[#E1E8F0] px-3 py-3">
         <StageStateBadge state={state} status={stage.status} />
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 text-right">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 text-right">
         {canInspect ? (
           <ActionButton label="Inspect" onClick={onInspect} />
         ) : (
@@ -1452,7 +1481,7 @@ function StageMobileCard({ stage, canInspect, onInspect }) {
 
   return (
     <article
-      className={`rounded-[1.2rem] border-[3px] bg-white p-4 ${stateBorder(
+      className={`rounded-[1.2rem] border-[3px] bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(23,36,61,0.09)] ${stateBorder(
         state
       )}`}
     >
@@ -1491,7 +1520,7 @@ function BottleneckCard({ item, canInspect, onInspect }) {
 
   return (
     <article
-      className={`rounded-[1.2rem] border-[3px] bg-white p-4 ${outerBorder(
+      className={`rounded-[1.2rem] border-[3px] bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(23,36,61,0.09)] ${outerBorder(
         tone
       )}`}
     >
@@ -1536,7 +1565,7 @@ function RecoveryCard({ item, canOpen, onOpen }) {
 
   return (
     <article
-      className={`rounded-[1.2rem] border-[3px] bg-white p-4 ${outerBorder(
+      className={`rounded-[1.2rem] border-[3px] bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(23,36,61,0.09)] ${outerBorder(
         tone
       )}`}
     >
@@ -1602,7 +1631,7 @@ function MetricCard({
     <article
       className={`relative overflow-hidden rounded-[1.4rem] border-[3px] ${
         compact ? "p-4" : "p-4 sm:p-5"
-      } shadow-[0_10px_28px_rgba(23,36,61,0.055)] ${toneClass(
+      } shadow-[0_10px_28px_rgba(23,36,61,0.055)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(23,36,61,0.11)] ${toneClass(
         connected ? tone : "muted"
       )}`}
     >
@@ -1642,7 +1671,7 @@ function MetricCard({
         </span>
 
         {derived ? (
-          <span className="rounded-md border border-orange-300 bg-white px-2 py-0.5 text-[8px] font-black uppercase text-orange-800">
+          <span className="rounded-md border border-[#F97316] bg-white px-2 py-0.5 text-[8px] font-black uppercase text-[#B84F0E]">
             Calculated
           </span>
         ) : null}
@@ -1695,7 +1724,7 @@ function InsightPanel({ title, icon: Icon, tone, children }) {
 
 function StageInsight({ stage, primaryLabel, primaryValue }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-[#FFFDF8] p-4">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-black text-[#10233F]">{stage.stage}</p>
@@ -1725,7 +1754,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white sm:px-5">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white sm:px-5">
       <div className="min-w-0">
         <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
           {eyebrow}
@@ -1761,7 +1790,7 @@ function CollapsibleSection({
 }) {
   return (
     <section
-      className={`overflow-hidden rounded-[1.75rem] border-[3px] bg-[#FFF8EE] shadow-[0_12px_30px_rgba(23,36,61,0.055)] ${outerBorder(
+      className={`overflow-hidden rounded-[1.75rem] border-[3px] bg-[#FFF8EF] shadow-[0_12px_30px_rgba(23,36,61,0.055)] ${outerBorder(
         tone
       )}`}
     >
@@ -1769,7 +1798,7 @@ function CollapsibleSection({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-left text-white transition hover:bg-[#0F3158] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/60 sm:px-5"
+        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-left text-white transition hover:bg-[#0F3158] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/60 sm:px-5"
       >
         <div className="flex min-w-0 items-start gap-3">
           <span
@@ -1820,7 +1849,7 @@ function HeaderChip({ icon: Icon, label }) {
 
 function DarkMetric({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
       <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
         {label}
       </p>
@@ -1831,7 +1860,7 @@ function DarkMetric({ label, value }) {
 
 function StatusMeta({ icon: Icon, label }) {
   return (
-    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5">
+    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#C9D7E6] bg-white px-2.5 py-1.5">
       <Icon size={12} className="shrink-0 text-[#123865]" />
       <span>{label}</span>
     </span>
@@ -1840,7 +1869,7 @@ function StatusMeta({ icon: Icon, label }) {
 
 function ReadinessCard({ icon: Icon, label, value, detail }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-4">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.09em] text-slate-500">
@@ -1861,7 +1890,7 @@ function ReadinessCard({ icon: Icon, label, value, detail }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="min-w-0 rounded-lg border-2 border-slate-200 bg-slate-50 p-2.5">
+    <div className="min-w-0 rounded-lg border-2 border-[#E1E8F0] bg-[#F7FAFC] p-2.5">
       <p className="truncate text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
         {label}
       </p>
@@ -1887,10 +1916,10 @@ function StageStateBadge({ state, status }) {
     state === "healthy"
       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
       : state === "watch"
-        ? "border-orange-300 bg-orange-50 text-orange-800"
+        ? "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]"
         : state === "critical"
           ? "border-red-300 bg-red-50 text-red-800"
-          : "border-slate-300 bg-slate-50 text-slate-600";
+          : "border-[#C9D7E6] bg-[#F7FAFC] text-slate-600";
 
   return (
     <span
@@ -1903,7 +1932,7 @@ function StageStateBadge({ state, status }) {
 
 function SourceBadge({ source }) {
   return (
-    <span className="mt-1 inline-flex max-w-full truncate rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+    <span className="mt-1 inline-flex max-w-full truncate rounded-md border border-[#C9D7E6] bg-[#F7FAFC] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
       {source}
     </span>
   );
@@ -1955,7 +1984,7 @@ function InlineNotice({
           <button
             type="button"
             onClick={onAction}
-            className="shrink-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA]"
           >
             {actionLabel}
           </button>
@@ -1967,7 +1996,7 @@ function InlineNotice({
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F7FAFC] p-5 text-center">
       <Sparkles className="mx-auto text-orange-600" size={20} />
 
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
@@ -1980,7 +2009,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search & filters
         </button>
@@ -1991,7 +2020,7 @@ function EmptyState({ title, text, onClear }) {
 
 function SmallEmpty({ text }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F7FAFC] p-4 text-center">
       <p className="text-xs font-semibold leading-5 text-slate-600">{text}</p>
     </div>
   );
@@ -2000,19 +2029,19 @@ function SmallEmpty({ text }) {
 function toneClass(tone = "navy") {
   if (tone === "red") return "border-red-400 bg-red-50 text-red-800";
   if (tone === "orange")
-    return "border-orange-400 bg-orange-50 text-orange-800";
+    return "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]";
   if (tone === "green")
     return "border-emerald-400 bg-emerald-50 text-emerald-800";
   if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-800";
   if (tone === "muted")
-    return "border-slate-300 bg-slate-50 text-slate-500";
+    return "border-[#C9D7E6] bg-[#F7FAFC] text-slate-500";
 
-  return "border-[#234E78] bg-[#EEF4FA] text-[#123865]";
+  return "border-[#234E78] bg-[#F2F7FF] text-[#123865]";
 }
 
 function outerBorder(tone = "navy") {
   if (tone === "red") return "border-red-400";
-  if (tone === "orange") return "border-orange-400";
+  if (tone === "orange") return "border-[#F97316]";
   if (tone === "green") return "border-emerald-400";
   if (tone === "blue") return "border-blue-400";
 
@@ -2021,14 +2050,14 @@ function outerBorder(tone = "navy") {
 
 function stateBorder(state) {
   if (state === "critical") return "border-red-400";
-  if (state === "watch") return "border-orange-400";
+  if (state === "watch") return "border-[#F97316]";
   if (state === "healthy") return "border-emerald-400";
-  return "border-slate-300";
+  return "border-[#C9D7E6]";
 }
 
 function accentBar(tone = "navy") {
   if (tone === "red") return "bg-red-500";
-  if (tone === "orange") return "bg-orange-500";
+  if (tone === "orange") return "bg-[#FF5A0A]";
   if (tone === "green") return "bg-emerald-500";
   if (tone === "blue") return "bg-blue-500";
 
@@ -2037,7 +2066,7 @@ function accentBar(tone = "navy") {
 
 function toneIconClass(tone) {
   if (tone === "red") return "text-red-700";
-  if (tone === "orange") return "text-orange-700";
+  if (tone === "orange") return "text-[#B84F0E]";
   if (tone === "green") return "text-emerald-700";
   if (tone === "blue") return "text-blue-700";
   return "text-[#123865]";

@@ -1,4 +1,4 @@
-// ExecutiveCommandSystem V3 — Architecture Hardening Pass
+// ExecutiveCommandSystem PARTNER OS EXTREME V9 — Clean Stable AI Switching
 // Parent orchestrator only: loads executive scores, computes command snapshots,
 // routes into specialized Executive/Enterprise OS modules, and keeps developer
 // execution tools hidden from normal operations.
@@ -6,14 +6,15 @@
 // V3 changes:
 // - grouped command navigation instead of a 16-pill wall
 // - truthful module labels ("Open" instead of hardcoded "Live")
-// - stronger navy/orange Admin OS hierarchy and text contrast
+// - locked Partner OS navy/orange/cream hierarchy and text contrast
 // - removes "Success Stories" wording from executive KPI UI
 // - preserves all existing engines, lazy modules, verification logic and handlers
 // - does NOT merge/remove child engines yet; child audits happen separately
 // - Communication OS now receives real Admin CRM inquiries, appointments and follow-up reminders
 // - optional communication integrations remain explicit; missing telemetry is never fabricated
+// - no duplicate launcher architecture, fake metrics, or decorative gradient shells
 
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
@@ -722,6 +723,8 @@ function ExecutiveCommandSystem({
   const [error, setError] = useState("");
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
   const [activeView, setActiveView] = useState(() => getStoredExecutiveView());
+  const preservedScrollYRef = useRef(null);
+  const scrollRestoreFrameRef = useRef(null);
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
   const [showExecutiveSnapshot, setShowExecutiveSnapshot] = useState(true);
 
@@ -757,6 +760,53 @@ function ExecutiveCommandSystem({
 
   useEffect(() => {
     persistExecutiveView(activeView);
+  }, [activeView]);
+
+  useLayoutEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      preservedScrollYRef.current === null
+    ) {
+      return undefined;
+    }
+
+    const targetScrollY = preservedScrollYRef.current;
+
+    if (scrollRestoreFrameRef.current) {
+      window.cancelAnimationFrame(scrollRestoreFrameRef.current);
+    }
+
+    window.scrollTo({
+      top: targetScrollY,
+      left: window.scrollX,
+      behavior: "auto",
+    });
+
+    scrollRestoreFrameRef.current = window.requestAnimationFrame(() => {
+      window.scrollTo({
+        top: targetScrollY,
+        left: window.scrollX,
+        behavior: "auto",
+      });
+
+      scrollRestoreFrameRef.current = window.requestAnimationFrame(() => {
+        window.scrollTo({
+          top: targetScrollY,
+          left: window.scrollX,
+          behavior: "auto",
+        });
+
+        preservedScrollYRef.current = null;
+        scrollRestoreFrameRef.current = null;
+      });
+    });
+
+    return () => {
+      if (scrollRestoreFrameRef.current) {
+        window.cancelAnimationFrame(scrollRestoreFrameRef.current);
+        scrollRestoreFrameRef.current = null;
+      }
+    };
   }, [activeView]);
 
   const commandMetrics = useMemo(() => buildCommandMetrics(scores), [scores]);
@@ -1526,35 +1576,50 @@ function ExecutiveCommandSystem({
       return;
     }
 
-    setActiveView(nextView);
-  }, []);
+    if (nextView === activeView) {
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      preservedScrollYRef.current = window.scrollY;
+    }
+
+    startTransition(() => {
+      setActiveView(nextView);
+    });
+  }, [activeView]);
 
   return (
-    <div className="space-y-6 rounded-[2rem] bg-[#fff8ee] p-1 text-[#10233f] sm:p-2">
-      <div className="relative rounded-[2rem] border-[3px] border-orange-400 bg-[#FFF8EE] p-3 shadow-[0_20px_70px_rgba(15,35,63,0.08)] sm:p-4">
-        <div className="grid overflow-hidden rounded-[1.65rem] border-2 border-[#123865] xl:grid-cols-[1.25fr_0.75fr]">
-          <div className="flex min-h-[310px] flex-col bg-[#123865] p-6 text-white sm:p-7">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-300">
-                Executive Operations Center
-              </p>
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="flex min-w-0 flex-col justify-between gap-6 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                  Executive AI
+                </span>
+                <span className="rounded-full border border-[#FFB38A]/30 bg-[#FF5A0A]/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-[#FDBA74]">
+                  Command System
+                </span>
+              </div>
 
-              <h2 className="mt-2 max-w-3xl text-3xl font-black text-white">
-                Zaifan Executive Command System
+              <h2 className="mt-4 max-w-3xl break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
+                Zaifan Executive Command
               </h2>
 
-              <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/90">
-                One command layer for student movement, executive watchlists,
-                counselor workload, workflow integrity, automation and recovery.
+              <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
+                One operating layer for portfolio pressure, workflow integrity,
+                intervention priorities, automation and recovery readiness.
               </p>
             </div>
 
-            <div className="mt-auto flex flex-wrap justify-start gap-2 pt-8 lg:justify-end">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => void loadExecutiveScores()}
                 disabled={loadingScores}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-[0_8px_18px_rgba(0,0,0,0.08)] transition hover:-translate-y-0.5 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw size={14} className={loadingScores ? "animate-spin" : ""} />
                 {loadingScores ? "Reloading..." : "Reload Scores"}
@@ -1563,7 +1628,7 @@ function ExecutiveCommandSystem({
               <button
                 type="button"
                 onClick={() => setShowDeveloperTools((prev) => !prev)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-300/70 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/20"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/20"
               >
                 <Wrench size={14} />
                 {showDeveloperTools ? "Hide Developer Tools" : "Developer Tools"}
@@ -1571,30 +1636,26 @@ function ExecutiveCommandSystem({
             </div>
           </div>
 
-          <div className="border-t-2 border-orange-300 bg-orange-500 p-6 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
-              Command State
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-50">
+              Live Portfolio State
             </p>
+
             <p className="mt-3 text-4xl font-black text-white">
               {commandMetrics.total}
             </p>
             <p className="mt-1 text-sm font-black text-white">
-              students in executive portfolio
+              scored student records
             </p>
+
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <div className="rounded-2xl border border-white/25 bg-white/10 p-3">
-                <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">Critical</p>
-                <p className="mt-1 text-xl font-black text-white">{commandMetrics.critical}</p>
-              </div>
-              <div className="rounded-2xl border border-white/25 bg-white/10 p-3">
-                <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">Ready</p>
-                <p className="mt-1 text-xl font-black text-white">{commandMetrics.conversionReady}</p>
-              </div>
+              <ExecutiveHeroMetric label="Critical" value={commandMetrics.critical} />
+              <ExecutiveHeroMetric label="Ready" value={commandMetrics.conversionReady} />
             </div>
 
-            <div className="mt-3 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-                Data Freshness
+            <div className="mt-3 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.11em] text-orange-50">
+                Data freshness
               </p>
               <p className="mt-1 text-xs font-black text-white">
                 {lastLoadedAt
@@ -1610,77 +1671,89 @@ function ExecutiveCommandSystem({
           </div>
         </div>
 
-        <div className="mt-3 rounded-[1.5rem] border-2 border-orange-200 bg-[#FFFDF8] p-5 sm:p-6">
+        <div className="min-w-0 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:p-5">
+          {error ? (
+            <div className="rounded-[1.25rem] border-[3px] border-red-400 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              {error}
+            </div>
+          ) : null}
 
-        {error ? (
-          <div className="mt-5 rounded-[1.25rem] border-[3px] border-red-400 bg-red-50 p-4 text-sm font-semibold text-red-700">
-            {error}
-          </div>
-        ) : null}
-
-        {!loadingScores && !error && scores.length === 0 ? (
-          <div className="mt-5 rounded-[1.4rem] border-[3px] border-dashed border-slate-300 bg-white p-6 text-center">
-            <p className="font-black text-[#10233f]">No executive score records yet</p>
-            <p className="mx-auto mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-              Generate or load Student OS executive scores before using portfolio,
-              verification, automation, and recovery intelligence.
-            </p>
-          </div>
-        ) : null}
-
-        <section className="mt-6 overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(15,35,63,0.06)]">
-          <div className="flex flex-col gap-2 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-300">
-                Executive Signal Wall
-              </p>
-              <h3 className="mt-1 text-lg font-black text-white">
-                Portfolio pressure & readiness
-              </h3>
-              <p className="mt-1 text-xs font-semibold text-white/80">
-                Read-only executive metrics derived from the currently loaded score portfolio.
+          {!loadingScores && !error && scores.length === 0 ? (
+            <div className="rounded-[1.35rem] border-[3px] border-dashed border-slate-300 bg-white p-6 text-center">
+              <p className="font-black text-[#10233F]">No executive score records yet</p>
+              <p className="mx-auto mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+                Generate or load Student OS executive scores before using portfolio,
+                verification, automation and recovery intelligence.
               </p>
             </div>
-            <span className="w-fit rounded-xl border-2 border-white/25 bg-white/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-white">
-              {commandMetrics.total} scored records
-            </span>
-          </div>
+          ) : null}
 
-          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:p-5">
-            <SummaryCard label="Students Scored" value={summary?.total ?? commandMetrics.total} tone="navy" />
-            <SummaryCard label="Critical Risk" value={summary?.criticalRisk ?? summary?.critical ?? commandMetrics.critical} tone="red" />
-            <SummaryCard label="Executive Priority" value={commandMetrics.executivePriority} tone="orange" />
-            <SummaryCard label="Conversion Ready" value={summary?.conversionReady ?? commandMetrics.conversionReady} tone="green" />
-            <SummaryCard label="Visa/CAS Watch" value={commandMetrics.visaWatch} tone="blue" />
-            <SummaryCard label="Verified Outcomes" value={summary?.verifiedOutcomes ?? summary?.successStories ?? commandMetrics.verifiedOutcomes} tone="green" />
-            <SummaryCard label="Avg Risk" value={summary?.averageRisk ?? commandMetrics.averageRisk} tone="red" />
-            <SummaryCard label="Avg Opportunity" value={summary?.averageOpportunity ?? commandMetrics.averageOpportunity} tone="green" />
-            <SummaryCard label="Workflow Integrity" value={`${workflowIntegrity.overallIntegrity || 0}%`} tone={(workflowIntegrity.overallIntegrity || 0) >= 75 ? "green" : "orange"} />
-            <SummaryCard label="Production Ready" value={`${productionReadiness.readinessScore || 0}%`} tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)} />
-          </div>
-        </section>
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_10px_28px_rgba(15,35,63,0.07)]">
+            <div className="flex flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#FFB38A]">
+                  Executive Signal Wall
+                </p>
+                <h3 className="mt-1 text-lg font-black text-white">
+                  Four primary command signals
+                </h3>
+                <p className="mt-1 text-xs font-semibold text-slate-200">
+                  The remaining diagnostics stay inside the enterprise health wall below.
+                </p>
+              </div>
 
-        <CommandDisclosure
-          eyebrow="Executive Intelligence"
-          title="Unified Enterprise Health Wall"
-          description="Portfolio, workflow, system coverage and executive risk intelligence."
-          open={showExecutiveSnapshot}
-          onToggle={() => setShowExecutiveSnapshot((current) => !current)}
-          icon={Gauge}
-        >
-          <ExecutiveSnapshotV2
-            snapshot={executiveSnapshotV2}
-            setActiveView={changeActiveView}
-            verificationSnapshot={platformVerificationSnapshot}
-            workflowScanner={brokenWorkflowScanner}
-            workflowIntegrity={workflowIntegrity}
-            productionReadiness={productionReadiness}
-            executiveRecoveryActions={executiveRecoveryActions}
-          />
-        </CommandDisclosure>
+              <span className="w-fit rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+                Read-only evidence
+              </span>
+            </div>
 
+            <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 sm:p-5">
+              <SummaryCard
+                label="Students Scored"
+                value={summary?.total ?? commandMetrics.total}
+                tone="navy"
+              />
+              <SummaryCard
+                label="Critical Risk"
+                value={summary?.criticalRisk ?? summary?.critical ?? commandMetrics.critical}
+                tone="red"
+              />
+              <SummaryCard
+                label="Conversion Ready"
+                value={summary?.conversionReady ?? commandMetrics.conversionReady}
+                tone="green"
+              />
+              <SummaryCard
+                label="Production Ready"
+                value={`${productionReadiness.readinessScore || 0}%`}
+                tone={getGoLiveTone(
+                  productionReadiness.goLiveStatus,
+                  productionReadiness.readinessScore
+                )}
+              />
+            </div>
+          </section>
+
+          <CommandDisclosure
+            eyebrow="Executive Intelligence"
+            title="Unified Enterprise Health Wall"
+            description="Portfolio, workflow, system coverage and executive risk intelligence."
+            open={showExecutiveSnapshot}
+            onToggle={() => setShowExecutiveSnapshot((current) => !current)}
+            icon={Gauge}
+          >
+            <ExecutiveSnapshotV2
+              snapshot={executiveSnapshotV2}
+              setActiveView={changeActiveView}
+              verificationSnapshot={platformVerificationSnapshot}
+              workflowScanner={brokenWorkflowScanner}
+              workflowIntegrity={workflowIntegrity}
+              productionReadiness={productionReadiness}
+              executiveRecoveryActions={executiveRecoveryActions}
+            />
+          </CommandDisclosure>
         </div>
-      </div>
+      </section>
 
       <CommandTabs activeView={activeView} setActiveView={changeActiveView} />
 
@@ -1698,6 +1771,7 @@ function ExecutiveCommandSystem({
         />
       ) : null}
 
+      <div className="min-w-0 [overflow-anchor:none]">
       <Suspense fallback={<CommandModuleLoader label="Opening executive command module..." />}>
       {activeView === "founder-growth" ? (
         <FounderGrowthDashboard
@@ -2042,15 +2116,16 @@ function ExecutiveCommandSystem({
         <ExecutiveAutomationAnalytics adminProfile={adminProfile} />
       ) : null}
       </Suspense>
+      </div>
 
       {showDeveloperTools ? (
         <Suspense fallback={<CommandModuleLoader label="Loading developer tools..." />}>
-        <div className="space-y-6 rounded-[2rem] border-[3px] border-slate-300 bg-white p-5 shadow-sm">
+        <div className="min-w-0 space-y-6 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
               Advanced Developer Tools
             </p>
-            <h3 className="mt-2 text-xl font-black text-[#10233f]">
+            <h3 className="mt-2 text-xl font-black text-[#10233F]">
               Controlled Executive AI Tools
             </h3>
             <p className="mt-2 text-sm text-slate-500">
@@ -2105,7 +2180,7 @@ function ExecutiveSnapshotV2({
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-400 bg-[#FFF8EF] shadow-[0_16px_42px_rgba(15,35,63,0.08)]">
+      <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] shadow-[0_16px_42px_rgba(15,35,63,0.08)]">
         <div className="grid xl:grid-cols-[1.35fr_0.65fr]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -2159,7 +2234,7 @@ function ExecutiveSnapshotV2({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
               Executive Readiness
             </p>
@@ -2225,7 +2300,7 @@ function ExecutiveSnapshotV2({
       <section className="rounded-[1.7rem] border-[3px] border-[#123865] bg-white p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.17em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#B84F0E]">
               Student Journey Pulse
             </p>
             <h4 className="mt-1 text-xl font-black text-[#10233F]">
@@ -2247,7 +2322,7 @@ function ExecutiveSnapshotV2({
       <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#123865] bg-[#FFF8EF]">
         <div className="flex flex-col gap-3 border-b-[3px] border-[#123865] bg-[#123865] p-4 text-white sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.17em] text-orange-300">
+            <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#FFB38A]">
               System Coverage
             </p>
             <h4 className="mt-1 text-xl font-black text-white">
@@ -2309,25 +2384,13 @@ function ExecutiveSnapshotV2({
   );
 }
 
-function ExecutiveHeroMetric({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white/80">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
-}
 
 function ExecutiveSummaryMetric({ label, value, detail, tone = "neutral" }) {
   const toneClass =
     tone === "risk"
       ? "border-red-400 bg-red-50"
       : tone === "action"
-        ? "border-orange-400 bg-orange-50"
+        ? "border-[#FF5A0A] bg-[#FFF4E8]"
         : tone === "success"
           ? "border-emerald-400 bg-emerald-50"
           : tone === "info"
@@ -2356,7 +2419,7 @@ function ExecutiveJourneyCard({ label, value, detail, tone = "default" }) {
   const toneClass = risk
     ? "border-red-300 bg-red-50"
     : action
-      ? "border-orange-300 bg-orange-50"
+      ? "border-[#FFB38A] bg-[#FFF4E8]"
       : info
         ? "border-blue-300 bg-blue-50"
         : success
@@ -2379,7 +2442,7 @@ function ExecutiveJourneyCard({ label, value, detail, tone = "default" }) {
 function ExecutiveSystemCard({ label, value, detail, tone = "default" }) {
   const needsAttention = tone === "red" || tone === "orange" || tone === "gold" || tone === "yellow";
   const toneClass = needsAttention
-    ? "border-orange-300 bg-orange-50"
+    ? "border-[#FFB38A] bg-[#FFF4E8]"
     : tone === "blue"
       ? "border-blue-300 bg-blue-50"
       : "border-[#C9D7E6] bg-white";
@@ -2410,7 +2473,7 @@ function ExecutiveRiskCard({ label, value, detail, tone = "default" }) {
   const critical = tone === "red";
   const toneClass = critical
     ? "border-red-300 bg-red-50"
-    : "border-orange-300 bg-orange-50";
+    : "border-[#FFB38A] bg-[#FFF4E8]";
 
   return (
     <div className={`rounded-[1.25rem] border-[3px] p-4 ${toneClass}`}>
@@ -2429,77 +2492,203 @@ function ExecutiveRiskCard({ label, value, detail, tone = "default" }) {
   );
 }
 
+
 function ExecutiveOperationsCenter({ operations, totalStudents = 0 }) {
   const stageRows = [
-    ["Not Started", operations.stages.notStarted, "Students with no active application movement."],
-    ["Started", operations.stages.started, "Application started or draft stage."],
-    ["Applied", operations.stages.applied, "Submitted or under review applications."],
+    ["Not Started", operations.stages.notStarted, "No active application movement."],
+    ["Started", operations.stages.started, "Application started or draft."],
+    ["Applied", operations.stages.applied, "Submitted or under review."],
     ["Offer", operations.stages.offer, "Offer received or accepted."],
     ["CAS", operations.stages.cas, "CAS pending or issued."],
-    ["Visa", operations.stages.visa, "Visa pending or recovery watch."],
-    ["Approved", operations.stages.approved, "Visa approved or enrolled students."],
+    ["Visa", operations.stages.visa, "Visa or recovery watch."],
+    ["Approved", operations.stages.approved, "Visa approved or enrolled."],
   ];
 
+  const watchPressure =
+    operations.watchlist.criticalRisk.length +
+    operations.watchlist.casDelays.length +
+    operations.watchlist.visaDelays.length +
+    operations.watchlist.documentWeakness.length +
+    operations.watchlist.taskProblems.length +
+    operations.watchlist.universityGaps.length;
+
+  const actionPressure =
+    operations.today.pendingApprovals +
+    operations.today.overdueTasks +
+    operations.today.documentFollowups +
+    operations.today.visaFollowups +
+    operations.today.universityFollowups +
+    operations.today.communicationFollowups;
+
   return (
-    <div className="space-y-6">
-      <div className="rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
-          CEO / Counselor Command Screen
-        </p>
-        <h3 className="mt-2 text-2xl font-black text-[#10233f]">
-          Executive Operations Center
-        </h3>
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
-          This screen turns Executive AI scores into a day-to-day operating map:
-          where students are, what is blocked, what needs action today, and where
-          revenue or visa movement may be at risk.
-        </p>
-      </div>
+    <section className="min-w-0 space-y-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_16px_44px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                <Activity size={12} />
+                Core Operations
+              </span>
+              <span className="inline-flex items-center rounded-full border-2 border-orange-300/40 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-100">
+                CEO / Counselor Command
+              </span>
+            </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
-        {stageRows.map(([label, value, detail]) => (
-          <JourneyStageCard key={label} label={label} value={value} total={totalStudents} detail={detail} />
-        ))}
-      </div>
+            <h3 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
+              Executive Operations Center
+            </h3>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
-          <SectionHeader
-            eyebrow="Executive Watchlist"
-            title="Students that need leadership attention"
-            description="Risk, CAS, visa, document, task, university, and stalled journey pressure."
-          />
+            <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-slate-100">
+              Convert Executive AI evidence into a practical operating map:
+              journey position, blocked movement, leadership pressure and the
+              actions counselors should clear first.
+            </p>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <WatchMetric label="Critical Risk" value={operations.watchlist.criticalRisk.length} tone="red" />
-            <WatchMetric label="CAS Delays" value={operations.watchlist.casDelays.length} tone="orange" />
-            <WatchMetric label="Visa Delays" value={operations.watchlist.visaDelays.length} tone="red" />
-            <WatchMetric label="Weak Documents" value={operations.watchlist.documentWeakness.length} tone="yellow" />
-            <WatchMetric label="Task Problems" value={operations.watchlist.taskProblems.length} tone="orange" />
-            <WatchMetric label="University Gaps" value={operations.watchlist.universityGaps.length} tone="blue" />
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
+              <DarkCommandMetric label="Students" value={totalStudents} />
+              <DarkCommandMetric label="Watch Pressure" value={watchPressure} />
+              <DarkCommandMetric label="Action Pressure" value={actionPressure} />
+            </div>
           </div>
 
-          <div className="mt-5 space-y-3">
-            {operations.topWatchlist.length ? (
-              operations.topWatchlist.map((score, index) => (
-                <WatchStudentRow key={`${score.student_id || score.id || index}-${index}`} score={score} />
-              ))
-            ) : (
-              <EmptyState text="No urgent watchlist students detected." />
-            )}
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Live Operating Position
+            </p>
+
+            <p className="mt-3 text-4xl font-black text-white">
+              {operations.stages.approved}
+            </p>
+            <p className="mt-1 text-sm font-black text-white">
+              approved or enrolled students
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeCommandMetric
+                label="Conversion Ready"
+                value={operations.revenue.conversionReady}
+              />
+              <OrangeCommandMetric
+                label="Visa Ready Soon"
+                value={operations.revenue.visaReadySoon}
+              />
+            </div>
+
+            <div className="mt-3 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Command Rule
+              </p>
+              <p className="mt-1 text-xs font-black leading-5 text-white">
+                Review pressure here; perform actions inside the owning Student,
+                Task, Visa or Communication workspace.
+              </p>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div className="space-y-6">
+      <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+        <div className="flex min-w-0 flex-col gap-2 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Student Journey Distribution
+            </p>
+            <h4 className="mt-1 text-xl font-black text-white">
+              Current portfolio movement
+            </h4>
+          </div>
+
+          <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+            {totalStudents} scored records
+          </span>
+        </div>
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 md:grid-cols-2 xl:grid-cols-7">
+          {stageRows.map(([label, value, detail], index) => (
+            <JourneyStageCard
+              key={label}
+              label={label}
+              value={value}
+              total={totalStudents}
+              detail={detail}
+              index={index}
+            />
+          ))}
+        </div>
+      </section>
+
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(20rem,0.88fr)]">
+        <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+          <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white">
+            <SectionHeader
+              inverse
+              eyebrow="Executive Watchlist"
+              title="Students needing leadership attention"
+              description="Risk, CAS, visa, document, task, university and stalled-journey pressure."
+            />
+          </div>
+
+          <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
+            <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <WatchMetric
+                label="Critical Risk"
+                value={operations.watchlist.criticalRisk.length}
+                tone="red"
+              />
+              <WatchMetric
+                label="CAS Delays"
+                value={operations.watchlist.casDelays.length}
+                tone="orange"
+              />
+              <WatchMetric
+                label="Visa Delays"
+                value={operations.watchlist.visaDelays.length}
+                tone="red"
+              />
+              <WatchMetric
+                label="Weak Documents"
+                value={operations.watchlist.documentWeakness.length}
+                tone="yellow"
+              />
+              <WatchMetric
+                label="Task Problems"
+                value={operations.watchlist.taskProblems.length}
+                tone="orange"
+              />
+              <WatchMetric
+                label="University Gaps"
+                value={operations.watchlist.universityGaps.length}
+                tone="blue"
+              />
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {operations.topWatchlist.length ? (
+                operations.topWatchlist.map((score, index) => (
+                  <WatchStudentRow
+                    key={`${score.student_id || score.id || index}-${index}`}
+                    score={score}
+                  />
+                ))
+              ) : (
+                <EmptyState text="No urgent watchlist students detected." />
+              )}
+            </div>
+          </div>
+        </section>
+
+        <div className="min-w-0 space-y-5">
           <TodayActionsPanel today={operations.today} />
           <RevenueCenterPanel revenue={operations.revenue} />
         </div>
       </div>
 
       <OperationsHealthPanel health={operations.health} />
-    </div>
+    </section>
   );
 }
+
 
 function ExecutiveVerificationReadinessPanel({
   productionReadiness = {},
@@ -2510,83 +2699,180 @@ function ExecutiveVerificationReadinessPanel({
 }) {
   const blockers = productionReadiness.launchBlockers || [];
   const criticalIssues = productionReadiness.criticalIssues || [];
-  const topBrokenWorkflows = workflowScanner.brokenWorkflows?.slice(0, 8) || [];
+  const topBrokenWorkflows =
+    workflowScanner.brokenWorkflows?.slice(0, 8) || [];
+
   const recoveryActions = [
     ...(executiveRecoveryActions.immediateActions || []),
     ...(executiveRecoveryActions.executiveActions || []),
     ...(executiveRecoveryActions.counselorActions || []),
   ].slice(0, 10);
 
+  const readinessScore = productionReadiness.readinessScore || 0;
+  const integrityScore = workflowIntegrity.overallIntegrity || 0;
+  const brokenCount = workflowScanner.totalBrokenWorkflows || 0;
+  const recoveryCount = verificationSnapshot.recoveryQueue?.length || 0;
+
   return (
-    <div className="space-y-6">
-      <div className="rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
-          Platform Verification V4
-        </p>
-        <h3 className="mt-2 text-2xl font-black text-[#10233f]">
-          Workflow Integrity & Production Readiness
-        </h3>
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
-          Final launch-readiness layer across broken workflows, recovery actions,
-          stage integrity, platform health, and executive blockers.
-        </p>
+    <section className="min-w-0 space-y-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_16px_44px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                <ShieldCheck size={12} />
+                Platform Verification V4
+              </span>
+              <span className="inline-flex items-center rounded-full border-2 border-orange-300/40 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-100">
+                Read-only command evidence
+              </span>
+            </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <SummaryCard
-            label="Readiness Score"
-            value={`${productionReadiness.readinessScore || 0}%`}
-            tone={(productionReadiness.readinessScore || 0) >= 75 ? "green" : "red"}
-          />
-          <SummaryCard
-            label="Go Live Status"
-            value={formatLabel(productionReadiness.goLiveStatus || "not_ready")}
-            tone={getGoLiveTone(productionReadiness.goLiveStatus, productionReadiness.readinessScore)}
-          />
-          <SummaryCard
-            label="Workflow Integrity"
-            value={`${workflowIntegrity.overallIntegrity || 0}%`}
-            tone={(workflowIntegrity.overallIntegrity || 0) >= 75 ? "green" : "orange"}
-          />
-          <SummaryCard
-            label="Broken Workflows"
-            value={workflowScanner.totalBrokenWorkflows || 0}
-            tone={(workflowScanner.totalBrokenWorkflows || 0) > 0 ? "red" : "green"}
-          />
-          <SummaryCard
-            label="Recovery Queue"
-            value={verificationSnapshot.recoveryQueue?.length || 0}
-            tone={(verificationSnapshot.recoveryQueue?.length || 0) > 0 ? "gold" : "green"}
-          />
-        </div>
-      </div>
+            <h3 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
+              Workflow Integrity & Production Readiness
+            </h3>
 
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="space-y-6">
-          <div className="rounded-[1.75rem] border-[3px] border-slate-300 bg-white p-5">
-            <SectionHeader
-              eyebrow="Integrity Score"
-              title="Workflow integrity breakdown"
-              description="Weighted score across inquiry, application, visa, payment, portal, and enterprise systems."
-            />
+            <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-slate-100">
+              Inspect broken workflows, recovery pressure, stage integrity,
+              platform health and launch blockers from one governed verification
+              surface.
+            </p>
 
-            <div className="mt-5 grid gap-3">
-              <HealthProgress label="Inquiry" value={workflowIntegrity.inquiryIntegrity || 0} />
-              <HealthProgress label="Application" value={workflowIntegrity.applicationIntegrity || 0} />
-              <HealthProgress label="Visa" value={workflowIntegrity.visaIntegrity || 0} />
-              <HealthProgress label="Payment" value={workflowIntegrity.paymentIntegrity || 0} />
-              <HealthProgress label="Portal" value={workflowIntegrity.portalIntegrity || 0} />
-              <HealthProgress label="Enterprise" value={workflowIntegrity.enterpriseIntegrity || 0} />
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
+              <DarkCommandMetric
+                label="Integrity"
+                value={`${integrityScore}%`}
+              />
+              <DarkCommandMetric
+                label="Broken Workflows"
+                value={brokenCount}
+              />
+              <DarkCommandMetric
+                label="Recovery Queue"
+                value={recoveryCount}
+              />
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
-            <SectionHeader
-              eyebrow="Launch Blockers"
-              title="Issues blocking clean launch"
-              description="Critical and high readiness blockers produced by the production readiness report."
-            />
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Go-Live Command Signal
+            </p>
 
-            <div className="mt-4 space-y-3">
+            <p className="mt-3 text-5xl font-black text-white">
+              {readinessScore}%
+            </p>
+
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+              {formatLabel(
+                productionReadiness.goLiveStatus || "not_ready"
+              )}
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeCommandMetric label="Blockers" value={blockers.length} />
+              <OrangeCommandMetric
+                label="Critical Issues"
+                value={criticalIssues.length}
+              />
+            </div>
+
+            <div className="mt-3 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Governance
+              </p>
+              <p className="mt-1 text-xs font-black leading-5 text-white">
+                Verification signals support launch decisions; they do not
+                execute recovery actions automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 md:grid-cols-2 sm:p-5 xl:grid-cols-5">
+          <SummaryCard
+            label="Readiness Score"
+            value={`${readinessScore}%`}
+            tone={readinessScore >= 75 ? "green" : "red"}
+          />
+          <SummaryCard
+            label="Go Live Status"
+            value={formatLabel(
+              productionReadiness.goLiveStatus || "not_ready"
+            )}
+            tone={getGoLiveTone(
+              productionReadiness.goLiveStatus,
+              readinessScore
+            )}
+          />
+          <SummaryCard
+            label="Workflow Integrity"
+            value={`${integrityScore}%`}
+            tone={integrityScore >= 75 ? "green" : "orange"}
+          />
+          <SummaryCard
+            label="Broken Workflows"
+            value={brokenCount}
+            tone={brokenCount > 0 ? "red" : "green"}
+          />
+          <SummaryCard
+            label="Recovery Queue"
+            value={recoveryCount}
+            tone={recoveryCount > 0 ? "gold" : "green"}
+          />
+        </div>
+      </section>
+
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1.1fr)]">
+        <div className="min-w-0 space-y-5">
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+            <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white">
+              <SectionHeader
+                inverse
+                eyebrow="Integrity Score"
+                title="Workflow integrity breakdown"
+                description="Weighted score across inquiry, application, visa, payment, portal and enterprise systems."
+              />
+            </div>
+
+            <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:p-5">
+              <HealthProgress
+                label="Inquiry"
+                value={workflowIntegrity.inquiryIntegrity || 0}
+              />
+              <HealthProgress
+                label="Application"
+                value={workflowIntegrity.applicationIntegrity || 0}
+              />
+              <HealthProgress
+                label="Visa"
+                value={workflowIntegrity.visaIntegrity || 0}
+              />
+              <HealthProgress
+                label="Payment"
+                value={workflowIntegrity.paymentIntegrity || 0}
+              />
+              <HealthProgress
+                label="Portal"
+                value={workflowIntegrity.portalIntegrity || 0}
+              />
+              <HealthProgress
+                label="Enterprise"
+                value={workflowIntegrity.enterpriseIntegrity || 0}
+              />
+            </div>
+          </section>
+
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-red-400 bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+            <div className="border-b-[3px] border-red-400 bg-red-50 px-5 py-4">
+              <SectionHeader
+                eyebrow="Launch Blockers"
+                title="Issues blocking clean launch"
+                description="Critical and high-readiness blockers produced by the production-readiness report."
+              />
+            </div>
+
+            <div className="space-y-3 bg-[#FFF8EF] p-4 sm:p-5">
               {blockers.length ? (
                 blockers.map((blocker, index) => (
                   <ReadinessIssueRow
@@ -2600,56 +2886,89 @@ function ExecutiveVerificationReadinessPanel({
                 <EmptyState text="No launch blockers detected by the readiness report." />
               )}
             </div>
-          </div>
+          </section>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50 p-5">
-            <SectionHeader
-              eyebrow="Broken Workflow Scanner"
-              title="Detected workflow breaks"
-              description="Missing transitions, orphan records, stalled students, portal/payment gaps, and counselor backlog."
-            />
-
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-              <WatchMetric label="Critical" value={workflowScanner.severityBreakdown?.critical || 0} tone="red" />
-              <WatchMetric label="High" value={workflowScanner.severityBreakdown?.high || 0} tone="orange" />
-              <WatchMetric label="Stalled" value={workflowScanner.stalledStudents?.length || 0} tone="yellow" />
-              <WatchMetric label="Missing Transitions" value={workflowScanner.missingTransitions?.length || 0} tone="blue" />
-              <WatchMetric label="Orphan Records" value={workflowScanner.orphanRecords?.length || 0} tone="orange" />
-              <WatchMetric label="Critical Failures" value={workflowScanner.criticalFailures?.length || 0} tone="red" />
+        <div className="min-w-0 space-y-5">
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+            <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white">
+              <SectionHeader
+                inverse
+                eyebrow="Broken Workflow Scanner"
+                title="Detected workflow breaks"
+                description="Missing transitions, orphan records, stalled students, portal/payment gaps and counselor backlog."
+              />
             </div>
 
-            <div className="mt-5 space-y-3">
-              {topBrokenWorkflows.length ? (
-                topBrokenWorkflows.map((issue) => (
-                  <ReadinessIssueRow
-                    key={issue.id}
-                    title={issue.title}
-                    detail={`${issue.student_name} • ${issue.description}`}
-                    severity={issue.severity}
-                  />
-                ))
-              ) : (
-                <EmptyState text="No broken workflows detected." />
-              )}
+            <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
+              <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-6">
+                <WatchMetric
+                  label="Critical"
+                  value={workflowScanner.severityBreakdown?.critical || 0}
+                  tone="red"
+                />
+                <WatchMetric
+                  label="High"
+                  value={workflowScanner.severityBreakdown?.high || 0}
+                  tone="orange"
+                />
+                <WatchMetric
+                  label="Stalled"
+                  value={workflowScanner.stalledStudents?.length || 0}
+                  tone="yellow"
+                />
+                <WatchMetric
+                  label="Missing Transitions"
+                  value={workflowScanner.missingTransitions?.length || 0}
+                  tone="blue"
+                />
+                <WatchMetric
+                  label="Orphan Records"
+                  value={workflowScanner.orphanRecords?.length || 0}
+                  tone="orange"
+                />
+                <WatchMetric
+                  label="Critical Failures"
+                  value={workflowScanner.criticalFailures?.length || 0}
+                  tone="red"
+                />
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {topBrokenWorkflows.length ? (
+                  topBrokenWorkflows.map((issue) => (
+                    <ReadinessIssueRow
+                      key={issue.id}
+                      title={issue.title}
+                      detail={`${issue.student_name} • ${issue.description}`}
+                      severity={issue.severity}
+                    />
+                  ))
+                ) : (
+                  <EmptyState text="No broken workflows detected." />
+                )}
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50/70 p-5">
-            <SectionHeader
-              eyebrow="Executive Recovery"
-              title="Next recovery actions"
-              description="Highest priority recovery queue items from the verification engine."
-            />
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+            <div className="border-b-[3px] border-[#FF5A0A] bg-[#FFF4E8] px-5 py-4">
+              <SectionHeader
+                eyebrow="Executive Recovery"
+                title="Next recovery actions"
+                description="Highest-priority recovery queue items from the verification engine."
+              />
+            </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="space-y-3 bg-[#FFF8EF] p-4 sm:p-5">
               {recoveryActions.length ? (
                 recoveryActions.map((action, index) => (
                   <ReadinessIssueRow
                     key={`${action.id || action.title}-${index}`}
                     title={action.title}
-                    detail={`${action.student_name || "Unknown Student"} • ${action.description}`}
+                    detail={`${action.student_name || "Unknown Student"} • ${
+                      action.description
+                    }`}
                     severity={action.priority}
                   />
                 ))
@@ -2657,17 +2976,19 @@ function ExecutiveVerificationReadinessPanel({
                 <EmptyState text="No recovery actions required." />
               )}
             </div>
-          </div>
+          </section>
 
           {criticalIssues.length ? (
-            <div className="rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
-              <SectionHeader
-                eyebrow="Critical Issues"
-                title="Executive intervention required"
-                description="Critical failures that should be resolved before full launch."
-              />
+            <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-red-400 bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+              <div className="border-b-[3px] border-red-400 bg-red-50 px-5 py-4">
+                <SectionHeader
+                  eyebrow="Critical Issues"
+                  title="Executive intervention required"
+                  description="Critical failures that should be resolved before full launch."
+                />
+              </div>
 
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3 bg-[#FFF8EF] p-4 sm:p-5">
                 {criticalIssues.slice(0, 6).map((issue) => (
                   <ReadinessIssueRow
                     key={issue.id}
@@ -2677,15 +2998,20 @@ function ExecutiveVerificationReadinessPanel({
                   />
                 ))}
               </div>
-            </div>
+            </section>
           ) : null}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-function ReadinessIssueRow({ title, detail, severity = "medium" }) {
+
+function ReadinessIssueRow({
+  title,
+  detail,
+  severity = "medium",
+}) {
   const tone =
     severity === "critical" || severity === "urgent"
       ? "red"
@@ -2696,44 +3022,89 @@ function ReadinessIssueRow({ title, detail, severity = "medium" }) {
           : "blue";
 
   return (
-    <div className={`rounded-2xl border p-4 ${getToneStyle(tone)}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-black text-[#10233f]">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+    <article
+      className={`min-w-0 rounded-[1.2rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(
+        tone
+      )}`}
+    >
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="break-words font-black text-[#10233F]">
+            {title}
+          </p>
+          <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
+            {detail}
+          </p>
         </div>
-        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+
+        <span className="w-fit shrink-0 rounded-full border-2 border-white bg-white px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600 shadow-sm">
           {formatLabel(severity)}
         </span>
       </div>
-    </div>
+    </article>
   );
 }
 
 function TodayActionsPanel({ today }) {
   const items = [
-    ["Pending Approvals", today.pendingApprovals, "Executive/high-risk actions likely requiring approval."],
-    ["Pending Tasks", today.pendingTasks, "Open task load across scored students."],
-    ["Overdue Tasks", today.overdueTasks, "Tasks that need counselor cleanup."],
-    ["Document Follow-ups", today.documentFollowups, "Students with weak document readiness."],
-    ["Visa Follow-ups", today.visaFollowups, "Students in CAS/visa watch zones."],
-    ["University Follow-ups", today.universityFollowups, "Missing or unbalanced university planning."],
-    ["Communication Follow-ups", today.communicationFollowups, "Stale or high-opportunity students to contact."],
+    [
+      "Pending Approvals",
+      today.pendingApprovals,
+      "Executive or high-risk actions likely requiring approval.",
+    ],
+    [
+      "Pending Tasks",
+      today.pendingTasks,
+      "Open task load across scored students.",
+    ],
+    [
+      "Overdue Tasks",
+      today.overdueTasks,
+      "Tasks requiring counselor cleanup.",
+    ],
+    [
+      "Document Follow-ups",
+      today.documentFollowups,
+      "Students with weak document readiness.",
+    ],
+    [
+      "Visa Follow-ups",
+      today.visaFollowups,
+      "Students inside CAS or visa watch zones.",
+    ],
+    [
+      "University Follow-ups",
+      today.universityFollowups,
+      "Missing or unbalanced university planning.",
+    ],
+    [
+      "Communication Follow-ups",
+      today.communicationFollowups,
+      "Stale or high-opportunity students to contact.",
+    ],
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50/70 p-5">
-      <SectionHeader
-        eyebrow="Today's Actions"
-        title="Counselor workload map"
-        description="Fast view of what the team should clear first."
-      />
-      <div className="mt-4 grid gap-3">
+    <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+      <div className="border-b-[3px] border-[#FF5A0A] bg-[#FFF4E8] px-5 py-4">
+        <SectionHeader
+          eyebrow="Today's Actions"
+          title="Counselor workload map"
+          description="A focused view of what the team should clear first."
+        />
+      </div>
+
+      <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:p-5">
         {items.map(([label, value, detail]) => (
-          <ActionRow key={label} label={label} value={value} detail={detail} />
+          <ActionRow
+            key={label}
+            label={label}
+            value={value}
+            detail={detail}
+          />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -2742,23 +3113,26 @@ function RevenueCenterPanel({ revenue }) {
     ["Conversion Ready", revenue.conversionReady],
     ["Offer Accepted", revenue.offerAccepted],
     ["Visa Ready Soon", revenue.visaReadySoon],
-    ["Success Students", revenue.successStudents],
+    ["Successful Outcomes", revenue.successStudents],
     ["Payment Risk Watch", revenue.paymentRiskStudents],
   ];
 
   return (
-    <div className="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 p-5">
-      <SectionHeader
-        eyebrow="Revenue Center"
-        title="Revenue and conversion pressure"
-        description="A practical proxy until direct invoice revenue is added to Executive scores."
-      />
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+    <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-emerald-400 bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+      <div className="border-b-[3px] border-emerald-400 bg-emerald-50 px-5 py-4">
+        <SectionHeader
+          eyebrow="Revenue Center"
+          title="Revenue and conversion pressure"
+          description="A practical operating proxy until direct invoice revenue is included in Executive scores."
+        />
+      </div>
+
+      <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5">
         {items.map(([label, value]) => (
           <SmallMetric key={label} label={label} value={value} />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -2773,19 +3147,22 @@ function OperationsHealthPanel({ health }) {
   ];
 
   return (
-    <div className="rounded-[1.75rem] border-[3px] border-slate-300 bg-white p-5">
-      <SectionHeader
-        eyebrow="Operations Health"
-        title="Student OS module readiness"
-        description="Percent of scored students with healthy data or clear automation pressure in each operating system."
-      />
+    <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+      <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white">
+        <SectionHeader
+          inverse
+          eyebrow="Operations Health"
+          title="Student OS module readiness"
+          description="Percentage of scored students with healthy data or clear automation pressure in each operating system."
+        />
+      </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 md:grid-cols-2 sm:p-5 xl:grid-cols-3">
         {rows.map(([label, value]) => (
           <HealthProgress key={label} label={label} value={value} />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -2799,24 +3176,26 @@ function CommandDisclosure({
   children,
 }) {
   return (
-    <section className="mt-6 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_12px_34px_rgba(15,35,63,0.06)]">
+    <section className="mt-5 min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0F3158]"
+        className="flex min-w-0 w-full items-center justify-between gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0F3158] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-100"
       >
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300/60 bg-white/10 text-white">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-orange-200">
             <Icon size={18} />
           </span>
 
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-300">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
               {eyebrow}
             </p>
-            <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
-            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-white/80">
+            <h3 className="mt-1 break-words text-lg font-black text-white">
+              {title}
+            </h3>
+            <p className="mt-1 max-w-4xl break-words text-xs font-semibold leading-5 text-slate-200">
               {description}
             </p>
           </div>
@@ -2827,8 +3206,51 @@ function CommandDisclosure({
         </span>
       </button>
 
-      {open ? <div className="p-4 sm:p-5">{children}</div> : null}
+      {open ? (
+        <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
+          {children}
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function ExecutiveHeroMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value ?? 0}
+      </p>
+    </div>
+  );
+}
+
+function DarkCommandMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value ?? 0}
+      </p>
+    </div>
+  );
+}
+
+function OrangeCommandMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value ?? 0}
+      </p>
+    </div>
   );
 }
 
@@ -2838,7 +3260,6 @@ function CommandTabs({ activeView, setActiveView }) {
       label: "Core Command",
       eyebrow: "Live Operations",
       icon: Gauge,
-      tone: "navy",
       tabs: [
         { key: "operations", label: "Operations", icon: Activity },
         { key: "intelligence", label: "Intelligence", icon: BrainCircuit },
@@ -2850,7 +3271,6 @@ function CommandTabs({ activeView, setActiveView }) {
       label: "Execution",
       eyebrow: "Controlled Actions",
       icon: Zap,
-      tone: "orange",
       tabs: [
         { key: "actions", label: "Actions", icon: Target },
         { key: "bulk-operations", label: "Bulk Ops", icon: Boxes },
@@ -2862,7 +3282,6 @@ function CommandTabs({ activeView, setActiveView }) {
       label: "Executive",
       eyebrow: "Leadership Intelligence",
       icon: BriefcaseBusiness,
-      tone: "navy",
       tabs: [
         { key: "alerts", label: "Alerts", icon: BellRing },
         { key: "portfolio", label: "Portfolio", icon: ClipboardList },
@@ -2873,27 +3292,35 @@ function CommandTabs({ activeView, setActiveView }) {
   ];
 
   const allTabs = groups.flatMap((group) => group.tabs);
-  const activeTab =
-    allTabs.find((tab) => tab.key === activeView) || allTabs[0];
+  const activeTab = allTabs.find((tab) => tab.key === activeView) || allTabs[0];
   const activeGroup =
     groups.find((group) => group.tabs.some((tab) => tab.key === activeView)) || groups[0];
+  const ActiveIcon = activeTab.icon;
 
   return (
-    <section className="sticky top-3 z-20 overflow-hidden rounded-[1.8rem] border-[3px] border-[#123865] bg-[#FFF8EE] shadow-[0_14px_38px_rgba(15,35,63,0.12)]">
-      <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white lg:hidden">
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.15em] text-orange-300">
-            {activeGroup.label}
-          </p>
-          <p className="mt-0.5 truncate text-sm font-black text-white">
-            {activeTab.label}
-          </p>
+    <nav
+      aria-label="Executive command navigation"
+      className="sticky top-3 z-20 min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_16px_42px_rgba(18,56,101,0.12)]"
+    >
+      <div className="flex items-center justify-between gap-3 bg-[#123865] px-4 py-3 text-white sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-[#FDBA74]">
+            <ActiveIcon size={16} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[#FFB38A]">
+              {activeGroup.label}
+            </p>
+            <p className="mt-0.5 truncate text-sm font-black text-white">
+              {activeTab.label}
+            </p>
+          </div>
         </div>
 
         <select
           value={activeView}
           onChange={(event) => setActiveView(event.target.value)}
-          className="max-w-[205px] rounded-xl border-2 border-white/25 bg-white px-3 py-2 text-xs font-black text-[#10233F] outline-none focus:border-orange-400"
+          className="max-w-[190px] rounded-xl border-2 border-white/25 bg-white px-3 py-2 text-xs font-black text-[#10233F] outline-none focus:border-[#FF5A0A] focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20 lg:hidden"
         >
           {groups.map((group) => (
             <optgroup key={group.label} label={group.label}>
@@ -2905,91 +3332,96 @@ function CommandTabs({ activeView, setActiveView }) {
             </optgroup>
           ))}
         </select>
+
+        <span className="hidden rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-white lg:inline-flex">
+          12 command views
+        </span>
       </div>
 
-      <div className="hidden gap-3 p-3 lg:grid xl:grid-cols-3">
-        {groups.map((group) => {
-          const GroupIcon = group.icon;
-          const groupActive = group.tabs.some((tab) => tab.key === activeView);
-          const isTemplate = group.tone === "template";
+      <div className="hidden border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-3 lg:block">
+        <div className="grid min-w-0 gap-3 xl:grid-cols-3">
+          {groups.map((group) => {
+            const GroupIcon = group.icon;
+            const groupActive = group.tabs.some(
+              (tab) => tab.key === activeView
+            );
 
-          return (
-            <div
-              key={group.label}
-              className={`min-w-0 rounded-[1.35rem] border-[3px] p-3 transition ${
-                groupActive
-                  ? "border-orange-400 bg-orange-50 shadow-[0_8px_22px_rgba(249,115,22,0.08)]"
-                  : isTemplate
-                  ? "border-slate-300 bg-[#F7F4EF]"
-                  : "border-[#C8D5E4] bg-white"
-              }`}
-            >
-              <div className="flex items-start gap-2.5">
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+            return (
+              <section
+                key={group.label}
+                className={`min-w-0 overflow-hidden rounded-[1.2rem] border-[3px] bg-white ${
+                  groupActive
+                    ? "border-[#123865] shadow-[0_8px_20px_rgba(18,56,101,0.10)]"
+                    : "border-[#C9D7E6]"
+                }`}
+              >
+                <div
+                  className={`flex items-center gap-3 border-b-2 px-3 py-2.5 ${
                     groupActive
-                      ? "border-orange-400 bg-orange-500 text-white"
-                      : isTemplate
-                      ? "border-slate-300 bg-white text-slate-500"
-                      : "border-[#AFC7E4] bg-[#EEF4FA] text-[#123865]"
+                      ? "border-[#FF5A0A] bg-[#123865] text-white"
+                      : "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F]"
                   }`}
                 >
-                  <GroupIcon size={15} />
-                </span>
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+                      groupActive
+                        ? "border-white/20 bg-white/10 text-[#FFB38A]"
+                        : "border-[#123865]/15 bg-white text-[#123865]"
+                    }`}
+                  >
+                    <GroupIcon size={15} />
+                  </span>
 
-                <div className="min-w-0">
-                  <p className="text-[8px] font-black uppercase tracking-[0.13em] text-slate-500">
-                    {group.eyebrow}
-                  </p>
-                  <p className="mt-0.5 text-sm font-black text-[#10233F]">
-                    {group.label}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid gap-2">
-                {group.tabs.map((tab) => {
-                  const active = activeView === tab.key;
-                  const Icon = tab.icon;
-
-                  return (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => setActiveView(tab.key)}
-                      className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[11px] font-black transition ${
-                        active
-                          ? "border-orange-600 bg-orange-500 text-white shadow-[0_6px_14px_rgba(249,115,22,0.16)]"
-                          : isTemplate
-                          ? "border-slate-300 bg-white text-[#53657D] hover:border-orange-300 hover:bg-orange-50"
-                          : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                  <div className="min-w-0">
+                    <p
+                      className={`text-[7px] font-black uppercase tracking-[0.12em] ${
+                        groupActive ? "text-[#FFB38A]" : "text-slate-500"
                       }`}
                     >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <Icon size={14} className="shrink-0" />
-                        <span className="break-words">{tab.label}</span>
-                      </span>
+                      {group.eyebrow}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11px] font-black">
+                      {group.label}
+                    </p>
+                  </div>
+                </div>
 
-                      <ArrowUpRight
-                        size={13}
-                        className={`shrink-0 ${active ? "text-white" : "text-slate-400"}`}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+                <div className="grid min-w-0 grid-cols-2 gap-2 p-2">
+                  {group.tabs.map((tab) => {
+                    const active = activeView === tab.key;
+                    const Icon = tab.icon;
 
-              {isTemplate ? (
-                <p className="mt-3 rounded-xl border-2 border-dashed border-slate-300 bg-white px-3 py-2 text-[9px] font-bold leading-4 text-slate-500">
-                  Template ecosystem retained for the later dedicated Enterprise OS rebuild.
-                </p>
-              ) : null}
-            </div>
-          );
-        })}
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setActiveView(tab.key)}
+                        className={`flex min-h-[3.15rem] min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2 text-left text-[10px] font-black leading-4 transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20 ${
+                          active
+                            ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_6px_14px_rgba(255,90,10,0.18)]"
+                            : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
+                        }`}
+                      >
+                        <Icon
+                          size={14}
+                          className={`shrink-0 ${
+                            active ? "text-white" : "text-[#123865]"
+                          }`}
+                        />
+                        <span className="min-w-0 [overflow-wrap:anywhere]">
+                          {tab.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
       </div>
-    </section>
+    </nav>
   );
 }
 
@@ -3001,7 +3433,7 @@ function CommandLaunchCard({ title, value, detail, tone = "navy", onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`group relative min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] text-left shadow-[0_8px_22px_rgba(15,35,63,0.055)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(15,35,63,0.11)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${style}`}
+      className={`group relative min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] text-left shadow-[0_8px_22px_rgba(15,35,63,0.055)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(15,35,63,0.11)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20 ${style}`}
     >
       <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
 
@@ -3016,7 +3448,7 @@ function CommandLaunchCard({ title, value, detail, tone = "navy", onClick }) {
           </p>
         </div>
 
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/20 bg-white/80 text-[#123865] transition group-hover:border-orange-500 group-hover:bg-orange-500 group-hover:text-white">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/20 bg-white/80 text-[#123865] transition group-hover:border-[#FF5A0A] group-hover:bg-[#FF5A0A] group-hover:text-white">
           <ArrowUpRight size={17} />
         </span>
       </div>
@@ -3040,14 +3472,17 @@ function CommandLaunchCard({ title, value, detail, tone = "navy", onClick }) {
   );
 }
 
+
 function SummaryCard({ label, value, tone = "navy" }) {
   const style = getToneStyle(tone);
 
   return (
-    <div className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_20px_rgba(15,35,63,0.045)] ${style}`}>
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-65" />
+    <article
+      className={`relative min-w-0 overflow-hidden rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
+    >
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
 
-      <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.12em] text-[#53657D]">
+      <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] text-[#53657D]">
         {label}
       </p>
 
@@ -3058,95 +3493,184 @@ function SummaryCard({ label, value, tone = "navy" }) {
       <p className="mt-3 text-[8px] font-black uppercase tracking-[0.1em] opacity-65">
         Read-only command signal
       </p>
-    </div>
+    </article>
   );
 }
 
-function JourneyStageCard({ label, value, total, detail }) {
-  const percentage = total ? Math.round((Number(value || 0) / total) * 100) : 0;
+function JourneyStageCard({
+  label,
+  value,
+  total,
+  detail,
+  index = 0,
+}) {
+  const percentage = total
+    ? Math.round((Number(value || 0) / total) * 100)
+    : 0;
+
+  const active = Number(value || 0) > 0;
 
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-[#B8CBE0] bg-[#F8FAFD] p-4 shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
-      <p className="break-words text-[10px] font-black uppercase leading-4 tracking-[0.12em] text-slate-500">{label}</p>
-      <p className="mt-3 text-3xl font-black text-[#10233F]">{value}</p>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-        <div className="h-full rounded-full bg-orange-500" style={{ width: `${percentage}%` }} />
+    <article
+      className={`min-w-0 rounded-[1.25rem] border-[3px] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md ${
+        active
+          ? "border-[#FF5A0A]"
+          : "border-[#C9D7E6]"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] text-slate-500">
+          {label}
+        </p>
+
+        <span
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 text-[9px] font-black ${
+            active
+              ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-700"
+              : "border-[#C9D7E6] bg-[#FFF8EF] text-slate-500"
+          }`}
+        >
+          {index + 1}
+        </span>
       </div>
-      <p className="mt-3 text-xs leading-5 text-slate-500">{detail}</p>
-    </div>
+
+      <p className="mt-3 text-3xl font-black text-[#10233F]">
+        {value}
+      </p>
+
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+        <div
+          className="h-full rounded-full bg-[#FF5A0A]"
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      <p className="mt-3 break-words text-[10px] font-semibold leading-4 text-slate-500">
+        {detail}
+      </p>
+    </article>
   );
 }
 
-function SectionHeader({ eyebrow, title, description }) {
+function SectionHeader({
+  eyebrow,
+  title,
+  description,
+  inverse = false,
+}) {
   return (
-    <div>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-600">{eyebrow}</p>
-      <h3 className="mt-1 text-xl font-black text-[#10233f]">{title}</h3>
-      {description ? <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p> : null}
+    <div className="min-w-0">
+      <p
+        className={`text-[9px] font-black uppercase tracking-[0.14em] ${
+          inverse ? "text-orange-200" : "text-orange-700"
+        }`}
+      >
+        {eyebrow}
+      </p>
+
+      <h3
+        className={`mt-1 break-words text-xl font-black ${
+          inverse ? "text-white" : "text-[#10233F]"
+        }`}
+      >
+        {title}
+      </h3>
+
+      {description ? (
+        <p
+          className={`mt-1 break-words text-xs font-semibold leading-5 ${
+            inverse ? "text-slate-200" : "text-slate-500"
+          }`}
+        >
+          {description}
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function WatchMetric({ label, value, tone = "navy" }) {
   return (
-    <div className={`relative overflow-hidden rounded-[1.2rem] border-[3px] p-4 ${getToneStyle(tone)}`}>
-      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-65" />
-      <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#53657D]">
+    <article
+      className={`relative min-w-0 overflow-hidden rounded-[1.15rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(
+        tone
+      )}`}
+    >
+      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-70" />
+
+      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
-    </div>
+
+      <p className="mt-2 text-3xl font-black text-[#10233F]">
+        {value}
+      </p>
+    </article>
   );
 }
 
 function WatchStudentRow({ score = {} }) {
   return (
-    <div className="rounded-[1.2rem] border-[3px] border-[#C8D5E4] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <article className="min-w-0 rounded-[1.2rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A] hover:shadow-md">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="break-words font-black leading-5 text-[#10233f]">{getStudentName(score)}</p>
-          <p className="mt-1 text-xs text-slate-500">
-            {formatLabel(getJourneyStage(score))} • {score.executive_category || "Standard"}
+          <p className="break-words font-black leading-5 text-[#10233F]">
+            {getStudentName(score)}
+          </p>
+          <p className="mt-1 break-words text-xs font-semibold text-slate-500">
+            {formatLabel(getJourneyStage(score))} •{" "}
+            {score.executive_category || "Standard"}
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <span className="rounded-full border-2 border-red-300 bg-red-50 px-3 py-1 text-[10px] font-black text-red-700">
             Risk {number(score.risk_score)}
           </span>
-          <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black text-orange-600">
+          <span className="rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-1 text-[10px] font-black text-orange-700">
             Opp {number(score.opportunity_score)}
           </span>
         </div>
       </div>
 
-      <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">
-        {score.summary || score.gpt_summary || "No summary available."}
+      <p className="mt-2 line-clamp-2 break-words text-xs font-semibold leading-5 text-slate-500">
+        {score.summary ||
+          score.gpt_summary ||
+          "No summary available."}
       </p>
-    </div>
+    </article>
   );
 }
 
 function ActionRow({ label, value, detail }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-[1.2rem] border-[3px] border-[#C8D5E4] bg-white p-4">
-      <div>
-        <p className="font-semibold text-[#10233f]">{label}</p>
-        <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+    <article className="flex min-w-0 items-start justify-between gap-4 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A] hover:shadow-md">
+      <div className="min-w-0">
+        <p className="break-words font-black text-[#10233F]">
+          {label}
+        </p>
+        <p className="mt-1 break-words text-[10px] font-semibold leading-4 text-slate-500">
+          {detail}
+        </p>
       </div>
-      <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-sm font-black text-orange-600">
+
+      <span className="shrink-0 rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-1.5 text-sm font-black text-orange-700">
         {value}
       </span>
-    </div>
+    </article>
   );
 }
 
 function SmallMetric({ label, value }) {
   return (
-    <div className="rounded-[1.2rem] border-[3px] border-emerald-300 bg-emerald-50 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
-    </div>
+    <article className="min-w-0 rounded-[1.15rem] border-[3px] border-emerald-300 bg-emerald-50 p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
+      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-emerald-800">
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-black text-[#10233F]">
+        {value}
+      </p>
+    </article>
   );
 }
 
@@ -3154,35 +3678,50 @@ function HealthProgress({ label, value }) {
   const clean = Math.max(0, Math.min(100, Number(value || 0)));
 
   return (
-    <div className="rounded-[1.2rem] border-[3px] border-[#B8CBE0] bg-[#F8FAFD] p-4">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-[#10233f]">{label}</span>
-        <span className="font-black text-orange-600">{clean}%</span>
+    <article className="min-w-0 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="break-words font-black text-[#10233F]">
+          {label}
+        </span>
+        <span className="shrink-0 font-black text-orange-700">
+          {clean}%
+        </span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-        <div className="h-full rounded-full bg-orange-500" style={{ width: `${clean}%` }} />
+
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+        <div
+          className="h-full rounded-full bg-[#FF5A0A]"
+          style={{ width: `${clean}%` }}
+        />
       </div>
-    </div>
+    </article>
   );
 }
 
 function EmptyState({ text }) {
   return (
-    <p className="rounded-[1.2rem] border-[3px] border-dashed border-[#B8CBE0] bg-[#F8FAFD] p-5 text-sm font-semibold text-slate-500">
+    <p className="rounded-[1.2rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-5 text-sm font-semibold text-slate-500">
       {text}
     </p>
   );
 }
 
-
-function CommandModuleLoader({ label = "Loading command module..." }) {
+function CommandModuleLoader({
+  label = "Loading command module...",
+}) {
   return (
-    <div className="flex min-h-[260px] items-center justify-center rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_12px_32px_rgba(15,35,63,0.05)]">
+    <div className="flex min-h-[260px] min-w-0 items-center justify-center rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-6 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
       <div className="text-center">
-        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
-        <p className="mt-4 text-sm font-black text-[#10233f]">{label}</p>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-[3px] border-[#FF5A0A] bg-[#FFF4E8]">
+          <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-orange-100 border-t-[#FF5A0A]" />
+        </div>
+
+        <p className="mt-4 text-sm font-black text-[#10233F]">
+          {label}
+        </p>
+
         <p className="mt-1 text-xs font-semibold text-slate-500">
-          Zaifan OS is lazy-loading only the selected command module.
+          Zaifan OS is loading only the selected command module.
         </p>
       </div>
     </div>
@@ -3190,15 +3729,31 @@ function CommandModuleLoader({ label = "Loading command module..." }) {
 }
 
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-red-400 bg-red-50 text-red-800";
-  if (tone === "orange") return "border-orange-400 bg-orange-50 text-orange-800";
-  if (tone === "yellow") return "border-amber-400 bg-amber-50 text-amber-800";
-  if (tone === "green") return "border-emerald-400 bg-emerald-50 text-emerald-800";
-  if (tone === "gold") return "border-orange-400 bg-orange-50 text-orange-800";
-  if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-800";
-  if (tone === "navy") return "border-[#234E78] bg-[#EEF4FA] text-[#123865]";
-  return "border-[#C8D5E4] bg-[#F8FAFD] text-[#123865]";
-}
+  if (tone === "red") {
+    return "border-red-400 bg-red-50 text-red-800";
+  }
 
+  if (tone === "orange" || tone === "gold") {
+    return "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
+  }
+
+  if (tone === "yellow") {
+    return "border-amber-400 bg-amber-50 text-amber-800";
+  }
+
+  if (tone === "green") {
+    return "border-emerald-400 bg-emerald-50 text-emerald-800";
+  }
+
+  if (tone === "blue") {
+    return "border-blue-400 bg-blue-50 text-blue-800";
+  }
+
+  if (tone === "navy") {
+    return "border-[#123865] bg-[#F2F7FF] text-[#123865]";
+  }
+
+  return "border-[#C9D7E6] bg-white text-[#123865]";
+}
 
 export default ExecutiveCommandSystem;

@@ -1,5 +1,5 @@
-// AdminActivityLogs V5 — Role-Aware Audit Command Center
-// src/components/admin/AdminActivityLogs.jsx
+// AdminActivityLogs V6 PARTNER OS — Role-Aware Audit Command Center
+// src/components/admin/core/AdminActivityLogs.jsx
 //
 // Maximum pass:
 // - live Supabase activity_logs read model with realtime refresh
@@ -9,7 +9,7 @@
 // - local CSV export of currently filtered audit records
 // - clear RLS/network error states and retry flow
 // - no fake writes or destructive controls inside the audit viewer
-// - readable Zaifan Admin OS navy/orange/cream hierarchy
+// - locked Partner OS navy/orange/cream hierarchy and structural depth
 // - mobile-safe layout + reduced-motion support
 //
 // Known activity_logs fields used by the existing Zaifan codebase:
@@ -565,11 +565,9 @@ function AdminActivityLogs({ cardClass = "" }) {
     sortOrder !== "newest";
 
   return (
-    <section
-      className={`${cardClass} overflow-hidden rounded-[2.2rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.07)]`}
-    >
-      <div className="p-4 sm:p-5">
-        <div className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 shadow-[0_12px_30px_rgba(15,35,63,0.08)]">
+    <section className="min-w-0 space-y-4">
+      <div className="min-w-0">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] shadow-[0_12px_32px_rgba(15,35,63,0.10)]">
           <div className="grid xl:grid-cols-[1.2fr_0.8fr]">
             <div className="bg-[#123865] p-5 text-white sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -628,7 +626,7 @@ function AdminActivityLogs({ cardClass = "" }) {
           </p>
         </div>
 
-            <div className="bg-orange-500 p-5 text-white sm:p-6">
+            <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
             Audit Coverage
           </p>
@@ -647,7 +645,7 @@ function AdminActivityLogs({ cardClass = "" }) {
         </div>
       </div>
 
-      <div className="space-y-4 bg-[#fff8ee] px-4 pb-4 sm:px-5 sm:pb-5">
+      <div className="min-w-0 space-y-4">
         {loadError ? (
           <Feedback
             tone="error"
@@ -687,10 +685,10 @@ function AdminActivityLogs({ cardClass = "" }) {
           />
         </div>
 
-        <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#F97316] bg-[#FFFDF9] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.045)]">
+        <section className="min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.055)]">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal size={14} className="text-orange-700" />
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+            <SlidersHorizontal size={14} className="text-[#FF5A0A]" />
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#FF5A0A]">
               Audit Controls
             </p>
           </div>
@@ -705,14 +703,14 @@ function AdminActivityLogs({ cardClass = "" }) {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search action, admin, details, target ID..."
-                className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </div>
 
             <select
               value={targetFilter}
               onChange={(event) => setTargetFilter(event.target.value)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All targets</option>
               {targetTypes.map((type) => (
@@ -725,7 +723,7 @@ function AdminActivityLogs({ cardClass = "" }) {
             <select
               value={actionFilter}
               onChange={(event) => setActionFilter(event.target.value)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               {actionCategories.map(([value, label]) => (
                 <option key={value} value={value}>
@@ -737,7 +735,7 @@ function AdminActivityLogs({ cardClass = "" }) {
             <select
               value={adminFilter}
               onChange={(event) => setAdminFilter(event.target.value)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All admins</option>
               {adminNames.map((name) => (
@@ -750,7 +748,7 @@ function AdminActivityLogs({ cardClass = "" }) {
             <select
               value={dateFilter}
               onChange={(event) => setDateFilter(event.target.value)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All dates</option>
               <option value="today">Today</option>
@@ -761,7 +759,7 @@ function AdminActivityLogs({ cardClass = "" }) {
             <select
               value={sortOrder}
               onChange={(event) => setSortOrder(event.target.value)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -771,7 +769,7 @@ function AdminActivityLogs({ cardClass = "" }) {
               type="button"
               onClick={resetFilters}
               disabled={!hasActiveFilters}
-              className="inline-flex h-11 min-w-0 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] transition hover:border-[#F97316] hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-11 min-w-0 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Filter size={14} />
               Reset
@@ -787,7 +785,7 @@ function AdminActivityLogs({ cardClass = "" }) {
             <select
               value={pageSize}
               onChange={(event) => setPageSize(Number(event.target.value))}
-              className="h-9 w-fit shrink-0 rounded-lg border-2 border-[#B9C9D9] bg-white px-2 text-[11px] font-black text-[#10233f] outline-none focus:border-[#F97316]"
+              className="h-9 w-fit shrink-0 rounded-lg border-2 border-[#B9C9D9] bg-white px-2 text-[11px] font-black text-[#10233f] outline-none focus:border-[#FF5A0A]"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>
@@ -967,7 +965,7 @@ function getActorRoleTone(role = "unknown") {
   if (role === "admin") {
     return {
       label: "Admin",
-      badge: "border-[#F97316] bg-[#FFF4E8] text-orange-800",
+      badge: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     };
   }
 

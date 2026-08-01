@@ -1,5 +1,5 @@
-// CommunicationCenterPanel V4 MAXIMUM — Zaifan Student Communication OS
-// src/components/admin/CommunicationCenterPanel.jsx
+// CommunicationCenterPanel PARTNER OS EXTREME V2 — Compact Student Communication Command
+// src/components/admin/workspaces/communications/CommunicationCenterPanel.jsx
 //
 // Maximum production pass:
 // - preserves WhatsAppWorkspace + EmailWorkspace integrations
@@ -18,16 +18,15 @@
 // - better large-history handling
 // - clearer sent/logged/draft semantics
 // - explicit failure reason handling
-// - high-contrast Zaifan Admin OS theme
+// - final Partner OS visual alignment while preserving all communication logic
+// - #123865 navy / #10233F text / #FF5A0A orange / #FFF8EF cream
+// - stronger #C9D7E6 outer borders and #E1E8F0 inner borders
 // - navy surfaces use white text only
 // - responsive and accessible
 
 import {
   AlertTriangle,
-  Archive,
-  Check,
   CheckCircle2,
-  Clock3,
   Mail,
   MessageCircle,
   Phone,
@@ -36,7 +35,6 @@ import {
   Send,
   ShieldCheck,
   Trash2,
-  X,
   XCircle,
 } from "lucide-react";
 import {
@@ -1264,16 +1262,16 @@ function CommunicationCenterPanel({
     );
 
   return (
-    <div className="space-y-5 pb-8 text-[#10233f]">
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 pb-8 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
       <StudentNotificationPreviewModal
         pending={pendingEmailNotification}
         busy={emailSending}
         onCancel={() => !emailSending && setPendingEmailNotification(null)}
         onConfirm={confirmSafeEmail}
       />
-      <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-400 bg-white shadow-[0_14px_34px_rgba(15,35,63,0.06)]">
-        <div className="grid xl:grid-cols-[1.18fr_0.82fr]">
-          <div className="bg-[#123866] p-5 text-white sm:p-6">
+      <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 border-b-[3px] border-[#FF5A0A] lg:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.55fr)]">
+          <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5">
             <div className="flex flex-wrap gap-2">
               <Badge
                 text="Communication OS"
@@ -1289,18 +1287,18 @@ function CommunicationCenterPanel({
               />
             </div>
 
-            <h2 className="mt-3 text-2xl font-black text-white">
+            <h2 className="mt-3 break-words text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
               Student Communication Center
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-5 text-slate-100">
               Keep WhatsApp, email, calls,
               manual outreach and future
               automated communication in one
               permanent student history.
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <DarkMetric
                 label="Total"
                 value={stats.total}
@@ -1320,12 +1318,12 @@ function CommunicationCenterPanel({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:border-l-[3px] lg:border-t-0">
             <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
               Communication Health
             </p>
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <OrangeMetric
                 label="Drafts"
                 value={stats.drafts}
@@ -1336,7 +1334,7 @@ function CommunicationCenterPanel({
               />
             </div>
 
-            <div className="mt-4">
+            <div className="mt-3">
               <StudentNotificationComposer
                 student={student}
                 context="general"
@@ -1349,7 +1347,7 @@ function CommunicationCenterPanel({
               type="button"
               onClick={loadCommunications}
               disabled={loading}
-              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white/25 bg-white/10 px-4 text-xs font-black text-white transition hover:bg-white/15 disabled:opacity-50"
+              className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:opacity-50"
             >
               <RefreshCw
                 size={14}
@@ -1389,7 +1387,7 @@ function CommunicationCenterPanel({
         </Feedback>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid min-w-0 gap-3 md:grid-cols-2">
         <QuickContactCard
           title="WhatsApp"
           value={
@@ -1415,8 +1413,8 @@ function CommunicationCenterPanel({
         />
       </div>
 
-      <Suspense fallback={null}>
-<WhatsAppWorkspace
+      <Suspense fallback={<WorkspaceFallback label="Loading WhatsApp workspace..." />}>
+        <WhatsAppWorkspace
         student={student}
         saving={
           creatingChannel ===
@@ -1435,11 +1433,11 @@ function CommunicationCenterPanel({
           })
         }
       />
-</Suspense>
+      </Suspense>
 
       <form
         onSubmit={previewSafeEmail}
-        className="rounded-[1.7rem] border-[3px] border-orange-400 bg-white p-5 shadow-[0_12px_28px_rgba(15,35,63,0.05)]"
+        className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:p-5"
       >
         <SectionHeading
           eyebrow="Protected Email Delivery"
@@ -1447,12 +1445,12 @@ function CommunicationCenterPanel({
           description="Compose here when Zaifan should actually deliver an email through the verified notification system. Preview and explicit confirmation are mandatory before sending."
         />
 
-        <div className="mt-4 rounded-2xl border-2 border-blue-300 bg-blue-50 p-4 text-xs font-semibold leading-5 text-blue-900">
+        <div className="mt-4 rounded-[1.25rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4 text-xs font-semibold leading-5 text-blue-800 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
           Recipient: <strong>{email || "No student email"}</strong>. Drafts saved in the workspace below are not delivered automatically.
         </div>
 
         <label className="mt-4 block">
-          <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">Subject</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">Subject</span>
           <input
             value={safeEmailForm.subject}
             onChange={(event) =>
@@ -1460,12 +1458,12 @@ function CommunicationCenterPanel({
             }
             disabled={emailSending}
             placeholder="Example: Update on your university application"
-            className="mt-2 h-11 w-full rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
+            className="mt-2 h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
           />
         </label>
 
         <label className="mt-3 block">
-          <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">Message</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">Message</span>
           <textarea
             value={safeEmailForm.message}
             onChange={(event) =>
@@ -1474,7 +1472,7 @@ function CommunicationCenterPanel({
             disabled={emailSending}
             rows={6}
             placeholder="Write the exact student-facing message..."
-            className="mt-2 w-full resize-y rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
+            className="mt-2 min-w-0 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
           />
         </label>
 
@@ -1486,15 +1484,15 @@ function CommunicationCenterPanel({
             !safeEmailForm.subject.trim() ||
             !safeEmailForm.message.trim()
           }
-          className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-45"
+          className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-45 sm:w-fit"
         >
           <ShieldCheck size={15} />
           {emailSending ? "Preparing Preview..." : "Preview Before Sending"}
         </button>
       </form>
 
-      <Suspense fallback={null}>
-<EmailWorkspace
+      <Suspense fallback={<WorkspaceFallback label="Loading email workspace..." />}>
+        <EmailWorkspace
         student={student}
         saving={
           creatingChannel ===
@@ -1516,13 +1514,13 @@ function CommunicationCenterPanel({
           })
         }
       />
-</Suspense>
+      </Suspense>
 
       <form
         onSubmit={
           handleManualLog
         }
-        className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5"
+        className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:p-5"
       >
         <SectionHeading
           eyebrow="Manual Logging"
@@ -1530,7 +1528,7 @@ function CommunicationCenterPanel({
           description="Use this for calls, inbound messages, SMS, portal messages or any interaction that happened outside an automated integration."
         />
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <Select
             label="Channel"
             value={
@@ -1691,7 +1689,7 @@ function CommunicationCenterPanel({
           />
 
           <label className="md:col-span-2 xl:col-span-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">
               Message / call notes
             </span>
 
@@ -1711,7 +1709,7 @@ function CommunicationCenterPanel({
               }
               rows={4}
               placeholder="What was said, sent, received or agreed?"
-              className="mt-2 w-full resize-y rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="mt-2 min-w-0 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </label>
         </div>
@@ -1722,7 +1720,7 @@ function CommunicationCenterPanel({
             anyMutationBusy ||
             !manualForm.message.trim()
           }
-          className="mt-4 rounded-xl bg-orange-500 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
+          className="mt-4 min-h-11 w-full rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 sm:w-fit"
         >
           {creatingChannel
             ? "Saving Communication..."
@@ -1730,14 +1728,14 @@ function CommunicationCenterPanel({
         </button>
       </form>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5">
+      <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.07)] sm:p-5">
         <SectionHeading
           eyebrow="Student Contact History"
           title="Communication Timeline"
           description="Search and filter the student record instead of scrolling through an endless wall of messages."
         />
 
-        <div className="mt-5 grid gap-2 lg:grid-cols-[1fr_150px_150px_150px]">
+        <div className="mt-5 grid min-w-0 gap-3 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-3 lg:grid-cols-[minmax(0,1fr)_150px_150px_150px]">
           <div className="relative">
             <Search
               size={15}
@@ -1752,7 +1750,7 @@ function CommunicationCenterPanel({
                 )
               }
               placeholder="Search messages, subject, source or linked context..."
-              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </div>
 
@@ -1828,7 +1826,7 @@ function CommunicationCenterPanel({
                   "all"
                 );
               }}
-              className="text-xs font-black text-orange-700 hover:text-orange-900"
+              className="rounded-lg border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-1.5 text-xs font-black text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             >
               Clear filters
             </button>
@@ -1873,7 +1871,7 @@ function CommunicationCenterPanel({
 
         {filteredCommunications.length >
         PAGE_SIZE ? (
-          <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+          <div className="mt-5 flex items-center justify-between gap-3 border-t-2 border-[#E1E8F0] pt-4">
             <button
               type="button"
               disabled={
@@ -1888,7 +1886,7 @@ function CommunicationCenterPanel({
                     )
                 )
               }
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+              className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:opacity-40"
             >
               Previous
             </button>
@@ -1912,7 +1910,7 @@ function CommunicationCenterPanel({
                     )
                 )
               }
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+              className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:opacity-40"
             >
               Next
             </button>
@@ -1970,16 +1968,16 @@ function CommunicationRow({
     STATUS_FLOW[status] || [];
 
   return (
-    <article className="rounded-2xl border-2 border-slate-300 bg-[#fffaf4] p-4 transition hover:border-orange-400 hover:shadow-sm">
+    <article className="min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="flex min-w-0 gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-600">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-[#FFF8EF] text-[#123865]">
             <Icon size={17} />
           </span>
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-black text-[#10233f]">
+              <p className="font-black text-[#10233F]">
                 {pretty(channel)}
               </p>
 
@@ -1995,7 +1993,7 @@ function CommunicationRow({
             </div>
 
             {item.subject ? (
-              <p className="mt-2 text-sm font-black text-orange-800">
+              <p className="mt-2 text-sm font-black text-[#10233F]">
                 {item.subject}
               </p>
             ) : null}
@@ -2074,7 +2072,7 @@ function CommunicationRow({
           </div>
         </div>
 
-        <div className="grid min-w-[190px] gap-2">
+        <div className="grid min-w-0 gap-2 xl:w-[200px]">
           <label>
             <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
               Communication Status
@@ -2088,7 +2086,7 @@ function CommunicationRow({
                   event.target.value
                 )
               }
-              className="h-10 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none transition hover:border-orange-400 focus:border-orange-400 disabled:opacity-50"
+              className="h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
             >
               <option
                 value={status}
@@ -2117,7 +2115,7 @@ function CommunicationRow({
             type="button"
             onClick={onDelete}
             disabled={busy}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-red-300 bg-red-50 px-3 text-xs font-black text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-3 text-xs font-black text-red-700 transition hover:-translate-y-0.5 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 disabled:opacity-50"
           >
             <Trash2 size={13} />
             Delete
@@ -2140,13 +2138,13 @@ function QuickContactCard({
     tone === "green";
 
   return (
-    <article className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+    <article className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md">
       <div className="flex items-start gap-3">
         <span
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 ${
             green
               ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-              : "border-orange-300 bg-orange-50 text-orange-700"
+              : "border-[#FF5A0A] bg-[#FFF4E8] text-orange-700"
           }`}
         >
           <Icon size={18} />
@@ -2157,7 +2155,7 @@ function QuickContactCard({
             {title}
           </p>
 
-          <p className="mt-2 break-words text-sm font-black text-[#10233f]">
+          <p className="mt-2 break-words text-sm font-black text-[#10233F]">
             {value}
           </p>
 
@@ -2175,7 +2173,7 @@ function QuickContactCard({
               className={`mt-3 inline-flex rounded-xl px-4 py-2 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
                 green
                   ? "bg-emerald-600 hover:bg-emerald-700"
-                  : "bg-orange-500 hover:bg-orange-600"
+                  : "bg-[#FF5A0A] hover:bg-[#E94F08]"
               }`}
             >
               {actionLabel}
@@ -2198,15 +2196,15 @@ function SectionHeading({
 }) {
   return (
     <div>
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+      <p className="inline-flex rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
         {eyebrow}
       </p>
 
-      <h3 className="mt-1 text-lg font-black text-[#10233f]">
+      <h3 className="mt-3 break-words text-2xl font-black tracking-[-0.025em] text-[#10233F]">
         {title}
       </h3>
 
-      <p className="mt-1 text-sm leading-5 text-slate-600">
+      <p className="mt-1.5 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
         {description}
       </p>
     </div>
@@ -2219,13 +2217,13 @@ function Badge({
 }) {
   const styles = {
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     navy:
       "border-[#123865] bg-[#123865] text-white",
     navyLight:
       "border-white/20 bg-white/10 text-white",
     slate:
-      "border-slate-300 bg-slate-50 text-slate-700",
+      "border-[#C9D7E6] bg-slate-50 text-slate-700",
   };
 
   return (
@@ -2249,12 +2247,12 @@ function DirectionBadge({
     clean === "inbound"
       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
       : clean === "internal"
-      ? "border-violet-300 bg-violet-50 text-violet-800"
+      ? "border-[#C9D7E6] bg-[#F7FAFC] text-slate-700"
       : "border-blue-300 bg-blue-50 text-blue-800";
 
   return (
     <span
-      className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${style}`}
+      className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${style}`}
     >
       {pretty(clean)}
     </span>
@@ -2284,11 +2282,11 @@ function StatusBadge({
       ? "border-blue-300 bg-blue-50 text-blue-800"
       : clean === "cancelled"
       ? "border-slate-400 bg-slate-100 text-slate-700"
-      : "border-orange-300 bg-orange-50 text-orange-800";
+      : "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
 
   return (
     <span
-      className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${style}`}
+      className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${style}`}
     >
       {pretty(clean)}
     </span>
@@ -2307,8 +2305,8 @@ function Feedback({
 
   return (
     <div
-      role="status"
-      className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${style}`}
+      role={tone === "error" ? "alert" : "status"}
+      className={`flex min-w-0 items-start gap-3 rounded-[1.3rem] border-[3px] p-4 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${style}`}
     >
       {tone === "error" ? (
         <AlertTriangle
@@ -2330,9 +2328,21 @@ function Feedback({
         type="button"
         onClick={onClose}
         aria-label="Dismiss message"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-current/20 bg-white/50 transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
       >
         <XCircle size={16} />
       </button>
+    </div>
+  );
+}
+
+function WorkspaceFallback({ label }) {
+  return (
+    <div className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:p-5">
+      <div className="flex min-h-28 items-center justify-center gap-3 rounded-[1.25rem] border-2 border-dashed border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#123865]">
+        <RefreshCw size={16} className="animate-spin text-[#FF5A0A]" />
+        {label}
+      </div>
     </div>
   );
 }
@@ -2341,7 +2351,7 @@ function EmptyState({
   text,
 }) {
   return (
-    <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-[#fffaf4] p-7 text-center text-sm font-bold text-slate-500">
+    <div className="rounded-[1.3rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-7 text-center text-sm font-bold text-slate-500">
       {text}
     </div>
   );
@@ -2355,7 +2365,7 @@ function Input({
 }) {
   return (
     <label>
-      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">
         {label}
       </span>
 
@@ -2367,7 +2377,7 @@ function Input({
           )
         }
         placeholder={placeholder}
-        className="mt-2 h-11 w-full rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+        className="mt-2 h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
       />
     </label>
   );
@@ -2381,7 +2391,7 @@ function Select({
 }) {
   return (
     <label>
-      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">
         {label}
       </span>
 
@@ -2392,7 +2402,7 @@ function Select({
             event.target.value
           )
         }
-        className="mt-2 h-11 w-full rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 text-sm font-bold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+        className="mt-2 h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-sm font-bold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
       >
         {options.map(
           ([
@@ -2426,7 +2436,7 @@ function FilterSelect({
           event.target.value
         )
       }
-      className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none transition hover:border-orange-400 focus:border-orange-400"
+      className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
     >
       <option value="all">
         {label}
@@ -2449,7 +2459,7 @@ function DarkMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -2465,7 +2475,7 @@ function OrangeMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -2483,9 +2493,9 @@ function DeleteConfirmation({
   onConfirm,
 }) {
   return (
-    <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-[#10233f]/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-[1.7rem] border-[3px] border-red-300 bg-white shadow-[0_28px_90px_rgba(15,35,63,0.26)]">
-        <div className="bg-[#123866] p-5 text-white">
+    <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-[#10233F]/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg overflow-hidden rounded-[1.7rem] border-[4px] border-[#123865] bg-[#FFFDF8] shadow-[0_30px_100px_rgba(15,35,63,0.34)]">
+        <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
               <ShieldCheck size={17} />
@@ -2503,7 +2513,7 @@ function DeleteConfirmation({
           </div>
         </div>
 
-        <div className="bg-[#fff8ee] p-5">
+        <div className="bg-[#FFF8EF] p-5">
           <p className="text-sm font-semibold leading-6 text-slate-700">
             This will remove the selected{" "}
             <strong>
@@ -2535,7 +2545,7 @@ function DeleteConfirmation({
               type="button"
               onClick={onCancel}
               disabled={deleting}
-              className="h-11 rounded-xl border-2 border-slate-300 bg-white text-xs font-black text-[#10233f] disabled:opacity-50"
+              className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-white text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:opacity-50"
             >
               Cancel
             </button>

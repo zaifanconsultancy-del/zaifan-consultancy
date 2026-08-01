@@ -1,4 +1,4 @@
-// ExecutiveCopilot V3 EXTREME — Zaifan AI Command OS
+// ExecutiveCopilot V5 PARTNER-OS PREMIUM — Zaifan AI Command OS
 // Full replacement for:
 // src/components/admin/ai-command/ExecutiveCopilot.jsx
 //
@@ -519,15 +519,15 @@ export default function ExecutiveCopilot({
   };
 
   return (
-    <section className="space-y-4 p-3 sm:space-y-5 sm:p-5">
+    <section className="space-y-4 rounded-[2rem] border border-[#E7D8C7] bg-[#FFF8EF]/70 p-3 shadow-[0_18px_50px_rgba(15,35,63,0.05)] sm:space-y-5 sm:p-5">
       <AICommandModuleNav
         activeModule="executive-copilot"
         onOpenModule={onOpenModule}
       />
 
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_18px_48px_rgba(23,36,61,0.09)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.5fr)]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
+      <header className="overflow-hidden rounded-[2rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_18px_46px_rgba(15,35,63,0.10)]">
+        <div className="grid xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,0.55fr)]">
+          <div className="relative overflow-hidden bg-[#123865] p-5 text-white sm:p-7">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderChip icon={Bot} label="Executive Copilot" />
               <HeaderChip icon={ShieldCheck} label="Human Controlled" />
@@ -535,7 +535,7 @@ export default function ExecutiveCopilot({
             </div>
 
             <div className="mt-4 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-              <div className="max-w-4xl">
+              <div className="relative z-10 max-w-4xl">
                 <h1 className="text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
                   Executive Decision Copilot
                 </h1>
@@ -547,7 +547,7 @@ export default function ExecutiveCopilot({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[420px]">
+              <div className="relative z-10 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[420px]">
                 <DarkMetric label="Students" value={formatCount(localContext.students)} />
                 <DarkMetric label="Critical" value={formatCount(localContext.critical)} />
                 <DarkMetric label="Ready" value={formatCount(localContext.conversionReady)} />
@@ -556,7 +556,7 @@ export default function ExecutiveCopilot({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -599,7 +599,7 @@ export default function ExecutiveCopilot({
           </div>
         </div>
 
-        <div className="border-t-[3px] border-orange-300 bg-[#FFF8EE] p-3 sm:p-4">
+        <div className="border-t-[3px] border-[#F97316] bg-[#FFF8EF] p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_auto]">
             <div className="relative">
               <Search
@@ -612,7 +612,7 @@ export default function ExecutiveCopilot({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search recommendations and executive context..."
                 aria-label="Search Executive Copilot context"
-                className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
               />
 
               {search ? (
@@ -631,7 +631,7 @@ export default function ExecutiveCopilot({
               type="button"
               onClick={() => void handleRefresh()}
               disabled={!hasRefresh || refreshing}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-xs font-black text-white transition hover:bg-[#E94F00] disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500"
             >
               <RefreshCw
                 size={15}
@@ -667,7 +667,7 @@ export default function ExecutiveCopilot({
         />
       ) : null}
 
-      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
+      <section className="overflow-hidden rounded-[1.85rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_16px_38px_rgba(15,35,63,0.08)]">
         <SectionHeader
           eyebrow="Human → AI"
           title="Ask Executive Copilot"
@@ -676,8 +676,9 @@ export default function ExecutiveCopilot({
           count={hasAsk ? 1 : 0}
         />
 
-        <div className="p-4 sm:p-5">
-          <div className="flex flex-col gap-3 lg:flex-row">
+        <div className="grid gap-4 p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="min-w-0">
+            <div className="flex flex-col gap-3 lg:flex-row">
             <textarea
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
@@ -688,28 +689,28 @@ export default function ExecutiveCopilot({
               }
               disabled={!hasAsk || asking}
               rows={3}
-              className="min-h-[92px] flex-1 resize-y rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+              className="min-h-[92px] flex-1 resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
             />
 
             <button
               type="button"
               onClick={() => void handleAsk()}
               disabled={!hasAsk || asking || !prompt.trim()}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-6 text-xs font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 lg:self-stretch"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-6 text-xs font-black text-white transition hover:bg-[#E94F00] disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500 lg:self-stretch"
             >
               <Send size={15} />
               {asking ? "Thinking..." : hasAsk ? "Ask Copilot" : "AI Not Connected"}
             </button>
-          </div>
+            </div>
 
-          <div className="mt-4 flex max-w-full gap-2 overflow-x-auto pb-1">
+            <div className="mt-4 flex max-w-full gap-2 overflow-x-auto pb-1">
             {SUGGESTED_PROMPTS.map((item) => (
               <button
                 key={item}
                 type="button"
                 disabled={!hasAsk || asking}
                 onClick={() => handleSuggestedPrompt(item)}
-                className="shrink-0 rounded-full border-2 border-slate-300 bg-white px-3 py-2 text-[10px] font-black text-[#10233F] transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                className="shrink-0 rounded-full border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[10px] font-black text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               >
                 {item}
               </button>
@@ -731,11 +732,11 @@ export default function ExecutiveCopilot({
           ) : null}
 
           {answer ? (
-            <div className="mt-4 rounded-[1.35rem] border-[3px] border-orange-300 bg-orange-50 p-5">
+            <div className="mt-4 rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-5">
               <div className="flex items-start gap-3">
-                <Bot size={20} className="mt-0.5 shrink-0 text-orange-700" />
+                <Bot size={20} className="mt-0.5 shrink-0 text-[#B84F0E]" />
                 <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-800">
+                  <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
                     Executive Copilot Answer
                   </p>
                   <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#10233F]">
@@ -745,10 +746,29 @@ export default function ExecutiveCopilot({
               </div>
             </div>
           ) : null}
+          </div>
+
+          <aside className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#123865]">
+              Decision Context
+            </p>
+            <h3 className="mt-1 text-base font-black text-[#10233F]">
+              Evidence before action
+            </h3>
+            <div className="mt-4 space-y-3">
+              <CopilotEvidenceRow label="Students loaded" value={formatCount(localContext.students)} />
+              <CopilotEvidenceRow label="Critical records" value={formatCount(localContext.critical)} />
+              <CopilotEvidenceRow label="Workflow integrity" value={formatPercent(localContext.workflowIntegrity)} />
+              <CopilotEvidenceRow label="Production readiness" value={formatPercent(localContext.productionReadiness)} />
+            </div>
+            <p className="mt-4 rounded-xl border-2 border-[#C9D7E6] bg-white p-3 text-[10px] font-semibold leading-4 text-slate-600">
+              The copilot receives the same loaded snapshot shown here, so leadership can compare every response against visible operating evidence.
+            </p>
+          </aside>
         </div>
       </section>
 
-      <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+      <div className="flex max-w-full gap-2 overflow-x-auto rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-2 shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
         {TABS.map((tab) => {
           const Icon = tab.icon;
 
@@ -761,7 +781,7 @@ export default function ExecutiveCopilot({
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border-2 px-4 text-[10px] font-black transition ${
                 activeTab === tab.id
                   ? "border-[#123865] bg-[#123865] text-white"
-                  : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                  : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
               }`}
             >
               <Icon size={14} />
@@ -779,7 +799,7 @@ export default function ExecutiveCopilot({
         onOpenSystem={onOpenSystem}
       />
 
-      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
+      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316] bg-[#FFF8EF]">
         <SectionHeader
           eyebrow="Leadership Guidance"
           title="Connected Recommendations"
@@ -794,10 +814,10 @@ export default function ExecutiveCopilot({
               {filteredRecommendations.map((item, index) => (
                 <article
                   key={item.id}
-                  className="rounded-xl border-2 border-orange-300 bg-white p-4"
+                  className="relative overflow-hidden rounded-[1.2rem] border-[3px] border-[#F97316] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)]"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-orange-300 bg-orange-50 text-xs font-black text-orange-800">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#F97316] bg-[#FFF4EA] text-xs font-black text-[#B84F0E]">
                       {index + 1}
                     </span>
                     <div>
@@ -809,7 +829,7 @@ export default function ExecutiveCopilot({
                         {item.detail}
                       </p>
                       {item.priority ? (
-                        <p className="mt-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800">
+                        <p className="mt-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E]">
                           Priority: {item.priority}
                         </p>
                       ) : null}
@@ -832,8 +852,8 @@ export default function ExecutiveCopilot({
         </div>
       </section>
 
-      <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+      <footer className="grid gap-3 lg:grid-cols-3">
+        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4">
           <div className="flex items-start gap-3">
             <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#123865]" />
             <div>
@@ -847,15 +867,29 @@ export default function ExecutiveCopilot({
           </div>
         </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4">
           <div className="flex items-start gap-3">
-            <Brain size={18} className="mt-0.5 shrink-0 text-orange-700" />
+            <Brain size={18} className="mt-0.5 shrink-0 text-[#B84F0E]" />
             <div>
               <p className="font-black text-[#10233F]">Human-controlled AI</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
                 A real AI response can only be produced through onAsk. Without
                 it, the component remains an honest read-only executive
                 workspace.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-white p-4">
+          <div className="flex items-start gap-3">
+            <Database size={18} className="mt-0.5 shrink-0 text-[#123865]" />
+            <div>
+              <p className="font-black text-[#10233F]">Source accountability</p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                Source: {sourceLabel}. Updated: {formatTimestamp(updatedAt)}.
+                Missing fields remain unavailable rather than becoming invented
+                executive claims.
               </p>
             </div>
           </div>
@@ -897,7 +931,7 @@ function CopilotTabPanel({
             />
           )}
 
-          <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-50 p-4">
+          <div className="mt-4 rounded-xl border-2 border-[#C9D7E6] bg-[#F7FAFC] p-4">
             <p className="font-black text-[#10233F]">What this brief does not do</p>
             <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
               It does not claim application growth, revenue above target, stable
@@ -954,6 +988,17 @@ function CopilotTabPanel({
   );
 }
 
+function CopilotEvidenceRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2.5">
+      <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
+        {label}
+      </span>
+      <strong className="text-sm font-black text-[#10233F]">{value}</strong>
+    </div>
+  );
+}
+
 function HeaderChip({ icon: Icon, label }) {
   return (
     <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-white">
@@ -982,7 +1027,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white sm:px-5">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white sm:px-5">
       <div className="min-w-0">
         <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
           {eyebrow}
@@ -1007,7 +1052,8 @@ function SectionHeader({
 
 function ContextCard({ label, value, detail, tone = "navy" }) {
   return (
-    <article className={`rounded-[1.25rem] border-[3px] p-4 ${toneClass(tone)}`}>
+    <article className={`relative overflow-hidden rounded-[1.25rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.045)] ${toneClass(tone)}`}>
+      <div className="absolute inset-x-0 top-0 h-1 bg-current/35" />
       <p className="text-[9px] font-black uppercase tracking-[0.09em] text-[#10233F]">
         {label}
       </p>
@@ -1021,7 +1067,7 @@ function ContextCard({ label, value, detail, tone = "navy" }) {
 
 function SourceBadge({ source }) {
   return (
-    <span className="inline-flex max-w-full truncate rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+    <span className="inline-flex max-w-full truncate rounded-md border border-[#C9D7E6] bg-[#F7FAFC] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
       {source}
     </span>
   );
@@ -1072,7 +1118,7 @@ function InlineNotice({
           <button
             type="button"
             onClick={onAction}
-            className="shrink-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA]"
           >
             {actionLabel}
           </button>
@@ -1084,7 +1130,7 @@ function InlineNotice({
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F7FAFC] p-5 text-center">
       <Sparkles className="mx-auto text-orange-600" size={20} />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-md text-xs font-semibold leading-5 text-slate-600">
@@ -1095,7 +1141,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search
         </button>
@@ -1106,8 +1152,8 @@ function EmptyState({ title, text, onClear }) {
 
 function toneClass(tone = "navy") {
   if (tone === "red") return "border-red-400 bg-red-50 text-red-800";
-  if (tone === "orange") return "border-orange-400 bg-orange-50 text-orange-800";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]";
   if (tone === "green") return "border-emerald-400 bg-emerald-50 text-emerald-800";
   if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-800";
-  return "border-[#234E78] bg-[#EEF4FA] text-[#123865]";
+  return "border-[#234E78] bg-[#F2F7FF] text-[#123865]";
 }

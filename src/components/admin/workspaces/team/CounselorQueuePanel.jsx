@@ -1,4 +1,4 @@
-// CounselorQueuePanel V5 MAXIMUM — Counselor Action Command Center
+// CounselorQueuePanel PARTNER OS EXTREME — Executive Counselor Action Command
 // src/components/admin/CounselorQueuePanel.jsx
 //
 // Maximum pass:
@@ -706,10 +706,10 @@ function CounselorQueuePanel({ student = {} }) {
       transition={{
         duration: reduceMotion ? 0 : 0.28,
       }}
-      className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_18px_48px_rgba(15,35,63,0.09)] sm:p-4"
+      className="min-w-0 space-y-4 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4"
     >
-      <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(19rem,0.8fr)]">
-        <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
               <Target size={12} />
@@ -722,11 +722,11 @@ function CounselorQueuePanel({ student = {} }) {
             </span>
           </div>
 
-          <h2 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+          <h2 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
             Counselor Queue
           </h2>
 
-          <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
             Surface missing documents, ownership gaps, overdue work,
             application blockers, communication needs, visa triggers and
             stored risk signals for {model.fullName}.
@@ -752,7 +752,7 @@ function CounselorQueuePanel({ student = {} }) {
           </div>
         </div>
 
-        <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
           <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
             Student Readiness
           </p>
@@ -783,8 +783,8 @@ function CounselorQueuePanel({ student = {} }) {
         </div>
       </div>
 
-      <div className="min-w-0 space-y-5 bg-[#FFF8EE] px-1 pb-1 pt-5 sm:pt-6">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <div className="min-w-0 space-y-5 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <QueueMetric
             label="Critical"
             value={model.counts.critical}
@@ -815,7 +815,7 @@ function CounselorQueuePanel({ student = {} }) {
         </div>
 
         {model.queue[0] ? (
-          <div className="rounded-[1.4rem] border-[3px] border-[#F97316] bg-[#FFF4E8] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.04)]">
+          <div className="rounded-[1.45rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="text-[8px] font-black uppercase tracking-[0.12em] text-orange-700">
@@ -875,9 +875,9 @@ function QueueRow({
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.12),
       }}
-      className={`min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] bg-white shadow-[0_8px_22px_rgba(15,35,63,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,35,63,0.07)] ${style.border}`}
+      className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(18,56,101,0.09)] ${style.border}`}
     >
-      <div className="grid min-w-0 xl:grid-cols-[minmax(0,1fr)_minmax(12rem,14rem)]">
+      <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_minmax(12rem,14rem)]">
         <div className="min-w-0 p-4 sm:p-5">
           <div className="flex min-w-0 items-start gap-3">
             <div
@@ -888,7 +888,7 @@ function QueueRow({
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="break-words font-black leading-5 text-[#10233f]">
+                <h3 className="break-words font-black leading-5 text-[#10233F]">
                   {item.title}
                 </h3>
 
@@ -907,7 +907,7 @@ function QueueRow({
                 {item.description}
               </p>
 
-              <div className="mt-3 grid min-w-0 gap-2 lg:grid-cols-2">
+              <div className="mt-3 grid min-w-0 gap-2">
                 <InfoBox
                   label="Why this is here"
                   text={item.reason}
@@ -925,14 +925,14 @@ function QueueRow({
         </div>
 
         <div
-          className={`flex min-w-0 items-center justify-center border-t-[3px] p-4 xl:border-l-[3px] xl:border-t-0 ${style.side}`}
+          className={`flex min-w-0 items-center justify-center border-t-[3px] p-4 lg:border-l-[3px] lg:border-t-0 ${style.side}`}
         >
           <div className="min-w-0 text-center">
             <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
               Action Priority
             </p>
 
-            <p className="mt-1 text-2xl font-black text-[#10233f]">
+            <p className="mt-1 text-2xl font-black text-[#10233F]">
               {LEVEL_WEIGHT[item.level] ?? 0}/4
             </p>
 
@@ -958,7 +958,7 @@ function QueueMetric({
 
   return (
     <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.045)] ${style.card}`}
+      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style.card}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -966,7 +966,7 @@ function QueueMetric({
             {label}
           </p>
 
-          <p className="mt-2 text-3xl font-black text-[#10233f]">
+          <p className="mt-2 text-3xl font-black text-[#10233F]">
             {value}
           </p>
         </div>
@@ -988,12 +988,12 @@ function InfoBox({
 }) {
   const style =
     tone === "orange"
-      ? "border-[#F97316] bg-[#FFF4E8]"
+      ? "border-[#FF5A0A] bg-[#FFF4E8]"
       : "border-[#C9D7E6] bg-[#FFFDF8]";
 
   return (
     <div
-      className={`min-w-0 rounded-xl border-2 p-3 ${style}`}
+      className={`min-w-0 rounded-xl border-[2px] p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${style}`}
     >
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
         {label}
@@ -1011,7 +1011,7 @@ function DarkMetric({
   value,
 }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -1028,7 +1028,7 @@ function OrangeMetric({
   value,
 }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -1042,14 +1042,14 @@ function OrangeMetric({
 
 function MethodologyNote() {
   return (
-    <div className="rounded-[1.45rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4 shadow-[0_7px_18px_rgba(15,35,63,0.04)]">
+    <div className="rounded-[1.45rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#60A5FA] bg-white text-blue-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-[#123865] text-white">
           <BadgeCheck size={17} />
         </div>
 
         <div className="min-w-0">
-          <p className="text-sm font-black text-[#10233f]">
+          <p className="text-sm font-black text-[#10233F]">
             Queue methodology
           </p>
 

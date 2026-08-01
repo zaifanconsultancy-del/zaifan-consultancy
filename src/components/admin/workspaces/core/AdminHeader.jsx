@@ -1,5 +1,5 @@
-// AdminHeader V4 — compact Admin OS utility shell
-// src/components/admin/AdminHeader.jsx
+// AdminHeader V5 PARTNER OS — compact Admin OS utility shell
+// src/components/admin/core/AdminHeader.jsx
 //
 // Batch 19 ownership cleanup:
 // - keeps the existing public prop API for safe replacement
@@ -9,6 +9,7 @@
 // - Refresh and Logout remain global shell actions
 // - Export/Clear remain accepted props but are intentionally not global-header actions
 // - role/session and basic live counts stay visible without overwhelming Home
+// - Partner OS border, spacing, control and containment alignment
 
 import { useMemo, useState } from "react";
 import {
@@ -251,10 +252,10 @@ function AdminHeader({
   };
 
   return (
-    <header className="rounded-[1.35rem] border-2 border-[#C9D7E6] bg-white shadow-[0_10px_30px_rgba(15,35,63,0.05)]">
-      <div className="flex flex-col gap-3 p-3.5 sm:p-4 xl:flex-row xl:items-center xl:justify-between">
+    <header className="min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_12px_34px_rgba(15,35,63,0.08)]">
+      <div className="flex min-w-0 flex-col gap-3 p-3.5 sm:p-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-200 bg-orange-50 text-orange-700">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
             <RoleIcon size={17} />
           </div>
 
@@ -264,7 +265,7 @@ function AdminHeader({
                 {adminProfile?.full_name || "Admin User"}
               </p>
 
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-slate-600">
+              <span className="rounded-full border-2 border-[#C9D7E6] bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-slate-600">
                 {currentRole.label}
               </span>
 
@@ -292,7 +293,7 @@ function AdminHeader({
             type="button"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#123865] transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-55"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#123865] transition hover:border-[#FF5A0A] hover:bg-[#FFF4EA] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20 disabled:cursor-not-allowed disabled:opacity-55"
           >
             <RefreshCw
               size={15}
@@ -313,7 +314,7 @@ function AdminHeader({
             <button
               type="button"
               onClick={() => setActiveTab?.("system-overview")}
-              className="hidden h-10 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#123865] transition hover:border-orange-400 hover:bg-orange-50 md:inline-flex"
+              className="hidden h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#123865] transition hover:border-[#FF5A0A] hover:bg-[#FFF4EA] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20 md:inline-flex"
             >
               <UsersRound size={15} />
               System
@@ -323,7 +324,7 @@ function AdminHeader({
           <button
             type="button"
             onClick={logout}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-50 px-3 text-xs font-black text-orange-700 transition hover:border-orange-500 hover:bg-orange-100"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4EA] px-3 text-xs font-black text-[#B84F0E] transition hover:bg-[#FFE8D6] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20"
           >
             <LogOut size={15} />
             <span className="hidden sm:inline">Logout</span>

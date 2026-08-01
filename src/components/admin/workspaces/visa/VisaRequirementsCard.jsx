@@ -1,4 +1,4 @@
-// VisaRequirementsCard V3 MAXIMUM — Visa Readiness Intelligence
+// VisaRequirementsCard PARTNER OS EXTREME V4 — Visa Readiness Command Center
 // src/components/admin/VisaRequirementsCard.jsx
 //
 // Maximum pass:
@@ -938,75 +938,87 @@ function VisaRequirementsCard({
       : `${stats.readiness}%`;
 
   return (
-    <section className="rounded-[1.8rem] border-[3px] border-orange-300 bg-white p-4 shadow-[0_10px_28px_rgba(15,35,63,0.06)] sm:p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1.5">
-            <ShieldCheck
-              size={14}
-              className="text-orange-700"
-            />
+    <section className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                <ShieldCheck size={12} />
+                Visa Readiness Intelligence
+              </span>
 
-            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
-              Visa Readiness Intelligence
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                <Database size={12} />
+                Visa OS + Master File
+              </span>
+            </div>
+
+            <h3 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
+              Visa Requirements Command Center
+            </h3>
+
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
+              Control live Visa OS readiness, linked Student Master File evidence,
+              deadlines, expiry pressure, blockers and counselor next actions.
             </p>
+
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <HeroMetric label="Required" value={stats.total} />
+              <HeroMetric label="Ready" value={stats.ready} />
+              <HeroMetric label="Review" value={stats.review} />
+              <HeroMetric label="Overdue" value={stats.overdue} />
+            </div>
           </div>
 
-          <h3 className="mt-3 text-xl font-black text-[#10233f]">
-            Visa Requirements
-          </h3>
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Visa Command Actions
+            </p>
 
-          <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-            Live Visa OS readiness with Student Master File document links,
-            deadlines, expiry pressure and counselor next-action intelligence.
-          </p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">
+              Open the linked Student Master File or refresh all Visa OS sources
+              before acting on readiness, blockers or expiry pressure.
+            </p>
+
+            <div className="mt-4 grid min-w-0 gap-2">
+              {typeof onOpenMasterFile === "function" ? (
+                <button
+                  type="button"
+                  onClick={onOpenMasterFile}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-[#123865] px-4 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:border-white hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
+                >
+                  <FolderOpen size={15} />
+                  Open Master File
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => load({ force: true })}
+                disabled={loading}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw
+                  size={15}
+                  className={loading ? "animate-spin" : ""}
+                />
+                {loading ? "Refreshing..." : "Refresh Visa Data"}
+              </button>
+            </div>
+          </div>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          {typeof onOpenMasterFile ===
-          "function" ? (
-            <button
-              type="button"
-              onClick={onOpenMasterFile}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-[#0b2a57] bg-[#0b2a57] px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5"
-            >
-              <FolderOpen size={14} />
-              Open Master File
-            </button>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={() =>
-              load({ force: true })
-            }
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <RefreshCw
-              size={14}
-              className={
-                loading
-                  ? "animate-spin"
-                  : ""
-              }
-            />
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
-          </button>
-        </div>
-      </div>
+      </section>
 
       {error ? (
-        <div className="mt-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 text-sm font-bold text-amber-900">
+        <div className="rounded-[1.35rem] border-[3px] border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
           {error}
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_auto]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
         <div
-          className={`rounded-[1.35rem] border-[3px] p-4 ${getHealthStyle(
+          className={`min-w-0 rounded-[1.5rem] border-[3px] p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)] ${getHealthStyle(
             health.tone
           )}`}
         >
@@ -1017,7 +1029,7 @@ function VisaRequirementsCard({
               <p className="text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
                 Current Visa Readiness State
               </p>
-              <h4 className="mt-1 text-lg font-black text-[#10233f]">
+              <h4 className="mt-1 text-lg font-black text-[#10233F]">
                 {health.label}
               </h4>
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
@@ -1027,9 +1039,16 @@ function VisaRequirementsCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 xl:max-w-[480px] xl:justify-end">
-          {Object.entries(sourceHealth).map(
-            ([source, state]) => (
+        <div className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+          <div className="flex items-center gap-2">
+            <Database size={17} className="text-[#123865]" />
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+              Data Source Health
+            </p>
+          </div>
+
+          <div className="mt-3 flex min-w-0 flex-wrap gap-2">
+            {Object.entries(sourceHealth).map(([source, state]) => (
               <span
                 key={source}
                 className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${getSourceStyle(
@@ -1038,25 +1057,22 @@ function VisaRequirementsCard({
               >
                 {source}: {state}
               </span>
-            )
-          )}
+            ))}
 
-          {lastSyncedAt ? (
-            <span className="rounded-full border-2 border-slate-300 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-slate-600">
-              Synced{" "}
-              {lastSyncedAt.toLocaleTimeString(
-                "en-GB",
-                {
+            {lastSyncedAt ? (
+              <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-slate-600">
+                Synced{" "}
+                {lastSyncedAt.toLocaleTimeString("en-GB", {
                   hour: "2-digit",
                   minute: "2-digit",
-                }
-              )}
-            </span>
-          ) : null}
+                })}
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <Metric
           label="Readiness"
           value={readinessLabel}
@@ -1125,17 +1141,17 @@ function VisaRequirementsCard({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
         <div className="space-y-2">
           {requirements.length === 0 &&
           !loading ? (
-            <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-6 text-center">
+            <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-7 text-center shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
               <FileCheck2
                 size={28}
                 className="mx-auto text-orange-500"
               />
 
-              <p className="mt-3 text-sm font-black text-[#10233f]">
+              <p className="mt-3 text-sm font-black text-[#10233F]">
                 No Visa OS requirements created yet
               </p>
 
@@ -1165,12 +1181,12 @@ function VisaRequirementsCard({
               return (
                 <div
                   key={item.id}
-                  className="rounded-2xl border-2 border-slate-300 bg-white p-3 transition hover:border-orange-300"
+                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-black text-[#10233f]">
+                        <p className="font-black text-[#10233F]">
                           {item.requirement_name ||
                             "Unnamed requirement"}
                         </p>
@@ -1221,14 +1237,14 @@ function VisaRequirementsCard({
         </div>
 
         <div className="space-y-3">
-          <div className="rounded-2xl border-2 border-orange-300 bg-[#fffaf4] p-4">
+          <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
             <div className="flex items-center gap-2">
               <ShieldAlert
                 size={17}
                 className="text-orange-700"
               />
 
-              <h4 className="text-sm font-black text-[#10233f]">
+              <h4 className="text-sm font-black text-[#10233F]">
                 Current blockers
               </h4>
             </div>
@@ -1258,7 +1274,7 @@ function VisaRequirementsCard({
             )}
           </div>
 
-          <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
+          <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
             <div className="flex items-center gap-2">
               <Sparkles
                 size={15}
@@ -1270,7 +1286,7 @@ function VisaRequirementsCard({
               </p>
             </div>
 
-            <p className="mt-2 text-sm font-black text-[#10233f]">
+            <p className="mt-2 text-sm font-black text-[#10233F]">
               {nextRequirement?.item
                 ?.requirement_name ||
                 (stats.total
@@ -1291,7 +1307,7 @@ function VisaRequirementsCard({
 
           {linkedDocumentIntelligence
             .missingLinks.length ? (
-            <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
+            <div className="min-w-0 rounded-[1.45rem] border-[3px] border-amber-300 bg-amber-50 p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
               <p className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-900">
                 Master File Link Gaps
               </p>
@@ -1314,7 +1330,7 @@ function VisaRequirementsCard({
 
           {linkedDocumentIntelligence
             .expiring.length ? (
-            <div className="rounded-2xl border-2 border-blue-300 bg-blue-50 p-4">
+            <div className="min-w-0 rounded-[1.45rem] border-[3px] border-blue-300 bg-blue-50 p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
               <p className="text-[10px] font-black uppercase tracking-[0.12em] text-blue-800">
                 Expiry Watch
               </p>
@@ -1340,7 +1356,7 @@ function VisaRequirementsCard({
       </div>
 
       {visa ? (
-        <div className="mt-4 grid gap-2 rounded-2xl border-2 border-slate-300 bg-white p-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-w-0 gap-3 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:grid-cols-2 xl:grid-cols-4">
           <VisaField
             label="Visa Case"
             value={
@@ -1378,13 +1394,27 @@ function VisaRequirementsCard({
           />
         </div>
       ) : (
-        <div className="mt-4 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
+        <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-5 text-sm font-semibold text-slate-600 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
           No active Visa OS case is linked to this student yet.
         </div>
       )}
     </section>
   );
 }
+
+function HeroMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
 
 function Metric({
   label,
@@ -1394,7 +1424,7 @@ function Metric({
 }) {
   const tones = {
     slate:
-      "border-slate-300 bg-white text-[#10233f]",
+      "border-slate-300 bg-white text-[#10233F]",
     green:
       "border-emerald-300 bg-emerald-50 text-emerald-800",
     blue:
@@ -1407,7 +1437,7 @@ function Metric({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 ${
+      className={`flex min-w-0 items-center gap-3 rounded-[1.2rem] border-[3px] p-3 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md ${
         tones[tone] || tones.slate
       }`}
     >
@@ -1491,13 +1521,13 @@ function DeadlineBadge({ meta }) {
 
 function VisaField({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-slate-200 bg-[#fffaf4] px-3 py-2">
+    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-3">
       <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
         {label}
       </p>
 
       <p
-        className="mt-1 truncate text-xs font-black text-[#10233f]"
+        className="mt-1 truncate text-xs font-black text-[#10233F]"
         title={String(value || "")}
       >
         {value || "—"}

@@ -538,247 +538,420 @@ function ConversionAnalytics({
   return (
     <motion.section
       key="conversion-analytics"
-      initial={
-        shouldReduceMotion
-          ? false
-          : {
-              opacity: 0,
-              y: 14,
-            }
-      }
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration:
-          shouldReduceMotion
-            ? 0
-            : 0.3,
-        ease: [
-          0.22,
-          1,
-          0.36,
-          1,
-        ],
+        duration: shouldReduceMotion ? 0 : 0.26,
+        ease: [0.22, 1, 0.36, 1],
       }}
-      className="space-y-5"
+      className={`${cardClass} min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 text-[#10233F] shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5`}
     >
-      <header
-        className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4`}
-      >
-        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(19rem,0.8fr)]">
-          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
                 <Activity size={12} />
-                Pipeline Intelligence
+                Conversion OS
               </span>
 
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                <BarChart3 size={12} />
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                <Info size={12} />
                 Snapshot Analytics
               </span>
             </div>
 
-            <h2 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
-              Conversion Analytics
+            <h2 className="mt-3 text-3xl font-black text-white">
+              Pipeline Conversion Command
             </h2>
 
-            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
-              Compare current inquiry and appointment stage distribution,
-              successful outcomes and operational concentration without
-              pretending snapshot counts are true cohort drop-off.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Compare inquiry and appointment outcomes, stage concentration and
+              data quality without presenting current snapshot counts as true
+              historical drop-off.
             </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkStat
-                label="Inquiries"
-                value={inquiryTotal}
-              />
-              <DarkStat
-                label="Appointments"
-                value={appointmentTotal}
-              />
-              <DarkStat
-                label="Outcomes"
-                value={combinedOutcomeCount}
-              />
-              <DarkStat
-                label="Combined"
-                value={`${combinedConversion}%`}
-              />
-            </div>
           </div>
 
-          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
               View Controls
             </p>
 
-            <div className="mt-4">
-              <PipelineToggle
-                value={
-                  activePipeline
-                }
-                onChange={
-                  setActivePipeline
-                }
-              />
+            <div className="mt-3">
+              <PipelineToggle value={activePipeline} onChange={setActivePipeline} />
             </div>
 
             <label className="relative mt-3 block">
-              <span className="sr-only">
-                Select analytics
-                date range
-              </span>
-
+              <span className="sr-only">Select analytics date range</span>
               <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white" />
 
               <select
                 value={range}
-                onChange={(event) =>
-                  setRange(
-                    event.target
-                      .value
-                  )
-                }
+                onChange={(event) => setRange(event.target.value)}
                 className="h-11 w-full appearance-none rounded-xl border-2 border-white/30 bg-white/10 pl-9 pr-9 text-sm font-black text-white outline-none transition focus:border-white focus:ring-4 focus:ring-white/10"
               >
-                {RANGE_OPTIONS.map(
-                  (option) => (
-                    <option
-                      key={
-                        option.value
-                      }
-                      value={
-                        option.value
-                      }
-                      className="text-[#10233f]"
-                    >
-                      {
-                        option.label
-                      }
-                    </option>
-                  )
-                )}
+                {RANGE_OPTIONS.map((option) => (
+                  <option
+                    key={option.value}
+                    value={option.value}
+                    className="text-[#10233f]"
+                  >
+                    {option.label}
+                  </option>
+                ))}
               </select>
 
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white" />
             </label>
 
-            <p className="mt-4 text-xs font-semibold leading-5 text-white">
-              Conversion = successful outcome ÷ tracked records in the selected
-              date window.
-            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <HeroMetric label="Records" value={totalRecords} />
+              <HeroMetric label="Outcomes" value={combinedOutcomeCount} />
+              <HeroMetric label="Combined" value={`${combinedConversion}%`} />
+              <HeroMetric label="Data Quality" value={`${dataQuality}%`} />
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
-        {metrics.map(
-          (metric, index) => (
-            <MetricCard
-              key={
-                metric.label
-              }
-              {...metric}
-              index={index}
-              shouldReduceMotion={
-                shouldReduceMotion
-              }
-            />
-          )
-        )}
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <PartnerConversionMetric
+          label="Tracked Records"
+          value={totalRecords}
+          helper={`${inquiryTotal} inquiries · ${appointmentTotal} appointments`}
+          icon={Users}
+          tone="navy"
+          badge="CRM Scope"
+        />
+
+        <PartnerConversionMetric
+          label="Inquiry Conversion"
+          value={`${inquiryConversion}%`}
+          helper={`${approvedCount} approved student${approvedCount === 1 ? "" : "s"}`}
+          icon={TrendingUp}
+          tone={inquiryConversion >= 25 ? "green" : "blue"}
+          badge="Inquiry"
+        />
+
+        <PartnerConversionMetric
+          label="Appointment Conversion"
+          value={`${appointmentConversion}%`}
+          helper={`${convertedAppointments} converted booking${convertedAppointments === 1 ? "" : "s"}`}
+          icon={CalendarCheck2}
+          tone={appointmentConversion >= 25 ? "green" : "blue"}
+          badge="Appointment"
+        />
+
+        <PartnerConversionMetric
+          label="Data Quality"
+          value={`${dataQuality}%`}
+          helper={
+            inquiryUnknown + appointmentUnknown > 0
+              ? `${inquiryUnknown + appointmentUnknown} record(s) have unknown stages`
+              : "All tracked records map to a known stage"
+          }
+          icon={Gauge}
+          tone={
+            dataQuality >= 90
+              ? "green"
+              : dataQuality >= 70
+                ? "amber"
+                : "red"
+          }
+          badge="Integrity"
+        />
       </div>
 
       {totalRecords === 0 ? (
-        <EmptyAnalyticsState
-          cardClass={
-            cardClass
-          }
-        />
+        <EmptyAnalyticsState cardClass="" />
       ) : (
         <>
-          <div
-            className={`grid gap-5 ${
-              visibleColumns.length ===
-              2
-                ? "xl:grid-cols-2"
-                : ""
-            }`}
-          >
-            {visibleColumns.map(
-              (column) => (
-                <PipelineColumn
-                  key={column.id}
-                  {...column}
-                  cardClass={
-                    cardClass
-                  }
-                  shouldReduceMotion={
-                    shouldReduceMotion
-                  }
-                />
-              )
-            )}
-          </div>
+          <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+            <div className="mb-4">
+              <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                Conversion Command
+              </p>
 
-          <div className="grid gap-4 xl:grid-cols-3">
-            <InsightCard
-              icon={
-                TrendingUp
-              }
+              <h3 className="mt-1 text-xl font-black text-[#10233F]">
+                Pipeline operating portfolio
+              </h3>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                Each row represents a current pipeline snapshot—not a
+                historical cohort loss calculation.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {visibleColumns.map((column) => (
+                <ConversionPortfolioRow
+                  key={column.id}
+                  column={column}
+                  reduceMotion={shouldReduceMotion}
+                />
+              ))}
+            </div>
+          </section>
+
+          <div className="grid gap-3 lg:grid-cols-3">
+            <ConversionIntegrityCard
+              icon={TrendingUp}
               eyebrow="Primary Strength"
-              title={
-                strongestPipeline
+              title={strongestPipeline}
+              helper={
+                strongestPipeline === "Balanced"
+                  ? "Both pipelines currently show the same outcome rate."
+                  : `${strongestPipeline} currently has the higher successful-outcome share.`
               }
-              description={
-                strongestPipeline ===
-                "Balanced"
-                  ? "Both pipelines currently show the same successful-outcome rate."
-                  : `${strongestPipeline} currently produces the stronger measured outcome rate.`
+              tone="blue"
+            />
+
+            <ConversionIntegrityCard
+              icon={CircleDot}
+              eyebrow="Stage Concentration"
+              title={inquirySnapshot?.label || "No inquiry concentration"}
+              helper={
+                inquirySnapshot?.description ||
+                "Inquiry stage concentration will appear with mapped records."
               }
+              tone="amber"
+            />
+
+            <ConversionIntegrityCard
+              icon={Info}
+              eyebrow="Analytics Boundary"
+              title="Snapshot—not cohort history"
+              helper="True sequential conversion and drop-off require stored stage-transition events over time."
               tone="green"
             />
-
-            <InsightCard
-              icon={
-                CircleDot
-              }
-              eyebrow="Inquiry Concentration"
-              title={
-                inquirySnapshot.title
-              }
-              description={
-                inquirySnapshot.description
-              }
-              tone={
-                inquirySnapshot.tone
-              }
-            />
-
-            <InsightCard
-              icon={
-                CalendarCheck2
-              }
-              eyebrow="Appointment Concentration"
-              title={
-                appointmentSnapshot.title
-              }
-              description={
-                appointmentSnapshot.description
-              }
-              tone={
-                appointmentSnapshot.tone
-              }
-            />
           </div>
-
-          <AnalyticsTruthNote />
         </>
       )}
     </motion.section>
+  );
+}
+
+
+function HeroMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-orange-50">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function PartnerConversionMetric({
+  label,
+  value,
+  helper,
+  icon: Icon,
+  tone = "blue",
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#123865] bg-[#123865]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <article
+      className={`flex min-h-[176px] h-full flex-col justify-between rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
+        </div>
+
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+            dark
+              ? "border-white/20 bg-white/10 text-orange-200"
+              : "border-[#123865]/15 bg-white text-[#123865]"
+          }`}
+        >
+          <Icon size={16} />
+        </div>
+      </div>
+
+      <div>
+        <p
+          className={`mt-4 text-xs font-semibold leading-5 ${
+            dark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
+          {helper}
+        </p>
+
+        {badge ? (
+          <span
+            className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+              dark
+                ? "border-white/20 bg-white/10 text-white"
+                : "border-[#C9D7E6] bg-white text-slate-600"
+            }`}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function ConversionPortfolioRow({ column, reduceMotion }) {
+  const activeStages = column.items.filter((stage) => stage.count > 0);
+  const topStage = [...column.items].sort((a, b) => b.count - a.count)[0];
+
+  return (
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.22 }}
+      className="rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4"
+    >
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(16rem,1.35fr)_8rem_9rem_11rem] xl:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h4 className="font-black text-[#10233F]">{column.title}</h4>
+            <span className="rounded-full border-2 border-[#F97316] bg-[#FFF4EA] px-2.5 py-1 text-[8px] font-black uppercase text-orange-700">
+              {activeStages.length} active stages
+            </span>
+          </div>
+
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {column.subtitle}
+          </p>
+        </div>
+
+        <ConversionMiniValue label="Tracked" value={column.total} />
+        <ConversionMiniValue label="Outcome" value={`${column.conversion}%`} />
+        <ConversionMiniValue
+          label="Top Stage"
+          value={topStage?.label || "No stage"}
+        />
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {column.items.map((stage) => (
+          <div
+            key={stage.key}
+            className="rounded-xl border-2 border-[#D7E1EB] bg-white p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate text-xs font-black text-[#10233F]">
+                {stage.shortLabel || stage.label}
+              </p>
+              <span className="text-sm font-black text-[#10233F]">
+                {stage.count}
+              </span>
+            </div>
+
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-[#FF5A0A]"
+                style={{ width: `${stage.share || stage.percent || 0}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        <div className="rounded-xl border-2 border-[#60A5FA] bg-[#F2F7FF] p-3">
+          <p className="text-[8px] font-black uppercase tracking-[0.09em] text-blue-700">
+            Snapshot Insight
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {column.snapshot?.label || "No concentration signal"}
+          </p>
+        </div>
+
+        <div
+          className={`rounded-xl border-2 p-3 ${
+            column.unknownCount
+              ? "border-[#F59E0B] bg-[#FFF8E8]"
+              : "border-[#34D399] bg-[#F0FFF8]"
+          }`}
+        >
+          <p className="text-[8px] font-black uppercase tracking-[0.09em] text-slate-600">
+            Mapping Integrity
+          </p>
+          <p className="mt-1 text-xs font-black text-[#10233F]">
+            {column.unknownCount
+              ? `${column.unknownCount} unknown stage record(s)`
+              : "All stages recognized"}
+          </p>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function ConversionMiniValue({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+      <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xs font-black text-[#10233F]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ConversionIntegrityCard({
+  icon: Icon,
+  eyebrow,
+  title,
+  helper,
+  tone = "blue",
+}) {
+  const tones = {
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+  };
+
+  return (
+    <div className={`rounded-[1.35rem] border-[3px] p-4 ${tones[tone]}`}>
+      <div className="flex items-start gap-3">
+        <Icon size={17} className="mt-0.5 shrink-0 text-[#123865]" />
+        <div>
+          <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+            {eyebrow}
+          </p>
+          <p className="mt-1 font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {helper}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

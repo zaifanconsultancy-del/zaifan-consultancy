@@ -1,4 +1,4 @@
-// ProgramTracker V5 MAXIMUM — Academic Planning Readiness
+// ProgramTracker PARTNER OS EXTREME — Academic Planning Command
 // src/components/admin/ProgramTracker.jsx
 //
 // Focused maximum pass for a compact academic-planning component:
@@ -180,11 +180,11 @@ function ProgramTracker({ student = {} }) {
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.24 }}
-      className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-300 bg-white shadow-[0_10px_28px_rgba(15,35,63,0.05)]"
+      className="min-w-0 space-y-4 rounded-[2.1rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_20px_55px_rgba(18,56,101,0.13)] sm:p-4"
     >
-      <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
         <div
-          className="bg-[#123866] p-5 sm:p-6"
+          className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7"
           style={{ color: "#FFFFFF" }}
         >
           <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
@@ -202,14 +202,14 @@ function ProgramTracker({ student = {} }) {
           </div>
 
           <h3
-            className="mt-3 text-xl font-black sm:text-2xl"
+            className="mt-4 max-w-3xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl"
             style={{ color: "#FFFFFF" }}
           >
             Program Information
           </h3>
 
           <p
-            className="mt-2 max-w-2xl text-sm font-semibold leading-6"
+            className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100"
             style={{ color: "#F8FAFC" }}
           >
             Track the core academic decisions needed before the student moves
@@ -218,7 +218,7 @@ function ProgramTracker({ student = {} }) {
         </div>
 
         <div
-          className="bg-orange-500 p-5 sm:p-6"
+          className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7"
           style={{ color: "#FFFFFF" }}
         >
           <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ function ProgramTracker({ student = {} }) {
             </p>
           </div>
 
-          <p className="mt-3 text-4xl font-black text-white">
+          <p className="mt-3 text-5xl font-black text-white">
             {readiness}%
           </p>
 
@@ -244,8 +244,8 @@ function ProgramTracker({ student = {} }) {
         </div>
       </div>
 
-      <div className="bg-[#fff8ee] p-5 sm:p-6">
-        <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
+      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:p-5">
+        <div className="min-w-0 rounded-[1.3rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]">
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
               Academic Readiness
@@ -263,7 +263,7 @@ function ProgramTracker({ student = {} }) {
               transition={{
                 duration: reduceMotion ? 0 : 0.45,
               }}
-              className="h-full rounded-full bg-orange-500"
+              className="h-full rounded-full bg-[#FF5A0A]"
             />
           </div>
 
@@ -272,7 +272,7 @@ function ProgramTracker({ student = {} }) {
           </p>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
           <InfoCard
             label="Program"
             value={program}
@@ -302,14 +302,14 @@ function ProgramTracker({ student = {} }) {
           />
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
           {readinessItems.map((item) => {
             const Icon = item.icon;
 
             return (
               <div
                 key={item.key}
-                className={`rounded-xl border-2 p-4 ${
+                className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${
                   item.complete
                     ? "border-emerald-300 bg-emerald-50"
                     : "border-amber-300 bg-amber-50"
@@ -358,9 +358,9 @@ function ProgramTracker({ student = {} }) {
         </div>
 
         <div
-          className={`mt-5 rounded-[1.35rem] border-[3px] p-4 ${
+          className={`mt-5 min-w-0 rounded-[1.45rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
             missing.length
-              ? "border-orange-300 bg-orange-50"
+              ? "border-[#FF5A0A] bg-[#FFF4E8]"
               : "border-emerald-300 bg-emerald-50"
           }`}
         >
@@ -368,7 +368,7 @@ function ProgramTracker({ student = {} }) {
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 bg-white ${
                 missing.length
-                  ? "border-orange-300 text-orange-700"
+                  ? "border-[#FF5A0A] text-orange-700"
                   : "border-emerald-300 text-emerald-700"
               }`}
             >
@@ -384,7 +384,7 @@ function ProgramTracker({ student = {} }) {
                 Next Academic Action
               </p>
 
-              <p className="mt-1 text-sm font-black leading-6 text-[#10233f]">
+              <p className="mt-1 text-sm font-black leading-6 text-[#10233F]">
                 {nextAction}
               </p>
             </div>
@@ -392,7 +392,7 @@ function ProgramTracker({ student = {} }) {
         </div>
 
         {missing.length > 0 ? (
-          <div className="mt-3 flex items-start gap-3 rounded-xl border-2 border-slate-300 bg-white p-4">
+          <div className="mt-3 flex min-w-0 items-start gap-3 rounded-xl border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
 
             <p className="text-xs font-semibold leading-5 text-slate-600">
@@ -414,7 +414,7 @@ function InfoCard({
   ready,
 }) {
   return (
-    <div className="rounded-xl border-[3px] border-slate-300 bg-white p-4 shadow-[0_4px_14px_rgba(15,35,63,0.03)]">
+    <div className="min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
@@ -422,7 +422,7 @@ function InfoCard({
           </p>
 
           <p
-            className="mt-2 break-words font-black text-[#10233f]"
+            className="mt-2 break-words font-black text-[#10233F]"
             title={String(value || "")}
           >
             {value}
@@ -433,7 +433,7 @@ function InfoCard({
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 ${
             ready
               ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-              : "border-orange-300 bg-orange-50 text-orange-700"
+              : "border-[#FF5A0A] bg-[#FFF4E8] text-orange-700"
           }`}
         >
           <Icon size={16} />

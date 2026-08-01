@@ -1,5 +1,5 @@
-// AdminStats V3 MAXIMUM — Executive Operating Intelligence
-// src/components/admin/AdminStats.jsx
+// AdminStats V4 PARTNER OS — Executive Operating Intelligence
+// src/components/admin/core/AdminStats.jsx
 //
 // Full maximum pass:
 // - preserves the existing prop API: no parent rewiring required
@@ -13,7 +13,8 @@
 // - adds attention queue and executive summary derived from current data
 // - preserves animated counters/progress with reduced-motion support
 // - follows Zaifan rule: ALL navy surfaces use white text
-// - denser, stronger, more responsive Admin OS presentation
+// - denser, stronger, more responsive Partner OS presentation
+// - locked #123865 navy / #10233F text / #FF5A0A orange / #FFF8EF cream
 
 import { useEffect, useMemo } from "react";
 import {
@@ -894,15 +895,14 @@ function AdminStats({
   ];
 
   return (
-    <section className="mb-6 space-y-4">
+    <section className="mb-6 min-w-0 space-y-4 rounded-[2.2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-5 shadow-[0_20px_55px_rgba(18,56,101,0.10)]">
       <motion.section
         initial={reduceMotion ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: reduceMotion ? 0 : 0.28 }}
-        className={`${cardClass} rounded-[2rem] border-[3px] bg-[#fff8ef] p-3 shadow-[0_18px_46px_rgba(15,35,63,0.08)] sm:p-4`}
-        style={{ borderColor: "#fb923c" }}
+        className="min-w-0 bg-transparent"
       >
-        <div className="grid overflow-hidden rounded-[1.55rem] border-2 border-[#234e78] xl:grid-cols-[1.25fr_0.75fr]">
+        <div className="grid min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div
             className="relative overflow-hidden p-5 text-white sm:p-7"
             style={{ backgroundColor: NAVY }}
@@ -939,7 +939,7 @@ function AdminStats({
             </div>
           </div>
 
-          <div className="border-t-2 border-orange-300 bg-orange-500 p-5 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
+          <div className="border-t-[3px] border-white/25 bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
             <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
               Operating Health
             </p>
@@ -1080,9 +1080,9 @@ function MetricSection({
   children,
 }) {
   return (
-    <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#c8d8e8] bg-[#fff8ef] shadow-[0_16px_40px_rgba(15,35,63,0.09)]">
+    <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] shadow-[0_16px_40px_rgba(15,35,63,0.09)]">
       <div
-        className="flex items-start gap-3 border-b-[3px] border-orange-500 px-5 py-4 text-white sm:px-6"
+        className="flex min-w-0 items-start gap-3 border-b-[3px] border-[#FF5A0A] px-5 py-4 text-white sm:px-6"
         style={{ backgroundColor: NAVY }}
       >
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-orange-300 bg-white/10 text-white">
@@ -1124,7 +1124,7 @@ function PerformanceCard({
         duration: reduceMotion ? 0 : 0.24,
         delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.1),
       }}
-      className="rounded-[1.4rem] border-2 border-[#c8d8e8] bg-white p-4 text-[#10233f] shadow-[0_8px_20px_rgba(15,35,63,0.05)] transition hover:-translate-y-0.5 hover:border-orange-400 hover:shadow-[0_12px_26px_rgba(15,35,63,0.09)]"
+      className="min-w-0 rounded-[1.4rem] border-2 border-[#C9D7E6] bg-white p-4 text-[#10233F] shadow-[0_8px_20px_rgba(15,35,63,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_12px_26px_rgba(15,35,63,0.09)]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -1132,7 +1132,7 @@ function PerformanceCard({
             {stat.label}
           </p>
 
-          <p className="mt-2 text-4xl font-black leading-none text-[#10233f]">
+          <p className="mt-2 text-4xl font-black leading-none text-[#10233F]">
             <AnimatedNumber value={stat.value} />
           </p>
         </div>
@@ -1186,14 +1186,14 @@ function OperationalCard({
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : Math.min(index * 0.02, 0.08),
       }}
-      className={`rounded-[1.35rem] border-2 border-[#c8d8e8] bg-white p-4 text-[#10233f] shadow-[0_7px_18px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-orange-400 ${tone.card}`}
+      className={`min-w-0 rounded-[1.35rem] border-2 border-[#C9D7E6] bg-white p-4 text-[#10233F] shadow-[0_7px_18px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] ${tone.card}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
             {stat.label}
           </p>
-          <p className="mt-1.5 text-3xl font-black text-[#10233f]">
+          <p className="mt-1.5 text-3xl font-black text-[#10233F]">
             <AnimatedNumber value={stat.value} />
           </p>
         </div>
@@ -1221,7 +1221,7 @@ function CompactHealth({
   const toneConfig = getTone(tone);
 
   return (
-    <div className="rounded-[1.2rem] border-2 border-[#c8d8e8] bg-white p-4 text-[#10233f] shadow-[0_7px_18px_rgba(15,35,63,0.045)]">
+    <div className="min-w-0 rounded-[1.2rem] border-2 border-[#C9D7E6] bg-white p-4 text-[#10233F] shadow-[0_7px_18px_rgba(15,35,63,0.045)]">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
           {label}
@@ -1231,7 +1231,7 @@ function CompactHealth({
         />
       </div>
 
-      <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
       <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
         {detail}
       </p>
@@ -1245,13 +1245,13 @@ function AttentionCenter({
   reduceMotion,
 }) {
   return (
-    <section className="rounded-[1.9rem] border-[3px] border-orange-300 bg-[#fff8ee] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.06)] sm:p-6">
+    <section className="min-w-0 rounded-[1.9rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5 shadow-[0_12px_30px_rgba(15,35,63,0.07)] sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
             Priority Center
           </p>
-          <h3 className="mt-1 text-2xl font-black text-[#10233f]">
+          <h3 className="mt-1 text-2xl font-black text-[#10233F]">
             Operational Attention
           </h3>
           <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
@@ -1342,7 +1342,7 @@ function AttentionRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-black text-[#10233f]">
+          <p className="text-xs font-black text-[#10233F]">
             {item.label}
           </p>
           <span className={`rounded-full px-2 py-0.5 text-[9px] font-black ${tone.badge}`}>
@@ -1404,7 +1404,7 @@ function OrangeHeroMetric({
 function getTone(tone = "slate") {
   const tones = {
     orange: {
-      icon: "border-orange-300 bg-orange-50 text-orange-700",
+      icon: "border-orange-300 bg-orange-50 text-[#B84F0E]",
       bar: "bg-orange-500",
       dot: "bg-orange-400",
       card: "border-l-[5px] border-l-orange-400",
@@ -1454,7 +1454,7 @@ function getLightTone(tone = "slate") {
     amber: {
       card: "border-amber-300 bg-amber-50",
       icon: "border-amber-300 bg-white text-amber-800",
-      badge: "bg-amber-500 text-[#10233f]",
+      badge: "bg-amber-500 text-[#10233F]",
     },
     emerald: {
       card: "border-emerald-300 bg-emerald-50",

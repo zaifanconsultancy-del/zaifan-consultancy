@@ -1,4 +1,4 @@
-// AIAnalytics V3 EXTREME — Zaifan AI Command OS
+// AIAnalytics V4 PARTNER-OS ALIGNED — Zaifan AI Command OS
 // Full replacement for:
 // src/components/admin/ai-command/AIAnalytics.jsx
 //
@@ -578,8 +578,8 @@ export default function AIAnalytics({
         onOpenModule={onOpenModule}
       />
 
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_18px_48px_rgba(23,36,61,0.09)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.5fr)]">
+      <header className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
+        <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-7">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderChip icon={BarChart3} label="AI Analytics" />
@@ -609,7 +609,7 @@ export default function AIAnalytics({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -651,7 +651,7 @@ export default function AIAnalytics({
           </div>
         </div>
 
-        <div className="border-t-[3px] border-orange-300 bg-[#FFF8EE] p-3 sm:p-4">
+        <div className="border-t-[3px] border-[#F97316] bg-[#FFF8EF] p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_auto]">
             <div className="relative">
               <Search
@@ -663,7 +663,7 @@ export default function AIAnalytics({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search analytics, stages, coverage or operational signals..."
                 aria-label="Search AI Analytics"
-                className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
               />
               {search ? (
                 <button
@@ -681,7 +681,7 @@ export default function AIAnalytics({
               type="button"
               onClick={() => void handleRefresh()}
               disabled={!hasRefresh || refreshing}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-xs font-black text-white transition hover:bg-[#E94F00] disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500"
             >
               <RefreshCw
                 size={15}
@@ -772,7 +772,7 @@ export default function AIAnalytics({
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
+        <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316] bg-[#FFF8EF]">
           <SectionHeader
             eyebrow="Model Governance"
             title="AI Quality Telemetry"
@@ -815,7 +815,7 @@ export default function AIAnalytics({
         </div>
 
         {hasOpenSystem ? (
-          <div className="flex flex-wrap gap-2 border-t-2 border-slate-200 bg-[#EEF4FA] p-4">
+          <div className="flex flex-wrap gap-2 border-t-2 border-[#E1E8F0] bg-[#F2F7FF] p-4">
             <SystemAction
               label="Open Operations"
               onClick={() => onOpenSystem("operations")}
@@ -832,7 +832,7 @@ export default function AIAnalytics({
         ) : null}
       </section>
 
-      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
+      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316] bg-[#FFF8EF]">
         <SectionHeader
           eyebrow="Source Audit"
           title="Connected Intelligence Sources"
@@ -848,7 +848,7 @@ export default function AIAnalytics({
               className={`rounded-xl border-2 p-4 ${
                 item.connected
                   ? "border-emerald-400 bg-emerald-50"
-                  : "border-slate-300 bg-white"
+                  : "border-[#C9D7E6] bg-white"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
@@ -875,7 +875,7 @@ export default function AIAnalytics({
       </section>
 
       <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4">
           <div className="flex items-start gap-3">
             <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#123865]" />
             <div>
@@ -891,9 +891,9 @@ export default function AIAnalytics({
           </div>
         </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4">
           <div className="flex items-start gap-3">
-            <BarChart3 size={18} className="mt-0.5 shrink-0 text-orange-700" />
+            <BarChart3 size={18} className="mt-0.5 shrink-0 text-[#B84F0E]" />
             <div>
               <p className="font-black text-[#10233F]">
                 Observed vs evaluated
@@ -934,7 +934,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
+        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#B84F0E]">
           {eyebrow}
         </p>
         <h2 className="mt-1 text-xl font-black text-[#10233F]">{title}</h2>
@@ -943,7 +943,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
         </p>
       </div>
 
-      <span className="w-fit rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+      <span className="w-fit rounded-lg border-2 border-[#234E78] bg-[#F2F7FF] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
         {badge}
       </span>
     </div>
@@ -958,7 +958,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white sm:px-5">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white sm:px-5">
       <div className="min-w-0">
         <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
           {eyebrow}
@@ -998,7 +998,7 @@ function MetricCard({ label, value, detail, source, tone = "navy", icon: Icon })
         {detail}
       </p>
 
-      <span className="mt-3 inline-flex rounded-md border border-slate-300 bg-white/70 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+      <span className="mt-3 inline-flex rounded-md border border-[#C9D7E6] bg-white/70 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
         {source}
       </span>
     </article>
@@ -1023,7 +1023,7 @@ function JourneyRow({ item }) {
   const width = item.share === null ? 0 : Math.max(2, Math.min(100, item.share));
 
   return (
-    <article className="rounded-xl border-2 border-slate-300 bg-white p-4">
+    <article className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-black capitalize text-[#10233F]">
@@ -1058,7 +1058,7 @@ function QualityCard({ item }) {
       className={`rounded-xl border-2 p-4 ${
         item.available
           ? "border-emerald-400 bg-emerald-50"
-          : "border-slate-300 bg-white"
+          : "border-[#C9D7E6] bg-white"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -1135,7 +1135,7 @@ function InlineNotice({
           <button
             type="button"
             onClick={onAction}
-            className="shrink-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA]"
           >
             {actionLabel}
           </button>
@@ -1147,7 +1147,7 @@ function InlineNotice({
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F7FAFC] p-5 text-center">
       <Sparkles className="mx-auto text-orange-600" size={20} />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-md text-xs font-semibold leading-5 text-slate-600">
@@ -1158,7 +1158,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search
         </button>
@@ -1169,8 +1169,8 @@ function EmptyState({ title, text, onClear }) {
 
 function toneClass(tone = "navy") {
   if (tone === "red") return "border-red-400 bg-red-50";
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA]";
   if (tone === "green") return "border-emerald-400 bg-emerald-50";
   if (tone === "blue") return "border-blue-400 bg-blue-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
+  return "border-[#234E78] bg-[#F2F7FF]";
 }

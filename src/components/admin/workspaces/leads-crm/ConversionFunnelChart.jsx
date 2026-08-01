@@ -161,60 +161,52 @@ function ConversionFunnelChart({ cardClass = "", inquiries = [] }) {
   ];
 
   return (
-    <section className="space-y-5">
-      <motion.header
-        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.28 }}
-        className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4`}
-      >
-        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
-          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                <BarChart3 size={13} />
-                Funnel Intelligence
+    <motion.section
+      key="conversion-funnel"
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.26,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className={`${cardClass} min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 text-[#10233F] shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5`}
+    >
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+                <BarChart3 size={12} />
+                Funnel OS
               </span>
 
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                <CircleDot size={13} />
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                <CircleDot size={12} />
                 Live Snapshot
               </span>
             </div>
 
-            <h2 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
-              Student Journey Funnel
+            <h2 className="mt-3 text-3xl font-black text-white">
+              Student Journey Funnel Command
             </h2>
 
-            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
-              See where inquiry records currently sit across the Zaifan student
-              journey, how deep the active pipeline has progressed, and where
-              workload is concentrated.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              See where inquiry records currently sit across the Zaifan journey,
+              how deep the active pipeline has progressed and where workload is
+              concentrated.
             </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkMetric label="Leads" value={totalLeads} />
-              <DarkMetric label="Active Stages" value={activeStages} />
-              <DarkMetric label="Approved" value={approvedCount} />
-              <DarkMetric label="Unmapped" value={unknownCount} />
-            </div>
           </div>
 
-          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
               Pipeline Snapshot
             </p>
 
-            <p className="mt-3 text-4xl font-black text-white">
-              {approvedShare}%
-            </p>
+            <p className="mt-2 text-4xl font-black">{approvedShare}%</p>
+            <p className="mt-1 text-sm font-black">currently approved</p>
 
-            <p className="mt-1 text-sm font-black text-white">
-              currently approved
-            </p>
-
-            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-4 text-white">
-              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
+            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-orange-50">
                 Deepest Active Stage
               </p>
               <p className="mt-1 text-lg font-black text-white">
@@ -222,15 +214,17 @@ function ConversionFunnelChart({ cardClass = "", inquiries = [] }) {
               </p>
             </div>
 
-            <p className="mt-4 text-xs font-semibold leading-5 text-white">
-              This is a current-state funnel. True historical conversion and
-              drop-off require student stage-transition history.
-            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <DarkMetric label="Leads" value={totalLeads} />
+              <DarkMetric label="Stages" value={activeStages} />
+              <DarkMetric label="Approved" value={approvedCount} />
+              <DarkMetric label="Unmapped" value={unknownCount} />
+            </div>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {metricCards.map((metric, index) => (
           <MetricCard
             key={metric.label}
@@ -242,112 +236,122 @@ function ConversionFunnelChart({ cardClass = "", inquiries = [] }) {
       </div>
 
       {totalLeads === 0 ? (
-        <div
-          className={`${cardClass} rounded-[2rem] border-[3px] border-dashed border-[#F97316] bg-[#FFFDF8] p-9 text-center shadow-[0_8px_22px_rgba(15,35,63,0.04)]`}
-        >
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
-            <BarChart3 size={28} />
+        <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#F97316] bg-white p-9 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4EA] text-orange-700">
+            <BarChart3 size={26} />
           </div>
 
-          <h3 className="mt-4 text-xl font-black text-[#10233f]">
+          <h3 className="mt-4 text-lg font-black text-[#10233F]">
             Funnel will activate with inquiry data
           </h3>
 
           <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-            Add inquiry records and update their pipeline stages to see student
-            distribution, pipeline depth and stage concentration.
+            Add inquiry records and update their stages to activate journey
+            distribution, depth and concentration evidence.
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-          <div
-            className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_14px_36px_rgba(15,35,63,0.07)]`}
-          >
-            <div className="overflow-hidden rounded-[1.6rem] border-[3px] border-[#F97316]">
-              <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
-                <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
-                  Stage Distribution
-                </p>
+        <>
+          <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+            <div className="mb-4">
+              <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+                Funnel Command
+              </p>
 
-                <h3 className="mt-1 break-words text-xl font-black leading-6 text-white">
-                  Current inquiry pipeline
-                </h3>
+              <h3 className="mt-1 text-xl font-black text-[#10233F]">
+                Current inquiry pipeline
+              </h3>
 
-                <p className="mt-1 break-words text-sm font-semibold leading-5 text-white">
-                  Each bar represents the share of all tracked inquiry records
-                  currently sitting in that stage.
-                </p>
-              </div>
-
-              <div className="space-y-3 bg-[#FFF8EE] p-4 sm:p-5">
-                {funnel.map((stage, index) => {
-                  const Icon = stage.icon;
-
-                  return (
-                    <motion.article
-                      key={stage.key}
-                      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: reduceMotion ? 0 : 0.22,
-                        delay: reduceMotion ? 0 : index * 0.025,
-                      }}
-                      className="min-w-0 rounded-[1.3rem] border-[3px] border-[#D1DCE7] bg-[#FFFDF8] p-4 transition hover:border-[#F97316] hover:shadow-[0_8px_20px_rgba(15,35,63,0.055)]"
-                    >
-                      <div className="flex min-w-0 items-start gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
-                          <Icon size={18} />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                <h4 className="break-words font-black text-[#10233f]">
-                                  {stage.label}
-                                </h4>
-
-                                <span className="rounded-full border-2 border-[#C9D7E6] bg-white px-2.5 py-1 text-[9px] font-black uppercase text-slate-600">
-                                  Stage {index + 1}/{funnel.length}
-                                </span>
-                              </div>
-
-                              <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
-                                {stage.description}
-                              </p>
-                            </div>
-
-                            <div className="shrink-0 text-right">
-                              <p className="text-xl font-black text-[#10233f]">
-                                {stage.count}
-                              </p>
-                              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
-                                {stage.percent}% share
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-                            <motion.div
-                              initial={reduceMotion ? false : { width: 0 }}
-                              animate={{ width: `${stage.percent}%` }}
-                              transition={{
-                                duration: reduceMotion ? 0 : 0.55,
-                                delay: reduceMotion ? 0 : 0.04 + index * 0.025,
-                              }}
-                              className="h-full rounded-full bg-[#E96512]"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </motion.article>
-                  );
-                })}
-              </div>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                Each row shows the current share of tracked inquiries at that
+                stage. This is not historical cohort drop-off.
+              </p>
             </div>
-          </div>
 
-          <aside className="space-y-4">
+            <div className="space-y-2.5">
+              {funnel.map((stage, index) => {
+                const Icon = stage.icon;
+
+                return (
+                  <motion.article
+                    key={stage.key}
+                    initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.22,
+                      delay: reduceMotion ? 0 : index * 0.025,
+                    }}
+                    className="grid min-w-0 gap-3 rounded-[1.25rem] border-2 border-[#C9D7E6] bg-[#FFFDF8] p-4 xl:grid-cols-[minmax(17rem,1.45fr)_8rem_9rem_minmax(14rem,0.9fr)] xl:items-center"
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#FFF4EA] text-orange-700">
+                        <Icon size={17} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-black text-[#10233F]">
+                            {stage.label}
+                          </p>
+
+                          <span className="rounded-full border-2 border-[#C9D7E6] bg-white px-2.5 py-1 text-[8px] font-black uppercase text-slate-600">
+                            Stage {index + 1}/{funnel.length}
+                          </span>
+                        </div>
+
+                        <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                          {stage.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+                      <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+                        Records
+                      </p>
+                      <p className="mt-1 text-sm font-black text-[#10233F]">
+                        {stage.count}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl border border-[#E1E8F0] bg-[#F2F7FF] px-3 py-2.5">
+                      <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+                        Share
+                      </p>
+                      <p className="mt-1 text-sm font-black text-[#10233F]">
+                        {stage.percent}%
+                      </p>
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="h-2.5 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+                        <motion.div
+                          initial={reduceMotion ? false : { width: 0 }}
+                          animate={{ width: `${stage.percent}%` }}
+                          transition={{
+                            duration: reduceMotion ? 0 : 0.55,
+                            delay: reduceMotion ? 0 : 0.04 + index * 0.025,
+                          }}
+                          className="h-full rounded-full bg-[#FF5A0A]"
+                        />
+                      </div>
+
+                      <p className="mt-2 text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
+                        Current-stage distribution
+                      </p>
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 grid gap-3 xl:grid-cols-2">
+              <OperationalRecommendation analytics={analytics} />
+              <MethodologyNote />
+            </div>
+          </section>
+
+          <div className="grid gap-3 lg:grid-cols-3">
             <InsightCard
               icon={CircleDot}
               eyebrow="Largest Workload"
@@ -360,8 +364,17 @@ function ConversionFunnelChart({ cardClass = "", inquiries = [] }) {
               icon={TrendingUp}
               eyebrow="Pipeline Depth"
               title={`${averageDepth}% average depth`}
-              description={getDepthMessage(averageDepth, deepestActiveStage)}
-              tone={averageDepth >= 60 ? "green" : averageDepth >= 35 ? "orange" : "blue"}
+              description={getDepthMessage(
+                averageDepth,
+                deepestActiveStage
+              )}
+              tone={
+                averageDepth >= 60
+                  ? "green"
+                  : averageDepth >= 35
+                    ? "orange"
+                    : "blue"
+              }
             />
 
             <InsightCard
@@ -370,19 +383,15 @@ function ConversionFunnelChart({ cardClass = "", inquiries = [] }) {
               title={`${dataQuality}% mapped correctly`}
               description={
                 unknownCount
-                  ? `${unknownCount} inquiry record(s) use a status that does not match this funnel. Review those statuses before trusting pipeline reporting.`
+                  ? `${unknownCount} inquiry record(s) use an unmapped stage and should be reviewed.`
                   : "Every inquiry in this snapshot maps to a recognized Zaifan funnel stage."
               }
               tone={unknownCount ? "amber" : "green"}
             />
-
-            <OperationalRecommendation analytics={analytics} />
-
-            <MethodologyNote />
-          </aside>
-        </div>
+          </div>
+        </>
       )}
-    </section>
+    </motion.section>
   );
 }
 

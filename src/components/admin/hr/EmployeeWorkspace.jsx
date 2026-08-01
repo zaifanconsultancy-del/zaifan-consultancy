@@ -87,7 +87,7 @@ function EvidencePill({ children, tone = "blue" }) {
 
   return (
     <span
-      className={`inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${
+      className={`inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${
         tones[tone] || tones.blue
       }`}
     >
@@ -106,7 +106,7 @@ function EmployeeCard({ person, compact }) {
     : null;
 
   return (
-    <article className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-[#F97316]">
+    <article className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-[#F97316]">
       <div
         className={
           compact
@@ -133,7 +133,7 @@ function EmployeeCard({ person, compact }) {
 
           <div className="mt-3 flex flex-wrap gap-2">
             <span
-              className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
+              className={`rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
                 person.status
               )}`}
             >
@@ -244,7 +244,7 @@ function EmployeeCard({ person, compact }) {
             </div>
           </div>
 
-          <div className="mt-3 h-3 overflow-hidden rounded-full border-2 border-[#D1DCE7] bg-[#FFF8EF]">
+          <div className="mt-3 h-3 overflow-hidden rounded-full border-2 border-[#E1E8F0] bg-[#FFF8EF]">
             <div
               className={`h-full rounded-full transition-[width] duration-300 ${
                 performanceAvailable ? "bg-[#F97316]" : "bg-slate-300"
@@ -357,9 +357,9 @@ export default function EmployeeWorkspace({ hr = {}, compact = false }) {
 
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
-      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <div className="bg-[#123865] p-5 text-white sm:p-6">
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-[#F97316]/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <UsersRound size={12} />
             Employee Workspace
           </div>
@@ -508,7 +508,7 @@ export default function EmployeeWorkspace({ hr = {}, compact = false }) {
               type="button"
               onClick={clearFilters}
               disabled={!filtersActive}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-[#B84F0E] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X size={13} />
               Clear
@@ -527,7 +527,7 @@ export default function EmployeeWorkspace({ hr = {}, compact = false }) {
             ))
           ) : (
             <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#C9D7E6] bg-[#FFFDF8] text-[#B84F0E]">
                 <UsersRound size={24} />
               </div>
 

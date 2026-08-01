@@ -1,4 +1,4 @@
-// UniversityManagementPanel V5.1 MAXIMUM — Syntax-Fixed University Strategy / Shortlist OS
+// UniversityManagementPanel PARTNER OS EXTREME — University Strategy Command Center
 // Zaifan Admin OS functional overhaul:
 // - dedicated shortlist workspace with Dream / Target / Safe strategy
 // - real structured Supabase persistence using student_universities
@@ -1721,35 +1721,38 @@ function UniversityManagementPanel({
   };
 
   return (
-    <div className="space-y-4 bg-[#fffaf4] p-3 text-[#10233f] sm:p-4 lg:p-5">
-      <section className="rounded-[1.7rem] border-[3px] border-orange-500 bg-white p-4 shadow-[0_12px_32px_rgba(121,72,40,0.08)] sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(17rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white">
                 University Planning OS
               </span>
-              <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-100">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
                 Italy First
               </span>
             </div>
 
-            <h2 className="mt-2 text-2xl font-black text-[#10233f]">
+            <h2 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               University Strategy Center
             </h2>
 
-            <p className="mt-1 max-w-3xl text-sm font-medium text-slate-600">
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Build a practical Dream / Target / Safe shortlist, verify eligibility,
               compare cost and deadlines, then create one independent Application OS
               record per university.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">University Strategy Actions</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">Add a university option or refresh the live shortlist before changing strategy, requirements, applications, or archive state.</p>
+            <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
             <button
               type="button"
               onClick={beginNewUniversity}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-700 bg-orange-500 px-3.5 py-2.5 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-[#123865] px-3.5 py-2.5 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 active:translate-y-0"
             >
               <Plus size={15} />
               Add University
@@ -1759,15 +1762,16 @@ function UniversityManagementPanel({
               type="button"
               onClick={() => loadCoreData({ force: true })}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2.5 text-xs font-black text-[#10233f] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md active:translate-y-0 disabled:opacity-50"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-3.5 py-2.5 text-xs font-black text-[#123865] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
               Refresh
             </button>
+            </div>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-8">
+        <div className="grid min-w-0 gap-2 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
           <Metric label="Active" value={stats.total} icon={University} />
           <Metric label="Dream" value={stats.dream} icon={Sparkles} tone="orange" />
           <Metric label="Target" value={stats.target} icon={Scale} tone="blue" />
@@ -1797,13 +1801,13 @@ function UniversityManagementPanel({
         </Feedback>
       ) : null}
 
-      <section className="rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
               Portfolio Intelligence
             </p>
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Shortlist Pressure Check
             </h3>
             <p className="mt-1 text-xs font-semibold text-slate-600">
@@ -1813,7 +1817,7 @@ function UniversityManagementPanel({
           </div>
 
           {lastSyncedAt ? (
-            <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase text-slate-700">
+            <span className="rounded-full border border-[#C9D7E6] bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase text-slate-700">
               Synced{" "}
               {lastSyncedAt.toLocaleTimeString("en-GB", {
                 hour: "2-digit",
@@ -1823,7 +1827,7 @@ function UniversityManagementPanel({
           ) : null}
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           <PressureTile
             label="Overdue Actions"
             value={portfolioIntelligence.overdueNextActions}
@@ -1875,8 +1879,8 @@ function UniversityManagementPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.5rem] border-[3px] border-orange-300 bg-white p-3">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+      <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+        <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center">
           <div className="relative flex-1">
             <Search
               size={15}
@@ -1886,7 +1890,7 @@ function UniversityManagementPanel({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Find university, program, intake or status..."
-              className="h-10 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold outline-none focus:border-orange-400"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </div>
 
@@ -1896,8 +1900,8 @@ function UniversityManagementPanel({
               onClick={() => setShowArchived(false)}
               className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${
                 !showArchived
-                  ? "border-orange-500 bg-orange-50 text-orange-800"
-                  : "border-slate-300 bg-white text-slate-700"
+                  ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
+                  : "border-[#C9D7E6] bg-white text-slate-700"
               }`}
             >
               Active
@@ -1908,8 +1912,8 @@ function UniversityManagementPanel({
               onClick={() => setShowArchived(true)}
               className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${
                 showArchived
-                  ? "border-[#0b2a57] bg-[#0b2a57]"
-                  : "border-slate-300 bg-white text-slate-700"
+                  ? "border-[#123865] bg-[#123865]"
+                  : "border-[#C9D7E6] bg-white text-slate-700"
               }`}
               style={{ color: showArchived ? "#ffffff" : undefined }}
             >
@@ -1919,7 +1923,7 @@ function UniversityManagementPanel({
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2 rounded-[1.3rem] border-[3px] border-orange-300 bg-white p-2 sm:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-2 gap-2 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-2 shadow-[0_8px_22px_rgba(18,56,101,0.04)] sm:grid-cols-4">
         {[
           ["shortlist", "Shortlist"],
           ["details", activeUniversity ? "University Workspace" : "New University"],
@@ -1930,10 +1934,10 @@ function UniversityManagementPanel({
             key={value}
             type="button"
             onClick={() => setActiveTab(value)}
-            className={`rounded-xl border-2 px-3 py-2.5 text-xs font-black ${
+            className={`rounded-xl border-2 px-3 py-2.5 text-xs font-black transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
               activeTab === value
-                ? "border-[#0b2a57] bg-[#0b2a57]"
-                : "border-slate-300 bg-white text-slate-700"
+                ? "border-[#123865] bg-[#123865]"
+                : "border-[#C9D7E6] bg-white text-slate-700"
             }`}
             style={{ color: activeTab === value ? "#ffffff" : undefined }}
           >
@@ -2058,15 +2062,15 @@ function ShortlistView({
   onDelete,
 }) {
   return (
-    <div className="grid gap-4 xl:grid-cols-3">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-3">
       {CATEGORY_OPTIONS.map((category) => (
         <section
           key={category.id}
-          className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4"
+          className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-black text-[#10233f]">
+              <h3 className="text-lg font-black text-[#10233F]">
                 {category.label}
               </h3>
               <p className="mt-1 text-xs font-semibold text-slate-600">
@@ -2074,7 +2078,7 @@ function ShortlistView({
               </p>
             </div>
 
-            <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-xs font-black text-orange-700">
+            <span className="rounded-full border border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-xs font-black text-orange-700">
               {(grouped[category.id] || []).length}
             </span>
           </div>
@@ -2127,7 +2131,7 @@ function ShortlistView({
                 );
               })
             ) : (
-              <div className="rounded-2xl border-2 border-dashed border-orange-200 bg-[#fffaf4] p-5 text-center">
+              <div className="rounded-[1.3rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-5 text-center">
                 <University size={24} className="mx-auto text-orange-300" />
                 <p className="mt-2 text-xs font-black text-slate-600">
                   No {category.label.toLowerCase()} options
@@ -2160,19 +2164,19 @@ function UniversityCard({
   const deadline = deadlineMeta(university.deadline_date);
 
   return (
-    <article className="rounded-2xl border-2 border-slate-300 bg-white p-3">
+    <article className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:border-[#FF5A0A] hover:shadow-md">
       <div className="flex items-start gap-3">
         <button
           type="button"
           onClick={onSelect}
           className="flex min-w-0 flex-1 items-start gap-3 text-left"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-600">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
             <GraduationCap size={17} />
           </span>
 
           <div className="min-w-0">
-            <p className="truncate font-black text-[#10233f]">
+            <p className="break-words font-black text-[#10233F]">
               {university.university}
             </p>
             <p className="mt-1 truncate text-xs font-semibold text-slate-600">
@@ -2198,8 +2202,8 @@ function UniversityCard({
           onClick={onCompare}
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
             selectedForCompare
-              ? "border-[#0b2a57] bg-[#0b2a57]"
-              : "border-slate-300 bg-white text-slate-600"
+              ? "border-[#123865] bg-[#123865]"
+              : "border-[#C9D7E6] bg-white text-slate-600"
           }`}
           style={{ color: selectedForCompare ? "#ffffff" : undefined }}
           title="Add/remove from comparison"
@@ -2231,7 +2235,7 @@ function UniversityCard({
           value={university.category || "target"}
           onChange={(event) => onCategoryChange(event.target.value)}
           disabled={busy}
-          className="h-9 rounded-xl border-2 border-slate-300 bg-white px-2 text-xs font-black capitalize text-[#10233f]"
+          className="h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-2 text-xs font-black capitalize text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
         >
           {CATEGORY_OPTIONS.map((option) => (
             <option key={option.id} value={option.id}>
@@ -2244,7 +2248,7 @@ function UniversityCard({
           value={university.status || "shortlisted"}
           onChange={(event) => onStatusChange(event.target.value)}
           disabled={busy}
-          className="h-9 rounded-xl border-2 border-slate-300 bg-white px-2 text-xs font-black capitalize text-[#10233f]"
+          className="h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-2 text-xs font-black capitalize text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option} value={option}>
@@ -2258,7 +2262,7 @@ function UniversityCard({
         <button
           type="button"
           onClick={onSelect}
-          className="rounded-xl border-2 border-orange-400 bg-orange-50 px-3 py-2 text-xs font-black text-orange-800 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-600 hover:bg-orange-100 hover:shadow-md active:translate-y-0"
+          className="min-h-10 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-2 text-xs font-black text-orange-800 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0"
         >
           Open Workspace
         </button>
@@ -2271,7 +2275,7 @@ function UniversityCard({
                   type="button"
                   onClick={onCreateApplication}
                   disabled={busy}
-                  className="rounded-xl border-2 border-[#0b2a57] bg-[#0b2a57] px-3 py-2 text-xs font-black shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50"
+                  className="min-h-10 rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 disabled:opacity-50"
                   style={{ color: "#ffffff" }}
                 >
                   <span style={{ color: "#ffffff" }}>Open Application</span>
@@ -2292,7 +2296,7 @@ function UniversityCard({
                 type="button"
                 onClick={onCreateApplication}
                 disabled={busy}
-                className="rounded-xl border-2 border-orange-700 bg-orange-500 px-3 py-2 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0 disabled:opacity-50"
+                className="min-h-10 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-3 py-2 text-xs font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:opacity-50"
               >
                 Create Application
               </button>
@@ -2361,7 +2365,7 @@ function UniversityWorkspace({
 }) {
   return (
     <div className="space-y-4">
-      <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4 sm:p-5">
+      <section className="rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap gap-2">
@@ -2375,7 +2379,7 @@ function UniversityWorkspace({
               ) : null}
             </div>
 
-            <h3 className="mt-3 text-2xl font-black text-[#10233f]">
+            <h3 className="mt-3 text-2xl font-black text-[#10233F]">
               {form.university || "New University Option"}
             </h3>
 
@@ -2395,7 +2399,7 @@ function UniversityWorkspace({
             <button
               type="button"
               onClick={onNew}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-[#10233f]"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-xs font-black text-[#10233F]"
             >
               <Plus size={14} />
               New
@@ -2426,7 +2430,7 @@ function UniversityWorkspace({
               <button
                 type="button"
                 onClick={onArchive}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-slate-100 px-3 py-2 text-xs font-black text-slate-700"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-slate-100 px-3 py-2 text-xs font-black text-slate-700"
               >
                 <Archive size={14} />
                 Archive
@@ -2444,7 +2448,7 @@ function UniversityWorkspace({
                     : "create-university"
                 )
               }
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-700 bg-orange-500 px-4 py-2 text-xs font-black text-white disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-700 bg-[#FF5A0A] px-4 py-2 text-xs font-black text-white disabled:opacity-50"
             >
               {savingKeys.has(
                 activeUniversity?.id
@@ -2775,7 +2779,7 @@ function UniversityWorkspace({
             <button
               type="button"
               onClick={onAddRequirement}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-3 py-2 text-xs font-black text-white"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-[#FF5A0A] px-3 py-2 text-xs font-black text-white"
             >
               <Plus size={14} />
               Add Requirement
@@ -2784,13 +2788,13 @@ function UniversityWorkspace({
         }
       >
         {!activeUniversity?.id ? (
-          <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-5 text-center">
-            <p className="text-sm font-black text-[#10233f]">
+          <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-5 text-center">
+            <p className="text-sm font-black text-[#10233F]">
               Save the university first to manage requirements.
             </p>
           </div>
         ) : supportLoading ? (
-          <div className="rounded-2xl border-2 border-slate-300 bg-white p-5 text-center">
+          <div className="rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-5 text-center">
             <LoaderCircle size={22} className="mx-auto animate-spin text-orange-500" />
           </div>
         ) : requirements.length ? (
@@ -2807,8 +2811,8 @@ function UniversityWorkspace({
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-5 text-center">
-            <p className="text-sm font-black text-[#10233f]">
+          <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-5 text-center">
+            <p className="text-sm font-black text-[#10233F]">
               No structured requirements yet.
             </p>
           </div>
@@ -2865,7 +2869,7 @@ function UniversityWorkspace({
       </Section>
 
       {activeUniversity?.id && !activeUniversity.is_archived ? (
-        <section className="rounded-[1.6rem] border-[3px] border-[#0b2a57] bg-[#0b2a57] p-4 sm:p-5">
+        <section className="rounded-[1.6rem] border-[3px] border-[#123865] bg-[#123865] p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p
@@ -2897,7 +2901,7 @@ function UniversityWorkspace({
                 type="button"
                 onClick={onCreateApplication}
                 disabled={savingKeys.size > 0}
-                className="rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#0b2a57] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-orange-50 hover:shadow-md active:translate-y-0 disabled:opacity-50"
+                className="rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md active:translate-y-0 disabled:opacity-50"
               >
                 {activeApplication ? "Open Application" : "Create Application"}
               </button>
@@ -2924,9 +2928,9 @@ function UniversityWorkspace({
 function ComparisonView({ items, onRemove, onSelect }) {
   if (!items.length) {
     return (
-      <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-8 text-center">
+      <section className="rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-8 text-center">
         <Columns3 size={34} className="mx-auto text-orange-400" />
-        <h3 className="mt-3 text-lg font-black text-[#10233f]">
+        <h3 className="mt-3 text-lg font-black text-[#10233F]">
           Select universities to compare
         </h3>
         <p className="mt-1 text-sm text-slate-100">
@@ -2937,7 +2941,7 @@ function ComparisonView({ items, onRemove, onSelect }) {
   }
 
   return (
-    <section className="overflow-x-auto rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4">
+    <section className="overflow-x-auto rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4">
       <div
         className="grid min-w-[900px] gap-3"
         style={{
@@ -3051,7 +3055,7 @@ function HistoryView({ events, loading, activeUniversity, onRefresh }) {
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-[#10233f]"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-xs font-black text-[#10233F]"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             Refresh
@@ -3060,9 +3064,9 @@ function HistoryView({ events, loading, activeUniversity, onRefresh }) {
       }
     >
       {!activeUniversity ? (
-        <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-6 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-6 text-center">
           <History size={28} className="mx-auto text-orange-400" />
-          <p className="mt-3 text-sm font-black text-[#10233f]">
+          <p className="mt-3 text-sm font-black text-[#10233F]">
             No university selected
           </p>
         </div>
@@ -3071,11 +3075,11 @@ function HistoryView({ events, loading, activeUniversity, onRefresh }) {
           {events.map((event) => (
             <div
               key={event.id}
-              className="rounded-2xl border-2 border-slate-300 bg-white p-4"
+              className="rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4"
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-black text-[#10233f]">
+                  <p className="text-sm font-black text-[#10233F]">
                     {event.event_label || pretty(event.event_type)}
                   </p>
                   {(event.old_value || event.new_value) ? (
@@ -3098,9 +3102,9 @@ function HistoryView({ events, loading, activeUniversity, onRefresh }) {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-6 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-6 text-center">
           <History size={28} className="mx-auto text-orange-400" />
-          <p className="mt-3 text-sm font-black text-[#10233f]">
+          <p className="mt-3 text-sm font-black text-[#10233F]">
             No university events recorded yet
           </p>
         </div>
@@ -3112,13 +3116,13 @@ function HistoryView({ events, loading, activeUniversity, onRefresh }) {
 function RequirementModal({ draft, setDraft, onClose, onSave, disabled }) {
   return (
     <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[1.6rem] border-[3px] border-orange-400 bg-[#fffaf4] p-5">
+      <div className="w-full max-w-2xl rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">
               Eligibility Requirement
             </p>
-            <h3 className="mt-1 text-xl font-black text-[#10233f]">
+            <h3 className="mt-1 text-xl font-black text-[#10233F]">
               Add structured requirement
             </h3>
           </div>
@@ -3126,7 +3130,7 @@ function RequirementModal({ draft, setDraft, onClose, onSave, disabled }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-slate-600"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-white text-slate-600"
           >
             <X size={17} />
           </button>
@@ -3227,7 +3231,7 @@ function RequirementModal({ draft, setDraft, onClose, onSave, disabled }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-700"
+            className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-xs font-black text-slate-700"
           >
             Cancel
           </button>
@@ -3236,7 +3240,7 @@ function RequirementModal({ draft, setDraft, onClose, onSave, disabled }) {
             type="button"
             onClick={onSave}
             disabled={disabled}
-            className="rounded-xl border-2 border-orange-700 bg-orange-500 px-4 py-2.5 text-xs font-black text-white disabled:opacity-40"
+            className="rounded-xl border-2 border-orange-700 bg-[#FF5A0A] px-4 py-2.5 text-xs font-black text-white disabled:opacity-40"
           >
             Add Requirement
           </button>
@@ -3247,17 +3251,17 @@ function RequirementModal({ draft, setDraft, onClose, onSave, disabled }) {
 }
 
 const inputClass =
-  "h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
+  "h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 const textareaClass =
-  "w-full resize-y rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100";
+  "w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 function Section({ title, subtitle, action = null, children }) {
   return (
-    <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4 sm:p-5">
+    <section className="rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-lg font-black text-[#10233f]">{title}</h3>
+          <h3 className="text-lg font-black text-[#10233F]">{title}</h3>
           {subtitle ? (
             <p className="mt-1 text-sm text-slate-100">{subtitle}</p>
           ) : null}
@@ -3273,7 +3277,7 @@ function Section({ title, subtitle, action = null, children }) {
 function Field({ label, className = "", children }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-black text-[#10233f]">
+      <span className="mb-1.5 block text-xs font-black text-[#10233F]">
         {label}
       </span>
       {children}
@@ -3320,10 +3324,10 @@ function MoneyCard({
   onCurrencyChange,
 }) {
   return (
-    <div className="rounded-2xl border-2 border-orange-300 bg-[#fffaf4] p-4">
+    <div className="rounded-2xl border-2 border-[#FF5A0A] bg-[#FFF8EF] p-4">
       <div className="flex items-center gap-2">
         <WalletCards size={17} className="text-orange-600" />
-        <h4 className="text-sm font-black text-[#10233f]">{title}</h4>
+        <h4 className="text-sm font-black text-[#10233F]">{title}</h4>
       </div>
 
       <div className="mt-3 grid grid-cols-[1fr_100px] gap-2">
@@ -3347,8 +3351,8 @@ function MoneyCard({
 
 function ToggleCard({ label, checked, onChange }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 border-slate-300 bg-white px-3 py-2.5">
-      <span className="text-sm font-black text-[#10233f]">{label}</span>
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2.5">
+      <span className="text-sm font-black text-[#10233F]">{label}</span>
       <input
         type="checkbox"
         checked={checked}
@@ -3365,17 +3369,17 @@ function RequirementRow({
   onStatusChange,
 }) {
   return (
-    <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
+    <div className="rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h4 className="font-black text-[#10233f]">
+            <h4 className="font-black text-[#10233F]">
               {requirement.requirement_name}
             </h4>
 
             <RequirementStatus value={requirement.status} />
 
-            <span className="rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-100">
+            <span className="rounded-full border border-[#C9D7E6] bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-100">
               {requirement.requirement_category}
             </span>
           </div>
@@ -3396,7 +3400,7 @@ function RequirementRow({
           value={requirement.status || "missing"}
           disabled={busy}
           onChange={(event) => onStatusChange(event.target.value)}
-          className="h-10 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black capitalize text-[#10233f]"
+          className="h-10 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black capitalize text-[#10233F]"
         >
           {REQUIREMENT_STATUS_OPTIONS.map((option) => (
             <option key={option} value={option}>
@@ -3417,10 +3421,10 @@ function PressureTile({
 }) {
   const styles = {
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
     blue: "border-blue-300 bg-blue-50 text-blue-800",
-    slate: "border-slate-300 bg-[#fffaf4] text-slate-700",
+    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-slate-700",
   };
 
   return (
@@ -3444,8 +3448,8 @@ function PressureTile({
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-300 bg-white text-[#10233f]",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    slate: "border-[#C9D7E6] bg-white text-[#10233F]",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
     blue: "border-blue-300 bg-blue-50 text-blue-800",
     red: "border-red-300 bg-red-50 text-red-800",
@@ -3470,9 +3474,9 @@ function Metric({ label, value, icon: Icon, tone = "slate" }) {
 
 function CompactStat({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-300 bg-[#fffaf4] text-[#10233f]",
+    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F]",
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
   };
 
   return (
@@ -3494,18 +3498,18 @@ function CompactStat({ label, value, icon: Icon, tone = "slate" }) {
 
 function CompactInfo({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-[#fffaf4] px-3 py-2">
+    <div className="rounded-xl border-2 border-slate-200 bg-[#FFF8EF] px-3 py-2">
       <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-200">
         {label}
       </p>
-      <p className="mt-1 truncate text-xs font-black text-[#10233f]">{value}</p>
+      <p className="mt-1 truncate text-xs font-black text-[#10233F]">{value}</p>
     </div>
   );
 }
 
 function CategoryBadge({ value }) {
   return (
-    <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[9px] font-black uppercase text-orange-800">
+    <span className="rounded-full border border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-[9px] font-black uppercase text-orange-800">
       {pretty(value || "target")}
     </span>
   );
@@ -3524,7 +3528,7 @@ function StatusBadge({ value }) {
       : normalized.includes("applied") ||
         normalized.includes("application ready")
       ? "border-blue-300 bg-blue-50 text-blue-800"
-      : "border-orange-300 bg-orange-50 text-orange-800";
+      : "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
 
   return (
     <span
@@ -3542,7 +3546,7 @@ function RiskBadge({ value }) {
     normalized.includes("critical") || normalized.includes("high")
       ? "border-red-300 bg-red-50 text-red-800"
       : normalized.includes("medium")
-      ? "border-orange-300 bg-orange-50 text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
       : "border-emerald-300 bg-emerald-50 text-emerald-800";
 
   return (
@@ -3580,9 +3584,9 @@ function DeadlineBadge({ meta }) {
 
   const styles = {
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     blue: "border-blue-300 bg-blue-50 text-blue-800",
-    slate: "border-slate-300 bg-slate-50 text-slate-700",
+    slate: "border-[#C9D7E6] bg-slate-50 text-slate-700",
   };
 
   return (
@@ -3619,7 +3623,7 @@ function Feedback({ tone, onClose, children }) {
 
 function CompareLabel({ label }) {
   return (
-    <div className="flex items-center rounded-xl border-2 border-orange-200 bg-orange-50 px-3 py-3 text-xs font-black text-orange-800">
+    <div className="flex items-center rounded-xl border-2 border-[#FFB37A] bg-[#FFF4E8] px-3 py-3 text-xs font-black text-orange-800">
       {label}
     </div>
   );
@@ -3627,9 +3631,9 @@ function CompareLabel({ label }) {
 
 function CompareHeader({ item, onRemove, onSelect }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
       <button type="button" onClick={onSelect} className="w-full text-left">
-        <p className="truncate text-sm font-black text-[#10233f]">
+        <p className="truncate text-sm font-black text-[#10233F]">
           {item.university}
         </p>
         <p className="mt-1 truncate text-xs font-semibold text-slate-600">
@@ -3650,7 +3654,7 @@ function CompareHeader({ item, onRemove, onSelect }) {
 
 function CompareCell({ value }) {
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-[#fffaf4] px-3 py-3 text-xs font-semibold text-[#10233f]">
+    <div className="rounded-xl border-2 border-slate-200 bg-[#FFF8EF] px-3 py-3 text-xs font-semibold text-[#10233F]">
       {value}
     </div>
   );

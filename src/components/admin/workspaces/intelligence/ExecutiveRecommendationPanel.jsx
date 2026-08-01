@@ -333,7 +333,7 @@ function ExecutiveRecommendationPanel({
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.25 }}
-      className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#FFFDF8] shadow-[0_18px_50px_rgba(23,36,61,0.08)]"
+      className="overflow-hidden rounded-[2rem] border-[3px] border-[#FFB38A] bg-[#FFFDF8] shadow-[0_18px_50px_rgba(23,36,61,0.08)]"
     >
       <div className="grid xl:grid-cols-[1.35fr_0.65fr]">
         <div className="bg-[#123865] p-5 text-white sm:p-6">
@@ -362,7 +362,7 @@ function ExecutiveRecommendationPanel({
           </div>
         </div>
 
-        <div className="bg-orange-500 p-5 text-white sm:p-6">
+        <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
           <div className="flex items-center gap-2">
             <Target size={17} />
             <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
@@ -605,9 +605,9 @@ function RecommendationCard({
       </div>
 
       {confirmationOpen && template ? (
-        <div className="mt-4 rounded-xl border-[3px] border-orange-300 bg-orange-50 p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-0.5 shrink-0 text-orange-700" size={19} />
+        <div className="mt-4 rounded-xl border-[3px] border-[#FFB38A] bg-[#FFF4EA] p-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <ShieldCheck className="mt-0.5 shrink-0 text-[#B84F0E]" size={19} />
             <div className="min-w-0 flex-1">
               <p className="font-black text-[#17243D]">Human approval required</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-[#667085]">
@@ -627,7 +627,7 @@ function RecommendationCard({
                   type="button"
                   onClick={onCancelConfirmation}
                   disabled={executing}
-                  className="rounded-full border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#344054] disabled:opacity-50"
+                  className="rounded-full border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#344054] disabled:opacity-50"
                 >
                   Cancel
                 </button>

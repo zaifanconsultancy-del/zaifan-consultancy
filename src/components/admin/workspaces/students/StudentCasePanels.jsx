@@ -1,3 +1,4 @@
+// StudentCasePanels PARTNER OS EXTREME V2 — Clean Panel Ownership
 import { lazy } from "react";
 
 const LeadAssignmentPanel = lazy(() => import("../leads-crm/LeadAssignmentPanel"));
@@ -70,18 +71,16 @@ function StudentCasePanels({
 
   if (activePanel === "documents") {
     return (
-      <div className="pb-10">
-        <section className="overflow-hidden rounded-[1.6rem] border-2 border-orange-400 bg-white shadow-[0_14px_40px_rgba(121,72,40,0.08)]">
-          <StudentDocumentsPanel
-            key={`documents-${studentId}-${studentType}-${panelMountKey}`}
-            student={{
-              ...workingStudent,
-              documents: studentDocuments,
-            }}
-            sharedDocuments={studentDocuments}
-            onSharedDataChange={loadStudentOsData}
-          />
-        </section>
+      <div className="min-w-0 pb-10">
+        <StudentDocumentsPanel
+          key={`documents-${studentId}-${studentType}-${panelMountKey}`}
+          student={{
+            ...workingStudent,
+            documents: studentDocuments,
+          }}
+          sharedDocuments={studentDocuments}
+          onSharedDataChange={loadStudentOsData}
+        />
       </div>
     );
   }
@@ -184,7 +183,7 @@ function StudentCasePanels({
     };
 
     return (
-      <div className="space-y-5">
+      <div className="min-w-0 space-y-5">
         <TaskCenterPanel
           key={`tasks-${studentId}-${studentType}-${panelMountKey}`}
           student={operationalStudent}
@@ -210,33 +209,33 @@ function StudentCasePanels({
     );
 
     return (
-      <div className="rounded-[1.75rem] border border-slate-300 bg-slate-50 p-5">
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+        <div className="mb-4 flex min-w-0 flex-col gap-4 rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white shadow-[0_18px_50px_rgba(18,56,101,0.11)] sm:p-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
               CRM Pipeline
             </h3>
-            <p className="text-sm text-slate-500">
+            <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-100">
               Track this student through the consultancy workflow.
             </p>
           </div>
 
           {savingStage ? (
-            <span className="rounded-full border border-orange-300/20 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-600">
+            <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-xs font-black text-white">
               Saving stage...
             </span>
           ) : null}
         </div>
 
         {persistenceMissing ? (
-          <div className="mb-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+          <div className="mb-4 rounded-[1.35rem] border-[3px] border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
             Pipeline stages are visible, but stage persistence is not connected
             for this record type. Buttons are disabled to prevent fake local-only
             progress.
           </div>
         ) : null}
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3 rounded-[1.8rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_18px_50px_rgba(18,56,101,0.08)] sm:p-5">
           {stages.map((stage, index) => {
             const isActive = stage.id === currentStageId;
             const isPassed = index < Math.max(currentIndex, 0);
@@ -247,38 +246,38 @@ function StudentCasePanels({
                 type="button"
                 onClick={() => handleStageChange(stage.id)}
                 disabled={savingStage || persistenceMissing}
-                className={`group w-full rounded-2xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`group min-w-0 w-full rounded-[1.35rem] border-[3px] p-4 text-left shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-60 ${
                   isActive
-                    ? "border-orange-300/40 bg-orange-500/10"
+                    ? "border-[#FF5A0A] bg-[#FFF4E8]"
                     : isPassed
-                    ? "border-emerald-400/20 bg-emerald-500/5"
-                    : "border-slate-300 bg-white hover:border-orange-300/25 hover:bg-white/[0.045]"
+                    ? "border-[#34D399] bg-[#F0FFF8]"
+                    : "border-[#C9D7E6] bg-[#FFF8EF] hover:border-[#FF5A0A] hover:bg-white"
                 }`}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex min-w-0 items-start gap-4">
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
                       isActive
-                        ? "border-orange-300/40 bg-orange-500/15 text-orange-600"
+                        ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
                         : isPassed
-                        ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-700"
-                        : "border-slate-300 bg-slate-50 text-slate-400"
+                        ? "border-[#34D399] bg-[#F0FFF8] text-emerald-700"
+                        : "border-[#C9D7E6] bg-white text-slate-500"
                     }`}
                   >
                     {index + 1}
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-slate-900">
+                    <p className="break-words font-black text-[#10233F]">
                       {stage.label || stage.title || stage.id}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 break-words text-sm font-semibold leading-5 text-slate-600">
                       {stage.description || "Pipeline workflow stage"}
                     </p>
                   </div>
 
                   {isActive ? (
-                    <span className="rounded-full border border-orange-300/25 bg-orange-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-600">
+                    <span className="rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
                       Current
                     </span>
                   ) : null}

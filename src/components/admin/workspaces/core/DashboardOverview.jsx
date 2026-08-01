@@ -1,5 +1,5 @@
-// DashboardOverview V6 MAXIMUM — Framed Executive Daily CRM Overview
-// src/components/admin/DashboardOverview.jsx
+// DashboardOverview V7 PARTNER OS — Framed Executive Daily CRM Overview
+// src/components/admin/core/DashboardOverview.jsx
 //
 // Maximum pass:
 // - preserves buildAiLeadInsights integration
@@ -17,7 +17,7 @@
 // - stronger latest inquiry / appointment cards
 // - reduced-motion support
 // - explicit white text on navy surfaces
-// - consistent Zaifan orange/navy/cream Admin OS visual system
+// - locked Partner OS navy/orange/cream visual system
 // - mobile-safe layouts
 // - no fake Supabase writes or automatic GPT calls
 //
@@ -326,10 +326,10 @@ function DashboardOverview({
   ]);
 
   return (
-    <div className="mb-5 space-y-5 xl:mb-6">
-      <section className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4">
-        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
-          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+    <div className="mb-5 min-w-0 space-y-5 xl:mb-6">
+      <section className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_18px_48px_rgba(15,35,63,0.11)] sm:p-4">
+        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderBadge>
                 <Activity size={12} />
@@ -374,7 +374,7 @@ function DashboardOverview({
             </div>
           </div>
 
-          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
             <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
               Operational Health
             </p>
@@ -423,7 +423,7 @@ function DashboardOverview({
         reduceMotion={reduceMotion}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1.25fr_0.95fr]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.95fr)]">
         <DailyPulseCard
           cardClass={cardClass}
           totalToday={model.totalToday}
@@ -434,7 +434,7 @@ function DashboardOverview({
           reduceMotion={reduceMotion}
         />
 
-        <div className="grid gap-4">
+        <div className="grid min-w-0 gap-4">
           {model.latestCards.map((card, index) => (
             <LatestLeadCard
               key={card.title}
@@ -487,10 +487,10 @@ function DailyPulseCard({
       transition={{
         duration: reduceMotion ? 0 : 0.26,
       }}
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_12px_32px_rgba(15,35,63,0.06)]`}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_14px_36px_rgba(15,35,63,0.08)]`}
     >
-      <div className="overflow-hidden rounded-[1.45rem] border-[3px] border-[#F97316]">
-      <div className="min-w-0 bg-[#173F6B] p-5 text-white">
+      <div className="min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] border-[#FF5A0A]">
+      <div className="min-w-0 bg-[#123865] p-5 text-white">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
             <Activity size={17} />
@@ -508,13 +508,13 @@ function DailyPulseCard({
         </div>
       </div>
 
-      <div className="grid min-w-0 gap-4 bg-[#FFF8EE] p-4 sm:p-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-        <div className="rounded-[1.4rem] border-[3px] border-orange-300 bg-orange-50 p-5">
-          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-800">
+      <div className="grid min-w-0 gap-4 bg-[#FFF8EF] p-4 sm:p-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <div className="rounded-[1.4rem] border-[3px] border-[#FFB38A] bg-[#FFF4EA] p-5">
+          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#9B3E08]">
             Activity Count
           </p>
 
-          <p className="mt-3 text-5xl font-black text-[#10233f]">
+          <p className="mt-3 text-5xl font-black text-[#10233F]">
             {totalToday}
           </p>
 
@@ -535,7 +535,7 @@ function DailyPulseCard({
           </div>
         </div>
 
-        <div className="rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4 sm:p-5">
+        <div className="rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
           {totalToday === 0 ? (
             <DailyEmptyState />
           ) : (
@@ -556,8 +556,8 @@ function ActivityDistribution({
   reduceMotion,
 }) {
   return (
-    <div className="flex min-h-[250px] flex-col justify-center">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className="flex min-h-[250px] min-w-0 flex-col justify-center">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         {bars.map((bar) => {
           const Icon = bar.icon;
           const style = getToneStyle(bar.tone);
@@ -573,7 +573,7 @@ function ActivityDistribution({
                     {bar.label}
                   </p>
 
-                  <p className="mt-2 text-3xl font-black text-[#10233f]">
+                  <p className="mt-2 text-3xl font-black text-[#10233F]">
                     {bar.count}
                   </p>
                 </div>
@@ -610,7 +610,7 @@ function ActivityDistribution({
         })}
       </div>
 
-      <div className="mt-4 rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
+      <div className="mt-4 rounded-xl border-2 border-[#8FB8E3] bg-[#EEF6FF] p-4">
         <div className="flex items-start gap-3">
           <TrendingUp
             size={17}
@@ -618,7 +618,7 @@ function ActivityDistribution({
           />
 
           <div>
-            <p className="text-sm font-black text-[#10233f]">
+            <p className="text-sm font-black text-[#10233F]">
               Daily mix
             </p>
 
@@ -657,7 +657,7 @@ function ProgressMetric({
           </span>
         </div>
 
-        <span className="text-xs font-black text-[#10233f]">
+        <span className="text-xs font-black text-[#10233F]">
           {count} · {value}%
         </span>
       </div>
@@ -735,10 +735,10 @@ function AIExecutiveBriefing({
       transition={{
         duration: reduceMotion ? 0 : 0.25,
       }}
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_12px_32px_rgba(15,35,63,0.06)]`}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_14px_38px_rgba(15,35,63,0.09)]`}
     >
-      <div className="grid min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.14fr)_minmax(20rem,0.86fr)]">
-        <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#FF5A0A] xl:grid-cols-[minmax(0,1.14fr)_minmax(20rem,0.86fr)]">
+        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <HeaderBadge>
               <BrainCircuit size={11} />
@@ -773,7 +773,7 @@ function AIExecutiveBriefing({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3 bg-[#FFF8EE] p-4 sm:grid-cols-2 sm:p-5">
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5">
           {statCards.map((stat) => (
             <AIStatCard
               key={stat.label}
@@ -781,7 +781,7 @@ function AIExecutiveBriefing({
             />
           ))}
 
-          <div className="sm:col-span-2 rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
+          <div className="sm:col-span-2 rounded-xl border-2 border-[#8FB8E3] bg-[#EEF6FF] p-4">
             <div className="flex items-start gap-3">
               <Bot
                 size={16}
@@ -789,7 +789,7 @@ function AIExecutiveBriefing({
               />
 
               <div>
-                <p className="text-sm font-black text-[#10233f]">
+                <p className="text-sm font-black text-[#10233F]">
                   Intelligence coverage
                 </p>
 
@@ -827,7 +827,7 @@ function AIStatCard({ stat }) {
         </div>
       </div>
 
-      <p className="mt-3 text-3xl font-black text-[#10233f]">
+      <p className="mt-3 text-3xl font-black text-[#10233F]">
         {stat.value}
       </p>
     </div>
@@ -874,10 +874,10 @@ function LatestLeadCard({
         duration: reduceMotion ? 0 : 0.24,
         delay: reduceMotion ? 0 : index * 0.05,
       }}
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_10px_28px_rgba(15,35,63,0.06)]`}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_12px_32px_rgba(15,35,63,0.08)]`}
     >
-      <div className="overflow-hidden rounded-[1.4rem] border-[3px] border-[#F97316]">
-      <div className="min-w-0 bg-[#173F6B] p-4 text-white">
+      <div className="min-w-0 overflow-hidden rounded-[1.4rem] border-[3px] border-[#FF5A0A]">
+      <div className="min-w-0 bg-[#123865] p-4 text-white">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
@@ -900,7 +900,7 @@ function LatestLeadCard({
         </div>
       </div>
 
-      <div className="min-w-0 bg-[#FFF8EE] p-4">
+      <div className="min-w-0 bg-[#FFF8EF] p-4">
         <p className="break-words text-sm font-semibold leading-6 text-slate-700">
           {hasLead
             ? card.detail || "No detail available"
@@ -920,7 +920,7 @@ function LatestLeadCard({
                 priority={priority}
               />
 
-              <span className="rounded-full border-2 border-slate-300 bg-white px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-slate-700">
+              <span className="rounded-full border-2 border-[#C9D7E6] bg-white px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-slate-700">
                 {status || "unknown"}
               </span>
 
@@ -974,7 +974,7 @@ function LatestLeadCard({
             />
           </div>
         ) : (
-          <div className="mt-4 rounded-xl border-2 border-dashed border-slate-300 bg-white p-4 text-center">
+          <div className="mt-4 rounded-xl border-2 border-dashed border-[#C9D7E6] bg-white p-4 text-center">
             <p className="text-xs font-semibold text-slate-500">
               This card will populate automatically when a new record arrives.
             </p>
@@ -996,7 +996,7 @@ function MiniInfo({
       <div className="flex items-center gap-2">
         <Icon
           size={12}
-          className="text-orange-700"
+          className="text-[#B84F0E]"
         />
 
         <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
@@ -1004,7 +1004,7 @@ function MiniInfo({
         </p>
       </div>
 
-      <p className="mt-1 break-all text-xs font-bold leading-5 text-[#10233f] sm:break-words">
+      <p className="mt-1 break-all text-xs font-bold leading-5 text-[#10233F] sm:break-words">
         {value || "—"}
       </p>
     </div>
@@ -1016,12 +1016,12 @@ function PriorityBadge({
 }) {
   const style =
     priority === "vip"
-      ? "border-[#F97316] bg-[#FFF4E8] text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]"
       : priority === "high"
       ? "border-[#FB7185] bg-[#FFF4F4] text-red-800"
       : priority === "medium"
       ? "border-[#60A5FA] bg-[#F2F7FF] text-blue-800"
-      : "border-slate-300 bg-slate-50 text-slate-700";
+      : "border-[#C9D7E6] bg-slate-50 text-slate-700";
 
   return (
     <span
@@ -1035,11 +1035,11 @@ function PriorityBadge({
 function DailyEmptyState() {
   return (
     <div className="flex min-h-[250px] flex-col items-center justify-center text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#FF5A0A] bg-[#FFF4EA] text-[#B84F0E]">
         <Radar size={22} />
       </div>
 
-      <h3 className="mt-4 text-lg font-black text-[#10233f]">
+      <h3 className="mt-4 text-lg font-black text-[#10233F]">
         No activity today yet
       </h3>
 
@@ -1215,13 +1215,13 @@ function getToneStyle(tone) {
   const styles = {
     orange: {
       card:
-        "border-[#F97316] bg-[#FFF4E8] text-orange-800",
+        "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]",
       icon:
-        "border-orange-300 text-orange-700",
+        "border-[#FFB38A] text-[#B84F0E]",
       badge:
-        "border-[#F97316] bg-[#FFF4E8] text-orange-800",
-      text: "text-orange-700",
-      bar: "bg-orange-500",
+        "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]",
+      text: "text-[#B84F0E]",
+      bar: "bg-[#FFF4EA]0",
     },
 
     red: {

@@ -73,17 +73,17 @@ function MarketList({
   const rows = compact ? filteredItems.slice(0, 5) : filteredItems.slice(0, 12);
 
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)] sm:p-5">
+    <div className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)] sm:p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-black text-[#10233f]">{title}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">
+          <p className="text-sm font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold text-[#65748B]">
             {filteredItems.length} ranked signal{filteredItems.length === 1 ? "" : "s"}
           </p>
         </div>
 
         {total > 0 ? (
-          <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-orange-800">
+          <span className="rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#9B3E08]">
             {total} total demand
           </span>
         ) : null}
@@ -104,26 +104,26 @@ function MarketList({
                   duration: reduceMotion ? 0 : 0.2,
                   delay: reduceMotion ? 0 : index * 0.025,
                 }}
-                className="rounded-xl border-2 border-slate-200 bg-[#fffdf9] p-3 transition hover:border-orange-300 hover:bg-white"
+                className="rounded-xl border-2 border-slate-200 bg-[#fffdf9] p-3 transition hover:border-[#FFB38A] hover:bg-white"
               >
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-black text-[#10233f]">
+                    <p className="truncate text-xs font-black text-[#10233F]">
                       #{index + 1} {item.name}
                     </p>
-                    <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                    <p className="mt-1 text-[10px] font-semibold text-[#65748B]">
                       {share}% of visible demand
                     </p>
                   </div>
 
-                  <span className="shrink-0 rounded-full border-2 border-slate-300 bg-white px-3 py-1 text-xs font-black text-[#10233f]">
+                  <span className="shrink-0 rounded-full border-2 border-[#C9D7E6] bg-white px-3 py-1 text-xs font-black text-[#10233F]">
                     {item.count}
                   </span>
                 </div>
 
-                <div className="h-2.5 overflow-hidden rounded-full border border-slate-300 bg-[#fffaf2]">
+                <div className="h-2.5 overflow-hidden rounded-full border border-[#C9D7E6] bg-[#FFF8EF]">
                   <div
-                    className="h-full rounded-full bg-orange-500 transition-all duration-500"
+                    className="h-full rounded-full bg-[#FF5A0A] transition-all duration-500"
                     style={{ width: `${width}%` }}
                   />
                 </div>
@@ -131,9 +131,9 @@ function MarketList({
             );
           })
         ) : (
-          <div className="rounded-xl border-2 border-dashed border-slate-300 bg-[#fffaf2] p-6 text-center">
-            <BarChart3 className="mx-auto h-7 w-7 text-orange-600" />
-            <p className="mt-3 text-sm font-semibold text-slate-500">{empty}</p>
+          <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-6 text-center">
+            <BarChart3 className="mx-auto h-7 w-7 text-[#D94B00]" />
+            <p className="mt-3 text-sm font-semibold text-[#65748B]">{empty}</p>
           </div>
         )}
       </div>
@@ -229,10 +229,10 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]"
+      className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#FFB38A] bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]"
     >
       <div
-        className="border-b-[3px] border-orange-300 bg-[#123865] p-5 sm:p-6"
+        className="border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 sm:p-6"
         style={{ color: "#FFFFFF" }}
       >
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -269,8 +269,8 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
                     }}
                     className={`inline-flex min-h-10 items-center gap-2 rounded-xl border-2 px-3 py-2 text-xs font-black transition ${
                       active
-                        ? "border-orange-300 bg-orange-500 text-white"
-                        : "border-white/25 bg-white/10 text-white hover:border-orange-300 hover:bg-white/15"
+                        ? "border-[#FFB38A] bg-[#FF5A0A] text-white"
+                        : "border-white/25 bg-white/10 text-white hover:border-[#FFB38A] hover:bg-white/15"
                     }`}
                   >
                     <Icon size={13} />
@@ -283,7 +283,7 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
         </div>
       </div>
 
-      <div className="bg-[#fff8ee] p-5 sm:p-6">
+      <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <IntelligenceMetric
             label="Total Market Signals"
@@ -330,14 +330,14 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={`Search ${activeView.label.toLowerCase()}...`}
-                className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
 
             <select
               value={sortMode}
               onChange={(event) => setSortMode(event.target.value)}
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none focus:border-[#FF5A0A]"
             >
               <option value="count">Sort: Demand</option>
               <option value="name">Sort: Name</option>
@@ -369,14 +369,14 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
               tone={interpretation.tone}
             />
 
-            <div className="rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4">
-              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+            <div className="rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-4">
+              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
                 Current Leader
               </p>
-              <p className="mt-2 text-xl font-black text-[#10233f]">
+              <p className="mt-2 text-xl font-black text-[#10233F]">
                 {metrics.topItem?.name || "No signal yet"}
               </p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#51627A]">
                 {metrics.topItem
                   ? `${metrics.topItem.count} visible demand record${
                       metrics.topItem.count === 1 ? "" : "s"
@@ -402,15 +402,15 @@ function IntelligenceMetric({ label, value, helper, icon: Icon, tone = "orange" 
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
       : tone === "cream"
-      ? "border-slate-300 bg-white"
-      : "border-orange-300 bg-orange-50";
+      ? "border-[#C9D7E6] bg-white"
+      : "border-[#FFB38A] bg-[#FFF4EA]";
 
   return (
     <div
       className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)] ${surface}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.1em]" style={{ color: dark ? "#FDBA74" : "#64748B" }}>
             {label}
@@ -436,7 +436,7 @@ function FounderInterpretation({ title, detail, tone = "orange" }) {
       ? "border-amber-300 bg-amber-50"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-orange-300 bg-orange-50";
+      : "border-[#FFB38A] bg-[#FFF4EA]";
 
   const dark = tone === "navy";
 
@@ -445,9 +445,9 @@ function FounderInterpretation({ title, detail, tone = "orange" }) {
       className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_5px_16px_rgba(15,35,63,0.03)] ${style}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${
-          dark ? "border-white/25 bg-white/10" : "border-orange-300 bg-white"
+          dark ? "border-white/25 bg-white/10" : "border-[#FFB38A] bg-white"
         }`}>
           <Sparkles size={17} style={{ color: dark ? "#FDBA74" : "#C2410C" }} />
         </div>

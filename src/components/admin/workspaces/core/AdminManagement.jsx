@@ -1,5 +1,5 @@
-// AdminManagement V4 MAXIMUM — Framed Access Control Command Center
-// src/components/admin/AdminManagement.jsx
+// AdminManagement V5 PARTNER OS — Framed Access Control Command Center
+// src/components/admin/core/AdminManagement.jsx
 //
 // Maximum pass:
 // - preserves Supabase admin_profiles CRUD and current role/permission API
@@ -13,7 +13,7 @@
 // - search + role filter + sorting
 // - optimistic role update with rollback on failure
 // - best-effort activity_logs audit writes without breaking core CRUD
-// - stronger responsive Admin OS hierarchy and contrast
+// - stronger responsive Partner OS hierarchy, containment and contrast
 // - no fake Auth user creation: this panel manages profiles only
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -566,80 +566,120 @@ function AdminManagement({
       initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.28 }}
-      className="space-y-5 text-[#10233f]"
+      className="min-w-0 space-y-5 text-[#10233F]"
     >
-      <section
-        className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_18px_48px_rgba(15,35,63,0.09)] sm:p-4`}
-      >
-        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
-          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                <ShieldCheck size={12} />
-                Team Access OS
-              </span>
-
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
-                <Crown size={12} />
-                Super Admin Control
-              </span>
-            </div>
-
-            <h2 className="mt-4 break-words text-3xl font-black leading-tight text-white sm:text-4xl">
-              Admin Management
-            </h2>
-
-            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
-              Control Zaifan team access, roles and protected Super Admin
-              authority from one audited workspace.
-            </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkStat label="Total" value={counts.total} />
-              <DarkStat label="Staff" value={counts.staff} />
-              <DarkStat label="Admins" value={counts.admin} />
-              <DarkStat label="Super Admin" value={counts.superAdmin} />
-            </div>
-          </div>
-
-          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
-              Current Authority
-            </p>
-
-            <div className="mt-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white/30 bg-white/10 text-white">
-                {canManageAdmins ? (
-                  <Crown size={21} />
-                ) : (
-                  <KeyRound size={21} />
-                )}
-              </div>
-
+      <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#FF5A0A] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.08)]">
+        <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,0.55fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
-                <p className="break-words text-xl font-black text-white">
-                  {canManageAdmins ? "Management Enabled" : "View Only"}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    <ShieldCheck size={12} />
+                    Team Access OS
+                  </span>
+
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    <Crown size={12} />
+                    Super Admin Control
+                  </span>
+                </div>
+
+                <h2 className="mt-5 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
+                  Admin Management
+                </h2>
+
+                <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-white sm:text-[15px]">
+                  Control Zaifan team access, role hierarchy, protected Super Admin
+                  authority, and audited profile changes from one operating workspace.
                 </p>
-                <p className="mt-1 text-xs font-semibold text-white">
-                  {canManageAdmins
-                    ? "Create, promote, demote and remove team profiles."
-                    : "Your role cannot change team access."}
+
+                <p className="mt-4 inline-flex max-w-full rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+                  Auth users must already exist in Supabase
                 </p>
               </div>
-            </div>
 
-            <div className="mt-5 rounded-[1.25rem] border-2 border-white/25 bg-white/10 p-4">
-              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                Signed in as
-              </p>
-              <p className="mt-1 break-words text-lg font-black text-white">
-                {adminProfile?.full_name || "Admin User"}
-              </p>
-              <p className="mt-1 text-xs font-bold text-white">
-                {prettyRole(role)}
-              </p>
+              <div className="grid shrink-0 grid-cols-2 gap-2 lg:w-[280px]">
+                <DarkStat label="Total Profiles" value={counts.total} />
+                <DarkStat label="Staff" value={counts.staff} />
+                <DarkStat label="Admins" value={counts.admin} />
+                <DarkStat label="Super Admin" value={counts.superAdmin} />
+              </div>
             </div>
           </div>
+
+          <div
+            style={{ backgroundColor: "#FF5A0A" }}
+            className="min-w-0 border-t-[3px] border-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
+                  Authority Health
+                </p>
+
+                <h3 className="mt-3 break-words text-3xl font-black leading-none text-white">
+                  {canManageAdmins ? "Management enabled" : "View only"}
+                </h3>
+
+                <p className="mt-2 text-xs font-bold leading-5 text-white">
+                  {canManageAdmins
+                    ? "Create, promote, demote, and remove team profiles with protected safeguards."
+                    : "Your current role can inspect access records but cannot change them."}
+                </p>
+              </div>
+
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-white">
+                {canManageAdmins ? <Crown size={22} /> : <KeyRound size={22} />}
+              </span>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeAuthorityMetric
+                label="Signed In As"
+                value={adminProfile?.full_name || "Admin User"}
+              />
+              <OrangeAuthorityMetric
+                label="Current Role"
+                value={prettyRole(role)}
+              />
+              <OrangeAuthorityMetric
+                label="Manage Access"
+                value={canManageAdmins ? "Enabled" : "Restricted"}
+              />
+              <OrangeAuthorityMetric
+                label="Directory"
+                value={`${counts.total} profile${counts.total === 1 ? "" : "s"}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:grid-cols-2 xl:grid-cols-4">
+          <AccessSummaryStat
+            icon={UsersRound}
+            label="Total Profiles"
+            value={counts.total}
+            tone="slate"
+          />
+          <AccessSummaryStat
+            icon={UserRound}
+            label="Staff"
+            value={counts.staff}
+            tone="blue"
+          />
+          <AccessSummaryStat
+            icon={ShieldCheck}
+            label="Admins"
+            value={counts.admin}
+            tone="orange"
+          />
+          <AccessSummaryStat
+            icon={Crown}
+            label="Super Admin"
+            value={counts.superAdmin}
+            tone="navy"
+          />
         </div>
       </section>
 
@@ -659,15 +699,15 @@ function AdminManagement({
       ) : null}
 
       <section
-        className={`${cardClass} min-w-0 rounded-[1.85rem] border-[3px] border-[#F97316] bg-[#FFF7EC] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.055)] sm:p-6`}
+        className={`${cardClass} min-w-0 rounded-[1.85rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.055)] sm:p-6`}
       >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
               Access Provisioning
             </p>
 
-            <h3 className="mt-1 break-words text-2xl font-black leading-tight text-[#10233f]">
+            <h3 className="mt-1 break-words text-2xl font-black leading-tight text-[#10233F]">
               Add Team Access
             </h3>
 
@@ -681,7 +721,7 @@ function AdminManagement({
             type="button"
             onClick={resetForm}
             disabled={!canManageAdmins || saving}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-xs font-black text-[#10233f] transition hover:border-[#F97316] hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4EA] disabled:cursor-not-allowed disabled:opacity-45"
           >
             <X size={14} />
             Reset
@@ -752,7 +792,7 @@ function AdminManagement({
                   !isUuid(form.id) ||
                   !form.full_name.trim()
                 }
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border-[3px] border-[#D94F08] bg-[#E96512] px-5 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition hover:bg-[#D94F08] disabled:cursor-not-allowed disabled:opacity-45 2xl:w-auto"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border-[3px] border-[#D94F08] bg-[#FF5A0A] px-5 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition hover:bg-[#E94F08] disabled:cursor-not-allowed disabled:opacity-45 2xl:w-auto"
               >
                 <UserPlus size={16} />
                 {saving ? "Creating..." : "Create Access"}
@@ -769,14 +809,14 @@ function AdminManagement({
       </section>
 
       <section
-        className={`${cardClass} min-w-0 rounded-[1.85rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.055)] sm:p-6`}
+        className={`${cardClass} min-w-0 rounded-[1.85rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.055)] sm:p-6`}
       >
         <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
               Team Directory
             </p>
-            <h3 className="mt-1 text-2xl font-black text-[#10233f]">
+            <h3 className="mt-1 text-2xl font-black text-[#10233F]">
               Admin Profiles
             </h3>
             <p className="mt-1 text-xs font-semibold text-slate-600">
@@ -794,14 +834,14 @@ function AdminManagement({
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search name, UUID or role..."
-                className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white pl-9 pr-3 text-xs font-bold text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-9 pr-3 text-xs font-bold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/15"
               />
             </div>
 
             <select
               value={roleFilter}
               onChange={(event) => setRoleFilter(event.target.value)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/15"
             >
               <option value="all">All roles</option>
               {ROLES.map((item) => (
@@ -814,7 +854,7 @@ function AdminManagement({
             <select
               value={sortMode}
               onChange={(event) => setSortMode(event.target.value)}
-              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#B9C9D9] bg-white px-3 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/15"
             >
               <option value="role">Privilege first</option>
               <option value="name">Name A–Z</option>
@@ -825,7 +865,7 @@ function AdminManagement({
               type="button"
               onClick={() => fetchAdmins()}
               disabled={loading}
-              className="inline-flex h-11 min-w-0 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] px-4 text-xs font-black text-orange-700 transition hover:bg-[#FFE8D5] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-11 min-w-0 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4EA] px-4 text-xs font-black text-[#B84F0E] transition hover:bg-[#FFE8D6] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 size={14}
@@ -901,11 +941,61 @@ function AdminManagement({
   );
 }
 
+function OrangeAuthorityMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/30 bg-white/10 p-3 text-white shadow-inner">
+      <p className="break-words text-[8px] font-black uppercase tracking-[0.09em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm font-black leading-5 text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function AccessSummaryStat({
+  icon: Icon,
+  label,
+  value,
+  tone = "slate",
+}) {
+  const styles = {
+    slate: "border-[#C9D7E6] bg-[#FFFDF8] text-[#10233F]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4EA] text-orange-900",
+    navy: "border-[#123865] bg-[#123865] text-white",
+  };
+
+  return (
+    <div
+      className={`min-w-0 rounded-[1.45rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.06)] ${
+        styles[tone] || styles.slate
+      }`}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="break-words text-[9px] font-black uppercase tracking-[0.12em] opacity-75">
+            {label}
+          </p>
+          <p className="mt-2 text-3xl font-black">
+            {value}
+          </p>
+        </div>
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/10 shadow-sm">
+          <Icon size={19} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function inputClass(invalid) {
-  return `h-12 w-full rounded-xl border-2 bg-white px-4 text-sm font-bold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-50 ${
+  return `h-12 w-full rounded-xl border-2 bg-white px-4 text-sm font-bold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-50 ${
     invalid
       ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-      : "border-[#B9C9D9] focus:border-[#F97316] focus:ring-orange-100"
+      : "border-[#C9D7E6] focus:border-[#FF5A0A] focus:ring-[#FF5A0A]/15"
   }`;
 }
 
@@ -923,7 +1013,7 @@ function Field({ label, children }) {
 function RoleExplainer({ label, description, Icon, id }) {
   const styles = {
     staff: "border-[#60A5FA] bg-[#F2F7FF] text-blue-900",
-    admin: "border-[#F97316] bg-[#FFF4E8] text-orange-900",
+    admin: "border-[#FF5A0A] bg-[#FFF4EA] text-orange-900",
     super_admin: "border-[#123865] bg-[#123865] text-white",
   };
 
@@ -956,7 +1046,7 @@ function AdminProfileCard({
   const Icon = config.Icon;
 
   return (
-    <div className="min-w-0 rounded-[1.5rem] border-[3px] border-[#D1DCE7] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#F97316] hover:shadow-[0_10px_24px_rgba(15,35,63,0.06)]">
+    <div className="min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:border-[#FF5A0A] hover:shadow-[0_10px_24px_rgba(15,35,63,0.06)]">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="min-w-0">
           <div className="flex items-start gap-3">
@@ -965,7 +1055,7 @@ function AdminProfileCard({
                 admin.role === "super_admin"
                   ? "border-[#123865] bg-[#123865] text-white"
                   : admin.role === "admin"
-                  ? "border-orange-300 bg-orange-50 text-orange-700"
+                  ? "border-orange-300 bg-orange-50 text-[#B84F0E]"
                   : "border-blue-300 bg-blue-50 text-blue-700"
               }`}
             >
@@ -974,7 +1064,7 @@ function AdminProfileCard({
 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h4 className="break-words text-lg font-black leading-6 text-[#10233f]">
+                <h4 className="break-words text-lg font-black leading-6 text-[#10233F]">
                   {admin.full_name || "Unnamed Admin"}
                 </h4>
 
@@ -1017,7 +1107,7 @@ function AdminProfileCard({
                 (isCurrentUser && admin.role === "super_admin") ||
                 isLastSuperAdmin
               }
-              className="h-11 w-full appearance-none rounded-xl border-2 border-[#B9C9D9] bg-white px-4 pr-9 text-xs font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-11 w-full appearance-none rounded-xl border-2 border-[#C9D7E6] bg-white px-4 pr-9 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/15 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {ROLES.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -1058,7 +1148,7 @@ function AdminProfileCard({
 function RoleBadge({ role }) {
   const styles = {
     staff: "border-blue-300 bg-blue-50 text-blue-700",
-    admin: "border-orange-300 bg-orange-50 text-orange-700",
+    admin: "border-orange-300 bg-orange-50 text-[#B84F0E]",
     super_admin: "border-[#123865] bg-[#123865] text-white",
   };
 
@@ -1093,7 +1183,7 @@ function Feedback({
 }) {
   const styles = {
     success: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-    warning: "border-[#F97316] bg-[#FFF4E8] text-orange-800",
+    warning: "border-[#FF5A0A] bg-[#FFF4EA] text-orange-800",
     error: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
   };
 
@@ -1181,7 +1271,7 @@ function DeleteConfirmation({
         <div className="bg-[#fff8ee] p-5">
           <p className="text-sm font-semibold leading-6 text-slate-700">
             You are about to delete the Admin profile for{" "}
-            <strong className="text-[#10233f]">
+            <strong className="text-[#10233F]">
               {admin.full_name || "this user"}
             </strong>
             . This removes their <strong>admin_profiles</strong> record. It does
@@ -1202,7 +1292,7 @@ function DeleteConfirmation({
               type="button"
               onClick={onCancel}
               disabled={deleting}
-              className="h-11 rounded-xl border-2 border-slate-300 bg-white text-xs font-black text-[#10233f] transition hover:bg-slate-50 disabled:opacity-50"
+              className="h-11 rounded-xl border-2 border-slate-300 bg-white text-xs font-black text-[#10233F] transition hover:bg-slate-50 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -1241,11 +1331,11 @@ function LoadingState() {
 
 function EmptyState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#F97316] bg-[#FFF8EE] p-8 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EE] p-8 text-center">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-[#B84F0E]">
         <UsersRound size={22} />
       </div>
-      <h3 className="mt-4 text-xl font-black text-[#10233f]">
+      <h3 className="mt-4 text-xl font-black text-[#10233F]">
         No Admin Profiles Found
       </h3>
       <p className="mx-auto mt-2 max-w-xl text-sm font-semibold text-slate-600">
@@ -1257,9 +1347,9 @@ function EmptyState() {
 
 function NoMatchState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-8 text-center">
+    <div className="rounded-[1.5rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-8 text-center">
       <Filter size={22} className="mx-auto text-orange-600" />
-      <h3 className="mt-3 text-lg font-black text-[#10233f]">
+      <h3 className="mt-3 text-lg font-black text-[#10233F]">
         No matching Admin profiles
       </h3>
       <p className="mt-2 text-sm font-semibold text-slate-600">

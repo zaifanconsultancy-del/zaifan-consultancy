@@ -1,10 +1,10 @@
-// LeadHealthPanel V3 MAXIMUM — Framed Student OS Health Command
+// LeadHealthPanel PARTNER OS EXTREME — Compact Student Health Command
 // Preserves Student OS health scoring, application funnel, risk heatmap, watchlist,
 // task/document/university/application analysis and team health logic.
 // Full mature component retained; visual system aligned with Zaifan Admin OS.
 
 import { motion, useReducedMotion } from "framer-motion";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   HeartPulse,
@@ -30,6 +30,7 @@ function LeadHealthPanel({
   studentRiskScores = [],
 }) {
   const reduceMotion = useReducedMotion();
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const allLeads = useMemo(
     () => [...inquiries, ...appointments],
@@ -274,26 +275,26 @@ function LeadHealthPanel({
       initial={reduceMotion ? false : { opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="space-y-6 text-[#10233f]"
+      className="min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-5 text-[#10233F] shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-5"
     >
-      <div className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_18px_50px_rgba(15,35,63,0.09)] sm:p-4">
-        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
-          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+      <div className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_46px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
+          <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-200">
               Student Success Intelligence V3
             </p>
 
-            <h2 className="mt-2 break-words text-3xl font-black leading-tight text-white">
+            <h2 className="mt-2 break-words text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
               OS Health Monitor
             </h2>
 
-            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Reads CRM leads plus Student OS data: applications, university planning,
               visa progress, documents, tasks, reminders, and journey risk.
             </p>
           </div>
 
-          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-6">
             <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
               OS Health
             </p>
@@ -322,7 +323,7 @@ function LeadHealthPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <HealthSignal
           label="Assignment Coverage"
           value={`${assignmentCoverage}%`}
@@ -349,16 +350,47 @@ function LeadHealthPanel({
         />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4">
+      <section className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Student Health Workspace
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide portfolio health, funnel, risk heatmap and intervention watchlist."
+                : "Open portfolio health, funnel, risk heatmap and intervention watchlist."}
+            </p>
+          </div>
+
+          <Activity
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </section>
+
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         {cards.map((card) => {
           const Icon = card.icon;
 
           return (
-            <div key={card.label} className={`min-w-0 rounded-[1.6rem] border-[3px] p-5 shadow-[0_7px_18px_rgba(15,35,63,0.05)] ${card.color}`}>
+            <div key={card.label} className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] ${card.color}`}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.08em] opacity-80">{card.label}</p>
-                  <h3 className="mt-2 text-4xl font-black">{card.value}</h3>
+                  <h3 className="mt-2 text-3xl font-black">{card.value}</h3>
                 </div>
                 <Icon size={28} />
               </div>
@@ -367,7 +399,7 @@ function LeadHealthPanel({
           );
         })}
       </div>
-<div className="rounded-[1.7rem] border-[3px] border-[#F97316] bg-[#FFFDF8] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
+<div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-white p-5 shadow-[0_10px_26px_rgba(18,56,101,0.06)]">
   <div className="flex items-center justify-between gap-3">
     <div>
       <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
@@ -382,7 +414,7 @@ function LeadHealthPanel({
     </div>
   </div>
 
-  <div className="mt-5 grid gap-3 md:grid-cols-3 lg:grid-cols-5">
+  <div className="mt-5 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3">
     <MiniFunnel
       label="Not Started"
       value={applicationFunnel.notStarted}
@@ -429,7 +461,7 @@ function LeadHealthPanel({
     />
   </div>
 </div>
-<div className="rounded-[1.7rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
+<div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_10px_26px_rgba(18,56,101,0.05)]">
   <div className="flex items-center justify-between gap-3">
     <div>
       <p className="text-[9px] font-black uppercase tracking-[0.12em] text-red-700">
@@ -444,7 +476,7 @@ function LeadHealthPanel({
     </div>
   </div>
 
-  <div className="mt-5 grid gap-4 md:grid-cols-4">
+  <div className="mt-5 grid min-w-0 grid-cols-2 gap-4">
     <RiskCard
       label="Critical"
       value={riskHeatmap.critical}
@@ -470,7 +502,7 @@ function LeadHealthPanel({
     />
   </div>
 </div>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-4">
         <InfoBox icon={Users} title="Student OS Coverage">
           <p>Total CRM leads: {allLeads.length}</p>
           <p>Applications: {studentApplications.length}</p>
@@ -494,7 +526,7 @@ function LeadHealthPanel({
         </InfoBox>
       </div>
 
-      <div className="rounded-[1.7rem] border-[3px] border-[#F97316] bg-[#FFFDF8] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
+      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-white p-5 shadow-[0_10px_26px_rgba(18,56,101,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
@@ -518,7 +550,7 @@ function LeadHealthPanel({
             {watchlist.map((student) => (
               <div
                 key={`${student.displayType}-${student.id}`}
-                className="flex min-w-0 flex-col gap-3 rounded-2xl border-2 border-[#D1DCE7] bg-white p-4 shadow-[0_5px_14px_rgba(15,35,63,0.035)] transition hover:border-[#F97316] md:flex-row md:items-center md:justify-between"
+                className="flex min-w-0 flex-col gap-3 rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A]"
               >
                 <div className="min-w-0">
                   <p className="break-words font-black text-[#10233f]">{student.displayName}</p>
@@ -547,6 +579,8 @@ function LeadHealthPanel({
           </div>
         )}
       </div>
+        </div>
+      ) : null}
     </motion.section>
   );
 }
@@ -788,7 +822,7 @@ function HealthSignal({ label, value, detail, tone = "default" }) {
     good: "border-[#34D399] bg-[#F0FFF8]",
     warning: "border-[#F59E0B] bg-[#FFF7ED]",
     risk: "border-[#FB7185] bg-[#FFF4F4]",
-    navy: "border-[#315B88] bg-[#F2F7FF]",
+    navy: "border-[#123865] bg-[#F2F7FF]",
     default: "border-[#F97316] bg-[#FFF4E8]",
   };
 
@@ -800,11 +834,11 @@ function HealthSignal({ label, value, detail, tone = "default" }) {
       : tone === "good"
       ? "text-emerald-700"
       : tone === "navy"
-      ? "text-[#315B88]"
+      ? "text-[#123865]"
       : "text-orange-700";
 
   return (
-    <div className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(15,35,63,0.05)] ${styles[tone] || styles.default}`}>
+    <div className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] ${styles[tone] || styles.default}`}>
       <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.1em] text-slate-500">
         {label}
       </p>
@@ -820,7 +854,7 @@ function HealthSignal({ label, value, detail, tone = "default" }) {
 
 function InfoBox({ icon: Icon, title, children }) {
   return (
-    <div className="min-w-0 rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
+    <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_8px_24px_rgba(18,56,101,0.05)]">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
           <Icon size={18} />

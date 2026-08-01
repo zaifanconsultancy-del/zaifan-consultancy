@@ -96,11 +96,11 @@ function statusTone(status = "") {
 
 function categoryTone(index) {
   const tones = [
-    "border-[#F97316] bg-[#FFF4E8]",
+    "border-[#C9D7E6] bg-[#FFFDF8]",
     "border-[#60A5FA] bg-[#F2F7FF]",
     "border-[#34D399] bg-[#F0FFF8]",
     "border-[#F59E0B] bg-[#FFF8E8]",
-    "border-[#9B6CFF] bg-[#F8F5FF]",
+    "border-[#60A5FA] bg-[#F2F7FF]",
   ];
 
   return tones[index % tones.length];
@@ -130,7 +130,7 @@ function CategoryCard({ item, max, currency, index }) {
         </p>
       </div>
 
-      <div className="mt-4 h-3 overflow-hidden rounded-full border-2 border-[#D1DCE7] bg-white">
+      <div className="mt-4 h-3 overflow-hidden rounded-full border-2 border-[#E1E8F0] bg-white">
         <div
           className="h-full rounded-full bg-[#F97316] transition-[width] duration-300"
           style={{ width: `${width}%` }}
@@ -142,7 +142,7 @@ function CategoryCard({ item, max, currency, index }) {
 
 function ExpenseRow({ expense, currency }) {
   return (
-    <article className="rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+    <article className="rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_11rem_10rem_9rem] xl:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -183,7 +183,7 @@ function ExpenseRow({ expense, currency }) {
             Status
           </p>
           <span
-            className={`mt-1 inline-flex w-fit rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
+            className={`mt-1 inline-flex w-fit rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${statusTone(
               expense.status
             )}`}
           >
@@ -198,7 +198,7 @@ function ExpenseRow({ expense, currency }) {
 function EmptyExpenses({ queryActive }) {
   return (
     <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#C9D7E6] bg-[#FFFDF8] text-[#B84F0E]">
         <Receipt size={24} />
       </div>
 
@@ -332,9 +332,9 @@ export default function ExpenseManagementPanel({ finance = {} }) {
 
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
-      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+      <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <div className="bg-[#123865] p-5 text-white sm:p-6">
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-[#F97316]/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <TrendingDown size={12} />
             Expense Management
           </div>
@@ -458,7 +458,7 @@ export default function ExpenseManagementPanel({ finance = {} }) {
           <section className="rounded-[1.65rem] border-[3px] border-[#F97316] bg-[#FFF8EF] p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#B84F0E]">
                   Cost Distribution
                 </p>
                 <h3 className="mt-1 text-xl font-black text-[#10233F]">
@@ -470,7 +470,7 @@ export default function ExpenseManagementPanel({ finance = {} }) {
                 </p>
               </div>
 
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-white text-orange-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-white text-[#B84F0E]">
                 <Layers3 size={17} />
               </div>
             </div>
@@ -564,7 +564,7 @@ export default function ExpenseManagementPanel({ finance = {} }) {
                 type="button"
                 onClick={clearFilters}
                 disabled={!queryActive}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 transition hover:border-[#F97316] hover:text-[#B84F0E] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <X size={13} />
                 Clear

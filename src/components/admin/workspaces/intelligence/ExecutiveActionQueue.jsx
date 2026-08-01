@@ -781,28 +781,28 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="space-y-5"
+      className="min-w-0 space-y-5"
       aria-busy={Boolean(bulkExecuting)}
     >
-      <div className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#fff8ee] shadow-[0_18px_50px_rgba(15,35,63,0.08)]">
-        <div className="grid xl:grid-cols-[1.3fr_0.7fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-6">
-            <div className="flex flex-wrap gap-2">
-              <DarkPill icon={Crown}>Executive Action Queue V4</DarkPill>
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <DarkPill icon={Crown}>Executive Action Queue V5</DarkPill>
               <DarkPill icon={ShieldCheck}>Human Controlled</DarkPill>
               <DarkPill icon={Activity}>Live Queue Health</DarkPill>
             </div>
 
-            <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">
-              Student OS Decision & Execution Queue
+            <h2 className="mt-4 max-w-5xl break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
+              Student OS Decision & Execution Command
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
-              Review, approve, reject, execute, recover, and audit AI-generated
+            <p className="mt-3 max-w-5xl break-words text-sm font-semibold leading-6 text-slate-100">
+              Review, approve, reject, execute, recover and audit AI-generated
               student actions without bypassing the human control layer.
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
               <DarkMetric label="Actions" value={analytics.total} />
               <DarkMetric label="Critical" value={analytics.critical + analytics.urgent} />
               <DarkMetric label="Approval" value={analytics.approvalRequired} />
@@ -812,14 +812,16 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
-            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-              Queue Command Status
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Queue Operating Position
             </p>
-            <p className="mt-3 text-3xl font-black text-white">
+
+            <p className="mt-3 text-5xl font-black text-white">
               {queueHealth.queuePressure || 0}
             </p>
-            <p className="text-xs font-black uppercase tracking-[0.1em] text-white">
+
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
               Queue Pressure
             </p>
 
@@ -829,168 +831,190 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
               <OrangeMetric label="Throughput" value={throughput.totalExecuted} />
               <OrangeMetric label="Success" value={`${throughput.successRate}%`} />
             </div>
+
+            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Human Control Rule
+              </p>
+              <p className="mt-1 text-xs font-black leading-5 text-white">
+                Approval-gated actions stay locked until a human explicitly approves them.
+              </p>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div className="space-y-4 p-4 sm:p-5">
-          {bulkError ? (
-            <div role="alert" className="flex items-start gap-3 rounded-xl border-[3px] border-red-300 bg-red-50 p-4 text-red-900">
-              <AlertTriangle size={17} className="mt-0.5 shrink-0" />
-              <p className="min-w-0 flex-1 text-sm font-bold">{bulkError}</p>
-              <button type="button" onClick={() => setBulkError("")} aria-label="Dismiss bulk error">
-                <XCircle size={16} />
-              </button>
-            </div>
-          ) : null}
+      {bulkError ? (
+        <div
+          role="alert"
+          className="flex min-w-0 items-start gap-3 rounded-[1.3rem] border-[3px] border-red-400 bg-red-50 p-4 text-red-900 shadow-[0_8px_22px_rgba(18,56,101,0.05)]"
+        >
+          <AlertTriangle size={17} className="mt-0.5 shrink-0" />
+          <p className="min-w-0 flex-1 text-sm font-bold">{bulkError}</p>
+          <button
+            type="button"
+            onClick={() => setBulkError("")}
+            aria-label="Dismiss bulk error"
+          >
+            <XCircle size={16} />
+          </button>
+        </div>
+      ) : null}
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <QueueMetric label="Tasks" value={analytics.tasks} icon={Target} />
-            <QueueMetric label="Reminders" value={analytics.reminders} icon={Clock3} />
-            <QueueMetric label="Calls" value={analytics.calls} icon={PhoneCall} />
-            <QueueMetric label="Emails" value={analytics.emailDrafts} icon={Mail} />
-            <QueueMetric label="WhatsApp" value={analytics.whatsappDrafts} icon={MessageCircle} />
-            <QueueMetric label="High Impact" value={analytics.highImpact} icon={Zap} tone="gold" />
+      <QueueOperationsBoard
+        analytics={analytics}
+        queueHealth={queueHealth}
+        approvalSla={approvalSla}
+        throughput={throughput}
+      />
+
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Command Center
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Human approval first. Execution only activates when work is eligible.
+            </h3>
+            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-slate-200">
+              Muted commands are intentionally unavailable because no eligible work
+              exists. They are not broken buttons.
+            </p>
           </div>
 
-          <div className="rounded-[1.6rem] border-[3px] border-[#123865] bg-[#FFFDF8] p-4 shadow-[0_10px_28px_rgba(18,56,101,0.08)] sm:p-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
-                  Command Center
-                </p>
-                <p className="mt-1 text-base font-black text-[#10233f]">
-                  Human approval first. Execution only lights up when work is eligible.
-                </p>
-                <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-slate-600">
-                  Every command below is real. A muted command means there is currently nothing
-                  eligible to process — it is not a broken button.
-                </p>
-              </div>
+          {bulkExecuting ? (
+            <span className="inline-flex items-center gap-2 self-start rounded-xl border-2 border-white/25 bg-white/10 px-3 py-2 text-[10px] font-black uppercase text-white">
+              <RefreshCw size={12} className="animate-spin" />
+              Running {formatLabel(bulkExecuting)}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 self-start rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3 py-2 text-[10px] font-black uppercase text-emerald-800">
+              <ShieldCheck size={13} />
+              Human control active
+            </span>
+          )}
+        </div>
 
-              {bulkExecuting ? (
-                <span className="inline-flex items-center gap-2 self-start rounded-xl border-2 border-orange-400 bg-orange-50 px-3 py-2 text-[10px] font-black uppercase text-orange-800">
-                  <RefreshCw size={12} className="animate-spin" />
-                  Running {formatLabel(bulkExecuting)}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-2 self-start rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3 py-2 text-[10px] font-black uppercase text-emerald-800">
-                  <ShieldCheck size={13} />
-                  Human control active
-                </span>
-              )}
-            </div>
+        <div className="grid min-w-0 gap-5 bg-[#FFF8EF] p-4 sm:p-5 xl:grid-cols-2">
+          <PartnerCommandGroup
+            eyebrow="Step 01"
+            title="Approve or reject"
+            description="These commands change only the local human-review state."
+            tone="orange"
+          >
+            <BulkButton
+              label="Approve Critical"
+              count={commandAvailability.approveCritical}
+              hint="Critical or urgent actions waiting for approval"
+              onClick={() => handleBulkApprove("critical")}
+              disabled={Boolean(bulkExecuting) || commandAvailability.approveCritical === 0}
+              tone="approve"
+            />
+            <BulkButton
+              label="Approve Executive"
+              count={commandAvailability.approveExecutive}
+              hint="Executive-priority actions waiting for approval"
+              onClick={() => handleBulkApprove("executive")}
+              disabled={Boolean(bulkExecuting) || commandAvailability.approveExecutive === 0}
+              tone="approve"
+            />
+            <BulkButton
+              label="Approve All"
+              count={commandAvailability.approveAll}
+              hint="All remaining approval-gated actions"
+              onClick={() => handleBulkApprove("all")}
+              disabled={Boolean(bulkExecuting) || commandAvailability.approveAll === 0}
+              tone="approve"
+            />
+            <BulkButton
+              label="Reject Waiting"
+              count={commandAvailability.rejectWaiting}
+              hint="Reject every action still waiting for approval"
+              onClick={() => handleBulkReject("approval")}
+              disabled={Boolean(bulkExecuting) || commandAvailability.rejectWaiting === 0}
+              tone="reject"
+            />
+          </PartnerCommandGroup>
 
-            <div className="mt-5 grid gap-4 xl:grid-cols-2">
-              <CommandGroup
-                eyebrow="Step 1"
-                title="Approve or reject"
-                description="These change the local human-review state only. They do not execute student actions."
-              >
-                <BulkButton
-                  label="Approve Critical"
-                  count={commandAvailability.approveCritical}
-                  hint="Critical/urgent actions waiting for human approval"
-                  onClick={() => handleBulkApprove("critical")}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.approveCritical === 0}
-                  tone="approve"
-                />
-                <BulkButton
-                  label="Approve Executive"
-                  count={commandAvailability.approveExecutive}
-                  hint="Executive-priority actions waiting for approval"
-                  onClick={() => handleBulkApprove("executive")}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.approveExecutive === 0}
-                  tone="approve"
-                />
-                <BulkButton
-                  label="Approve All"
-                  count={commandAvailability.approveAll}
-                  hint="All remaining actions that require approval"
-                  onClick={() => handleBulkApprove("all")}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.approveAll === 0}
-                  tone="approve"
-                />
-                <BulkButton
-                  label="Reject Waiting"
-                  count={commandAvailability.rejectWaiting}
-                  hint="Reject every action still waiting for approval"
-                  onClick={() => handleBulkReject("approval")}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.rejectWaiting === 0}
-                  tone="reject"
-                />
-              </CommandGroup>
+          <PartnerCommandGroup
+            eyebrow="Step 02"
+            title="Execute eligible work"
+            description="These commands call the real executor after approval rules are satisfied."
+            tone="navy"
+          >
+            <BulkButton
+              label="Execute Critical"
+              count={commandAvailability.executeCritical}
+              hint="Approved critical or urgent actions ready to run"
+              onClick={() => runBulkExecution("critical")}
+              loading={bulkExecuting === "critical"}
+              disabled={Boolean(bulkExecuting) || commandAvailability.executeCritical === 0}
+              tone="critical"
+            />
+            <BulkButton
+              label="Execute Executive"
+              count={commandAvailability.executeExecutive}
+              hint="Approved executive-priority actions ready to run"
+              onClick={() => runBulkExecution("executive")}
+              loading={bulkExecuting === "executive"}
+              disabled={Boolean(bulkExecuting) || commandAvailability.executeExecutive === 0}
+              tone="execute"
+            />
+            <BulkButton
+              label="Execute Conversion"
+              count={commandAvailability.executeConversion}
+              hint="Conversion-ready actions eligible to run"
+              onClick={() => runBulkExecution("conversion")}
+              loading={bulkExecuting === "conversion"}
+              disabled={Boolean(bulkExecuting) || commandAvailability.executeConversion === 0}
+              tone="conversion"
+            />
+            <BulkButton
+              label="Retry Failed"
+              count={commandAvailability.retryFailed}
+              hint="Previously failed actions eligible for retry"
+              onClick={() => runBulkExecution("failed")}
+              loading={bulkExecuting === "failed"}
+              disabled={Boolean(bulkExecuting) || commandAvailability.retryFailed === 0}
+              tone="retry"
+            />
+          </PartnerCommandGroup>
+        </div>
+      </section>
 
-              <CommandGroup
-                eyebrow="Step 2"
-                title="Execute eligible work"
-                description="These call the real execution layer. Approval-gated actions stay locked until approved."
-              >
-                <BulkButton
-                  label="Execute Critical"
-                  count={commandAvailability.executeCritical}
-                  hint="Approved critical/urgent actions ready to run"
-                  onClick={() => runBulkExecution("critical")}
-                  loading={bulkExecuting === "critical"}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.executeCritical === 0}
-                  tone="critical"
-                />
-                <BulkButton
-                  label="Execute Executive"
-                  count={commandAvailability.executeExecutive}
-                  hint="Approved executive-priority actions ready to run"
-                  onClick={() => runBulkExecution("executive")}
-                  loading={bulkExecuting === "executive"}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.executeExecutive === 0}
-                  tone="execute"
-                />
-                <BulkButton
-                  label="Execute Conversion"
-                  count={commandAvailability.executeConversion}
-                  hint="Conversion-ready student actions eligible to run"
-                  onClick={() => runBulkExecution("conversion")}
-                  loading={bulkExecuting === "conversion"}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.executeConversion === 0}
-                  tone="conversion"
-                />
-                <BulkButton
-                  label="Retry Failed"
-                  count={commandAvailability.retryFailed}
-                  hint="Previously failed actions eligible for another attempt"
-                  onClick={() => runBulkExecution("failed")}
-                  loading={bulkExecuting === "failed"}
-                  disabled={Boolean(bulkExecuting) || commandAvailability.retryFailed === 0}
-                  tone="retry"
-                />
-              </CommandGroup>
-            </div>
-          </div>
-
-          <div className="rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4">
-            <div className="flex items-center gap-2">
-              <Filter size={15} className="text-orange-700" />
-              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <section className="min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] border-[#123865] bg-white shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#FFF4E8] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <Filter size={15} className="text-orange-700" />
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
                 Queue Filters
               </p>
-              <span className="ml-auto text-xs font-black text-slate-500">
-                {filteredItems.length} shown
-              </span>
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <FilterButton active={filter === "all"} onClick={() => changeFilter("all")}>All</FilterButton>
-              <FilterButton active={filter === "approval"} onClick={() => changeFilter("approval")}>Approval</FilterButton>
-              <FilterButton active={filter === "ready"} onClick={() => changeFilter("ready")}>Ready</FilterButton>
-              <FilterButton active={filter === "critical"} onClick={() => changeFilter("critical")}>Critical</FilterButton>
-              <FilterButton active={filter === "executive"} onClick={() => changeFilter("executive")}>Executive</FilterButton>
-              <FilterButton active={filter === "high-impact"} onClick={() => changeFilter("high-impact")}>High Impact</FilterButton>
-              <FilterButton active={filter === "tasks"} onClick={() => changeFilter("tasks")}>Tasks</FilterButton>
-              <FilterButton active={filter === "communication"} onClick={() => changeFilter("communication")}>Communication</FilterButton>
-              <FilterButton active={filter === "failed"} onClick={() => changeFilter("failed")}>Failed</FilterButton>
-              <FilterButton active={filter === "executed"} onClick={() => changeFilter("executed")}>Executed</FilterButton>
+              <p className="mt-0.5 text-sm font-black text-[#10233F]">
+                Focus the execution queue
+              </p>
             </div>
           </div>
+
+          <span className="w-fit rounded-full border-2 border-[#123865] bg-white px-3 py-1.5 text-[9px] font-black uppercase text-[#123865]">
+            {filteredItems.length} visible
+          </span>
         </div>
-      </div>
+
+        <div className="flex min-w-0 flex-wrap gap-2 bg-[#FFF8EF] p-4">
+          <FilterButton active={filter === "all"} onClick={() => changeFilter("all")}>All</FilterButton>
+          <FilterButton active={filter === "approval"} onClick={() => changeFilter("approval")}>Approval</FilterButton>
+          <FilterButton active={filter === "ready"} onClick={() => changeFilter("ready")}>Ready</FilterButton>
+          <FilterButton active={filter === "critical"} onClick={() => changeFilter("critical")}>Critical</FilterButton>
+          <FilterButton active={filter === "executive"} onClick={() => changeFilter("executive")}>Executive</FilterButton>
+          <FilterButton active={filter === "high-impact"} onClick={() => changeFilter("high-impact")}>High Impact</FilterButton>
+          <FilterButton active={filter === "tasks"} onClick={() => changeFilter("tasks")}>Tasks</FilterButton>
+          <FilterButton active={filter === "communication"} onClick={() => changeFilter("communication")}>Communication</FilterButton>
+          <FilterButton active={filter === "failed"} onClick={() => changeFilter("failed")}>Failed</FilterButton>
+          <FilterButton active={filter === "executed"} onClick={() => changeFilter("executed")}>Executed</FilterButton>
+        </div>
+      </section>
 
       {batchHistory.length ? <BatchHistoryPanel batchHistory={batchHistory} /> : null}
 
@@ -1013,22 +1037,23 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
             />
           ))
         ) : (
-          <div className="rounded-[1.5rem] border-[3px] border-orange-300 bg-white p-7 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+          <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-7 text-center shadow-inner">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border-[3px] border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
               <Sparkles size={23} />
             </div>
-            <p className="mt-4 font-black text-[#10233f]">No actions in this view</p>
+            <p className="mt-4 font-black text-[#10233F]">No actions in this view</p>
             <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
               The current filter has no matching executive tasks, reminders,
-              calls, email drafts, or WhatsApp drafts.
+              calls, email drafts or WhatsApp drafts.
             </p>
           </div>
         )}
+
         {filteredItems.length > visibleItems.length ? (
           <button
             type="button"
             onClick={() => setVisibleLimit((value) => Math.min(value + 12, filteredItems.length))}
-            className="w-full rounded-[1.25rem] border-[3px] border-[#123865] bg-[#FFF8EE] px-4 py-3 text-sm font-black text-[#10233f] transition hover:border-orange-400 hover:text-orange-800"
+            className="w-full rounded-[1.25rem] border-[3px] border-[#123865] bg-[#FFF8EF] px-4 py-3 text-sm font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-white"
           >
             Show 12 more · {filteredItems.length - visibleItems.length} remaining
           </button>
@@ -1038,7 +1063,7 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
           <button
             type="button"
             onClick={() => setVisibleLimit(12)}
-            className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:text-orange-800"
+            className="w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:text-orange-700"
           >
             Collapse queue
           </button>
@@ -1047,6 +1072,150 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
     </motion.section>
   );
 }
+
+function QueueOperationsBoard({
+  analytics,
+  queueHealth,
+  approvalSla,
+  throughput,
+}) {
+  return (
+    <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+      <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+            Queue Operations Board
+          </p>
+          <h3 className="mt-1 text-xl font-black text-white">
+            Action mix and execution health
+          </h3>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-200">
+            One grouped operational board replaces the loose six-card metric row.
+          </p>
+        </div>
+
+        <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+          {analytics.total} actions
+        </span>
+      </div>
+
+      <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+        <QueueBoardCard
+          label="Task Operations"
+          value={analytics.tasks}
+          detail={`${analytics.reminders} reminders · ${analytics.calls} calls`}
+          icon={Target}
+          tone="navy"
+        />
+        <QueueBoardCard
+          label="Communication"
+          value={analytics.emailDrafts + analytics.whatsappDrafts}
+          detail={`${analytics.emailDrafts} email · ${analytics.whatsappDrafts} WhatsApp`}
+          icon={Mail}
+          tone="orange"
+        />
+        <QueueBoardCard
+          label="High Impact"
+          value={analytics.highImpact}
+          detail="Actions with impact score 120 or higher"
+          icon={Zap}
+          tone="red"
+        />
+        <QueueBoardCard
+          label="Approval Health"
+          value={`${approvalSla.approvalRate}%`}
+          detail={`${approvalSla.waiting} waiting · ${approvalSla.rejected} rejected`}
+          icon={ShieldCheck}
+          tone="green"
+        />
+        <QueueBoardCard
+          label="Execution Throughput"
+          value={throughput.totalExecuted}
+          detail={`${throughput.batches} batches · ${throughput.totalFailed} failed`}
+          icon={Activity}
+          tone="navy"
+        />
+        <QueueBoardCard
+          label="Duplicate Protection"
+          value={queueHealth.duplicateBlockedCount || throughput.totalDuplicate}
+          detail="Repeated work blocked by action-key protection"
+          icon={ShieldCheck}
+          tone="orange"
+        />
+      </div>
+    </section>
+  );
+}
+
+function QueueBoardCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+  tone = "navy",
+}) {
+  const classes =
+    tone === "green"
+      ? "border-emerald-400 bg-emerald-50"
+      : tone === "red"
+        ? "border-red-400 bg-red-50"
+        : tone === "orange"
+          ? "border-[#FF5A0A] bg-[#FFF4E8]"
+          : "border-[#123865] bg-[#F2F7FF]";
+
+  return (
+    <article className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${classes}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
+            {label}
+          </p>
+          <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865]">
+          <Icon size={16} />
+        </span>
+      </div>
+      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-600">
+        {detail}
+      </p>
+    </article>
+  );
+}
+
+function PartnerCommandGroup({
+  eyebrow,
+  title,
+  description,
+  tone = "navy",
+  children,
+}) {
+  const accent =
+    tone === "orange"
+      ? "border-[#FF5A0A]"
+      : "border-[#123865]";
+
+  return (
+    <section className={`min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] bg-white shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${accent}`}>
+      <div className={`border-b-[3px] px-4 py-3.5 ${tone === "orange" ? "border-[#FF5A0A] bg-[#FFF4E8]" : "border-[#FF5A0A] bg-[#123865] text-white"}`}>
+        <p className={`text-[8px] font-black uppercase tracking-[0.12em] ${tone === "orange" ? "text-orange-700" : "text-orange-200"}`}>
+          {eyebrow}
+        </p>
+        <h4 className={`mt-1 text-base font-black ${tone === "orange" ? "text-[#10233F]" : "text-white"}`}>
+          {title}
+        </h4>
+        <p className={`mt-1 text-xs font-semibold leading-5 ${tone === "orange" ? "text-slate-600" : "text-slate-200"}`}>
+          {description}
+        </p>
+      </div>
+
+      <div className="grid min-w-0 gap-3 bg-white p-4 sm:grid-cols-2">
+        {children}
+      </div>
+    </section>
+  );
+}
+
 
 function ActionQueueCard({
   item,
@@ -1085,24 +1254,24 @@ function ActionQueueCard({
     ? "border-red-300 bg-red-50 text-red-800"
     : waitingApproval
     ? "border-amber-300 bg-amber-50 text-amber-900"
-    : "border-orange-400 bg-orange-50 text-orange-800";
+    : "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]";
 
   return (
     <motion.article
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.16) }}
-      className={`overflow-hidden rounded-[1.6rem] border-[3px] shadow-[0_12px_30px_rgba(15,35,63,0.07)] ${style.wrapper}`}
+      className={`min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] shadow-[0_14px_34px_rgba(18,56,101,0.08)] ${style.wrapper}`}
     >
       <div className="grid xl:grid-cols-[minmax(0,1fr)_230px]">
         <div className="min-w-0 p-4 sm:p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-white text-sm font-black text-[#10233f]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-white text-sm font-black text-[#10233F]">
               {index + 1}
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className="break-words text-base font-black text-[#10233f] sm:text-lg">
+              <p className="break-words text-base font-black text-[#10233F] sm:text-lg">
                 {recommendation.title || template.title}
               </p>
               <p className="mt-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
@@ -1122,11 +1291,11 @@ function ActionQueueCard({
             <Tag text={`Impact ${item.impactScore}`} />
           </div>
 
-          <div className="mt-4 rounded-xl border-2 border-slate-300 bg-white p-4">
-            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+          <div className="mt-4 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#B84F0E]">
               Recommended move
             </p>
-            <p className="mt-2 text-sm font-bold leading-6 text-[#10233f]">
+            <p className="mt-2 text-sm font-bold leading-6 text-[#10233F]">
               {recommendation.description || template.description}
             </p>
             <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">{reason}</p>
@@ -1142,15 +1311,15 @@ function ActionQueueCard({
           <div className="mt-3 grid gap-3 xl:grid-cols-2">
             <PayloadSummary payload={template.payload || {}} />
 
-            <div className="rounded-xl border-2 border-slate-300 bg-[#F8FAFC] p-4">
+            <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#F8FAFC] p-4">
               <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
                 Student context
               </p>
-              <p className="mt-2 text-base font-black text-[#10233f]">{getStudentName(score)}</p>
+              <p className="mt-2 text-base font-black text-[#10233F]">{getStudentName(score)}</p>
               <div className="mt-3 grid gap-1.5 text-xs font-semibold leading-5 text-slate-600">
-                <p><span className="font-black text-[#10233f]">Type:</span> {formatLabel(getStudentType(score))}</p>
-                <p><span className="font-black text-[#10233f]">Stage:</span> {formatLabel(studentStage)}</p>
-                <p><span className="font-black text-[#10233f]">Priority:</span> {formatLabel(recommendation.priority || "medium")}</p>
+                <p><span className="font-black text-[#10233F]">Type:</span> {formatLabel(getStudentType(score))}</p>
+                <p><span className="font-black text-[#10233F]">Stage:</span> {formatLabel(studentStage)}</p>
+                <p><span className="font-black text-[#10233F]">Priority:</span> {formatLabel(recommendation.priority || "medium")}</p>
               </div>
             </div>
           </div>
@@ -1168,7 +1337,7 @@ function ActionQueueCard({
           ) : null}
         </div>
 
-        <aside className="border-t-[3px] border-[#123865] bg-[#FFFDF8] p-4 xl:border-l-[3px] xl:border-t-0">
+        <aside className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 xl:border-l-[3px] xl:border-t-0">
           <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
             Human control
           </p>
@@ -1184,7 +1353,7 @@ function ActionQueueCard({
                 type="button"
                 onClick={onApprove}
                 disabled={executing || approved}
-                className="min-h-11 rounded-xl border-2 border-emerald-500 bg-emerald-500 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+                className="min-h-11 rounded-xl border-2 border-emerald-500 bg-emerald-500 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-100 disabled:text-slate-400"
               >
                 {approved ? "Approved" : "Approve action"}
               </button>
@@ -1206,8 +1375,8 @@ function ActionQueueCard({
             disabled={!canExecute}
             className={`mt-3 min-h-12 w-full rounded-xl border-2 px-4 py-2 text-xs font-black uppercase tracking-[0.08em] transition ${
               canExecute
-                ? "border-orange-600 bg-orange-500 text-white shadow-[0_7px_16px_rgba(249,115,22,0.18)] hover:bg-orange-600"
-                : "border-slate-300 bg-slate-100 text-slate-400"
+                ? "border-orange-600 bg-[#FF5A0A] text-white shadow-[0_7px_16px_rgba(249,115,22,0.18)] hover:bg-orange-600"
+                : "border-[#C9D7E6] bg-slate-100 text-slate-400"
             } disabled:cursor-not-allowed`}
           >
             {executed
@@ -1243,15 +1412,15 @@ function ReadOnlyMetric({ label, value, tone = "default" }) {
       : tone === "opportunity"
       ? "border-emerald-300 bg-emerald-50"
       : tone === "action"
-      ? "border-orange-300 bg-orange-50"
-      : "border-slate-300 bg-[#F8FAFC]";
+      ? "border-[#FF5A0A] bg-[#FFF4E8]"
+      : "border-[#C9D7E6] bg-[#F8FAFC]";
 
   return (
     <div className={`min-w-0 rounded-xl border-2 p-3 ${style}`}>
       <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-600">
         {label}
       </p>
-      <p className="mt-1 break-words text-sm font-black text-[#10233f]">{value}</p>
+      <p className="mt-1 break-words text-sm font-black text-[#10233F]">{value}</p>
     </div>
   );
 }
@@ -1260,8 +1429,8 @@ function BatchHistoryPanel({ batchHistory = [] }) {
   const visibleBatches = batchHistory.slice(0, 4);
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_14px_34px_rgba(18,56,101,0.08)]">
-      <div className="flex flex-col gap-2 border-b-2 border-orange-200 bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+    <div className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_14px_34px_rgba(18,56,101,0.08)]">
+      <div className="flex flex-col gap-2 border-b-2 border-[#FFD0B5] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
             Execution Audit
@@ -1276,7 +1445,7 @@ function BatchHistoryPanel({ batchHistory = [] }) {
         </span>
       </div>
 
-      <div className="grid gap-3 p-4 sm:p-5">
+      <div className="grid min-w-0 gap-3 p-4 sm:p-5">
         {visibleBatches.map((batch, index) => {
           const successful = number(batch.summary?.successful);
           const failed = number(batch.summary?.failed);
@@ -1290,16 +1459,16 @@ function BatchHistoryPanel({ batchHistory = [] }) {
               className={`rounded-[1.3rem] border-[3px] p-4 transition ${
                 hasFailure
                   ? "border-red-300 bg-red-50"
-                  : "border-slate-300 bg-white hover:border-orange-300"
+                  : "border-[#C9D7E6] bg-white hover:border-[#FF5A0A]"
               }`}
             >
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-orange-300 bg-orange-50 text-xs font-black text-orange-800">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-[#FF5A0A] bg-[#FFF4E8] text-xs font-black text-[#9B3E08]">
                       {index + 1}
                     </span>
-                    <p className="text-base font-black text-[#10233f]">
+                    <p className="text-base font-black text-[#10233F]">
                       {formatLabel(batch.scope)} Batch
                     </p>
                     <span
@@ -1340,8 +1509,8 @@ function HistoryMetric({ label, value, tone = "neutral" }) {
       : tone === "red"
       ? "border-red-300 bg-red-50 text-red-800"
       : tone === "orange"
-      ? "border-orange-300 bg-orange-50 text-orange-800"
-      : "border-slate-300 bg-slate-50 text-[#10233f]";
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]"
+      : "border-[#C9D7E6] bg-slate-50 text-[#10233F]";
 
   return (
     <div className={`min-w-[92px] rounded-xl border-2 px-3 py-2 ${style}`}>
@@ -1353,17 +1522,17 @@ function HistoryMetric({ label, value, tone = "neutral" }) {
 
 function PayloadSummary({ payload = {} }) {
   return (
-    <div className="rounded-xl border-2 border-orange-300 bg-orange-50/50 p-4">
-      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-800">
+    <div className="rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8]/50 p-4">
+      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#9B3E08]">
         Prepared execution payload
       </p>
 
       <div className="mt-3 grid gap-1.5 text-xs font-semibold leading-5 text-slate-600">
-        <p><span className="font-black text-[#10233f]">Student:</span> {payload.student_name || "Unknown"}</p>
-        <p><span className="font-black text-[#10233f]">Journey:</span> {formatLabel(payload.journey_stage || "not_started")}</p>
-        <p><span className="font-black text-[#10233f]">Recommendation:</span> {formatLabel(payload.recommendation_type || "unknown")}</p>
-        <p><span className="font-black text-[#10233f]">Priority:</span> {formatLabel(payload.recommendation_priority || payload.priority || "medium")}</p>
-        <p><span className="font-black text-[#10233f]">Due date:</span> {payload.due_date || "Not set"}</p>
+        <p><span className="font-black text-[#10233F]">Student:</span> {payload.student_name || "Unknown"}</p>
+        <p><span className="font-black text-[#10233F]">Journey:</span> {formatLabel(payload.journey_stage || "not_started")}</p>
+        <p><span className="font-black text-[#10233F]">Recommendation:</span> {formatLabel(payload.recommendation_type || "unknown")}</p>
+        <p><span className="font-black text-[#10233F]">Priority:</span> {formatLabel(payload.recommendation_priority || payload.priority || "medium")}</p>
+        <p><span className="font-black text-[#10233F]">Due date:</span> {payload.due_date || "Not set"}</p>
       </div>
     </div>
   );
@@ -1401,10 +1570,10 @@ function QueueMetric({ label, value, tone = "default", icon: Icon = Activity }) 
     tone === "red"
       ? "border-red-300 bg-red-50"
       : tone === "gold"
-      ? "border-orange-300 bg-orange-50"
+      ? "border-[#FF5A0A] bg-[#FFF4E8]"
       : tone === "green"
       ? "border-emerald-300 bg-emerald-50"
-      : "border-slate-300 bg-white";
+      : "border-[#C9D7E6] bg-white";
 
   return (
     <div className={`rounded-xl border-[3px] p-4 ${toneClass}`}>
@@ -1412,18 +1581,18 @@ function QueueMetric({ label, value, tone = "default", icon: Icon = Activity }) 
         <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
           {label}
         </p>
-        <Icon size={14} className="text-orange-700" />
+        <Icon size={14} className="text-[#B84F0E]" />
       </div>
-      <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
     </div>
   );
 }
 
 function CommandGroup({ eyebrow, title, description, children }) {
   return (
-    <div className="rounded-[1.3rem] border-2 border-slate-300 bg-white p-4">
-      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-orange-700">{eyebrow}</p>
-      <p className="mt-1 text-sm font-black text-[#10233f]">{title}</p>
+    <div className="rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white p-4">
+      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#B84F0E]">{eyebrow}</p>
+      <p className="mt-1 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">{description}</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">{children}</div>
     </div>
@@ -1449,10 +1618,10 @@ function BulkButton({
       : tone === "conversion"
       ? "border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600"
       : tone === "execute"
-      ? "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
+      ? "border-[#FF5A0A] bg-[#FF5A0A] text-white hover:bg-orange-600"
       : tone === "retry"
       ? "border-[#123865] bg-[#123865] text-white hover:bg-[#0d2d53]"
-      : "border-slate-300 bg-white text-[#10233f] hover:border-orange-300";
+      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A]";
 
   const isDisabled = loading || disabled;
 
@@ -1464,7 +1633,7 @@ function BulkButton({
       title={isDisabled && count === 0 ? `Unavailable: ${hint || "no eligible actions"}` : hint}
       className={`group min-h-[78px] rounded-xl border-2 p-3 text-left transition ${
         isDisabled
-          ? "cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400 opacity-75"
+          ? "cursor-not-allowed border-[#C9D7E6] bg-slate-100 text-slate-400 opacity-75"
           : `${enabledStyle} shadow-[0_6px_14px_rgba(15,35,63,0.08)] hover:-translate-y-0.5`
       }`}
     >
@@ -1475,7 +1644,7 @@ function BulkButton({
         <span
           className={`flex min-w-7 items-center justify-center rounded-lg border px-2 py-1 text-[10px] font-black ${
             isDisabled
-              ? "border-slate-300 bg-white text-slate-400"
+              ? "border-[#C9D7E6] bg-white text-slate-400"
               : "border-current/20 bg-white/15"
           }`}
         >
@@ -1496,8 +1665,8 @@ function FilterButton({ active = false, onClick, children }) {
       onClick={onClick}
       className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
         active
-          ? "border-orange-600 bg-orange-500 text-white shadow-[0_4px_10px_rgba(249,115,22,0.16)]"
-          : "border-slate-300 bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50"
+          ? "border-orange-600 bg-[#FF5A0A] text-white shadow-[0_4px_10px_rgba(249,115,22,0.16)]"
+          : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
       }`}
     >
       {children}
@@ -1553,7 +1722,7 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "executive") {
     return {
-      wrapper: "border-orange-400 bg-orange-50",
+      wrapper: "border-[#FF5A0A] bg-[#FFF4E8]",
       badge: "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]",
     };
   }
@@ -1567,13 +1736,13 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "medium") {
     return {
-      wrapper: "border-slate-300 bg-slate-50",
+      wrapper: "border-[#C9D7E6] bg-slate-50",
       badge: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
     };
   }
 
   return {
-    wrapper: "border-slate-300 bg-white",
+    wrapper: "border-[#C9D7E6] bg-white",
     badge: "border-[#243A60]/18 bg-white text-[#7A8392]",
   };
 }

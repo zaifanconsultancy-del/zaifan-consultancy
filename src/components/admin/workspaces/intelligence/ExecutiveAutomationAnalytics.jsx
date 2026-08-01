@@ -183,6 +183,8 @@ function buildAnalytics(logs = []) {
   return analytics;
 }
 
+// ExecutiveAutomationAnalytics V5 PARTNER OS EXTREME — Execution Intelligence
+
 function ExecutiveAutomationAnalytics({ adminProfile = null }) {
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
   const [logs, setLogs] = useState([]);
@@ -282,48 +284,63 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
 
   const recentLogs = filteredLogs.slice(0, 80);
 
+  const automationStatus =
+    analytics.failureRate > 20
+      ? "Needs Attention"
+      : analytics.failureRate > 0
+        ? "Operational"
+        : "Clean Run";
+
+  const actionMixTotal =
+    analytics.tasks +
+    analytics.reminders +
+    analytics.calls +
+    analytics.emailDrafts +
+    analytics.whatsappDrafts;
+
   return (
-    <div className="space-y-6">
-      <div className="overflow-hidden rounded-[2rem] border-[3px] border-[#D85F0B]/65 bg-[#FFFDF8] shadow-[0_20px_55px_rgba(23,36,61,0.08)]">
-        <div className="grid xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="bg-[#173A67] p-5 text-white sm:p-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
-                <BarChart3 size={14} /> Executive Automation
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
-                <ShieldCheck size={14} /> Audit Trail
-              </span>
+    <div className="min-w-0 space-y-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <CommandChip icon={BarChart3}>Executive Automation</CommandChip>
+              <CommandChip icon={ShieldCheck}>Audit Trail</CommandChip>
+              <CommandChip icon={Activity}>Live Execution Data</CommandChip>
             </div>
 
-            <h2 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
+            <h2 className="mt-4 max-w-5xl break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
               Automation Control & Execution Intelligence
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
-              Live operational visibility across executed tasks, reminders, calls,
-              communication drafts, approval-protected actions, duplicate prevention,
-              failures, executors, and Student OS sources.
+            <p className="mt-3 max-w-5xl break-words text-sm font-semibold leading-6 text-slate-100">
+              Review executed tasks, reminders, calls, communication drafts,
+              approval-protected actions, duplicate prevention, failures,
+              executors and Student OS source activity from one command surface.
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <CommandMetric label="Logs" value={analytics.total} />
-              <CommandMetric label="Success" value={`${analytics.successRate}%`} />
-              <CommandMetric label="Failures" value={analytics.failed} />
-              <CommandMetric label="Today" value={analytics.today} />
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric label="Logs" value={analytics.total} />
+              <DarkMetric label="Success" value={`${analytics.successRate}%`} />
+              <DarkMetric label="Failures" value={analytics.failed} />
+              <DarkMetric label="Today" value={analytics.today} />
             </div>
           </div>
 
-          <div className="bg-[#D85F0B] p-5 text-white sm:p-6">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
             <div className="flex items-center gap-2">
               <Activity size={18} />
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white">
-                Automation Health
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                Automation Operating Position
               </p>
             </div>
-            <p className="mt-3 text-5xl font-black text-white">{analytics.successRate}%</p>
-            <p className="mt-1 text-sm font-black uppercase text-white">
-              {analytics.failureRate > 20 ? "Needs Attention" : analytics.failureRate > 0 ? "Operational" : "Clean Run"}
+
+            <p className="mt-3 text-5xl font-black text-white">
+              {analytics.successRate}%
+            </p>
+
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+              {automationStatus}
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
@@ -332,86 +349,160 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
               <OrangeMetric label="Actions" value={Object.keys(analytics.byAction).length} />
               <OrangeMetric label="Executors" value={Object.keys(analytics.byExecutor).length} />
             </div>
+
+            <button
+              type="button"
+              onClick={() => void loadLogs()}
+              disabled={loading}
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              {loading ? "Refreshing..." : "Refresh Logs"}
+            </button>
           </div>
         </div>
+      </section>
 
-        <div className="flex flex-col gap-3 border-t-[3px] border-[#D85F0B]/50 bg-[#FFFDF8] p-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#667085]">
-            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1.5">
-              Limit: {LOG_LIMIT} records
+      {error ? (
+        <div className="flex min-w-0 items-start gap-3 rounded-[1.3rem] border-[3px] border-red-400 bg-red-50 p-4 text-red-900 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
+          <AlertTriangle size={17} className="mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-black">{error}</p>
+            <p className="mt-1 text-xs font-semibold leading-5">
+              Check that executive_execution_logs exists and that the logged-in
+              admin has a readable RLS policy.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Automation Operations Board
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Execution health and command pressure
+            </h3>
+            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-slate-200">
+              Grouped operational intelligence replaces the old loose metric wall.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+              Limit {LOG_LIMIT}
             </span>
-            <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1.5">
-              {lastLoadedAt ? `Updated ${lastLoadedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Not loaded yet"}
+            <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+              {lastLoadedAt
+                ? `Updated ${lastLoadedAt.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}`
+                : "Not loaded"}
             </span>
-            {adminProfile?.full_name || adminProfile?.name ? (
-              <span className="rounded-full border border-[#D85F0B]/50 bg-[#FFF1E3] px-3 py-1.5 text-[#B84F0E]">
-                Viewer: {adminProfile.full_name || adminProfile.name}
-              </span>
-            ) : null}
+          </div>
+        </div>
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+          <BoardMetric
+            label="Execution Success"
+            value={`${analytics.successRate}%`}
+            detail={`${analytics.successful} successful executions`}
+            tone="green"
+            icon={CheckCircle2}
+          />
+          <BoardMetric
+            label="Failure Pressure"
+            value={`${analytics.failureRate}%`}
+            detail={`${analytics.failed} failed executions`}
+            tone="red"
+            icon={XCircle}
+          />
+          <BoardMetric
+            label="Duplicate Protection"
+            value={analytics.duplicateBlocked}
+            detail={`${analytics.duplicateRate}% duplicate rate`}
+            tone="orange"
+            icon={CopyCheck}
+          />
+          <BoardMetric
+            label="Approval Control"
+            value={analytics.approvalRequired}
+            detail="Human-protected execution events"
+            tone="navy"
+            icon={UserCheck}
+          />
+          <BoardMetric
+            label="Task Operations"
+            value={analytics.tasks}
+            detail={`${analytics.reminders} reminders created`}
+            tone="navy"
+            icon={Target}
+          />
+          <BoardMetric
+            label="Calls Scheduled"
+            value={analytics.calls}
+            detail="Operational call actions"
+            tone="orange"
+            icon={PhoneCall}
+          />
+          <BoardMetric
+            label="Communication Drafts"
+            value={analytics.emailDrafts + analytics.whatsappDrafts}
+            detail={`${analytics.emailDrafts} email · ${analytics.whatsappDrafts} WhatsApp`}
+            tone="green"
+            icon={Mail}
+          />
+          <BoardMetric
+            label="Action Mix"
+            value={actionMixTotal}
+            detail={`${Object.keys(analytics.byAction).length} action types`}
+            tone="navy"
+            icon={Sparkles}
+          />
+        </div>
+      </section>
+
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Intelligence Distribution
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Status, action and priority breakdown
+            </h3>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void loadLogs()}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#D85F0B] bg-[#D85F0B] px-4 py-2.5 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:-translate-y-0.5 hover:bg-[#B94B08] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            {loading ? "Refreshing..." : "Refresh Logs"}
-          </button>
+          {adminProfile?.full_name || adminProfile?.name ? (
+            <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+              Viewer: {adminProfile.full_name || adminProfile.name}
+            </span>
+          ) : null}
         </div>
 
-        {error ? (
-          <div className="mt-5 rounded-2xl border border-[#C2413B]/30 bg-[#FFF0EE] p-4 text-sm leading-6 text-[#A8342F]">
-            {error}
-            <div className="mt-2 text-xs font-semibold text-[#A8342F]">
-              Check that executive_execution_logs exists and that the logged-in admin
-              has a readable RLS policy.
-            </div>
-          </div>
-        ) : null}
-
-        <div className="mx-4 mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8 sm:mx-6">
-          <MetricCard label="Total Logs" value={analytics.total} />
-          <MetricCard label="Success Rate" value={`${analytics.successRate}%`} tone="green" />
-          <MetricCard label="Failure Rate" value={`${analytics.failureRate}%`} tone="red" />
-          <MetricCard label="Duplicate Blocked" value={analytics.duplicateBlocked} tone="yellow" />
-          <MetricCard label="Approval Required" value={analytics.approvalRequired} tone="gold" />
-          <MetricCard label="Today" value={analytics.today} tone="blue" />
-          <MetricCard label="Successful" value={analytics.successful} tone="green" />
-          <MetricCard label="Failed" value={analytics.failed} tone="red" />
+        <div className="grid min-w-0 gap-5 bg-[#FFF8EF] p-4 sm:p-5 xl:grid-cols-3">
+          <DistributionPanel
+            title="Status Distribution"
+            description="Completed, failed, duplicate blocked and other execution states."
+            items={analytics.byStatus}
+          />
+          <DistributionPanel
+            title="Action Distribution"
+            description="Which automation actions are actually being executed."
+            items={analytics.byAction}
+          />
+          <DistributionPanel
+            title="Priority Distribution"
+            description="Critical, executive, high, medium and low execution load."
+            items={analytics.byPriority}
+          />
         </div>
+      </section>
 
-        <div className="mx-4 mb-6 mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5 sm:mx-6">
-          <MetricCard label="Tasks Created" value={analytics.tasks} compact />
-          <MetricCard label="Reminders Created" value={analytics.reminders} compact />
-          <MetricCard label="Calls Scheduled" value={analytics.calls} compact />
-          <MetricCard label="Email Drafts" value={analytics.emailDrafts} compact />
-          <MetricCard label="WhatsApp Drafts" value={analytics.whatsappDrafts} compact />
-        </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-3">
-        <DistributionPanel
-          title="Status Distribution"
-          description="Completed, failed, duplicate blocked, and other execution states."
-          items={analytics.byStatus}
-        />
-
-        <DistributionPanel
-          title="Action Distribution"
-          description="Which automation actions are actually being executed."
-          items={analytics.byAction}
-        />
-
-        <DistributionPanel
-          title="Priority Distribution"
-          description="Critical, executive, high, medium, and low automation execution load."
-          items={analytics.byPriority}
-        />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <CollapsibleSection
           title="Failure & duplicate monitor"
           count={failureLogs.length}
@@ -440,90 +531,107 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
         onToggle={() => setShowHistory((value) => !value)}
         tone="navy"
       >
-        <div className="rounded-[2rem] border-[3px] border-[#173A67] bg-[#FFFDF8] p-5 shadow-[0_16px_40px_rgba(23,58,103,0.08)]">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8992A1]">
-              Queue History
-            </p>
-            <h3 className="mt-2 text-xl font-black text-[#17243D]">
-              Execution History Feed
-            </h3>
+        <div className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_32px_rgba(18,56,101,0.07)]">
+          <div className="flex min-w-0 flex-col gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+                Queue History
+              </p>
+              <h3 className="mt-1 text-xl font-black text-white">
+                Execution History Feed
+              </h3>
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <label className="relative min-w-0">
+                <Search
+                  size={15}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <span className="sr-only">Search execution history</span>
+                <input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search student, action, status..."
+                  className="min-h-10 w-full min-w-0 rounded-xl border-2 border-white/25 bg-white pl-10 pr-4 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-orange-300 sm:w-[260px]"
+                />
+              </label>
+
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+                className="min-h-10 rounded-xl border-2 border-white/25 bg-white px-4 text-sm font-black text-[#10233F] outline-none focus:border-orange-300"
+              >
+                <option value="all">All Status</option>
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
+                <option value="duplicate">Duplicate Blocked</option>
+                <option value="approval">Approval Required</option>
+              </select>
+
+              <select
+                value={actionFilter}
+                onChange={(event) => setActionFilter(event.target.value)}
+                className="min-h-10 rounded-xl border-2 border-white/25 bg-white px-4 text-sm font-black text-[#10233F] outline-none focus:border-orange-300"
+              >
+                <option value="all">All Actions</option>
+                <option value="create_task">Tasks</option>
+                <option value="create_reminder">Reminders</option>
+                <option value="schedule_call">Calls</option>
+                <option value="send_email">Emails</option>
+                <option value="send_whatsapp">WhatsApp</option>
+              </select>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <label className="relative">
-              <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white" />
-              <span className="sr-only">Search execution history</span>
-              <input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search student, action, status..."
-              className="w-full rounded-full border border-[#243A60]/18 bg-[#17243D] py-2 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/70 focus:border-[#E9802D]/70 sm:w-[260px]"
-            />
-            </label>
-
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-              className="rounded-full border border-[#243A60]/18 bg-[#17243D] px-4 py-2 text-sm text-[#F7F3EB] outline-none focus:border-[#E9802D]/50"
-            >
-              <option value="all">All Status</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
-              <option value="duplicate">Duplicate Blocked</option>
-              <option value="approval">Approval Required</option>
-            </select>
-
-            <select
-              value={actionFilter}
-              onChange={(event) => setActionFilter(event.target.value)}
-              className="rounded-full border border-[#243A60]/18 bg-[#17243D] px-4 py-2 text-sm text-[#F7F3EB] outline-none focus:border-[#E9802D]/50"
-            >
-              <option value="all">All Actions</option>
-              <option value="create_task">Tasks</option>
-              <option value="create_reminder">Reminders</option>
-              <option value="schedule_call">Calls</option>
-              <option value="send_email">Emails</option>
-              <option value="send_whatsapp">WhatsApp</option>
-            </select>
+          <div className="space-y-3 bg-[#FFF8EF] p-4 sm:p-5">
+            {loading && logs.length === 0 ? (
+              <EmptyState
+                title="Loading execution intelligence..."
+                text="Reading the latest Executive Automation audit records."
+              />
+            ) : recentLogs.length ? (
+              recentLogs.map((log) => (
+                <ExecutionLogCard
+                  key={
+                    log.id ||
+                    log.duplicate_key ||
+                    `${log.student_id}-${getCreatedAt(log)}`
+                  }
+                  log={log}
+                />
+              ))
+            ) : (
+              <EmptyState
+                title="No execution logs found."
+                text="Executed tasks, reminders, drafts and duplicate blocks will appear here."
+              />
+            )}
           </div>
         </div>
-
-        <div className="mt-5 space-y-3">
-          {loading && logs.length === 0 ? (
-            <EmptyState
-              title="Loading execution intelligence..."
-              text="Reading the latest Executive Automation audit records."
-            />
-          ) : recentLogs.length ? (
-            recentLogs.map((log) => <ExecutionLogCard key={log.id || log.duplicate_key || `${log.student_id}-${getCreatedAt(log)}`} log={log} />)
-          ) : (
-            <EmptyState
-              title="No execution logs found."
-              text="Once Executive Action Queue executes tasks, reminders, email drafts, WhatsApp drafts, or duplicate blocks, they will appear here."
-            />
-          )}
-        </div>
-      </div>
-
       </CollapsibleSection>
+
       <CollapsibleSection
         title="Secondary analytics"
-        count={Object.keys(analytics.byExecutor).length + Object.keys(analytics.byStudentType).length}
+        count={
+          Object.keys(analytics.byExecutor).length +
+          Object.keys(analytics.byStudentType).length
+        }
         open={showSecondaryDistributions}
-        onToggle={() => setShowSecondaryDistributions((value) => !value)}
+        onToggle={() =>
+          setShowSecondaryDistributions((value) => !value)
+        }
         tone="navy"
       >
-        <div className="grid gap-6 xl:grid-cols-2">
+        <div className="grid min-w-0 gap-5 xl:grid-cols-2">
           <DistributionPanel
             title="Executor Distribution"
-            description="Which admin/counselor executed automation actions."
+            description="Which admin or counselor executed automation actions."
             items={analytics.byExecutor}
           />
           <DistributionPanel
             title="Student Type Distribution"
-            description="Inquiry, appointment, student, or other Student OS source type."
+            description="Inquiry, appointment, student or other source type."
             items={analytics.byStudentType}
           />
         </div>
@@ -532,64 +640,140 @@ function ExecutiveAutomationAnalytics({ adminProfile = null }) {
   );
 }
 
-function CollapsibleSection({ title, count = 0, open, onToggle, tone = "navy", children }) {
-  const toneClass =
+
+function CollapsibleSection({
+  title,
+  count = 0,
+  open,
+  onToggle,
+  tone = "navy",
+  children,
+}) {
+  const accent =
     tone === "red"
-      ? "border-red-300 bg-red-50 text-red-800"
+      ? "border-red-400"
       : tone === "orange"
-      ? "border-[#E56A12] bg-[#FFF0E2] text-[#A94308]"
-      : "border-[#173A67]/30 bg-[#EEF4FA] text-[#173A67]";
+        ? "border-[#FF5A0A]"
+        : "border-[#123865]";
 
   return (
-    <section>
+    <section className={`min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] bg-white shadow-[0_12px_32px_rgba(18,56,101,0.07)] ${accent}`}>
       <button
         type="button"
         onClick={onToggle}
-        className={`mb-3 flex w-full items-center justify-between gap-4 rounded-[1.15rem] border-2 px-4 py-3 text-left transition hover:-translate-y-0.5 ${toneClass}`}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0F3158]"
       >
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.16em] opacity-70">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
             Workspace Section
           </p>
-          <p className="mt-0.5 font-black">{title}</p>
+          <p className="mt-1 break-words text-lg font-black text-white">
+            {title}
+          </p>
         </div>
+
         <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-lg border border-current/20 bg-white/70 px-2.5 py-1 text-xs font-black">
+          <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-xs font-black text-white">
             {count}
           </span>
-          <ChevronDown size={18} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+          <ChevronDown
+            size={18}
+            className={`transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+          />
         </div>
       </button>
-      {open ? children : null}
+
+      {open ? (
+        <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
+          {children}
+        </div>
+      ) : null}
     </section>
   );
 }
 
 function CommandMetric({ label, value }) {
+  return <DarkMetric label={label} value={value} />;
+}
+
+function CommandChip({ icon: Icon, children }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">{label}</p>
-      <p className="mt-1 text-xl font-black text-white">{value ?? 0}</p>
+    <span className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+      <Icon size={11} className="shrink-0 text-orange-200" />
+      <span className="truncate">{children}</span>
+    </span>
+  );
+}
+
+function DarkMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value ?? 0}
+      </p>
     </div>
   );
 }
 
 function OrangeMetric({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">{label}</p>
-      <p className="mt-1 text-lg font-black text-white">{value ?? 0}</p>
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value ?? 0}
+      </p>
     </div>
   );
 }
 
-function MetricCard({ label, value, tone = "default", compact = false }) {
-  const style = getToneStyle(tone);
-
+function BoardMetric({
+  label,
+  value,
+  detail,
+  tone = "navy",
+  icon: Icon,
+}) {
   return (
-    <div className={`group relative overflow-hidden rounded-[1.35rem] border-2 p-4 shadow-[0_10px_26px_rgba(23,36,61,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(23,36,61,0.10)] ${style}`}>
-      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-60" />
-      <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#596579]">
+    <article className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${getToneStyle(tone)}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
+            {label}
+          </p>
+          <p className="mt-2 text-3xl font-black text-[#10233F]">
+            {value ?? 0}
+          </p>
+        </div>
+
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865]">
+          <Icon size={16} />
+        </span>
+      </div>
+
+      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-600">
+        {detail}
+      </p>
+    </article>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  tone = "default",
+  compact = false,
+}) {
+  return (
+    <div className={`min-w-0 rounded-[1.2rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(tone)}`}>
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
         {label}
       </p>
       <p className={`${compact ? "mt-2 text-2xl" : "mt-3 text-3xl"} font-black leading-none text-[#10233F]`}>
@@ -600,12 +784,12 @@ function MetricCard({ label, value, tone = "default", compact = false }) {
 }
 
 function getToneStyle(tone = "") {
-  if (tone === "red") return "border-red-400 bg-red-50 text-red-700";
-  if (tone === "green") return "border-emerald-400 bg-emerald-50 text-emerald-700";
-  if (tone === "gold") return "border-[#E56A12] bg-[#FFF0E2] text-[#B84A08]";
-  if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-700";
-  if (tone === "yellow") return "border-amber-400 bg-amber-50 text-amber-700";
-  return "border-[#173A67] bg-[#F4F8FC] text-[#173A67]";
+  if (tone === "red") return "border-red-400 bg-red-50";
+  if (tone === "green") return "border-emerald-400 bg-emerald-50";
+  if (tone === "gold" || tone === "orange") return "border-[#FF5A0A] bg-[#FFF4E8]";
+  if (tone === "blue" || tone === "navy") return "border-[#123865] bg-[#F2F7FF]";
+  if (tone === "yellow") return "border-amber-400 bg-amber-50";
+  return "border-[#C9D7E6] bg-white";
 }
 
 function DistributionPanel({ title, description, items = {} }) {
@@ -615,9 +799,9 @@ function DistributionPanel({ title, description, items = {} }) {
   const max = Math.max(1, ...entries.map(([, value]) => Number(value) || 0));
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border-2 border-[#173A67] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,58,103,0.07)]">
-      <div className="border-b-2 border-[#E56A12] bg-[#173A67] px-5 py-4 text-white">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+    <div className="overflow-hidden rounded-[1.75rem] border-2 border-[#123865] bg-[#FFF8EF] shadow-[0_12px_32px_rgba(23,58,103,0.07)]">
+      <div className="border-b-2 border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FDBA74]">
           Intelligence Breakdown
         </p>
         <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
@@ -629,26 +813,26 @@ function DistributionPanel({ title, description, items = {} }) {
           entries.map(([key, value], index) => (
             <div
               key={key}
-              className="rounded-[1rem] border-2 border-slate-200 bg-white px-3.5 py-3 transition hover:border-orange-300"
+              className="rounded-[1rem] border-2 border-slate-200 bg-white px-3.5 py-3 transition hover:border-[#FDBA74]"
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="min-w-0 break-words text-xs font-black text-[#243A60]">
                   {formatLabel(key)}
                 </span>
-                <span className="shrink-0 rounded-lg bg-[#173A67] px-2.5 py-1 text-xs font-black text-white">
+                <span className="shrink-0 rounded-lg bg-[#123865] px-2.5 py-1 text-xs font-black text-white">
                   {value}
                 </span>
               </div>
               <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-slate-100">
                 <div
-                  className={`h-full rounded-full ${index === 0 ? "bg-[#D85F0B]" : "bg-[#315B88]"}`}
+                  className={`h-full rounded-full ${index === 0 ? "bg-[#FF5A0A]" : "bg-[#315B88]"}`}
                   style={{ width: `${Math.max(5, ((Number(value) || 0) / max) * 100)}%` }}
                 />
               </div>
             </div>
           ))
         ) : (
-          <p className="rounded-xl border-2 border-dashed border-slate-300 bg-[#F8FAFC] px-3 py-5 text-center text-xs font-bold text-slate-500">
+          <p className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F8FAFC] px-3 py-5 text-center text-xs font-bold text-slate-500">
             No data yet.
           </p>
         )}
@@ -717,10 +901,10 @@ function ApprovalHistory({ logs = [] }) {
   const visibleLogs = logs.slice(0, 8);
 
   return (
-    <div className="rounded-[1.8rem] border-[3px] border-[#E56A12] bg-[#FFF7EC] p-5 shadow-[0_14px_34px_rgba(233,128,45,0.08)]">
+    <div className="rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#FFF7EC] p-5 shadow-[0_14px_34px_rgba(233,128,45,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#B84F0E]">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#C2410C]">
             Approval History
           </p>
           <h3 className="mt-2 text-xl font-black text-[#17243D]">
@@ -728,7 +912,7 @@ function ApprovalHistory({ logs = [] }) {
           </h3>
         </div>
 
-        <span className="rounded-full border border-[#E9802D]/40 bg-[#FFF1E3] px-3 py-1 text-xs font-black text-[#B84F0E]">
+        <span className="rounded-full border border-[#E9802D]/40 bg-[#FFF4E8] px-3 py-1 text-xs font-black text-[#C2410C]">
           {logs.length}
         </span>
       </div>
@@ -738,7 +922,7 @@ function ApprovalHistory({ logs = [] }) {
           visibleLogs.map((log) => (
             <div
               key={log.id || `${log.duplicate_key}-${getCreatedAt(log)}`}
-              className="rounded-[1.25rem] border-2 border-orange-300 bg-white p-4 shadow-[0_7px_18px_rgba(233,128,45,0.05)]"
+              className="rounded-[1.25rem] border-2 border-[#FDBA74] bg-white p-4 shadow-[0_7px_18px_rgba(233,128,45,0.05)]"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Tag text={formatLabel(log.recommendation_priority)} className={getPriorityTone(log.recommendation_priority)} />
@@ -791,9 +975,9 @@ function ExecutionLogCard({ log = {} }) {
             <Tag text={formatLabel(log.recommendation_priority || "medium")} className={getPriorityTone(log.recommendation_priority)} />
 
             {log.approval_required ? (
-              <Tag text="Approval Protected" className="border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]" />
+              <Tag text="Approval Protected" className="border-[#E9802D]/40 bg-[#FFF4E8] text-[#C2410C]" />
             ) : (
-              <Tag text="Auto Ready" className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]" />
+              <Tag text="Auto Ready" className="border-[#E9802D]/32 bg-[#FFF4E8] text-[#C2410C]" />
             )}
           </div>
 
@@ -818,7 +1002,7 @@ function ExecutionLogCard({ log = {} }) {
           </div>
         </div>
 
-        <div className="shrink-0 rounded-[1.2rem] border-2 border-[#173A67]/25 bg-white p-4 xl:w-72">
+        <div className="shrink-0 rounded-[1.2rem] border-2 border-[#123865]/25 bg-white p-4 xl:w-72">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
             Student / Execution
           </p>
@@ -854,7 +1038,7 @@ function Tag({ text, className = "" }) {
 function MiniStat({ label, value }) {
   return (
     <span className="max-w-full break-all rounded-lg border-2 border-[#243A60]/15 bg-[#F8FAFC] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-[#596579]">
-      <span className="text-orange-700">{label}</span>: {value}
+      <span className="text-[#C2410C]">{label}</span>: {value}
     </span>
   );
 }

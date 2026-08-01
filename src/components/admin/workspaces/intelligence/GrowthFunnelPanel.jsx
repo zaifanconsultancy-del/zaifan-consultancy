@@ -61,7 +61,7 @@ function getConversionTone(rate) {
   if (rate >= 45) {
     return {
       badge: "border-amber-300 bg-amber-50 text-amber-800",
-      bar: "bg-orange-500",
+      bar: "bg-[#FF5A0A]",
       label: "Watch",
     };
   }
@@ -100,12 +100,12 @@ function FunnelBar({
   const tone = getConversionTone(conversion);
 
   return (
-    <article className="min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-orange-300">
+    <article className="min-w-0 overflow-hidden rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A]">
       <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0 flex-1">
-          <p className="break-words text-sm font-black text-[#10233f]">{label}</p>
+          <p className="break-words text-sm font-black text-[#10233F]">{label}</p>
 
-          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 break-words text-xs font-semibold text-slate-500">
+          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 break-words text-xs font-semibold text-[#65748B]">
             <span>{safeCount} records</span>
 
             {!isFirst ? (
@@ -121,24 +121,24 @@ function FunnelBar({
 
         <div className="flex flex-wrap items-center gap-2">
           <span
-            className={`rounded-full border px-3 py-1 text-xs font-black ${tone.badge}`}
+            className={`rounded-full border-2 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${tone.badge}`}
           >
             {conversion}%
           </span>
 
-          <span className="rounded-full border border-slate-300 bg-[#fffaf2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600">
+          <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#51627A]">
             {tone.label}
           </span>
         </div>
       </div>
 
       <div className="mt-4">
-        <div className="mb-2 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+        <div className="mb-2 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.08em] text-[#65748B]">
           <span>Stage volume</span>
           <span>{width}% of max</span>
         </div>
 
-        <div className="h-3 overflow-hidden rounded-full border border-slate-300 bg-[#fffaf2]">
+        <div className="h-3 overflow-hidden rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF]">
           <div
             className={`h-full rounded-full transition-all duration-500 ${tone.bar}`}
             style={{ width: `${width}%` }}
@@ -156,25 +156,25 @@ function FunnelInsight({
   icon: Icon = Target,
 }) {
   const tones = {
-    orange: "border-orange-300 bg-orange-50 text-orange-700",
+    orange: "border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]",
     amber: "border-amber-300 bg-amber-50 text-amber-800",
     rose: "border-rose-300 bg-rose-50 text-rose-700",
     emerald: "border-emerald-300 bg-emerald-50 text-emerald-700",
-    navy: "border-slate-300 bg-slate-100 text-[#123865]",
+    navy: "border-[#C9D7E6] bg-[#F2F7FC] text-[#123865]",
   };
 
   const style = tones[tone] || tones.orange;
 
   return (
-    <div className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_5px_16px_rgba(15,35,63,0.03)] ${style}`}>
+    <div className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] ${style}`}>
       <div className="flex min-w-0 items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-current bg-white/70">
           <Icon size={17} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="break-words font-black text-[#10233f]">{title}</p>
-          <p className="mt-1 break-words text-sm font-semibold leading-6 text-slate-600">
+          <p className="break-words font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 break-words text-sm font-semibold leading-6 text-[#51627A]">
             {detail}
           </p>
         </div>
@@ -194,7 +194,7 @@ function SummaryMetric({
 
   const surface =
     tone === "orange"
-      ? "border-orange-300 bg-orange-50"
+      ? "border-[#FFB38A] bg-[#FFF4EA]"
       : tone === "rose"
       ? "border-rose-300 bg-rose-50"
       : tone === "emerald"
@@ -203,7 +203,7 @@ function SummaryMetric({
 
   return (
     <div
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 ${surface}`}
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] ${surface}`}
       style={{ color: isNavy ? "#FFFFFF" : "#10233F" }}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
@@ -227,7 +227,7 @@ function SummaryMetric({
           className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${
             isNavy
               ? "border-white/30 bg-white/10"
-              : "border-orange-300 bg-white"
+              : "border-[#FFB38A] bg-white"
           }`}
         >
           <Icon
@@ -339,18 +339,18 @@ export default function GrowthFunnelPanel({
       : "rose";
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
+    <section className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_12px_30px_rgba(15,35,63,0.07)]">
       <div
-        className="border-b-[3px] border-orange-300 bg-[#123865] p-5 sm:p-6"
+        className="border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 sm:p-6"
         style={{ color: "#FFFFFF" }}
       >
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
           <div className="min-w-0">
             <div className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
               <Funnel size={13} style={{ color: "#FDBA74" }} />
 
               <p
-                className="text-[9px] font-black uppercase tracking-[0.1em]"
+                className="text-[9px] font-black uppercase tracking-[0.12em]"
                 style={{ color: "#FFFFFF" }}
               >
                 Growth Funnel
@@ -358,7 +358,7 @@ export default function GrowthFunnelPanel({
             </div>
 
             <h2
-              className="mt-3 break-words text-2xl font-black leading-tight sm:text-3xl"
+              className="mt-3 break-words text-2xl font-black leading-tight tracking-[-0.025em] sm:text-3xl"
               style={{ color: "#FFFFFF" }}
             >
               Student Journey Conversion
@@ -382,7 +382,7 @@ export default function GrowthFunnelPanel({
             </span>
 
             <span
-              className="rounded-xl border-2 border-orange-300 bg-orange-500 px-4 py-2 text-xs font-black"
+              className="rounded-xl border-2 border-white/25 bg-[#FF5A0A] px-4 py-2 text-xs font-black shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
               style={{ color: "#FFFFFF" }}
             >
               {pressureLevel}
@@ -391,8 +391,8 @@ export default function GrowthFunnelPanel({
         </div>
       </div>
 
-      <div className="bg-[#fff8ee] p-5 sm:p-6">
-        <div className="mb-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
+      <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
+        <div className="mb-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
           <SummaryMetric
             label="Entry Volume"
             value={totalRecords}
@@ -430,8 +430,8 @@ export default function GrowthFunnelPanel({
           <div
             className={
               compact
-                ? "space-y-3"
-                : "grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-3"
+                ? "min-w-0 space-y-3"
+                : "grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-3"
             }
           >
             {stages.map((stage, index) => (
@@ -451,14 +451,14 @@ export default function GrowthFunnelPanel({
             ))}
           </div>
         ) : (
-          <div className="rounded-[1.4rem] border-[3px] border-dashed border-slate-300 bg-white p-8 text-center">
-            <Funnel className="mx-auto h-10 w-10 text-orange-600" />
+          <div className="min-w-0 rounded-[1.35rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFFDF8] p-8 text-center">
+            <Funnel className="mx-auto h-10 w-10 text-[#D94B00]" />
 
-            <h3 className="mt-3 font-black text-[#10233f]">
+            <h3 className="mt-3 font-black text-[#10233F]">
               No funnel data yet
             </h3>
 
-            <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-500">
+            <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-[#65748B]">
               Add real student journey records to expose stage conversion,
               leakage, and founder bottlenecks.
             </p>
@@ -467,7 +467,7 @@ export default function GrowthFunnelPanel({
 
         {!compact ? (
           <>
-            <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-3">
+            <div className="mt-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-3">
               <FunnelInsight
                 title="Application quality"
                 detail={`${clamp(
@@ -506,7 +506,7 @@ export default function GrowthFunnelPanel({
               />
             </div>
 
-            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-3">
+            <div className="mt-3 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-3">
               <FunnelInsight
                 title={
                   strongestStage

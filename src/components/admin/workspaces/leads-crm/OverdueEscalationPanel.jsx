@@ -1,4 +1,4 @@
-// OverdueEscalationPanel V5 MAXIMUM — Framed Escalation Operations Center
+// OverdueEscalationPanel PARTNER OS EXTREME — Compact Escalation Command
 // Full replacement for: src/components/admin/OverdueEscalationPanel.jsx
 //
 // Uses:
@@ -154,6 +154,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const mountedRef = useRef(true);
 
@@ -517,19 +518,19 @@ function OverdueEscalationPanel({ cardClass = "" }) {
       initial={reduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.25 }}
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.09)] sm:p-4`}
+      className={`${cardClass} min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-3`}
     >
-      <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
-        <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+        <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-6">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-orange-300">
             Escalation Command Center
           </p>
 
-          <h2 className="mt-3 break-words text-3xl font-black leading-tight text-white sm:text-4xl">
+          <h2 className="mt-3 break-words text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
             Overdue & Intervention Queue
           </h2>
 
-          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+          <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
             Combine overdue follow-up reminders and Student OS tasks into one
             ranked intervention queue so critical cases are not lost.
           </p>
@@ -538,7 +539,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
             type="button"
             onClick={fetchEscalations}
             disabled={loading}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-white/25 bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 disabled:opacity-50"
+            className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-white/25 bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
               size={14}
@@ -548,7 +549,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
           </button>
         </div>
 
-        <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-6">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-100">
             Immediate Attention
           </p>
@@ -568,7 +569,60 @@ function OverdueEscalationPanel({ cardClass = "" }) {
         </div>
       </div>
 
-      <div className="min-w-0 bg-[#FFF8EE] px-1 pb-1 pt-5 sm:pt-6">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <EscalationStat
+          label="Overdue"
+          value={stats.total}
+          tone="red"
+        />
+        <EscalationStat
+          label="Critical"
+          value={stats.critical}
+          tone="critical"
+        />
+        <EscalationStat
+          label="Follow-ups"
+          value={stats.followUps}
+          tone="blue"
+        />
+        <EscalationStat
+          label="Tasks"
+          value={stats.overdueTasks}
+          tone="navy"
+        />
+      </div>
+
+      <section className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Escalation Workspace
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide filters, overdue records and escalation actions."
+                : "Open filters, overdue records and escalation actions."}
+            </p>
+          </div>
+
+          <ShieldAlert
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </section>
+
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_26px_rgba(18,56,101,0.05)] sm:p-5">
         {error ? (
           <Feedback
             tone="error"
@@ -585,35 +639,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
           />
         ) : null}
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-3">
-          <EscalationStat
-            label="Overdue"
-            value={stats.total}
-            tone="red"
-          />
-          <EscalationStat
-            label="Critical"
-            value={stats.critical}
-            tone="critical"
-          />
-          <EscalationStat
-            label="High"
-            value={stats.high}
-            tone="orange"
-          />
-          <EscalationStat
-            label="Follow-ups"
-            value={stats.followUps}
-            tone="blue"
-          />
-          <EscalationStat
-            label="Tasks"
-            value={stats.overdueTasks}
-            tone="navy"
-          />
-        </div>
-
-        <section className="mt-5 rounded-[1.5rem] border-2 border-orange-300 bg-white p-4">
+        <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4">
           <div className="flex items-center gap-2">
             <Filter size={14} className="text-orange-600" />
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
@@ -621,8 +647,8 @@ function OverdueEscalationPanel({ cardClass = "" }) {
             </p>
           </div>
 
-          <div className="mt-3 grid gap-2 xl:grid-cols-[1fr_170px_170px]">
-            <div className="relative">
+          <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
+            <div className="relative min-w-0">
               <Search
                 size={15}
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -632,7 +658,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search student id, title, owner, notes..."
-                className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </div>
 
@@ -641,7 +667,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
               onChange={(event) =>
                 setSourceFilter(event.target.value)
               }
-              className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none hover:border-orange-400 focus:border-orange-400"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All sources</option>
               <option value="follow_up">Follow-ups</option>
@@ -653,7 +679,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
               onChange={(event) =>
                 setSeverityFilter(event.target.value)
               }
-              className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none hover:border-orange-400 focus:border-orange-400"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All severities</option>
               <option value="critical">Critical</option>
@@ -711,7 +737,7 @@ function OverdueEscalationPanel({ cardClass = "" }) {
               onClick={() =>
                 setPage((previous) => Math.max(1, previous - 1))
               }
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+              className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Previous
             </button>
@@ -728,13 +754,14 @@ function OverdueEscalationPanel({ cardClass = "" }) {
                   Math.min(totalPages, previous + 1)
                 )
               }
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+              className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
             </button>
           </div>
         ) : null}
       </div>
+      ) : null}
     </motion.section>
   );
 }
@@ -776,9 +803,9 @@ function EscalationCard({
         duration: reduceMotion ? 0 : 0.2,
         delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.15),
       }}
-      className={`rounded-[1.5rem] border-[3px] p-5 shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${style.card}`}
+      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] sm:p-5 ${style.card}`}
     >
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex min-w-0 flex-col gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span
@@ -819,7 +846,7 @@ function EscalationCard({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
             <InfoTile
               label="Student"
               value={`#${item.student_id || "Unknown"}`}
@@ -853,13 +880,13 @@ function EscalationCard({
           ) : null}
         </div>
 
-        <div className="flex min-w-[210px] flex-col gap-2">
+        <div className="grid min-w-0 gap-2 sm:grid-cols-3">
           {item.source === "follow_up" ? (
             <button
               type="button"
               onClick={onCompleteReminder}
               disabled={busy}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-md disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <CheckCircle2 size={14} />
               {busy ? "Saving..." : "Mark Completed"}
@@ -870,7 +897,7 @@ function EscalationCard({
                 type="button"
                 onClick={() => onTaskStatus("in_progress")}
                 disabled={busy || normalize(item.status) === "in_progress"}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-blue-300 bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-800 transition hover:-translate-y-0.5 hover:bg-blue-100 disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-blue-300 bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-800 transition hover:-translate-y-0.5 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Clock3 size={14} />
                 In Progress
@@ -880,7 +907,7 @@ function EscalationCard({
                 type="button"
                 onClick={() => onTaskStatus("blocked")}
                 disabled={busy || normalize(item.status) === "blocked"}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-4 py-2.5 text-xs font-black text-red-800 transition hover:-translate-y-0.5 hover:bg-red-100 disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-4 py-2.5 text-xs font-black text-red-800 transition hover:-translate-y-0.5 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ShieldAlert size={14} />
                 Blocked
@@ -958,7 +985,8 @@ function Feedback({ tone, message, onClose }) {
 
   return (
     <div
-      className={`mb-4 flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${
+      role={isError ? "alert" : "status"}
+      className={`mb-4 flex min-w-0 items-start gap-3 rounded-2xl border-[3px] p-4 text-sm font-bold shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${
         isError
           ? "border-red-400 bg-red-50 text-red-900"
           : "border-emerald-400 bg-emerald-50 text-emerald-900"
@@ -975,7 +1003,7 @@ function Feedback({ tone, message, onClose }) {
       <button
         type="button"
         onClick={onClose}
-        className="font-black"
+        className="rounded-lg px-2 py-1 font-black transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
         aria-label="Dismiss message"
       >
         ×

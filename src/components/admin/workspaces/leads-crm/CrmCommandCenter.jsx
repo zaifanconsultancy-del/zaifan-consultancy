@@ -1,4 +1,4 @@
-// CrmCommandCenter V4 MAXIMUM — Executive CRM Operating View
+// CrmCommandCenter PARTNER OS EXTREME — Compact Executive CRM Command
 // src/components/admin/CrmCommandCenter.jsx
 //
 // Maximum pass:
@@ -36,7 +36,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { buildAiLeadInsights } from "../../../../services/aiLeadEngine";
 import { buildAutoStageSuggestions } from "../../../../services/autoStageEngine";
 
@@ -181,6 +181,7 @@ function CrmCommandCenter({
   followUpReminders = [],
 }) {
   const reduceMotion = useReducedMotion();
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const model = useMemo(() => {
     const safeInquiries = safeArray(inquiries).map((lead) => ({
@@ -701,11 +702,11 @@ function CrmCommandCenter({
           1,
         ],
       }}
-      className="space-y-5"
+      className="min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-3"
     >
-      <section className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.07)]">
-        <div className="grid xl:grid-cols-[1.18fr_0.82fr]">
-          <div className="bg-[#123866] p-5 text-white sm:p-6">
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_46px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.18fr)_minmax(18rem,0.82fr)]">
+          <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
                 <Crown size={12} />
@@ -718,17 +719,17 @@ function CrmCommandCenter({
               </span>
             </div>
 
-            <h1 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl xl:text-4xl">
+            <h1 className="mt-4 break-words text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
               Executive Operating View
             </h1>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               See CRM health, urgent work, pipeline pressure, lead quality,
               ownership gaps, reminder discipline, and the first action staff
               should take today.
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <DarkMetric
                 label="Engagement"
                 value={`${model.engagementRate}%`}
@@ -748,7 +749,7 @@ function CrmCommandCenter({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-6">
             <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
               Health Score
             </p>
@@ -792,7 +793,7 @@ function CrmCommandCenter({
         </div>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         {metricCards.map(
           (metric, index) => (
             <MetricCard
@@ -809,11 +810,43 @@ function CrmCommandCenter({
         )}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <section
-          className={`${cardClass} overflow-hidden rounded-[1.8rem] border-[3px] border-red-300 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.05)]`}
+      <section className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
         >
-          <div className="bg-[#123866] p-5 text-white">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Executive CRM Workspace
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide priority command, intelligence summary and methodology."
+                : "Open priority command, intelligence summary and methodology."}
+            </p>
+          </div>
+
+          <Gauge
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </section>
+
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4">
+      <div className="grid min-w-0 gap-4">
+        <section
+          className={`${cardClass} min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#FB7185] bg-white shadow-[0_12px_30px_rgba(18,56,101,0.06)]`}
+        >
+          <div className="bg-[#123865] p-5 text-white">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
                 <Zap size={18} />
@@ -854,9 +887,9 @@ function CrmCommandCenter({
         </section>
 
         <section
-          className={`${cardClass} overflow-hidden rounded-[1.8rem] border-[3px] border-orange-300 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.05)]`}
+          className={`${cardClass} min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_12px_30px_rgba(18,56,101,0.06)]`}
         >
-          <div className="bg-[#123866] p-5 text-white">
+          <div className="bg-[#123865] p-5 text-white">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
                 <Sparkles size={18} />
@@ -874,7 +907,7 @@ function CrmCommandCenter({
             </div>
           </div>
 
-          <div className="space-y-3 bg-[#fff8ee] p-4 sm:p-5">
+          <div className="min-w-0 space-y-3 bg-[#FFF8EF] p-4 sm:p-5">
             {intelligenceRows.map(
               (row) => (
                 <IntelligenceRow
@@ -888,6 +921,8 @@ function CrmCommandCenter({
       </div>
 
       <MethodologyNote />
+        </div>
+      ) : null}
     </motion.section>
   );
 }
@@ -902,15 +937,15 @@ function MetricCard({
 }) {
   const styles = {
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     red:
-      "border-red-300 bg-red-50 text-red-800",
+      "border-[#FB7185] bg-[#FFF4F4] text-red-800",
     amber:
       "border-amber-300 bg-amber-50 text-amber-900",
     blue:
-      "border-blue-300 bg-blue-50 text-blue-800",
+      "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
     green:
-      "border-emerald-300 bg-emerald-50 text-emerald-800",
+      "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
   };
 
   return (
@@ -937,7 +972,7 @@ function MetricCard({
             ? 0
             : index * 0.035,
       }}
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)] ${
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
         styles[tone] ||
         styles.orange
       }`}
@@ -970,15 +1005,15 @@ function IntelligenceRow({
 }) {
   const styles = {
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     red:
-      "border-red-300 bg-red-50 text-red-800",
+      "border-[#FB7185] bg-[#FFF4F4] text-red-800",
     amber:
       "border-amber-300 bg-amber-50 text-amber-900",
     blue:
-      "border-blue-300 bg-blue-50 text-blue-800",
+      "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
     green:
-      "border-emerald-300 bg-emerald-50 text-emerald-800",
+      "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
   };
 
   const style =
@@ -987,7 +1022,7 @@ function IntelligenceRow({
 
   return (
     <div
-      className={`rounded-[1.25rem] border-2 p-4 ${style}`}
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${style}`}
     >
       <div className="flex items-start gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-current/20 bg-white">
@@ -1016,9 +1051,9 @@ function IntelligenceRow({
 
 function MethodologyNote() {
   return (
-    <div className="rounded-[1.45rem] border-[3px] border-blue-300 bg-blue-50 p-4">
+    <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-blue-300 bg-white text-blue-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-[#123865] text-white">
           <Gauge size={17} />
         </div>
 
@@ -1045,7 +1080,7 @@ function DarkMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>

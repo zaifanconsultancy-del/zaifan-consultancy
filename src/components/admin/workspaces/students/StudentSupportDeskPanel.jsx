@@ -1,4 +1,4 @@
-// StudentSupportDeskPanel V2 MAXIMUM — Zaifan Student Support OS
+// StudentSupportDeskPanel PARTNER OS EXTREME — Student Support Command Center
 // Full standalone replacement for the old inline Support Desk UI inside StudentDetailModal.
 // Preserves the current student_support_requests schema and Student Portal visibility.
 // Adds:
@@ -570,41 +570,45 @@ export default function StudentSupportDeskPanel({
   };
 
   return (
-    <div className="space-y-4 pb-6 text-[#10233f]">
-      <section className="rounded-[1.7rem] border-[3px] border-orange-400 bg-white p-4 shadow-[0_12px_30px_rgba(15,35,63,0.06)] sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 pb-6 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,0.75fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white">
                 Support OS
               </span>
-              <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
                 Student #{studentId || "—"}
               </span>
             </div>
 
-            <h2 className="mt-2 text-2xl font-black text-[#10233f]">
+            <h2 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Student Support Desk
             </h2>
 
-            <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-slate-600">
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Review student requests, control urgency and status, keep internal
               notes, and send responses directly back to the Student Portal.
             </p>
           </div>
 
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">Support Queue Command</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">Refresh the live queue before changing priorities, statuses, notes, or student-facing responses.</p>
           <button
             type="button"
             onClick={refresh}
             disabled={refreshing}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-[#10233f] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md active:translate-y-0"
+            className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
+          </div>
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+        <div className="grid min-w-0 gap-2 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
           <Metric label="Total" value={stats.total} icon={LifeBuoy} />
           <Metric label="Open" value={stats.open} icon={MessageSquareText} tone="blue" />
           <Metric label="In Progress" value={stats.progress} icon={Clock3} tone="orange" />
@@ -628,22 +632,22 @@ export default function StudentSupportDeskPanel({
         </Feedback>
       ) : null}
 
-      <section className="rounded-[1.4rem] border-[3px] border-orange-300 bg-white p-3">
+      <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
         <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={14} className="text-orange-700" />
             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Queue Controls</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full border-2 border-slate-300 bg-[#fffaf4] px-3 py-1.5 text-[10px] font-black text-slate-600">{filteredRequests.length} shown</span>
+            <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-1.5 text-[10px] font-black text-slate-600">{filteredRequests.length} shown</span>
             {hasFilters ? (
-              <button type="button" onClick={resetFilters} className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:border-orange-400 hover:bg-orange-50 hover:text-orange-700">
+              <button type="button" onClick={resetFilters} className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF4E8] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100">
                 <X size={13} /> Clear Filters
               </button>
             ) : null}
           </div>
         </div>
-        <div className="grid gap-2 lg:grid-cols-[1fr_180px_180px]">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
           <div className="relative">
             <Search
               size={15}
@@ -653,14 +657,14 @@ export default function StudentSupportDeskPanel({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search subject, message, type, notes or response..."
-              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">All statuses</option>
             {STATUS_OPTIONS.map((status) => (
@@ -673,7 +677,7 @@ export default function StudentSupportDeskPanel({
           <select
             value={priorityFilter}
             onChange={(event) => setPriorityFilter(event.target.value)}
-            className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">All priorities</option>
             {PRIORITY_OPTIONS.map((priority) => (
@@ -725,9 +729,9 @@ export default function StudentSupportDeskPanel({
           ))}
         </div>
       ) : (
-        <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-8 text-center">
+        <section className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-8 text-center">
           <LifeBuoy size={34} className="mx-auto text-orange-400" />
-          <h3 className="mt-3 text-lg font-black text-[#10233f]">
+          <h3 className="mt-3 break-words text-xl font-black text-[#10233F]">
             No matching support requests
           </h3>
           <p className="mt-1 text-sm text-slate-600">
@@ -761,19 +765,19 @@ function SupportRequestCard({
   const age = ageMeta(request.created_at, request.status);
 
   return (
-    <article className="overflow-hidden rounded-[1.6rem] border-[3px] border-orange-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
-      <div className="border-b-2 border-orange-200 bg-[#fffaf4] p-4 sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+    <article className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+      <div className="border-b-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:p-5">
+        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <PriorityBadge value={request.priority || "normal"} />
               <StatusBadge value={request.status || "open"} />
               <AgeBadge meta={age} />
               {unsavedNotes ? <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[9px] font-black uppercase text-amber-800">Notes Unsaved</span> : null}
-              {unsavedResponse ? <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[9px] font-black uppercase text-orange-800">Response Draft</span> : null}
+              {unsavedResponse ? <span className="rounded-full border border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-[9px] font-black uppercase text-orange-800">Response Draft</span> : null}
             </div>
 
-            <h3 className="mt-3 text-lg font-black text-[#10233f]">
+            <h3 className="mt-3 text-lg font-black text-[#10233F]">
               {request.subject || "Support Request"}
             </h3>
 
@@ -786,7 +790,7 @@ function SupportRequestCard({
             </p>
           </div>
 
-          <div className="grid min-w-[220px] gap-2 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:w-[240px] xl:grid-cols-1">
             <label>
               <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
                 Priority
@@ -795,7 +799,7 @@ function SupportRequestCard({
                 value={normalize(request.priority || "normal")}
                 disabled={busy}
                 onChange={(event) => onPriority(event.target.value)}
-                className="h-10 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black capitalize text-[#10233f]"
+                className="h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black capitalize text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               >
                 {PRIORITY_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -813,7 +817,7 @@ function SupportRequestCard({
                 value={status}
                 disabled={busy}
                 onChange={(event) => onStatus(event.target.value)}
-                className="h-10 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black capitalize text-[#10233f]"
+                className="h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black capitalize text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -833,11 +837,11 @@ function SupportRequestCard({
       </div>
 
       <div className="grid gap-4 p-4 sm:p-5 xl:grid-cols-2">
-        <section className="rounded-2xl border-2 border-slate-300 bg-[#fffaf4] p-4">
+        <section className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
             Internal Workspace
           </p>
-          <h4 className="mt-1 font-black text-[#10233f]">Admin Notes</h4>
+          <h4 className="mt-1 font-black text-[#10233F]">Admin Notes</h4>
           <p className="mt-1 text-xs font-semibold text-slate-500">
             Internal only. Students do not see this text.
           </p>
@@ -848,20 +852,20 @@ function SupportRequestCard({
             rows={6}
             disabled={busy}
             placeholder="Add internal context, follow-up instructions, escalation notes..."
-            className="mt-3 w-full resize-y rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
+            className="mt-3 min-w-0 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
           />
 
           <button
             type="button"
             onClick={onSaveNotes}
             disabled={busy || !unsavedNotes}
-            className="mt-3 rounded-xl border-2 border-orange-400 bg-orange-50 px-4 py-2.5 text-xs font-black text-orange-800 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-600 hover:bg-orange-100 hover:shadow-md active:translate-y-0 disabled:opacity-50"
+            className="mt-3 min-h-10 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-4 py-2.5 text-xs font-black text-orange-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:opacity-50"
           >
             {busy ? "Saving..." : unsavedNotes ? "Save Internal Notes" : "Notes Saved"}
           </button>
         </section>
 
-        <section className="rounded-2xl border-2 border-[#123865] bg-[#123865] p-4 text-white">
+        <section className="min-w-0 rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 text-white shadow-[0_8px_22px_rgba(18,56,101,0.08)]">
           <p
             className="text-[10px] font-black uppercase tracking-[0.16em]"
             style={{ color: "#ffb35c" }}
@@ -884,7 +888,7 @@ function SupportRequestCard({
             rows={6}
             disabled={busy}
             placeholder="Write the response the student will see..."
-            className="mt-3 w-full resize-y rounded-xl border-2 border-white/40 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:ring-4 focus:ring-orange-200/30 disabled:opacity-60"
+            className="mt-3 min-w-0 w-full resize-y rounded-xl border-2 border-white/40 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-200/30 disabled:opacity-60"
           />
 
           <div className="mt-3 flex flex-wrap gap-2">
@@ -892,7 +896,7 @@ function SupportRequestCard({
               type="button"
               onClick={onSend}
               disabled={busy || !String(responseDraft || "").trim() || (!unsavedResponse && Boolean(request.counselor_response))}
-              className="rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 hover:shadow-md active:translate-y-0 disabled:opacity-40"
+              className="min-h-10 rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 active:translate-y-0 disabled:opacity-40"
             >
               {busy ? (busyAction === "saving" ? "Saving..." : "Working...") : request.counselor_response ? (unsavedResponse ? "Update Response" : "Response Saved") : "Send Response"}
             </button>
@@ -902,7 +906,7 @@ function SupportRequestCard({
                 type="button"
                 onClick={onSendResolve}
                 disabled={busy || !String(responseDraft || "").trim()}
-                className="rounded-xl border-2 border-orange-300 bg-orange-500 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0 disabled:opacity-40"
+                className="min-h-10 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 active:translate-y-0 disabled:opacity-40"
                 style={{ color: "#ffffff" }}
               >
                 <span style={{ color: "#ffffff" }}>
@@ -914,7 +918,7 @@ function SupportRequestCard({
         </section>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t-2 border-orange-200 bg-white p-4 sm:px-5">
+      <div className="flex min-w-0 flex-wrap gap-2 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:px-5">
         {!closed ? (
           <>
             {status !== "in_progress" ? (
@@ -956,7 +960,7 @@ function SupportRequestCard({
         <button
           type="button"
           onClick={onTimeline}
-          className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-[#10233f] shadow-sm transition hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md active:translate-y-0"
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-xs font-black text-[#10233F] shadow-sm transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0"
         >
           <History size={14} />
           Open Timeline
@@ -968,16 +972,16 @@ function SupportRequestCard({
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-300 bg-white text-[#10233f]",
+    slate: "border-slate-300 bg-white text-[#10233F]",
     blue: "border-blue-300 bg-blue-50 text-blue-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     red: "border-red-300 bg-red-50 text-red-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
   };
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 ${
+      className={`flex min-w-0 items-center gap-3 rounded-[1.1rem] border-[3px] p-3 shadow-[0_5px_14px_rgba(18,56,101,0.04)] ${
         tones[tone] || tones.slate
       }`}
     >
@@ -994,11 +998,11 @@ function Metric({ label, value, icon: Icon, tone = "slate" }) {
 
 function Info({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5">
+    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2.5 shadow-[0_4px_12px_rgba(18,56,101,0.03)]">
       <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
         {label}
       </p>
-      <p className="mt-1 text-xs font-black text-[#10233f]">{value}</p>
+      <p className="mt-1 text-xs font-black text-[#10233F]">{value}</p>
     </div>
   );
 }
@@ -1007,14 +1011,14 @@ function PriorityBadge({ value }) {
   const clean = normalize(value || "normal");
   const styles = {
     urgent: "border-red-400 bg-red-50 text-red-800",
-    high: "border-orange-400 bg-orange-50 text-orange-800",
+    high: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     normal: "border-blue-300 bg-blue-50 text-blue-800",
     low: "border-slate-300 bg-slate-50 text-slate-700",
   };
 
   return (
     <span
-      className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase ${
+      className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase ${
         styles[clean] || styles.normal
       }`}
     >
@@ -1031,11 +1035,11 @@ function StatusBadge({ value }) {
       : clean === "closed"
       ? "border-slate-400 bg-slate-100 text-slate-700"
       : clean === "in_progress"
-      ? "border-orange-300 bg-orange-50 text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
       : "border-blue-300 bg-blue-50 text-blue-800";
 
   return (
-    <span className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase ${style}`}>
+    <span className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase ${style}`}>
       {pretty(clean)}
     </span>
   );
@@ -1044,14 +1048,14 @@ function StatusBadge({ value }) {
 function AgeBadge({ meta }) {
   const styles = {
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     blue: "border-blue-300 bg-blue-50 text-blue-800",
     slate: "border-slate-300 bg-slate-50 text-slate-700",
   };
 
   return (
     <span
-      className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase ${
+      className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase ${
         styles[meta?.tone] || styles.slate
       }`}
     >
@@ -1075,7 +1079,7 @@ function ActionButton({ children, tone = "slate", disabled, onClick }) {
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`rounded-xl border-2 px-3 py-2 text-xs font-black shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 ${
+      className={`min-h-10 rounded-xl border-2 px-3 py-2 text-xs font-black shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 ${
         styles[tone] || styles.slate
       }`}
     >
@@ -1094,7 +1098,8 @@ function Feedback({ tone = "info", onClose, children }) {
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${
+      role={tone === "error" || tone === "warning" ? "alert" : "status"}
+      className={`flex min-w-0 items-start gap-3 rounded-[1.35rem] border-[3px] p-4 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
         styles[tone] || styles.info
       }`}
     >
@@ -1106,7 +1111,7 @@ function Feedback({ tone = "info", onClose, children }) {
 
       <div className="min-w-0 flex-1">{children}</div>
 
-      <button type="button" onClick={onClose} aria-label="Dismiss message" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white/50 transition hover:bg-white">
+      <button type="button" onClick={onClose} aria-label="Dismiss message" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-current/20 bg-white/50 transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15">
         <X size={15} />
       </button>
     </div>

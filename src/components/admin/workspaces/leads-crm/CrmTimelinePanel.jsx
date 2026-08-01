@@ -1,7 +1,7 @@
-// CrmTimelinePanel V4 MAXIMUM — Zaifan Student Journey Timeline OS
+// CrmTimelinePanel V5 PARTNER OS EXTREME — Executive Student Journey Timeline Command
 // src/components/admin/CrmTimelinePanel.jsx
 //
-// Maximum production pass:
+// Partner OS Extreme production pass:
 // - preserves crm_timeline + student_application_timeline architecture
 // - preserves addTimelineEvent + fetchTimelineEvents helpers
 // - no DB migration required
@@ -969,7 +969,7 @@ function CrmTimelinePanel({
   };
 
   return (
-    <div className="space-y-5 pb-8 text-[#10233f]">
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
       <motion.section
         initial={
           reduceMotion
@@ -989,24 +989,24 @@ function CrmTimelinePanel({
               ? 0
               : 0.26,
         }}
-        className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-400 bg-white shadow-[0_16px_45px_rgba(15,35,63,0.08)]"
+        className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]"
       >
-        <div className="grid lg:grid-cols-[1.22fr_0.78fr]">
+        <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderBadge>
                 <History size={11} />
-                Student Journey OS
+                Timeline Command
               </HeaderBadge>
 
               <HeaderBadge>
                 <ShieldCheck size={11} />
-                Permanent Audit Trail
+                Evidence First
               </HeaderBadge>
             </div>
 
             <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">
-              Unified Student Journey Timeline
+              Student Journey Timeline Command
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
@@ -1037,9 +1037,9 @@ function CrmTimelinePanel({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
             <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
-              History Coverage
+              Current Workspace
             </p>
 
             <p className="mt-3 text-5xl font-black text-white">
@@ -1047,7 +1047,7 @@ function CrmTimelinePanel({
             </p>
 
             <p className="mt-1 text-xs font-black uppercase tracking-[0.1em] text-white">
-              timeline event
+              verified timeline event
               {stats.total === 1
                 ? ""
                 : "s"}
@@ -1073,7 +1073,7 @@ function CrmTimelinePanel({
               type="button"
               onClick={loadTimeline}
               disabled={loading}
-              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white/25 bg-white/10 px-4 text-xs font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-4 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 size={14}
@@ -1116,9 +1116,9 @@ function CrmTimelinePanel({
         />
       ) : null}
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
+      <section className="min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_24px_rgba(15,35,63,0.05)] sm:p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#FFF4EA] text-orange-700">
             <StickyNote
               size={18}
             />
@@ -1129,7 +1129,7 @@ function CrmTimelinePanel({
               Internal Staff Note
             </p>
 
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Add Timeline Note
             </h3>
 
@@ -1154,7 +1154,7 @@ function CrmTimelinePanel({
             )
           }
           placeholder="Example: Called student. Waiting for bank statement. Student promised to send it tomorrow morning."
-          className="mt-4 min-h-[120px] w-full resize-y rounded-xl border-2 border-slate-300 bg-[#fffaf4] p-4 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+          className="mt-4 min-h-[120px] w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
           aria-label="Internal timeline note"
         />
 
@@ -1179,7 +1179,7 @@ function CrmTimelinePanel({
               savingNote ||
               !hasValidStudentId
             }
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C94800] bg-[#FF5A0A] px-5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#E64F00] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <StickyNote size={14} />
 
@@ -1190,7 +1190,7 @@ function CrmTimelinePanel({
         </div>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <MiniStat
           label="Total"
           value={stats.total}
@@ -1226,7 +1226,7 @@ function CrmTimelinePanel({
         />
       </div>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-[#fff8ee] p-4 sm:p-5">
+      <section className="min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)] sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Filter
@@ -1245,7 +1245,7 @@ function CrmTimelinePanel({
               onClick={
                 resetFilters
               }
-              className="inline-flex items-center gap-1.5 text-xs font-black text-orange-700 hover:text-orange-900"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-black text-orange-700 transition hover:bg-[#FFF4EA] hover:text-orange-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             >
               <RotateCcw size={12} />
               Reset filters
@@ -1268,8 +1268,8 @@ function CrmTimelinePanel({
                 )
               }
               placeholder="Search event title, notes, change values, creator..."
-              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-              aria-label="Search timeline events"
+              className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              aria-label="Search verified timeline events"
             />
           </div>
 
@@ -1321,7 +1321,7 @@ function CrmTimelinePanel({
                     : "newest"
               )
             }
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             aria-label={`Sort ${
               sortOrder ===
               "newest"
@@ -1352,14 +1352,14 @@ function CrmTimelinePanel({
         </div>
       </section>
 
-      <section className="rounded-[1.75rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(15,35,63,0.04)] sm:p-5">
+      <section className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(15,35,63,0.06)] sm:p-5">
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
               Permanent History
             </p>
 
-            <h3 className="mt-1 text-xl font-black text-[#10233f]">
+            <h3 className="mt-1 text-xl font-black text-[#10233F]">
               Student Journey Timeline
             </h3>
 
@@ -1530,7 +1530,7 @@ function TimelineEvent({
                 0.12
               ),
       }}
-      className="relative sm:pl-12"
+      className="relative min-w-0 sm:pl-12"
     >
       <div
         className={`absolute left-0 top-5 z-10 hidden h-9 w-9 items-center justify-center rounded-xl border-2 sm:flex ${style.iconWrap}`}
@@ -1539,7 +1539,7 @@ function TimelineEvent({
       </div>
 
       <div
-        className={`rounded-[1.4rem] border-[3px] bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)] transition hover:-translate-y-0.5 hover:shadow-md ${style.card}`}
+        className={`min-w-0 rounded-[1.35rem] border-[3px] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-[#F97316] hover:shadow-md ${style.card}`}
       >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
@@ -1568,7 +1568,7 @@ function TimelineEvent({
               ) : null}
             </div>
 
-            <h4 className="mt-3 text-base font-black text-[#10233f] sm:text-lg">
+            <h4 className="mt-3 text-base font-black text-[#10233F] sm:text-lg">
               {event.title}
             </h4>
 
@@ -1581,12 +1581,12 @@ function TimelineEvent({
             ) : null}
           </div>
 
-          <div className="shrink-0 rounded-xl border-2 border-slate-200 bg-[#fffaf4] px-3 py-2">
+          <div className="min-w-0 shrink-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2">
             <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
               Event Type
             </p>
 
-            <p className="mt-1 max-w-[220px] break-words text-xs font-black text-[#10233f]">
+            <p className="mt-1 max-w-[220px] break-words text-xs font-black text-[#10233F]">
               {pretty(
                 event.type
               )}
@@ -1664,7 +1664,7 @@ function TimelineEvent({
                     !previous
                 )
               }
-              className="inline-flex items-center gap-1.5 text-xs font-black text-orange-700 hover:text-orange-900"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-black text-orange-700 transition hover:bg-[#FFF4EA] hover:text-orange-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
               aria-expanded={
                 expanded
               }
@@ -1694,7 +1694,7 @@ function TimelineEvent({
                       key={
                         key
                       }
-                      className="rounded-xl border-2 border-slate-200 bg-slate-50 p-3"
+                      className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3"
                     >
                       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
                         {pretty(
@@ -1702,7 +1702,7 @@ function TimelineEvent({
                         )}
                       </p>
 
-                      <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-xs font-bold leading-5 text-[#10233f]">
+                      <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-xs font-bold leading-5 text-[#10233F]">
                         {formatMetadataValue(
                           value
                         )}
@@ -2018,7 +2018,7 @@ function ChangeBox({
         {label}
       </p>
 
-      <p className="mt-1 break-words text-xs font-black text-[#10233f]">
+      <p className="mt-1 break-words text-xs font-black text-[#10233F]">
         {String(value)}
       </p>
     </div>
@@ -2085,7 +2085,7 @@ function CompactBadge({
         {label}
       </p>
 
-      <p className="mt-0.5 text-xs font-black text-[#10233f]">
+      <p className="mt-0.5 text-xs font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -2164,7 +2164,7 @@ function EmptyState({
   loading = false,
 }) {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-slate-300 bg-[#fffaf4] p-8 text-center">
+    <div className="rounded-[1.5rem] border-[3px] border-slate-300 bg-[#FFF8EF] p-8 text-center">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
         {loading ? (
           <RefreshCw
@@ -2178,7 +2178,7 @@ function EmptyState({
         )}
       </div>
 
-      <h3 className="mt-4 text-lg font-black text-[#10233f]">
+      <h3 className="mt-4 text-lg font-black text-[#10233F]">
         {title}
       </h3>
 
@@ -2201,7 +2201,7 @@ function Pagination({
         type="button"
         onClick={onPrevious}
         disabled={page <= 1}
-        className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+        className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
       >
         <ChevronLeft
           size={14}
@@ -2220,7 +2220,7 @@ function Pagination({
         disabled={
           page >= totalPages
         }
-        className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+        className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
       >
         Next
         <ChevronRight
@@ -2247,7 +2247,7 @@ function SelectControl({
           )
         }
         aria-label={ariaLabel}
-        className="h-11 w-full appearance-none rounded-xl border-2 border-slate-300 bg-white px-3 pr-9 text-xs font-black text-[#10233f] outline-none transition hover:border-orange-400 focus:border-orange-400"
+        className="h-11 w-full appearance-none rounded-xl border-2 border-[#C9D7E6] bg-white px-3 pr-9 text-xs font-black text-[#10233F] outline-none transition hover:border-orange-400 focus:border-[#F97316]"
       >
         {options.map(
           ([

@@ -1,4 +1,4 @@
-// CounselorCommandCenter V1 — Counselor Priority Command Center
+// CounselorCommandCenter PARTNER OS EXTREME — Executive Counselor Priority Command
 // src/components/admin/CounselorCommandCenter.jsx
 //
 // V5 polish:
@@ -367,10 +367,10 @@ function CounselorCommandCenter({
       initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.28 }}
-      className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#F1A45F] bg-[#FFFDF8] shadow-[0_16px_40px_rgba(15,35,63,0.07)]"
+      className="min-w-0 space-y-4"
     >
-      <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
-        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
               <TrendingUp size={12} className="shrink-0" />
@@ -383,11 +383,11 @@ function CounselorCommandCenter({
             </span>
           </div>
 
-          <h3 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+          <h3 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
             Counselor Command Center
           </h3>
 
-          <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
             Rank the strongest next opportunities using CRM priority,
             engagement, contactability, ownership, recency and pipeline movement.
           </p>
@@ -400,7 +400,7 @@ function CounselorCommandCenter({
           </div>
         </div>
 
-        <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
             Queue Temperature
           </p>
@@ -418,7 +418,7 @@ function CounselorCommandCenter({
         </div>
       </div>
 
-      <div className="min-w-0 bg-[#FFF8EE] p-4 sm:p-5">
+      <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-5">
         {data.visible.length ? (
           <>
             <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -467,16 +467,16 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
         duration: shouldReduceMotion ? 0 : 0.22,
         delay: shouldReduceMotion ? 0 : Math.min(index * 0.025, 0.12),
       }}
-      className={`min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] bg-white shadow-[0_7px_20px_rgba(15,35,63,0.045)] ${
-        isFirst ? "border-[#F97316]" : "border-[#CBD7E3]"
+      className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
+        isFirst ? "border-[#FF5A0A]" : "border-[#CBD7E3]"
       }`}
     >
-      <div className="grid min-w-0 md:grid-cols-[5.25rem_minmax(0,1fr)]">
+      <div className="grid min-w-0 lg:grid-cols-[5.25rem_minmax(0,1fr)]">
         <div
-          className={`flex items-center justify-center border-b-2 p-3 md:border-b-0 md:border-r-2 ${
+          className={`flex items-center justify-center border-b-2 p-3 lg:border-b-0 lg:border-r-2 ${
             isFirst
-              ? "border-[#F97316] bg-[#E96512] text-white"
-              : "border-[#D8E1EA] bg-[#FFF8EE] text-[#10233F]"
+              ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
+              : "border-[#D8E1EA] bg-[#FFF8EF] text-[#10233F]"
           }`}
         >
           <div className="text-center">
@@ -498,7 +498,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
         </div>
 
         <div className="min-w-0 p-4 sm:p-5">
-          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <h5 className="max-w-full break-words text-base font-black leading-snug text-[#10233F] sm:text-lg">
@@ -544,7 +544,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
             </div>
           </div>
 
-          <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-2">
+          <div className="mt-4 grid min-w-0 gap-3">
             <ReasonBlock
               title="Positive Signals"
               items={lead.reasons.slice(0, 4)}
@@ -559,8 +559,8 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
             />
           </div>
 
-          <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-            <div className="min-w-0 rounded-xl border-2 border-orange-300 bg-orange-50 p-3">
+          <div className="mt-3 grid min-w-0 gap-3">
+            <div className="min-w-0 rounded-xl border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)]">
               <p className="text-[8px] font-black uppercase tracking-[0.11em] text-orange-700">
                 Recommended Next Move
               </p>
@@ -572,7 +572,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
               </div>
             </div>
 
-            <div className="flex min-w-0 flex-wrap gap-2 lg:justify-end">
+            <div className="grid min-w-0 grid-cols-3 gap-2">
               <ContactFlag
                 icon={Phone}
                 label="Phone"
@@ -599,7 +599,7 @@ function LeadRow({ lead, index, shouldReduceMotion }) {
 function ReasonBlock({ title, items = [], empty, positive = false }) {
   return (
     <div
-      className={`min-w-0 rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-xl border-[3px] p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${
         positive
           ? "border-emerald-300 bg-emerald-50"
           : "border-amber-300 bg-amber-50"
@@ -640,7 +640,7 @@ function ReasonBlock({ title, items = [], empty, positive = false }) {
 function ContactFlag({ icon: Icon, label, ready }) {
   return (
     <div
-      className={`inline-flex min-w-[5.6rem] items-center justify-center gap-1.5 rounded-lg border-2 px-2.5 py-2 text-[9px] font-black ${
+      className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg border-2 px-2.5 py-2 text-[9px] font-black ${
         ready
           ? "border-emerald-300 bg-emerald-50 text-emerald-800"
           : "border-slate-300 bg-white text-slate-500"
@@ -656,7 +656,7 @@ function ContactFlag({ icon: Icon, label, ready }) {
 function Badge({ icon: Icon, text, tone = "blue" }) {
   const colors = {
     red: "border-red-300 bg-red-50 text-red-700",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     blue: "border-blue-300 bg-blue-50 text-blue-700",
     green: "border-emerald-300 bg-emerald-50 text-emerald-700",
   };
@@ -673,7 +673,7 @@ function Badge({ icon: Icon, text, tone = "blue" }) {
 
 function DarkMetric({ label, value }) {
   return (
-    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/25 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -684,7 +684,7 @@ function DarkMetric({ label, value }) {
 
 function OrangeMetric({ label, value, icon: Icon }) {
   return (
-    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/30 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/30 bg-white/10 p-3 text-white shadow-inner">
       <Icon size={15} className="text-white" />
       <p className="mt-2 break-words text-[8px] font-black uppercase tracking-[0.08em] text-white">
         {label}
@@ -696,7 +696,7 @@ function OrangeMetric({ label, value, icon: Icon }) {
 
 function EmptyState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-dashed border-slate-300 bg-white p-8 text-center">
+    <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-8 text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
         <Target size={20} />
       </div>
@@ -724,7 +724,7 @@ function getTemperatureConfig(temperature) {
     return {
       icon: Target,
       tone: "orange",
-      scoreBox: "border-orange-300 bg-orange-50 text-orange-800",
+      scoreBox: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     };
   }
 

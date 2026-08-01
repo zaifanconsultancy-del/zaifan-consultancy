@@ -1,4 +1,4 @@
-// WorkloadBalancerAI V4 MAXIMUM — Compact Capacity Operations Command
+// WorkloadBalancerAI PARTNER OS EXTREME V3 — Executive Capacity Operations
 // src/components/admin/WorkloadBalancerAI.jsx
 //
 // Maximum Zaifan Admin OS pass:
@@ -385,110 +385,127 @@ function WorkloadBalancerAI({
   }, [stats, workloads]);
 
   return (
-    <section className="space-y-5 text-[#10233f]">
-      <div
-        className="rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#123865] p-5 shadow-[0_16px_40px_rgba(15,35,63,0.14)] sm:p-6"
-        style={{ color: "#ffffff" }}
-      >
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-          <div className="min-w-0">
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1.5">
-              <Scale
-                size={14}
-                style={{ color: "#FDBA74" }}
-              />
+    <section className="min-w-0 space-y-4 text-[#10233F]">
+      <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#FF5A0A] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.08)]">
+        <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,0.55fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    <Scale size={12} className="shrink-0 text-orange-300" />
+                    Workload Intelligence
+                  </span>
 
-              <p
-                className="text-[9px] font-black uppercase tracking-[0.15em]"
-                style={{ color: "#ffffff" }}
-              >
-                Workload Intelligence
-              </p>
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    <ShieldCheck size={12} className="shrink-0" />
+                    Deterministic Scoring
+                  </span>
+                </div>
+
+                <h2 className="mt-5 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
+                  Counselor Capacity Command Center
+                </h2>
+
+                <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-white sm:text-[15px]">
+                  Detect overloaded counselors, unassigned students, VIP pressure,
+                  pending appointments, stale ownership, and distribution imbalance
+                  before service quality drops.
+                </p>
+
+                <p className="mt-4 inline-flex max-w-full rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+                  No GPT call is made
+                </p>
+              </div>
+
+              <div className="grid shrink-0 grid-cols-2 gap-2 lg:w-[280px]">
+                <HeaderMetric label="Average Load" value={stats.averageScore} />
+                <HeaderMetric
+                  label="Load Spread"
+                  value={stats.imbalance}
+                  warning={stats.imbalance >= 50}
+                />
+                <HeaderMetric label="Counselors" value={stats.counselors} />
+                <HeaderMetric label="Active Staff" value={stats.activeCounselors} />
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{ backgroundColor: "#FF5A0A" }}
+            className="min-w-0 border-t-[3px] border-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
+                  Capacity Health
+                </p>
+
+                <h3 className="mt-3 break-words text-3xl font-black leading-none text-white">
+                  {stats.unassigned || stats.overloaded
+                    ? "Needs action"
+                    : "Load balanced"}
+                </h3>
+
+                <p className="mt-2 text-xs font-bold leading-5 text-white">
+                  {stats.unassigned
+                    ? `${stats.unassigned} unassigned lead${
+                        stats.unassigned === 1 ? "" : "s"
+                      } need ownership.`
+                    : stats.overloaded
+                      ? `${stats.overloaded} counselor${
+                          stats.overloaded === 1 ? "" : "s"
+                        } exceed the recommended load.`
+                      : "No major capacity pressure is visible right now."}
+                </p>
+              </div>
+
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-white">
+                <Gauge size={22} />
+              </span>
             </div>
 
-            <h2
-              className="mt-3 break-words text-3xl font-black leading-tight"
-              style={{ color: "#ffffff" }}
-            >
-              Counselor Capacity Command Center
-            </h2>
-
-            <p
-              className="mt-2 max-w-3xl text-sm font-semibold leading-6"
-              style={{ color: "#ffffff" }}
-            >
-              Detect overloaded counselors, unassigned students, VIP pressure,
-              pending appointments, stale ownership, and distribution imbalance
-              before service quality drops.
-            </p>
-
-            <p
-              className="mt-3 text-xs font-semibold"
-              style={{ color: "#ffffff" }}
-            >
-              This is deterministic workload scoring — no GPT call is made.
-            </p>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[380px]">
-            <HeaderMetric
-              label="Average Load"
-              value={stats.averageScore}
-            />
-
-            <HeaderMetric
-              label="Load Spread"
-              value={stats.imbalance}
-              warning={stats.imbalance >= 50}
-            />
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeCapacityMetric label="Tracked Leads" value={stats.tracked} />
+              <OrangeCapacityMetric label="Unassigned" value={stats.unassigned} />
+              <OrangeCapacityMetric label="Overloaded" value={stats.overloaded} />
+              <OrangeCapacityMetric label="Balanced" value={stats.balanced} />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-3">
-        <Metric
-          icon={Users}
-          label="Tracked Leads"
-          value={stats.tracked}
-        />
+        <div className="grid gap-3 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Metric
+            icon={Users}
+            label="Tracked Leads"
+            value={stats.tracked}
+          />
 
-        <Metric
-          icon={UserPlus}
-          label="Unassigned"
-          value={stats.unassigned}
-          tone={stats.unassigned ? "red" : "slate"}
-        />
+          <Metric
+            icon={UserPlus}
+            label="Unassigned"
+            value={stats.unassigned}
+            tone={stats.unassigned ? "red" : "slate"}
+          />
 
-        <Metric
-          icon={BriefcaseBusiness}
-          label="Counselors"
-          value={stats.counselors}
-        />
+          <Metric
+            icon={Flame}
+            label="Overloaded"
+            value={stats.overloaded}
+            tone={stats.overloaded ? "orange" : "slate"}
+          />
 
-        <Metric
-          icon={Flame}
-          label="Overloaded"
-          value={stats.overloaded}
-          tone={stats.overloaded ? "orange" : "slate"}
-        />
+          <Metric
+            icon={Gauge}
+            label="Active Staff"
+            value={stats.activeCounselors}
+            tone="blue"
+          />
+        </div>
+      </section>
 
-        <Metric
-          icon={ShieldCheck}
-          label="Balanced"
-          value={stats.balanced}
-          tone="green"
-        />
-
-        <Metric
-          icon={Gauge}
-          label="Active Staff"
-          value={stats.activeCounselors}
-          tone="blue"
-        />
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-5 xl:flex-row xl:items-start">
-        <div className="min-w-0 flex-1 space-y-3">
+      <div className="grid min-w-0 gap-4">
+        <div className="min-w-0 space-y-3 rounded-[1.6rem] border-[3px] border-[#123865] bg-white p-3 shadow-[0_12px_34px_rgba(18,56,101,0.07)] sm:p-4">
           {workloads.length ? (
             workloads.map((item, index) => (
               <motion.article
@@ -499,12 +516,12 @@ function WorkloadBalancerAI({
                   duration: 0.3,
                   delay: Math.min(index * 0.04, 0.25),
                 }}
-                className="min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] transition hover:border-[#F97316] sm:p-5"
+                className="min-w-0 rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_7px_20px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-white hover:shadow-md sm:p-5"
               >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex min-w-0 flex-col gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="truncate text-lg font-black text-[#10233f]">
+                      <h3 className="break-words text-lg font-black text-[#10233F]">
                         {item.name}
                       </h3>
 
@@ -516,7 +533,7 @@ function WorkloadBalancerAI({
                       {item.appointments} appointments • {item.vip} VIP/high
                     </p>
 
-                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="mt-4 grid min-w-0 grid-cols-2 gap-2">
                       <MiniMetric
                         label="Load Score"
                         value={item.loadScore}
@@ -550,13 +567,13 @@ function WorkloadBalancerAI({
               </motion.article>
             ))
           ) : (
-            <div className="rounded-[1.5rem] border-2 border-dashed border-slate-300 bg-white p-8 text-center">
+            <div className="rounded-[1.45rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-8 text-center">
               <Users
                 size={30}
                 className="mx-auto text-slate-400"
               />
 
-              <h3 className="mt-3 text-lg font-black text-[#10233f]">
+              <h3 className="mt-3 text-lg font-black text-[#10233F]">
                 No counselor workload data yet
               </h3>
 
@@ -568,8 +585,8 @@ function WorkloadBalancerAI({
           )}
         </div>
 
-        <div className="min-w-0 space-y-4 xl:w-[24rem] xl:shrink-0">
-          <section className="rounded-[1.5rem] border-[3px] border-[#F97316] bg-[#FFF7EC] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
+        <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+          <section className="min-w-0 rounded-[1.5rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
             <div className="flex items-center gap-2">
               <Target
                 size={16}
@@ -581,7 +598,7 @@ function WorkloadBalancerAI({
                   Operations Guidance
                 </p>
 
-                <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                <h3 className="mt-1 text-lg font-black text-[#10233F]">
                   Balancing Recommendations
                 </h3>
               </div>
@@ -597,11 +614,11 @@ function WorkloadBalancerAI({
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4">
+          <section className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.05)]">
             <button
               type="button"
               onClick={() => setShowFormula((value) => !value)}
-              className="flex w-full items-center justify-between gap-3 text-left"
+              className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl p-1 text-left transition hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
               aria-expanded={showFormula}
             >
               <div className="flex items-center gap-2">
@@ -614,13 +631,13 @@ function WorkloadBalancerAI({
                   <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
                     Explainability
                   </p>
-                  <h3 className="mt-0.5 text-sm font-black text-[#10233f]">
+                  <h3 className="mt-0.5 text-sm font-black text-[#10233F]">
                     Workload Formula
                   </h3>
                 </div>
               </div>
 
-              <span className="rounded-full border-2 border-[#F97316]/35 bg-[#FFF1E3] px-3 py-1 text-[10px] font-black text-[#B84F0E]">
+              <span className="rounded-full border-2 border-[#FF5A0A]/35 bg-[#FFF1E3] px-3 py-1 text-[10px] font-black text-[#B84F0E]">
                 {showFormula ? "Hide" : "View"}
               </span>
             </button>
@@ -648,7 +665,7 @@ function WorkloadBalancerAI({
           </section>
 
           {stats.highest ? (
-            <section className="rounded-[1.5rem] border-[3px] border-[#F97316] bg-[#123865] p-4 text-white shadow-[0_8px_22px_rgba(15,35,63,0.08)]">
+            <section className="min-w-0 rounded-[1.5rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white shadow-[0_10px_28px_rgba(18,56,101,0.10)]">
               <div className="flex items-start gap-3">
                 <Sparkles
                   size={17}
@@ -676,8 +693,8 @@ function WorkloadBalancerAI({
       </div>
 
       {unassigned.length > 0 ? (
-        <section className="rounded-[1.6rem] border-[3px] border-[#FB7185] bg-[#FFF4F4] p-5 shadow-[0_8px_22px_rgba(190,24,93,0.05)]">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FB7185] bg-[#FFF4F4] p-5 shadow-[0_10px_28px_rgba(190,24,93,0.06)]">
+          <div className="flex min-w-0 flex-col gap-4">
             <div className="flex items-start gap-3">
               <AlertTriangle
                 size={20}
@@ -706,13 +723,13 @@ function WorkloadBalancerAI({
             </span>
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
             {unassigned.slice(0, 8).map((lead, index) => (
               <div
                 key={`${lead.__leadType}-${lead.id || index}`}
                 className="rounded-xl border-2 border-red-200 bg-white p-3"
               >
-                <p className="truncate text-sm font-black text-[#10233f]">
+                <p className="truncate text-sm font-black text-[#10233F]">
                   {lead.full_name ||
                     lead.name ||
                     lead.email ||
@@ -731,6 +748,19 @@ function WorkloadBalancerAI({
   );
 }
 
+function OrangeCapacityMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/30 bg-white/10 p-3 text-white shadow-inner">
+      <p className="break-words text-[8px] font-black uppercase tracking-[0.09em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function HeaderMetric({
   label,
   value,
@@ -738,7 +768,7 @@ function HeaderMetric({
 }) {
   return (
     <div
-      className={`rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-[1.15rem] border-[2px] p-4 shadow-inner ${
         warning
           ? "border-[#C84F08] bg-[#E96512]"
           : "border-white/25 bg-white/10"
@@ -763,7 +793,7 @@ function Metric({
 }) {
   const styles = {
     slate:
-      "border-[#C9D7E6] bg-[#FFFDF8] text-[#10233f]",
+      "border-[#C9D7E6] bg-[#FFFDF8] text-[#10233F]",
     orange:
       "border-[#F59E0B] bg-[#FFF7ED] text-orange-800",
     red:
@@ -776,7 +806,7 @@ function Metric({
 
   return (
     <div
-      className={`min-w-0 rounded-[1.5rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(15,35,63,0.05)] ${
+      className={`min-w-0 rounded-[1.45rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${
         styles[tone] || styles.slate
       }`}
     >
@@ -791,7 +821,7 @@ function Metric({
           </h3>
         </div>
 
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/80 shadow-sm">
           <Icon size={19} />
         </div>
       </div>
@@ -817,7 +847,7 @@ function MiniMetric({
 
   return (
     <div
-      className={`rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-xl border-2 p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${
         styles[tone] || styles.slate
       }`}
     >
@@ -867,7 +897,7 @@ function Recommendation({
 
   return (
     <div
-      className={`rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-xl border-2 p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${
         styles[tone] || styles.orange
       }`}
     >
@@ -884,7 +914,7 @@ function Recommendation({
 
 function FormulaRow({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-[#D2DDE8] bg-[#FFF9F1] px-3 py-2">
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2.5">
       <p className="text-xs font-semibold text-slate-600">
         {label}
       </p>

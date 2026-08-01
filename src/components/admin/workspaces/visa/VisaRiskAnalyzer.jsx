@@ -1,4 +1,4 @@
-// VisaRiskAnalyzer V4 MAXIMUM — Reliable Portfolio Command Center
+// VisaRiskAnalyzer PARTNER OS EXTREME V5 — Executive Visa Risk Command Center
 // src/components/admin/VisaRiskAnalyzer.jsx
 //
 // Admin-wide Visa OS command center.
@@ -826,14 +826,14 @@ function VisaRiskAnalyzer({
   };
 
   return (
-    <section className="min-w-0 space-y-5 text-[#10233f]">
+    <section className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
       <div
-        className="rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#173F6B] p-5 shadow-[0_16px_40px_rgba(15,35,63,0.14)] sm:p-6"
+        className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]"
         style={{ color: "#ffffff" }}
       >
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-          <div className="min-w-0">
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1.5">
+        <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
               <ShieldCheck size={14} style={{ color: "#FDBA74" }} />
               <p
                 className="text-[9px] font-black uppercase tracking-[0.14em]"
@@ -844,14 +844,14 @@ function VisaRiskAnalyzer({
             </div>
 
             <h2
-              className="mt-3 break-words text-3xl font-black leading-tight"
+              className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl"
               style={{ color: "#ffffff" }}
             >
               Visa Risk Command Center
             </h2>
 
             <p
-              className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6"
+              className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6"
               style={{ color: "#ffffff" }}
             >
               Deterministic portfolio ranking from application linkage,
@@ -860,7 +860,7 @@ function VisaRiskAnalyzer({
             </p>
 
             <p
-              className="mt-3 max-w-3xl text-xs font-semibold"
+              className="mt-3 max-w-3xl text-xs font-semibold text-slate-200"
               style={{ color: "#ffffff" }}
             >
               No GPT call is made here. Scores are operational triage signals,
@@ -868,36 +868,47 @@ function VisaRiskAnalyzer({
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-wrap gap-2 rounded-2xl border-2 border-[#C9D7E6] bg-[#FFFDF8] p-3">
-            {lastSyncedAt ? (
-              <span className="inline-flex items-center gap-2 rounded-xl border-2 border-white/25 bg-white/10 px-3 py-2 text-xs font-black text-white">
-                <DatabaseDot />
-                Synced{" "}
-                {lastSyncedAt.toLocaleTimeString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            ) : null}
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Portfolio Command Actions
+            </p>
 
-            <button
-              type="button"
-              onClick={load}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-white bg-white px-3 py-2 text-xs font-black text-[#0b2a57] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw
-                size={14}
-                className={loading ? "animate-spin" : ""}
-              />
-              {loading ? "Refreshing..." : "Refresh Portfolio"}
-            </button>
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">
+              Refresh all Visa OS sources, confirm portfolio health and then
+              open the highest-pressure cases for counselor action.
+            </p>
+
+            <div className="mt-4 grid min-w-0 gap-2">
+              {lastSyncedAt ? (
+                <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-4 text-xs font-black text-white">
+                  <DatabaseDot />
+                  Synced{" "}
+                  {lastSyncedAt.toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={load}
+                disabled={loading}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw
+                  size={15}
+                  className={loading ? "animate-spin" : ""}
+                />
+                {loading ? "Refreshing..." : "Refresh Portfolio"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {error ? (
-        <div role="alert" className="rounded-2xl border-[3px] border-amber-400 bg-[#FFF8E8] p-4 text-sm font-bold leading-6 text-amber-950 shadow-[0_7px_18px_rgba(146,96,12,0.06)]">
+        <div role="alert" className="rounded-[1.45rem] border-[3px] border-amber-400 bg-[#FFF8E8] p-4 text-sm font-bold leading-6 text-amber-950 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
           <div className="flex items-start gap-3">
             <AlertTriangle size={17} className="mt-0.5 shrink-0 text-amber-700" />
             <div className="min-w-0 flex-1">
@@ -909,7 +920,7 @@ function VisaRiskAnalyzer({
       ) : null}
 
       {Object.keys(sourceHealth).length ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex min-w-0 flex-wrap gap-2 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
           {Object.entries(sourceHealth).map(([source, health]) => (
             <span
               key={source}
@@ -925,7 +936,7 @@ function VisaRiskAnalyzer({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9.5rem),1fr))] gap-3">
+      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,9.5rem),1fr))] gap-3">
         <Metric label="Active Cases" value={stats.total} icon={Stamp} />
         <Metric
           label="Critical"
@@ -971,7 +982,7 @@ function VisaRiskAnalyzer({
         />
       </div>
 
-      <div className="rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
+      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={15} className="text-orange-700" />
@@ -999,7 +1010,7 @@ function VisaRiskAnalyzer({
           ) : null}
         </div>
 
-        <div className="mt-3 grid gap-2 lg:grid-cols-[1fr_190px_190px]">
+        <div className="mt-3 grid min-w-0 gap-3 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-3 lg:grid-cols-[minmax(0,1fr)_190px_190px]">
           <label className="relative">
             <Search
               size={15}
@@ -1009,7 +1020,7 @@ function VisaRiskAnalyzer({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search student, university, program, stage, pressure..."
-              className="w-full rounded-xl border-2 border-[#B9C9D9] bg-[#FFF9F1] py-2.5 pl-10 pr-3 text-sm font-semibold text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="w-full rounded-xl border-2 border-[#B9C9D9] bg-[#FFF8EF] py-2.5 pl-10 pr-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </label>
 
@@ -1021,7 +1032,7 @@ function VisaRiskAnalyzer({
             <select
               value={riskFilter}
               onChange={(event) => setRiskFilter(event.target.value)}
-              className="w-full appearance-none rounded-xl border-2 border-[#B9C9D9] bg-white py-2.5 pl-9 pr-3 text-sm font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="w-full appearance-none rounded-xl border-2 border-[#B9C9D9] bg-white py-2.5 pl-9 pr-3 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All Risk Levels</option>
               <option value="Critical">Critical</option>
@@ -1034,7 +1045,7 @@ function VisaRiskAnalyzer({
           <select
             value={sortBy}
             onChange={(event) => setSortBy(event.target.value)}
-            className="rounded-xl border-2 border-[#B9C9D9] bg-white px-3 py-2.5 text-sm font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+            className="rounded-xl border-2 border-[#B9C9D9] bg-white px-3 py-2.5 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="risk">Sort: Highest Risk</option>
             <option value="next_action">Sort: Next Action</option>
@@ -1044,7 +1055,7 @@ function VisaRiskAnalyzer({
         </div>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
         <PressureCard
           label="High / Critical"
           value={stats.highOrCritical}
@@ -1071,12 +1082,12 @@ function VisaRiskAnalyzer({
         />
       </div>
 
-      <div className="overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_10px_28px_rgba(15,35,63,0.06)]">
-        <div className="border-b-[3px] border-[#F97316]/35 bg-[#FFF7EC] p-4">
-          <h3 className="text-lg font-black text-[#10233f]">
+      <div className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white">
+          <h3 className="text-xl font-black text-white">
             Highest Pressure Visa Cases
           </h3>
-          <p className="mt-1 text-sm font-semibold text-slate-600">
+          <p className="mt-1 text-sm font-semibold text-slate-200">
             Operational score is transparent and capped at 100. It is for
             prioritization only, not a prediction of visa approval or refusal.
           </p>
@@ -1089,7 +1100,7 @@ function VisaRiskAnalyzer({
                 size={26}
                 className="mx-auto animate-spin text-orange-500"
               />
-              <p className="mt-2 text-sm font-black text-[#10233f]">
+              <p className="mt-2 text-sm font-black text-[#10233F]">
                 Loading Visa OS portfolio
               </p>
             </div>
@@ -1097,9 +1108,9 @@ function VisaRiskAnalyzer({
         ) : null}
 
         {!loading && !ranked.length ? (
-          <div className="p-8 text-center">
+          <div className="m-4 rounded-[1.4rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-8 text-center">
             <CheckCircle2 size={34} className="mx-auto text-emerald-500" />
-            <p className="mt-3 text-sm font-black text-[#10233f]">
+            <p className="mt-3 text-sm font-black text-[#10233F]">
               {portfolio.length
                 ? "No visa cases match the current controls"
                 : "No active visa cases yet"}
@@ -1116,7 +1127,7 @@ function VisaRiskAnalyzer({
           </div>
         ) : null}
 
-        <div className="divide-y-2 divide-slate-200">
+        <div className="divide-y-[3px] divide-[#DCE5EE]">
           {ranked.map((item) => (
             <VisaCaseRow
               key={item.id}
@@ -1127,12 +1138,12 @@ function VisaRiskAnalyzer({
         </div>
       </div>
 
-      <div className="rounded-[1.6rem] border-[3px] border-[#173F6B]/30 bg-[#FFFDF8] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
+      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
           Risk Model Transparency
         </p>
 
-        <h3 className="mt-1 text-base font-black text-[#10233f]">
+        <h3 className="mt-1 text-base font-black text-[#10233F]">
           What can increase the operational risk score?
         </h3>
 
@@ -1168,7 +1179,7 @@ function VisaCaseRow({ item, onOpenStudent }) {
         <div className="flex flex-wrap items-center gap-2">
           <UserRound size={15} className="text-orange-600" />
 
-          <p className="truncate font-black text-[#10233f]">
+          <p className="truncate font-black text-[#10233F]">
             {item.studentName}
           </p>
 
@@ -1193,7 +1204,7 @@ function VisaCaseRow({ item, onOpenStudent }) {
           Visa Stage / Readiness
         </p>
 
-        <p className="mt-1 text-xs font-black text-[#10233f]">
+        <p className="mt-1 text-xs font-black text-[#10233F]">
           {pretty(item.visa_stage || item.visa_status || "preparation")}
         </p>
 
@@ -1217,7 +1228,7 @@ function VisaCaseRow({ item, onOpenStudent }) {
           Highest Pressure
         </p>
 
-        <p className="mt-1 line-clamp-2 text-xs font-black leading-5 text-[#10233f]">
+        <p className="mt-1 line-clamp-2 text-xs font-black leading-5 text-[#10233F]">
           {item.reasons[0] || "No major pressure signal"}
         </p>
 
@@ -1244,7 +1255,7 @@ function VisaCaseRow({ item, onOpenStudent }) {
   );
 
   if (!openable) {
-    return <div className="p-4 transition hover:bg-[#FFF7EC]">{content}</div>;
+    return <div className="p-4 transition hover:bg-[#FFF8EF]">{content}</div>;
   }
 
   return (
@@ -1257,7 +1268,7 @@ function VisaCaseRow({ item, onOpenStudent }) {
           visaId: item.id,
         })
       }
-      className="w-full p-4 text-left transition hover:bg-orange-50/50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-100"
+      className="w-full p-4 text-left transition hover:bg-[#FFF8EF] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-100"
     >
       {content}
     </button>
@@ -1266,7 +1277,7 @@ function VisaCaseRow({ item, onOpenStudent }) {
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "border-[#B9C9D9] bg-[#FFFDF8] text-[#10233f]",
+    slate: "border-[#B9C9D9] bg-[#FFFDF8] text-[#10233F]",
     orange: "border-[#F59E0B] bg-[#FFF7ED] text-orange-800",
     red: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
     green: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
@@ -1274,7 +1285,7 @@ function Metric({ label, value, icon: Icon, tone = "slate" }) {
 
   return (
     <div
-      className={`min-w-0 rounded-2xl border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.055)] ${
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
         tones[tone] || tones.slate
       }`}
     >
@@ -1303,14 +1314,14 @@ function PressureCard({ label, value, helper, tone = "green" }) {
 
   return (
     <div
-      className={`min-w-0 rounded-2xl border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.05)] ${
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
         styles[tone] || styles.green
       }`}
     >
       <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
       <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
         {helper}
       </p>
@@ -1338,8 +1349,8 @@ function RiskBadge({ level, score }) {
 
 function Rule({ title, text }) {
   return (
-    <div className="rounded-xl border-2 border-[#9B6CFF]/55 bg-[#FBF8FF] p-3">
-      <p className="text-xs font-black text-[#10233f]">{title}</p>
+    <div className="rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-3 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
+      <p className="text-xs font-black text-[#10233F]">{title}</p>
       <p className="mt-1 text-[11px] font-semibold leading-5 text-slate-600">
         {text}
       </p>

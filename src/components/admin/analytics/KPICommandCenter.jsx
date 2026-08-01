@@ -1,4 +1,4 @@
-// KPICommandCenter V3 EXTREME — Zaifan Analytics OS
+// KPICommandCenter V4 PARTNER-OS ALIGNED — Zaifan Analytics OS
 // Full replacement for:
 // src/components/admin/analytics/KPICommandCenter.jsx
 //
@@ -285,252 +285,114 @@ export default function KPICommandCenter({
 
   if (compact) {
     return (
-      <section className="overflow-hidden rounded-[1.5rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-        <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white">
-          <div>
-            <p className="text-[8px] font-black uppercase tracking-[0.13em] text-orange-300">
-              Analytics OS
-            </p>
-            <h2 className="mt-0.5 text-base font-black text-white">
-              KPI Command Center
-            </h2>
-          </div>
-
-          <Target size={18} />
-        </div>
-
-        <div className="grid gap-3 p-4 sm:grid-cols-2">
-          {kpis.slice(0, 4).map((item) => (
-            <CompactKPI key={item.key} item={item} />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="space-y-4 sm:space-y-5">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_16px_42px_rgba(23,36,61,0.07)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+    <section className="min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:p-5">
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <HeaderChip icon={Target} label="KPI Command" />
-              <HeaderChip icon={ShieldCheck} label="Evidence Based" />
+              <HeaderChip icon={Target} label="KPI OS" />
+              <HeaderChip icon={ShieldCheck} label="Target Evidence" />
             </div>
-
-            <h1 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
-              KPI Command Center
-            </h1>
-
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/90">
-              Monitor the real operating metrics already connected to Analytics
-              OS. Targets remain optional and are never invented by this
-              workspace.
+            <h1 className="mt-3 text-3xl font-black text-white">KPI Command Center</h1>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Current operating values, optional business targets and explicit ownership in one command portfolio.
             </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkMetric label="KPIs" value={kpis.length} />
-              <DarkMetric label="Targets Set" value={configuredTargets} />
-              <DarkMetric label="Targets Reached" value={reachedTargets} />
-              <DarkMetric
-                label="Unconfigured"
-                value={kpis.length - configuredTargets}
-              />
-            </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                  KPI Governance
-                </p>
-                <p className="mt-2 text-4xl font-black text-white">
-                  {configuredTargets}/{kpis.length}
-                </p>
-                <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
-                  targets configured
-                </p>
-              </div>
-
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10">
-                <BarChart3 size={22} />
-              </span>
-            </div>
-
-            <div className="mt-5 rounded-2xl border-2 border-white/25 bg-white/10 p-3">
-              <p className="text-xs font-black text-white">
-                No hidden benchmark assumptions
-              </p>
-              <p className="mt-1 text-[10px] font-semibold leading-4 text-white/85">
-                A KPI can have a real current value without having a configured
-                business target. Those are kept separate.
-              </p>
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">Current Workspace</p>
+            <p className="mt-2 text-2xl font-black">KPI Portfolio</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase">{configuredTargets}/{kpis.length} targets</span>
+              <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[8px] font-black uppercase">{reachedTargets} reached</span>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EE] p-3">
-        <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_auto]">
-          <div className="relative">
-            <Search
-              size={17}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-            />
-
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search KPIs, owners, periods or sources..."
-              aria-label="Search KPI Command Center"
-              className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-            />
-
-            {search ? (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                aria-label="Clear KPI search"
-                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#123865]"
-              >
-                <X size={16} />
-              </button>
-            ) : null}
-          </div>
-
-          <div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:pb-0">
-            {groups.map((group) => {
-              const active = group === activeGroup;
-
-              return (
-                <button
-                  key={group}
-                  type="button"
-                  onClick={() => setActiveGroup(group)}
-                  className={`min-h-12 shrink-0 rounded-xl border-2 px-4 text-[10px] font-black uppercase tracking-[0.06em] transition ${
-                    active
-                      ? "border-[#123865] bg-[#123865] text-white"
-                      : "border-slate-300 bg-white text-[#10233F] hover:border-orange-400 hover:bg-orange-50"
-                  }`}
-                >
-                  {group}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <KpiSummary label="Total KPIs" value={kpis.length} helper="Operating definitions in this workspace." tone="navy" icon={BarChart3} />
+        <KpiSummary label="Targets Set" value={configuredTargets} helper="KPIs with explicit business targets." tone="blue" icon={Target} />
+        <KpiSummary label="Targets Reached" value={reachedTargets} helper="Configured targets currently reached." tone="green" icon={CheckCircle2} />
+        <KpiSummary label="Unconfigured" value={kpis.length - configuredTargets} helper="KPIs without an explicit target." tone="amber" icon={Info} />
       </div>
 
-      {configuredTargets === 0 ? (
-        <div className="rounded-[1.35rem] border-[3px] border-blue-300 bg-blue-50 p-4">
-          <div className="flex items-start gap-3">
-            <Info
-              size={18}
-              className="mt-0.5 shrink-0 text-blue-700"
-            />
-            <div>
-              <p className="font-black text-[#10233F]">
-                Business targets are not configured yet
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                Current KPI values remain useful and visible. Progress,
-                target-gap and target-status analytics will activate
-                automatically when real targets are supplied through
-                <code className="mx-1 rounded bg-white px-1 py-0.5 text-[10px] font-black text-[#123865]">
-                  analytics.kpiTargets
-                </code>
-                or
-                <code className="mx-1 rounded bg-white px-1 py-0.5 text-[10px] font-black text-[#123865]">
-                  analytics.targets
-                </code>.
-              </p>
-            </div>
+      <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">KPI Command</p>
+            <h2 className="mt-1 text-xl font-black text-[#10233F]">Operating KPI portfolio</h2>
+            <p className="mt-1 text-xs font-semibold text-slate-600">Search and review real values, targets, ownership and target position.</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[minmax(14rem,1fr)_10rem]">
+            <label className="relative block">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search KPIs..." className="min-h-10 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-xs font-semibold" />
+            </label>
+            <select value={activeGroup} onChange={(event) => setActiveGroup(event.target.value)} className="min-h-10 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black">
+              {groups.map((group) => <option key={group}>{group}</option>)}
+            </select>
           </div>
         </div>
-      ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {filteredKpis.length ? (
-          filteredKpis.map((item) => (
-            <KPICard key={item.key} item={item} />
-          ))
-        ) : (
-          <div className="sm:col-span-2 xl:col-span-4">
-            <EmptyState
-              onClear={() => {
-                setSearch("");
-                setActiveGroup("All");
-              }}
-            />
-          </div>
-        )}
-      </div>
+        <div className="space-y-2.5">
+          {filteredKpis.length ? filteredKpis.map((item) => (
+            <KpiPortfolioRow key={item.key} item={item} />
+          )) : <EmptyState onClear={() => { setSearch(""); setActiveGroup("All"); }} />}
+        </div>
+      </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-          <SectionHeader
-            eyebrow="Performance"
-            title="Configured Target Position"
-            description="Only KPIs with explicit targets are evaluated."
-            icon={CircleGauge}
-          />
-
-          <div className="p-4">
-            {configuredTargets ? (
-              <div className="space-y-3">
-                {kpis
-                  .filter((item) => item.progress !== null)
-                  .map((item) => (
-                    <ProgressRow key={item.key} item={item} />
-                  ))}
-              </div>
-            ) : (
-              <PanelEmpty
-                title="No target performance to evaluate"
-                text="Configure real business targets before Analytics OS labels any KPI as ahead, behind or complete."
-              />
-            )}
-          </div>
-        </section>
-
-        <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
-          <SectionHeader
-            eyebrow="Governance"
-            title="KPI Evidence Rules"
-            description="How this workspace protects executive analytics from template assumptions."
-            icon={ShieldCheck}
-          />
-
-          <div className="grid gap-3 p-4">
-            <GovernanceRow
-              icon={CheckCircle2}
-              title="Current values"
-              text="Read directly from the Analytics OS metrics contract."
-              tone="green"
-            />
-            <GovernanceRow
-              icon={Target}
-              title="Targets"
-              text="Displayed only when a real target is supplied."
-              tone="orange"
-            />
-            <GovernanceRow
-              icon={CircleGauge}
-              title="Progress"
-              text="Calculated from current value ÷ configured target."
-              tone="blue"
-            />
-            <GovernanceRow
-              icon={ShieldCheck}
-              title="Outcome language"
-              text="Conversion percentages are operating indicators, not guaranteed student outcomes."
-              tone="navy"
-            />
-          </div>
-        </section>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <GovernanceRow icon={ShieldCheck} title="No invented targets" text="Progress is calculated only when an explicit target exists." tone="green" />
+        <GovernanceRow icon={Info} title="Unknown stays unknown" text="Missing owners, periods and sources remain visibly unconfigured." tone="blue" />
+        <GovernanceRow icon={CircleGauge} title={`${configuredTargets} configured targets`} text="Target governance remains separate from current KPI values." tone="orange" />
       </div>
     </section>
+  );
+}
+
+function KpiSummary({ label, value, helper, tone = "blue", icon: Icon }) {
+  const tones = {
+    navy: "border-[#123865] bg-[#123865] text-white",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-[#10233F]",
+    green: "border-[#34D399] bg-[#F0FFF8] text-[#10233F]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8] text-[#10233F]",
+  };
+  return (
+    <article className={`min-h-[170px] rounded-[1.4rem] border-[3px] p-4 ${tones[tone]}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div><p className="text-[9px] font-black uppercase tracking-[0.11em] opacity-70">{label}</p><p className="mt-2 text-2xl font-black">{value}</p></div>
+        <Icon size={17} />
+      </div>
+      <p className="mt-4 text-xs font-semibold leading-5 opacity-80">{helper}</p>
+    </article>
+  );
+}
+
+function KpiPortfolioRow({ item }) {
+  return (
+    <article className="grid gap-3 rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white p-4 xl:grid-cols-[minmax(16rem,1.35fr)_9rem_9rem_10rem_12rem] xl:items-center">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-black text-[#10233F]">{item.label}</p>
+          <span className="rounded-full border-2 border-[#60A5FA] bg-[#F2F7FF] px-2.5 py-1 text-[8px] font-black uppercase text-blue-700">{item.group}</span>
+        </div>
+        <p className="mt-1 text-xs font-semibold text-slate-500">{item.description}</p>
+      </div>
+      <MiniValue label="Current" value={formatValue(item.value, item.format)} />
+      <MiniValue label="Target" value={hasValue(item.target) ? formatValue(item.target, item.format) : "Not configured"} />
+      <MiniValue label="Progress" value={item.progress === null ? "Unavailable" : `${item.progress}%`} />
+      <MiniValue label="Owner" value={item.meta?.owner || "Not assigned"} />
+    </article>
+  );
+}
+
+function MiniValue({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+      <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">{label}</p>
+      <p className="mt-1 truncate text-xs font-black text-[#10233F]">{value}</p>
+    </div>
   );
 }
 
@@ -568,7 +430,7 @@ function KPICard({ item }) {
           {item.meta?.description || item.description}
         </p>
 
-        <div className="mt-4 rounded-xl border-2 border-slate-300 bg-white/75 p-3">
+        <div className="mt-4 rounded-xl border-2 border-[#C9D7E6] bg-white/75 p-3">
           <div className="flex items-center justify-between gap-3">
             <span className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
               Target
@@ -584,7 +446,7 @@ function KPICard({ item }) {
             <>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
                 <div
-                  className="h-full rounded-full bg-orange-500"
+                  className="h-full rounded-full bg-[#FF5A0A]"
                   style={{
                     width: `${Math.min(100, item.progress)}%`,
                   }}
@@ -599,7 +461,7 @@ function KPICard({ item }) {
         </div>
       </div>
 
-      <div className="border-t-2 border-slate-200 bg-white/55 px-4 py-3">
+      <div className="border-t-2 border-[#E1E8F0] bg-white/55 px-4 py-3">
         <div className="flex items-center gap-2">
           <StatusIcon
             size={14}
@@ -630,7 +492,7 @@ function KPICard({ item }) {
 
 function CompactKPI({ item }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
       <p className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
         {item.label}
       </p>
@@ -649,7 +511,7 @@ function CompactKPI({ item }) {
 
 function ProgressRow({ item }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-4">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-black text-[#10233F]">{item.label}</p>
@@ -659,14 +521,14 @@ function ProgressRow({ item }) {
           </p>
         </div>
 
-        <span className="w-fit rounded-lg border-2 border-orange-300 bg-orange-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.06em] text-orange-800">
+        <span className="w-fit rounded-lg border-2 border-[#F97316] bg-[#FFF4EA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.06em] text-[#B84F0E]">
           {item.progress}% of target
         </span>
       </div>
 
       <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
         <div
-          className="h-full rounded-full bg-orange-500"
+          className="h-full rounded-full bg-[#FF5A0A]"
           style={{ width: `${Math.min(100, item.progress)}%` }}
         />
       </div>
@@ -681,7 +543,7 @@ function SectionHeader({
   icon: Icon,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white">
       <div>
         <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
           {eyebrow}
@@ -704,10 +566,10 @@ function GovernanceRow({ icon: Icon, title, text, tone }) {
     tone === "green"
       ? "border-emerald-300 bg-emerald-50"
       : tone === "orange"
-        ? "border-orange-300 bg-orange-50"
+        ? "border-[#F97316] bg-[#FFF4EA]"
         : tone === "blue"
           ? "border-blue-300 bg-blue-50"
-          : "border-[#B8CBE0] bg-[#EEF4FA]";
+          : "border-[#B8CBE0] bg-[#F2F7FF]";
 
   return (
     <div className={`rounded-xl border-2 p-3 ${style}`}>
@@ -726,7 +588,7 @@ function GovernanceRow({ icon: Icon, title, text, tone }) {
 
 function PanelEmpty({ title, text }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-5 text-center">
       <Target size={20} className="mx-auto text-orange-600" />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-md text-xs font-semibold leading-5 text-slate-600">
@@ -738,7 +600,7 @@ function PanelEmpty({ title, text }) {
 
 function EmptyState({ onClear }) {
   return (
-    <div className="rounded-[1.35rem] border-[3px] border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+    <div className="rounded-[1.35rem] border-[3px] border-dashed border-[#C9D7E6] bg-slate-50 p-6 text-center">
       <Search size={20} className="mx-auto text-orange-600" />
       <p className="mt-2 text-sm font-black text-[#10233F]">
         No KPIs match these filters
@@ -749,7 +611,7 @@ function EmptyState({ onClear }) {
       <button
         type="button"
         onClick={onClear}
-        className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+        className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
       >
         Clear filters
       </button>
@@ -781,22 +643,23 @@ function DarkMetric({ label, value }) {
 
 function MetaChip({ label }) {
   return (
-    <span className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[8px] font-black text-slate-600">
+    <span className="rounded-md border border-[#C9D7E6] bg-white px-2 py-0.5 text-[8px] font-black text-slate-600">
       {label}
     </span>
   );
 }
 
 function toneClass(tone) {
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
-  if (tone === "green") return "border-emerald-400 bg-emerald-50";
-  if (tone === "blue") return "border-blue-400 bg-blue-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA]";
+  if (tone === "green") return "border-[#34D399] bg-[#F0FFF8]";
+  if (tone === "blue") return "border-[#60A5FA] bg-[#F2F7FF]";
+  return "border-[#234E78] bg-[#F2F7FF]";
 }
 
 function statusIconClass(tone) {
   if (tone === "green") return "text-emerald-700";
-  if (tone === "orange") return "text-orange-700";
+  if (tone === "orange") return "text-[#B84F0E]";
   if (tone === "blue") return "text-blue-700";
   return "text-slate-500";
+}
 }

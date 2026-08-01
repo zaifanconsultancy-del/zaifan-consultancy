@@ -448,7 +448,7 @@ function RevenueIntelligencePanel({
   ]);
 
   return (
-    <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
+    <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#FFB38A] bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
       <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
         <div
           className="bg-[#123865] p-5 sm:p-6"
@@ -485,7 +485,7 @@ function RevenueIntelligencePanel({
         </div>
 
         <div
-          className="bg-orange-500 p-5 sm:p-6"
+          className="bg-[#FF5A0A] p-5 sm:p-6"
           style={{ color: "#FFFFFF" }}
         >
           <div className="flex items-center gap-2">
@@ -517,7 +517,7 @@ function RevenueIntelligencePanel({
         </div>
       </div>
 
-      <div className="bg-[#fff8ee] p-5 sm:p-6">
+      <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
         <div
           className={
             compact
@@ -684,22 +684,22 @@ function RevenueIntelligencePanel({
               />
             </div>
 
-            <div className="mt-5 rounded-[1.4rem] border-[3px] border-orange-300 bg-orange-50 p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+            <div className="mt-5 rounded-[1.4rem] border-[3px] border-[#FFB38A] bg-[#FFF4EA] p-5">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-white text-[#B84F0E]">
                   <Sparkles size={17} />
                 </div>
 
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+                  <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
                     Founder Action
                   </p>
 
-                  <h3 className="mt-1 text-base font-black text-[#10233f]">
+                  <h3 className="mt-1 text-base font-black text-[#10233F]">
                     {founderAction.title}
                   </h3>
 
-                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                  <p className="mt-2 text-sm font-semibold leading-6 text-[#51627A]">
                     {founderAction.text}
                   </p>
                 </div>
@@ -722,7 +722,7 @@ function RevenueCard({
   const dark = tone === "navy";
 
   const styles = {
-    orange: "border-orange-300 bg-orange-50",
+    orange: "border-[#FFB38A] bg-[#FFF4EA]",
     good: "border-emerald-300 bg-emerald-50",
     warning: "border-amber-300 bg-amber-50",
     danger: "border-red-300 bg-red-50",
@@ -738,7 +738,7 @@ function RevenueCard({
         color: dark ? "#FFFFFF" : "#10233F",
       }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <p
             className="text-[9px] font-black uppercase tracking-[0.1em]"
@@ -794,26 +794,26 @@ function ScenarioCard({
   casWeight,
 }) {
   return (
-    <div className="rounded-[1.45rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_7px_20px_rgba(15,35,63,0.04)]">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_7px_20px_rgba(15,35,63,0.04)]">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
             Pipeline Scenario
           </p>
 
-          <h3 className="mt-1 text-lg font-black text-[#10233f]">
+          <h3 className="mt-1 text-lg font-black text-[#10233F]">
             Modeled short-term potential
           </h3>
         </div>
 
-        <TrendingUp className="h-5 w-5 text-orange-700" />
+        <TrendingUp className="h-5 w-5 text-[#B84F0E]" />
       </div>
 
-      <p className="mt-4 text-3xl font-black text-[#10233f]">
+      <p className="mt-4 text-3xl font-black text-[#10233F]">
         {formatMoney(estimate, currency)}
       </p>
 
-      <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+      <p className="mt-2 text-sm font-semibold leading-6 text-[#51627A]">
         This is a planning estimate, <strong>not collected or guaranteed revenue</strong>.
         It uses the current average invoice as a rough value proxy.
       </p>
@@ -848,7 +848,7 @@ function FinanceHealthCard({
     good: "border-emerald-300 bg-emerald-50",
     warning: "border-amber-300 bg-amber-50",
     danger: "border-red-300 bg-red-50",
-    orange: "border-orange-300 bg-orange-50",
+    orange: "border-[#FFB38A] bg-[#FFF4EA]",
   };
 
   return (
@@ -857,23 +857,23 @@ function FinanceHealthCard({
         styles[health.tone] || styles.orange
       }`}
     >
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white text-orange-700">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white text-[#B84F0E]">
           <ShieldCheck size={17} />
         </div>
 
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#51627A]">
             Revenue Health
           </p>
 
-          <h3 className="mt-1 text-lg font-black text-[#10233f]">
+          <h3 className="mt-1 text-lg font-black text-[#10233F]">
             {health.label}
           </h3>
         </div>
       </div>
 
-      <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">
+      <p className="mt-3 text-sm font-semibold leading-6 text-[#51627A]">
         {health.text}
       </p>
 
@@ -910,16 +910,16 @@ function HealthRow({
       ? "bg-emerald-500"
       : tone === "danger"
       ? "bg-red-500"
-      : "bg-orange-500";
+      : "bg-[#FF5A0A]";
 
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-3">
-        <span className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+        <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#65748B]">
           {label}
         </span>
 
-        <span className="text-xs font-black text-[#10233f]">
+        <span className="text-xs font-black text-[#10233F]">
           {value}%
         </span>
       </div>
@@ -941,22 +941,22 @@ function SignalCard({
   icon: Icon,
 }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#65748B]">
             {label}
           </p>
 
-          <p className="mt-2 text-xl font-black text-[#10233f]">
+          <p className="mt-2 text-xl font-black text-[#10233F]">
             {value}
           </p>
         </div>
 
-        <Icon className="h-4 w-4 text-orange-700" />
+        <Icon className="h-4 w-4 text-[#B84F0E]" />
       </div>
 
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+      <p className="mt-2 text-xs font-semibold leading-5 text-[#51627A]">
         {helper}
       </p>
     </div>
@@ -965,12 +965,12 @@ function SignalCard({
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-[#fffaf2] p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-[#65748B]">
         {label}
       </p>
 
-      <p className="mt-1 text-xs font-black leading-5 text-[#10233f]">
+      <p className="mt-1 text-xs font-black leading-5 text-[#10233F]">
         {value}
       </p>
     </div>

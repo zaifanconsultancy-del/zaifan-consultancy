@@ -1,4 +1,4 @@
-// ForecastEnginePanel V3 EXTREME — Zaifan Analytics OS
+// ForecastEnginePanel V4 PARTNER-OS ALIGNED — Zaifan Analytics OS
 // Full replacement for:
 // src/components/admin/analytics/ForecastEnginePanel.jsx
 //
@@ -358,7 +358,7 @@ export default function ForecastEnginePanel({
   if (compact) {
     return (
       <section className="overflow-hidden rounded-[1.5rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-        <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white">
+        <div className="flex items-center justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-3 text-white">
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.13em] text-orange-300">
               Analytics OS
@@ -388,7 +388,7 @@ export default function ForecastEnginePanel({
 
   return (
     <section className="space-y-4 sm:space-y-5">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_16px_42px_rgba(23,36,61,0.07)]">
+      <header className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
         <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
@@ -417,7 +417,7 @@ export default function ForecastEnginePanel({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
@@ -458,7 +458,7 @@ export default function ForecastEnginePanel({
         </div>
       </header>
 
-      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EE] p-3">
+      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EF] p-3">
         <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)]">
           <div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:pb-0">
             {HORIZONS.map((item) => (
@@ -469,7 +469,7 @@ export default function ForecastEnginePanel({
                 className={`min-h-12 shrink-0 rounded-xl border-2 px-4 text-[10px] font-black uppercase tracking-[0.06em] transition ${
                   horizon === item.value
                     ? "border-[#123865] bg-[#123865] text-white"
-                    : "border-slate-300 bg-white text-[#10233F] hover:border-orange-400 hover:bg-orange-50"
+                    : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                 }`}
               >
                 {item.label}
@@ -488,7 +488,7 @@ export default function ForecastEnginePanel({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search forecast outputs, assumptions or sources..."
               aria-label="Search Forecast Engine"
-              className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
             />
 
             {search ? (
@@ -552,7 +552,7 @@ export default function ForecastEnginePanel({
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-        <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
+        <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#F97316] bg-[#FFF8EF]">
           <SectionHeader
             eyebrow="Forecast Governance"
             title="Assumptions"
@@ -596,7 +596,7 @@ export default function ForecastEnginePanel({
                   className={`rounded-xl border-2 p-4 ${
                     count
                       ? "border-emerald-300 bg-emerald-50"
-                      : "border-slate-300 bg-white"
+                      : "border-[#C9D7E6] bg-white"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -623,7 +623,7 @@ export default function ForecastEnginePanel({
       </div>
 
       <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4">
           <div className="flex items-start gap-3">
             <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#123865]" />
             <div>
@@ -638,9 +638,9 @@ export default function ForecastEnginePanel({
           </div>
         </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4">
           <div className="flex items-start gap-3">
-            <LineChart size={18} className="mt-0.5 shrink-0 text-orange-700" />
+            <LineChart size={18} className="mt-0.5 shrink-0 text-[#B84F0E]" />
             <div>
               <p className="font-black text-[#10233F]">
                 Baseline ≠ forecast
@@ -661,7 +661,7 @@ function BaselineCard({ item }) {
   const Icon = item.icon;
 
   return (
-    <article className="rounded-[1.25rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+    <article className="rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -720,7 +720,7 @@ function ForecastCard({ item }) {
         />
       </div>
 
-      <div className="mt-2 rounded-lg border-2 border-slate-200 bg-white/70 p-2.5">
+      <div className="mt-2 rounded-lg border-2 border-[#E1E8F0] bg-white/70 p-2.5">
         <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
           Change
         </p>
@@ -734,7 +734,7 @@ function ForecastCard({ item }) {
       </p>
 
       {item.source ? (
-        <span className="mt-3 inline-flex rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+        <span className="mt-3 inline-flex rounded-md border border-[#C9D7E6] bg-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
           {item.source}
         </span>
       ) : null}
@@ -744,9 +744,9 @@ function ForecastCard({ item }) {
 
 function AssumptionCard({ item, index }) {
   return (
-    <article className="rounded-xl border-2 border-orange-300 bg-white p-4">
+    <article className="rounded-xl border-2 border-[#F97316] bg-white p-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-orange-300 bg-orange-50 text-xs font-black text-orange-800">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#F97316] bg-[#FFF4EA] text-xs font-black text-[#B84F0E]">
           {index + 1}
         </span>
 
@@ -757,7 +757,7 @@ function AssumptionCard({ item, index }) {
           </p>
 
           {item.source ? (
-            <span className="mt-2 inline-flex rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+            <span className="mt-2 inline-flex rounded-md border border-[#C9D7E6] bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
               {item.source}
             </span>
           ) : null}
@@ -773,8 +773,8 @@ function ForecastUnavailable({ horizon, sourceLabel }) {
     `${horizon} days`;
 
   return (
-    <div className="rounded-[1.35rem] border-[3px] border-dashed border-orange-300 bg-orange-50 p-6 text-center">
-      <LineChart size={24} className="mx-auto text-orange-700" />
+    <div className="rounded-[1.35rem] border-[3px] border-dashed border-[#F97316] bg-[#FFF4EA] p-6 text-center">
+      <LineChart size={24} className="mx-auto text-[#B84F0E]" />
       <p className="mt-3 text-base font-black text-[#10233F]">
         No {label} forecast output connected
       </p>
@@ -790,7 +790,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
+        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#B84F0E]">
           {eyebrow}
         </p>
         <h2 className="mt-1 text-xl font-black text-[#10233F]">{title}</h2>
@@ -799,7 +799,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
         </p>
       </div>
 
-      <span className="w-fit rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+      <span className="w-fit rounded-lg border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
         {badge}
       </span>
     </div>
@@ -814,7 +814,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white">
       <div>
         <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
           {eyebrow}
@@ -866,7 +866,7 @@ function DarkMetric({ label, value }) {
 
 function CompactForecast({ item }) {
   return (
-    <article className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <article className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
       <p className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
         {item.title}
       </p>
@@ -882,7 +882,7 @@ function CompactForecast({ item }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-lg border-2 border-slate-200 bg-white p-2.5">
+    <div className="rounded-lg border-2 border-[#E1E8F0] bg-white p-2.5">
       <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
         {label}
       </p>
@@ -895,7 +895,7 @@ function MiniStat({ label, value }) {
 
 function SmallEmpty({ text }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-4 text-center">
       <p className="text-xs font-semibold text-slate-600">{text}</p>
     </div>
   );
@@ -903,7 +903,7 @@ function SmallEmpty({ text }) {
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-[1.25rem] border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+    <div className="rounded-[1.25rem] border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-6 text-center">
       <Info size={20} className="mx-auto text-orange-600" />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600">
@@ -914,7 +914,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search
           <ArrowRight size={12} />
@@ -926,7 +926,7 @@ function EmptyState({ title, text, onClear }) {
 
 function toneClass(tone) {
   if (tone === "red") return "border-red-400 bg-red-50";
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA]";
   if (tone === "green") return "border-emerald-400 bg-emerald-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
+  return "border-[#C9D7E6] bg-[#FFFDF8]";
 }

@@ -1,5 +1,5 @@
-// DashboardContent V5 MAXIMUM — Zaifan CRM Work Queue OS
-// Full replacement for: src/components/admin/DashboardContent.jsx
+// DashboardContent V6 PARTNER OS — Zaifan CRM Work Queue OS
+// Full replacement for: src/components/admin/core/DashboardContent.jsx
 //
 // Maximum pass:
 // - preserves approved InquiryCard / AppointmentCard components
@@ -21,7 +21,8 @@
 // - reduced-motion support
 // - stronger accessibility and keyboard focus states
 // - explicit white text on navy surfaces
-// - maximum orange/navy Admin OS treatment without changing backend contracts
+// - locked Partner OS hierarchy without changing backend contracts
+// - stronger min-width containment across queue, board, filters and cards
 //
 // NOTE:
 // This component intentionally remains a workflow/render orchestrator.
@@ -96,7 +97,7 @@ const ROLE_CONFIG = Object.freeze({
   admin: {
     label: "Admin",
     icon: UserCheck,
-    badge: "border-orange-300 bg-orange-50 text-orange-800",
+    badge: "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]",
   },
   super_admin: {
     label: "Super Admin",
@@ -111,10 +112,10 @@ const PRIORITY_COLUMNS = Object.freeze([
     label: "VIP",
     description: "Highest strategic value",
     icon: Crown,
-    border: "border-orange-300",
-    bg: "bg-orange-50/70",
-    accent: "text-orange-800",
-    badge: "border-orange-300 bg-orange-50 text-orange-800",
+    border: "border-[#FFB38A]",
+    bg: "bg-[#FFF4EA]/70",
+    accent: "text-[#9B3E08]",
+    badge: "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]",
   },
   {
     value: "high",
@@ -1511,7 +1512,7 @@ function DashboardContent({
           key={activeTab}
         >
           <div className="space-y-5">
-            <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.07)]">
+            <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-white shadow-[0_18px_46px_rgba(15,35,63,0.10)]">
               <div className="grid xl:grid-cols-[1.22fr_0.78fr]">
                 <div className="bg-[#123865] p-5 text-white sm:p-6">
                   <div className="flex flex-wrap items-center gap-2">
@@ -1573,7 +1574,7 @@ function DashboardContent({
                   </div>
                 </div>
 
-                <div className="bg-orange-500 p-5 text-white sm:p-6">
+                <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
                   <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
                     Operational Pressure
                   </p>
@@ -1636,7 +1637,7 @@ function DashboardContent({
               }
             />
 
-            <section className="rounded-[1.9rem] border-[3px] border-orange-300 bg-[#fff8ef] p-4 shadow-[0_10px_30px_rgba(15,35,63,0.05)] sm:p-5">
+            <section className="min-w-0 rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 shadow-[0_12px_34px_rgba(15,35,63,0.08)] sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
                   <div className="flex items-center gap-2">
@@ -1645,12 +1646,12 @@ function DashboardContent({
                       className="text-white"
                     />
 
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#B84F0E]">
                       CRM Work Queue
                     </p>
                   </div>
 
-                  <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                  <h3 className="mt-1 text-xl font-black text-[#10233F]">
                     What should I work on?
                   </h3>
 
@@ -1700,7 +1701,7 @@ function DashboardContent({
                         workQueue ===
                         value
                           ? "border-[#123865] bg-[#123865] text-white shadow-sm"
-                          : "border-slate-300 bg-white text-slate-700 hover:border-orange-400 hover:bg-orange-50"
+                          : "border-[#C9D7E6] bg-white text-slate-700 hover:border-[#FF5A0A] hover:bg-[#FFF4EA]"
                       }`}
                     >
                       <Icon
@@ -1747,7 +1748,7 @@ function DashboardContent({
                     }
                     placeholder="Search this queue by student, country, program, phone, counselor..."
                     aria-label="Search current CRM work queue"
-                    className="h-11 w-full rounded-[1.05rem] border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className="h-11 w-full rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                   />
                 </div>
 
@@ -1764,7 +1765,7 @@ function DashboardContent({
                     )
                   }
                   aria-label="Filter by priority"
-                  className="h-11 rounded-[1.05rem] border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none hover:border-orange-400 focus:border-orange-400"
+                  className="h-11 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none hover:border-[#FF5A0A] focus:border-[#FF5A0A]"
                 >
                   <option value="all">
                     All priorities
@@ -1796,7 +1797,7 @@ function DashboardContent({
                     )
                   }
                   aria-label="Filter by ownership"
-                  className="h-11 rounded-[1.05rem] border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none hover:border-orange-400 focus:border-orange-400"
+                  className="h-11 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none hover:border-[#FF5A0A] focus:border-[#FF5A0A]"
                 >
                   <option value="all">
                     All ownership
@@ -1823,7 +1824,7 @@ function DashboardContent({
                     )
                   }
                   aria-label="Sort CRM work queue"
-                  className="h-11 rounded-[1.05rem] border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none hover:border-orange-400 focus:border-orange-400"
+                  className="h-11 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none hover:border-[#FF5A0A] focus:border-[#FF5A0A]"
                 >
                   <option value="smart">
                     Smart order
@@ -1855,7 +1856,7 @@ function DashboardContent({
                     )
                   }
                   aria-label="Records per page"
-                  className="h-11 rounded-[1.05rem] border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none hover:border-orange-400 focus:border-orange-400"
+                  className="h-11 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] outline-none hover:border-[#FF5A0A] focus:border-[#FF5A0A]"
                 >
                   <option value={8}>
                     8 / page
@@ -1896,7 +1897,7 @@ function DashboardContent({
                     onClick={
                       resetQueueFilters
                     }
-                    className="inline-flex items-center gap-1.5 text-xs font-black text-orange-700 hover:text-orange-900"
+                    className="inline-flex items-center gap-1.5 text-xs font-black text-[#B84F0E] hover:text-orange-900"
                   >
                     <X size={12} />
                     Clear queue filters
@@ -1906,10 +1907,10 @@ function DashboardContent({
             </section>
 
             <section
-              className="grid gap-4 rounded-[1.9rem] border-[3px] bg-[#fff3e5] p-3 shadow-[0_12px_34px_rgba(15,35,63,0.06)] sm:p-4 xl:grid-cols-[minmax(0,1fr)_auto]"
+              className="grid min-w-0 gap-4 rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_14px_38px_rgba(15,35,63,0.09)] sm:p-4 xl:grid-cols-[minmax(0,1fr)_auto]"
               style={{ borderColor: "#fb923c" }}
             >
-              <div className="rounded-[1.55rem] border-2 border-[#234e78] bg-[#123865] p-4 text-white shadow-[0_10px_24px_rgba(18,56,101,0.12)]">
+              <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#123865] p-4 text-white shadow-[0_10px_24px_rgba(18,56,101,0.16)]">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
@@ -1971,7 +1972,7 @@ function DashboardContent({
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 rounded-[1.55rem] border-2 border-orange-400 bg-[#ff6a0a] p-3 shadow-[0_10px_24px_rgba(249,115,22,0.12)]">
+              <div className="grid min-w-0 grid-cols-2 gap-2 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-3 shadow-[0_10px_24px_rgba(255,90,10,0.16)] sm:grid-cols-4">
                 {priorityColumns.map(
                   (column) => {
                     const ColumnIcon =
@@ -2272,7 +2273,7 @@ function Pagination({
   }, [page, totalPages]);
 
   return (
-    <section className="mt-4 flex flex-col gap-3 rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+    <section className="mt-4 flex min-w-0 flex-col gap-3 rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)] sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs font-bold text-slate-500">
         {rangeStart}–
         {rangeEnd} of {total}
@@ -2292,7 +2293,7 @@ function Pagination({
               )
             )
           }
-          className="inline-flex h-9 items-center gap-1 rounded-[1.05rem] border-2 border-slate-300 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-35"
+          className="inline-flex h-9 items-center gap-1 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:bg-[#FFF4EA] disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronLeft
             size={14}
@@ -2340,7 +2341,7 @@ function Pagination({
                     page ===
                     number
                       ? "border-[#123865] bg-[#123865] text-white"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-orange-400 hover:bg-orange-50"
+                      : "border-[#C9D7E6] bg-white text-slate-700 hover:border-[#FF5A0A] hover:bg-[#FFF4EA]"
                   }`}
                 >
                   {number}
@@ -2364,7 +2365,7 @@ function Pagination({
               )
             )
           }
-          className="inline-flex h-9 items-center gap-1 rounded-[1.05rem] border-2 border-slate-300 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-35"
+          className="inline-flex h-9 items-center gap-1 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:bg-[#FFF4EA] disabled:cursor-not-allowed disabled:opacity-35"
         >
           Next
           <ChevronRight
@@ -2430,10 +2431,10 @@ function ViewButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center justify-center gap-2 rounded-[0.9rem] border-2 px-4 py-2.5 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${
+      className={`flex items-center justify-center gap-2 rounded-[0.9rem] border-2 px-4 py-2.5 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20 ${
         active
-          ? "border-orange-400 bg-orange-500 text-white shadow-[0_7px_18px_rgba(249,115,22,0.22)]"
-          : "border-white/20 bg-white/10 text-white hover:border-orange-300 hover:bg-white/15"
+          ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_7px_18px_rgba(249,115,22,0.22)]"
+          : "border-white/20 bg-white/10 text-white hover:border-[#FFB38A] hover:bg-white/15"
       }`}
     >
       <Icon size={15} />
@@ -2474,7 +2475,7 @@ function PipelineAiControlStrip({
   ];
 
   return (
-    <section className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-400 bg-[#fff8ef] shadow-[0_12px_32px_rgba(15,35,63,0.07)]">
+    <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_14px_38px_rgba(15,35,63,0.09)]">
       <div className="grid overflow-hidden xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="bg-[#123865] p-4 text-white sm:p-5">
           <div className="flex items-center gap-2">
@@ -2495,7 +2496,7 @@ function PipelineAiControlStrip({
           </p>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t-2 border-orange-300 bg-orange-500 p-4 text-white xl:border-l-2 xl:border-t-0 sm:p-5">
+        <div className="flex items-center justify-between gap-3 border-t-2 border-[#FFB38A] bg-[#FF5A0A] p-4 text-white xl:border-l-2 xl:border-t-0 sm:p-5">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.13em] text-white">
               GPT Intelligence
@@ -2514,7 +2515,7 @@ function PipelineAiControlStrip({
         </div>
       </div>
 
-      <div className="grid gap-3 border-t-[3px] border-orange-400 bg-[#fff8ef] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-3 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
         {items.map((item) => (
           <AiMiniStat
             key={item.label}
@@ -2523,7 +2524,7 @@ function PipelineAiControlStrip({
         ))}
       </div>
 
-      <div className="border-t-2 border-orange-200 bg-[#fff2df] px-4 py-3 sm:px-5">
+      <div className="border-t-2 border-[#FFD0B5] bg-[#FFF4EA] px-4 py-3 sm:px-5">
         <span className="inline-flex w-fit items-center gap-2 rounded-full border-2 border-[#123865] bg-[#123865] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-sm">
           <ShieldCheck size={11} />
           Local scoring always on
@@ -2531,8 +2532,8 @@ function PipelineAiControlStrip({
       </div>
 
       {reanalysisState.loading ? (
-        <div className="border-t-2 border-orange-200 bg-orange-50 p-4">
-          <div className="flex items-center gap-3 text-sm font-bold text-orange-800">
+        <div className="border-t-2 border-[#FFD0B5] bg-[#FFF4EA] p-4">
+          <div className="flex items-center gap-3 text-sm font-bold text-[#9B3E08]">
             <LoaderCircle size={17} className="animate-spin" />
             GPT is analyzing and saving intelligence for the selected record.
           </div>
@@ -2581,7 +2582,7 @@ function AiMiniStat({
         </div>
       </div>
 
-      <p className="mt-3 text-2xl font-black text-[#10233f]">
+      <p className="mt-3 text-2xl font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -2635,7 +2636,7 @@ function PipelineStage({
             {stage.label}
           </p>
 
-          <p className="mt-2 text-2xl font-black text-[#10233f]">
+          <p className="mt-2 text-2xl font-black text-[#10233F]">
             {stage.value}
           </p>
         </div>
@@ -2656,12 +2657,12 @@ function EmptyState({
   text,
 }) {
   return (
-    <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[1.5rem] border-[3px] border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[1.5rem] border-[3px] border-dashed border-[#C9D7E6] bg-white px-6 py-12 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#FFB38A] bg-[#FFF4EA] text-[#B84F0E]">
         <Icon size={24} />
       </div>
 
-      <h2 className="mt-5 text-xl font-black text-[#10233f]">
+      <h2 className="mt-5 text-xl font-black text-[#10233F]">
         {title}
       </h2>
 
@@ -2674,8 +2675,8 @@ function EmptyState({
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="animate-pulse rounded-[1.6rem] border-[3px] border-orange-200 bg-white p-5">
+    <div className="min-w-0 space-y-4">
+      <div className="animate-pulse rounded-[1.6rem] border-[3px] border-[#FFD0B5] bg-white p-5">
         <div className="h-3 w-40 rounded-full bg-slate-100" />
         <div className="mt-4 h-8 w-72 max-w-full rounded-xl bg-slate-100" />
         <div className="mt-4 h-4 w-full max-w-2xl rounded-full bg-slate-100" />
@@ -2823,7 +2824,7 @@ function KanbanView({
               <div className="space-y-3">
                 {columnItems.length ===
                 0 ? (
-                  <div className="rounded-[1.1rem] border-2 border-dashed border-slate-300 bg-white/80 p-5 text-center">
+                  <div className="rounded-[1.1rem] border-2 border-dashed border-[#C9D7E6] bg-white/80 p-5 text-center">
                     <p className="text-xs font-semibold text-slate-500">
                       No records in
                       this priority.
@@ -2979,7 +2980,7 @@ function ListView({
   shouldReduceMotion,
 }) {
   return (
-    <div className="grid gap-4 rounded-[1.9rem] border-[3px] border-orange-200 bg-[#fff5e9] p-3 sm:p-4 2xl:grid-cols-2">
+    <div className="grid min-w-0 gap-4 rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_12px_32px_rgba(15,35,63,0.07)] sm:p-4 2xl:grid-cols-2">
       {activeItems.map(
         (item, index) => (
           <motion.div
@@ -3139,15 +3140,15 @@ function GptReanalysisButton({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-[1.2rem] border-2 border-orange-300 bg-orange-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-[1.2rem] border-2 border-[#FFB38A] bg-[#FFF4EA] p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <BrainCircuit
             size={14}
-            className="text-orange-700"
+            className="text-[#B84F0E]"
           />
 
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-800">
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#9B3E08]">
             GPT Intelligence
           </p>
         </div>
@@ -3180,8 +3181,8 @@ function GptReanalysisButton({
         }
         className={`shrink-0 rounded-xl border-2 px-4 py-2.5 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
           hasStoredGpt
-            ? "border-orange-300 bg-white text-orange-800 hover:bg-orange-50"
-            : "border-orange-600 bg-orange-500 text-white shadow-[0_7px_18px_rgba(249,115,22,0.18)] hover:bg-orange-600"
+            ? "border-[#FFB38A] bg-white text-[#9B3E08] hover:bg-[#FFF4EA]"
+            : "border-orange-600 bg-[#FF5A0A] text-white shadow-[0_7px_18px_rgba(249,115,22,0.18)] hover:bg-orange-600"
         } disabled:cursor-not-allowed disabled:opacity-50`}
       >
         {isLoading
@@ -3197,10 +3198,10 @@ function GptReanalysisButton({
 function StudentModalLoader() {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#10233f]/45 p-4 backdrop-blur-sm">
-      <div className="rounded-[1.5rem] border-[3px] border-orange-300 bg-white px-8 py-7 text-center shadow-2xl">
-        <LoaderCircle className="mx-auto h-8 w-8 animate-spin text-orange-500" />
+      <div className="rounded-[1.5rem] border-[3px] border-[#123865] bg-[#FFF8EF] px-8 py-7 text-center shadow-2xl">
+        <LoaderCircle className="mx-auto h-8 w-8 animate-spin text-[#FF5A0A]" />
 
-        <p className="mt-4 text-sm font-black text-[#10233f]">
+        <p className="mt-4 text-sm font-black text-[#10233F]">
           Opening student workspace
         </p>
 
@@ -3216,9 +3217,9 @@ function getToneStyle(tone) {
   const styles = {
     orange: {
       card:
-        "border-orange-300 bg-orange-50 text-orange-800",
+        "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]",
       icon:
-        "border-orange-300 text-orange-700",
+        "border-[#FFB38A] text-[#B84F0E]",
     },
     green: {
       card:

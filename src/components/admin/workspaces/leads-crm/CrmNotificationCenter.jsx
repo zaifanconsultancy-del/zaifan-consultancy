@@ -1,4 +1,4 @@
-// CrmNotificationCenter V4 MAXIMUM — Live CRM Notification Command Drawer
+// CrmNotificationCenter PARTNER OS EXTREME — Live CRM Notification Command Drawer
 // src/components/admin/CrmNotificationCenter.jsx
 //
 // Maximum pass:
@@ -19,7 +19,11 @@
 // - accessible dialog semantics
 // - replaces emoji bell with Lucide icon
 // - explicit white text on navy surfaces
+// - Partner OS Extreme command-center hierarchy and premium framed surfaces
 // - stronger Zaifan Admin OS orange/navy visual system
+// - min-w-0 overflow containment across drawer, cards, and content
+// - visible focus states for keyboard users
+// - mobile-safe viewport height and drawer positioning
 //
 // NOTE:
 // This component is intentionally read-only. It displays notification data
@@ -165,6 +169,7 @@ function CrmNotificationCenter({
   const [priorityFilter, setPriorityFilter] = useState("all");
 
   const searchRef = useRef(null);
+  const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
 
   const normalizedNotifications = useMemo(() => {
@@ -290,6 +295,26 @@ function CrmNotificationCenter({
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusable = dialogRef.current?.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (!focusable?.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -368,9 +393,10 @@ function CrmNotificationCenter({
           />
 
           <motion.aside
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label="CRM notifications"
+            aria-label="CRM notification command center"
             initial={
               reduceMotion
                 ? false
@@ -402,25 +428,25 @@ function CrmNotificationCenter({
                 1,
               ],
             }}
-            className="absolute right-0 top-14 z-50 w-[min(94vw,440px)] overflow-hidden rounded-[1.75rem] border-[3px] border-orange-300 bg-white shadow-[0_26px_80px_rgba(15,35,63,0.24)]"
+            className="absolute right-0 top-14 z-50 flex max-h-[min(78vh,720px)] w-[min(94vw,460px)] min-w-0 flex-col overflow-hidden rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_30px_90px_rgba(15,35,63,0.30)] ring-4 ring-[#FF5A0A]/15"
           >
-            <header className="bg-[#123866] p-4 text-white sm:p-5">
+            <header className="shrink-0 border-b-[3px] border-[#FF5A0A] bg-[#123865] p-4 text-white sm:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] border-2 border-orange-300/45 bg-orange-400/10 text-orange-200 shadow-inner">
                     <BellRing size={17} />
                   </div>
 
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
                       CRM Alerts
                     </p>
 
-                    <h3 className="mt-1 text-lg font-black text-white">
+                    <h3 className="mt-1 text-xl font-black text-white">
                       Smart Notifications
                     </h3>
 
-                    <p className="mt-1 text-xs font-semibold text-white">
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-200">
                       {counts.unread
                         ? `${counts.unread} unread / active alert${
                             counts.unread === 1 ? "" : "s"
@@ -433,7 +459,7 @@ function CrmNotificationCenter({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white transition hover:border-orange-200 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300/40"
                   aria-label="Close notification center"
                 >
                   <X size={15} />
@@ -458,7 +484,7 @@ function CrmNotificationCenter({
               </div>
             </header>
 
-            <div className="border-b-2 border-orange-200 bg-[#fff8ee] p-3">
+            <div className="shrink-0 border-b-2 border-[#C9D7E6] bg-[#FFF8EF] p-3 sm:p-4">
               <div className="relative">
                 <Search
                   size={14}
@@ -474,7 +500,7 @@ function CrmNotificationCenter({
                     )
                   }
                   placeholder="Search CRM alerts..."
-                  className="h-10 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-xs font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                  className="h-11 w-full min-w-0 rounded-xl border-2 border-[#9FB3C8] bg-white pl-9 pr-3 text-xs font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
                 />
               </div>
 
@@ -499,10 +525,10 @@ function CrmNotificationCenter({
                             value
                           )
                         }
-                        className={`shrink-0 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] transition ${
+                        className={`shrink-0 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${
                           active
-                            ? "border-orange-500 bg-orange-500 text-white"
-                            : "border-slate-300 bg-white text-slate-600 hover:border-orange-300"
+                            ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_4px_12px_rgba(255,90,10,0.20)]"
+                            : "border-[#C9D7E6] bg-white text-slate-600 hover:border-orange-300 hover:text-[#10233F]"
                         }`}
                       >
                         {label}
@@ -513,7 +539,7 @@ function CrmNotificationCenter({
               </div>
             </div>
 
-            <div className="max-h-[470px] overflow-y-auto bg-[#fffaf4] p-3">
+            <div className="min-h-0 flex-1 overflow-y-auto bg-[#FFF8EF] p-3 sm:p-4">
               {filteredNotifications.length ? (
                 <div className="space-y-2.5">
                   {filteredNotifications.map(
@@ -545,8 +571,8 @@ function CrmNotificationCenter({
               )}
             </div>
 
-            <footer className="border-t-2 border-orange-200 bg-white px-4 py-3">
-              <div className="flex items-center justify-between gap-3 text-[9px] font-bold text-slate-500">
+            <footer className="shrink-0 border-t-[3px] border-[#123865] bg-white px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[9px] font-black uppercase tracking-[0.06em] text-slate-500">
                 <span>
                   Sorted by priority, then newest
                 </span>
@@ -613,7 +639,7 @@ function NotificationRow({
                 0.1
               ),
       }}
-      className={`group w-full rounded-[1.2rem] border-2 p-3.5 text-left transition hover:-translate-y-0.5 hover:border-orange-400 hover:shadow-[0_7px_18px_rgba(15,35,63,0.045)] ${style.card}`}
+      className={`group w-full min-w-0 rounded-[1.35rem] border-[3px] p-3.5 text-left shadow-[0_6px_16px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_10px_24px_rgba(15,35,63,0.09)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${style.card}`}
     >
       <div className="flex items-start gap-3">
         <div
@@ -626,7 +652,7 @@ function NotificationRow({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h4 className="text-sm font-black text-[#10233f]">
+                <h4 className="break-words text-sm font-black text-[#10233F]">
                   {item.__title}
                 </h4>
 
@@ -638,7 +664,7 @@ function NotificationRow({
                 ) : null}
               </div>
 
-              <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-slate-600">
+              <p className="mt-1 line-clamp-2 break-words text-xs font-semibold leading-5 text-slate-600">
                 {item.__message}
               </p>
             </div>
@@ -680,12 +706,12 @@ function HeaderMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-2.5 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-2.5 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
         {label}
       </p>
 
-      <p className="mt-1 text-lg font-black text-white">
+      <p className="mt-1 text-xl font-black text-white">
         {value}
       </p>
     </div>
@@ -694,7 +720,7 @@ function HeaderMetric({
 
 function AllClearState() {
   return (
-    <div className="flex min-h-[230px] flex-col items-center justify-center rounded-[1.4rem] border-[3px] border-emerald-300 bg-emerald-50 px-6 text-center">
+    <div className="flex min-h-[230px] flex-col items-center justify-center rounded-[1.5rem] border-[3px] border-emerald-400 bg-emerald-50 px-6 text-center shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-emerald-300 bg-white text-emerald-700">
         <CheckCircle2 size={22} />
       </div>
@@ -712,7 +738,7 @@ function AllClearState() {
 
 function FilteredEmptyState() {
   return (
-    <div className="flex min-h-[210px] flex-col items-center justify-center rounded-[1.4rem] border-[3px] border-slate-300 bg-white px-6 text-center">
+    <div className="flex min-h-[210px] flex-col items-center justify-center rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white px-6 text-center shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
       <Search
         size={20}
         className="text-orange-600"
@@ -733,7 +759,7 @@ function getPriorityStyle(priority = "normal") {
   if (priority === "urgent") {
     return {
       card:
-        "border-red-300 bg-red-50",
+        "border-red-400 bg-red-50",
       icon:
         "border-red-300 text-red-700",
       badge:
@@ -744,7 +770,7 @@ function getPriorityStyle(priority = "normal") {
   if (priority === "high") {
     return {
       card:
-        "border-amber-300 bg-amber-50",
+        "border-amber-400 bg-amber-50",
       icon:
         "border-amber-300 text-amber-800",
       badge:
@@ -755,7 +781,7 @@ function getPriorityStyle(priority = "normal") {
   if (priority === "medium") {
     return {
       card:
-        "border-orange-300 bg-orange-50",
+        "border-orange-400 bg-orange-50",
       icon:
         "border-orange-300 text-orange-700",
       badge:
@@ -766,7 +792,7 @@ function getPriorityStyle(priority = "normal") {
   if (priority === "low") {
     return {
       card:
-        "border-emerald-300 bg-emerald-50",
+        "border-emerald-400 bg-emerald-50",
       icon:
         "border-emerald-300 text-emerald-700",
       badge:
@@ -776,7 +802,7 @@ function getPriorityStyle(priority = "normal") {
 
   return {
     card:
-      "border-slate-300 bg-white",
+      "border-[#C9D7E6] bg-white",
     icon:
       "border-blue-300 text-blue-700",
     badge:

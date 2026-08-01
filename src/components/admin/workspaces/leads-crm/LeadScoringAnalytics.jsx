@@ -1,4 +1,4 @@
-// LeadScoringAnalytics V4 MAXIMUM — Framed Executive Lead Intelligence
+// LeadScoringAnalytics PARTNER OS EXTREME — Compact Lead Intelligence Command
 // src/components/admin/LeadScoringAnalytics.jsx
 //
 // Maximum pass:
@@ -111,6 +111,7 @@ function LeadScoringAnalytics({
   const [query, setQuery] = useState("");
   const [bandFilter, setBandFilter] = useState("all");
   const [sortMode, setSortMode] = useState("score");
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const scoredLeads = useMemo(() => {
     const safeInquiries = safeArray(inquiries);
@@ -147,6 +148,8 @@ function LeadScoringAnalytics({
     let cold = 0;
     let assigned = 0;
     let completeContact = 0;
+    let contactReady = 0;
+    let completenessTotal = 0;
     let scoreTotal = 0;
     let topScore = 0;
 
@@ -171,6 +174,12 @@ function LeadScoringAnalytics({
         assigned += 1;
       }
 
+      completenessTotal += lead._contactCompleteness;
+
+      if (lead.email || lead.phone) {
+        contactReady += 1;
+      }
+
       if (lead._contactCompleteness >= 80) {
         completeContact += 1;
       }
@@ -190,6 +199,13 @@ function LeadScoringAnalytics({
         ? Math.round((assigned / total) * 100)
         : 0,
       completeContact,
+      contactReady,
+      contactRate: total
+        ? Math.round((contactReady / total) * 100)
+        : 0,
+      averageCompleteness: total
+        ? Math.round(completenessTotal / total)
+        : 0,
       contactCompletenessRate: total
         ? Math.round((completeContact / total) * 100)
         : 0,
@@ -239,135 +255,163 @@ function LeadScoringAnalytics({
   return (
     <motion.section
       key="lead-scoring"
-      initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4`}
+      transition={{ duration: reduceMotion ? 0 : 0.26 }}
+      className={`${cardClass} min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 text-[#10233F] shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-3`}
     >
-      <div
-        className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] bg-[#173F6B] p-5 text-white shadow-[0_12px_30px_rgba(15,35,63,0.12)] sm:p-6"
-        style={{ color: "#FFFFFF" }}
-      >
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.42fr)] xl:items-start">
-          <div className="min-w-0">
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
-              <Brain size={13} style={{ color: "#FDBA74" }} />
-              <p
-                className="text-[10px] font-black uppercase tracking-[0.12em]"
-                style={{ color: "#FFFFFF" }}
-              >
-                Smart Lead Intelligence
-              </p>
+      <header className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+                <Brain size={12} />
+                Lead Scoring OS
+              </span>
+
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                <ShieldCheck size={12} />
+                Existing Scoring Engine
+              </span>
             </div>
 
-            <h2
-              className="mt-3 break-words text-3xl font-black leading-tight sm:text-4xl"
-              style={{ color: "#FFFFFF" }}
-            >
-              Lead Scoring System
+            <h2 className="mt-3 break-words text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
+              Lead Priority Command
             </h2>
 
-            <p
-              className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6"
-              style={{ color: "#F8FAFC" }}
-            >
-              Ranks inquiries and appointments from cold to hot using the
-              existing Zaifan scoring engine, then exposes ownership,
-              completeness, and portfolio-quality signals for counselors.
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Rank real inquiries and appointments through the existing Zaifan
+              scoring engine, then review score band, ownership and profile
+              readiness from one operating portfolio.
             </p>
           </div>
 
-          <div className="grid min-w-0 grid-cols-2 gap-2">
-            <HeroMetric label="Leads Scored" value={summary.total} />
-            <HeroMetric label="Average Score" value={`${summary.averageScore}/100`} />
-            <HeroMetric label="Top Score" value={`${summary.topScore}/100`} />
-            <HeroMetric label="Median Score" value={`${summary.medianScore}/100`} />
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Current Workspace
+            </p>
+
+            <p className="mt-2 text-2xl font-black">Scored Lead Portfolio</p>
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+              Top matching leads are shown after search, score-band and sorting
+              controls are applied.
+            </p>
+
+            <div className="mt-4 grid min-w-0 grid-cols-2 gap-2">
+              <HeroMetric label="Scored" value={summary.total} />
+              <HeroMetric label="Average" value={`${summary.average}/100`} />
+              <HeroMetric label="Top Score" value={`${summary.topScore}/100`} />
+              <HeroMetric label="Median" value={`${summary.median}/100`} />
+            </div>
           </div>
         </div>
+      </header>
+
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <PartnerScoreMetric
+          label="Hot Leads"
+          value={summary.hot}
+          helper="Scores between 80 and 100."
+          icon={Flame}
+          tone={summary.hot ? "red" : "green"}
+          badge="Immediate"
+        />
+
+        <PartnerScoreMetric
+          label="Warm Leads"
+          value={summary.warm}
+          helper="Scores between 60 and 79."
+          icon={TrendingUp}
+          tone="amber"
+          badge="Priority"
+        />
+
+        <PartnerScoreMetric
+          label="Assignment Coverage"
+          value={`${summary.assignmentRate}%`}
+          helper={`${summary.assigned}/${summary.total} scored leads have an owner.`}
+          icon={UserRoundCheck}
+          tone={summary.assignmentRate >= 80 ? "green" : "blue"}
+          badge="Ownership"
+        />
+
+        <PartnerScoreMetric
+          label="Contact Coverage"
+          value={`${summary.contactRate}%`}
+          helper={`${summary.contactReady}/${summary.total} leads have email or phone.`}
+          icon={ShieldCheck}
+          tone={summary.contactRate >= 85 ? "green" : "blue"}
+          badge="Contactability"
+        />
       </div>
 
-      <div className="min-w-0 bg-[#FFF8EE] px-1 pb-1 pt-5 sm:pt-6">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
-          <ScoreStat
-            label="Hot"
-            value={summary.hot}
-            tone="red"
-            helper="80–100"
-            icon={Flame}
-          />
-          <ScoreStat
-            label="Warm"
-            value={summary.warm}
-            tone="orange"
-            helper="60–79"
-            icon={TrendingUp}
-          />
-          <ScoreStat
-            label="Active"
-            value={summary.active}
-            tone="gold"
-            helper="35–59"
-            icon={Activity}
-          />
-          <ScoreStat
-            label="Cold"
-            value={summary.cold}
-            tone="blue"
-            helper="0–34"
-            icon={CircleGauge}
-          />
-        </div>
+      <section className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Lead Scoring Workspace
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide ranked leads, filters and scoring integrity."
+                : "Open ranked leads, filters and scoring integrity."}
+            </p>
+          </div>
 
-        <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
-          <OperationalCard
-            label="Assignment Coverage"
-            value={`${summary.assignmentRate}%`}
-            helper={`${summary.assigned}/${summary.total} leads have an owner.`}
-            icon={UserRoundCheck}
-            tone={summary.assignmentRate >= 80 ? "good" : "warning"}
+          <Activity
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
           />
-          <OperationalCard
-            label="Contact Coverage"
-            value={`${summary.contactRate}%`}
-            helper={`${summary.contactReady}/${summary.total} leads have email or phone.`}
-            icon={ShieldCheck}
-            tone={summary.contactRate >= 85 ? "good" : "warning"}
-          />
-          <OperationalCard
-            label="Profile Completeness"
-            value={`${summary.averageCompleteness}%`}
-            helper="Average completeness across scoring-relevant CRM fields."
-            icon={Target}
-            tone="navy"
-          />
-          <OperationalCard
-            label="Priority Pool"
-            value={summary.hot + summary.warm}
-            helper="Hot + warm leads worth faster counselor attention."
-            icon={Crown}
-            tone="orange"
-          />
-        </div>
+        </button>
+      </section>
 
-        <div className="mt-5 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_8px_24px_rgba(15,35,63,0.05)]">
-          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-            <label className="relative block">
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4">
+      <section className="min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_26px_rgba(18,56,101,0.05)] sm:p-5">
+        <div className="mb-4 flex min-w-0 flex-col gap-3">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+              Lead Scoring Command
+            </p>
+
+            <h3 className="mt-1 text-xl font-black text-[#10233F]">
+              Ranked lead portfolio
+            </h3>
+
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              Search, filter and sort scored CRM records without changing the
+              underlying scoring engine.
+            </p>
+          </div>
+
+          <div className="grid min-w-0 gap-2 sm:grid-cols-3">
+            <label className="relative block min-w-0">
               <Search
-                size={16}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={15}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search lead, email, phone, owner, status..."
-                className="min-h-11 w-full rounded-xl border-2 border-[#B9C9D9] bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                placeholder="Search lead, contact, owner..."
+                className="min-h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-xs font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
 
             <select
               value={bandFilter}
               onChange={(event) => setBandFilter(event.target.value)}
-              className="min-h-11 rounded-xl border-2 border-[#B9C9D9] bg-white px-4 text-sm font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="min-h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">All Scores</option>
               <option value="hot">Hot 80+</option>
@@ -379,178 +423,270 @@ function LeadScoringAnalytics({
             <select
               value={sortMode}
               onChange={(event) => setSortMode(event.target.value)}
-              className="min-h-11 rounded-xl border-2 border-[#B9C9D9] bg-white px-4 text-sm font-black text-[#10233f] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="min-h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             >
               <option value="score">Sort: Score</option>
               <option value="completeness">Sort: Completeness</option>
               <option value="name">Sort: Name</option>
             </select>
           </div>
-
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500">
-            <span>
-              Showing {Math.min(topLeads.length, 20)} of {filteredLeads.length} matching lead
-              {filteredLeads.length === 1 ? "" : "s"}
-            </span>
-            <span>Top 20 rendered for workspace performance.</span>
-          </div>
         </div>
 
-        <section className="mt-5 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_10px_28px_rgba(15,35,63,0.06)]">
-          <div className="flex flex-col gap-3 border-b-[3px] border-[#F97316]/25 bg-[#FFF7EC] p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
-                Ranked Lead Portfolio
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500">
+          <span>
+            Showing {topLeads.length} of {filteredLeads.length} matching lead
+            {filteredLeads.length === 1 ? "" : "s"}
+          </span>
+          <span>Top 20 rendered for workspace performance.</span>
+        </div>
+
+        <div className="space-y-2.5">
+          {topLeads.length ? (
+            topLeads.map((lead, index) => (
+              <LeadPortfolioRow
+                key={lead._rowKey}
+                lead={lead}
+                index={index}
+                reduceMotion={reduceMotion}
+              />
+            ))
+          ) : (
+            <div className="rounded-[1.4rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-8 text-center">
+              <BarChart3 size={25} className="mx-auto text-orange-700" />
+              <p className="mt-3 font-black text-[#10233F]">
+                No matching scored leads
               </p>
-              <h3 className="mt-1 text-xl font-black text-[#10233f]">
-                Counselor Priority Ranking
-              </h3>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                Top scored inquiry and appointment records with ownership, priority, completeness and lead temperature.
+              <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                Adjust the search or score-band filter, or wait for CRM records.
               </p>
             </div>
+          )}
+        </div>
+      </section>
 
-            <span className="w-fit shrink-0 rounded-full border-2 border-[#F59E0B] bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-orange-700">
-              Top {Math.min(topLeads.length, 20)} shown
-            </span>
-          </div>
+      <div className="grid min-w-0 gap-3">
+        <LeadIntegrityCard
+          icon={ShieldCheck}
+          eyebrow="Scoring Integrity"
+          title="Existing engine preserved"
+          helper="Scores still come from calculateLeadScore for inquiry and appointment records."
+          tone="green"
+        />
 
-          <div className="space-y-3 p-4 sm:p-5">
-            {topLeads.length ? (
-              topLeads.map((lead, index) => {
-                const label = getLeadScoreLabel(lead.score);
-                const tone = getLeadScoreTone(lead.score);
-                const normalizedTone = normalizeTone(tone);
+        <LeadIntegrityCard
+          icon={Target}
+          eyebrow="Profile Readiness"
+          title={`${summary.averageCompleteness}% average completeness`}
+          helper={`${summary.completeContact} leads meet the 80% profile-completeness threshold.`}
+          tone="blue"
+        />
 
-                return (
-                  <motion.article
-                    key={lead._rowKey}
-                    initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: reduceMotion ? 0 : 0.2,
-                      delay: reduceMotion ? 0 : index * 0.02,
-                    }}
-                    className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_6px_18px_rgba(15,35,63,0.045)] ${
-                      index === 0 ? "border-[#F97316]" : "border-[#D1DCE7]"
-                    }`}
-                  >
-                    <div className="grid min-w-0 gap-0 2xl:grid-cols-[5.5rem_minmax(0,1fr)]">
-                      <div
-                        className={`flex items-center justify-center border-b-2 p-3 2xl:border-b-0 2xl:border-r-2 ${
-                          index === 0
-                            ? "border-[#F97316] bg-[#E96512] text-white"
-                            : "border-[#E1E8EF] bg-[#FFF8EE] text-[#10233f]"
-                        }`}
-                      >
-                        <div className="text-center">
-                          <p className={`text-[8px] font-black uppercase tracking-[0.1em] ${
-                            index === 0 ? "text-white" : "text-slate-500"
-                          }`}>
-                            Rank
-                          </p>
-                          <p className={`mt-1 text-2xl font-black ${
-                            index === 0 ? "text-white" : "text-[#10233f]"
-                          }`}>
-                            #{index + 1}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="min-w-0 p-4 sm:p-5">
-                        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <h4 className="break-words text-base font-black leading-5 text-[#10233f] sm:text-lg">
-                                {lead._name}
-                              </h4>
-
-                              <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF9F1] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.07em] text-slate-600">
-                                {lead.type}
-                              </span>
-
-                              <span className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.07em] ${
-                                lead._band === "hot"
-                                  ? "border-[#FB7185] bg-[#FFF4F4] text-red-700"
-                                  : lead._band === "warm"
-                                  ? "border-[#F59E0B] bg-[#FFF7ED] text-orange-700"
-                                  : lead._band === "active"
-                                  ? "border-[#FCD34D] bg-[#FFFBEA] text-amber-800"
-                                  : "border-[#60A5FA] bg-[#F2F7FF] text-blue-700"
-                              }`}>
-                                {label}
-                              </span>
-                            </div>
-
-                            <p className="mt-2 break-words text-xs font-semibold leading-5 text-slate-500">
-                              {lead._contact}
-                            </p>
-                          </div>
-
-                          <div className={`w-fit shrink-0 rounded-xl border-2 px-4 py-2.5 ${
-                            index === 0
-                              ? "border-[#F97316] bg-[#FFF4E8]"
-                              : "border-[#C9D7E6] bg-[#FFF9F1]"
-                          }`}>
-                            <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
-                              Lead Score
-                            </p>
-                            <p className={`mt-1 text-2xl font-black ${normalizedTone}`}>
-                              {lead.score}/100
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                          <LeadDetailMetric
-                            label="Priority"
-                            value={lead.priority || "low"}
-                            tone="orange"
-                          />
-                          <LeadDetailMetric
-                            label="Owner"
-                            value={lead.assigned_admin_name || "Unassigned"}
-                            tone={lead.assigned_admin_name ? "navy" : "warning"}
-                          />
-                          <LeadDetailMetric
-                            label="Profile"
-                            value={`${lead._contactCompleteness}%`}
-                            tone="blue"
-                          />
-                          <LeadDetailMetric
-                            label="Band"
-                            value={lead._band}
-                            tone={
-                              lead._band === "hot"
-                                ? "danger"
-                                : lead._band === "warm"
-                                ? "orange"
-                                : lead._band === "active"
-                                ? "warning"
-                                : "blue"
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.article>
-                );
-              })
-            ) : (
-              <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.35rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
-                <BarChart3 className="h-10 w-10 text-orange-600" />
-                <h3 className="mt-3 font-black text-[#10233f]">
-                  No matching scored leads
-                </h3>
-                <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">
-                  Adjust the search or score filter, or wait for CRM inquiry and appointment records to become available.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
+        <LeadIntegrityCard
+          icon={Crown}
+          eyebrow="Priority Pool"
+          title={`${summary.hot + summary.warm} hot or warm leads`}
+          helper="These records remain visible as the fastest counselor-attention pool."
+          tone={summary.hot + summary.warm ? "amber" : "green"}
+        />
       </div>
+        </div>
+      ) : null}
     </motion.section>
+  );
+}
+
+
+function PartnerScoreMetric({
+  label,
+  value,
+  helper,
+  icon: Icon,
+  tone = "blue",
+  badge = "",
+}) {
+  const tones = {
+    navy: "border-[#123865] bg-[#123865]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+  };
+
+  const dark = tone === "navy";
+
+  return (
+    <article
+      className={`flex min-w-0 h-full flex-col justify-between rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(18,56,101,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </p>
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
+          </p>
+        </div>
+
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+            dark
+              ? "border-white/20 bg-white/10 text-orange-200"
+              : "border-[#123865]/15 bg-white text-[#123865]"
+          }`}
+        >
+          <Icon size={16} />
+        </div>
+      </div>
+
+      <div>
+        <p
+          className={`mt-4 text-xs font-semibold leading-5 ${
+            dark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
+          {helper}
+        </p>
+
+        {badge ? (
+          <span
+            className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+              dark
+                ? "border-white/20 bg-white/10 text-white"
+                : "border-[#C9D7E6] bg-white text-slate-600"
+            }`}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function LeadPortfolioRow({ lead, index, reduceMotion }) {
+  const label = getLeadScoreLabel(lead.score);
+  const normalizedTone = normalizeTone(getLeadScoreTone(lead.score));
+  const bandTone =
+    lead._band === "hot"
+      ? "border-[#FB7185] bg-[#FFF4F4] text-red-700"
+      : lead._band === "warm"
+        ? "border-[#F59E0B] bg-[#FFF8E8] text-amber-800"
+        : lead._band === "active"
+          ? "border-[#FCD34D] bg-[#FFFBEA] text-amber-800"
+          : "border-[#60A5FA] bg-[#F2F7FF] text-blue-700";
+
+  return (
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.2,
+        delay: reduceMotion ? 0 : index * 0.02,
+      }}
+      className="grid min-w-0 gap-3 rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.04)] sm:grid-cols-2"
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="min-w-0 [overflow-wrap:anywhere] font-black text-[#10233F]">
+            {lead._name}
+          </p>
+
+          <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-2.5 py-1 text-[8px] font-black uppercase text-slate-600">
+            {lead.type}
+          </span>
+
+          <span
+            className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase ${bandTone}`}
+          >
+            {label}
+          </span>
+        </div>
+
+        <p className="mt-1 truncate text-xs font-semibold text-slate-500">
+          {lead._contact}
+        </p>
+      </div>
+
+      <LeadMiniValue
+        label="Score"
+        value={`${lead.score}/100`}
+        valueClass={normalizedTone}
+      />
+
+      <LeadMiniValue
+        label="Priority"
+        value={lead.priority || "Low"}
+      />
+
+      <LeadMiniValue
+        label="Owner"
+        value={
+          lead.assigned_admin_name ||
+          lead.assigned_to ||
+          "Unassigned"
+        }
+      />
+
+      <LeadMiniValue
+        label="Profile"
+        value={`${lead._contactCompleteness}%`}
+      />
+    </motion.article>
+  );
+}
+
+function LeadMiniValue({ label, value, valueClass = "text-[#10233F]" }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+      <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+        {label}
+      </p>
+      <p className={`mt-1 truncate text-xs font-black ${valueClass}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function LeadIntegrityCard({
+  icon: Icon,
+  eyebrow,
+  title,
+  helper,
+  tone = "blue",
+}) {
+  const tones = {
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+  };
+
+  return (
+    <div className={`rounded-[1.35rem] border-[3px] p-4 ${tones[tone]}`}>
+      <div className="flex items-start gap-3">
+        <Icon size={17} className="mt-0.5 shrink-0 text-[#123865]" />
+        <div>
+          <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+            {eyebrow}
+          </p>
+          <p className="mt-1 font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {helper}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

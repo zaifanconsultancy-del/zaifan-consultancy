@@ -1,4 +1,4 @@
-// AutoReminderGenerator V5 MAXIMUM — Framed Follow-Up Automation Queue
+// AutoReminderGenerator PARTNER OS EXTREME — Executive Follow-Up Automation Command Queue
 // src/components/admin/AutoReminderGenerator.jsx
 //
 // Maximum pass:
@@ -373,33 +373,33 @@ function AutoReminderGenerator({
           ? 0
           : 0.28,
       }}
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_40px_rgba(15,35,63,0.08)] sm:p-4`}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_22px_55px_rgba(15,35,63,0.13)] sm:p-4`}
     >
-      <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
-        <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white xl:grid-cols-[minmax(0,1.28fr)_minmax(20rem,0.72fr)]">
+        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-7">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/35 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-orange-200 shadow-inner">
               <Sparkles size={12} />
               Workflow Automation
             </span>
 
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/35 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-orange-200 shadow-inner">
               <ShieldCheck size={12} />
               Human Approved
             </span>
           </div>
 
-          <h2 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+          <h2 className="mt-4 break-words text-2xl font-black leading-[1.08] tracking-[-0.025em] text-white sm:text-4xl">
             Auto Reminder Generator
           </h2>
 
-          <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-200">
             Zaifan scans active CRM records and suggests
             follow-up reminders. Nothing is created until a
             staff member approves the suggestion.
           </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             <DarkStat
               label="Suggestions"
               value={summary.total}
@@ -419,7 +419,7 @@ function AutoReminderGenerator({
           </div>
         </div>
 
-        <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-7 xl:border-l-[3px] xl:border-t-0">
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
             Suggestion Mix
           </p>
@@ -444,7 +444,7 @@ function AutoReminderGenerator({
         </div>
       </div>
 
-      <div className="min-w-0 space-y-4 bg-[#FFF8EE] px-1 pb-1 pt-5">
+      <div className="min-w-0 space-y-5 bg-[#FFF8EF] px-1 pb-1 pt-5">
         {feedback ? (
           <Feedback
             feedback={feedback}
@@ -454,13 +454,13 @@ function AutoReminderGenerator({
           />
         ) : null}
 
-        <section className="rounded-[1.55rem] border-[3px] border-[#F97316] bg-[#FFFDF8] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
+        <section className="rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(15,35,63,0.08)] sm:p-5">
           <div className="flex items-center gap-2">
             <Filter
               size={14}
-              className="text-orange-700"
+              className="text-[#FF5A0A]"
             />
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#123865]">
               Suggestion Controls
             </p>
           </div>
@@ -480,7 +480,7 @@ function AutoReminderGenerator({
                   )
                 }
                 placeholder="Search reminder title, note or student..."
-                className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="h-12 w-full min-w-0 rounded-xl border-2 border-[#9FB2C8] bg-[#FFFDF8] pl-9 pr-3 text-sm font-bold text-[#10233F] outline-none placeholder:text-slate-400 transition focus:border-[#FF5A0A] focus:bg-white focus:ring-4 focus:ring-orange-100"
               />
             </div>
 
@@ -491,7 +491,7 @@ function AutoReminderGenerator({
                   event.target.value
                 )
               }
-              className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="h-12 min-w-0 rounded-xl border-2 border-[#9FB2C8] bg-[#FFFDF8] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:bg-white focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">
                 All record types
@@ -511,7 +511,7 @@ function AutoReminderGenerator({
                   event.target.value
                 )
               }
-              className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="h-12 min-w-0 rounded-xl border-2 border-[#9FB2C8] bg-[#FFFDF8] px-3 text-xs font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:bg-white focus:ring-4 focus:ring-orange-100"
             >
               <option value="all">
                 All due windows
@@ -530,7 +530,7 @@ function AutoReminderGenerator({
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white shadow-[0_7px_16px_rgba(18,56,101,0.16)] transition hover:-translate-y-0.5 hover:bg-[#0E2E55] focus:outline-none focus:ring-4 focus:ring-blue-100"
             >
               <RefreshCw size={14} />
               Reset
@@ -581,10 +581,10 @@ function AutoReminderGenerator({
                               0.12
                             ),
                     }}
-                    className={`rounded-[1.45rem] border-[3px] bg-white p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)] transition ${
+                    className={`min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.06)] transition sm:p-5 ${
                       created
-                        ? "border-emerald-300"
-                        : "border-slate-300 hover:border-orange-400"
+                        ? "border-[#34D399] bg-[#FBFFFD]"
+                        : "border-[#C9D7E6] hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_14px_30px_rgba(15,35,63,0.10)]"
                     }`}
                   >
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -631,18 +631,18 @@ function AutoReminderGenerator({
                           ) : null}
                         </div>
 
-                        <h3 className="mt-3 text-lg font-black text-[#10233f]">
+                        <h3 className="mt-3 break-words text-lg font-black leading-snug text-[#10233F] sm:text-xl">
                           {item.title ||
                             "Follow-up reminder"}
                         </h3>
 
-                        <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                        <p className="mt-2 max-w-4xl break-words text-sm font-semibold leading-6 text-slate-600">
                           {item.note ||
                             "No reminder note provided."}
                         </p>
 
                         <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-slate-500">
-                          <span className="rounded-lg border-2 border-slate-200 bg-[#fffaf4] px-2.5 py-1.5">
+                          <span className="max-w-full rounded-lg border-2 border-[#D7E0EA] bg-[#FFF8EF] px-2.5 py-1.5 [overflow-wrap:anywhere]">
                             Student ID:{" "}
                             {item.studentId ||
                               "Missing"}
@@ -668,7 +668,7 @@ function AutoReminderGenerator({
                         className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border-2 px-4 py-2.5 text-xs font-black transition ${
                           created
                             ? "border-[#34D399] bg-[#F0FFF8] text-emerald-800"
-                            : "border-orange-600 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.16)] hover:-translate-y-0.5 hover:bg-orange-600"
+                            : "border-[#C84600] bg-[#FF5A0A] text-white shadow-[0_9px_20px_rgba(255,90,10,0.22)] hover:-translate-y-0.5 hover:bg-[#E84F00] focus:outline-none focus:ring-4 focus:ring-orange-100"
                         } disabled:cursor-not-allowed disabled:opacity-60`}
                       >
                         {creatingId ===
@@ -708,8 +708,8 @@ function AutoReminderGenerator({
         )}
 
         {suggestions.length > 30 ? (
-          <div className="rounded-[1.25rem] border-2 border-[#F97316] bg-[#FFF4E8] p-4">
-            <p className="text-xs font-black text-orange-800">
+          <div className="rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 shadow-[0_7px_18px_rgba(255,90,10,0.08)]">
+            <p className="text-xs font-black leading-5 text-[#9A3A00]">
               Showing the first 30 suggestions of{" "}
               {suggestions.length}. Use search and filters
               to narrow the queue.
@@ -805,7 +805,7 @@ function DarkStat({
   value,
 }) {
   return (
-    <div className="rounded-[1.1rem] border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="rounded-[1.15rem] border-2 border-white/25 bg-white/10 p-3.5 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
         {label}
       </p>
@@ -822,7 +822,7 @@ function OrangeStat({
   icon: Icon,
 }) {
   return (
-    <div className="rounded-[1.1rem] border-2 border-white/25 bg-white/10 p-3 text-white">
+    <div className="rounded-[1.15rem] border-2 border-white/30 bg-white/10 p-3.5 text-white shadow-inner">
       <Icon
         size={14}
         className="text-white"
@@ -839,7 +839,7 @@ function OrangeStat({
 
 function EmptyState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-8 text-center">
+    <div className="rounded-[1.6rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-8 text-center shadow-[0_10px_26px_rgba(16,185,129,0.08)]">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-emerald-300 bg-white text-emerald-700">
         <CheckCircle2
           size={22}
@@ -860,7 +860,7 @@ function EmptyState() {
 
 function EmptyFilteredState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-8 text-center">
+    <div className="rounded-[1.6rem] border-[3px] border-[#123865] bg-white p-8 text-center shadow-[0_10px_26px_rgba(15,35,63,0.08)]">
       <Search
         size={22}
         className="mx-auto text-orange-600"

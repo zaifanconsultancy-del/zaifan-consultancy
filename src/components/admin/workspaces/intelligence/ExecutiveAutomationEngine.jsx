@@ -338,25 +338,25 @@ function ExecutiveAutomationEngine({ scores = [] }) {
   const topTemplates = automationTemplates.slice(0, 15);
 
   return (
-    <div className="rounded-[2rem] border-[3px] border-[#E9802D]/45 bg-[#FFFDF8] p-5 shadow-[0_20px_55px_rgba(23,36,61,0.08)] sm:p-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
+    <div className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_16px_42px_rgba(15,35,63,0.09)]">
+      <div className="grid min-w-0 border-b-[3px] border-[#FF5A0A] bg-[#123865] lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="min-w-0 p-5 sm:p-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFB38A]">
             Executive Automation Engine V2
           </p>
 
-          <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-[#17243D]">
+          <h2 className="mt-2 text-2xl font-black tracking-[-0.025em] text-white sm:text-[2rem]">
             Student OS Automation Templates
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
             Executive AI converts student journey intelligence into prepared actions with
             duplicate protection, approval intelligence, action analytics, and automation
             health scoring.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex min-w-0 flex-wrap content-start gap-2 border-t-2 border-white/10 bg-white/5 p-4 lg:border-l-2 lg:border-t-0">
           <Badge label={`${analytics.totalTemplates} Templates`} />
           <Badge label={`${analytics.critical} Critical`} danger />
           <Badge label={`${analytics.executive} Executive`} gold />
@@ -366,18 +366,18 @@ function ExecutiveAutomationEngine({ scores = [] }) {
         </div>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-[#243A60]/20 bg-white px-4 py-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
+      <div className="mx-4 mt-4 min-w-0 rounded-[1.2rem] border-2 border-[#C9D7E6] bg-white px-4 py-3 sm:mx-5">
+        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#D94B00]">
           Engine Scope
         </p>
-        <p className="mt-1 text-xs font-semibold leading-5 text-[#596579]">
+        <p className="mt-1 text-xs font-semibold leading-5 text-[#51627A]">
           This component generates, prioritizes, deduplicates, and explains proposed automation
           templates. It does not send emails, send WhatsApp messages, create tasks, or mutate
           Supabase records by itself.
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="mx-4 mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5 sm:mx-5">
         <MetricCard label="Students Scanned" value={analytics.totalStudents} />
         <MetricCard label="Templates Generated" value={analytics.totalTemplates} />
         <MetricCard label="Automation Coverage" value={`${analytics.coverage}%`} />
@@ -385,7 +385,7 @@ function ExecutiveAutomationEngine({ scores = [] }) {
         <MetricCard label="High Impact" value={analytics.highImpact} />
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="mx-4 mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 sm:mx-5">
         <MetricCard label="Tasks" value={analytics.taskActions} compact />
         <MetricCard label="Reminders" value={analytics.reminderActions} compact />
         <MetricCard label="Calls" value={analytics.callActions} compact />
@@ -394,7 +394,7 @@ function ExecutiveAutomationEngine({ scores = [] }) {
         <MetricCard label="Comms Total" value={analytics.communicationDrafts} compact />
       </div>
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-3">
+      <div className="mx-4 mt-4 grid min-w-0 gap-4 xl:grid-cols-3 sm:mx-5">
         <DistributionPanel
           title="Journey Stage Distribution"
           description="Where Executive AI is generating the most workflow pressure."
@@ -416,7 +416,7 @@ function ExecutiveAutomationEngine({ scores = [] }) {
 
       <AutomationHealthPanel analytics={analytics} />
 
-      <div className="mt-6 space-y-3">
+      <div className="mx-4 mt-4 min-w-0 space-y-3 pb-5 sm:mx-5 sm:pb-6">
         {topTemplates.length ? (
           topTemplates.map((item, index) => (
             <AutomationTemplateCard
@@ -425,11 +425,11 @@ function ExecutiveAutomationEngine({ scores = [] }) {
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-[#E9802D]/28 bg-[#FFF1E3] p-5">
-            <p className="font-semibold text-[#B84F0E]">
+          <div className="min-w-0 rounded-[1.35rem] border-[3px] border-dashed border-[#FFB38A] bg-[#FFF4EA] p-6 text-center">
+            <p className="font-black text-[#B84F0E]">
               No automation templates generated yet.
             </p>
-            <p className="mt-2 text-sm text-[#7A8392]">
+            <p className="mt-2 text-sm font-semibold leading-6 text-[#65748B]">
               Executive AI does not currently see action templates that need task,
               reminder, call, email, or WhatsApp preparation.
             </p>
@@ -447,11 +447,11 @@ function AutomationTemplateCard({ item }) {
   const actionType = normalize(template.actionType);
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.045)] ${priorityStyle.wrapper}`}>
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+    <div className={`min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${priorityStyle.wrapper}`}>
+      <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-black text-[#17243D]">{template.title}</p>
+            <p className="font-black text-[#10233F]">{template.title}</p>
 
             <Tag text={recommendation.priority || "medium"} className={priorityStyle.badge} />
             <Tag text={formatLabel(template.actionType)} />
@@ -461,17 +461,17 @@ function AutomationTemplateCard({ item }) {
             {approvalRequired ? (
               <Tag
                 text="Approval Required"
-                className="border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
+                className="border-[#FF5A0A]/40 bg-[#FFF4EA] text-[#B84F0E]"
               />
             ) : (
               <Tag
                 text="Review Ready"
-                className="border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
+                className="border-[#FF5A0A]/32 bg-[#FFF4EA] text-[#B84F0E]"
               />
             )}
           </div>
 
-          <p className="mt-2 text-sm leading-6 text-[#667085]">
+          <p className="mt-2 text-sm font-semibold leading-6 text-[#65748B]">
             {template.description}
           </p>
 
@@ -482,22 +482,22 @@ function AutomationTemplateCard({ item }) {
             <MiniStat label="Generated By" value={payload.generated_by || "executive_ai"} />
           </div>
 
-          <div className="mt-4 grid gap-3 xl:grid-cols-2">
+          <div className="mt-4 grid min-w-0 gap-3 xl:grid-cols-2">
             <PayloadPreview title="Prepared Payload" payload={payload} />
             <PayloadSummary payload={payload} actionType={actionType} />
           </div>
         </div>
 
-        <div className="shrink-0 rounded-2xl border border-[#243A60]/18 bg-white p-4 xl:w-64">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8992A1]">
+        <div className="min-w-0 shrink-0 rounded-[1.2rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 xl:w-64">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#65748B]">
             Student
           </p>
 
-          <p className="mt-2 truncate font-bold text-[#17243D]">
+          <p className="mt-2 truncate font-black text-[#10233F]">
             {getStudentName(score)}
           </p>
 
-          <div className="mt-4 grid gap-2 text-xs text-[#7A8392]">
+          <div className="mt-4 grid min-w-0 gap-2 text-xs font-semibold text-[#65748B]">
             <p>Type: {formatLabel(getStudentType(score))}</p>
             <p>Risk: {score.risk_score || 0}</p>
             <p>Opportunity: {score.opportunity_score || 0}</p>
@@ -514,31 +514,31 @@ function AutomationTemplateCard({ item }) {
 function AutomationHealthPanel({ analytics }) {
   const readinessTone =
     analytics.healthScore >= 70
-      ? "border-[#E9802D]/32 bg-[#FFF1E3] text-[#B84F0E]"
+      ? "border-[#FF5A0A]/32 bg-[#FFF4EA] text-[#B84F0E]"
       : analytics.healthScore >= 40
       ? "border-[#A36A18]/28 bg-[#FFF7E8] text-[#8A5611]"
       : "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]";
 
   return (
-    <div className={`mt-6 rounded-2xl border p-5 shadow-[0_10px_24px_rgba(23,36,61,0.05)] ${readinessTone}`}>
+    <div className={`mx-4 mt-4 min-w-0 rounded-[1.45rem] border-[3px] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.055)] sm:mx-5 ${readinessTone}`}>
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">
             Automation Health
           </p>
 
-          <h3 className="mt-2 text-xl font-black text-[#17243D]">
+          <h3 className="mt-2 text-xl font-black text-[#10233F]">
             {analytics.healthScore}% Review Ready Without Extra Approval
           </h3>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
             This score shows how much of the generated template queue can be reviewed without an
             additional approval gate. It does not mean an action has already executed. Executive
             and communication-heavy actions remain protected behind human approval.
           </p>
         </div>
 
-        <div className="grid gap-2 text-xs text-[#667085] xl:w-72">
+        <div className="grid min-w-0 gap-2 text-xs font-semibold text-[#65748B] xl:w-72">
           <p>Approval Required: {analytics.approvalRequired}</p>
           <p>Ready To Execute: {analytics.readyToExecute}</p>
           <p>Conversion Ready Actions: {analytics.conversionReady}</p>
@@ -555,28 +555,28 @@ function DistributionPanel({ title, description, items = {} }) {
   const entries = Object.entries(items).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="rounded-2xl border-2 border-[#243A60]/18 bg-white p-5">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8992A1]">
+    <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4">
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#65748B]">
         {title}
       </p>
 
-      <p className="mt-2 text-sm leading-6 text-[#7A8392]">
+      <p className="mt-2 text-sm font-semibold leading-6 text-[#65748B]">
         {description}
       </p>
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 min-w-0 space-y-2">
         {entries.length ? (
           entries.map(([key, value]) => (
             <div
               key={key}
-              className="flex items-center justify-between rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs"
+              className="flex min-w-0 items-center justify-between rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2.5 text-xs"
             >
-              <span className="font-bold text-[#667085]">{formatLabel(key)}</span>
-              <span className="font-black text-[#17243D]">{value}</span>
+              <span className="font-black text-[#51627A]">{formatLabel(key)}</span>
+              <span className="font-black text-[#10233F]">{value}</span>
             </div>
           ))
         ) : (
-          <p className="rounded-xl border border-[#243A60]/18 bg-white px-3 py-2 text-xs text-[#8992A1]">
+          <p className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#FFFDF8] px-3 py-2.5 text-xs font-semibold text-[#65748B]">
             No data yet.
           </p>
         )}
@@ -587,12 +587,12 @@ function DistributionPanel({ title, description, items = {} }) {
 
 function PayloadSummary({ payload = {}, actionType = "" }) {
   return (
-    <div className="rounded-xl border border-[#243A60]/18 bg-white p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
+    <div className="min-w-0 rounded-[1.15rem] border-2 border-[#C9D7E6] bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65748B]">
         Execution Summary
       </p>
 
-      <div className="mt-3 grid gap-2 text-xs leading-5 text-[#667085]">
+      <div className="mt-3 grid min-w-0 gap-2 text-xs font-semibold leading-5 text-[#65748B]">
         <p>Student: {payload.student_name || "Unknown"}</p>
         <p>Journey: {formatLabel(payload.journey_stage || "not_started")}</p>
         <p>Recommendation: {formatLabel(payload.recommendation_type || "unknown")}</p>
@@ -606,12 +606,12 @@ function PayloadSummary({ payload = {}, actionType = "" }) {
 
 function PayloadPreview({ title, payload }) {
   return (
-    <div className="rounded-xl border border-[#243A60]/18 bg-white p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
+    <div className="min-w-0 rounded-[1.15rem] border-2 border-[#C9D7E6] bg-white p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65748B]">
         {title}
       </p>
 
-      <pre className="mt-3 max-h-44 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#667085]">
+      <pre className="mt-3 max-h-44 min-w-0 overflow-auto whitespace-pre-wrap break-words rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3 text-xs font-semibold leading-5 text-[#51627A] [scrollbar-width:thin]">
         {safeStringify(payload)}
       </pre>
     </div>
@@ -632,12 +632,12 @@ function safeStringify(value) {
 
 function MetricCard({ label, value, compact = false }) {
   return (
-    <div className="rounded-2xl border border-[#243A60]/18 bg-white p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
+    <div className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.045)]">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65748B]">
         {label}
       </p>
 
-      <p className={`${compact ? "text-2xl" : "text-3xl"} mt-2 font-black text-[#17243D]`}>
+      <p className={`${compact ? "text-2xl" : "text-3xl"} mt-2 font-black tracking-[-0.025em] text-[#10233F]`}>
         {value}
       </p>
     </div>
@@ -647,8 +647,8 @@ function MetricCard({ label, value, compact = false }) {
 function Tag({ text, className = "" }) {
   return (
     <span
-      className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
-        className || "border-[#243A60]/18 bg-white text-[#7A8392]"
+      className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${
+        className || "border-[#123865]/18 bg-white text-[#65748B]"
       }`}
     >
       {text}
@@ -658,7 +658,7 @@ function Tag({ text, className = "" }) {
 
 function MiniStat({ label, value }) {
   return (
-    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#7A8392]">
+    <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#51627A]">
       {label}: {value}
     </span>
   );
@@ -668,13 +668,13 @@ function Badge({ label, danger = false, gold = false, success = false }) {
   const style = danger
     ? "border-[#C2413B]/32 bg-[#FFF0EE] text-[#A8342F]"
     : gold
-    ? "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]"
+    ? "border-[#FF5A0A]/40 bg-[#FFF4EA] text-[#B84F0E]"
     : success
-    ? "border-[#E9802D]/35 bg-[#FFF1E3] text-[#B84F0E]"
-    : "border-[#243A60]/20 bg-white text-[#243A60]";
+    ? "border-[#FF5A0A]/35 bg-[#FFF4EA] text-[#B84F0E]"
+    : "border-[#123865]/20 bg-white text-[#123865]";
 
   return (
-    <span className={`rounded-full border px-4 py-2 text-xs font-bold ${style}`}>
+    <span className={`rounded-xl border-2 px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] ${style}`}>
       {label}
     </span>
   );
@@ -692,8 +692,8 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "executive") {
     return {
-      wrapper: "border-[#E9802D]/45 bg-[#FFF1E3]",
-      badge: "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]",
+      wrapper: "border-[#FF5A0A]/45 bg-[#FFF4EA]",
+      badge: "border-[#FF5A0A]/40 bg-[#FFF4EA] text-[#B84F0E]",
     };
   }
 
@@ -706,14 +706,14 @@ function getPriorityStyle(priority = "") {
 
   if (clean === "medium") {
     return {
-      wrapper: "border-[#243A60]/25 bg-[#F3F5F8]",
-      badge: "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]",
+      wrapper: "border-[#123865]/25 bg-[#F3F5F8]",
+      badge: "border-[#123865]/25 bg-[#F3F5F8] text-[#123865]",
     };
   }
 
   return {
-    wrapper: "border-[#243A60]/18 bg-white",
-    badge: "border-[#243A60]/18 bg-white text-[#7A8392]",
+    wrapper: "border-[#123865]/18 bg-white",
+    badge: "border-[#123865]/18 bg-white text-[#65748B]",
   };
 }
 

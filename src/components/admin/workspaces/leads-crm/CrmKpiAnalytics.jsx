@@ -17,6 +17,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  Activity,
   AlertTriangle,
   BarChart3,
   CheckCircle2,
@@ -242,12 +243,12 @@ function CrmKpiAnalytics({
     );
 
     const activeRate = percent(
-      activeLeads.length,
+      activeLeads,
       totalLeads
     );
 
     const priorityShare = percent(
-      priorityLeads.length,
+      priorityLeads,
       activeLeads
     );
 
@@ -368,282 +369,365 @@ function CrmKpiAnalytics({
   return (
     <motion.section
       key="crm-kpi-analytics"
-      initial={
-        reduceMotion
-          ? false
-          : { opacity: 0, y: 14 }
-      }
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: reduceMotion ? 0 : 0.28,
+        duration: reduceMotion ? 0 : 0.26,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="space-y-5"
+      className={`${cardClass} min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 text-[#10233F] shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5`}
     >
-      <section
-        className={`${cardClass} overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_42px_rgba(15,35,63,0.08)] sm:p-4`}
-      >
-        <div className="grid min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.18fr)_minmax(20rem,0.82fr)]">
-          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+      <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
+        <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
                 <BarChart3 size={12} />
-                Executive CRM Intelligence
+                CRM KPI OS
               </span>
 
-              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
                 <ShieldCheck size={12} />
-                Live CRM Snapshot
+                Deterministic Analytics
               </span>
             </div>
 
-            <h2 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
-              KPI Analytics
+            <h2 className="mt-3 text-3xl font-black text-white">
+              CRM Performance Command
             </h2>
 
-            <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
-              High-level CRM performance across student volume, engagement,
-              outcomes, ownership, priority workload, and active case health.
-            </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkMetric
-                label="Tracked"
-                value={model.totalLeads}
-              />
-              <DarkMetric
-                label="Active"
-                value={model.activeLeads}
-              />
-              <DarkMetric
-                label="Outcomes"
-                value={model.outcomeTotal}
-              />
-              <DarkMetric
-                label="Unassigned"
-                value={model.unassignedLeads}
-              />
-            </div>
-          </div>
-
-          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
-              KPI Health
-            </p>
-
-            <div className="mt-3 flex items-end gap-3">
-              <p className="text-5xl font-black text-white">
-                {model.healthScore}
-              </p>
-
-              <p className="pb-1 text-xs font-black uppercase tracking-[0.1em] text-white">
-                {health.label}
-              </p>
-            </div>
-
-            <div className="mt-4 h-3 overflow-hidden rounded-full border border-white/25 bg-white/10">
-              <motion.div
-                initial={
-                  reduceMotion
-                    ? false
-                    : { width: 0 }
-                }
-                animate={{
-                  width: `${model.healthScore}%`,
-                }}
-                transition={{
-                  duration: reduceMotion ? 0 : 0.65,
-                }}
-                className="h-full rounded-full bg-white"
-              />
-            </div>
-
-            <p className="mt-4 text-xs font-semibold leading-5 text-white">
-              {health.message}
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              One operating picture for CRM volume, engagement, outcomes,
+              ownership, priority pressure and active workload—derived only
+              from the inquiry and appointment records already loaded.
             </p>
           </div>
+
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em]">
+              Current Workspace
+            </p>
+
+            <p className="mt-2 text-2xl font-black">KPI Portfolio</p>
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+              Executive CRM snapshot with no fabricated targets, forecasts or
+              AI claims.
+            </p>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <HeroMetric label="Tracked" value={model.totalLeads} />
+              <HeroMetric label="Active" value={model.activeLeads} />
+              <HeroMetric label="Outcomes" value={model.outcomeTotal} />
+              <HeroMetric label="Unassigned" value={model.unassignedLeads} />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <PartnerMetricCard
+          label="Total CRM Leads"
+          value={model.totalLeads}
+          helper={`${model.safeInquiries.length} inquiries · ${model.safeAppointments.length} appointments`}
+          icon={Target}
+          tone="navy"
+          badge="CRM Context"
+        />
+
+        <PartnerMetricCard
+          label="Engagement Rate"
+          value={`${model.engagementRate}%`}
+          helper={`${model.progressedTotal} records progressed beyond an initial stage`}
+          icon={TrendingUp}
+          tone={model.engagementRate >= 60 ? "green" : "blue"}
+          badge="Progression"
+        />
+
+        <PartnerMetricCard
+          label="Outcome Rate"
+          value={`${model.outcomeRate}%`}
+          helper={`${model.outcomeTotal} approved, completed or converted outcomes`}
+          icon={CheckCircle2}
+          tone={model.outcomeRate >= 35 ? "green" : "amber"}
+          badge="Outcomes"
+        />
+
+        <PartnerMetricCard
+          label="Assigned Rate"
+          value={`${model.assignedRate}%`}
+          helper={`${model.assignedLeads} active records have clear ownership`}
+          icon={UserCheck}
+          tone={model.assignedRate >= 90 ? "green" : "blue"}
+          badge="Ownership"
+        />
+      </div>
+
+      <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
+        <div className="mb-4">
+          <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-700">
+            CRM Command
+          </p>
+
+          <h3 className="mt-1 text-xl font-black text-[#10233F]">
+            Operating KPI portfolio
+          </h3>
+
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            A compact evidence workspace replacing the old eight-card dashboard.
+          </p>
+        </div>
+
+        <div className="space-y-2.5">
+          <KpiEvidenceRow
+            label="Active Workload"
+            value={model.activeLeads}
+            status={`${model.activeRate}% active`}
+            detail={`${model.inactiveLeads} records are inactive or terminal`}
+            icon={Zap}
+            tone="blue"
+          />
+
+          <KpiEvidenceRow
+            label="Priority Pressure"
+            value={model.priorityLeads}
+            status={`${model.priorityShare}% of active`}
+            detail={`${model.vipLeads} VIP · ${model.highLeads} high or urgent`}
+            icon={Crown}
+            tone={model.priorityLeads ? "amber" : "green"}
+          />
+
+          <KpiEvidenceRow
+            label="Ownership Gap"
+            value={model.unassignedLeads}
+            status={
+              model.unassignedLeads
+                ? "Action required"
+                : "Ownership complete"
+            }
+            detail={
+              model.unassignedLeads
+                ? "Active records without a clear counselor or owner"
+                : "Every active record currently has ownership"
+            }
+            icon={Users}
+            tone={model.unassignedLeads ? "red" : "green"}
+          />
+
+          <KpiEvidenceRow
+            label="CRM KPI Health"
+            value={`${model.healthScore}%`}
+            status={health.label}
+            detail="Weighted engagement, outcomes, ownership and active workload"
+            icon={Gauge}
+            tone={
+              model.healthScore >= 75
+                ? "green"
+                : model.healthScore >= 50
+                  ? "amber"
+                  : "red"
+            }
+          />
         </div>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((item, index) => (
-          <KpiCard
-            key={item.label}
-            item={item}
-            index={index}
-            reduceMotion={reduceMotion}
-          />
-        ))}
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <PipelineBreakdown
-          title="Inquiry Pipeline"
-          subtitle="Progress and successful outcomes from inquiry records"
-          total={model.safeInquiries.length}
-          progressed={model.progressedInquiries}
-          outcomes={model.inquiryOutcomes}
-          tone="orange"
+      <div className="grid gap-3 lg:grid-cols-3">
+        <IntegrityCard
+          icon={ShieldCheck}
+          eyebrow="Analytics Integrity"
+          title="Read-only CRM evidence"
+          helper="No Supabase writes, targets or AI recommendations are introduced."
+          tone="green"
         />
 
-        <PipelineBreakdown
-          title="Appointment Pipeline"
-          subtitle="Confirmation/completion movement from appointment records"
-          total={model.safeAppointments.length}
-          progressed={model.progressedAppointments}
-          outcomes={model.appointmentOutcomes}
+        <IntegrityCard
+          icon={Activity}
+          eyebrow="Progression Boundary"
+          title={`${model.progressedTotal} progressed records`}
+          helper="Progression comes only from recognized inquiry and appointment stages."
           tone="blue"
         />
-      </div>
 
-      <MethodologyNote />
+        <IntegrityCard
+          icon={AlertTriangle}
+          eyebrow="Ownership Pressure"
+          title={`${model.unassignedLeads} unassigned active records`}
+          helper="This remains visible as operational pressure instead of being hidden in a secondary card."
+          tone={model.unassignedLeads ? "amber" : "green"}
+        />
+      </div>
     </motion.section>
   );
 }
 
-function KpiCard({
-  item,
-  index,
-  reduceMotion,
+
+function HeroMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-orange-50">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function PartnerMetricCard({
+  label,
+  value,
+  helper,
+  icon: Icon,
+  tone = "blue",
+  badge = "",
 }) {
-  const Icon = item.icon;
-  const style = getToneStyle(item.tone);
+  const tones = {
+    navy: "border-[#123865] bg-[#123865]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
+  };
+
+  const dark = tone === "navy";
 
   return (
-    <motion.article
-      initial={
-        reduceMotion
-          ? false
-          : { opacity: 0, y: 10 }
-      }
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.22,
-        delay: reduceMotion ? 0 : index * 0.03,
-      }}
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)] ${style.card}`}
+    <article
+      className={`flex min-h-[176px] h-full flex-col justify-between rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
+        tones[tone] || tones.blue
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.13em]">
-            {item.label}
+        <div className="min-w-0">
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
+              dark ? "text-orange-300" : "text-slate-500"
+            }`}
+          >
+            {label}
           </p>
 
-          <p className="mt-2 text-3xl font-black text-[#10233f]">
-            {item.value}
+          <p
+            className={`mt-2 break-words text-2xl font-black ${
+              dark ? "text-white" : "text-[#10233F]"
+            }`}
+          >
+            {value}
           </p>
         </div>
 
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${style.icon}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
+            dark
+              ? "border-white/20 bg-white/10 text-orange-200"
+              : "border-[#123865]/15 bg-white text-[#123865]"
+          }`}
         >
-          <Icon size={17} />
+          <Icon size={16} />
         </div>
       </div>
 
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-        {item.helper}
-      </p>
-    </motion.article>
-  );
-}
+      <div>
+        <p
+          className={`mt-4 text-xs font-semibold leading-5 ${
+            dark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
+          {helper}
+        </p>
 
-function PipelineBreakdown({
-  title,
-  subtitle,
-  total,
-  progressed,
-  outcomes,
-  tone = "orange",
-}) {
-  const progressedRate = percent(progressed, total);
-  const outcomeRate = percent(outcomes, total);
-
-  const accent =
-    tone === "blue"
-      ? "border-blue-300 bg-blue-50"
-      : "border-orange-300 bg-orange-50";
-
-  return (
-    <section className={`rounded-[1.6rem] border-[3px] p-5 ${accent}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
-            Pipeline Breakdown
-          </p>
-
-          <h3 className="mt-1 text-xl font-black text-[#10233f]">
-            {title}
-          </h3>
-
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-            {subtitle}
-          </p>
-        </div>
-
-        <span className="rounded-full border-2 border-slate-300 bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
-          {total} records
-        </span>
-      </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <SmallMetric
-          label="Tracked"
-          value={total}
-        />
-
-        <SmallMetric
-          label="Progressed"
-          value={`${progressedRate}%`}
-        />
-
-        <SmallMetric
-          label="Outcome"
-          value={`${outcomeRate}%`}
-        />
-      </div>
-
-      <div className="mt-4">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-            Progressed share
-          </span>
-
-          <span className="text-xs font-black text-[#10233f]">
-            {progressed}/{total}
-          </span>
-        </div>
-
-        <div className="h-2.5 overflow-hidden rounded-full border border-slate-200 bg-white">
-          <div
-            className={`h-full rounded-full ${
-              tone === "blue"
-                ? "bg-blue-500"
-                : "bg-orange-500"
+        {badge ? (
+          <span
+            className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+              dark
+                ? "border-white/20 bg-white/10 text-white"
+                : "border-[#C9D7E6] bg-white text-slate-600"
             }`}
-            style={{
-              width: `${progressedRate}%`,
-            }}
-          />
-        </div>
+          >
+            {badge}
+          </span>
+        ) : null}
       </div>
-    </section>
+    </article>
   );
 }
 
-function SmallMetric({
+function KpiEvidenceRow({
   label,
   value,
+  status,
+  detail,
+  icon: Icon,
+  tone = "blue",
 }) {
-  return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3 text-center">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
-        {label}
-      </p>
+  const tones = {
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
+    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
+    amber: "border-[#F59E0B] bg-[#FFF8E8] text-amber-800",
+    red: "border-[#FB7185] bg-[#FFF4F4] text-red-700",
+  };
 
-      <p className="mt-1 text-xl font-black text-[#10233f]">
-        {value}
-      </p>
+  return (
+    <article className="grid min-w-0 gap-3 rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white p-4 md:grid-cols-[minmax(14rem,1.35fr)_8rem_10rem_minmax(14rem,1fr)] md:items-center">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#F97316] bg-[#FFF4EA] text-orange-700">
+          <Icon size={17} />
+        </div>
+        <div className="min-w-0">
+          <p className="font-black text-[#10233F]">{label}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+            {detail}
+          </p>
+        </div>
+      </div>
+
+      <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#FFF8EF] px-3 py-2.5">
+        <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+          Current
+        </p>
+        <p className="mt-1 text-sm font-black text-[#10233F]">{value}</p>
+      </div>
+
+      <span
+        className={`inline-flex max-w-full justify-center rounded-full border-2 px-2.5 py-1.5 text-center text-[8px] font-black uppercase tracking-[0.07em] ${
+          tones[tone] || tones.blue
+        }`}
+      >
+        {status}
+      </span>
+
+      <div className="min-w-0 rounded-xl border border-[#E1E8F0] bg-[#F7FAFC] px-3 py-2.5">
+        <p className="text-[7px] font-black uppercase tracking-[0.09em] text-slate-500">
+          Evidence
+        </p>
+        <p className="mt-1 text-xs font-black text-[#10233F]">
+          Live inquiry + appointment snapshot
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function IntegrityCard({ icon: Icon, eyebrow, title, helper, tone = "blue" }) {
+  const tones = {
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF]",
+    amber: "border-[#F59E0B] bg-[#FFF8E8]",
+  };
+
+  return (
+    <div className={`rounded-[1.35rem] border-[3px] p-4 ${tones[tone]}`}>
+      <div className="flex items-start gap-3">
+        <Icon size={17} className="mt-0.5 shrink-0 text-[#123865]" />
+        <div>
+          <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+            {eyebrow}
+          </p>
+          <p className="mt-1 font-black text-[#10233F]">{title}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {helper}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

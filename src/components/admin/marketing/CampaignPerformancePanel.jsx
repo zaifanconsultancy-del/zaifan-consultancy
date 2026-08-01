@@ -130,14 +130,14 @@ function getCampaignState(campaign) {
 
   return {
     label: "Lead only",
-    className: "border-orange-400 bg-orange-50 text-orange-800",
+    className: "border-orange-400 bg-[#FFF4EA] text-orange-800",
   };
 }
 
 function Stat({ label, value, helper, compact = false }) {
   return (
     <div
-      className={`min-w-0 rounded-2xl border border-slate-200 bg-[#fffaf3] ${
+      className={`min-w-0 rounded-xl border-2 border-[#E1E8F0] bg-[#FFF8EF] ${
         compact ? "px-2.5 py-2.5" : "px-3 py-3"
       }`}
     >
@@ -151,7 +151,7 @@ function Stat({ label, value, helper, compact = false }) {
         {label}
       </p>
       <p
-        className={`mt-1 font-black text-[#102a4c] ${
+        className={`mt-1 font-black text-[#10233F] ${
           compact ? "text-base" : "text-lg"
         }`}
       >
@@ -185,10 +185,10 @@ function CompactCampaignRow({ campaign }) {
   const casToVisa = ratio(visas, cas);
 
   return (
-    <article className="rounded-[1.35rem] border border-[#cbd8e8] bg-white p-3.5 shadow-sm">
+    <article className="rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white p-3.5 shadow-[0_8px_22px_rgba(15,35,63,0.05)] transition hover:border-[#F97316]">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+          <span className="rounded-full border-2 border-[#F97316] bg-[#FFF4EA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-[#B84F0E]">
             Campaign
           </span>
           <span
@@ -198,7 +198,7 @@ function CompactCampaignRow({ campaign }) {
           </span>
         </div>
 
-        <h3 className="mt-3 min-w-0 whitespace-normal break-normal [overflow-wrap:anywhere] text-lg font-black leading-snug text-[#102a4c]">
+        <h3 className="mt-3 min-w-0 whitespace-normal break-normal [overflow-wrap:anywhere] text-lg font-black leading-snug text-[#10233F]">
           {campaign.name || "Unnamed campaign"}
         </h3>
 
@@ -210,11 +210,11 @@ function CompactCampaignRow({ campaign }) {
 
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
           <span>
-            <strong className="text-[#102a4c]">{integer(leads)}</strong> leads
+            <strong className="text-[#10233F]">{integer(leads)}</strong> leads
           </span>
           <span>
             Lead → app{" "}
-            <strong className="text-[#102a4c]">
+            <strong className="text-[#10233F]">
               {leadToApp === null ? "—" : percent(leadToApp)}
             </strong>
           </span>
@@ -286,11 +286,11 @@ function CampaignRow({ campaign, compact }) {
   const casToVisa = ratio(visas, cas);
 
   return (
-    <article className="overflow-hidden rounded-[1.65rem] border border-[#cbd8e8] bg-white shadow-sm">
+    <article className="overflow-hidden rounded-[1.3rem] border-2 border-[#C9D7E6] bg-white shadow-[0_8px_22px_rgba(15,35,63,0.05)] transition hover:border-[#F97316]">
       <div className="grid gap-4 p-4 xl:grid-cols-[minmax(18rem,1.15fr)_minmax(22rem,1fr)_minmax(12rem,0.55fr)] xl:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-orange-300 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
+            <span className="rounded-full border-2 border-[#F97316] bg-[#FFF4EA] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
               Campaign
             </span>
             <span
@@ -300,7 +300,7 @@ function CampaignRow({ campaign, compact }) {
             </span>
           </div>
 
-          <h3 className="mt-3 min-w-0 whitespace-normal break-normal [overflow-wrap:anywhere] text-lg font-black leading-snug text-[#102a4c]">
+          <h3 className="mt-3 min-w-0 whitespace-normal break-normal [overflow-wrap:anywhere] text-lg font-black leading-snug text-[#10233F]">
             {campaign.name || "Unnamed campaign"}
           </h3>
 
@@ -312,11 +312,11 @@ function CampaignRow({ campaign, compact }) {
 
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
             <span>
-              <strong className="text-[#102a4c]">{integer(leads)}</strong> leads
+              <strong className="text-[#10233F]">{integer(leads)}</strong> leads
             </span>
             <span>
               Lead → app{" "}
-              <strong className="text-[#102a4c]">
+              <strong className="text-[#10233F]">
                 {leadToApp === null ? "—" : percent(leadToApp)}
               </strong>
             </span>
@@ -355,10 +355,10 @@ function CampaignRow({ campaign, compact }) {
           <p className="text-xs text-slate-500 xl:text-right">{roiMeta.helper}</p>
 
           <div className="mt-1 flex min-w-0 flex-wrap gap-2 xl:justify-end">
-            <span className="rounded-full border border-[#cbd8e8] bg-[#f7fbff] px-3 py-1.5 text-xs font-black text-[#173f6d]">
+            <span className="rounded-full border-2 border-[#C9D7E6] bg-[#F2F7FF] px-3 py-1.5 text-xs font-black text-[#123865]">
               Spend {hasSpendEvidence(campaign) ? money(campaign.spend) : "not recorded"}
             </span>
-            <span className="rounded-full border border-[#cbd8e8] bg-[#f7fbff] px-3 py-1.5 text-xs font-black text-[#173f6d]">
+            <span className="rounded-full border-2 border-[#C9D7E6] bg-[#F2F7FF] px-3 py-1.5 text-xs font-black text-[#123865]">
               Revenue {hasRevenueEvidence(campaign) ? money(campaign.revenue) : "not linked"}
             </span>
           </div>
@@ -439,17 +439,17 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
   }, [campaigns]);
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-[2rem] border border-[#b9cbe0] bg-[#fffdf9] shadow-sm">
+    <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_8px_22px_rgba(15,35,63,0.05)]">
       <div
-        className={`border-b border-[#d7e1ec] bg-[#173f6d] text-white ${
-          compact ? "px-4 py-4" : "px-5 py-5"
+        className={`border-b-[3px] border-[#F97316] bg-[#123865] text-white ${
+          compact ? "px-4 py-4" : "px-5 py-5 sm:px-6"
         }`}
       >
         <div
           className={
             compact
               ? "flex flex-col gap-3"
-              : "flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+              : "flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between"
           }
         >
           <div className="min-w-0">
@@ -464,16 +464,16 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
             </p>
 
             <h2
-              className={`mt-2 font-black ${
-                compact ? "text-xl" : "text-2xl"
+              className={`mt-1 font-black text-white ${
+                compact ? "text-xl" : "text-xl sm:text-2xl"
               }`}
             >
               Campaign Intelligence
             </h2>
 
             <p
-              className={`mt-1 max-w-3xl leading-6 text-blue-100 ${
-                compact ? "text-xs" : "text-sm"
+              className={`mt-1 max-w-3xl font-semibold leading-5 text-white/80 ${
+                compact ? "text-xs" : "text-xs sm:text-sm sm:leading-6"
               }`}
             >
               Compare recorded campaign acquisition and downstream student outcomes without turning missing spend or attribution into fake performance.
@@ -481,13 +481,13 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-black">
+            <span className="rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.06em] text-white">
               {summary.total} campaigns
             </span>
-            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-black">
+            <span className="rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.06em] text-white">
               {summary.converting} converting
             </span>
-            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-black">
+            <span className="rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.06em] text-white">
               {summary.measuredRoi} ROI measured
             </span>
           </div>
@@ -495,14 +495,14 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
       </div>
 
       {!compact ? (
-        <div className="grid gap-3 border-b border-[#d7e1ec] bg-white p-4 lg:grid-cols-[1fr_220px_auto]">
+        <div className="grid gap-3 border-b-2 border-[#E1E8F0] bg-white p-4 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
           <label className="relative block">
             <span className="sr-only">Search campaigns</span>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search campaign or source..."
-              className="w-full rounded-2xl border border-[#cbd8e8] bg-[#fffaf3] px-4 py-3 text-sm font-semibold text-[#102a4c] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
             />
           </label>
 
@@ -511,7 +511,7 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
-              className="w-full rounded-2xl border border-[#cbd8e8] bg-[#fffaf3] px-4 py-3 text-sm font-black text-[#102a4c] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-sm font-black text-[#10233F] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
             >
               <option value="evidence">Strongest evidence</option>
               <option value="leads">Most leads</option>
@@ -521,14 +521,14 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
           </label>
 
           <div className="flex items-center justify-end">
-            <span className="rounded-2xl border border-[#cbd8e8] bg-[#f7fbff] px-4 py-3 text-xs font-black text-[#173f6d]">
+            <span className="inline-flex min-h-12 items-center rounded-xl border-2 border-[#234E78] bg-[#F2F7FF] px-4 py-3 text-xs font-black text-[#123865]">
               {filtered.length}/{campaigns.length} visible
             </span>
           </div>
         </div>
       ) : null}
 
-      <div className={compact ? "space-y-2.5 p-3" : "space-y-3 p-4"}>
+      <div className={compact ? "space-y-2.5 p-3" : "space-y-3 p-4 sm:p-5"}>
         {visible.length ? (
           visible.map((campaign, index) => (
             <CampaignRow
@@ -538,8 +538,8 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
             />
           ))
         ) : (
-          <div className="rounded-[1.65rem] border border-dashed border-[#b9cbe0] bg-white px-6 py-10 text-center">
-            <p className="text-sm font-black text-[#102a4c]">
+          <div className="rounded-[1.3rem] border border-dashed border-[#b9cbe0] bg-white px-6 py-10 text-center">
+            <p className="text-sm font-black text-[#10233F]">
               {campaigns.length
                 ? "No campaigns match this search."
                 : "No campaign evidence yet."}
@@ -555,7 +555,7 @@ export default function CampaignPerformancePanel({ marketing = {}, compact = fal
         {!compact &&
         campaigns.length > 0 &&
         summary.trackedSources < campaigns.length ? (
-          <div className="rounded-2xl border border-orange-300 bg-orange-50 px-4 py-3">
+          <div className="rounded-xl border-2 border-[#F97316] bg-[#FFF4EA] px-4 py-3">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-800">
               Attribution warning
             </p>

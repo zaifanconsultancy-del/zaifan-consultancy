@@ -449,7 +449,7 @@ function ProductivityHeatmap({
       transition={{
         duration: reduceMotion ? 0 : 0.28,
       }}
-      className="space-y-5 text-[#10233f]"
+      className="space-y-5 text-[#10233F]"
     >
       <section className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_40px_rgba(15,35,63,0.08)] sm:p-4">
         <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.7fr)]">
@@ -530,11 +530,11 @@ function ProductivityHeatmap({
       >
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
               Heatmap Controls
             </p>
 
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Adjust the operating window
             </h3>
           </div>
@@ -548,8 +548,8 @@ function ProductivityHeatmap({
                   onClick={() => setWindowDays(days)}
                   className={`rounded-lg px-3 py-2 text-xs font-black transition ${
                     windowDays === days
-                      ? "bg-orange-500 text-white shadow-sm"
-                      : "text-slate-600 hover:bg-white hover:text-orange-700"
+                      ? "bg-[#FF5A0A] text-white shadow-sm"
+                      : "text-[#51627A] hover:bg-white hover:text-[#B84F0E]"
                   }`}
                 >
                   {days} Days
@@ -562,7 +562,7 @@ function ProductivityHeatmap({
               onChange={(event) =>
                 setFocus(event.target.value)
               }
-              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none focus:border-[#FF5A0A]"
             >
               <option value="all">All Activity</option>
               <option value="inquiries">Leads Only</option>
@@ -579,20 +579,20 @@ function ProductivityHeatmap({
         >
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
                 Last {windowDays} Days
               </p>
 
-              <h3 className="mt-1 text-xl font-black text-[#10233f]">
+              <h3 className="mt-1 text-xl font-black text-[#10233F]">
                 Operational Workload Grid
               </h3>
 
-              <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600">
+              <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-[#51627A]">
                 Each day shows Leads, Appointments and Follow-ups directly. The bottom bar reflects the currently selected activity focus.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
+            <div className="flex flex-wrap items-center gap-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#65748B]">
               <span>Low</span>
               <span className="h-3 w-3 rounded border border-[#C9D7E6] bg-white" />
               <span className="h-3 w-3 rounded border border-[#F97316] bg-[#FFF4E8]" />
@@ -637,7 +637,7 @@ function ProductivityHeatmap({
                   )}`}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <p className="text-[8px] font-black uppercase tracking-[0.06em] text-slate-600 sm:text-[9px]">
+                    <p className="text-[8px] font-black uppercase tracking-[0.06em] text-[#51627A] sm:text-[9px]">
                       {day.shortDay}
                     </p>
 
@@ -646,17 +646,17 @@ function ProductivityHeatmap({
                     ) : null}
                   </div>
 
-                  <p className="mt-1.5 text-sm font-black text-[#10233f] sm:text-base">
+                  <p className="mt-1.5 text-sm font-black text-[#10233F] sm:text-base">
                     {day.dayNumber}
                   </p>
 
-                  <div className="mt-2 space-y-1 text-[8px] font-bold leading-4 text-slate-600 sm:text-[9px]">
+                  <div className="mt-2 space-y-1 text-[8px] font-bold leading-4 text-[#51627A] sm:text-[9px]">
                     <div className="flex min-w-0 items-center justify-between gap-1.5">
                       <span className="flex min-w-0 items-center gap-1">
                         <UserRound className="h-3 w-3 shrink-0 text-emerald-600" />
                         <span className="truncate">Leads</span>
                       </span>
-                      <span className="shrink-0 font-black text-[#10233f]">
+                      <span className="shrink-0 font-black text-[#10233F]">
                         {day.inquiries}
                       </span>
                     </div>
@@ -666,7 +666,7 @@ function ProductivityHeatmap({
                         <CalendarCheck2 className="h-3 w-3 shrink-0 text-blue-600" />
                         <span className="truncate">Appts</span>
                       </span>
-                      <span className="shrink-0 font-black text-[#10233f]">
+                      <span className="shrink-0 font-black text-[#10233F]">
                         {day.appointments}
                       </span>
                     </div>
@@ -676,7 +676,7 @@ function ProductivityHeatmap({
                         <BellRing className="h-3 w-3 shrink-0 text-violet-600" />
                         <span className="truncate">Follow-ups</span>
                       </span>
-                      <span className="shrink-0 font-black text-[#10233f]">
+                      <span className="shrink-0 font-black text-[#10233F]">
                         {day.reminders}
                       </span>
                     </div>
@@ -684,7 +684,7 @@ function ProductivityHeatmap({
 
                   <div className="absolute inset-x-2 bottom-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
                     <div
-                      className="h-full rounded-full bg-orange-500 transition-[width] duration-300"
+                      className="h-full rounded-full bg-[#FF5A0A] transition-[width] duration-300"
                       style={{
                         width: `${barPercent}%`,
                       }}
@@ -695,7 +695,7 @@ function ProductivityHeatmap({
             })}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
+          <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-bold text-[#51627A]">
             <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-emerald-200 bg-emerald-50 px-2.5 py-1">
               <UserRound className="h-3 w-3 text-emerald-600" />
               Leads / Inquiries
@@ -766,11 +766,11 @@ function ProductivityHeatmap({
               </div>
 
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
+                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#65748B]">
                   Activity Mix
                 </p>
 
-                <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                <h3 className="mt-1 text-lg font-black text-[#10233F]">
                   Selected {windowDays}-day window
                 </h3>
               </div>
@@ -807,16 +807,16 @@ function ProductivityHeatmap({
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
               Weekday Profile
             </p>
 
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Average workload by weekday
             </h3>
           </div>
 
-          <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 py-1.5 text-[10px] font-black text-slate-600">
+          <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 py-1.5 text-[10px] font-black text-[#51627A]">
             {metrics.activeStreak} day active streak
           </span>
         </div>
@@ -828,18 +828,18 @@ function ProductivityHeatmap({
               className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EE] p-3"
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-black text-[#10233f]">
+                <p className="text-xs font-black text-[#10233F]">
                   {item.short}
                 </p>
 
-                <span className="text-xs font-black text-orange-700">
+                <span className="text-xs font-black text-[#B84F0E]">
                   {item.average}
                 </span>
               </div>
 
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
                 <div
-                  className="h-full rounded-full bg-orange-500"
+                  className="h-full rounded-full bg-[#FF5A0A]"
                   style={{
                     width: `${percentage(
                       item.average,
@@ -849,7 +849,7 @@ function ProductivityHeatmap({
                 />
               </div>
 
-              <p className="mt-2 text-[9px] font-semibold text-slate-500">
+              <p className="mt-2 text-[9px] font-semibold text-[#65748B]">
                 {item.total} total activity
               </p>
             </div>
@@ -878,10 +878,10 @@ function MetricCard({
 
   return (
     <div
-      className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)] ${style}`}
+      className={`rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)] ${style}`}
       style={{ color: "#10233F" }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div>
           <p
             className="text-[9px] font-black uppercase tracking-[0.1em]"
@@ -981,8 +981,8 @@ function InsightCard({
       accent: "bg-[#F97316]",
       iconBorder: "border-[#FDBA74]",
       iconBg: "bg-white",
-      iconText: "text-orange-700",
-      eyebrow: "text-orange-700",
+      iconText: "text-[#B84F0E]",
+      eyebrow: "text-[#B84F0E]",
     },
   };
 
@@ -1012,7 +1012,7 @@ function InsightCard({
             {value}
           </h3>
 
-          <p className="mt-2 break-words text-sm font-semibold leading-6 text-slate-600">
+          <p className="mt-2 break-words text-sm font-semibold leading-6 text-[#51627A]">
             {text}
           </p>
         </div>
@@ -1034,16 +1034,16 @@ function ProgressRow({
       ? "bg-[#123865]"
       : tone === "good"
       ? "bg-emerald-500"
-      : "bg-orange-500";
+      : "bg-[#FF5A0A]";
 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs font-black uppercase tracking-[0.08em] text-slate-600">
+        <p className="text-xs font-black uppercase tracking-[0.08em] text-[#51627A]">
           {label}
         </p>
 
-        <p className="text-xs font-black text-[#10233f]">
+        <p className="text-xs font-black text-[#10233F]">
           {value} · {percent}%
         </p>
       </div>

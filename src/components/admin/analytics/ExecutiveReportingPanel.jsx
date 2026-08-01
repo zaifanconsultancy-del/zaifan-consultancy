@@ -1,4 +1,4 @@
-// ExecutiveReportingPanel V3 EXTREME — Zaifan Analytics OS
+// ExecutiveReportingPanel V4 PARTNER-OS ALIGNED — Zaifan Analytics OS
 // Full replacement for:
 // src/components/admin/analytics/ExecutiveReportingPanel.jsx
 //
@@ -462,7 +462,7 @@ export default function ExecutiveReportingPanel({
   if (compact) {
     return (
       <section className="overflow-hidden rounded-[1.5rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-        <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white">
+        <div className="flex items-center justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-3 text-white">
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.13em] text-orange-300">
               Analytics OS
@@ -492,7 +492,7 @@ export default function ExecutiveReportingPanel({
 
   return (
     <section className="space-y-4 sm:space-y-5">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_16px_42px_rgba(23,36,61,0.07)]">
+      <header className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
         <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
@@ -518,7 +518,7 @@ export default function ExecutiveReportingPanel({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
@@ -578,7 +578,7 @@ export default function ExecutiveReportingPanel({
         />
       ) : null}
 
-      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EE] p-3">
+      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EF] p-3">
         <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)]">
           <div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:pb-0">
             {VIEW_OPTIONS.map((view) => {
@@ -592,7 +592,7 @@ export default function ExecutiveReportingPanel({
                   className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl border-2 px-4 text-[10px] font-black uppercase tracking-[0.06em] transition ${
                     activeView === view.id
                       ? "border-[#123865] bg-[#123865] text-white"
-                      : "border-slate-300 bg-white text-[#10233F] hover:border-orange-400 hover:bg-orange-50"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                   }`}
                 >
                   <Icon size={14} />
@@ -613,7 +613,7 @@ export default function ExecutiveReportingPanel({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search reports, archive, recipients or snapshots..."
               aria-label="Search Executive Reporting"
-              className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
             />
 
             {search ? (
@@ -675,7 +675,7 @@ export default function ExecutiveReportingPanel({
       ) : null}
 
       <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4">
           <div className="flex items-start gap-3">
             <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#123865]" />
             <div>
@@ -690,9 +690,9 @@ export default function ExecutiveReportingPanel({
           </div>
         </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4">
           <div className="flex items-start gap-3">
-            <Database size={18} className="mt-0.5 shrink-0 text-orange-700" />
+            <Database size={18} className="mt-0.5 shrink-0 text-[#B84F0E]" />
             <div>
               <p className="font-black text-[#10233F]">
                 Honest executive snapshots
@@ -735,7 +735,7 @@ function ReportsWorkspace({
 
       <div className="p-4 sm:p-5">
         {canGenerate ? (
-          <div className="mb-4 overflow-hidden rounded-[1.35rem] border-[3px] border-orange-300 bg-orange-50">
+          <div className="mb-4 overflow-hidden rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA]">
             <div className="border-b-2 border-orange-200 p-4">
               <p className="font-black text-[#10233F]">Generate report</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
@@ -751,7 +751,7 @@ function ReportsWorkspace({
                   type="button"
                   disabled={Boolean(generatingType)}
                   onClick={() => void onGenerate(type)}
-                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border-2 border-orange-400 bg-white px-3 text-[9px] font-black text-orange-800 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border-2 border-[#F97316] bg-white px-3 text-[9px] font-black text-[#B84F0E] transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {generatingType === type ? (
                     <RefreshCw size={13} className="animate-spin" />
@@ -879,7 +879,7 @@ function DistributionWorkspace({ items, allItems, query, onClear }) {
 
 function SnapshotsWorkspace({ items, query, onClear }) {
   return (
-    <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
+    <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#F97316] bg-[#FFF8EF]">
       <SectionHeader
         eyebrow="Executive Snapshot"
         title="Current Reporting Context"
@@ -1030,7 +1030,7 @@ function SnapshotCard({ item }) {
 
 function CompactReport({ report }) {
   return (
-    <article className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <article className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
       <p className="font-black text-[#10233F]">{report.title}</p>
       <p className="mt-1 text-[9px] font-semibold text-slate-500">
         {report.status || "Status unavailable"}
@@ -1047,7 +1047,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white">
       <div>
         <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
           {eyebrow}
@@ -1096,7 +1096,7 @@ function DarkMetric({ label, value }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-lg border-2 border-slate-200 bg-white/80 p-2.5">
+    <div className="rounded-lg border-2 border-[#E1E8F0] bg-white/80 p-2.5">
       <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
         {label}
       </p>
@@ -1109,7 +1109,7 @@ function MiniStat({ label, value }) {
 
 function SourceBadge({ source }) {
   return (
-    <span className="mt-3 inline-flex max-w-full truncate rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+    <span className="mt-3 inline-flex max-w-full truncate rounded-md border border-[#C9D7E6] bg-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
       {source}
     </span>
   );
@@ -1122,7 +1122,7 @@ function ActionButton({ label, onClick, secondary = false }) {
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded-lg border-2 px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] transition ${
         secondary
-          ? "border-orange-400 bg-orange-50 text-orange-800 hover:bg-orange-100"
+          ? "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E] hover:bg-orange-100"
           : "border-[#234E78] bg-white text-[#123865] hover:bg-[#123865] hover:text-white"
       }`}
     >
@@ -1167,7 +1167,7 @@ function InlineNotice({
           <button
             type="button"
             onClick={onAction}
-            className="shrink-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA]"
           >
             {actionLabel}
           </button>
@@ -1179,7 +1179,7 @@ function InlineNotice({
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-[1.25rem] border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+    <div className="rounded-[1.25rem] border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-6 text-center">
       <Sparkles size={20} className="mx-auto text-orange-600" />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600">
@@ -1190,7 +1190,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search
         </button>
@@ -1201,7 +1201,7 @@ function EmptyState({ title, text, onClear }) {
 
 function SmallEmpty({ text }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-4 text-center">
       <p className="text-xs font-semibold text-slate-600">{text}</p>
     </div>
   );
@@ -1209,15 +1209,15 @@ function SmallEmpty({ text }) {
 
 function toneClass(tone = "navy") {
   if (tone === "red") return "border-red-400 bg-red-50";
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA]";
   if (tone === "green") return "border-emerald-400 bg-emerald-50";
   if (tone === "blue") return "border-blue-400 bg-blue-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
+  return "border-[#234E78] bg-[#F2F7FF]";
 }
 
 function statusBadgeClass(tone = "blue") {
   if (tone === "red") return "border-red-300 bg-red-50 text-red-800";
-  if (tone === "orange") return "border-orange-300 bg-orange-50 text-orange-800";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]";
   if (tone === "green") return "border-emerald-300 bg-emerald-50 text-emerald-800";
   return "border-blue-300 bg-blue-50 text-blue-800";
 }

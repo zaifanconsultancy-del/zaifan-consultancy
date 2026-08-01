@@ -1,4 +1,4 @@
-// AIWorkspacePanel V4 MAXIMUM — Counselor Intelligence Command Workspace
+// AIWorkspacePanel PARTNER OS COMPACT V5 — Counselor Intelligence Command Workspace
 // Maximum production pass: local CRM intelligence + intentional GPT generation,
 // counselor qualification, explainable signals, safe copy actions, responsive Admin OS UI.
 // Preserves all existing AI lead scoring, GPT context, copy actions, CRM intelligence,
@@ -240,13 +240,13 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
   };
 
   return (
-    <section className="space-y-5 text-[#10233f]">
-      <div className="relative overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#123865] p-6 shadow-[0_16px_40px_rgba(15,35,63,0.14)]" style={{ color: "#ffffff" }}>
+    <section className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <div className="relative min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] shadow-[0_18px_50px_rgba(18,56,101,0.11)]" style={{ color: "#ffffff" }}>
 
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="mb-4 flex flex-wrap gap-2">
-              <span className="rounded-full border border-orange-400/45 bg-orange-500/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
+        <div className="relative grid min-w-0 items-center border-b-[3px] border-[#FF5A0A] gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0 max-w-3xl px-5 py-4 sm:px-6 sm:py-5">
+            <div className="mb-3 flex min-w-0 flex-wrap gap-2">
+              <span className="rounded-full border border-[#FFB38A]/45 bg-[#FF5A0A]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-[#FFB38A]">
                 AI Workspace V3
               </span>
               <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-white">
@@ -254,16 +254,16 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
               </span>
             </div>
 
-            <h2 className="text-3xl font-black text-white sm:text-4xl">
+            <h2 className="text-3xl font-black tracking-[-0.03em] text-white sm:text-[2rem]">
               Counselor Operating Desk
             </h2>
 
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white">
+            <p className="mt-2 max-w-2xl text-sm leading-5 text-white">
               This workspace combines local CRM intelligence with real GPT generation. Local AI handles scores and signals instantly. GPT is used only when the counselor manually generates a real output.
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
+          <div className="grid w-full min-w-0 gap-2 px-3 pb-3 sm:grid-cols-2 lg:w-[300px] lg:self-center lg:px-0 lg:pb-0 lg:pr-3">
             <HeroScoreCard
               label="AI Score"
               value={aiLead.ai_score}
@@ -334,8 +334,8 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         />
       </div>
 
-      <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.06)]">
-        <div className="bg-orange-500 px-5 py-4 text-white sm:px-6">
+      <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_12px_30px_rgba(15,35,63,0.06)]">
+        <div className="bg-[#FF5A0A] px-5 py-4 text-white sm:px-6">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white">
             Real GPT Generation
           </p>
@@ -347,7 +347,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
           </p>
         </div>
 
-        <div className="bg-[#fff8ee] p-4 sm:p-5">
+        <div className="bg-[#FFF8EF] p-4 sm:p-5">
           <Suspense fallback={null}>
 <GPTCopilotPanel
             student={student}
@@ -392,7 +392,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
         <InsightCard
           icon={TrendingUp}
           title="Main Opportunities"
@@ -417,17 +417,17 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         />
       </div>
 
-      <div className="rounded-[1.6rem] border-2 border-orange-300 bg-[#fff8ee] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
+      <div className="rounded-[1.6rem] border-2 border-[#FFB38A] bg-[#FFF8EF] p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
         <div className="flex items-start gap-4">
           <div className="rounded-2xl bg-[#102f5c] p-3">
             <UserCheck className="h-5 w-5 text-white" />
           </div>
 
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B84F0E]">
               Recommended Counselor Move
             </p>
-            <h3 className="mt-2 text-xl font-black text-[#10233f]">
+            <h3 className="mt-2 text-xl font-black text-[#10233F]">
               {aiLead.ai_recommended_action}
             </h3>
             <p className="mt-2 text-sm leading-6 text-[#36506f]">
@@ -474,14 +474,14 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
 
       <div className="rounded-[1.8rem] border-2 border-[#b8c5d3] bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.05)]">
         <div className="mb-5 flex items-center gap-3">
-          <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3">
-            <Sparkles className="h-5 w-5 text-orange-700" />
+          <div className="rounded-2xl border border-[#FFD0B5] bg-[#FFF4EA] p-3">
+            <Sparkles className="h-5 w-5 text-[#B84F0E]" />
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-orange-700">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#B84F0E]">
               Local Rule-Based Copilot
             </p>
-            <h3 className="text-xl font-black text-[#10233f]">
+            <h3 className="text-xl font-black text-[#10233F]">
               AI Counselor Assistant
             </h3>
           </div>
@@ -501,28 +501,28 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
 
 function HeroScoreCard({ icon: Icon, label, value, suffix, detail }) {
   return (
-    <div className="rounded-[1.4rem] border border-white/20 bg-white/10 p-5 backdrop-blur-sm" style={{ color: "#ffffff" }}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-white">
+    <div className="min-w-0 rounded-[1.15rem] border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm" style={{ color: "#ffffff" }}>
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <p className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-white">
           {label}
         </p>
-        <Icon className="h-5 w-5 text-orange-300" />
+        <Icon className="h-4 w-4 shrink-0 text-[#FFB38A]" />
       </div>
-      <h3 className="mt-3 text-4xl font-black text-white">
+      <h3 className="mt-2 text-3xl font-black leading-none text-white">
         {value}
-        <span className="text-base text-white">{suffix}</span>
+        <span className="ml-0.5 text-sm text-white">{suffix}</span>
       </h3>
-      <p className="mt-1 text-xs text-white">{detail}</p>
+      <p className="mt-1 text-[11px] font-semibold leading-4 text-white/90">{detail}</p>
     </div>
   );
 }
 
 function Metric({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-[1.4rem] border-2 border-[#b8c5d3] bg-white p-5 text-[#10233f] shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
+    <div className="rounded-[1.4rem] border-2 border-[#b8c5d3] bg-white p-5 text-[#10233F] shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
       <div className="flex items-center justify-between">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-[#4d6380]">{label}</p>
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><Icon size={18} /></span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FFF4EA] text-[#B84F0E]"><Icon size={18} /></span>
       </div>
       <h3 className="mt-3 text-2xl font-black">{value}</h3>
     </div>
@@ -560,15 +560,15 @@ function StudentIntelligenceSnapshot({
     <div className="rounded-[1.8rem] border-2 border-[#b8c5d3] bg-white p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B84F0E]">
             Student Intelligence Snapshot
           </p>
-          <h3 className="mt-2 text-2xl font-black text-[#10233f]">
+          <h3 className="mt-2 text-2xl font-black text-[#10233F]">
             Counselor Decision View
           </h3>
         </div>
 
-        <div className="rounded-2xl border-2 border-orange-300 bg-orange-50 px-4 py-3 text-orange-700">
+        <div className="rounded-2xl border-2 border-[#FFB38A] bg-[#FFF4EA] px-4 py-3 text-[#B84F0E]">
           <div className="flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, index) => (
               <Star
@@ -589,12 +589,12 @@ function StudentIntelligenceSnapshot({
         {rows.map(([label, value]) => (
           <div
             key={label}
-            className="min-w-0 rounded-2xl border-2 border-[#b8c5d3] bg-[#fff8ee] px-4 py-3"
+            className="min-w-0 rounded-2xl border-2 border-[#b8c5d3] bg-[#FFF8EF] px-4 py-3"
           >
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#4d6380]">
               {label}
             </p>
-            <p className="mt-1 truncate text-sm font-bold text-[#10233f]">
+            <p className="mt-1 truncate text-sm font-bold text-[#10233F]">
               {value || "-"}
             </p>
           </div>
@@ -613,15 +613,15 @@ function CounselorChecklist({
     <div className="rounded-[1.8rem] border-2 border-[#b8c5d3] bg-white p-5 shadow-[0_10px_28px_rgba(15,35,63,0.05)]">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B84F0E]">
             Counselor Checklist
           </p>
-          <h3 className="mt-2 text-2xl font-black text-[#10233f]">
+          <h3 className="mt-2 text-2xl font-black text-[#10233F]">
             Qualification Readiness
           </h3>
         </div>
 
-        <span className="rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-3 py-1 text-xs font-black text-orange-600">
+        <span className="rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-3 py-1 text-xs font-black text-[#D94B00]">
           {completedChecks}/{qualificationChecks.length}
         </span>
       </div>
@@ -633,7 +633,7 @@ function CounselorChecklist({
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-slate-200">
           <div
-            className="h-full rounded-full bg-orange-500 transition-all duration-500"
+            className="h-full rounded-full bg-[#FF5A0A] transition-all duration-500"
             style={{ width: `${qualificationPercent}%` }}
           />
         </div>
@@ -654,7 +654,7 @@ function CounselorChecklist({
             ) : (
               <AlertCircle className="h-4 w-4 shrink-0 text-red-700" />
             )}
-            <span className="text-sm font-semibold text-[#10233f]">{item.label}</span>
+            <span className="text-sm font-semibold text-[#10233F]">{item.label}</span>
           </div>
         ))}
       </div>
@@ -686,7 +686,7 @@ function InsightCard({
     <div className={`rounded-[1.5rem] border p-5 ${boxClass}`}>
       <div className="flex items-center gap-3">
         <Icon className={`h-5 w-5 ${iconClass}`} />
-        <h3 className="font-black text-[#10233f]">{title}</h3>
+        <h3 className="font-black text-[#10233F]">{title}</h3>
       </div>
 
       <div className="mt-4 space-y-2">
@@ -711,16 +711,16 @@ function QuickAction({ icon: Icon, title, text, onClick }) {
       type="button"
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className="rounded-[1.5rem] border-2 border-[#b8c5d3] bg-white p-5 text-left shadow-[0_8px_20px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-[#fff8ee]"
+      className="rounded-[1.5rem] border-2 border-[#b8c5d3] bg-white p-5 text-left shadow-[0_8px_20px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-[#FFB38A] hover:bg-[#FFF8EF]"
     >
       <div className="flex items-start gap-3">
-        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3">
-          <Icon className="h-5 w-5 text-orange-700" />
+        <div className="rounded-2xl border border-[#FFD0B5] bg-[#FFF4EA] p-3">
+          <Icon className="h-5 w-5 text-[#B84F0E]" />
         </div>
         <div>
-          <h3 className="font-black text-[#10233f]">{title}</h3>
+          <h3 className="font-black text-[#10233F]">{title}</h3>
           <p className="mt-1 text-sm text-[#36506f]">{text}</p>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-xs font-black text-orange-700">
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-3 py-1 text-xs font-black text-[#B84F0E]">
             <Copy size={13} />
             Copy
           </div>
@@ -735,7 +735,7 @@ function OperationalSignal({ icon: Icon, label, value, detail, tone = "blue" }) 
   const tones = {
     blue: "border-blue-300 bg-blue-50 text-blue-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FFB38A] bg-[#FFF4EA] text-[#9B3E08]",
     red: "border-red-300 bg-red-50 text-red-800",
   };
 
@@ -765,8 +765,8 @@ function WorkspaceModeCard({ label, value, detail, tone = "cream" }) {
     tone === "navy"
       ? "border-[#123865] bg-[#123865]"
       : tone === "orange"
-        ? "border-orange-500 bg-orange-500"
-        : "border-orange-300 bg-white";
+        ? "border-orange-500 bg-[#FF5A0A]"
+        : "border-[#FFB38A] bg-white";
 
   return (
     <div

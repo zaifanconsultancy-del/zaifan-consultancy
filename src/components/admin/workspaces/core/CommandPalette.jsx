@@ -1,5 +1,5 @@
 // CommandPalette V5 COMPACT MAXIMUM — Zaifan Admin OS
-// src/components/admin/CommandPalette.jsx
+// src/components/admin/core/CommandPalette.jsx
 //
 // Direction:
 // Keep the original compact command-palette feel, but upgrade the functionality
@@ -329,7 +329,7 @@ function CommandPalette({
         aria-label="Open Admin command palette"
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="fixed bottom-5 right-5 z-40 inline-flex h-11 items-center gap-2 rounded-full border-2 border-orange-600 bg-orange-500 px-4 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[0_10px_24px_rgba(249,115,22,0.22)] transition hover:-translate-y-0.5 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200"
+        className="fixed bottom-5 right-5 z-40 inline-flex h-11 items-center gap-2 rounded-full border-2 border-orange-600 bg-[#FF5A0A] px-4 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[0_10px_24px_rgba(249,115,22,0.22)] transition hover:-translate-y-0.5 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200"
       >
         <Command
           size={14}
@@ -400,13 +400,13 @@ function CommandPalette({
               onKeyDown={
                 handlePaletteKeyDown
               }
-              className="w-full max-w-2xl overflow-hidden rounded-[1.7rem] border-[3px] border-orange-300 bg-[#fffaf2] shadow-[0_22px_70px_rgba(0,0,0,0.34)]"
+              className="w-full max-w-2xl overflow-hidden rounded-[1.7rem] border-[3px] border-[#FFB38A] bg-[#fffaf2] shadow-[0_22px_70px_rgba(0,0,0,0.34)]"
             >
               <div className="border-b-2 border-orange-200 bg-white p-3 sm:p-4">
                 <div className="flex items-center gap-3 rounded-[1.1rem] border-2 border-slate-300 bg-white px-3 py-2.5 transition focus-within:border-orange-400 focus-within:ring-4 focus-within:ring-orange-100">
                   <Search
                     size={17}
-                    className="shrink-0 text-orange-700"
+                    className="shrink-0 text-[#B84F0E]"
                   />
 
                   <input
@@ -426,7 +426,7 @@ function CommandPalette({
                         ? `command-option-${activeCommand.id}`
                         : undefined
                     }
-                    className="min-w-0 flex-1 bg-transparent text-sm font-bold text-[#10233f] outline-none placeholder:text-slate-400 sm:text-base"
+                    className="min-w-0 flex-1 bg-transparent text-sm font-bold text-[#10233F] outline-none placeholder:text-slate-400 sm:text-base"
                   />
 
                   {query ? (
@@ -436,7 +436,7 @@ function CommandPalette({
                         setQuery("");
                         inputRef.current?.focus();
                       }}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-slate-300 bg-[#fffaf4] text-slate-500 transition hover:border-orange-300 hover:text-orange-700"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-slate-300 bg-[#fffaf4] text-slate-500 transition hover:border-[#FFB38A] hover:text-[#B84F0E]"
                       aria-label="Clear search"
                     >
                       <X size={14} />
@@ -464,7 +464,7 @@ function CommandPalette({
                           key={groupName}
                         >
                           <div className="mb-1.5 flex items-center justify-between gap-3 px-2">
-                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">
+                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#B84F0E]">
                               {groupName}
                             </p>
 
@@ -535,15 +535,15 @@ function CommandPalette({
                                     }
                                     className={`flex w-full items-center gap-3 rounded-[1.05rem] border-2 px-3 py-2.5 text-left transition ${
                                       selected
-                                        ? "border-orange-500 bg-orange-50"
-                                        : "border-transparent bg-transparent hover:border-orange-300 hover:bg-orange-50/70"
+                                        ? "border-[#FF5A0A] bg-[#FFF4EA]"
+                                        : "border-transparent bg-transparent hover:border-[#FFB38A] hover:bg-[#FFF4EA]/70"
                                     }`}
                                   >
                                     <div
                                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
                                         isActive
                                           ? "border-[#123866] bg-[#123866] text-white"
-                                          : "border-slate-300 bg-white text-orange-700"
+                                          : "border-slate-300 bg-white text-[#B84F0E]"
                                       }`}
                                     >
                                       <Icon
@@ -555,14 +555,14 @@ function CommandPalette({
 
                                     <div className="min-w-0 flex-1">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <h4 className="text-sm font-black text-[#10233f]">
+                                        <h4 className="text-sm font-black text-[#10233F]">
                                           {
                                             command.label
                                           }
                                         </h4>
 
                                         {isActive ? (
-                                          <span className="inline-flex items-center gap-1 rounded-full border-2 border-orange-500 bg-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-orange-700">
+                                          <span className="inline-flex items-center gap-1 rounded-full border-2 border-orange-500 bg-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-[#B84F0E]">
                                             <Check
                                               size={
                                                 9
@@ -633,11 +633,11 @@ function CommandPalette({
 function EmptyState({ query }) {
   return (
     <div className="px-4 py-12 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-[#FFB38A] bg-orange-50 text-[#B84F0E]">
         <Search size={19} />
       </div>
 
-      <h4 className="mt-3 text-base font-black text-[#10233f]">
+      <h4 className="mt-3 text-base font-black text-[#10233F]">
         No command found
       </h4>
 

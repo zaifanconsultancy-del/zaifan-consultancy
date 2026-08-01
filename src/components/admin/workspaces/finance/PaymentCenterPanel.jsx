@@ -1,4 +1,4 @@
-// PaymentCenterPanel V4 MAXIMUM — Zaifan Student Finance OS
+// PaymentCenterPanel PARTNER OS EXTREME — Student Finance Command Center
 // Full replacement for: src/components/admin/PaymentCenterPanel.jsx
 // Database-aligned with:
 // - student_invoices
@@ -1193,25 +1193,28 @@ function PaymentCenterPanel({
   };
 
   return (
-    <div className="space-y-5 pb-8 text-[#10233f]">
-      <section className="rounded-[1.8rem] border-2 border-orange-400 bg-white p-5 shadow-[0_12px_30px_rgba(15,35,63,0.06)]">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 pb-8 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 sm:pb-8 lg:p-5 lg:pb-8">
+      <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Badge text="FINANCE OS" tone="orange" />
               <Badge text={safeStudentType.toUpperCase()} tone="navy" />
             </div>
 
-            <h2 className="mt-3 text-2xl font-black text-[#10233f]">
+            <h2 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Student Finance Center
             </h2>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               One financial record for {studentName}: invoices, confirmed money,
               outstanding balances, receipt verification and payment destinations.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">Finance Actions</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">Send a protected payment update or refresh the live student ledger.</p>
+            <div className="mt-4 flex min-w-0 flex-col gap-2">
             <StudentNotificationComposer
               student={student}
               context="payment"
@@ -1222,14 +1225,15 @@ function PaymentCenterPanel({
             <button
               type="button"
               onClick={refreshAll}
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-[#10233f] transition hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 active:translate-y-0"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border-2 border-white bg-white px-4 py-2.5 text-sm font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 active:translate-y-0"
             >
               Refresh Finance Data
             </button>
+            </div>
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-5 sm:p-5">
           <Metric label="Active invoices" value={financeStats.activeInvoices} />
           <Metric label="Open invoices" value={financeStats.openInvoices} />
           <Metric
@@ -1252,7 +1256,7 @@ function PaymentCenterPanel({
 
       {message ? (
         <div
-          className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${
+          className={`flex min-w-0 items-start gap-3 rounded-[1.35rem] border-[3px] p-4 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
             messageStyles[messageTone] || messageStyles.info
           }`}
           role={messageTone === "error" ? "alert" : "status"}
@@ -1261,7 +1265,7 @@ function PaymentCenterPanel({
           <button
             type="button"
             onClick={() => setMessage("")}
-            className="shrink-0 rounded-lg px-2 py-1 font-black transition hover:bg-black/5"
+            className="shrink-0 rounded-lg px-2 py-1 font-black transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
             aria-label="Dismiss finance message"
           >
             ×
@@ -1269,7 +1273,7 @@ function PaymentCenterPanel({
         </div>
       ) : null}
 
-      <section className="rounded-[1.6rem] border-2 border-orange-300 bg-[#fffaf3] p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
             Money Position
@@ -1282,18 +1286,18 @@ function PaymentCenterPanel({
         </div>
 
         {totalsByCurrency.length ? (
-          <div className="mt-4 grid gap-3 xl:grid-cols-2">
+          <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-2">
             {totalsByCurrency.map((row) => (
               <div
                 key={row.currency}
-                className="rounded-2xl border border-slate-300 bg-white p-4"
+                className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A] hover:bg-white"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-black">{row.currency}</p>
                   <Badge text={row.currency} tone="navy" />
                 </div>
 
-                <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
                   <Info label="Invoiced" value={formatMoney(row.invoiced, row.currency)} />
                   <Info label="Confirmed" value={formatMoney(row.paid, row.currency)} />
                   <Info
@@ -1310,10 +1314,10 @@ function PaymentCenterPanel({
         )}
       </section>
 
-      <div className="grid gap-5 2xl:grid-cols-2">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <form
           onSubmit={handleCreateInvoice}
-          className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5"
+          className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]"
         >
           <SectionHeading
             eyebrow="Receivable"
@@ -1321,7 +1325,7 @@ function PaymentCenterPanel({
             description="Use an invoice when Zaifan expects the student to pay a specific amount."
           />
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
             <Input
               label="Invoice title"
               required
@@ -1391,7 +1395,7 @@ function PaymentCenterPanel({
           <button
             type="submit"
             disabled={invoiceSaving}
-            className="mt-4 rounded-xl bg-orange-500 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {invoiceSaving ? "Creating Invoice..." : "Create Invoice"}
           </button>
@@ -1399,7 +1403,7 @@ function PaymentCenterPanel({
 
         <form
           onSubmit={handleAddPayment}
-          className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5"
+          className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]"
         >
           <SectionHeading
             eyebrow="Money Received"
@@ -1407,7 +1411,7 @@ function PaymentCenterPanel({
             description="Use this only after money has actually been received. Linked invoices reconcile automatically."
           />
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
             <Select
               label="Invoice"
               value={paymentForm.invoice_id}
@@ -1498,7 +1502,7 @@ function PaymentCenterPanel({
           </div>
 
           {paymentForm.invoice_id ? (
-            <p className="mt-3 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-xs font-bold text-blue-900">
+            <p className="mt-3 rounded-xl border-[3px] border-[#60A5FA] bg-[#F2F7FF] px-4 py-3 text-xs font-bold text-blue-900">
               Currency is locked to the selected invoice. This prevents
               cross-currency balance corruption.
             </p>
@@ -1507,14 +1511,14 @@ function PaymentCenterPanel({
           <button
             type="submit"
             disabled={paymentSaving}
-            className="mt-4 rounded-xl bg-[#123865] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0d2b50] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-[#123865] bg-[#123865] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {paymentSaving ? "Recording Payment..." : "Record Confirmed Payment"}
           </button>
         </form>
       </div>
 
-      <section className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
         <SectionHeading
           eyebrow="Receivables Ledger"
           title="Invoices"
@@ -1534,12 +1538,12 @@ function PaymentCenterPanel({
               return (
                 <article
                   key={invoice.id}
-                  className="rounded-2xl border border-slate-300 bg-[#fffaf3] p-4 transition hover:border-orange-400 hover:shadow-sm"
+                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-white hover:shadow-md"
                 >
-                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="flex min-w-0 flex-col gap-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-black text-[#10233f]">
+                        <h4 className="font-black text-[#10233F]">
                           {invoice.title || "Student Invoice"}
                         </h4>
                         <Badge text={invoice.status || "unpaid"} />
@@ -1590,7 +1594,7 @@ function PaymentCenterPanel({
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                  <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     <Info label="Total" value={formatMoney(total, invoice.currency)} />
                     <Info label="Paid" value={formatMoney(paid, invoice.currency)} />
                     <Info
@@ -1601,7 +1605,7 @@ function PaymentCenterPanel({
                     <Info label="Issued" value={formatDate(invoice.issued_at)} />
                   </div>
 
-                  <div className="mt-3 rounded-xl border border-slate-300 bg-white p-3">
+                  <div className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
                     <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
                       <span>Payment progress</span>
                       <span>
@@ -1613,7 +1617,7 @@ function PaymentCenterPanel({
                     </div>
                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
                       <div
-                        className="h-full rounded-full bg-orange-500 transition-[width] duration-300"
+                        className="h-full rounded-full bg-[#FF5A0A] transition-[width] duration-300"
                         style={{
                           width: `${
                             total > 0
@@ -1633,7 +1637,7 @@ function PaymentCenterPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
         <SectionHeading
           eyebrow="Cash Ledger"
           title="Payments"
@@ -1648,9 +1652,9 @@ function PaymentCenterPanel({
               return (
                 <article
                   key={payment.id}
-                  className="rounded-2xl border border-slate-300 bg-[#fffaf3] p-4 transition hover:border-orange-400 hover:shadow-sm"
+                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-white hover:shadow-md"
                 >
-                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="flex min-w-0 flex-col gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h4 className="font-black">
@@ -1699,7 +1703,7 @@ function PaymentCenterPanel({
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
                     <Info label="Paid at" value={formatDate(payment.paid_at)} />
                     <Info
                       label="Invoice link"
@@ -1720,7 +1724,7 @@ function PaymentCenterPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
         <SectionHeading
           eyebrow="Evidence Review"
           title="Student Receipts"
@@ -1736,9 +1740,9 @@ function PaymentCenterPanel({
               return (
                 <article
                   key={receipt.id}
-                  className="rounded-2xl border border-slate-300 bg-[#fffaf3] p-4"
+                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]"
                 >
-                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="flex min-w-0 flex-col gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h4 className="font-black">
@@ -1761,7 +1765,7 @@ function PaymentCenterPanel({
                           href={receipt.receipt_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-3 inline-flex rounded-lg border border-orange-300 bg-white px-3 py-2 text-xs font-black text-orange-800 transition hover:bg-orange-50"
+                          className="mt-3 inline-flex min-h-10 items-center rounded-lg border-2 border-[#FF5A0A] bg-white px-3 py-2 text-xs font-black text-orange-800 transition hover:bg-[#FFF4E8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
                         >
                           Open Receipt
                         </a>
@@ -1802,10 +1806,10 @@ function PaymentCenterPanel({
         </div>
       </section>
 
-      <div className="grid gap-5 2xl:grid-cols-2">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <form
           onSubmit={handleSavePaymentAccount}
-          className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5"
+          className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]"
         >
           <SectionHeading
             eyebrow="Collection Setup"
@@ -1813,7 +1817,7 @@ function PaymentCenterPanel({
             description="Bank or wallet details students can use when paying Zaifan."
           />
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
             <Select
               label="Account type"
               value={accountForm.account_type}
@@ -1878,7 +1882,7 @@ function PaymentCenterPanel({
           </div>
 
           <label className="mt-3 block">
-            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">
               Student instructions
             </span>
             <textarea
@@ -1889,20 +1893,20 @@ function PaymentCenterPanel({
                   instructions: event.target.value,
                 }))
               }
-              className="mt-2 min-h-[88px] w-full rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 py-2.5 text-sm font-semibold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              className="mt-2 min-h-[96px] min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-2.5 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </label>
 
           <button
             type="submit"
             disabled={accountSaving}
-            className="mt-4 rounded-xl bg-orange-500 px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600 active:translate-y-0 disabled:opacity-50"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:opacity-50"
           >
             {accountSaving ? "Saving..." : "Save Payment Account"}
           </button>
         </form>
 
-        <section className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5">
+        <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
           <SectionHeading
             eyebrow="Collection Channels"
             title="Payment Accounts"
@@ -1916,7 +1920,7 @@ function PaymentCenterPanel({
               paymentAccounts.map((account) => (
                 <article
                   key={account.id}
-                  className="rounded-2xl border border-slate-300 bg-[#fffaf3] p-4"
+                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -1942,7 +1946,7 @@ function PaymentCenterPanel({
                   </div>
 
                   {account.instructions ? (
-                    <p className="mt-3 rounded-xl border border-slate-300 bg-white p-3 text-sm font-semibold text-slate-600">
+                    <p className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-white p-3 text-sm font-semibold text-slate-600">
                       {account.instructions}
                     </p>
                   ) : null}
@@ -1972,17 +1976,17 @@ function PaymentCenterPanel({
       </div>
 
       {paymentRequests.length ? (
-        <section className="rounded-[1.6rem] border-2 border-orange-300 bg-white p-5">
+        <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
           <SectionHeading
             eyebrow="Student Portal"
             title="Payment Requests"
             description="Requests already supplied to this panel by the Student OS."
           />
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-2">
             {paymentRequests.map((request) => (
               <article
                 key={request.id}
-                className="rounded-2xl border border-slate-300 bg-[#fffaf3] p-4"
+                className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-black">
@@ -2024,26 +2028,26 @@ function SectionHeading({ eyebrow, title, description }) {
       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
         {eyebrow}
       </p>
-      <h3 className="mt-1 text-lg font-black text-[#10233f]">{title}</h3>
-      <p className="mt-1 text-sm leading-5 text-slate-600">{description}</p>
+      <h3 className="mt-1 break-words text-xl font-black text-[#10233F]">{title}</h3>
+      <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-slate-600">{description}</p>
     </div>
   );
 }
 
 function Metric({ label, value, tone = "default" }) {
   const tones = {
-    default: "border-slate-300 bg-[#fffaf3]",
+    default: "border-[#C9D7E6] bg-white",
     success: "border-emerald-300 bg-emerald-50",
     warning: "border-amber-300 bg-amber-50",
     danger: "border-red-300 bg-red-50",
   };
 
   return (
-    <div className={`rounded-xl border-2 p-3 ${tones[tone] || tones.default}`}>
+    <div className={`min-w-0 rounded-[1.2rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${tones[tone] || tones.default}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
         {label}
       </p>
-      <p className="mt-1 text-xl font-black text-[#10233f]">{value}</p>
+      <p className="mt-1 text-xl font-black text-[#10233F]">{value}</p>
     </div>
   );
 }
@@ -2051,14 +2055,14 @@ function Metric({ label, value, tone = "default" }) {
 function Badge({ text, tone = "" }) {
   const custom =
     tone === "orange"
-      ? "border-orange-300 bg-orange-50 text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
       : tone === "navy"
         ? "border-[#123865] bg-[#123865] text-white"
         : statusClass(text);
 
   return (
     <span
-      className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${custom}`}
+      className={`inline-flex max-w-full rounded-full border-2 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${custom}`}
     >
       {String(text || "unknown").replaceAll("_", " ")}
     </span>
@@ -2067,11 +2071,11 @@ function Badge({ text, tone = "" }) {
 
 function Info({ label, value }) {
   return (
-    <div className="rounded-xl border border-slate-300 bg-white px-3 py-2.5">
+    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2.5">
       <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
         {label}
       </p>
-      <p className="mt-1 break-words text-sm font-black text-[#10233f]">
+      <p className="mt-1 break-words text-sm font-black text-[#10233F]">
         {value ?? "Not set"}
       </p>
     </div>
@@ -2080,7 +2084,7 @@ function Info({ label, value }) {
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-[#fffaf3] p-6 text-center text-sm font-bold text-slate-500">
+    <div className="rounded-[1.35rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-6 text-center text-sm font-bold text-slate-500">
       {text}
     </div>
   );
@@ -2097,14 +2101,14 @@ function ActionButton({
     ? "border-red-300 bg-red-50 text-red-800 hover:border-red-500 hover:bg-red-100"
     : success
       ? "border-emerald-300 bg-emerald-50 text-emerald-800 hover:border-emerald-500 hover:bg-emerald-100"
-      : "border-slate-300 bg-white text-[#10233f] hover:border-orange-400 hover:bg-orange-50";
+      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]";
 
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg border-2 px-3 py-2 text-xs font-black shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 ${style}`}
+      className={`inline-flex min-h-10 items-center justify-center rounded-lg border-2 px-3 py-2 text-xs font-black shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 ${style}`}
     >
       {children}
     </button>
@@ -2123,7 +2127,7 @@ function Input({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">
         {label}
       </span>
       <input
@@ -2134,7 +2138,7 @@ function Input({
         disabled={disabled}
         required={required}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 py-2.5 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+        className="mt-2 min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-2.5 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
       />
     </label>
   );
@@ -2149,14 +2153,14 @@ function Select({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#10233F]">
         {label}
       </span>
       <select
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-xl border-2 border-slate-300 bg-[#fffdf9] px-3 py-2.5 text-sm font-bold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+        className="mt-2 min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-2.5 text-sm font-bold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
       >
         {options.map(([optionValue, optionLabel]) => (
           <option key={String(optionValue)} value={optionValue}>

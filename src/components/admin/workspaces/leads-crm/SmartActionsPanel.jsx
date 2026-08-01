@@ -1,4 +1,4 @@
-// SmartActionsPanel V3 MAXIMUM — Counselor Action Intelligence
+// SmartActionsPanel PARTNER OS EXTREME — Compact Counselor Action Command
 // src/components/admin/SmartActionsPanel.jsx
 //
 // Maximum pass:
@@ -195,6 +195,7 @@ function getPriorityWeight(priority = "") {
 function SmartActionsPanel({ student = {} }) {
   const reduceMotion = useReducedMotion();
   const [feedback, setFeedback] = useState("");
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const fullName = getStudentName(student);
   const rawPhone =
@@ -516,11 +517,11 @@ Zaifan Consultancy`,
       transition={{
         duration: reduceMotion ? 0 : 0.24,
       }}
-      className="overflow-hidden rounded-[1.85rem] border-[3px] border-orange-300 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.05)]"
+      className="min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-3"
     >
-      <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
         <div
-          className="bg-[#123865] p-5 sm:p-6"
+          className="min-w-0 bg-[#123865] p-4 sm:p-5 lg:p-6"
           style={{ color: "#FFFFFF" }}
         >
           <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
@@ -538,7 +539,7 @@ Zaifan Consultancy`,
           </div>
 
           <h3
-            className="mt-3 text-xl font-black sm:text-2xl"
+            className="mt-3 break-words text-xl font-black tracking-[-0.025em] sm:text-2xl"
             style={{ color: "#FFFFFF" }}
           >
             Smart Counselor Actions
@@ -555,7 +556,7 @@ Zaifan Consultancy`,
         </div>
 
         <div
-          className="bg-orange-500 p-5 sm:p-6"
+          className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-6"
           style={{ color: "#FFFFFF" }}
         >
           <div className="flex items-center gap-2">
@@ -582,57 +583,84 @@ Zaifan Consultancy`,
         </div>
       </div>
 
-      <div className="bg-[#fff8ee] p-5 sm:p-6">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatusCard
-            label="Phone"
-            value={phone ? "Ready" : "Missing"}
-            helper={
-              phone
-                ? "WhatsApp action available."
-                : "Add a phone number to enable WhatsApp."
-            }
-            tone={phone ? "good" : "warning"}
-            icon={MessageCircle}
-          />
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <StatusCard
+          label="Phone"
+          value={phone ? "Ready" : "Missing"}
+          helper={
+            phone
+              ? "WhatsApp action available."
+              : "Add a phone number to enable WhatsApp."
+          }
+          tone={phone ? "good" : "warning"}
+          icon={MessageCircle}
+        />
 
-          <StatusCard
-            label="Email"
-            value={email ? "Ready" : "Missing"}
-            helper={
-              email
-                ? "Gmail compose available."
-                : "Add an email address to enable email."
-            }
-            tone={email ? "good" : "warning"}
-            icon={Mail}
-          />
+        <StatusCard
+          label="Email"
+          value={email ? "Ready" : "Missing"}
+          helper={
+            email
+              ? "Gmail compose available."
+              : "Add an email address to enable email."
+          }
+          tone={email ? "good" : "warning"}
+          icon={Mail}
+        />
 
-          <StatusCard
-            label="Urgent"
-            value={metrics.urgent}
-            helper="Immediate operations pressure."
-            tone={
-              metrics.urgent ? "danger" : "good"
-            }
-            icon={AlertTriangle}
-          />
+        <StatusCard
+          label="Urgent"
+          value={metrics.urgent}
+          helper="Immediate operations pressure."
+          tone={metrics.urgent ? "danger" : "good"}
+          icon={AlertTriangle}
+        />
 
-          <StatusCard
-            label="High Priority"
-            value={metrics.high}
-            helper="Important counselor actions."
-            tone={
-              metrics.high ? "orange" : "good"
-            }
-            icon={Target}
-          />
-        </div>
+        <StatusCard
+          label="High Priority"
+          value={metrics.high}
+          helper="Important counselor actions."
+          tone={metrics.high ? "orange" : "good"}
+          icon={Target}
+        />
+      </div>
 
+      <section className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Counselor Action Workspace
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide prepared messages and communication actions."
+                : "Open prepared messages and communication actions."}
+            </p>
+          </div>
+
+          <Zap
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </section>
+
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_26px_rgba(18,56,101,0.05)] sm:p-5">
         {feedback ? (
           <div
             role="status"
-            className="mt-4 flex items-start justify-between gap-3 rounded-xl border-2 border-orange-300 bg-orange-50 p-4"
+            className="flex min-w-0 items-start justify-between gap-3 rounded-xl border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]"
           >
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
@@ -646,14 +674,14 @@ Zaifan Consultancy`,
               type="button"
               onClick={() => setFeedback("")}
               aria-label="Dismiss message"
-              className="shrink-0 rounded-lg px-2 py-1 text-sm font-black text-orange-800 transition hover:bg-white"
+              className="shrink-0 rounded-lg px-2 py-1 text-sm font-black text-orange-800 transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             >
               ×
             </button>
           </div>
         ) : null}
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-3">
           {actions.map((action, index) => {
             const Icon = action.icon;
 
@@ -683,7 +711,7 @@ Zaifan Consultancy`,
                         0.15
                       ),
                 }}
-                className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${getActionStyle(
+                className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${getActionStyle(
                   action.priority
                 )}`}
               >
@@ -711,20 +739,20 @@ Zaifan Consultancy`,
                       priority={action.priority}
                     />
 
-                    <p className="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-slate-700">
+                    <p className="mt-3 max-h-36 overflow-auto whitespace-pre-line rounded-xl border-2 border-[#C9D7E6] bg-white p-3 text-sm font-semibold leading-6 text-slate-700">
                       {action.message}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-3">
                   <button
                     type="button"
                     onClick={() =>
                       openWhatsApp(action)
                     }
                     disabled={!phone}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3 text-xs font-black text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3 text-xs font-black text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-100 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
                   >
                     <MessageCircle size={14} />
                     WhatsApp
@@ -734,7 +762,7 @@ Zaifan Consultancy`,
                     type="button"
                     onClick={() => openEmail(action)}
                     disabled={!email}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-50 px-3 text-xs font-black text-orange-700 transition hover:border-orange-400 hover:bg-orange-100 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 text-xs font-black text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
                   >
                     <Mail size={14} />
                     Email
@@ -745,7 +773,7 @@ Zaifan Consultancy`,
                     onClick={() =>
                       copyMessage(action)
                     }
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-orange-50 hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
                   >
                     <Clipboard size={14} />
                     Copy
@@ -756,7 +784,7 @@ Zaifan Consultancy`,
           })}
         </div>
 
-        <div className="mt-5 flex items-start gap-3 rounded-xl border-2 border-slate-300 bg-white p-4">
+        <div className="flex min-w-0 items-start gap-3 rounded-xl border-[3px] border-[#123865] bg-[#FFF8EF] p-4">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
 
           <p className="text-xs font-semibold leading-5 text-slate-600">
@@ -766,7 +794,8 @@ Zaifan Consultancy`,
             message.
           </p>
         </div>
-      </div>
+        </div>
+      ) : null}
     </motion.section>
   );
 }
@@ -789,11 +818,11 @@ function StatusCard({
       ? "border-emerald-300 bg-emerald-50"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-orange-300 bg-orange-50";
+      : "border-[#FF5A0A] bg-[#FFF4E8]";
 
   return (
     <div
-      className={`rounded-[1.25rem] border-[3px] p-4 ${style}`}
+      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${style}`}
       style={{
         color: dark ? "#FFFFFF" : "#10233F",
       }}

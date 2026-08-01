@@ -5,6 +5,8 @@ import AdminHeader from "../workspaces/core/AdminHeader";
 const AdminStats = lazy(() => import("../workspaces/core/AdminStats"));
 const NotificationCenter = lazy(() => import("../workspaces/communications/NotificationCenter"));
 
+// AdminHomePage PARTNER OS EXTREME V2 — Executive Admin Command Home
+
 function AdminHomePage({
   cardClass,
   role,
@@ -43,10 +45,10 @@ function AdminHomePage({
   setActiveAnalyticsSection,
 }) {
   return (
-    <div className="space-y-4 sm:space-y-5">
-      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-orange-500 bg-[#fff9f2] shadow-[0_18px_44px_rgba(16,49,86,0.08)]">
-        <div className="grid min-[1180px]:grid-cols-[minmax(0,1fr)_330px]">
-          <div className="relative overflow-hidden bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="relative min-w-0 overflow-hidden bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
             <div className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
 
             <div className="relative">
@@ -65,16 +67,16 @@ function AdminHomePage({
                 Admin command home
               </p>
 
-              <h1 className="mt-1 text-3xl font-black tracking-[-0.035em] text-white sm:text-4xl">
+              <h1 className="mt-1 break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl lg:text-[2.7rem]">
                 Welcome back, {adminProfile?.full_name || "Admin User"}
               </h1>
 
-              <p className="mt-2 max-w-3xl text-[14px] font-semibold leading-6 text-white/80">
+              <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
                 See what needs attention, then jump straight into the right workspace
                 without losing operational context.
               </p>
 
-              <div className="mt-5 grid max-w-3xl gap-2 sm:grid-cols-3">
+              <div className="mt-5 grid min-w-0 max-w-3xl grid-cols-2 gap-2 sm:grid-cols-3">
                 <CommandStat
                   label="Open leads"
                   value={adminCommandMetrics.totalLeads}
@@ -93,7 +95,7 @@ function AdminHomePage({
                 <button
                   type="button"
                   onClick={() => setActiveTab("students")}
-                  className="rounded-xl border-2 border-orange-400 bg-[#ff5a0a] px-4 py-2.5 text-[11px] font-black text-white shadow-[0_8px_18px_rgba(255,90,10,0.22)] transition hover:bg-[#e94f05]"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 text-[11px] font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
                 >
                   Open students
                 </button>
@@ -101,7 +103,7 @@ function AdminHomePage({
                 <button
                   type="button"
                   onClick={() => setActiveTab("inquiries")}
-                  className="rounded-xl border-2 border-white/20 bg-white/10 px-4 py-2.5 text-[11px] font-black text-white transition hover:bg-white/15"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-white/30 bg-white/10 px-4 text-[11px] font-black text-white transition hover:-translate-y-0.5 hover:border-white hover:bg-white/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
                 >
                   Review leads
                 </button>
@@ -109,7 +111,7 @@ function AdminHomePage({
             </div>
           </div>
 
-          <aside className="relative bg-[#ff5a0a] p-5 text-white sm:p-6">
+          <aside className="relative min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
             <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
 
             <div className="relative">
@@ -132,7 +134,7 @@ function AdminHomePage({
                 </span>
               </div>
 
-              <div className="mt-5 rounded-2xl border-2 border-white/35 bg-white/10 p-4">
+              <div className="mt-5 rounded-[1.2rem] border-2 border-white/25 bg-white/10 p-4">
                 <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white/75">
                   Session access
                 </p>
@@ -159,8 +161,8 @@ function AdminHomePage({
           </aside>
         </div>
 
-        <div className="border-t-[3px] border-orange-500 bg-[#fff9f2] p-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        <div className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:p-5">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
             <Metric
               label="Student leads"
               value={adminCommandMetrics.totalLeads}
@@ -200,7 +202,7 @@ function AdminHomePage({
         </div>
       </section>
 
-      <div className="zaifan-admin-embedded-dark relative z-20 overflow-visible">
+      <div className="zaifan-admin-embedded-dark relative z-20 min-w-0 overflow-visible rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-2 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-3">
         <AdminHeader
           inquiries={inquiries}
           appointments={appointments}
@@ -232,25 +234,41 @@ function AdminHomePage({
         />
       </div>
 
-      <section className="rounded-[1.6rem] border-[3px] border-[#123865] bg-[#fff9f2] p-4 shadow-[0_12px_30px_rgba(16,49,86,0.06)] sm:p-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ff5a0a]">
-              Live operating picture
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Live Operating Picture
             </p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight text-[#10233f] sm:text-3xl">
+
+            <h2 className="mt-2 break-words text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
               What needs attention right now
             </h2>
+
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
+              Global CRM, student, finance, access and support signals remain
+              visible here without duplicating their operational workspaces.
+            </p>
           </div>
 
-          <p className="max-w-xl text-sm font-semibold leading-6 text-slate-600">
-            Global CRM, student, finance, access and support signals live here only.
-          </p>
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5 lg:border-l-[3px] lg:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Command Scope
+            </p>
+
+            <p className="mt-2 text-sm font-black leading-5 text-[#10233F]">
+              Attention, health and executive summaries only
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              Open the owning workspace to perform detailed actions.
+            </p>
+          </div>
         </div>
       </section>
 
       <Suspense fallback={<InsightLoader />}>
-        <div className="zaifan-admin-embedded-dark">
+        <div className="zaifan-admin-embedded-dark min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-2 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-3">
           <NotificationCenter
             cardClass={cardClass}
             inquiryNewCount={inquiryNewCount}
@@ -306,11 +324,11 @@ function AdminHomePage({
 function Metric({ label, value, detail, tone = "slate" }) {
   const tones = {
     slate: {
-      shell: "border-[#123865] bg-[#edf4fb]",
+      shell: "border-[#123865] bg-[#F2F7FF]",
       value: "text-[#123865]",
     },
     orange: {
-      shell: "border-orange-500 bg-[#fff6ec]",
+      shell: "border-orange-500 bg-[#FFF4E8]",
       value: "text-[#c93208]",
     },
     blue: {
@@ -331,7 +349,7 @@ function Metric({ label, value, detail, tone = "slate" }) {
 
   return (
     <div
-      className={`rounded-[1.2rem] border-[3px] p-4 shadow-[0_4px_10px_rgba(16,43,76,0.04)] ${selected.shell}`}
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${selected.shell}`}
     >
       <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#4f617a]">
         {label}
@@ -346,7 +364,7 @@ function Metric({ label, value, detail, tone = "slate" }) {
 
 function CommandStat({ label, value }) {
   return (
-    <div className="rounded-2xl border-2 border-white/20 bg-white/10 p-3.5">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3.5 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.11em] text-white/70">
         {label}
       </p>
@@ -357,7 +375,7 @@ function CommandStat({ label, value }) {
 
 function PermissionRow({ label, enabled }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-white/30 bg-white/10 px-3 py-2.5">
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-white/25 bg-white/10 px-3 py-2.5">
       <span className="text-[9px] font-black uppercase tracking-[0.08em] text-white/80">
         {label}
       </span>
@@ -380,7 +398,7 @@ function InsightLoader() {
       {[0, 1, 2, 3].map((item) => (
         <div
           key={item}
-          className="h-28 animate-pulse rounded-[1.4rem] border border-slate-200 bg-white shadow-sm"
+          className="h-28 animate-pulse rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white shadow-[0_7px_18px_rgba(18,56,101,0.05)]"
         />
       ))}
     </div>

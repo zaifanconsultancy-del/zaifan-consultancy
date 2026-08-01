@@ -385,9 +385,9 @@ function GPTCopilotPanel({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.3 }}
-      className="space-y-5 text-[#10233f]"
+      className="space-y-5 text-[#10233F]"
     >
-      <div className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-[#fffdf8] shadow-[0_18px_48px_rgba(15,35,63,0.08)]">
+      <div className="overflow-hidden rounded-[2rem] border-[3px] border-[#FFB38A] bg-[#fffdf8] shadow-[0_18px_48px_rgba(15,35,63,0.08)]">
         <div className="grid xl:grid-cols-[1.35fr_0.65fr]">
           <div className="bg-[#123865] p-5 sm:p-6" style={{ color: "#FFFFFF" }}>
             <div className="flex flex-wrap items-center gap-2">
@@ -413,7 +413,7 @@ function GPTCopilotPanel({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 sm:p-6" style={{ color: "#FFFFFF" }}>
+          <div className="bg-[#FF5A0A] p-5 sm:p-6" style={{ color: "#FFFFFF" }}>
             <div className="flex items-center gap-2">
               <Wand2 size={18} />
               <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
@@ -435,7 +435,7 @@ function GPTCopilotPanel({
               type="button"
               onClick={() => requestGeneration(activeMode)}
               disabled={loading}
-              className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white text-sm font-black transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60" style={{ color: "#C2410C" }}
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white text-sm font-black transition hover:bg-[#FFF4EA] disabled:cursor-not-allowed disabled:opacity-60" style={{ color: "#C2410C" }}
             >
               {loading ? <RefreshCw size={16} className="animate-spin" /> : <Wand2 size={16} />}
               {loading ? "Generating..." : `Generate ${active.label}`}
@@ -476,18 +476,18 @@ function GPTCopilotPanel({
       </div>
 
       {selectedPendingMode ? (
-        <section className="rounded-[1.5rem] border-[3px] border-orange-300 bg-orange-50 p-5">
+        <section className="rounded-[1.5rem] border-[3px] border-[#FFB38A] bg-[#FFF4EA] p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-3">
-              <ShieldAlert size={20} className="mt-0.5 shrink-0 text-orange-700" />
+            <div className="flex min-w-0 items-start gap-3">
+              <ShieldAlert size={20} className="mt-0.5 shrink-0 text-[#B84F0E]" />
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
                   Paid GPT Approval
                 </p>
-                <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                <h3 className="mt-1 text-lg font-black text-[#10233F]">
                   Generate {selectedPendingMode.label}?
                 </h3>
-                <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
+                <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-[#51627A]">
                   This calls the configured GPT service and may use paid API credits.
                   CRM context for <strong>{name}</strong> will be included according
                   to your existing service implementation.
@@ -500,7 +500,7 @@ function GPTCopilotPanel({
                 type="button"
                 onClick={() => void generate(selectedPendingMode.id)}
                 disabled={loading}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-orange-700 bg-orange-500 px-4 text-xs font-black hover:bg-orange-600 disabled:opacity-50" style={{ color: "#FFFFFF" }}
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-orange-700 bg-[#FF5A0A] px-4 text-xs font-black hover:bg-orange-600 disabled:opacity-50" style={{ color: "#FFFFFF" }}
               >
                 <CheckCircle2 size={14} />
                 Approve & Generate
@@ -510,7 +510,7 @@ function GPTCopilotPanel({
                 type="button"
                 onClick={cancelGenerationApproval}
                 disabled={loading}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-[#10233f] disabled:opacity-50"
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-[#10233F] disabled:opacity-50"
               >
                 <X size={14} />
                 Cancel
@@ -532,18 +532,18 @@ function GPTCopilotPanel({
         {usageCards.map((card) => <UsageCard key={card.label} card={card} />)}
       </div>
 
-      <section className="rounded-[1.6rem] border-[3px] border-slate-300 bg-[#fffdf8] p-4 shadow-[0_10px_28px_rgba(15,35,63,0.05)] sm:p-5">
+      <section className="rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-[#fffdf8] p-4 shadow-[0_10px_28px_rgba(15,35,63,0.05)] sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
               Generation Mode
             </p>
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Choose what GPT should help with
             </h3>
           </div>
 
-          <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-orange-800">
+          <span className="rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#9B3E08]">
             {active.category}
           </span>
         </div>
@@ -566,23 +566,23 @@ function GPTCopilotPanel({
                 disabled={loading}
                 className={`rounded-[1.3rem] border-[3px] p-4 text-left transition hover:-translate-y-0.5 disabled:opacity-60 ${
                   isActive
-                    ? "border-orange-400 bg-orange-50"
-                    : "border-slate-300 bg-white hover:border-orange-300"
+                    ? "border-[#FF5A0A] bg-[#FFF4EA]"
+                    : "border-[#C9D7E6] bg-white hover:border-[#FFB38A]"
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${
                     isActive
-                      ? "border-orange-300 bg-white text-orange-700"
-                      : "border-slate-300 bg-slate-50 text-[#10233f]"
+                      ? "border-[#FFB38A] bg-white text-[#B84F0E]"
+                      : "border-[#C9D7E6] bg-slate-50 text-[#10233F]"
                   }`}>
                     <Icon size={17} />
                   </div>
 
                   <span className={`rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.07em] ${
                     isActive
-                      ? "border-orange-300 bg-white text-orange-800"
-                      : "border-slate-300 bg-slate-50 text-slate-600"
+                      ? "border-[#FFB38A] bg-white text-[#9B3E08]"
+                      : "border-[#C9D7E6] bg-slate-50 text-[#51627A]"
                   }`}>
                     {mode.category}
                   </span>
@@ -596,7 +596,7 @@ function GPTCopilotPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_10px_28px_rgba(15,35,63,0.05)] sm:p-5">
+      <section className="rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_28px_rgba(15,35,63,0.05)] sm:p-5">
         <button
           type="button"
           onClick={() => setShowContext((current) => !current)}
@@ -604,15 +604,15 @@ function GPTCopilotPanel({
           aria-expanded={showContext}
         >
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
               GPT Input Visibility
             </p>
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Student & Prompt Context
             </h3>
           </div>
 
-          <span className="rounded-xl border-2 border-slate-300 bg-[#fffdf8] px-3 py-2 text-xs font-black text-[#10233f]">
+          <span className="rounded-xl border-2 border-[#C9D7E6] bg-[#fffdf8] px-3 py-2 text-xs font-black text-[#10233F]">
             {showContext ? "Hide Context" : "Show Context"}
           </span>
         </button>
@@ -625,17 +625,17 @@ function GPTCopilotPanel({
         ) : null}
       </section>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5 shadow-[0_12px_32px_rgba(15,35,63,0.055)]">
+      <section className="rounded-[1.7rem] border-[3px] border-[#FFB38A] bg-white p-5 shadow-[0_12px_32px_rgba(15,35,63,0.055)]">
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
               GPT Output
             </p>
-            <h3 className="mt-1 text-xl font-black text-[#10233f]">
+            <h3 className="mt-1 text-xl font-black text-[#10233F]">
               {lastMode ? MODES.find((mode) => mode.id === lastMode)?.label || active.label : active.label}
             </h3>
             {lastGeneratedAt ? (
-              <p className="mt-1 text-xs font-semibold text-slate-500">Generated {lastGeneratedAt}</p>
+              <p className="mt-1 text-xs font-semibold text-[#65748B]">Generated {lastGeneratedAt}</p>
             ) : null}
           </div>
 
@@ -644,7 +644,7 @@ function GPTCopilotPanel({
               type="button"
               onClick={saveOutput}
               disabled={!output || loading}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-50 px-4 text-xs font-black text-orange-800 hover:border-orange-500 hover:bg-orange-100 disabled:opacity-40"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FFB38A] bg-[#FFF4EA] px-4 text-xs font-black text-[#9B3E08] hover:border-[#FF5A0A] hover:bg-[#FFE6D5] disabled:opacity-40"
             >
               <Save size={14} />
               Save Session Draft
@@ -654,7 +654,7 @@ function GPTCopilotPanel({
               type="button"
               onClick={() => void copyOutput()}
               disabled={!output || loading}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-[#10233f] hover:border-orange-300 hover:bg-orange-50 disabled:opacity-40"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-[#10233F] hover:border-[#FFB38A] hover:bg-[#FFF4EA] disabled:opacity-40"
             >
               <Clipboard size={14} />
               {copied ? "Copied" : "Copy Output"}
@@ -664,7 +664,7 @@ function GPTCopilotPanel({
               type="button"
               onClick={clearOutput}
               disabled={!output || loading}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-[#51627A] hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
             >
               <X size={14} />
               Clear
@@ -672,12 +672,12 @@ function GPTCopilotPanel({
           </div>
         </div>
 
-        <div className="min-h-[280px] rounded-[1.4rem] border-[3px] border-slate-300 bg-[#fffdf8] p-5">
+        <div className="min-h-[280px] rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-[#fffdf8] p-5">
           {loading ? (
             <div className="flex min-h-[235px] flex-col items-center justify-center text-center">
               <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-orange-200 border-t-orange-600" />
-              <p className="mt-4 font-black text-[#10233f]">GPT is generating {active.label}...</p>
-              <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">
+              <p className="mt-4 font-black text-[#10233F]">GPT is generating {active.label}...</p>
+              <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-[#65748B]">
                 The request will time out safely after {Math.round(GENERATION_TIMEOUT_MS / 1000)} seconds.
               </p>
             </div>
@@ -687,11 +687,11 @@ function GPTCopilotPanel({
             </pre>
           ) : (
             <div className="flex min-h-[235px] flex-col items-center justify-center text-center">
-              <Brain className="h-12 w-12 text-orange-600" />
-              <h3 className="mt-4 text-lg font-black text-[#10233f]">
+              <Brain className="h-12 w-12 text-[#D94B00]" />
+              <h3 className="mt-4 text-lg font-black text-[#10233F]">
                 Ready for counselor-assisted GPT generation
               </h3>
-              <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">
+              <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-[#65748B]">
                 Choose a mode, review CRM context, then explicitly approve paid GPT generation.
               </p>
             </div>
@@ -699,12 +699,12 @@ function GPTCopilotPanel({
         </div>
 
         {output && !loading ? (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-black uppercase tracking-[0.07em] text-slate-500">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-black uppercase tracking-[0.07em] text-[#65748B]">
             <span>{output.length.toLocaleString()} characters</span>
             <button
               type="button"
               onClick={() => requestGeneration(lastMode || activeMode)}
-              className="inline-flex items-center gap-1.5 text-orange-700"
+              className="inline-flex items-center gap-1.5 text-[#B84F0E]"
             >
               <RefreshCw size={12} />
               Regenerate with approval
@@ -718,12 +718,12 @@ function GPTCopilotPanel({
         <SavedOutputsPanel savedOutputs={savedOutputs} onCopy={copySavedOutput} />
       </div>
 
-      <div className="rounded-[1.3rem] border-[3px] border-slate-300 bg-white p-4">
-        <div className="flex items-start gap-3">
-          <ShieldCheck size={17} className="mt-0.5 shrink-0 text-orange-700" />
+      <div className="rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <ShieldCheck size={17} className="mt-0.5 shrink-0 text-[#B84F0E]" />
           <div>
-            <p className="font-black text-[#10233f]">GPT operating policy</p>
-            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            <p className="font-black text-[#10233F]">GPT operating policy</p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-[#51627A]">
               GPT output is counselor assistance, not an automatic CRM decision.
               Review visa, scholarship, admissions, and compliance-sensitive claims
               before sending them to a student. Saved drafts here are session-local
@@ -780,7 +780,7 @@ function FeedbackBanner({ tone, message, onClose }) {
       className={`flex items-start gap-3 rounded-[1.3rem] border-[3px] p-4 ${
         error
           ? "border-red-300 bg-red-50 text-red-900"
-          : "border-orange-300 bg-orange-50 text-orange-900"
+          : "border-[#FFB38A] bg-[#FFF4EA] text-orange-900"
       }`}
     >
       {error ? <AlertTriangle size={17} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={17} className="mt-0.5 shrink-0" />}
@@ -798,8 +798,8 @@ function UsageCard({ card }) {
   const toneClass = isNavy
     ? "border-[#123865] bg-[#123865]"
     : isOrange
-    ? "border-orange-300 bg-orange-50"
-    : "border-slate-300 bg-white";
+    ? "border-[#FFB38A] bg-[#FFF4EA]"
+    : "border-[#C9D7E6] bg-white";
 
   return (
     <div
@@ -837,8 +837,8 @@ function OperationalCard({ label, value, helper, tone = "cream" }) {
   const surface = isNavy
     ? "border-[#123865] bg-[#123865]"
     : isOrange
-    ? "border-orange-300 bg-orange-50"
-    : "border-slate-300 bg-white";
+    ? "border-[#FFB38A] bg-[#FFF4EA]"
+    : "border-[#C9D7E6] bg-white";
 
   return (
     <div
@@ -872,23 +872,23 @@ function OperationalCard({ label, value, helper, tone = "cream" }) {
 function ContextPanel({ title, eyebrow, rows = [], highlighted = false }) {
   return (
     <div className={`rounded-[1.4rem] border-[3px] p-4 ${
-      highlighted ? "border-orange-300 bg-orange-50" : "border-slate-300 bg-[#fffdf8]"
+      highlighted ? "border-[#FFB38A] bg-[#FFF4EA]" : "border-[#C9D7E6] bg-[#fffdf8]"
     }`}>
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-white text-[#B84F0E]">
           {highlighted ? <Zap size={17} /> : <FileText size={17} />}
         </div>
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">{eyebrow}</p>
-          <h3 className="text-base font-black text-[#10233f]">{title}</h3>
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">{eyebrow}</p>
+          <h3 className="text-base font-black text-[#10233F]">{title}</h3>
         </div>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
         {rows.map(([label, value]) => (
-          <div key={label} className="min-w-0 rounded-xl border-2 border-slate-300 bg-white px-3 py-2">
-            <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
-            <p className="mt-1 truncate text-xs font-black text-[#10233f]" title={safeString(value)}>
+          <div key={label} className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2">
+            <p className="text-[8px] font-black uppercase tracking-[0.08em] text-[#65748B]">{label}</p>
+            <p className="mt-1 truncate text-xs font-black text-[#10233F]" title={safeString(value)}>
               {valueOrFallback(value, "-")}
             </p>
           </div>
@@ -900,27 +900,27 @@ function ContextPanel({ title, eyebrow, rows = [], highlighted = false }) {
 
 function HistoryPanel({ history = [] }) {
   return (
-    <div className="rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.04)]">
+    <div className="rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.04)]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">Session Memory</p>
-          <h3 className="text-lg font-black text-[#10233f]">Generation History</h3>
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">Session Memory</p>
+          <h3 className="text-lg font-black text-[#10233F]">Generation History</h3>
         </div>
-        <span className="rounded-full border-2 border-slate-300 bg-[#fffdf8] px-3 py-1 text-xs font-black text-slate-600">{history.length}</span>
+        <span className="rounded-full border-2 border-[#C9D7E6] bg-[#fffdf8] px-3 py-1 text-xs font-black text-[#51627A]">{history.length}</span>
       </div>
 
       {history.length ? (
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           {history.slice(0, 6).map((item) => (
-            <div key={item.id} className="rounded-xl border-2 border-slate-300 bg-[#fffdf8] p-4">
-              <div className="flex items-start justify-between gap-3">
+            <div key={item.id} className="rounded-xl border-2 border-[#C9D7E6] bg-[#fffdf8] p-4">
+              <div className="flex min-w-0 items-start justify-between gap-3">
                 <div>
-                  <p className="font-black text-[#10233f]">{item.label}</p>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">{item.generatedAt} • {item.category}</p>
+                  <p className="font-black text-[#10233F]">{item.label}</p>
+                  <p className="mt-1 text-xs font-semibold text-[#65748B]">{item.generatedAt} • {item.category}</p>
                 </div>
-                <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-orange-800">GPT</span>
+                <span className="rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#9B3E08]">GPT</span>
               </div>
-              <p className="mt-3 line-clamp-2 text-xs font-semibold leading-5 text-slate-600">{item.preview}</p>
+              <p className="mt-3 line-clamp-2 text-xs font-semibold leading-5 text-[#51627A]">{item.preview}</p>
             </div>
           ))}
         </div>
@@ -933,34 +933,34 @@ function HistoryPanel({ history = [] }) {
 
 function SavedOutputsPanel({ savedOutputs = [], onCopy = () => {} }) {
   return (
-    <div className="rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.04)]">
+    <div className="rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.04)]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">Counselor Drafts</p>
-          <h3 className="text-lg font-black text-[#10233f]">Saved Session Outputs</h3>
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">Counselor Drafts</p>
+          <h3 className="text-lg font-black text-[#10233F]">Saved Session Outputs</h3>
         </div>
-        <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-xs font-black text-orange-800">{savedOutputs.length}</span>
+        <span className="rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-3 py-1 text-xs font-black text-[#9B3E08]">{savedOutputs.length}</span>
       </div>
 
       {savedOutputs.length ? (
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           {savedOutputs.slice(0, 6).map((item) => (
-            <div key={item.id} className="rounded-xl border-2 border-slate-300 bg-[#fffdf8] p-4">
-              <div className="flex items-start justify-between gap-3">
+            <div key={item.id} className="rounded-xl border-2 border-[#C9D7E6] bg-[#fffdf8] p-4">
+              <div className="flex min-w-0 items-start justify-between gap-3">
                 <div>
-                  <p className="font-black text-[#10233f]">{item.label}</p>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">Saved: {item.savedAt}</p>
+                  <p className="font-black text-[#10233F]">{item.label}</p>
+                  <p className="mt-1 text-xs font-semibold text-[#65748B]">Saved: {item.savedAt}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => void onCopy(item)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border-2 border-slate-300 bg-white px-3 py-1.5 text-[10px] font-black text-[#10233f] transition hover:border-orange-300 hover:bg-orange-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-1.5 text-[10px] font-black text-[#10233F] transition hover:border-[#FFB38A] hover:bg-[#FFF4EA]"
                 >
                   <Copy size={12} />
                   Copy
                 </button>
               </div>
-              <p className="mt-3 line-clamp-3 text-xs font-semibold leading-5 text-slate-600">{item.output}</p>
+              <p className="mt-3 line-clamp-3 text-xs font-semibold leading-5 text-[#51627A]">{item.output}</p>
             </div>
           ))}
         </div>
@@ -973,9 +973,9 @@ function SavedOutputsPanel({ savedOutputs = [], onCopy = () => {} }) {
 
 function EmptyPanel({ text }) {
   return (
-    <div className="flex min-h-[170px] flex-col items-center justify-center rounded-xl border-[3px] border-dashed border-slate-300 bg-[#fffdf8] p-5 text-center">
-      <CheckCircle2 className="h-9 w-9 text-orange-600" />
-      <p className="mt-3 text-sm font-semibold text-slate-500">{text}</p>
+    <div className="flex min-h-[170px] flex-col items-center justify-center rounded-xl border-[3px] border-dashed border-[#C9D7E6] bg-[#fffdf8] p-5 text-center">
+      <CheckCircle2 className="h-9 w-9 text-[#D94B00]" />
+      <p className="mt-3 text-sm font-semibold text-[#65748B]">{text}</p>
     </div>
   );
 }

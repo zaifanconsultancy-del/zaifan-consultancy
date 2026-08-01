@@ -1,9 +1,11 @@
+// AppointmentCard PARTNER OS EXTREME V6 — True Inquiry Composition Match
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   CalendarClock,
   CheckCircle2,
+  ChevronDown,
   Clipboard,
   Copy,
   ExternalLink,
@@ -73,7 +75,7 @@ function getTimingSignal(dateValue, timeValue, status = "") {
       label: normalizedStatus === "completed" ? "Completed" : "Cancelled",
       tone:
         normalizedStatus === "completed"
-          ? "border-orange-300 bg-orange-50 text-orange-800"
+          ? "border-[#FF5A0A] bg-orange-50 text-orange-800"
           : "border-red-300 bg-red-50 text-red-700",
       helper:
         normalizedStatus === "completed"
@@ -123,7 +125,7 @@ function getTimingSignal(dateValue, timeValue, status = "") {
   if (diffHours <= 24) {
     return {
       label: "Within 24h",
-      tone: "border-orange-300 bg-orange-50 text-orange-800",
+      tone: "border-[#FF5A0A] bg-orange-50 text-orange-800",
       helper: "High scheduling attention recommended.",
     };
   }
@@ -131,7 +133,7 @@ function getTimingSignal(dateValue, timeValue, status = "") {
   if (diffHours <= 72) {
     return {
       label: "Within 3 Days",
-      tone: "border-orange-300 bg-[#FFF2E8] text-[#c2410c]",
+      tone: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]",
       helper: "Upcoming consultation window.",
     };
   }
@@ -184,7 +186,7 @@ const PRIORITY_CHOICES = [
     value: "medium",
     label: "Medium",
     icon: "★",
-    idle: "border-orange-300 bg-[#FFF2E8] text-[#c2410c] hover:border-[#FF7A2F] hover:bg-white",
+    idle: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C] hover:border-[#FF7A2F] hover:bg-white",
     active: "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_10px_24px_rgba(255,75,18,0.20)]",
   },
   {
@@ -198,7 +200,7 @@ const PRIORITY_CHOICES = [
     value: "vip",
     label: "VIP",
     icon: "♛",
-    idle: "border-orange-300 bg-orange-50 text-orange-700 hover:border-orange-400 hover:bg-white",
+    idle: "border-[#FF5A0A] bg-orange-50 text-orange-700 hover:border-orange-400 hover:bg-white",
     active: "border-orange-600 bg-orange-600 text-white shadow-[0_10px_24px_rgba(124,58,237,0.20)]",
   },
 ];
@@ -238,7 +240,7 @@ const STATUS_CHOICES = [
     label: "Confirmed",
     icon: "✓",
     helper: "Booked",
-    idle: "border-orange-300 bg-[#FFF2E8] text-[#c2410c] hover:border-[#FF7A2F] hover:bg-white",
+    idle: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C] hover:border-[#FF7A2F] hover:bg-white",
     active: "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_10px_24px_rgba(255,75,18,0.20)]",
   },
   {
@@ -246,7 +248,7 @@ const STATUS_CHOICES = [
     label: "Completed",
     icon: "✓",
     helper: "Done",
-    idle: "border-orange-300 bg-[#FFF2E8] text-[#c2410c] hover:border-[#FF7A2F] hover:bg-white",
+    idle: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C] hover:border-[#FF7A2F] hover:bg-white",
     active: "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_10px_24px_rgba(255,75,18,0.20)]",
   },
   {
@@ -273,7 +275,7 @@ const ROLE_CONFIG = {
     super_admin: {
       label: "Super Admin",
       icon: "👑",
-      badge: "border-orange-300 bg-orange-100 text-orange-800",
+      badge: "border-[#FF5A0A] bg-orange-100 text-orange-800",
     },
   };
 
@@ -281,7 +283,7 @@ const PRIORITY_STYLES = {
     vip: {
       badge: "border-orange-200 bg-orange-50 text-orange-700",
       card:
-        "border-orange-200 hover:border-orange-300 hover:shadow-[0_18px_50px_rgba(124,58,237,0.08)]",
+        "border-orange-200 hover:border-[#FF5A0A] hover:shadow-[0_18px_50px_rgba(124,58,237,0.08)]",
       glow: "bg-orange-100/70 group-hover:bg-orange-200/70",
       icon: "👑",
     },
@@ -295,7 +297,7 @@ const PRIORITY_STYLES = {
     medium: {
       badge: "border-orange-200 bg-orange-50 text-orange-700",
       card:
-        "border-orange-200 hover:border-orange-300 hover:shadow-[0_18px_50px_rgba(249,115,22,0.08)]",
+        "border-orange-200 hover:border-[#FF5A0A] hover:shadow-[0_18px_50px_rgba(249,115,22,0.08)]",
       glow: "bg-orange-100/70 group-hover:bg-orange-200/70",
       icon: "⭐",
     },
@@ -310,7 +312,7 @@ const PRIORITY_STYLES = {
 
 const STATUS_STYLES = {
     pending: "border-amber-300 bg-amber-50 text-amber-800",
-    confirmed: "border-orange-300 bg-[#FFF2E8] text-[#c2410c]",
+    confirmed: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]",
     completed: "border-[#FF5A0A] bg-[#FF5A0A] text-white",
     cancelled: "border-red-300 bg-red-50 text-red-700",
   };
@@ -331,6 +333,7 @@ function AppointmentCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [copiedField, setCopiedField] = useState("");
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
   const feedbackTimerRef = useRef(null);
 
   const status = appointment.status || "pending";
@@ -559,22 +562,22 @@ function AppointmentCard({
       whileHover={shouldReduceMotion ? undefined : { y: -2 }}
       transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => openModal(appointment)}
-      className={`${cardClass} group relative cursor-pointer overflow-hidden rounded-[1.55rem] border-[3px] ${activePriority.card} !border-[#123865] hover:!border-[#FF5A0A] bg-[#FFF8EF] p-4 shadow-[0_14px_42px_rgba(15,23,42,0.07)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:rounded-[2rem] sm:p-5`}
+      className={`${cardClass} group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.85rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2 shadow-[0_18px_50px_rgba(18,56,101,0.12)] ${TRANSITION} hover:border-[#FF5A0A] hover:shadow-[0_24px_65px_rgba(18,56,101,0.16)] sm:p-2.5`}
     >
       <div
-        className={`pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full blur-3xl transition duration-700 sm:h-48 sm:w-48 ${activePriority.glow}`}
+        className="hidden"
       ></div>
 
       {!assignedAdminName && (
-        <div className="pointer-events-none absolute -left-24 top-10 h-44 w-44 rounded-full bg-orange-500/5 blur-3xl transition duration-700 group-hover:bg-orange-500/10"></div>
+        <div className="hidden"></div>
       )}
 
-      <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-transparent via-orange-500 to-transparent transition duration-500 group-hover:scale-x-100"></div>
+      <div className="absolute inset-x-6 top-0 h-[3px] rounded-b-full bg-[#FF5A0A]"></div>
 
       {feedback ? (
         <div
           role="status"
-          className="relative mb-3 flex items-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-50 px-4 py-3 text-xs font-black text-orange-800"
+          className="relative mb-3 flex items-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-orange-50 px-4 py-3 text-xs font-black text-orange-800"
           onClick={(event) => event.stopPropagation()}
         >
           <CheckCircle2 size={14} />
@@ -582,88 +585,234 @@ function AppointmentCard({
         </div>
       ) : null}
 
-      <div className="relative flex flex-col gap-3 border-b border-slate-200 pb-4 sm:gap-4 sm:pb-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#ffb36d] sm:text-[10px]">
+      <div className="min-w-0 overflow-hidden rounded-[1.35rem] border-[2px] border-[#FF5A0A] bg-white">
+      <header className="min-w-0 bg-[#123865] p-4 text-white sm:p-5">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/45 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-orange-100">
+            <CalendarClock size={11} />
+            Student Appointment
+          </span>
+
+          <span className="inline-flex items-center gap-2 rounded-full border-2 border-blue-300 bg-blue-50 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-blue-800">
+            <span aria-hidden="true">{activeStage.icon}</span>
+            {formatCompactAppointmentStageLabel(activeStage.label)}
+          </span>
+
+          <span className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${activePriority.badge}`}>
+            <span aria-hidden="true">{activePriority.icon}</span>
+            {priority}
+          </span>
+        </div>
+
+        <div className="mt-3 flex min-w-0 flex-col gap-3">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
               Appointment Command Record
             </p>
 
-            <h2 className="mt-1.5 break-words text-xl font-bold leading-tight text-slate-950 sm:mt-2 sm:text-2xl">
+            <h2 className="mt-1 min-w-0 whitespace-normal [overflow-wrap:break-word] text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
               {appointment.full_name || "Unnamed Student"}
             </h2>
+
+            <p className="mt-2 min-w-0 whitespace-normal [overflow-wrap:break-word] text-sm font-semibold leading-6 text-slate-200">
+              {appointment.country_interest || "Destination not provided"}
+              <span className="mx-2 text-orange-300">·</span>
+              {appointment.consultation_type || "Consultation type not provided"}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div
-              className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300 bg-[#fff0e8] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#c2410c] shadow-sm"
-            >
-              {aiLead.ai_tier.badge} · {aiLead.ai_score}/100
-            </div>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <AssignmentBadge
+              assignedAdminName={assignedAdminName}
+              assignedAdminInitial={assignedAdminInitial}
+            />
 
-            {!compact && (
-              <div
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] ${currentRole.badge}`}
-              >
-                <span>{currentRole.icon}</span>
+            {!compact ? (
+              <span className={`inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${currentRole.badge}`}>
+                <span aria-hidden="true">{currentRole.icon}</span>
                 {currentRole.label}
-              </div>
-            )}
+              </span>
+            ) : null}
           </div>
         </div>
 
         <div
-          className="flex flex-wrap gap-2"
+          className="mt-4 flex min-w-0 flex-wrap gap-2"
           onClick={(event) => event.stopPropagation()}
         >
-          <span
-            className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${activePriority.badge}`}
-          >
-            {activePriority.icon} {priority}
-          </span>
-
-          <span className="w-fit shrink-0 rounded-full border-2 border-orange-300 bg-[#fff0e8] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-orange-600">
-            {activeStage.icon} {formatAppointmentStageLabel(activeStage.label)}
-          </span>
-
-          <span
-            className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-              STATUS_STYLES[status] || STATUS_STYLES.pending
-            }`}
-          >
-            Status: {status}
-          </span>
-
-          <span className="w-fit shrink-0 rounded-full border-2 border-orange-300 bg-[#fff0e8] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-orange-600">
-            AI: {aiLead.ai_conversion_probability}
-          </span>
-
-          <span className="w-fit shrink-0 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-700">
-            Urgency: {aiLead.ai_urgency.label}
-          </span>
-          <span
-            className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${timingSignal.tone}`}
-            title={timingSignal.helper}
-          >
+          <span className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${timingSignal.tone}`}>
             <CalendarClock size={11} />
             {timingSignal.label}
           </span>
 
-          <AssignmentBadge
-            assignedAdminName={assignedAdminName}
-            assignedAdminInitial={assignedAdminInitial}
-          />
+          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+            <ShieldCheck size={11} />
+            {status}
+          </span>
 
-          {!safePermissions.canDelete && !compact && (
-            <span className="w-fit shrink-0 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-700">
+          <span className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${
+            completeness >= 80
+              ? "border-emerald-200/55 bg-emerald-400/10 text-emerald-100"
+              : "border-amber-200/55 bg-amber-400/10 text-amber-100"
+          }`}>
+            <CheckCircle2 size={11} />
+            {completeness >= 80 ? "Profile Ready" : `${completeness}% Profile`}
+          </span>
+
+          {!safePermissions.canDelete && !compact ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-red-200/55 bg-red-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-red-100">
+              <Trash2 size={11} />
               Delete Locked
             </span>
-          )}
+          ) : null}
         </div>
+      </header>
+
+      <aside
+        className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              AI Appointment Intelligence
+            </p>
+            <p className="mt-1 text-xs font-semibold text-orange-50">
+              Evidence-led consultation signal
+            </p>
+          </div>
+
+          <ShieldCheck size={23} className="shrink-0 text-white" />
+        </div>
+
+        <div className="mt-4 grid min-w-0 grid-cols-2 gap-2">
+          <AppointmentOrangeMetric
+            label={aiLead.ai_tier.badge}
+            value={`${aiLead.ai_score}/100`}
+          />
+
+          <AppointmentOrangeMetric
+            label="Profile Complete"
+            value={`${completeness}%`}
+          />
+        </div>
+
+        <div className="mt-3 min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+            Conversion Probability
+          </p>
+
+          <p className="mt-1 text-lg font-black text-white">
+            {aiLead.ai_conversion_probability}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={openRealGptWorkspace}
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
+        >
+          <ShieldCheck size={15} />
+          Open AI Workspace
+          <ExternalLink size={13} />
+        </button>
+      </aside>
+
+      {!compact ? (
+        <div
+          className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-white p-3.5 sm:p-4"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                Immediate Actions
+              </p>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                Contact the student or open the complete appointment record without losing this queue position.
+              </p>
+            </div>
+
+            <div className="flex min-w-0 flex-wrap gap-2 [container-type:inline-size]">
+              <ContactAction
+                label="Email"
+                icon={Mail}
+                disabled={!contactLinks.email}
+                onClick={(event) => openExternal(event, contactLinks.email)}
+              />
+
+              <ContactAction
+                label="Call"
+                icon={Phone}
+                disabled={!contactLinks.phone}
+                onClick={(event) => openExternal(event, contactLinks.phone)}
+              />
+
+              <ContactAction
+                label="WhatsApp"
+                icon={MessageCircle}
+                disabled={!contactLinks.whatsapp}
+                primary
+                onClick={(event) => openExternal(event, contactLinks.whatsapp)}
+              />
+
+              <ContactAction
+                label="Open Profile"
+                icon={ExternalLink}
+                onClick={() => openModal(appointment)}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-3"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={() => setWorkspaceExpanded((current) => !current)}
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-[3px] border-[#123865] bg-white px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Operational Workspace
+            </p>
+
+            <p className="mt-1 break-words text-xs font-semibold text-slate-600">
+              {workspaceExpanded
+                ? "Hide appointment controls, journey, snapshot and protected actions."
+                : "Open appointment controls, journey, snapshot and protected actions."}
+            </p>
+          </div>
+
+          <ChevronDown
+            size={18}
+            className={`shrink-0 text-[#123865] ${TRANSITION} ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
       </div>
 
+      <AnimatePresence initial={false}>
+        {workspaceExpanded ? (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={shouldReduceMotion ? { duration: 0 } : MOTION}
+            className="min-w-0 overflow-hidden"
+          >
+            <div
+              className="min-w-0 space-y-4 bg-[#FFF8EF] p-4 sm:p-5"
+              onClick={(event) => event.stopPropagation()}
+            >
       {!compact && (
-        <div className="relative mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="relative mt-4 grid min-w-0 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
           <SummaryCard
             label="Schedule"
             value={appointmentDate || "Not scheduled"}
@@ -688,84 +837,9 @@ function AppointmentCard({
       )}
 
       {!compact && (
-        <div className="relative mt-4 rounded-[1.2rem] border-2 border-orange-300 bg-white p-4 transition duration-300 group-hover:border-orange-300 sm:mt-5 sm:rounded-[1.4rem] sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] uppercase tracking-[0.24em] text-orange-600 sm:text-[10px] sm:tracking-[0.32em]">
-                AI Appointment Intelligence
-              </p>
-
-              <p className="mt-2 text-sm leading-relaxed text-slate-700">
-                {aiLead.ai_recommended_action}
-              </p>
-
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                Open the GPT workspace when deeper drafting, reasoning, or counselor assistance is required.
-              </p>
-            </div>
-
-            <div className="shrink-0 rounded-2xl border-2 border-orange-300 bg-[#fff0e8] px-4 py-3 text-center">
-              <p className="text-[9px] uppercase tracking-[0.2em] text-slate-400">
-                Score
-              </p>
-              <p className="mt-1 text-2xl font-black text-orange-600">
-                {aiLead.ai_score}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!compact ? (
-        <section
-          onClick={(event) => event.stopPropagation()}
-          className="relative mt-4 rounded-[1.3rem] border-2 border-orange-300 bg-white p-4 shadow-[0_8px_24px_rgba(7,31,80,0.04)]"
-        >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#FF5A0A]">
-                Quick Contact
-              </p>
-              <p className="mt-1 text-xs font-semibold text-[#526178]">
-                Reach the student directly without leaving the appointment queue.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <ContactAction
-                label="Email"
-                icon={Mail}
-                disabled={!contactLinks.email}
-                onClick={(event) => openExternal(event, contactLinks.email)}
-              />
-              <ContactAction
-                label="Call"
-                icon={Phone}
-                disabled={!contactLinks.phone}
-                onClick={(event) => openExternal(event, contactLinks.phone)}
-              />
-              <ContactAction
-                label="WhatsApp"
-                icon={MessageCircle}
-                disabled={!contactLinks.whatsapp}
-                primary
-                onClick={(event) => openExternal(event, contactLinks.whatsapp)}
-              />
-              <ContactAction
-                label={copiedField === "phone" ? "Copied" : "Copy Phone"}
-                icon={copiedField === "phone" ? CheckCircle2 : Copy}
-                disabled={!appointment.phone}
-                onClick={() => void copyValue("phone", appointment.phone)}
-              />
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {!compact && (
         <div
           onClick={(event) => event.stopPropagation()}
-          className="relative mt-4 rounded-[1.2rem] border border-[#123865] bg-[#123865] p-4 shadow-[0_14px_32px_rgba(7,31,80,0.12)] sm:mt-5 sm:rounded-[1.4rem] sm:p-5" style={{ color: "#FFFFFF" }}
+          className="relative mt-4 overflow-hidden rounded-[1.45rem] border-[3px] border-[#123865] bg-[#123865] p-4 shadow-[0_14px_32px_rgba(18,56,101,0.14)] sm:mt-5 sm:p-5" style={{ color: "#FFFFFF" }}
         >
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -872,7 +946,7 @@ function AppointmentCard({
               type="button"
               onClick={() => nextStage && handleStageUpdate(nextStage.key)}
               disabled={!nextStage || !safePermissions.canUpdateAppointmentPipeline}
-              className={`rounded-full px-4 py-2.5 text-xs font-semibold transition duration-300 sm:text-sm ${
+              className={`rounded-xl border-2 px-4 py-2.5 text-xs font-semibold transition duration-300 sm:text-sm ${
                 nextStage && safePermissions.canUpdateAppointmentPipeline
                   ? "bg-[#FF5A0A] text-white shadow-[0_10px_24px_rgba(255,75,18,0.20)] hover:-translate-y-0.5 hover:bg-[#ff642f]"
                   : "cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400"
@@ -885,7 +959,7 @@ function AppointmentCard({
       )}
 
       <section className="relative mt-4">
-        <div className="rounded-[1.25rem] border-2 border-orange-300 bg-[#FFF8EF] p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_24px_rgba(18,56,101,0.05)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#FF5A0A]">
@@ -917,9 +991,9 @@ function AppointmentCard({
       {!compact && (
         <section
           onClick={(event) => event.stopPropagation()}
-          className="relative mt-4 grid gap-3 lg:grid-cols-2"
+          className="relative mt-4 grid min-w-0 gap-3 lg:grid-cols-2"
         >
-          <div className="rounded-[1.3rem] border-2 border-orange-300 bg-white p-4 shadow-[0_10px_28px_rgba(7,31,80,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#FF7A2F] hover:shadow-[0_16px_36px_rgba(255,75,18,0.08)]">
+          <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_24px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md sm:p-5">
             <div className="flex items-start gap-3">
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${activePriority.badge}`}>
                 <span>{activePriority.icon}</span>
@@ -946,7 +1020,7 @@ function AppointmentCard({
                     onClick={() => handlePriorityUpdate(choice.value)}
                     disabled={!safePermissions.canUpdatePriority}
                     aria-pressed={isActive}
-                    className={`group flex min-h-[62px] min-w-0 items-center gap-3 overflow-hidden rounded-[1rem] border px-4 py-3 text-left transition-all duration-300 ${
+                    className={`group flex min-h-[62px] min-w-0 items-center gap-3 overflow-hidden rounded-xl border-2 px-4 py-3 text-left transition-all duration-300 ${
                       isActive ? choice.active : choice.idle
                     } ${
                       !safePermissions.canUpdatePriority
@@ -985,7 +1059,7 @@ function AppointmentCard({
               })}
             </div>
 
-            <div className="mt-3 rounded-xl border-2 border-orange-300 bg-white/80 px-3 py-2">
+            <div className="mt-3 rounded-xl border-2 border-[#FF5A0A] bg-white/80 px-3 py-2">
               <p className="text-[9px] font-bold leading-4 text-[#71809a]">
                 Priority controls how quickly this appointment should surface in
                 the operational queue. Use VIP for the most important cases,
@@ -995,9 +1069,9 @@ function AppointmentCard({
             </div>
           </div>
 
-          <div className="rounded-[1.3rem] border-2 border-orange-300 bg-white p-4 shadow-[0_10px_28px_rgba(7,31,80,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#FF7A2F] hover:shadow-[0_16px_36px_rgba(255,75,18,0.08)]">
+          <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_24px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md sm:p-5">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-[#fff0e8] text-[#c2410c]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]">
                 <span>{activeStage.icon}</span>
               </div>
 
@@ -1062,7 +1136,7 @@ function AppointmentCard({
               })}
             </div>
 
-            <div className="mt-3 rounded-xl border-2 border-orange-300 bg-white/80 px-3 py-2">
+            <div className="mt-3 rounded-xl border-2 border-[#FF5A0A] bg-white/80 px-3 py-2">
               <p className="text-[9px] font-bold leading-4 text-[#71809a]">
                 Status changes update this booking immediately. Confirmed and
                 completed appointments use the Zaifan orange completion language;
@@ -1074,7 +1148,7 @@ function AppointmentCard({
       )}
 
       {!compact && (
-        <section className="relative mt-4 rounded-[1.35rem] border-2 border-orange-300 bg-[#FFF8EF] p-4 sm:p-5">
+        <section className="relative mt-4 rounded-[1.35rem] border-2 border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:p-5">
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#FF5A0A]">
             Student Message
           </p>
@@ -1087,7 +1161,7 @@ function AppointmentCard({
 
       <footer
         onClick={(event) => event.stopPropagation()}
-        className="relative mt-4 rounded-[1.35rem] border-2 border-orange-300 bg-white p-4 sm:p-5"
+        className="relative mt-4 rounded-[1.35rem] border-2 border-[#FF5A0A] bg-white p-4 sm:p-5"
       >
         <div className="grid gap-2.5 md:grid-cols-2">
           <button
@@ -1101,7 +1175,7 @@ function AppointmentCard({
           <button
             type="button"
             onClick={() => openModal(appointment)}
-            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-orange-300 bg-white px-5 py-3 text-xs font-black text-[#123865] transition duration-300 hover:-translate-y-1 hover:border-[#FF7A2F] hover:bg-[#FFF2E8] hover:text-[#FF5A0A] sm:text-sm"
+            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#FF5A0A] bg-white px-5 py-3 text-xs font-black text-[#123865] transition duration-300 hover:-translate-y-1 hover:border-[#FF7A2F] hover:bg-[#FFF4E8] hover:text-[#FF5A0A] sm:text-sm"
           >
             Open Full Student CRM
           </button>
@@ -1121,7 +1195,7 @@ function AppointmentCard({
                   type="button"
                   onClick={() => handleStatusUpdate(item)}
                   disabled={!safePermissions.canUpdateStatus || isConfirmBlocked}
-                  className={`rounded-full px-4 py-2.5 text-xs font-black capitalize transition duration-300 sm:px-5 sm:py-3 sm:text-sm ${
+                  className={`rounded-xl border-2 px-4 py-2.5 text-xs font-black capitalize transition duration-300 sm:px-5 sm:py-3 sm:text-sm ${
                     isActive
                       ? item === "cancelled"
                         ? "border border-red-500 bg-red-500 text-white"
@@ -1143,7 +1217,7 @@ function AppointmentCard({
             type="button"
             onClick={handleDelete}
             disabled={!safePermissions.canDelete}
-            className={`mt-3 w-full rounded-full px-4 py-2.5 text-xs font-black transition duration-300 sm:px-6 sm:py-3 sm:text-sm ${
+            className={`mt-3 w-full rounded-xl border-2 px-4 py-2.5 text-xs font-black transition duration-300 sm:px-6 sm:py-3 sm:text-sm ${
               safePermissions.canDelete
                 ? "border border-red-200 bg-white text-red-700 hover:-translate-y-0.5 hover:bg-red-50"
                 : "cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400"
@@ -1153,6 +1227,11 @@ function AppointmentCard({
           </button>
         )}
       </footer>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      </div>
     </motion.div>
 
       <AnimatePresence>
@@ -1229,8 +1308,8 @@ function AppointmentCard({
 function AssignmentBadge({ assignedAdminName, assignedAdminInitial }) {
   if (!assignedAdminName) {
     return (
-      <span className="inline-flex max-w-full shrink-0 items-center gap-2 rounded-full border-2 border-orange-300 bg-[#fff0e8] px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-orange-700 shadow-sm sm:px-3">
-        <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-orange-300 bg-white text-[9px]">
+      <span className="inline-flex max-w-full shrink-0 items-center gap-2 rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-orange-700 shadow-sm sm:px-3">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#FF5A0A] bg-white text-[9px]">
           !
         </span>
         <span className="truncate">Unassigned</span>
@@ -1250,10 +1329,24 @@ function AssignmentBadge({ assignedAdminName, assignedAdminInitial }) {
   );
 }
 
+function AppointmentOrangeMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+
 function SummaryCard({ label, value, accent = "navy" }) {
   const accentClass =
     accent === "orange"
-      ? "border-orange-300 bg-[#fff0e8]"
+      ? "border-[#FF5A0A] bg-[#FFF4E8]"
       : "border-[#123865]/20 bg-[#FFF8EF]";
 
   return (
@@ -1287,7 +1380,7 @@ function ContactAction({
           ? "cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400"
           : primary
           ? "border border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_8px_20px_rgba(255,75,18,0.18)] hover:-translate-y-0.5 hover:bg-[#ff642f]"
-          : "border-2 border-orange-300 bg-[#FFF8EF] text-[#123865] hover:-translate-y-0.5 hover:border-[#FF7A2F] hover:bg-white"
+          : "border-2 border-[#FF5A0A] bg-[#FFF8EF] text-[#123865] hover:-translate-y-0.5 hover:border-[#FF7A2F] hover:bg-white"
       }`}
     >
       <Icon size={14} />
@@ -1311,7 +1404,7 @@ function InfoCard({ label, value, onCopy = null, copied = false }) {
               event.stopPropagation();
               onCopy();
             }}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[9px] font-black text-slate-600 hover:border-orange-300 hover:text-orange-700"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[9px] font-black text-slate-600 hover:border-[#FF5A0A] hover:text-orange-700"
           >
             {copied ? <CheckCircle2 size={11} /> : <Clipboard size={11} />}
             {copied ? "Copied" : "Copy"}

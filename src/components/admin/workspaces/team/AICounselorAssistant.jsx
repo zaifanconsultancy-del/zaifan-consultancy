@@ -1,4 +1,4 @@
-// AICounselorAssistant V4 — Maximum Quick AI Actions / Counselor Copilot
+// AICounselorAssistant PARTNER OS EXTREME — Executive Counselor Copilot
 // Preserves the full mature AI counselor architecture: enrichment engine,
 // scoring, risk, opportunity, urgency, best-channel logic, drafts, copying,
 // reminder creation and all helper logic.
@@ -235,29 +235,29 @@ function AICounselorAssistant({
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28 }}
-      className="space-y-5"
+      className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5"
     >
-      <div className="relative overflow-hidden rounded-[1.9rem] border-[3px] border-orange-400 bg-[#123865] p-6 shadow-[0_18px_50px_rgba(15,35,63,0.14)]" style={{ color: "#ffffff" }}>
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="relative min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-5 shadow-[0_18px_50px_rgba(18,56,101,0.11)] sm:p-6 lg:p-7" style={{ color: "#ffffff" }}>
+        <div className="relative grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.36fr)] lg:items-start">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/40 bg-orange-500/15 px-3 py-1.5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#FF5A0A]/40 bg-[#FF5A0A]/15 px-3 py-1.5">
               <Bot className="h-3.5 w-3.5 text-orange-300" />
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-orange-300">
                 Local Counselor Copilot
               </p>
             </div>
 
-            <h3 className="mt-3 text-2xl font-black text-white sm:text-3xl">
+            <h3 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Quick Counselor Actions
             </h3>
 
-            <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-white">
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Fast rule-based counselor support for summaries, follow-ups,
               next actions and real Supabase reminders.
             </p>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/20 bg-white/10 p-5 text-right backdrop-blur-sm" style={{ color: "#ffffff" }}>
+          <div className="min-w-0 rounded-[1.4rem] border-[2px] border-white/25 bg-white/10 p-5 text-left shadow-inner backdrop-blur-sm" style={{ color: "#ffffff" }}>
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white">
               AI Score
             </p>
@@ -271,7 +271,7 @@ function AICounselorAssistant({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-3">
         <QuickModeCard
           label="Generation"
           value="Local Rules"
@@ -299,7 +299,7 @@ function AICounselorAssistant({
         />
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <InsightCard
           icon={Flame}
           label="Temperature"
@@ -337,7 +337,7 @@ function AICounselorAssistant({
         />
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <InsightCard
           icon={ShieldAlert}
           label="Risk Level"
@@ -361,7 +361,7 @@ function AICounselorAssistant({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <QuickModeCard
           label="Student Record"
           value={student?.id ? "Connected" : "Missing ID"}
@@ -388,7 +388,7 @@ function AICounselorAssistant({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeDraft === tab.id;
@@ -398,10 +398,10 @@ function AICounselorAssistant({
               key={tab.id}
               type="button"
               onClick={() => setActiveDraft(tab.id)}
-              className={`rounded-2xl border p-4 text-left transition ${
+              className={`min-w-0 rounded-[1.2rem] border-[2px] p-4 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
                 isActive
-                  ? "border-orange-500 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)]"
-                  : "border-[#b8c5d3] bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                  ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_8px_18px_rgba(255,90,10,0.18)]"
+                  : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8] hover:text-orange-700"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -413,13 +413,13 @@ function AICounselorAssistant({
         })}
       </div>
 
-      <div className="rounded-[1.75rem] border border-[#b8c5d3] bg-white p-5 shadow-[0_8px_24px_rgba(15,35,63,0.04)]">
-        <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_32px_rgba(18,56,101,0.07)]">
+        <div className="mb-4 flex min-w-0 flex-col gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#4d6380]">
               AI Output
             </p>
-            <h4 className="mt-1 text-lg font-black text-[#10233f]">{activeTab.label}</h4>
+            <h4 className="mt-1 text-lg font-black text-[#10233F]">{activeTab.label}</h4>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -431,14 +431,14 @@ function AICounselorAssistant({
           </div>
         </div>
 
-        <div className="rounded-[1.4rem] border-2 border-[#b8c5d3] bg-[#fff8ee] p-4">
+        <div className="min-w-0 rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-inner">
           <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7 text-[#243b5a]">
             {activeTab.content}
           </pre>
         </div>
       </div>
 
-      <div className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-4 text-sm leading-relaxed text-orange-800">
+      <div className="rounded-[1.45rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 text-sm font-semibold leading-relaxed text-orange-800 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
         Local rule-based generation is active here. Use GPT Workspace when deeper reasoning or custom generation is genuinely needed.
       </div>
     </motion.section>
@@ -455,14 +455,15 @@ function ActionStatus({ status, onDismiss }) {
         : "border-blue-300 bg-blue-50 text-blue-800";
 
   return (
-    <div className={`flex items-start gap-3 rounded-2xl border-2 px-4 py-3 ${style}`}>
+    <div role={status?.type === "error" ? "alert" : "status"}
+    className={`flex min-w-0 items-start gap-3 rounded-2xl border-[3px] px-4 py-3 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${style}`}>
       <div className="min-w-0 flex-1 text-sm font-black">
         {status?.message}
       </div>
       <button
         type="button"
         onClick={onDismiss}
-        className="shrink-0 text-lg font-black leading-none"
+        className="shrink-0 rounded-lg px-2 py-1 text-lg font-black leading-none transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
         aria-label="Dismiss status"
       >
         ×
@@ -478,13 +479,13 @@ function QuickModeCard({ label, value, detail, tone = "cream" }) {
     tone === "navy"
       ? "border-[#123865] bg-[#123865]"
       : tone === "orange"
-        ? "border-orange-500 bg-orange-500"
-        : "border-orange-300 bg-white";
+        ? "border-[#FF5A0A] bg-[#FF5A0A]"
+        : "border-[#FF5A0A] bg-white";
 
   return (
     <div
-      className={`rounded-[1.35rem] border-[3px] p-4 ${style}`}
-      style={{ color: isDark ? "#ffffff" : "#10233f" }}
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
+      style={{ color: isDark ? "#ffffff" : "#10233F" }}
     >
       <p
         className="text-[9px] font-black uppercase tracking-[0.14em]"
@@ -494,7 +495,7 @@ function QuickModeCard({ label, value, detail, tone = "cream" }) {
       </p>
       <p
         className="mt-1 text-xl font-black"
-        style={{ color: isDark ? "#ffffff" : "#10233f" }}
+        style={{ color: isDark ? "#ffffff" : "#10233F" }}
       >
         {value}
       </p>
@@ -526,15 +527,15 @@ function ActionButton({ icon: Icon, label, onClick, disabled, green, blue, gold 
     : blue
     ? "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
     : gold
-    ? "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
-    : "border-[#b8c5d3] bg-white text-[#10233f] hover:border-orange-400 hover:bg-orange-50 hover:text-orange-700";
+    ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-700 hover:bg-orange-100"
+    : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8] hover:text-orange-700";
 
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${tone}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 px-4 py-2 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50 ${tone}`}
     >
       <Icon className="h-4 w-4" />
       {label}
@@ -544,16 +545,16 @@ function ActionButton({ icon: Icon, label, onClick, disabled, green, blue, gold 
 
 function InsightCard({ icon: Icon, label, value, text, tone = "gold" }) {
   const toneClass = {
-    gold: "border-orange-300 bg-orange-50 text-orange-800",
+    gold: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
     blue: "border-blue-300 bg-blue-50 text-blue-800",
-    gray: "border-[#b8c5d3] bg-[#f7f9fc] text-[#243b5a]",
-  }[tone] || "border-orange-300 bg-orange-50 text-orange-800";
+    gray: "border-[#C9D7E6] bg-[#f7f9fc] text-[#243b5a]",
+  }[tone] || "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
 
   return (
-    <div className={`rounded-[1.5rem] border-2 p-4 ${toneClass}`}>
+    <div className={`min-w-0 rounded-[1.45rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${toneClass}`}>
       <div className="flex items-start gap-3">
         <div className="rounded-2xl border-2 border-current/20 bg-white p-3">
           <Icon className="h-5 w-5" />

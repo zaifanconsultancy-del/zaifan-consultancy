@@ -23,6 +23,12 @@ const SystemPage = lazy(() =>
 const EnterprisePage = lazy(() =>
   import("../../components/admin/pages/EnterprisePage")
 );
+const KnowledgeOSDashboard = lazy(() =>
+  import("../../components/admin/knowledge/KnowledgeOSDashboard")
+);
+const MobileControlCenter = lazy(() =>
+  import("../../components/admin/mobile/MobileControlCenter")
+);
 const AnalyticsPage = lazy(() =>
   import("../../components/admin/pages/AnalyticsPage")
 );
@@ -882,6 +888,30 @@ function AdminPage() {
                   studentInvoices={studentInvoices}
                   studentPayments={studentPayments}
                   counselorPaymentRequests={counselorPaymentRequests}
+                />
+              ) : activeTab === "knowledge-os" ? (
+                <KnowledgeOSDashboard
+                  adminProfile={adminProfile}
+                  snapshot={{
+                    sops: [],
+                    training: [],
+                    universityRules: [],
+                    visaGuides: [],
+                    policies: [],
+                  }}
+                  onRefresh={fetchAllData}
+                />
+              ) : activeTab === "mobile-os" ? (
+                <MobileControlCenter
+                  adminProfile={adminProfile}
+                  snapshot={{
+                    students: [...inquiries, ...appointments],
+                    supportRequests,
+                    studentTasks,
+                    studentDocuments,
+                    studentPayments,
+                  }}
+                  onRefresh={fetchAllData}
                 />
               ) : [
                 "system-overview",

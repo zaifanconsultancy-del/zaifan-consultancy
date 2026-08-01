@@ -1,4 +1,4 @@
-﻿// StudentDetailModal — Student 360 orchestration shell
+﻿// StudentDetailModal PARTNER OS EXTREME V4 — Compact Command Strip
 // Responsibilities intentionally retained here:
 // - source-record identity and modal lifecycle
 // - Student 360 derived context / readiness
@@ -45,6 +45,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Target,
+  Trash2,
   X,
 } from "lucide-react";
 import { addTimelineEvent } from "../../../../lib/crmTimeline";
@@ -666,118 +667,151 @@ function StudentDetailModal({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={shouldReduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.99 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
-          className={`zaifan-student-os-v24 flex h-[96dvh] max-h-[96dvh] w-full max-w-[1680px] flex-col overflow-hidden overscroll-contain touch-pan-y rounded-[1.45rem] border-[3px] border-[#F97316] bg-[#FFF8EF] text-[#152238] shadow-[0_36px_140px_rgba(15,23,42,0.42)] sm:rounded-[2rem] ${cardClass}`}
+          className={`zaifan-student-os-v24 flex h-[97dvh] max-h-[97dvh] w-full max-w-[1680px] min-w-0 flex-col overflow-hidden overscroll-contain touch-pan-y rounded-[1.45rem] border-[4px] border-[#123865] bg-[#FFF8EF] text-[#10233F] shadow-[0_40px_150px_rgba(15,23,42,0.48)] sm:rounded-[1.9rem] ${cardClass}`}
         >
-          <div className="relative shrink-0 border-b-[3px] border-[#D7E1EB] bg-[#FFFDF8] px-4 py-3 sm:px-6 sm:py-4">
-            <div className="absolute inset-x-8 top-0 h-[4px] rounded-b-full bg-[#F97316]" />
+          <div className="relative shrink-0 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-3 py-2.5 text-white sm:px-4">
+            <div className="absolute inset-x-8 top-0 h-[3px] rounded-b-full bg-[#FF5A0A]" />
 
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border-2 border-[#F97316] bg-[#FFF4E8] px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-700 sm:text-[10px]">
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                  <span className="rounded-full border border-white/25 bg-white/[0.08] px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.14em] text-white sm:text-[8px]">
                     {isAppointment ? "Appointment" : "Inquiry"}
                   </span>
 
-                  <span className={`rounded-full border-2 px-3 py-1 text-[9px] font-black capitalize sm:text-[10px] ${getPriorityStyle(priority)}`}>
-                    {priority} priority
+                  <span className={`rounded-full border px-2 py-0.5 text-[7px] font-black capitalize sm:text-[8px] ${getPriorityStyle(priority)}`}>
+                    {priority}
                   </span>
 
-                  <span className={`rounded-full border-2 px-3 py-1 text-[9px] font-black capitalize sm:text-[10px] ${getStatusStyle(status)}`}>
+                  <span className={`rounded-full border px-2 py-0.5 text-[7px] font-black capitalize sm:text-[8px] ${getStatusStyle(status)}`}>
                     {status}
                   </span>
 
-                  <span className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] sm:text-[10px] ${
-                    osLoading
-                      ? "border-blue-200 bg-blue-50 text-blue-700"
-                      : osHealthSummary.failed > 0
-                        ? "border-red-200 bg-red-50 text-red-700"
-                        : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  }`}>
-                    {osLoading ? <LoaderCircle size={11} className="animate-spin" /> : <ShieldCheck size={11} />}
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.08em] sm:text-[8px] ${
+                      osLoading
+                        ? "border-blue-200/50 bg-blue-400/10 text-blue-100"
+                        : osHealthSummary.failed > 0
+                          ? "border-red-200/50 bg-red-400/10 text-red-100"
+                          : "border-emerald-200/50 bg-emerald-400/10 text-emerald-100"
+                    }`}
+                  >
+                    {osLoading ? (
+                      <LoaderCircle size={9} className="animate-spin" />
+                    ) : (
+                      <ShieldCheck size={9} />
+                    )}
                     {osLoading
-                      ? "Syncing Student OS"
+                      ? "Syncing"
                       : osHealthSummary.total
-                        ? `Student OS ${osHealthSummary.ready}/${osHealthSummary.total}`
-                        : "Student OS connected"}
+                        ? `OS ${osHealthSummary.ready}/${osHealthSummary.total}`
+                        : "OS ready"}
                   </span>
                 </div>
 
-                <div className="mt-2 flex flex-col gap-1 lg:flex-row lg:items-end lg:gap-4">
-                  <h2 className="min-w-0 break-words text-2xl font-black leading-tight text-[#10233F] sm:text-[2rem]">
+                <div className="mt-1.5 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
+                  <h2 className="min-w-0 break-words text-xl font-black leading-none tracking-[-0.035em] text-white sm:text-2xl">
                     {fullName}
                   </h2>
-                  <p className="pb-0.5 text-sm font-semibold text-slate-500">
-                    {country} <span className="px-1 text-orange-400">•</span> {field}
+
+                  <span className="hidden h-4 w-px bg-white/20 sm:block" />
+
+                  <p className="min-w-0 truncate text-[11px] font-semibold text-slate-200 sm:text-xs">
+                    {country}
+                    <span className="px-1.5 text-orange-200">•</span>
+                    {field}
                   </p>
+
+                  <span className="hidden h-4 w-px bg-white/20 lg:block" />
+
+                  <div className="inline-flex min-w-0 w-fit items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2 py-1">
+                    <ActivePanelIcon size={11} className="shrink-0 text-orange-200" />
+                    <span className="max-w-[190px] truncate text-[8px] font-black uppercase tracking-[0.09em] text-white/65">
+                      Workspace
+                    </span>
+                    <span className="max-w-[190px] truncate text-[10px] font-black text-white">
+                      {activePanelDefinition.label}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="hidden min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#F5F9FF] px-3 text-sm font-black text-[#123865] 2xl:inline-flex">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#123865] text-white">
-                    <ActivePanelIcon size={14} />
-                  </span>
-                  <span className="max-w-[170px] truncate">{activePanelDefinition.label}</span>
-                </div>
-
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5 xl:justify-end">
                 <button
                   type="button"
                   onClick={() => setMobileNavOpen((prev) => !prev)}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3.5 text-sm font-black text-[#123865] transition hover:border-orange-300 hover:bg-[#FFF4E8] lg:hidden"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/20 bg-white/[0.07] px-2.5 text-[10px] font-black text-white transition hover:bg-white/12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 lg:hidden"
                 >
-                  <Menu size={16} />
+                  <Menu size={14} />
                   Modules
                 </button>
 
-                <StudentNotificationComposer
-                  student={workingStudent}
-                  context={activePanel}
-                  buttonLabel="Notify Student"
-                />
+                <div className="[&>div>button]:h-9 [&>div>button]:min-h-0 [&>div>button]:rounded-lg [&>div>button]:border [&>div>button]:border-white/25 [&>div>button]:bg-transparent [&>div>button]:px-3 [&>div>button]:text-[10px] [&>div>button]:shadow-none [&>div>button]:hover:bg-white/10">
+                  <StudentNotificationComposer
+                    student={workingStudent}
+                    context={activePanel}
+                    buttonLabel="Notify Student"
+                    compact
+                  />
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setActivePanel("ai-workspace")}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-[3px] border-[#D94F08] bg-[#E96512] px-4 text-sm font-black text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#D94F08]"
+                  aria-current={activePanel === "ai-workspace" ? "page" : undefined}
+                  className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[10px] font-black shadow-sm transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200/30 ${
+                    activePanel === "ai-workspace"
+                      ? "border-white bg-white text-[#123865]"
+                      : "border-[#FF5A0A] bg-[#FF5A0A] text-white hover:bg-orange-600"
+                  }`}
                 >
-                  <Bot size={16} />
-                  GPT Workspace
+                  <Bot size={14} />
+                  <span className="hidden sm:inline">
+                    {activePanel === "ai-workspace" ? "GPT Open" : "GPT Workspace"}
+                  </span>
+                  <span className="sm:hidden">GPT</span>
                 </button>
+
+                <span className="mx-0.5 hidden h-6 w-px bg-white/15 xl:block" />
 
                 <button
                   type="button"
                   onClick={refreshCurrentPanel}
                   disabled={osLoading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#123865] transition duration-300 hover:border-[#F97316] hover:bg-[#FFF4E8] hover:text-orange-700 disabled:opacity-50"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Refresh current student workspace"
+                  title="Refresh current workspace"
                 >
-                  <RefreshCw size={15} className={osLoading ? "animate-spin" : ""} />
-                  <span className="hidden sm:inline">Refresh</span>
+                  <RefreshCw size={14} className={osLoading ? "animate-spin" : ""} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/[0.07] text-white transition hover:-translate-y-0.5 hover:bg-white/12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
+                  aria-label="Close student workspace"
+                  title="Close"
+                >
+                  <X size={15} />
                 </button>
 
                 {safePermissions.canDelete ? (
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-4 text-sm font-black text-red-700 transition duration-300 hover:bg-red-100"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200/55 bg-red-400/10 text-red-100 transition hover:-translate-y-0.5 hover:bg-red-400/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200/20"
+                    aria-label="Delete student record"
+                    title="Delete student record"
                   >
-                    Delete
+                    <Trash2 size={14} />
                   </button>
                 ) : null}
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#123865] transition duration-300 hover:border-[#123865] hover:bg-[#F2F7FF]"
-                >
-                  <X size={16} />
-                  <span className="hidden sm:inline">Close</span>
-                </button>
               </div>
             </div>
 
             {osError ? (
-              <div className="mt-3 flex items-start gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs font-semibold text-amber-900">
-                <CircleAlert size={16} className="mt-0.5 shrink-0 text-amber-600" />
+              <div className="mt-2 flex min-w-0 items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-[10px] font-semibold leading-4 text-amber-900">
+                <CircleAlert size={13} className="mt-0.5 shrink-0 text-amber-600" />
                 <div className="min-w-0">
                   <span className="font-black">Partial sync issue.</span>{" "}
                   {osError}
@@ -786,21 +820,23 @@ function StudentDetailModal({
             ) : null}
           </div>
 
-          <div className="shrink-0 border-b-[3px] border-[#D7E1EB] bg-[#FFF8EF] px-4 py-2.5 sm:px-6">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
-              <Student360Metric label="Profile readiness" value={`${profileReadiness}%`} icon={BadgeCheck} tone="orange" />
-              <Student360Metric label="Pipeline" value={`${pipelineProgress || 0}%`} icon={Target} tone="blue" />
-              <Student360Metric label="Documents" value={`${verifiedDocuments}/${studentDocuments.length}`} icon={FolderOpen} tone="emerald" />
-              <Student360Metric label="Tasks done" value={`${completedTasks}/${studentTasks.length}`} icon={ClipboardCheck} tone="blue" />
-              <Student360Metric label="Universities" value={studentUniversities.length} icon={Building2} tone="blue" />
-              <Student360Metric label="Open support" value={openSupportRequests} icon={LifeBuoy} tone="red" />
-              <Student360Metric label="Portal" value={portalAccount?.is_active ? "Active" : portalAccount ? "Paused" : "Not set"} icon={LockKeyhole} tone={portalAccount?.is_active ? "emerald" : "slate"} />
+          <div className="shrink-0 border-b-2 border-[#123865] bg-[#FFF8EF] px-3 py-1.5 sm:px-4">
+            <div className="overflow-hidden rounded-xl border-2 border-[#C9D7E6] bg-white shadow-[0_4px_12px_rgba(18,56,101,0.04)]">
+              <div className="grid min-w-0 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
+                <Student360Metric label="Profile readiness" value={`${profileReadiness}%`} icon={BadgeCheck} tone="orange" />
+                <Student360Metric label="Pipeline" value={`${pipelineProgress || 0}%`} icon={Target} tone="blue" />
+                <Student360Metric label="Documents" value={`${verifiedDocuments}/${studentDocuments.length}`} icon={FolderOpen} tone="emerald" />
+                <Student360Metric label="Tasks done" value={`${completedTasks}/${studentTasks.length}`} icon={ClipboardCheck} tone="blue" />
+                <Student360Metric label="Universities" value={studentUniversities.length} icon={Building2} tone="blue" />
+                <Student360Metric label="Open support" value={openSupportRequests} icon={LifeBuoy} tone="red" />
+                <Student360Metric label="Portal" value={portalAccount?.is_active ? "Active" : portalAccount ? "Paused" : "Not set"} icon={LockKeyhole} tone={portalAccount?.is_active ? "emerald" : "slate"} />
+              </div>
             </div>
           </div>
 
-          <div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[292px_minmax(0,1fr)]">
+          <div className="grid min-h-0 min-w-0 flex-1 overflow-hidden bg-[#FFF8EF] lg:grid-cols-[248px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)]">
             <div
-              className={`min-h-0 ${mobileNavOpen ? "block" : "hidden"} lg:block`}
+              className={`min-h-0 min-w-0 border-r-[3px] border-[#123865] bg-[#123865] ${mobileNavOpen ? "block" : "hidden"} lg:block`}
             >
               <StudentWorkspaceNavigation
                 groups={filteredSidebarGroups}
@@ -813,9 +849,9 @@ function StudentDetailModal({
               />
             </div>
 
-            <main className="zaifan-student-main min-h-0 min-w-0 overscroll-contain overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch] bg-[#fffdfa] p-3 pb-20 sm:p-5 sm:pb-24 xl:p-6 xl:pb-28">
+            <main className="zaifan-student-main min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y bg-[#FFF8EF] p-2 pb-16 [-webkit-overflow-scrolling:touch] sm:p-3 sm:pb-20 xl:p-4 xl:pb-24">
               <div
-                className={`zaifan-panel-surface zaifan-admin-contrast-surface ${
+                className={`zaifan-panel-surface zaifan-admin-contrast-surface min-w-0 rounded-[1.35rem] border-2 border-[#C9D7E6] bg-[#FFFDF8] p-1.5 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:p-2 ${
                   ["ai-workspace", "gpt-intelligence", "ai", "executive-ai"].includes(activePanel)
                     ? "zaifan-ai-panel-surface"
                     : ""
@@ -938,19 +974,19 @@ function StudentDetailModal({
           <style>{`
             .zaifan-student-nav {
               scrollbar-width: thin;
-              scrollbar-color: rgba(249, 115, 22, 0.24) transparent;
+              scrollbar-color: rgba(255, 90, 10, 0.34) transparent;
             }
             .zaifan-student-nav::-webkit-scrollbar {
               width: 6px;
             }
             .zaifan-student-nav::-webkit-scrollbar-thumb,
             .zaifan-student-main::-webkit-scrollbar-thumb {
-              background: rgba(249, 115, 22, 0.3);
+              background: rgba(255, 90, 10, 0.38);
               border-radius: 999px;
             }
             .zaifan-student-main {
               scrollbar-width: thin;
-              scrollbar-color: rgba(249, 115, 22, 0.3) transparent;
+              scrollbar-color: rgba(255, 90, 10, 0.38) transparent;
             }
             .zaifan-student-main::-webkit-scrollbar {
               width: 8px;
@@ -962,10 +998,10 @@ function StudentDetailModal({
             }
 
             .zaifan-ai-panel-surface {
-              --zaifan-navy: #152238;
-              --zaifan-navy-soft: #24324a;
-              --zaifan-orange: #f97316;
-              --zaifan-cream: #fff8ee;
+              --zaifan-navy: #123865;
+              --zaifan-navy-soft: #315b88;
+              --zaifan-orange: #ff5a0a;
+              --zaifan-cream: #fff8ef;
               color: var(--zaifan-navy);
             }
 
@@ -983,18 +1019,18 @@ function StudentDetailModal({
              */
 
             .zaifan-ai-panel-surface {
-              --zaifan-navy: #152238;
-              --zaifan-navy-soft: #24324a;
-              --zaifan-orange: #f97316;
-              --zaifan-cream: #fff8ee;
+              --zaifan-navy: #123865;
+              --zaifan-navy-soft: #315b88;
+              --zaifan-orange: #ff5a0a;
+              --zaifan-cream: #fff8ef;
             }
 
             .zaifan-admin-contrast-surface {
-              --zaifan-admin-navy: #0f2a55;
-              --zaifan-admin-navy-deep: #0a1f44;
+              --zaifan-admin-navy: #123865;
+              --zaifan-admin-navy-deep: #10233f;
               --zaifan-admin-orange: #ff5a0a;
-              --zaifan-admin-cream: #fff8ee;
-              --zaifan-admin-card: #fffdf9;
+              --zaifan-admin-cream: #fff8ef;
+              --zaifan-admin-card: #fffdf8;
               --zaifan-admin-border: #cbd5e1;
             }
 
@@ -1014,7 +1050,7 @@ function StudentDetailModal({
              */
             .zaifan-admin-contrast-surface :is(input, select, textarea) {
               background: #ffffff;
-              color: #152238;
+              color: #10233f;
               border-color: #94a3b8;
               opacity: 1;
             }
@@ -1032,7 +1068,7 @@ function StudentDetailModal({
 
             .zaifan-admin-contrast-surface select option {
               background: #ffffff;
-              color: #152238;
+              color: #10233f;
             }
 
             /*
@@ -1047,11 +1083,11 @@ function StudentDetailModal({
              * Tables remain readable while preserving explicit component colors.
              */
             .zaifan-admin-contrast-surface table {
-              color: #152238;
+              color: #10233f;
             }
 
             .zaifan-admin-contrast-surface th {
-              background: #fff3e4;
+              background: #fff4e8;
               color: #0f2a55;
             }
 
@@ -1073,7 +1109,7 @@ function StudentDetailModal({
 
             @media (max-width: 1023px) {
               .zaifan-student-nav {
-                max-height: 42dvh;
+                max-height: 34dvh;
               }
             }
           `}</style>
@@ -1092,27 +1128,26 @@ function normalize(value = "") {
 
 function Student360Metric({ label, value, icon: Icon, tone = "slate" }) {
   const tones = {
-    orange: "border-[#F97316] bg-[#FFF4E8] text-orange-700",
-    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
-    emerald: "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
-    red: "border-[#FB7185] bg-[#FFF4F4] text-red-700",
-    slate: "border-[#C9D7E6] bg-white text-slate-700",
+    orange: "text-orange-700",
+    blue: "text-blue-700",
+    emerald: "text-emerald-700",
+    red: "text-red-700",
+    slate: "text-slate-700",
   };
 
   return (
     <div
-      className={`flex min-w-0 items-center gap-3 rounded-xl border-2 px-3 py-2.5 shadow-[0_4px_12px_rgba(15,35,63,0.035)] ${tones[tone] || tones.slate}`}
+      className={`flex min-w-0 items-center gap-2 border-b border-r border-[#E1E8F0] px-2.5 py-2 transition hover:bg-[#FFF8EF] md:[&:nth-child(4n)]:border-r-0 xl:border-b-0 xl:[&:nth-child(4n)]:border-r xl:[&:last-child]:border-r-0 ${tones[tone] || tones.slate}`}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white shadow-sm">
-        <Icon size={15} />
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-current/20 bg-[#FFF8EF]">
+        <Icon size={11} />
       </div>
 
       <div className="min-w-0">
-        <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] opacity-70">
+        <p className="truncate text-[6px] font-black uppercase leading-3 tracking-[0.08em] text-slate-500">
           {label}
         </p>
-
-        <p className="mt-0.5 break-words text-xs font-black leading-4 text-[#10233F]">
+        <p className="truncate text-[10px] font-black leading-3 text-[#10233F]">
           {value}
         </p>
       </div>
@@ -1122,11 +1157,11 @@ function Student360Metric({ label, value, icon: Icon, tone = "slate" }) {
 
 function StudentPanelLoader() {
   return (
-    <div className="flex min-h-[420px] items-center justify-center rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8]">
+    <div className="flex min-h-[420px] items-center justify-center rounded-[1.6rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-inner">
       <div className="text-center">
-        <LoaderCircle className="mx-auto h-9 w-9 animate-spin text-orange-500" />
+        <LoaderCircle className="mx-auto h-10 w-10 animate-spin text-[#FF5A0A]" />
         <p className="mt-4 text-sm font-black text-slate-900">Opening student module</p>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs font-semibold text-slate-500">
           Loading only this part of the student operating system.
         </p>
       </div>

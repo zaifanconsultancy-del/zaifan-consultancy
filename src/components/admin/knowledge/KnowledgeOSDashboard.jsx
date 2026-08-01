@@ -82,7 +82,7 @@ function MetricCard({
   badge = "",
 }) {
   const tones = {
-    navy: "border-[#173F6B] bg-[#173F6B]",
+    navy: "border-[#123865] bg-[#123865]",
     blue: "border-[#60A5FA] bg-[#F2F7FF]",
     green: "border-[#34D399] bg-[#F0FFF8]",
     amber: "border-[#F59E0B] bg-[#FFF8E8]",
@@ -109,7 +109,7 @@ function MetricCard({
           </p>
 
           <p
-            className={`mt-2 break-words text-2xl font-black leading-tight ${
+            className={`mt-2 whitespace-normal break-normal text-2xl font-black [overflow-wrap:normal] [word-break:normal] leading-tight ${
               dark ? "text-white" : "text-[#10233F]"
             }`}
           >
@@ -122,7 +122,7 @@ function MetricCard({
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
               dark
                 ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-[#173F6B]/15 bg-white text-[#173F6B]"
+                : "border-[#123865]/15 bg-white text-[#123865]"
             }`}
           >
             <Icon size={16} />
@@ -157,7 +157,7 @@ function StatusPill({ status }) {
   const value = lower(status);
 
   let className =
-    "border-[#C9D7E6] bg-[#FFF8EE] text-slate-600";
+    "border-[#C9D7E6] bg-[#FFF8EF] text-slate-600";
 
   if (readyStatus(value)) {
     className =
@@ -302,7 +302,7 @@ function KnowledgeOverview({
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(18rem,0.75fr)]">
-        <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white">
+        <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#234E78] bg-[#FFFDF8] shadow-[0_10px_28px_rgba(15,35,63,0.055)]">
           <div className="border-b-2 border-[#E1E8F0] p-4 sm:p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
@@ -358,7 +358,7 @@ function KnowledgeOverview({
                   disabled={
                     !searchTerm.trim() && activeCategory === "All"
                   }
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 text-xs font-black text-slate-700 disabled:opacity-40"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-slate-700 disabled:opacity-40"
                 >
                   <X size={12} />
                   Clear
@@ -433,7 +433,7 @@ function KnowledgeOverview({
         </section>
 
         <aside className="space-y-4">
-          <section className="rounded-[1.55rem] border-[3px] border-[#173F6B] bg-[#173F6B] p-4 text-white">
+          <section className="rounded-[1.55rem] border-[3px] border-[#123865] bg-[#123865] p-4 text-white">
             <div className="flex items-center gap-2">
               <Database size={16} className="text-orange-300" />
               <p className="text-[9px] font-black uppercase tracking-[0.11em] text-orange-300">
@@ -621,10 +621,10 @@ export default function KnowledgeOSDashboard({
   }
 
   return (
-    <div className="min-w-0 space-y-5 rounded-[2rem] border-[3px] border-[#173F6B] bg-[#FFF8EE] p-4 shadow-[0_18px_50px_rgba(23,63,107,0.12)] sm:p-5">
+    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
       <header className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316]">
         <div className="grid xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
-          <div className="bg-[#173F6B] p-5 text-white sm:p-6">
+          <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
                 <BookOpen size={12} />
@@ -633,6 +633,10 @@ export default function KnowledgeOSDashboard({
 
               <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
                 {knowledge.connectedDomains}/5 connected domains
+              </span>
+
+              <span className="rounded-full border-2 border-white/15 bg-white/5 px-3 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Evidence first
               </span>
             </div>
 
@@ -647,7 +651,7 @@ export default function KnowledgeOSDashboard({
             </p>
           </div>
 
-          <div className="bg-[#E96512] p-5 text-white sm:p-6">
+          <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
             <p className="text-[9px] font-black uppercase tracking-[0.12em]">
               Current Workspace
             </p>
@@ -686,8 +690,8 @@ export default function KnowledgeOSDashboard({
               aria-pressed={activeModule === key}
               className={`inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-xs font-black transition ${
                 activeModule === key
-                  ? "border-[#F97316] bg-[#F05A0D] text-white"
-                  : "border-[#C9D7E6] bg-[#FFF8EE] text-[#10233F] hover:border-[#F97316]"
+                  ? "border-[#F97316] bg-[#FF5A0A] text-white"
+                  : "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F] hover:border-[#F97316]"
               }`}
             >
               <Icon size={14} />
@@ -700,7 +704,7 @@ export default function KnowledgeOSDashboard({
           <button
             type="button"
             onClick={onRefresh}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#173F6B] bg-[#173F6B] px-4 text-xs font-black text-white transition hover:bg-[#245886]"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white transition hover:bg-[#245886]"
           >
             <RefreshCw size={13} />
             Refresh Knowledge

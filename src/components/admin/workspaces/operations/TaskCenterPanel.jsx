@@ -1,4 +1,4 @@
-// TaskCenterPanel V4 MAXIMUM — Zaifan Task / Operations OS
+// TaskCenterPanel PARTNER OS EXTREME V6 — Student Operations Command Center
 // Full replacement for: src/components/admin/TaskCenterPanel.jsx
 //
 // Requires Task OS Schema Upgrade V2:
@@ -1357,60 +1357,95 @@ function TaskCenterPanel({
   );
 
   return (
-    <div className="space-y-4 bg-[#fffaf4] p-3 text-[#10233f] sm:p-4 lg:p-5">
-      <section className="rounded-[1.7rem] border-[3px] border-orange-500 bg-white p-4 shadow-[0_12px_32px_rgba(121,72,40,0.08)] sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
             <div className="flex flex-wrap gap-2">
-              <Badge text="Task OS" tone="orange" />
-              <Badge text={`Student #${studentId || "—"}`} tone="navy" />
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.11em] text-white">
+                <ListTodo size={12} className="text-orange-300" />
+                Task OS
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.11em] text-white">
+                <UserRound size={12} className="text-orange-300" />
+                Student #{studentId || "—"}
+              </span>
             </div>
 
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-[#10233f]">
+            <h2 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Student Operations Command
             </h2>
 
-            <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-slate-600">
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Control next actions, ownership, deadlines, blockers and completion
               without turning the student record into an endless task wall.
             </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric label="Active" value={taskStats.total} />
+              <DarkMetric label="Pending" value={taskStats.pending} />
+              <DarkMetric label="In Progress" value={taskStats.inProgress} />
+              <DarkMetric label="Completed" value={taskStats.completed} />
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setTaskForm(EMPTY_TASK_FORM)}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0"
-            >
-              <Plus size={15} />
-              New Task
-            </button>
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                  Work pressure
+                </p>
+                <p className="mt-2 text-4xl font-black text-white">
+                  {taskStats.overdue + taskStats.blocked + taskStats.remindersDue}
+                </p>
+                <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
+                  attention signals
+                </p>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => loadTasks({ force: true })}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-[#10233f] shadow-sm transition hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md active:translate-y-0 disabled:opacity-50"
-            >
-              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-              Refresh
-            </button>
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10">
+                <ShieldAlert size={22} />
+              </span>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeStat label="Overdue" value={taskStats.overdue} />
+              <OrangeStat label="Blocked" value={taskStats.blocked} />
+              <OrangeStat label="Unassigned" value={taskStats.unassigned} />
+              <OrangeStat label="Reminders" value={taskStats.remindersDue} />
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setTaskForm(EMPTY_TASK_FORM)}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
+              >
+                <Plus size={15} />
+                New Task
+              </button>
+
+              <button
+                type="button"
+                onClick={() => loadTasks({ force: true })}
+                disabled={loading}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/35 bg-white/10 px-4 text-xs font-black text-white transition hover:-translate-y-0.5 hover:border-white hover:bg-white/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-10">
-          <Metric label="Active" value={taskStats.total} icon={ListTodo} />
-          <Metric label="Pending" value={taskStats.pending} icon={CircleDashed} tone="blue" />
-          <Metric label="In Progress" value={taskStats.inProgress} icon={Clock3} tone="orange" />
-          <Metric label="Blocked" value={taskStats.blocked} icon={ShieldAlert} tone={taskStats.blocked ? "red" : "slate"} />
-          <Metric label="Overdue" value={taskStats.overdue} icon={CalendarClock} tone={taskStats.overdue ? "red" : "slate"} />
-          <Metric label="Completed" value={taskStats.completed} icon={CheckCircle2} tone="green" />
-          <Metric label="Archived" value={taskStats.archived} icon={Archive} />
-          <Metric label="Unassigned" value={taskStats.unassigned} icon={UserRound} tone={taskStats.unassigned ? "orange" : "slate"} />
-          <Metric label="Reminder Due" value={taskStats.remindersDue} icon={BellRing} tone={taskStats.remindersDue ? "red" : "slate"} />
-          <Metric label="Stale 14d+" value={taskStats.stale} icon={TimerReset} tone={taskStats.stale ? "orange" : "slate"} />
         </div>
       </section>
+
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <Metric label="Archived" value={taskStats.archived} icon={Archive} />
+        <Metric label="Unassigned" value={taskStats.unassigned} icon={UserRound} tone={taskStats.unassigned ? "orange" : "slate"} />
+        <Metric label="Reminder Due" value={taskStats.remindersDue} icon={BellRing} tone={taskStats.remindersDue ? "red" : "slate"} />
+        <Metric label="Stale 14d+" value={taskStats.stale} icon={TimerReset} tone={taskStats.stale ? "orange" : "slate"} />
+        <Metric label="Completion" value={`${taskStats.completionRate}%`} icon={CheckCircle2} tone="blue" />
+      </div>
 
       {error ? (
         <Feedback tone="error" onClose={() => setError("")}>
@@ -1430,7 +1465,7 @@ function TaskCenterPanel({
         </Feedback>
       ) : null}
 
-      <section className="rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-4">
+      <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <SectionHeading
             eyebrow="Operations Intelligence"
@@ -1497,7 +1532,7 @@ function TaskCenterPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4">
+      <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <SectionHeading
           eyebrow="Create Work"
           title="New Operational Task"
@@ -1517,7 +1552,7 @@ function TaskCenterPanel({
         />
       </section>
 
-      <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4">
+      <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <SectionHeading
             eyebrow="Rule-Based Intelligence"
@@ -1538,10 +1573,10 @@ function TaskCenterPanel({
             suggestedTasks.map((task) => (
               <div
                 key={task.title}
-                className="rounded-2xl border-2 border-orange-300 bg-[#fffaf4] p-4"
+                className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md"
               >
                 <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-600">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
                     <Sparkles size={17} />
                   </span>
 
@@ -1551,7 +1586,7 @@ function TaskCenterPanel({
                       <TypeBadge value={task.task_type} />
                     </div>
 
-                    <h3 className="mt-2 font-black text-[#10233f]">
+                    <h3 className="mt-2 font-black text-[#10233F]">
                       {task.title}
                     </h3>
 
@@ -1569,7 +1604,7 @@ function TaskCenterPanel({
                       type="button"
                       disabled={hasAnyBusy}
                       onClick={() => createTask(task, "suggested")}
-                      className="mt-3 rounded-xl border-2 border-orange-500 bg-orange-50 px-4 py-2 text-xs font-black text-orange-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md active:translate-y-0 disabled:opacity-40"
+                      className="mt-3 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-4 py-2 text-xs font-black text-[#C2410C] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md active:translate-y-0 disabled:opacity-40"
                     >
                       Save Suggested Task
                     </button>
@@ -1585,7 +1620,7 @@ function TaskCenterPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4">
+      <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <SectionHeading
           eyebrow="Work Queue"
           title="Task Portfolio"
@@ -1608,8 +1643,8 @@ function TaskCenterPanel({
               onClick={() => setView(value)}
               className={`shrink-0 rounded-xl border-2 px-3.5 py-2 text-xs font-black transition ${
                 view === value
-                  ? "border-[#123865] bg-[#123865] text-white"
-                  : "border-slate-300 bg-white text-[#10233f] hover:border-orange-400 hover:bg-orange-50"
+                  ? "border-[#123865] bg-[#123865] text-white shadow-sm"
+                  : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
               }`}
             >
               {label}
@@ -1617,7 +1652,7 @@ function TaskCenterPanel({
           ))}
         </div>
 
-        <div className="mt-3 grid gap-2 xl:grid-cols-[1fr_150px_150px_150px_150px]">
+        <div className="mt-3 grid min-w-0 gap-3 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-3 xl:grid-cols-[minmax(0,1fr)_150px_150px_150px_150px]">
           <div className="relative">
             <Search
               size={15}
@@ -1627,7 +1662,7 @@ function TaskCenterPanel({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search title, notes, assignee, context..."
-              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-sm font-semibold text-[#10233F] outline-none focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </div>
 
@@ -1655,7 +1690,7 @@ function TaskCenterPanel({
           <select
             value={sortBy}
             onChange={(event) => setSortBy(event.target.value)}
-            className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none hover:border-orange-400 focus:border-orange-400"
+            className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none hover:border-[#FF5A0A] focus:border-[#FF5A0A]"
           >
             <option value="smart">Smart order</option>
             <option value="due">Due date</option>
@@ -1683,7 +1718,7 @@ function TaskCenterPanel({
                 setPriorityFilter("all");
                 setTypeFilter("all");
               }}
-              className="text-xs font-black text-orange-700 hover:text-orange-900"
+              className="text-xs font-black text-[#C2410C] hover:text-orange-900"
             >
               Clear filters
             </button>
@@ -1728,12 +1763,12 @@ function TaskCenterPanel({
         </div>
 
         {filteredTasks.length > PAGE_SIZE ? (
-          <div className="mt-5 flex items-center justify-between gap-3 border-t-2 border-slate-200 pt-4">
+          <div className="mt-5 flex items-center justify-between gap-3 border-t-2 border-[#E1E8F0] pt-4">
             <button
               type="button"
               disabled={safePage <= 1}
               onClick={() => setPage((previous) => Math.max(1, previous - 1))}
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+              className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:opacity-40"
             >
               Previous
             </button>
@@ -1748,7 +1783,7 @@ function TaskCenterPanel({
               onClick={() =>
                 setPage((previous) => Math.min(totalPages, previous + 1))
               }
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50 disabled:opacity-40"
+              className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:opacity-40"
             >
               Next
             </button>
@@ -1758,13 +1793,13 @@ function TaskCenterPanel({
 
       {editingTask ? (
         <div className="fixed inset-0 z-[1350] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-          <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[1.8rem] border-[3px] border-orange-400 bg-[#fffaf4] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.28)]">
+          <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[1.8rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.30)]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#C2410C]">
                   Task Inspector
                 </p>
-                <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
                   Edit Task
                 </h3>
               </div>
@@ -1772,7 +1807,7 @@ function TaskCenterPanel({
               <button
                 type="button"
                 onClick={() => setEditingTask(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-slate-300 bg-white text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#C9D7E6] bg-white text-[#10233F] transition hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
               >
                 <X size={17} />
               </button>
@@ -1923,7 +1958,7 @@ function TaskForm({ form, setForm, disabled, submitLabel, onSubmit }) {
         type="button"
         onClick={onSubmit}
         disabled={disabled || !String(form.title || "").trim()}
-        className="mt-4 rounded-xl border-2 border-orange-700 bg-orange-500 px-5 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
+        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
       >
         {submitLabel}
       </button>
@@ -1946,14 +1981,19 @@ function TaskCard({
 
   return (
     <article
-      className={`rounded-2xl border-2 p-4 transition ${
-        meta.overdue
-          ? "border-red-300 bg-red-50"
-          : status === "blocked"
-          ? "border-orange-400 bg-orange-50"
-          : "border-slate-300 bg-[#fffaf4] hover:border-orange-400"
-      }`}
+      className="relative min-w-0 overflow-hidden rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-4 pl-5 shadow-[0_7px_20px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md"
     >
+      <div
+        className={`absolute inset-y-0 left-0 w-1.5 ${
+          meta.overdue
+            ? "bg-red-400"
+            : status === "blocked"
+              ? "bg-[#FF5A0A]"
+              : status === "completed"
+                ? "bg-emerald-400"
+                : "bg-[#60A5FA]"
+        }`}
+      />
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -1964,7 +2004,7 @@ function TaskCard({
             {task.is_archived ? <Badge text="Archived" tone="slate" /> : null}
           </div>
 
-          <h3 className="mt-3 break-words text-base font-black text-[#10233f]">
+          <h3 className="mt-3 break-words text-base font-black text-[#10233F]">
             {task.title}
           </h3>
 
@@ -2011,19 +2051,19 @@ function TaskCard({
           ) : null}
 
           {task.notes ? (
-            <div className="mt-3 rounded-xl border-2 border-slate-200 bg-white p-3 text-xs font-medium leading-5 text-slate-600">
+            <div className="mt-3 rounded-xl border-2 border-[#E1E8F0] bg-white p-3 text-xs font-medium leading-5 text-slate-600">
               {task.notes}
             </div>
           ) : null}
         </div>
 
-        <div className="flex min-w-[210px] flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2 xl:w-[220px] xl:shrink-0">
           {!task.is_archived ? (
             <select
               value={status}
               disabled={busy}
               onChange={(event) => onStatus(event.target.value)}
-              className="h-10 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none transition hover:border-orange-400 focus:border-orange-400 disabled:opacity-50"
+              className="h-10 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A] disabled:opacity-50"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -2071,6 +2111,32 @@ function TaskCard({
   );
 }
 
+function DarkMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {Number(value || 0).toLocaleString("en-GB")}
+      </p>
+    </div>
+  );
+}
+
+function OrangeStat({ label, value }) {
+  return (
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-black text-white">
+        {Number(value || 0).toLocaleString("en-GB")}
+      </p>
+    </div>
+  );
+}
+
 function PressureTile({
   label,
   value,
@@ -2079,10 +2145,10 @@ function PressureTile({
 }) {
   const styles = {
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    slate: "border-slate-300 bg-[#fffaf4] text-slate-700",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]",
+    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
+    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-slate-700",
   };
 
   return (
@@ -2106,11 +2172,11 @@ function PressureTile({
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
   const styles = {
-    slate: "border-slate-300 bg-white text-[#10233f]",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    slate: "border-[#C9D7E6] bg-white text-[#10233F]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]",
     red: "border-red-300 bg-red-50 text-red-800",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
   };
 
   return (
@@ -2132,14 +2198,14 @@ function Metric({ label, value, icon: Icon, tone = "slate" }) {
 
 function Info({ label, value, icon: Icon }) {
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5">
+    <div className="rounded-xl border-2 border-[#E1E8F0] bg-white px-3 py-2.5">
       <div className="flex items-center gap-2">
         <Icon size={13} className="text-orange-600" />
         <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
           {label}
         </p>
       </div>
-      <p className="mt-1 break-words text-xs font-black text-[#10233f]">
+      <p className="mt-1 break-words text-xs font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -2155,7 +2221,7 @@ function PriorityBadge({ value }) {
       : clean === "urgent"
       ? "border-red-400 bg-red-50 text-red-800"
       : clean === "high"
-      ? "border-orange-400 bg-orange-50 text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]"
       : clean === "low"
       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
       : "border-blue-300 bg-blue-50 text-blue-800";
@@ -2176,7 +2242,7 @@ function StatusBadge({ value }) {
       : clean === "blocked"
       ? "border-red-300 bg-red-50 text-red-800"
       : clean === "in_progress"
-      ? "border-orange-300 bg-orange-50 text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]"
       : clean === "cancelled"
       ? "border-slate-400 bg-slate-100 text-slate-700"
       : "border-blue-300 bg-blue-50 text-blue-800";
@@ -2190,7 +2256,7 @@ function StatusBadge({ value }) {
 
 function TypeBadge({ value }) {
   return (
-    <span className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[9px] font-black uppercase text-slate-700">
+    <span className="rounded-full border border-[#C9D7E6] bg-white px-2.5 py-1 text-[9px] font-black uppercase text-slate-700">
       {pretty(value || "general")}
     </span>
   );
@@ -2199,9 +2265,9 @@ function TypeBadge({ value }) {
 function DueBadge({ meta }) {
   const styles = {
     red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    slate: "border-slate-300 bg-white text-slate-700",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]",
+    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
+    slate: "border-[#C9D7E6] bg-white text-slate-700",
   };
 
   return (
@@ -2218,10 +2284,10 @@ function DueBadge({ meta }) {
 function Badge({ text, tone = "slate" }) {
   const style =
     tone === "orange"
-      ? "border-orange-300 bg-orange-50 text-orange-800"
+      ? "border-[#FF5A0A] bg-[#FFF4E8] text-[#C2410C]"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865] text-white"
-      : "border-slate-300 bg-slate-50 text-slate-700";
+      : "border-[#C9D7E6] bg-slate-50 text-slate-700";
 
   return (
     <span className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${style}`}>
@@ -2263,10 +2329,10 @@ function Feedback({ tone, onClose, children }) {
 function SectionHeading({ eyebrow, title, description }) {
   return (
     <div>
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C2410C]">
         {eyebrow}
       </p>
-      <h3 className="mt-1 text-lg font-black text-[#10233f]">{title}</h3>
+      <h3 className="mt-1 text-lg font-black text-[#10233F]">{title}</h3>
       <p className="mt-1 text-sm leading-5 text-slate-600">{description}</p>
     </div>
   );
@@ -2281,7 +2347,7 @@ function InputField({
 }) {
   return (
     <label>
-      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#10233F]">
         {label}
       </span>
 
@@ -2290,7 +2356,7 @@ function InputField({
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="mt-2 h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-semibold text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+        className="mt-2 h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
       />
     </label>
   );
@@ -2299,14 +2365,14 @@ function InputField({
 function SelectField({ label, value, onChange, options = [], blankLabel = null }) {
   return (
     <label>
-      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#10233F]">
         {label}
       </span>
 
       <select
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-bold text-[#10233f] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+        className="mt-2 h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-sm font-bold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
       >
         {blankLabel !== null ? (
           <option value="">{blankLabel}</option>
@@ -2327,7 +2393,7 @@ function SelectField({ label, value, onChange, options = [], blankLabel = null }
 function TextAreaField({ label, value, onChange, placeholder = "" }) {
   return (
     <label>
-      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#10233f]">
+      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#10233F]">
         {label}
       </span>
 
@@ -2336,7 +2402,7 @@ function TextAreaField({ label, value, onChange, placeholder = "" }) {
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         rows={4}
-        className="mt-2 w-full resize-y rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233f] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+        className="mt-2 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
       />
     </label>
   );
@@ -2347,7 +2413,7 @@ function FilterSelect({ value, onChange, firstLabel, options }) {
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-[#10233f] outline-none transition hover:border-orange-400 focus:border-orange-400"
+      className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A]"
     >
       <option value="all">{firstLabel}</option>
       {options.map((option) => (
@@ -2369,7 +2435,7 @@ function ActionButton({
   const style =
     tone === "red"
       ? "border-red-300 bg-red-50 text-red-800 hover:border-red-500 hover:bg-red-100"
-      : "border-slate-300 bg-white text-[#10233f] hover:border-orange-400 hover:bg-orange-50";
+      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]";
 
   return (
     <button
@@ -2386,12 +2452,12 @@ function ActionButton({
 
 function EmptyState({ icon: Icon, title, text, spin = false }) {
   return (
-    <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-[#fffaf4] p-7 text-center">
+    <div className="rounded-2xl border-2 border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-7 text-center">
       <Icon
         size={30}
         className={`mx-auto text-orange-400 ${spin ? "animate-spin" : ""}`}
       />
-      <h3 className="mt-3 text-base font-black text-[#10233f]">{title}</h3>
+      <h3 className="mt-3 text-base font-black text-[#10233F]">{title}</h3>
       <p className="mt-1 text-sm font-medium text-slate-500">{text}</p>
     </div>
   );

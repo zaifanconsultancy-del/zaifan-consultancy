@@ -1,4 +1,4 @@
-// VisaStatusTimeline V3 MAXIMUM — Event-Driven Visa Journey Timeline
+// VisaStatusTimeline PARTNER OS EXTREME V4 — Visa Journey Command Center
 // src/components/admin/VisaStatusTimeline.jsx
 //
 // Reusable Visa OS timeline powered by student_visas + student_visa_events.
@@ -532,105 +532,107 @@ function VisaStatusTimeline({
 
   return (
     <section
-      className={`overflow-hidden rounded-[1.75rem] border-[3px] border-orange-300 bg-white shadow-[0_8px_24px_rgba(15,35,63,0.05)] ${
-        compact ? "" : ""
+      className={`min-w-0 overflow-hidden rounded-[2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2 shadow-[0_22px_60px_rgba(18,56,101,0.14)] ${
+        compact ? "" : "sm:p-3"
       }`}
     >
-      <div
-        className={`bg-[#0b2a57] ${
-          compact ? "p-4" : "p-5 sm:p-6"
-        }`}
-        style={{ color: "#ffffff" }}
-      >
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1.5">
-                <Stamp size={13} style={{ color: "#FDBA74" }} />
-                <span
-                  className="text-[9px] font-black uppercase tracking-[0.14em]"
-                  style={{ color: "#ffffff" }}
-                >
-                  Visa Journey
-                </span>
+      <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+          <div className={`min-w-0 bg-[#123865] text-white ${compact ? "p-4" : "p-5 sm:p-6 lg:p-7"}`}>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                <Stamp size={12} className="text-orange-200" />
+                Visa Journey
               </span>
 
               <StatusBadge value={visaCase?.visa_status || "not_started"} />
             </div>
 
-            <h3
-              className={`mt-3 font-black ${
-                compact ? "text-xl" : "text-2xl"
-              }`}
-              style={{ color: "#ffffff" }}
-            >
+            <h3 className={`mt-4 break-words font-black leading-tight tracking-[-0.035em] text-white ${
+              compact ? "text-2xl" : "text-3xl sm:text-4xl"
+            }`}>
               Visa Status Timeline
             </h3>
 
-            <p
-              className="mt-2 max-w-3xl text-sm font-semibold leading-6"
-              style={{ color: "#ffffff" }}
-            >
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Event-driven Visa OS history from preparation through decision,
               passport return and completion.
             </p>
+
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <HeroMetric label="Stage" value={`${Math.min(stageIndex + 1, JOURNEY.length)}/${JOURNEY.length}`} />
+              <HeroMetric label="Progress" value={`${progressPercent}%`} />
+              <HeroMetric label="Events" value={sortedEvents.length} />
+              <HeroMetric label="Status" value={pretty(visaCase?.visa_status || "not_started")} />
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {lastSyncedAt ? (
-              <span
-                className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[10px] font-black"
-                style={{ color: "#ffffff" }}
-              >
-                Synced{" "}
-                {lastSyncedAt.toLocaleTimeString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            ) : null}
+          <div className={`min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] text-white lg:border-l-[3px] lg:border-t-0 ${
+            compact ? "p-4" : "p-5 sm:p-6 lg:p-7"
+          }`}>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Journey Command Actions
+            </p>
 
-            {resolvedVisaId ? (
-              <button
-                type="button"
-                onClick={load}
-                disabled={loading}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-white bg-white px-3 py-2 text-xs font-black text-[#0b2a57] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <RefreshCw
-                  size={14}
-                  className={loading ? "animate-spin" : ""}
-                />
-                {loading ? "Refreshing..." : "Refresh"}
-              </button>
-            ) : null}
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">
+              Refresh the live visa record and event history before reviewing
+              milestones, timing pressure or refusal branches.
+            </p>
+
+            <div className="mt-4 grid min-w-0 gap-2">
+              {lastSyncedAt ? (
+                <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-4 text-xs font-black text-white">
+                  <CheckCircle2 size={14} />
+                  Synced{" "}
+                  {lastSyncedAt.toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ) : null}
+
+              {resolvedVisaId ? (
+                <button
+                  type="button"
+                  onClick={load}
+                  disabled={loading}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw
+                    size={15}
+                    className={loading ? "animate-spin" : ""}
+                  />
+                  {loading ? "Refreshing..." : "Refresh Journey"}
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className={compact ? "p-4" : "p-5 sm:p-6"}>
+      <div className={`min-w-0 bg-[#FFF8EF] ${compact ? "p-3" : "p-4 sm:p-5"}`}>
         {error ? (
-          <div className="mb-4 rounded-2xl border-2 border-red-300 bg-red-50 p-3 text-sm font-bold text-red-800">
+          <div className="mb-4 rounded-[1.35rem] border-[3px] border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
             {error}
           </div>
         ) : null}
 
         {loading && !visaCase ? (
-          <div className="flex min-h-[180px] items-center justify-center rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4]">
+          <div className="flex min-h-[180px] items-center justify-center rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
             <div className="text-center">
               <LoaderCircle
                 size={28}
                 className="mx-auto animate-spin text-orange-500"
               />
-              <p className="mt-3 text-sm font-black text-[#10233f]">
+              <p className="mt-3 text-sm font-black text-[#10233F]">
                 Loading visa journey
               </p>
             </div>
           </div>
         ) : !resolvedVisaId && !visaCase ? (
-          <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-[#fffaf4] p-6 text-center">
+          <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-7 text-center shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
             <History size={28} className="mx-auto text-orange-400" />
-            <p className="mt-3 text-sm font-black text-[#10233f]">
+            <p className="mt-3 text-sm font-black text-[#10233F]">
               No visa case selected
             </p>
             <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -639,7 +641,7 @@ function VisaStatusTimeline({
           </div>
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <SummaryCard
                 icon={ShieldCheck}
                 label="Current Stage"
@@ -712,18 +714,18 @@ function VisaStatusTimeline({
               />
             </div>
 
-            <div className="mt-5 overflow-hidden rounded-[1.4rem] border-2 border-slate-300 bg-[#fffaf4]">
-              <div className="flex flex-col gap-2 border-b-2 border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-5 min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
+              <div className="flex min-w-0 flex-col gap-2 border-b-[3px] border-[#FF5A0A] bg-[#123865] p-4 text-white sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-200">
                     Operational Journey
                   </p>
-                  <h4 className="mt-1 text-base font-black text-[#10233f]">
+                  <h4 className="mt-1 text-lg font-black text-white">
                     Visa Milestones
                   </h4>
                 </div>
 
-                <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-[10px] font-black text-orange-800">
+                <span className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1 text-[10px] font-black text-white">
                   Stage {Math.min(stageIndex + 1, JOURNEY.length)} of{" "}
                   {JOURNEY.length}
                 </span>
@@ -743,7 +745,7 @@ function VisaStatusTimeline({
             </div>
 
             {isRejected ? (
-              <div className="mt-4 rounded-[1.4rem] border-[3px] border-red-400 bg-red-50 p-4">
+              <div className="mt-4 rounded-[1.5rem] border-[3px] border-red-400 bg-red-50 p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-red-400 bg-white">
                     <AlertTriangle size={18} className="text-red-700" />
@@ -788,14 +790,14 @@ function VisaStatusTimeline({
               </div>
             ) : null}
 
-            <div className="mt-5 overflow-hidden rounded-[1.4rem] border-2 border-slate-300 bg-white">
+            <div className="mt-5 min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
               <button
                 type="button"
                 onClick={() => setEventsExpanded((value) => !value)}
-                className="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-orange-50/40"
+                className="flex w-full min-w-0 items-center justify-between gap-3 p-4 text-left transition hover:bg-[#FFF4E8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-100"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8]">
                     <History size={17} className="text-orange-700" />
                   </div>
 
@@ -803,7 +805,7 @@ function VisaStatusTimeline({
                     <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
                       Audit Trail
                     </p>
-                    <h4 className="mt-0.5 text-sm font-black text-[#10233f]">
+                    <h4 className="mt-0.5 text-sm font-black text-[#10233F]">
                       Visa Event History
                     </h4>
                     <p className="mt-0.5 text-xs font-semibold text-slate-500">
@@ -815,14 +817,14 @@ function VisaStatusTimeline({
 
                 <ChevronDown
                   size={18}
-                  className={`text-[#10233f] transition-transform duration-300 ${
+                  className={`text-[#10233F] transition-transform duration-300 ${
                     eventsExpanded ? "rotate-180" : ""
                   }`}
                 />
               </button>
 
               {eventsExpanded || compact ? (
-                <div className="border-t-2 border-slate-200 p-3 sm:p-4">
+                <div className="border-t-[3px] border-[#DCE5EE] bg-[#FFF8EF] p-3 sm:p-4">
                   {recentEvents.length ? (
                     <div className="space-y-2">
                       {recentEvents.map((event, index) => (
@@ -840,7 +842,7 @@ function VisaStatusTimeline({
                         <button
                           type="button"
                           onClick={() => setEventsExpanded(true)}
-                          className="w-full rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 px-3 py-2 text-xs font-black text-orange-800"
+                          className="w-full rounded-xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF4E8] px-3 py-2 text-xs font-black text-orange-800"
                         >
                           {sortedEvents.length - recentEvents.length} older
                           event
@@ -852,12 +854,12 @@ function VisaStatusTimeline({
                       ) : null}
                     </div>
                   ) : (
-                    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-[#fffaf4] p-5 text-center">
+                    <div className="rounded-[1.25rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-5 text-center">
                       <Clock3
                         size={24}
                         className="mx-auto text-slate-400"
                       />
-                      <p className="mt-2 text-sm font-black text-[#10233f]">
+                      <p className="mt-2 text-sm font-black text-[#10233F]">
                         No visa events recorded yet
                       </p>
                       <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -876,6 +878,20 @@ function VisaStatusTimeline({
   );
 }
 
+function HeroMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+
 function MilestoneRow({ stage, compact }) {
   const styles = {
     completed: {
@@ -885,9 +901,9 @@ function MilestoneRow({ stage, compact }) {
       badgeText: "Completed",
     },
     current: {
-      container: "border-orange-400 bg-orange-50",
-      icon: "border-orange-500 bg-orange-500 text-white",
-      badge: "border-orange-300 bg-white text-orange-800",
+      container: "border-orange-400 bg-[#FFF4E8]",
+      icon: "border-orange-500 bg-[#FFF4E8]0 text-white",
+      badge: "border-[#FF5A0A] bg-white text-orange-800",
       badgeText: "Current",
     },
     rejected: {
@@ -908,7 +924,7 @@ function MilestoneRow({ stage, compact }) {
 
   return (
     <div
-      className={`rounded-2xl border-2 ${
+      className={`min-w-0 rounded-[1.25rem] border-[3px] shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md ${
         compact ? "p-3" : "p-3.5"
       } ${style.container}`}
     >
@@ -929,7 +945,7 @@ function MilestoneRow({ stage, compact }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-black text-[#10233f]">{stage.label}</p>
+            <p className="font-black text-[#10233F]">{stage.label}</p>
 
             <span
               className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${style.badge}`}
@@ -961,21 +977,21 @@ function MilestoneRow({ stage, compact }) {
 function SummaryCard({ icon: Icon, label, value, helper, tone = "slate" }) {
   const tones = {
     slate: "border-slate-300 bg-white",
-    orange: "border-orange-300 bg-orange-50",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8]",
     red: "border-red-300 bg-red-50",
     green: "border-emerald-300 bg-emerald-50",
   };
 
   const iconTones = {
     slate: "border-slate-300 bg-slate-50 text-slate-700",
-    orange: "border-orange-300 bg-white text-orange-700",
+    orange: "border-[#FF5A0A] bg-white text-orange-700",
     red: "border-red-300 bg-white text-red-700",
     green: "border-emerald-300 bg-white text-emerald-700",
   };
 
   return (
     <div
-      className={`rounded-2xl border-2 p-4 ${
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
         tones[tone] || tones.slate
       }`}
     >
@@ -991,7 +1007,7 @@ function SummaryCard({ icon: Icon, label, value, helper, tone = "slate" }) {
         {label}
       </p>
 
-      <p className="mt-1 break-words text-sm font-black text-[#10233f]">
+      <p className="mt-1 break-words text-sm font-black text-[#10233F]">
         {value}
       </p>
 
@@ -1011,7 +1027,7 @@ function EventRow({ event }) {
 
   return (
     <div
-      className={`rounded-xl border-2 px-3 py-3 ${
+      className={`min-w-0 rounded-[1.15rem] border-[3px] px-3 py-3 shadow-[0_5px_14px_rgba(18,56,101,0.04)] ${
         isWarning
           ? "border-red-200 bg-red-50"
           : "border-slate-300 bg-white"
@@ -1021,7 +1037,7 @@ function EventRow({ event }) {
         <div className="min-w-0">
           <p
             className={`text-xs font-black ${
-              isWarning ? "text-red-900" : "text-[#10233f]"
+              isWarning ? "text-red-900" : "text-[#10233F]"
             }`}
           >
             {event.event_label ||
@@ -1049,7 +1065,7 @@ function EventRow({ event }) {
 
           <span className="text-orange-600">→</span>
 
-          <span className="rounded-lg border border-orange-300 bg-orange-50 px-2 py-1 text-orange-800">
+          <span className="rounded-lg border border-[#FF5A0A] bg-[#FFF4E8] px-2 py-1 text-orange-800">
             {pretty(event.new_value || "—")}
           </span>
         </div>
@@ -1098,7 +1114,7 @@ function StatusBadge({ value }) {
           ? "border-red-300 bg-red-50 text-red-800"
           : approved || completed
           ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-          : "border-orange-300 bg-orange-50 text-orange-800"
+          : "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
       }`}
     >
       {pretty(value)}

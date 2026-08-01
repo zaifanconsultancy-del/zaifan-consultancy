@@ -1,4 +1,4 @@
-// AutoStageMovementPanel V5 MAXIMUM — Framed Pipeline Movement Command
+// AutoStageMovementPanel PARTNER OS EXTREME — Executive Pipeline Movement Command
 // src/components/admin/AutoStageMovementPanel.jsx
 //
 // Maximum pass:
@@ -386,7 +386,7 @@ function AutoStageMovementPanel({
     filteredSuggestions.slice(0, 20);
 
   return (
-    <section className="space-y-5">
+    <section className="min-w-0 space-y-6">
       <motion.section
         initial={
           shouldReduceMotion
@@ -402,10 +402,10 @@ function AutoStageMovementPanel({
             ? 0
             : 0.28,
         }}
-        className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_16px_40px_rgba(15,35,63,0.08)] sm:p-4"
+        className="min-w-0 overflow-hidden rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_24px_70px_rgba(15,35,63,0.16)] sm:p-3"
       >
-        <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)]">
-          <div className="min-w-0 bg-[#173F6B] p-5 text-white sm:p-6">
+        <div className="grid min-w-0 overflow-hidden rounded-[1.85rem] border-[3px] border-[#FF5A0A] bg-white xl:grid-cols-[minmax(0,1.28fr)_minmax(21rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-7 lg:p-8">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
                 <Bot size={12} />
@@ -449,7 +449,7 @@ function AutoStageMovementPanel({
             </div>
           </div>
 
-          <div className="min-w-0 border-t-[3px] border-[#F97316] bg-[#E96512] p-5 text-white sm:p-6 xl:border-l-[3px] xl:border-t-0">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-7 xl:border-l-[3px] xl:border-t-0">
             <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
               Movement Pressure
             </p>
@@ -495,8 +495,9 @@ function AutoStageMovementPanel({
       ) : null}
 
       <section
-        className={`${cardClass} min-w-0 rounded-[1.7rem] border-[3px] border-[#F97316] bg-[#FFF7EC] p-5 shadow-[0_8px_24px_rgba(15,35,63,0.055)]`}
+        className={`${cardClass} min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-2 shadow-[0_16px_42px_rgba(15,35,63,0.09)]`}
       >
+        <div className="rounded-[1.55rem] border-2 border-[#FF5A0A] bg-white p-5 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-3">
             <div
@@ -536,12 +537,15 @@ function AutoStageMovementPanel({
             Review before applying
           </span>
         </div>
+        </div>
       </section>
 
       <section
-        className={`${cardClass} min-w-0 rounded-[1.7rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4 shadow-[0_8px_24px_rgba(15,35,63,0.05)]`}
+        className={`${cardClass} min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-2 shadow-[0_16px_42px_rgba(15,35,63,0.09)]`}
       >
-        <div className="flex items-center gap-2">
+        <div className="rounded-[1.55rem] border-2 border-[#FF5A0A] bg-white p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
           <Filter
             size={14}
             className="text-orange-700"
@@ -549,9 +553,13 @@ function AutoStageMovementPanel({
           <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-700">
             Queue Controls
           </p>
+          </div>
+          <span className="rounded-full border-2 border-[#123865]/20 bg-[#FFF8EF] px-3 py-1 text-[8px] font-black uppercase tracking-[0.1em] text-[#123865]">
+            {filteredSuggestions.length} matching
+          </span>
         </div>
 
-        <div className="mt-3 grid min-w-0 gap-2 lg:grid-cols-2 2xl:grid-cols-[minmax(18rem,1fr)_155px_165px_155px_auto]">
+        <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-2 2xl:grid-cols-[minmax(18rem,1fr)_160px_170px_160px_auto]">
           <div className="relative">
             <Search
               size={15}
@@ -565,7 +573,7 @@ function AutoStageMovementPanel({
                 )
               }
               placeholder="Search student, stage or reason..."
-              className="h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-9 pr-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="h-12 w-full rounded-[1rem] border-2 border-[#123865]/25 bg-white pl-10 pr-3 text-sm font-bold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </div>
 
@@ -576,7 +584,7 @@ function AutoStageMovementPanel({
                 event.target.value
               )
             }
-            className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="h-12 min-w-0 rounded-[1rem] border-2 border-[#123865]/25 bg-white px-3 text-xs font-black text-[#10233F] outline-none focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">
               All record types
@@ -596,7 +604,7 @@ function AutoStageMovementPanel({
                 event.target.value
               )
             }
-            className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="h-12 min-w-0 rounded-[1rem] border-2 border-[#123865]/25 bg-white px-3 text-xs font-black text-[#10233F] outline-none focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">
               All confidence
@@ -619,7 +627,7 @@ function AutoStageMovementPanel({
                 event.target.value
               )
             }
-            className="h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="h-12 min-w-0 rounded-[1rem] border-2 border-[#123865]/25 bg-white px-3 text-xs font-black text-[#10233F] outline-none focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">
               All urgency
@@ -638,11 +646,12 @@ function AutoStageMovementPanel({
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-[#10233f] transition hover:border-orange-400 hover:bg-orange-50"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-[1rem] border-2 border-[#123865] bg-[#123865] px-4 text-xs font-black text-white shadow-[0_8px_18px_rgba(18,56,101,0.16)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FF5A0A] focus:outline-none focus:ring-4 focus:ring-orange-100"
           >
             <RefreshCw size={14} />
             Reset
           </button>
+        </div>
         </div>
       </section>
 
@@ -691,14 +700,14 @@ function AutoStageMovementPanel({
                             0.12
                           ),
                   }}
-                  className={`${cardClass} overflow-hidden rounded-[1.7rem] border-[3px] ${
+                  className={`${cardClass} min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] ${
                     applied
-                      ? "border-emerald-300"
-                      : "border-orange-300"
-                  } bg-white shadow-[0_8px_24px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5`}
+                      ? "border-[#34D399]"
+                      : "border-[#123865]"
+                  } bg-white shadow-[0_16px_42px_rgba(15,35,63,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgba(15,35,63,0.12)]`}
                 >
-                  <div className="grid xl:grid-cols-[1fr_230px]">
-                    <div className="p-5 sm:p-6">
+                  <div className="grid min-w-0 xl:grid-cols-[minmax(0,1fr)_250px]">
+                    <div className="min-w-0 p-5 sm:p-6 lg:p-7">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge
                           tone="orange"
@@ -779,7 +788,7 @@ function AutoStageMovementPanel({
                         />
                       </div>
 
-                      <div className="mt-4 rounded-[1.15rem] border-2 border-slate-300 bg-[#fffaf4] p-4">
+                      <div className="mt-4 rounded-[1.25rem] border-2 border-[#123865]/20 bg-[#FFF8EF] p-4 shadow-inner">
                         <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">
                           Why Zaifan suggests this
                         </p>
@@ -790,7 +799,7 @@ function AutoStageMovementPanel({
                       </div>
                     </div>
 
-                    <div className="border-t-2 border-slate-200 bg-[#fffaf4] p-5 xl:border-l-2 xl:border-t-0">
+                    <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5 xl:border-l-[3px] xl:border-t-0">
                       <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
                         Suggestion Score
                       </p>
@@ -802,7 +811,7 @@ function AutoStageMovementPanel({
                         )}
                       </p>
 
-                      <div className="mt-4 rounded-xl border-2 border-[#F97316] bg-[#FFF4E8] p-3">
+                      <div className="mt-4 rounded-[1rem] border-2 border-[#FF5A0A] bg-white p-3.5 shadow-[0_6px_16px_rgba(255,90,10,0.08)]">
                         <p className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
                           Human Approval
                         </p>
@@ -824,10 +833,10 @@ function AutoStageMovementPanel({
                           Boolean(applyingId) ||
                           applied
                         }
-                        className={`mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 px-4 py-2.5 text-xs font-black transition ${
+                        className={`mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border-2 px-4 py-3 text-xs font-black transition focus:outline-none focus:ring-4 focus:ring-orange-100 ${
                           applied
                             ? "border-[#34D399] bg-[#F0FFF8] text-emerald-800"
-                            : "border-orange-600 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.16)] hover:-translate-y-0.5 hover:bg-orange-600"
+                            : "border-[#123865] bg-[#123865] text-white shadow-[0_10px_22px_rgba(18,56,101,0.2)] hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FF5A0A]"
                         } disabled:cursor-not-allowed disabled:opacity-60`}
                       >
                         {applyingId ===
@@ -886,12 +895,12 @@ function StageBox({
 }) {
   const styles =
     tone === "orange"
-      ? "border-[#F97316] bg-[#FFF4E8]"
-      : "border-[#C9D7E6] bg-white";
+      ? "border-[#FF5A0A] bg-[#FFF4E8]"
+      : "border-[#123865]/20 bg-white";
 
   return (
     <div
-      className={`rounded-[1.15rem] border-2 p-4 ${styles}`}
+      className={`min-w-0 rounded-[1.2rem] border-2 p-4 shadow-[0_6px_16px_rgba(15,35,63,0.04)] ${styles}`}
     >
       <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">
         {label} Stage
@@ -1047,7 +1056,7 @@ function StableState({
 
 function FilteredEmptyState() {
   return (
-    <div className="rounded-[1.7rem] border-[3px] border-[#C9D7E6] bg-white p-8 text-center">
+    <div className="min-w-0 rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-8 text-center shadow-[0_16px_42px_rgba(15,35,63,0.08)]">
       <Search
         size={22}
         className="mx-auto text-orange-600"

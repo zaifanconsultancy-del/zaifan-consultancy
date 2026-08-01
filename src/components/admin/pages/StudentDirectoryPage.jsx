@@ -54,6 +54,8 @@ const CONFIDENCE = {
   },
 };
 
+// StudentDirectoryPage PARTNER OS EXTREME V2 — Master Identity Command Center
+
 function StudentDirectoryPage({
   inquiries = [],
   appointments = [],
@@ -232,10 +234,10 @@ function StudentDirectoryPage({
 
   return (
     <>
-      <section className="space-y-5">
-        <div className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] shadow-[0_18px_48px_rgba(16,35,63,0.10)]">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_330px]">
-            <div className="bg-[#123865] px-5 py-6 text-white sm:px-6 lg:px-7 lg:py-7">
+      <section className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+          <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
+            <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -249,23 +251,23 @@ function StudentDirectoryPage({
                     </span>
                   </div>
 
-                  <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-[2.15rem]">
+                  <h1 className="mt-4 break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
                     Student Command Center
                   </h1>
-                  <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/85">
+                  <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
                     One person first, source records second. Review identity confidence, portal linkage and record history from one protected workspace.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-2 sm:grid-cols-3">
+              <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
                 <CommandMetric label="Master students" value={stats.total} />
                 <CommandMetric label="Portal connected" value={stats.portalConnected} />
                 <CommandMetric label="Multiple records" value={stats.multipleRecords} />
               </div>
             </div>
 
-            <aside className="flex flex-col justify-between bg-[#FF5A0A] px-5 py-6 text-white sm:px-6 lg:py-7">
+            <aside className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/90">
                   Identity health
@@ -295,7 +297,7 @@ function StudentDirectoryPage({
             </aside>
           </div>
 
-          <div className="grid gap-3 border-b-2 border-orange-200 bg-[#FFF8EF] p-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 xl:grid-cols-5">
             <Stat label="People" value={stats.total} />
             <Stat label="Verified / linked" value={stats.verified} tone="green" />
             <Stat label="Needs review" value={stats.review} tone="amber" />
@@ -303,7 +305,7 @@ function StudentDirectoryPage({
             <Stat label="Multiple records" value={stats.multipleRecords} />
           </div>
 
-          <div className="grid gap-3 border-t border-orange-100 bg-[#FFFDF8] p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid min-w-0 gap-3 border-t-[3px] border-[#C9D7E6] bg-white p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
             <label className="relative block">
               <Search
                 size={17}
@@ -313,7 +315,7 @@ function StudentDirectoryPage({
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search name, email, phone, Person ID or source record…"
-                className="h-12 w-full rounded-xl border-2 border-[#B9C9D9] bg-white pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
 
@@ -331,8 +333,8 @@ function StudentDirectoryPage({
                   onClick={() => setFilter(id)}
                   className={`rounded-xl border-2 px-3 py-2 text-xs font-black transition ${
                     filter === id
-                      ? "border-orange-500 bg-orange-500 text-white"
-                      : "border-[#B9C9D9] bg-white text-[#123865] hover:border-orange-400 hover:bg-orange-50"
+                      ? "border-[#123865] bg-[#123865] text-white shadow-sm"
+                      : "border-[#C9D7E6] bg-white text-[#123865] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
                   }`}
                 >
                   {label}
@@ -344,7 +346,7 @@ function StudentDirectoryPage({
 
         {reconciliationNotice.message ? (
           <div
-            className={`rounded-xl border-2 px-4 py-3 text-sm font-bold ${
+            className={`rounded-[1.35rem] border-[3px] px-4 py-3 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
               reconciliationNotice.type === "success"
                 ? "border-emerald-300 bg-emerald-50 text-emerald-800"
                 : "border-rose-300 bg-rose-50 text-rose-800"
@@ -381,7 +383,7 @@ function StudentDirectoryPage({
             ))}
           </div>
         ) : (
-          <div className="rounded-[1.6rem] border-2 border-dashed border-slate-300 bg-white p-10 text-center">
+          <div className="rounded-[1.55rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-10 text-center shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
             <UsersRound className="mx-auto text-slate-400" size={30} />
             <h2 className="mt-3 text-lg font-black text-[#10233F]">
               No matching students
@@ -482,10 +484,10 @@ function StudentIdentityCard({
   const ConfidenceIcon = confidence.icon;
 
   return (
-    <article className="overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_10px_30px_rgba(15,35,63,0.08)]">
-      <div className="grid gap-4 p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+    <article className="min-w-0 overflow-hidden rounded-[1.6rem] border-[4px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.09)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_18px_46px_rgba(18,56,101,0.13)]">
+      <div className="grid min-w-0 gap-4 border-b-[3px] border-[#FF5A0A] bg-white p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
         <div className="flex min-w-0 gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] text-white">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-[3px] border-[#123865] bg-[#123865] text-white shadow-sm">
             <UserRound size={20} />
           </div>
 
@@ -528,7 +530,7 @@ function StudentIdentityCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-          <span className="rounded-xl border-2 border-[#123865] bg-[#EDF4FA] px-3 py-2 text-xs font-black text-[#123865]">
+          <span className="rounded-xl border-[3px] border-[#123865] bg-[#F2F7FF] px-3 py-2 text-xs font-black text-[#123865]">
             {student.recordCount} source record{student.recordCount === 1 ? "" : "s"}
           </span>
 
@@ -536,7 +538,7 @@ function StudentIdentityCard({
             <button
               type="button"
               onClick={onReconcile}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-600 bg-emerald-600 px-4 py-2 text-xs font-black text-white transition hover:bg-emerald-700"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-emerald-600 bg-emerald-600 px-4 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
             >
               <Link2 size={14} />
               Review & link
@@ -546,7 +548,7 @@ function StudentIdentityCard({
           <button
             type="button"
             onClick={() => onOpen(student.primaryRecord)}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-2 text-xs font-black text-white transition hover:bg-orange-600"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md"
           >
             Open primary workspace
             <ChevronRight size={14} />
@@ -555,7 +557,7 @@ function StudentIdentityCard({
           <button
             type="button"
             onClick={onToggle}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#123865] bg-white text-[#123865] transition hover:border-orange-400 hover:bg-orange-50"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-[#123865] bg-white text-[#123865] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
             aria-label={expanded ? "Hide source records" : "Show source records"}
           >
             <ChevronDown
@@ -567,7 +569,7 @@ function StudentIdentityCard({
       </div>
 
       {expanded ? (
-        <div className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:p-5">
+        <div className="bg-[#FFF8EF] p-4 sm:p-5">
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-600">
@@ -593,8 +595,8 @@ function StudentIdentityCard({
                   key={`${getRecordType(record)}:${record.id}`}
                   className={`grid gap-3 rounded-xl border-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center ${
                     primary
-                      ? "border-emerald-300 bg-emerald-50/70"
-                      : "border-slate-200 bg-white"
+                      ? "border-emerald-300 bg-emerald-50/70 shadow-sm"
+                      : "border-[#C9D7E6] bg-white hover:border-[#FF5A0A]"
                   }`}
                 >
                   <div className="min-w-0">
@@ -639,7 +641,7 @@ function StudentIdentityCard({
                       className={`rounded-lg border-2 px-3 py-2 text-xs font-black transition ${
                       primary
                         ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
-                        : "border-[#123865] bg-white text-[#123865] hover:border-orange-400 hover:bg-orange-50"
+                        : "border-[#123865] bg-white text-[#123865] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
                     }`}
                   >
                     {primary ? "Open primary" : "Open history record"}
@@ -672,12 +674,12 @@ function IdentityConfirmationModal({
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-[#10233F]/65 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl overflow-hidden rounded-[1.6rem] border-[3px] border-orange-400 bg-white shadow-[0_30px_100px_rgba(16,35,63,0.35)]">
+      <div className="w-full max-w-xl overflow-hidden rounded-[1.7rem] border-[4px] border-[#123865] bg-white shadow-[0_30px_100px_rgba(16,35,63,0.38)]">
         <div
-          className={`border-b-2 px-5 py-4 ${
+          className={`border-b-[3px] px-5 py-4 ${
             dangerous
               ? "border-rose-300 bg-rose-50"
-              : "border-orange-200 bg-[#fff8f1]"
+              : "border-[#FF5A0A] bg-[#123865] text-white"
           }`}
         >
           <p
@@ -687,7 +689,7 @@ function IdentityConfirmationModal({
           >
             {eyebrow}
           </p>
-          <h2 className="mt-1 text-xl font-black text-[#10233F]">{title}</h2>
+          <h2 className={`mt-1 text-xl font-black ${dangerous ? "text-[#10233F]" : "text-white"}`}>{title}</h2>
         </div>
 
         <div className="p-5 text-sm font-semibold leading-6 text-slate-600">
@@ -703,12 +705,12 @@ function IdentityConfirmationModal({
               value={confirmationText}
               onChange={(event) => setConfirmationText(event.target.value)}
               disabled={busy}
-              className="mt-2 h-11 w-full rounded-xl border-2 border-slate-200 px-3 text-sm font-black uppercase text-[#10233F] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
+              className="mt-2 h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-sm font-black uppercase text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
             />
           </label>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-4">
+        <div className="flex items-center justify-end gap-2 border-t-[3px] border-[#C9D7E6] bg-[#FFF8EF] px-5 py-4">
           <button
             type="button"
             onClick={onCancel}
@@ -739,7 +741,7 @@ function IdentityConfirmationModal({
 
 function CommandMetric({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/25 bg-white/10 px-4 py-3.5">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 px-4 py-3.5 text-white shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.14em] text-white/80">
         {label}
       </p>
@@ -752,12 +754,12 @@ function Stat({ label, value, tone = "slate" }) {
   const tones = {
     slate: "border-[#123865] bg-[#EDF4FA] text-[#123865]",
     green: "border-emerald-500 bg-emerald-50 text-emerald-800",
-    amber: "border-orange-500 bg-orange-50 text-orange-800",
+    amber: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     blue: "border-blue-500 bg-blue-50 text-blue-800",
   };
 
   return (
-    <div className={`rounded-2xl border-[3px] p-4 ${tones[tone] || tones.slate}`}>
+    <div className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${tones[tone] || tones.slate}`}>
       <p className="text-[9px] font-black uppercase tracking-[0.12em] opacity-70">
         {label}
       </p>
@@ -769,8 +771,8 @@ function Stat({ label, value, tone = "slate" }) {
 function ModalLoader() {
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#10233F]/50 px-4 backdrop-blur-sm">
-      <div className="rounded-2xl border-2 border-orange-200 bg-white px-6 py-5 text-center shadow-xl">
-        <div className="mx-auto h-9 w-9 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+      <div className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white px-6 py-5 text-center shadow-[0_24px_70px_rgba(18,56,101,0.20)]">
+        <div className="mx-auto h-9 w-9 animate-spin rounded-full border-[3px] border-orange-100 border-t-[#FF5A0A]" />
         <p className="mt-3 text-sm font-black text-[#10233F]">
           Opening master student workspace
         </p>

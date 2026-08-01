@@ -1,4 +1,4 @@
-// TrendAnalysisPanel V3 EXTREME — Zaifan Analytics OS
+// TrendAnalysisPanel V4 PARTNER-OS ALIGNED — Zaifan Analytics OS
 // Full replacement for:
 // src/components/admin/analytics/TrendAnalysisPanel.jsx
 //
@@ -377,7 +377,7 @@ export default function TrendAnalysisPanel({
   if (compact) {
     return (
       <section className="overflow-hidden rounded-[1.5rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-        <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white">
+        <div className="flex items-center justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-3 text-white">
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.13em] text-orange-300">
               Analytics OS
@@ -401,7 +401,7 @@ export default function TrendAnalysisPanel({
 
   return (
     <section className="space-y-4 sm:space-y-5">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_16px_42px_rgba(23,36,61,0.07)]">
+      <header className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
         <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
@@ -427,7 +427,7 @@ export default function TrendAnalysisPanel({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
@@ -464,7 +464,7 @@ export default function TrendAnalysisPanel({
         </div>
       </header>
 
-      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EE] p-3">
+      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EF] p-3">
         <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)]">
           <div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:pb-0">
             {[
@@ -480,7 +480,7 @@ export default function TrendAnalysisPanel({
                 className={`min-h-12 shrink-0 rounded-xl border-2 px-4 text-[10px] font-black uppercase tracking-[0.06em] transition ${
                   activeView === key
                     ? "border-[#123865] bg-[#123865] text-white"
-                    : "border-slate-300 bg-white text-[#10233F] hover:border-orange-400 hover:bg-orange-50"
+                    : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                 }`}
               >
                 {label}
@@ -499,7 +499,7 @@ export default function TrendAnalysisPanel({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search trends, history, opportunities or risks..."
               aria-label="Search Trend Analysis"
-              className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
             />
 
             {search ? (
@@ -673,7 +673,7 @@ function TrendCard({ item }) {
         </span>
       </div>
 
-      <div className="mt-3 rounded-xl border-2 border-slate-300 bg-white/75 p-3">
+      <div className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-white/75 p-3">
         <div className="flex items-center justify-between gap-3">
           <span className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
             Previous
@@ -754,7 +754,7 @@ function HistoryWorkspace({ history, query, onClear }) {
                   ].map((heading) => (
                     <th
                       key={heading}
-                      className="border-b-2 border-slate-300 bg-[#F7F1E8] px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.08em] text-slate-600"
+                      className="border-b-2 border-[#C9D7E6] bg-[#F7F1E8] px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.08em] text-slate-600"
                     >
                       {heading}
                     </th>
@@ -765,22 +765,22 @@ function HistoryWorkspace({ history, query, onClear }) {
               <tbody>
                 {visible.map((item, index) => (
                   <tr key={item.id || item.period || index}>
-                    <td className="border-b border-slate-200 px-3 py-3 font-black text-[#10233F]">
+                    <td className="border-b border-[#E1E8F0] px-3 py-3 font-black text-[#10233F]">
                       {item.period || `Period ${index + 1}`}
                     </td>
-                    <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
+                    <td className="border-b border-[#E1E8F0] px-3 py-3 font-semibold text-[#10233F]">
                       {formatValue(item.students, "number")}
                     </td>
-                    <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
+                    <td className="border-b border-[#E1E8F0] px-3 py-3 font-semibold text-[#10233F]">
                       {formatValue(item.applications, "number")}
                     </td>
-                    <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
+                    <td className="border-b border-[#E1E8F0] px-3 py-3 font-semibold text-[#10233F]">
                       {formatValue(item.offers, "number")}
                     </td>
-                    <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
+                    <td className="border-b border-[#E1E8F0] px-3 py-3 font-semibold text-[#10233F]">
                       {formatValue(item.visas, "number")}
                     </td>
-                    <td className="border-b border-slate-200 px-3 py-3 font-semibold text-[#10233F]">
+                    <td className="border-b border-[#E1E8F0] px-3 py-3 font-semibold text-[#10233F]">
                       {formatValue(item.revenue, "money")}
                     </td>
                   </tr>
@@ -870,7 +870,7 @@ function SignalWorkspace({
 
 function GovernanceCard({ icon: Icon, label, value, detail }) {
   return (
-    <article className="rounded-xl border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+    <article className="rounded-xl border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -891,7 +891,7 @@ function GovernanceCard({ icon: Icon, label, value, detail }) {
 
 function CompactTrend({ item }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
       <p className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
         {item.label}
       </p>
@@ -915,7 +915,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white">
       <div>
         <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
           {eyebrow}
@@ -964,7 +964,7 @@ function DarkMetric({ label, value }) {
 
 function MetaChip({ label }) {
   return (
-    <span className="rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black text-slate-600">
+    <span className="rounded-md border border-[#C9D7E6] bg-slate-50 px-2 py-0.5 text-[8px] font-black text-slate-600">
       {label}
     </span>
   );
@@ -972,7 +972,7 @@ function MetaChip({ label }) {
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-[1.25rem] border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+    <div className="rounded-[1.25rem] border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-6 text-center">
       <Info size={20} className="mx-auto text-orange-600" />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600">
@@ -983,7 +983,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search
           <ArrowRight size={12} />
@@ -994,10 +994,10 @@ function EmptyState({ title, text, onClear }) {
 }
 
 function toneClass(tone) {
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA]";
   if (tone === "green") return "border-emerald-400 bg-emerald-50";
   if (tone === "blue") return "border-blue-400 bg-blue-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
+  return "border-[#C9D7E6] bg-[#FFFDF8]";
 }
 
 function deltaTextClass(state) {

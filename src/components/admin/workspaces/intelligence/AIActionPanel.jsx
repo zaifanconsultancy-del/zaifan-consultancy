@@ -515,7 +515,7 @@ function AIActionPanel({
   }
 
   return (
-    <section className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.08)]">
+    <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#FFB38A] bg-white shadow-[0_14px_36px_rgba(15,35,63,0.08)]">
       <header className="bg-[#123866] p-5 text-white sm:p-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-3xl">
@@ -562,7 +562,7 @@ function AIActionPanel({
         </div>
       </header>
 
-      <div className="bg-[#fff8ee] p-4 sm:p-6">
+      <div className="bg-[#FFF8EF] p-4 sm:p-6">
         {!canExecute ? (
           <FeedbackBanner
             feedback={{
@@ -575,14 +575,14 @@ function AIActionPanel({
         ) : null}
 
         <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-          <div className="space-y-4">
-            <section className="rounded-[1.6rem] border-[3px] border-orange-300 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+          <div className="min-w-0 space-y-4">
+            <section className="rounded-[1.6rem] border-[3px] border-[#FFB38A] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
                     Execution Controls
                   </p>
-                  <h4 className="mt-1 text-lg font-black text-[#10233f]">
+                  <h4 className="mt-1 text-lg font-black text-[#10233F]">
                     Choose one approved action
                   </h4>
                 </div>
@@ -607,7 +607,7 @@ function AIActionPanel({
             </section>
 
             <section className="rounded-[1.6rem] border-[3px] border-[#123866] bg-[#123866] p-5 text-white shadow-[0_8px_22px_rgba(15,35,63,0.10)]">
-              <div className="flex items-start gap-3">
+              <div className="flex min-w-0 items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 text-white">
                   <ShieldCheck size={18} />
                 </div>
@@ -629,17 +629,17 @@ function AIActionPanel({
             </section>
           </div>
 
-          <section className="overflow-hidden rounded-[1.6rem] border-[3px] border-orange-300 bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
-            <div className="border-b-2 border-orange-200 bg-[#fffaf2] p-4 sm:p-5">
+          <section className="overflow-hidden rounded-[1.6rem] border-[3px] border-[#FFB38A] bg-white shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+            <div className="border-b-2 border-orange-200 bg-[#FFF8EF] p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
                     Review Before Execution
                   </p>
-                  <h4 className="mt-1 text-lg font-black text-[#10233f]">
+                  <h4 className="mt-1 text-lg font-black text-[#10233F]">
                     {activeAction.label}
                   </h4>
-                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  <p className="mt-1 text-xs font-semibold leading-5 text-[#51627A]">
                     {activeAction.description}
                   </p>
                 </div>
@@ -691,7 +691,7 @@ function AIActionPanel({
                   !canExecute ||
                   !activeAction.available
                 }
-                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[1.15rem] border-2 border-orange-600 bg-orange-500 px-5 py-3 text-sm font-black text-white shadow-[0_8px_20px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[1.15rem] border-2 border-orange-600 bg-[#FF5A0A] px-5 py-3 text-sm font-black text-white shadow-[0_8px_20px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 {busyAction === activeAction.id ? (
                   <>
@@ -711,13 +711,13 @@ function AIActionPanel({
           </section>
         </div>
 
-        <section className="mt-4 rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-4 sm:p-5">
+        <section className="mt-4 rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
                 Recommendation Source
               </p>
-              <h4 className="mt-1 font-black text-[#10233f]">
+              <h4 className="mt-1 font-black text-[#10233F]">
                 AI reasoning passed into the execution layer
               </h4>
             </div>
@@ -732,7 +732,7 @@ function AIActionPanel({
             </div>
           </div>
 
-          <div className="mt-4 max-h-48 overflow-y-auto rounded-[1.2rem] border-2 border-slate-300 bg-[#fffaf2] p-4">
+          <div className="mt-4 max-h-48 overflow-y-auto rounded-[1.2rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4">
             <p className="whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-700">
               {recommendedText ||
                 "No structured AI recommendation is currently available. Open the AI workspace or GPT Intelligence, generate an analysis, then return here to execute the reviewed result."}
@@ -763,13 +763,13 @@ function ActionSelector({
       className={`group rounded-[1.25rem] border-[3px] p-4 text-left transition ${
         selected
           ? `${tone.selected} shadow-[0_7px_18px_rgba(15,35,63,0.07)]`
-          : "border-slate-300 bg-[#fffaf2] hover:border-orange-300 hover:bg-white"
+          : "border-[#C9D7E6] bg-[#FFF8EF] hover:border-[#FFB38A] hover:bg-white"
       } disabled:cursor-wait`}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div
           className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${
-            selected ? tone.icon : "border-slate-300 bg-white text-[#10233f]"
+            selected ? tone.icon : "border-[#C9D7E6] bg-white text-[#10233F]"
           }`}
         >
           {busy ? (
@@ -790,10 +790,10 @@ function ActionSelector({
         </span>
       </div>
 
-      <p className="mt-3 text-sm font-black text-[#10233f]">
+      <p className="mt-3 text-sm font-black text-[#10233F]">
         {action.label}
       </p>
-      <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-600">
+      <p className="mt-1 text-[11px] font-semibold leading-4 text-[#51627A]">
         {action.description}
       </p>
     </button>
@@ -803,11 +803,11 @@ function ActionSelector({
 function PreviewField({ label, value, multiline = false }) {
   return (
     <div>
-      <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
+      <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-[#65748B]">
         {label}
       </p>
       <div
-        className={`overflow-y-auto rounded-[1.15rem] border-2 border-slate-300 bg-[#fffaf2] p-4 text-sm font-semibold leading-6 text-[#10233f] ${
+        className={`overflow-y-auto rounded-[1.15rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4 text-sm font-semibold leading-6 text-[#10233F] ${
           multiline ? "max-h-56 min-h-[130px] whitespace-pre-wrap" : ""
         }`}
       >
@@ -819,11 +819,11 @@ function PreviewField({ label, value, multiline = false }) {
 
 function ReviewFact({ label, value }) {
   return (
-    <div className="rounded-[1rem] border-2 border-slate-300 bg-[#fffaf2] p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
+    <div className="rounded-[1rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.11em] text-[#65748B]">
         {label}
       </p>
-      <p className="mt-1 break-words text-xs font-black text-[#10233f]">
+      <p className="mt-1 break-words text-xs font-black text-[#10233F]">
         {value || "Not available"}
       </p>
     </div>
@@ -893,7 +893,7 @@ function FeedbackBanner({ feedback }) {
 
   return (
     <div className={`rounded-[1.2rem] border-2 p-4 ${tone.wrapper}`}>
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <div
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${tone.icon}`}
         >
@@ -930,8 +930,8 @@ function MiniState({ label, good }) {
 function getActionTone(tone) {
   const tones = {
     orange: {
-      selected: "border-orange-400 bg-orange-50",
-      icon: "border-orange-300 bg-white text-orange-700",
+      selected: "border-[#FF5A0A] bg-[#FFF4EA]",
+      icon: "border-[#FFB38A] bg-white text-[#B84F0E]",
     },
     blue: {
       selected: "border-blue-400 bg-blue-50",

@@ -1,5 +1,5 @@
-// NotificationBell V4 — lightweight Admin shell notification gateway
-// src/components/admin/NotificationBell.jsx
+// NotificationBell V6 PARTNER OS — lightweight Admin shell notification gateway
+// src/components/admin/workspaces/communications/NotificationBell.jsx
 //
 // Ownership rule:
 // - this component is only a trigger/gateway
@@ -9,6 +9,13 @@
 
 import { Bell, BellRing } from "lucide-react";
 
+function safeCount(value) {
+  if (Array.isArray(value)) return value.length;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+}
+
 function NotificationBell({
   notifications = [],
   open = false,
@@ -16,10 +23,7 @@ function NotificationBell({
   onClick = null,
   label = "Notifications",
 }) {
-  const unreadCount = Array.isArray(notifications)
-    ? notifications.length
-    : Number(notifications) || 0;
-
+  const unreadCount = safeCount(notifications);
   const hasUnread = unreadCount > 0;
   const Icon = hasUnread ? BellRing : Bell;
 
@@ -44,22 +48,35 @@ function NotificationBell({
       onClick={handleClick}
       aria-label={accessibleLabel}
       aria-expanded={typeof onClick === "function" ? undefined : Boolean(open)}
+      aria-haspopup={typeof onClick === "function" ? undefined : "dialog"}
       title={accessibleLabel}
-      className={`group relative inline-flex h-10 min-w-10 items-center justify-center rounded-xl border-2 px-2.5 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
+      className={`group relative inline-flex h-11 min-w-11 shrink-0 items-center justify-center overflow-visible rounded-[0.95rem] border-[3px] px-2.5 shadow-[0_6px_16px_rgba(15,35,63,0.06)] transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FF5A0A]/20 active:translate-y-px ${
         open
-          ? "border-orange-500 bg-orange-500 text-white"
+          ? "border-[#FF5A0A] bg-[#123865] text-white shadow-[0_8px_20px_rgba(18,56,101,0.18)]"
           : hasUnread
-          ? "border-orange-300 bg-orange-50 text-orange-700 hover:border-orange-500 hover:bg-orange-100"
-          : "border-slate-300 bg-white text-[#123865] hover:border-orange-400 hover:bg-orange-50"
+            ? "border-[#FF5A0A] bg-[#FFF8EF] text-[#123865] hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_9px_22px_rgba(15,35,63,0.10)]"
+            : "border-[#C9D7E6] bg-white text-[#123865] hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF8EF] hover:shadow-[0_9px_22px_rgba(15,35,63,0.09)]"
       }`}
     >
-      <Icon size={17} strokeWidth={2.3} />
+      <span
+        className={`flex h-7 w-7 items-center justify-center rounded-lg border-2 transition ${
+          open
+            ? "border-white/20 bg-white/10 text-orange-200"
+            : hasUnread
+              ? "border-[#FF5A0A]/25 bg-white text-[#FF5A0A]"
+              : "border-[#123865]/10 bg-[#F7FAFC] text-[#123865] group-hover:bg-white"
+        }`}
+      >
+        <Icon size={16} strokeWidth={2.4} />
+      </span>
 
       {hasUnread ? (
-        <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-red-600 px-1 text-[9px] font-black leading-none text-white shadow-sm">
+        <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-red-600 px-1 text-[9px] font-black leading-none text-white shadow-[0_5px_12px_rgba(185,28,28,0.22)]">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       ) : null}
+
+      <span className="pointer-events-none absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#FF5A0A] opacity-0 transition group-hover:opacity-100" />
     </button>
   );
 }

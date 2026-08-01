@@ -1,4 +1,4 @@
-// StudentAnalyticsPanel V5 MAXIMUM — Resilient Persistent Intelligence
+// StudentAnalyticsPanel PARTNER OS EXTREME — Student Intelligence Command Center
 // Full replacement for: src/components/admin/StudentAnalyticsPanel.jsx
 //
 // Uses live Student OS data + persistent Supabase intelligence:
@@ -1274,19 +1274,19 @@ function StudentAnalyticsPanel({
     storedRisk?.opportunity_score ?? null;
 
   return (
-    <div className="space-y-5 pb-8 text-[#10233f]">
-      <section className="overflow-hidden rounded-[1.85rem] border-[3px] border-orange-400 bg-white shadow-[0_16px_45px_rgba(15,35,63,0.08)]">
-        <div className="grid lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="bg-[#123865] p-6 text-white">
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 pb-8 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 sm:pb-8">
+      <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
               Student Intelligence OS
             </p>
 
-            <h2 className="mt-2 text-2xl font-black text-white">
+            <h2 className="mt-3 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Journey, Risk & Opportunity Center
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-200">
+            <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
               Live Student OS data is analyzed locally first. Stored Supabase
               intelligence adds history and executive context without making
               paid GPT a requirement.
@@ -1297,7 +1297,7 @@ function StudentAnalyticsPanel({
                 type="button"
                 onClick={refreshAnalytics}
                 disabled={refreshing}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-white/25 bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw
                   size={14}
@@ -1310,7 +1310,7 @@ function StudentAnalyticsPanel({
                 type="button"
                 onClick={saveIntelligenceSnapshot}
                 disabled={savingSnapshot || isLoading}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-500 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/35 bg-[#123865] px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save size={14} />
                 {savingSnapshot ? "Saving..." : "Save Intelligence Snapshot"}
@@ -1318,7 +1318,7 @@ function StudentAnalyticsPanel({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-6 text-white">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-100">
               Next Best Action
             </p>
@@ -1364,7 +1364,7 @@ function StudentAnalyticsPanel({
       ) : null}
 
       {!hasValidStudentId ? (
-        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+        <div className="rounded-[1.35rem] border-[3px] border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
           This student does not have a valid numeric Student OS ID. Live local
           analysis can use supplied data, but persistent Supabase intelligence
           cannot be loaded or saved until the record ID is valid.
@@ -1372,12 +1372,12 @@ function StudentAnalyticsPanel({
       ) : null}
 
       {(isLoading || refreshing) && (
-        <div className="rounded-2xl border-2 border-blue-300 bg-blue-50 p-4 text-sm font-bold text-blue-800">
+        <div className="rounded-[1.35rem] border-[3px] border-[#60A5FA] bg-[#F2F7FF] p-4 text-sm font-bold text-blue-800 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
           Refreshing student intelligence sources…
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <MetricCard
           label="Health Score"
           value={`${analytics.healthScore}%`}
@@ -1405,13 +1405,13 @@ function StudentAnalyticsPanel({
         />
       </div>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <div className="flex min-w-0 flex-col gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
               Persistent Intelligence
             </p>
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Stored vs Live Student Snapshot
             </h3>
             <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -1438,7 +1438,7 @@ function StudentAnalyticsPanel({
           />
         </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
           <InfoTile
             label="Stored Risk"
             value={
@@ -1472,7 +1472,7 @@ function StudentAnalyticsPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-[#fff8ee] p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
           Student Journey Tracker
         </p>
@@ -1480,14 +1480,14 @@ function StudentAnalyticsPanel({
         <JourneyTracker stage={analytics.journeyStage} />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-[1.7rem] border-[3px] border-red-200 bg-white p-5">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FB7185] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-700">
                 Risk Engine
               </p>
-              <h3 className="mt-1 text-lg font-black text-[#10233f]">
+              <h3 className="mt-1 text-lg font-black text-[#10233F]">
                 Operational Blockers
               </h3>
             </div>
@@ -1523,7 +1523,7 @@ function StudentAnalyticsPanel({
           </div>
         </section>
 
-        <section className="rounded-[1.7rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
+        <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white shadow-[0_12px_34px_rgba(18,56,101,0.09)]">
           <div className="flex items-center gap-2">
             <Sparkles size={15} className="text-orange-300" />
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
@@ -1555,7 +1555,7 @@ function StudentAnalyticsPanel({
         </section>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
         <ProgressCard
           title="Document Readiness"
           value={analytics.documentReadiness}
@@ -1576,7 +1576,7 @@ function StudentAnalyticsPanel({
         />
       </div>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <InfoTile
             label="Universities"
@@ -1600,9 +1600,9 @@ function StudentAnalyticsPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.7rem] border-[3px] border-slate-300 bg-white p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-orange-50 text-orange-700">
             <Database size={18} />
           </div>
 
@@ -1611,7 +1611,7 @@ function StudentAnalyticsPanel({
               Intelligence Data Contract
             </p>
 
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               What this panel is using
             </h3>
 
@@ -1623,7 +1623,7 @@ function StudentAnalyticsPanel({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <SourceTile
             label="Application"
             value={sharedApplication ? "Shared live data" : "Supabase / fallback"}
@@ -1647,12 +1647,12 @@ function StudentAnalyticsPanel({
         </div>
       </section>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-[#fff8ee] p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
           AI-Ready Executive Summary
         </p>
 
-        <h3 className="mt-2 text-lg font-black text-[#10233f]">
+        <h3 className="mt-2 text-lg font-black text-[#10233F]">
           Local intelligence summary
         </h3>
 
@@ -1661,13 +1661,13 @@ function StudentAnalyticsPanel({
         </p>
       </section>
 
-      <section className="rounded-[1.7rem] border-[3px] border-slate-300 bg-white p-5">
+      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700">
               Analysis History
             </p>
-            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+            <h3 className="mt-1 text-lg font-black text-[#10233F]">
               Previous Student Intelligence
             </h3>
           </div>
@@ -1682,7 +1682,7 @@ function StudentAnalyticsPanel({
             analysisHistory.map((analysis) => (
               <div
                 key={analysis.id}
-                className="rounded-2xl border-2 border-slate-200 bg-[#fffaf4] p-4"
+                className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill
@@ -1733,37 +1733,137 @@ function JourneyTracker({ stage }) {
 
   const stageIndex = stages.indexOf(stage);
   const current = stageIndex >= 0 ? stageIndex : 0;
+  const progress = stages.length > 1
+    ? Math.round((current / (stages.length - 1)) * 100)
+    : 0;
 
   return (
-    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-      {stages.map((item, index) => {
-        const completed = index <= current;
+    <div className="mt-5 min-w-0">
+      <div className="flex min-w-0 flex-col gap-4 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_10px_28px_rgba(18,56,101,0.06)] sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+            Current Journey Position
+          </p>
+          <h4 className="mt-1 break-words text-xl font-black text-[#10233F]">
+            {stages[current]}
+          </h4>
+          <p className="mt-1 text-xs font-semibold text-slate-600">
+            Stage {current + 1} of {stages.length}
+          </p>
+        </div>
 
-        return (
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-[390px]">
+          <JourneySummaryStat label="Progress" value={`${progress}%`} />
+          <JourneySummaryStat label="Completed" value={`${current + 1}/${stages.length}`} />
+          <JourneySummaryStat
+            label="Remaining"
+            value={Math.max(0, stages.length - current - 1)}
+            className="col-span-2 sm:col-span-1"
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 min-w-0 overflow-x-auto pb-2">
+        <div className="relative min-w-[920px] px-3 pb-2 pt-3">
+          <div className="absolute left-[5.4%] right-[5.4%] top-[2.35rem] h-[5px] rounded-full bg-[#D5E0EC]" />
+
           <div
-            key={item}
-            className={`rounded-2xl border-2 p-3 text-center transition ${
-              completed
-                ? "border-orange-500 bg-orange-500 text-white"
-                : "border-slate-300 bg-white text-slate-500"
-            }`}
-          >
-            <div
-              className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full border text-xs font-black ${
-                completed
-                  ? "border-white/30 bg-white/15 text-white"
-                  : "border-slate-300 bg-white text-slate-500"
-              }`}
-            >
-              {index + 1}
-            </div>
+            className="absolute left-[5.4%] top-[2.35rem] h-[5px] rounded-full bg-[#FF5A0A] transition-[width] duration-500"
+            style={{ width: `${progress * 0.892}%` }}
+          />
 
-            <p className="mt-2 text-[9px] font-black uppercase tracking-[0.08em]">
-              {item}
-            </p>
+          <div className="relative grid grid-cols-8 gap-3">
+            {stages.map((item, index) => {
+              const isCurrent = index === current;
+              const isCompleted = index < current;
+              const isUpcoming = index > current;
+
+              return (
+                <div key={item} className="min-w-0 text-center">
+                  <div
+                    className={`relative mx-auto flex h-16 w-16 items-center justify-center rounded-full border-[4px] shadow-[0_7px_20px_rgba(18,56,101,0.10)] transition ${
+                      isCurrent
+                        ? "border-[#FF5A0A] bg-[#FF5A0A] text-white ring-8 ring-orange-100"
+                        : isCompleted
+                        ? "border-[#123865] bg-[#123865] text-white"
+                        : "border-[#C9D7E6] bg-white text-slate-500"
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 size={25} strokeWidth={2.6} />
+                    ) : isCurrent ? (
+                      <Target size={24} strokeWidth={2.6} />
+                    ) : (
+                      <span className="text-sm font-black">{index + 1}</span>
+                    )}
+
+                    {isCurrent ? (
+                      <span className="absolute -bottom-2 rounded-full border-2 border-[#FF5A0A] bg-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] text-orange-700 shadow-sm">
+                        Current
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div
+                    className={`mt-5 rounded-[1.15rem] border-[3px] px-2.5 py-3 transition ${
+                      isCurrent
+                        ? "border-[#FF5A0A] bg-[#FFF4E8]"
+                        : isCompleted
+                        ? "border-[#123865] bg-[#F2F7FF]"
+                        : "border-[#C9D7E6] bg-white"
+                    }`}
+                  >
+                    <p
+                      className={`min-h-[2.25rem] text-[9px] font-black uppercase leading-[1.15rem] tracking-[0.07em] ${
+                        isCurrent
+                          ? "text-orange-800"
+                          : isCompleted
+                          ? "text-[#123865]"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {item}
+                    </p>
+
+                    <p
+                      className={`mt-1 text-[9px] font-bold ${
+                        isCurrent
+                          ? "text-orange-700"
+                          : isCompleted
+                          ? "text-blue-700"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {isCurrent
+                        ? "In progress"
+                        : isCompleted
+                        ? "Completed"
+                        : isUpcoming
+                        ? "Upcoming"
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JourneySummaryStat({ label, value, className = "" }) {
+  return (
+    <div
+      className={`min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2.5 ${className}`}
+    >
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-lg font-black text-[#10233F]">
+        {value}
+      </p>
     </div>
   );
 }
@@ -1777,14 +1877,14 @@ function MetricCard({
 }) {
   const styles = {
     navy: "border-[#123865] bg-[#123865] text-white",
-    orange: "border-orange-500 bg-orange-500 text-white",
+    orange: "border-[#FF5A0A] bg-[#FF5A0A] text-white",
     red: "border-red-300 bg-red-50 text-red-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
   };
 
   return (
     <div
-      className={`rounded-[1.5rem] border-[3px] p-5 ${
+      className={`min-w-0 rounded-[1.45rem] border-[3px] p-5 shadow-[0_9px_24px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${
         styles[tone] || styles.navy
       }`}
     >
@@ -1807,10 +1907,10 @@ function ProgressCard({ title, value, footer, danger = false }) {
 
   return (
     <div
-      className={`rounded-[1.7rem] border-[3px] p-5 ${
+      className={`min-w-0 rounded-[1.55rem] border-[3px] p-5 shadow-[0_9px_24px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${
         danger
           ? "border-red-300 bg-red-50"
-          : "border-orange-300 bg-white"
+          : "border-[#FF5A0A] bg-white"
       }`}
     >
       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
@@ -1819,7 +1919,7 @@ function ProgressCard({ title, value, footer, danger = false }) {
 
       <p
         className={`mt-3 text-3xl font-black ${
-          danger ? "text-red-700" : "text-[#10233f]"
+          danger ? "text-red-700" : "text-[#10233F]"
         }`}
       >
         {safeValue}%
@@ -1828,7 +1928,7 @@ function ProgressCard({ title, value, footer, danger = false }) {
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
         <div
           className={`h-full rounded-full ${
-            danger ? "bg-red-500" : "bg-orange-500"
+            danger ? "bg-red-500" : "bg-[#FF5A0A]"
           }`}
           style={{ width: `${safeValue}%` }}
         />
@@ -1846,10 +1946,10 @@ function RiskRow({ risk }) {
 
   return (
     <div
-      className={`rounded-2xl border-2 p-4 ${
+      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${
         high
           ? "border-red-300 bg-red-50"
-          : "border-orange-300 bg-orange-50"
+          : "border-[#FF5A0A] bg-[#FFF4E8]"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -1878,7 +1978,7 @@ function RiskRow({ risk }) {
 
 function InfoTile({ label, value, icon: Icon = FileCheck2 }) {
   return (
-    <div className="rounded-2xl border-2 border-slate-200 bg-[#fffaf4] p-4">
+    <div className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
       <div className="flex items-center gap-2">
         <Icon size={14} className="text-orange-600" />
         <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
@@ -1886,7 +1986,7 @@ function InfoTile({ label, value, icon: Icon = FileCheck2 }) {
         </p>
       </div>
 
-      <p className="mt-2 break-words text-sm font-black text-[#10233f]">
+      <p className="mt-2 break-words text-sm font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -1896,14 +1996,14 @@ function InfoTile({ label, value, icon: Icon = FileCheck2 }) {
 function StatusPill({ text, tone = "slate" }) {
   const styles = {
     slate: "border-slate-300 bg-slate-50 text-slate-700",
-    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     red: "border-red-300 bg-red-50 text-red-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
   };
 
   return (
     <span
-      className={`rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${
+      className={`inline-flex max-w-full rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${
         styles[tone] || styles.slate
       }`}
     >
@@ -1922,11 +2022,11 @@ function PositiveEmpty({ text }) {
 
 function SourceTile({ label, value }) {
   return (
-    <div className="rounded-2xl border-2 border-slate-200 bg-[#fffaf4] p-4">
+    <div className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
       <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
         {label}
       </p>
-      <p className="mt-2 text-xs font-black leading-5 text-[#10233f]">
+      <p className="mt-2 text-xs font-black leading-5 text-[#10233F]">
         {value}
       </p>
     </div>
@@ -1945,7 +2045,8 @@ function Feedback({ tone, onClose, children }) {
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${style}`}
+      role={isError ? "alert" : "status"}
+      className={`flex min-w-0 items-start gap-3 rounded-[1.35rem] border-[3px] p-4 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${style}`}
     >
       {isError || isWarning ? (
         <AlertTriangle size={17} className="mt-0.5 shrink-0" />
@@ -1959,7 +2060,7 @@ function Feedback({ tone, onClose, children }) {
         type="button"
         onClick={onClose}
         aria-label="Dismiss message"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white/50 transition hover:bg-white"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-current/20 bg-white/50 transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
       >
         <X size={14} />
       </button>

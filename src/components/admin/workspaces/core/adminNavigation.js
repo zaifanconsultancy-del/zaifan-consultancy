@@ -2,6 +2,7 @@ import {
   Activity,
   BadgeDollarSign,
   BarChart3,
+  BookOpen,
   Bot,
   BrainCircuit,
   CalendarDays,
@@ -17,11 +18,11 @@ import {
   LayoutDashboard,
   Settings,
   ShieldCheck,
+  Smartphone,
   Radar,
   RadioTower,
   Network,
   Target,
-  Zap,
   UsersRound,
 } from "lucide-react";
 
@@ -34,6 +35,7 @@ export const ADMIN_TAB_ALIASES = Object.freeze({
   pipeline: "inquiries",
   automation: "operations-automation",
   notifications: "communication-notifications",
+  "operations-actions": "communication-notifications",
   communication: "communications",
   analytics: "crm-analytics",
   intelligence: "ai-command",
@@ -44,8 +46,9 @@ export const ADMIN_TAB_ALIASES = Object.freeze({
   "activity-logs": "system-activity",
   settings: "system-settings",
   system: "system-overview",
+  knowledge: "knowledge-os",
+  mobile: "mobile-os",
 });
-
 
 export const ADMIN_NAVIGATION_ZONES = Object.freeze([
   {
@@ -202,7 +205,7 @@ export const ADMIN_NAVIGATION = Object.freeze([
   {
     id: "operations",
     title: "Operations",
-    description: "Tasks, automation and controlled actions",
+    description: "Tasks and workflow automation",
     items: [
       {
         id: "operations-tasks",
@@ -219,14 +222,6 @@ export const ADMIN_NAVIGATION = Object.freeze([
         description: "Rules and workflow intelligence",
         icon: Bot,
         keywords: "automation workflow rules engine stages reminders",
-      },
-      {
-        id: "operations-actions",
-        label: "Action Queue",
-        shortLabel: "Actions",
-        description: "Human-reviewed CRM actions",
-        icon: Zap,
-        keywords: "action queue notifications execution approval crm",
       },
     ],
   },
@@ -385,6 +380,22 @@ export const ADMIN_NAVIGATION = Object.freeze([
     description: "Shell, audit and configuration",
     items: [
       {
+        id: "knowledge-os",
+        label: "Knowledge OS",
+        shortLabel: "Knowledge",
+        description: "SOPs, visa, universities and policy",
+        icon: BookOpen,
+        keywords: "knowledge sop visa university policy training playbook",
+      },
+      {
+        id: "mobile-os",
+        label: "Mobile OS",
+        shortLabel: "Mobile",
+        description: "Student, counselor, devices and push",
+        icon: Smartphone,
+        keywords: "mobile student counselor app devices push notifications sessions",
+      },
+      {
         id: "system-overview",
         label: "System Overview",
         shortLabel: "System",
@@ -427,7 +438,6 @@ export function normalizeAdminTab(tab) {
 
   return exists ? normalized : DEFAULT_ADMIN_TAB;
 }
-
 
 export function getAdminNavigationZones(permissions = {}) {
   const groups = getAdminNavigationGroups(permissions);

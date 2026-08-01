@@ -100,23 +100,13 @@ function ROICard({
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
+        <p
+          className={`min-w-0 text-[9px] font-black uppercase tracking-[0.11em] ${
+            dark ? "text-orange-300" : "text-slate-500"
+          }`}
+        >
+          {label}
+        </p>
 
         {Icon ? (
           <div
@@ -132,7 +122,15 @@ function ROICard({
       </div>
 
       <p
-        className={`mt-2 text-xs font-semibold leading-5 ${
+        className={`mt-3 whitespace-nowrap text-[1.35rem] font-black leading-tight ${
+          dark ? "text-white" : "text-[#10233F]"
+        }`}
+      >
+        {value}
+      </p>
+
+      <p
+        className={`mt-3 text-xs font-semibold leading-5 ${
           dark ? "text-slate-200" : "text-slate-600"
         }`}
       >

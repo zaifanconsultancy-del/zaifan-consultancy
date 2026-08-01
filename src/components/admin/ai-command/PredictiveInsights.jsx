@@ -1,4 +1,4 @@
-// PredictiveInsights V3 EXTREME — Zaifan AI Command OS
+// PredictiveInsights V5 PARTNER-OS PREMIUM — Zaifan AI Command OS
 // Full replacement for:
 // src/components/admin/ai-command/PredictiveInsights.jsx
 //
@@ -484,9 +484,9 @@ export default function PredictiveInsights({
         onOpenModule={onOpenModule}
       />
 
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_18px_48px_rgba(23,36,61,0.09)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.5fr)]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
+      <header className="overflow-hidden rounded-[2rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_22px_55px_rgba(15,35,63,0.12)]">
+        <div className="grid xl:grid-cols-[minmax(0,1.42fr)_minmax(340px,0.58fr)]">
+          <div className="bg-[#123865] p-5 text-white sm:p-7 lg:p-8">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderChip icon={LineChart} label="Predictive Insights" />
               <HeaderChip icon={ShieldCheck} label="Evidence First" />
@@ -495,7 +495,7 @@ export default function PredictiveInsights({
 
             <div className="mt-4 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
               <div className="max-w-4xl">
-                <h1 className="text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
+                <h1 className="text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
                   Forecasting & Predictive Intelligence
                 </h1>
 
@@ -506,7 +506,7 @@ export default function PredictiveInsights({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[420px]">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[440px]">
                 <DarkMetric label="Forecasts" value={forecasts.length} />
                 <DarkMetric label="Predictions" value={predictions.length} />
                 <DarkMetric label="Opportunities" value={opportunities.length} />
@@ -515,7 +515,7 @@ export default function PredictiveInsights({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -543,7 +543,7 @@ export default function PredictiveInsights({
               </span>
             </div>
 
-            <div className="mt-5 rounded-2xl border-2 border-white/25 bg-white/10 p-3">
+            <div className="mt-5 rounded-2xl border-2 border-white/30 bg-white/15 p-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
                   Average supplied confidence
@@ -563,8 +563,8 @@ export default function PredictiveInsights({
           </div>
         </div>
 
-        <div className="border-t-[3px] border-orange-300 bg-[#FFF8EE] p-3 sm:p-4">
-          <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)_auto]">
+        <div className="border-t-[3px] border-[#F97316] bg-[#FFF8EF] p-4 sm:p-5">
+          <div className="grid gap-3 xl:grid-cols-[auto_minmax(320px,1fr)_auto]">
             <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1">
               {TIMEFRAMES.map((item) => (
                 <button
@@ -575,7 +575,7 @@ export default function PredictiveInsights({
                   className={`min-h-12 shrink-0 rounded-xl border-2 px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                     timeframe === item.value
                       ? "border-[#123865] bg-[#123865] text-white"
-                      : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                   }`}
                 >
                   {item.label}
@@ -594,7 +594,7 @@ export default function PredictiveInsights({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search forecasts, predictions, opportunities or risks..."
                 aria-label="Search predictive intelligence"
-                className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
               />
 
               {search ? (
@@ -618,7 +618,7 @@ export default function PredictiveInsights({
                   ? "Refresh predictive intelligence"
                   : "No refresh handler is connected"
               }
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-xs font-black text-white transition hover:bg-[#E94F00] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500"
             >
               <RefreshCw
                 size={15}
@@ -662,7 +662,7 @@ export default function PredictiveInsights({
         />
       ) : null}
 
-      <section>
+      <section className="rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8] p-4 shadow-[0_12px_30px_rgba(23,36,61,0.06)] sm:p-5">
         <SectionIntro
           eyebrow="Reality Check"
           title="Current portfolio baseline"
@@ -699,7 +699,7 @@ export default function PredictiveInsights({
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,36,61,0.06)]">
+      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8] shadow-[0_18px_42px_rgba(23,36,61,0.08)]">
         <SectionHeader
           eyebrow="Forecast Engine"
           title="Supplied Forecast Outputs"
@@ -732,7 +732,7 @@ export default function PredictiveInsights({
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.18fr_0.82fr]">
         <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
           <SectionHeader
             eyebrow="Prediction Evidence"
@@ -798,7 +798,7 @@ export default function PredictiveInsights({
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-orange-400 bg-[#FFF8EE]">
+      <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316] bg-[#FFF8EF] shadow-[0_16px_38px_rgba(249,115,22,0.08)]">
         <SectionHeader
           eyebrow="Forecast Governance"
           title="Assumptions & Confidence"
@@ -841,10 +841,10 @@ export default function PredictiveInsights({
               {assumptions.map((item, index) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border-2 border-slate-300 bg-white p-4"
+                  className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-orange-300 bg-orange-50 text-xs font-black text-orange-800">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#F97316] bg-[#FFF4EA] text-xs font-black text-[#B84F0E]">
                       {index + 1}
                     </span>
                     <div>
@@ -866,8 +866,8 @@ export default function PredictiveInsights({
         </div>
       </section>
 
-      <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+      <footer className="grid gap-3 lg:grid-cols-3">
+        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4 shadow-[0_10px_24px_rgba(18,56,101,0.07)]">
           <div className="flex items-start gap-3">
             <ShieldCheck
               size={18}
@@ -887,11 +887,11 @@ export default function PredictiveInsights({
           </div>
         </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4 shadow-[0_10px_24px_rgba(249,115,22,0.08)]">
           <div className="flex items-start gap-3">
             <Brain
               size={18}
-              className="mt-0.5 shrink-0 text-orange-700"
+              className="mt-0.5 shrink-0 text-[#B84F0E]"
             />
             <div>
               <p className="font-black text-[#10233F]">
@@ -901,6 +901,24 @@ export default function PredictiveInsights({
                 Predictions should guide review and planning. They should never
                 be presented as guaranteed admissions, revenue, visa or student
                 outcomes.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[1.35rem] border-[3px] border-emerald-400 bg-emerald-50 p-4 shadow-[0_10px_24px_rgba(16,185,129,0.07)]">
+          <div className="flex items-start gap-3">
+            <Database
+              size={18}
+              className="mt-0.5 shrink-0 text-emerald-700"
+            />
+            <div>
+              <p className="font-black text-[#10233F]">
+                Source accountability
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                Every displayed forecast remains tied to supplied source data,
+                selected horizon, disclosed confidence and visible assumptions.
               </p>
             </div>
           </div>
@@ -932,7 +950,7 @@ function DarkMetric({ label, value }) {
 
 function StatusMeta({ icon: Icon, label }) {
   return (
-    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5">
+    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#C9D7E6] bg-white px-2.5 py-1.5">
       <Icon size={12} className="shrink-0 text-[#123865]" />
       <span>{label}</span>
     </span>
@@ -943,7 +961,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
+        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#B84F0E]">
           {eyebrow}
         </p>
         <h2 className="mt-1 text-xl font-black text-[#10233F]">{title}</h2>
@@ -952,7 +970,7 @@ function SectionIntro({ eyebrow, title, description, badge }) {
         </p>
       </div>
 
-      <span className="w-fit rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+      <span className="w-fit rounded-lg border-2 border-[#234E78] bg-[#F2F7FF] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
         {badge}
       </span>
     </div>
@@ -967,7 +985,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white sm:px-5">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white sm:px-5">
       <div className="min-w-0">
         <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
           {eyebrow}
@@ -992,7 +1010,7 @@ function SectionHeader({
 
 function BaselineCard({ label, value, icon: Icon }) {
   return (
-    <article className="rounded-[1.25rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+    <article className="rounded-[1.25rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4 shadow-[0_9px_20px_rgba(18,56,101,0.06)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(18,56,101,0.10)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.09em] text-[#123865]">
@@ -1025,7 +1043,7 @@ function ForecastCard({ item, canInspect, onInspect }) {
 
   return (
     <article
-      className={`rounded-[1.3rem] border-[3px] bg-white p-4 ${outerBorder(
+      className={`rounded-[1.3rem] border-[3px] bg-white p-4 shadow-[0_10px_24px_rgba(15,35,63,0.06)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,35,63,0.10)] ${outerBorder(
         tone
       )}`}
     >
@@ -1073,7 +1091,7 @@ function PredictionCard({ item, canInspect, onInspect }) {
 
   return (
     <article
-      className={`rounded-[1.2rem] border-[3px] bg-white p-4 ${outerBorder(
+      className={`rounded-[1.2rem] border-[3px] bg-white p-4 shadow-[0_8px_20px_rgba(15,35,63,0.05)] ${outerBorder(
         tone
       )}`}
     >
@@ -1185,7 +1203,7 @@ function InsightList({
 
 function GovernanceCard({ icon: Icon, label, value, detail }) {
   return (
-    <article className="rounded-xl border-2 border-slate-300 bg-white p-4">
+    <article className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.09em] text-slate-500">
@@ -1212,8 +1230,8 @@ function ForecastUnavailableState({ timeframe }) {
     `${timeframe} days`;
 
   return (
-    <div className="rounded-[1.35rem] border-[3px] border-dashed border-orange-300 bg-orange-50 p-6 text-center">
-      <LineChart className="mx-auto text-orange-700" size={24} />
+    <div className="rounded-[1.35rem] border-[3px] border-dashed border-[#F97316] bg-[#FFF4EA] p-6 text-center">
+      <LineChart className="mx-auto text-[#B84F0E]" size={24} />
       <h3 className="mt-3 font-black text-[#10233F]">
         No {label} forecast source connected
       </h3>
@@ -1228,7 +1246,7 @@ function ForecastUnavailableState({ timeframe }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="min-w-0 rounded-lg border-2 border-slate-200 bg-slate-50 p-2.5">
+    <div className="min-w-0 rounded-lg border-2 border-[#E1E8F0] bg-[#F7FAFC] p-2.5">
       <p className="truncate text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
         {label}
       </p>
@@ -1241,7 +1259,7 @@ function MiniStat({ label, value }) {
 
 function SourceBadge({ source }) {
   return (
-    <span className="mt-3 inline-flex max-w-full truncate rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+    <span className="mt-3 inline-flex max-w-full truncate rounded-md border border-[#C9D7E6] bg-[#F7FAFC] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
       {source}
     </span>
   );
@@ -1292,7 +1310,7 @@ function InlineNotice({
           <button
             type="button"
             onClick={onAction}
-            className="shrink-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA]"
           >
             {actionLabel}
           </button>
@@ -1304,7 +1322,7 @@ function InlineNotice({
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F7FAFC] p-5 text-center">
       <Sparkles className="mx-auto text-orange-600" size={20} />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-md text-xs font-semibold leading-5 text-slate-600">
@@ -1315,7 +1333,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search
         </button>
@@ -1327,7 +1345,7 @@ function EmptyState({ title, text, onClear }) {
 function toneClass(tone = "blue") {
   if (tone === "red") return "border-red-400 bg-red-50 text-red-800";
   if (tone === "orange")
-    return "border-orange-400 bg-orange-50 text-orange-800";
+    return "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]";
   if (tone === "green")
     return "border-emerald-400 bg-emerald-50 text-emerald-800";
   return "border-blue-400 bg-blue-50 text-blue-800";
@@ -1335,14 +1353,14 @@ function toneClass(tone = "blue") {
 
 function outerBorder(tone = "blue") {
   if (tone === "red") return "border-red-400";
-  if (tone === "orange") return "border-orange-400";
+  if (tone === "orange") return "border-[#F97316]";
   if (tone === "green") return "border-emerald-400";
   return "border-[#234E78]";
 }
 
 function toneIconClass(tone = "blue") {
   if (tone === "red") return "text-red-700";
-  if (tone === "orange") return "text-orange-700";
+  if (tone === "orange") return "text-[#B84F0E]";
   if (tone === "green") return "text-emerald-700";
   return "text-[#123865]";
 }

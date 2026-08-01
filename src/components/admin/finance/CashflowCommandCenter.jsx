@@ -49,12 +49,12 @@ function safeMoney(value, currency = "GBP") {
 function toneClasses(tone = "orange") {
   const map = {
     navy: "border-[#123865] bg-[#123865]",
-    orange: "border-[#F97316] bg-[#FFF4E8]",
+    orange: "border-[#C9D7E6] bg-[#FFFDF8]",
     green: "border-[#34D399] bg-[#F0FFF8]",
     amber: "border-[#F59E0B] bg-[#FFF8E8]",
     red: "border-[#FB7185] bg-[#FFF4F4]",
     blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    violet: "border-[#9B6CFF] bg-[#F8F5FF]",
+    violet: "border-[#60A5FA] bg-[#F2F7FF]",
   };
 
   return map[tone] || map.orange;
@@ -120,7 +120,7 @@ function CashMetric({
 
       {badge ? (
         <span
-          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
+          className={`mt-3 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
             dark
               ? "border-white/20 bg-white/10 text-white"
               : "border-[#C9D7E6] bg-white text-slate-600"
@@ -203,7 +203,7 @@ function EstimatedPipelineRow({ item, maxValue, currency }) {
         </p>
       </div>
 
-      <div className="mt-4 h-3 overflow-hidden rounded-full border-2 border-[#D1DCE7] bg-[#FFF8EF]">
+      <div className="mt-4 h-3 overflow-hidden rounded-full border-2 border-[#E1E8F0] bg-[#FFF8EF]">
         <div
           className="h-full rounded-full bg-[#F97316] transition-[width] duration-300"
           style={{ width: `${width}%` }}
@@ -223,7 +223,7 @@ function EstimatedPipelineRow({ item, maxValue, currency }) {
 function EmptyPipeline() {
   return (
     <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-8 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#F97316] bg-[#FFF4E8] text-orange-700">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#C9D7E6] bg-[#FFFDF8] text-[#B84F0E]">
         <TrendingUp size={24} />
       </div>
 
@@ -290,9 +290,9 @@ export default function CashflowCommandCenter({
 
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
-      <div className="grid min-w-0 border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+      <div className="grid min-w-0 border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
+          <div className="inline-flex items-center gap-2 rounded-full border-2 border-[#F97316]/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <WalletCards size={12} />
             Cashflow Command
           </div>
@@ -470,7 +470,7 @@ export default function CashflowCommandCenter({
             <section className="rounded-[1.65rem] border-[3px] border-[#F97316] bg-[#FFF8EF] p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#B84F0E]">
                     Pipeline Cash Potential
                   </p>
 

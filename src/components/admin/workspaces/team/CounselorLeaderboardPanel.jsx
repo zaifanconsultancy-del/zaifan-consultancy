@@ -1,4 +1,4 @@
-// CounselorLeaderboardPanel V4 MAXIMUM — Founder Team Performance Intelligence
+// CounselorLeaderboardPanel PARTNER OS EXTREME — Executive Founder Performance Command
 // src/components/admin/CounselorLeaderboardPanel.jsx
 //
 // Maximum pass:
@@ -341,10 +341,10 @@ export default function CounselorLeaderboardPanel({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.07)]"
+      className="min-w-0 space-y-4 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4"
     >
-      <div className="grid min-w-0 2xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.42fr)]">
-        <div className="min-w-0 bg-[#123866] p-5 text-white sm:p-6">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
               <UsersRound size={12} />
@@ -357,11 +357,11 @@ export default function CounselorLeaderboardPanel({
             </span>
           </div>
 
-          <h2 className="mt-4 break-words text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+          <h2 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
             Team Performance
           </h2>
 
-          <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-6 text-white">
+          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
             Compare counselor output using student workload, applications,
             offers, CAS, visas, support activity, tasks and collected revenue
             without letting a single metric dominate the ranking.
@@ -387,7 +387,7 @@ export default function CounselorLeaderboardPanel({
           </div>
         </div>
 
-        <div className="min-w-0 bg-orange-500 p-5 text-white sm:p-6">
+        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
           <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
             Team Outcome Health
           </p>
@@ -413,9 +413,9 @@ export default function CounselorLeaderboardPanel({
         </div>
       </div>
 
-      <div className="space-y-5 bg-[#fff8ee] p-4 sm:p-5">
+      <div className="min-w-0 space-y-5 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-5">
         {!compact ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <HealthMetric
               label="Offer Rate"
               value={`${model.teamOfferRate}%`}
@@ -502,13 +502,13 @@ function LeaderboardRow({
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.12),
       }}
-      className={`min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] bg-white shadow-[0_8px_22px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-orange-400 ${
-        index === 0 ? "border-orange-400" : "border-slate-300"
+      className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] bg-white shadow-[0_8px_22px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md ${
+        index === 0 ? "border-[#FF5A0A]" : "border-slate-300"
       }`}
     >
       <div className="min-w-0 p-4 sm:p-5">
         {/* Identity + rank stay together. No detached side rail. */}
-        <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex min-w-0 flex-col gap-4">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <div
               className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-[3px] text-sm font-black ${rankTone.avatar}`}
@@ -518,7 +518,7 @@ function LeaderboardRow({
 
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <p className="min-w-0 break-words text-base font-black leading-5 text-[#10233f]">
+                <p className="min-w-0 break-words text-base font-black leading-5 text-[#10233F]">
                   {item.name}
                 </p>
 
@@ -535,12 +535,12 @@ function LeaderboardRow({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-3 rounded-2xl border-2 border-orange-300 bg-[#fff8ee] px-4 py-3">
+          <div className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border-[3px] border-[#FF5A0A] bg-[#FFF4E8] px-4 py-3 sm:w-fit">
             <div>
               <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
                 Rank
               </p>
-              <p className="mt-0.5 text-2xl font-black leading-none text-[#10233f]">
+              <p className="mt-0.5 text-2xl font-black leading-none text-[#10233F]">
                 #{index + 1}
               </p>
             </div>
@@ -563,9 +563,9 @@ function LeaderboardRow({
           {metrics.map((metric) => (
             <div
               key={metric.label}
-              className="min-w-0 rounded-xl border-2 border-slate-300 bg-[#fffaf4] p-3 text-center"
+              className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3 text-center shadow-[0_4px_12px_rgba(18,56,101,0.03)]"
             >
-              <p className="text-xl font-black text-[#10233f]">
+              <p className="text-xl font-black text-[#10233F]">
                 {metric.value}
               </p>
               <p className="mt-1 break-words text-[9px] font-black uppercase leading-4 tracking-[0.06em] text-slate-500">
@@ -607,7 +607,7 @@ function LeaderboardRow({
 
         {!compact ? (
           <>
-            <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-3">
+            <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
               <ConversionCard
                 label="Application → Offer"
                 value={`${item.outcome.offerRate}%`}
@@ -633,7 +633,7 @@ function LeaderboardRow({
                   Founder performance score
                 </p>
 
-                <span className="shrink-0 rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-xs font-black text-orange-800">
+                <span className="shrink-0 rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-1 text-xs font-black text-orange-800">
                   {item.score}/100
                 </span>
               </div>
@@ -646,7 +646,7 @@ function LeaderboardRow({
                     duration: reduceMotion ? 0 : 0.6,
                     delay: reduceMotion ? 0 : 0.05,
                   }}
-                  className="h-full rounded-full bg-orange-500"
+                  className="h-full rounded-full bg-[#FF5A0A]"
                 />
               </div>
             </div>
@@ -666,15 +666,15 @@ function HealthMetric({
   const style =
     tone === "green"
       ? "border-emerald-300 bg-emerald-50"
-      : "border-orange-300 bg-orange-50";
+      : "border-[#FF5A0A] bg-[#FFF4E8]";
 
   return (
-    <div className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 ${style}`}>
+    <div className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}>
       <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
         {label}
       </p>
 
-      <p className="mt-2 text-3xl font-black text-[#10233f]">
+      <p className="mt-2 text-3xl font-black text-[#10233F]">
         {value}
       </p>
 
@@ -692,7 +692,7 @@ function ConversionCard({
 }) {
   return (
     <div
-      className={`min-w-0 rounded-xl border-2 p-3 ${
+      className={`min-w-0 rounded-xl border-[3px] p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${
         good
           ? "border-emerald-300 bg-emerald-50"
           : "border-amber-300 bg-amber-50"
@@ -706,7 +706,7 @@ function ConversionCard({
         {label}
       </p>
 
-      <p className="mt-1 text-xl font-black text-[#10233f]">
+      <p className="mt-1 text-xl font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -723,7 +723,7 @@ function MiniSignal({
     green:
       "border-emerald-300 bg-emerald-50 text-emerald-800",
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     red:
       "border-red-300 bg-red-50 text-red-800",
     amber:
@@ -748,14 +748,14 @@ function MiniSignal({
 
 function FounderNote() {
   return (
-    <div className="rounded-[1.4rem] border-[3px] border-blue-300 bg-blue-50 p-4">
+    <div className="rounded-[1.45rem] border-[3px] border-[#123865] bg-[#F2F7FF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-blue-300 bg-white text-blue-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865] bg-[#123865] text-white">
           <BarChart3 size={17} />
         </div>
 
         <div>
-          <p className="text-sm font-black text-[#10233f]">
+          <p className="text-sm font-black text-[#10233F]">
             How this leaderboard should be used
           </p>
 
@@ -775,7 +775,7 @@ function DarkMetric({
   value,
 }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white shadow-inner">
       <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.07em] text-white">
         {label}
       </p>
@@ -792,7 +792,7 @@ function OrangeMetric({
   value,
 }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
       <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.07em] text-white">
         {label}
       </p>
@@ -806,12 +806,12 @@ function OrangeMetric({
 
 function EmptyState() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-dashed border-slate-300 bg-white p-8 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-8 text-center">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700">
         <UsersRound size={22} />
       </div>
 
-      <h3 className="mt-4 text-lg font-black text-[#10233f]">
+      <h3 className="mt-4 text-lg font-black text-[#10233F]">
         No counselor performance data yet
       </h3>
 
@@ -827,9 +827,9 @@ function getRankTone(tier) {
   const tones = {
     gold: {
       avatar:
-        "border-orange-400 bg-orange-500 text-white",
+        "border-[#FF5A0A] bg-[#FF5A0A] text-white",
       badge:
-        "border-orange-300 bg-orange-50 text-orange-800",
+        "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
     },
     blue: {
       avatar:

@@ -1,4 +1,4 @@
-// LeadAssignmentPanel V8 — Zaifan Identity-Based Ownership OS
+// LeadAssignmentPanel PARTNER OS EXTREME — Compact Ownership Command
 // Full replacement for: src/components/admin/LeadAssignmentPanel.jsx
 //
 // Keeps the existing database contract:
@@ -187,6 +187,7 @@ function LeadAssignmentPanel({
   const [syncing, setSyncing] = useState(false);
 
   const [feedback, setFeedback] = useState(null);
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const mountedRef = useRef(true);
   const refreshTimerRef = useRef(null);
@@ -920,7 +921,7 @@ function LeadAssignmentPanel({
 
   if (!leadId) {
     return (
-      <div className="rounded-[1.7rem] border-2 border-dashed border-orange-300 bg-[#fffaf4] p-6 text-center">
+      <div className="rounded-[1.7rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-6 text-center shadow-[0_12px_30px_rgba(18,56,101,0.06)]">
         <AlertTriangle className="mx-auto h-8 w-8 text-orange-600" />
         <h3 className="mt-3 text-lg font-black text-[#10233f]">
           Ownership unavailable
@@ -934,10 +935,10 @@ function LeadAssignmentPanel({
   }
 
   return (
-    <div className="space-y-4 text-[#10233f]">
-      <section className="overflow-hidden rounded-[1.85rem] border-[3px] border-orange-400 bg-white shadow-[0_16px_45px_rgba(15,35,63,0.08)]">
-        <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-6">
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+          <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-orange-300/30 bg-orange-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
                 Ownership OS
@@ -964,7 +965,7 @@ function LeadAssignmentPanel({
               Counselor, or both without duplicating ownership or workload.
             </p>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-3">
               <HeroStat
                 label="Current Owner"
                 value={
@@ -992,7 +993,7 @@ function LeadAssignmentPanel({
             </div>
           </div>
 
-          <div className="bg-orange-500 p-5 text-white sm:p-6">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 text-white sm:p-5 lg:p-6 lg:border-l-[3px] lg:border-t-0">
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-100">
               Ownership Status
             </p>
@@ -1022,7 +1023,7 @@ function LeadAssignmentPanel({
               type="button"
               onClick={() => refreshAll()}
               disabled={isBusy}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 py-2.5 text-xs font-black text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 disabled:opacity-50"
+              className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-white/30 bg-white px-4 py-2.5 text-xs font-black text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 size={14}
@@ -1042,7 +1043,40 @@ function LeadAssignmentPanel({
         />
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section
+        className="rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-3 shadow-[0_12px_34px_rgba(18,56,101,0.07)]"
+      >
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Ownership Workspace
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide workload, assignment controls and accountability guidance."
+                : "Open workload, assignment controls and accountability guidance."}
+            </p>
+          </div>
+
+          <RotateCcw
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </section>
+
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4">
+      <section className="grid min-w-0 gap-3 sm:grid-cols-2">
         <OperationalStat
           label="Ownership Health"
           value={ownershipHealth}
@@ -1084,8 +1118,8 @@ function LeadAssignmentPanel({
         />
       </section>
 
-      <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-4 sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_26px_rgba(18,56,101,0.05)] sm:p-5">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
               Assignment Control
@@ -1124,8 +1158,8 @@ function LeadAssignmentPanel({
           ) : null}
         </div>
 
-        <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_210px_auto_auto]">
-          <label className="rounded-2xl border-2 border-slate-300 bg-[#fffaf4] p-3 focus-within:border-orange-400">
+        <div className="mt-4 grid min-w-0 gap-3">
+          <label className="min-w-0 rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3 focus-within:border-[#FF5A0A]">
             <span className="block text-[9px] font-black uppercase tracking-[0.15em] text-slate-500">
               Team Member
             </span>
@@ -1136,7 +1170,7 @@ function LeadAssignmentPanel({
                 setSelectedAdminId(event.target.value)
               }
               disabled={isBusy}
-              className="mt-2 w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm font-bold text-[#10233f] outline-none transition focus:border-orange-400 disabled:opacity-50"
+              className="mt-2 min-w-0 w-full max-w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-3 text-sm font-bold text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Select admin or counselor</option>
 
@@ -1164,7 +1198,7 @@ function LeadAssignmentPanel({
             type="button"
             onClick={() => assignLead()}
             disabled={isBusy || !selectedAdminId}
-            className="inline-flex min-h-[74px] items-center justify-center gap-2 rounded-2xl border-2 border-orange-700 bg-orange-500 px-5 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md disabled:opacity-45"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-45"
           >
             <UserPlus size={16} />
             {saving
@@ -1179,7 +1213,7 @@ function LeadAssignmentPanel({
               type="button"
               onClick={unassignLead}
               disabled={isBusy}
-              className="inline-flex min-h-[74px] items-center justify-center gap-2 rounded-2xl border-2 border-red-300 bg-red-50 px-5 text-sm font-black text-red-800 transition hover:-translate-y-0.5 hover:border-red-500 hover:bg-red-100 disabled:opacity-45"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-red-300 bg-red-50 px-5 text-sm font-black text-red-800 transition hover:-translate-y-0.5 hover:border-red-500 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <UserMinus size={16} />
               {unassigning ? "Removing..." : "Unassign"}
@@ -1188,8 +1222,8 @@ function LeadAssignmentPanel({
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-[1.6rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
+      <section className="grid min-w-0 gap-4">
+        <div className="min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
           <div className="flex items-center gap-2">
             <ShieldCheck size={16} className="text-orange-300" />
 
@@ -1239,7 +1273,7 @@ function LeadAssignmentPanel({
           )}
         </div>
 
-        <div className="rounded-[1.6rem] border-[3px] border-orange-400 bg-orange-500 p-5 text-white">
+        <div className="min-w-0 rounded-[1.5rem] border-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white">
           <div className="flex items-center gap-2">
             <UsersRound size={16} />
 
@@ -1267,24 +1301,26 @@ function LeadAssignmentPanel({
           </p>
         </div>
       </section>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 function OperationalStat({ label, value, helper, tone = "orange" }) {
   const tones = {
-    orange: "border-orange-300 bg-orange-50",
+    orange: "border-[#FF5A0A] bg-[#FFF4E8]",
     navy: "border-[#123865] bg-[#123865] text-white",
     amber: "border-amber-300 bg-amber-50",
-    green: "border-emerald-300 bg-emerald-50",
-    red: "border-red-300 bg-red-50",
+    green: "border-[#34D399] bg-[#F0FFF8]",
+    red: "border-[#FB7185] bg-[#FFF4F4]",
   };
 
   const dark = tone === "navy";
 
   return (
     <div
-      className={`rounded-[1.4rem] border-2 p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)] ${
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
         tones[tone] || tones.orange
       }`}
     >
@@ -1428,7 +1464,8 @@ function Feedback({ type, message, onClose }) {
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-sm font-bold ${style}`}
+      role={type === "success" ? "status" : "alert"}
+      className={`flex min-w-0 items-start gap-3 rounded-2xl border-[3px] p-4 text-sm font-bold shadow-[0_8px_22px_rgba(18,56,101,0.04)] ${style}`}
     >
       <Icon size={17} className="mt-0.5 shrink-0" />
 
@@ -1437,7 +1474,7 @@ function Feedback({ type, message, onClose }) {
       <button
         type="button"
         onClick={onClose}
-        className="font-black"
+        className="rounded-lg px-2 py-1 font-black transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-current/15"
         aria-label="Dismiss message"
       >
         ×

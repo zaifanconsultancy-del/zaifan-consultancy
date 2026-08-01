@@ -1,6 +1,6 @@
-// MissionControlNotificationCenter V3 MAXIMUM — Admin OS Alert Command Center
-// Full replacement based on current V2 logic.
-// Preserves alert aggregation/data contracts while upgrading hierarchy,
+// MissionControlNotificationCenter V7 PARTNER OS EXTREME — Alert Intelligence Command
+// Partner OS visual alignment built on the current production logic.
+// Preserves alert aggregation and data contracts while strengthening hierarchy,
 // contrast, filtering, drill-down visibility, and operational usability.
 //
 // UI location: /admin -> Notification Center / Executive Alert Command Center
@@ -8,6 +8,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 import {
+  Activity,
   AlertTriangle,
   BellRing,
   CheckCircle2,
@@ -149,8 +150,8 @@ const toneClasses = {
   warning: {
     border: "border-orange-300",
     bg: "bg-orange-50",
-    text: "text-[#B84F0E]",
-    pill: "border-[#E9802D]/55 bg-[#FFF1E3] text-[#B84F0E]",
+    text: "text-[#C2410C]",
+    pill: "border-[#FF5A0A]/55 bg-[#FFF4E8] text-[#C2410C]",
     glow: "shadow-[0_0_35px_rgba(251,146,60,0.10)]",
   },
   success: {
@@ -162,30 +163,30 @@ const toneClasses = {
   },
   stable: {
     border: "border-[#123865]/35",
-    bg: "bg-[#FFF8EE]",
-    text: "text-[#10233f]",
-    pill: "border-[#123865]/30 bg-[#FFF8EE] text-[#10233f]",
+    bg: "bg-[#FFF8EF]",
+    text: "text-[#10233F]",
+    pill: "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F]",
     glow: "",
   },
   gold: {
     border: "border-orange-300",
     bg: "bg-orange-50",
-    text: "text-[#B84F0E]",
-    pill: "border-[#E9802D]/55 bg-[#FFF1E3] text-[#B84F0E]",
+    text: "text-[#C2410C]",
+    pill: "border-[#FF5A0A]/55 bg-[#FFF4E8] text-[#C2410C]",
     glow: "shadow-[0_0_35px_rgba(212,175,55,0.10)]",
   },
   blue: {
-    border: "border-[#123865]/45",
+    border: "border-[#C9D7E6]",
     bg: "bg-[#EEF3F8]",
     text: "text-[#123865]",
     pill: "border-[#123865]/35 bg-[#EEF3F8] text-[#123865]",
     glow: "shadow-[0_0_35px_rgba(96,165,250,0.08)]",
   },
   purple: {
-    border: "border-[#E9802D]/45",
-    bg: "bg-[#FFF1E3]",
-    text: "text-[#B84F0E]",
-    pill: "border-[#E9802D]/40 bg-[#FFF1E3] text-[#B84F0E]",
+    border: "border-[#FF5A0A]/45",
+    bg: "bg-[#FFF4E8]",
+    text: "text-[#C2410C]",
+    pill: "border-[#FF5A0A]/40 bg-[#FFF4E8] text-[#C2410C]",
     glow: "shadow-[0_0_35px_rgba(192,132,252,0.08)]",
   },
 };
@@ -636,6 +637,7 @@ function MissionControlNotificationCenter(props) {
 
     return resolutionQueue.filter((item) => {
       if (toneFilter !== "all" && item.tone !== toneFilter) return false;
+
       if (
         groupFilter !== "all" &&
         toLower(item.group).includes(groupFilter) === false
@@ -643,6 +645,7 @@ function MissionControlNotificationCenter(props) {
         const matchingGroup = alertGroups.find(
           (group) => group.key === groupFilter
         );
+
         if (matchingGroup?.title !== item.group) return false;
       }
 
@@ -652,309 +655,687 @@ function MissionControlNotificationCenter(props) {
         .map(toLower)
         .some((value) => value.includes(cleanQuery));
     });
-  }, [resolutionQueue, toneFilter, groupFilter, query, alertGroups]);
+  }, [
+    resolutionQueue,
+    toneFilter,
+    groupFilter,
+    query,
+    alertGroups,
+  ]);
+
+  const filtersActive =
+    toneFilter !== "all" ||
+    groupFilter !== "all" ||
+    Boolean(query.trim());
+
+  const clearFilters = () => {
+    setToneFilter("all");
+    setGroupFilter("all");
+    setQuery("");
+  };
+
+  const commandState =
+    criticalGroups > 0
+      ? "Immediate Intervention"
+      : warningGroups > 0
+        ? "Controlled Attention"
+        : "Stable Operations";
+
+  const activePressure =
+    criticalGroups * 3 +
+    warningGroups * 2 +
+    visibleResolutionQueue.length;
 
   return (
-    <div className="space-y-6">
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.28 }}
-        className="relative overflow-hidden rounded-[2rem] border-[3px] border-orange-400 bg-[#123865] p-6 shadow-[0_16px_40px_rgba(15,35,63,0.14)]" style={{ color: "#FFFFFF" }}
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-orange-500" />
+    <motion.section
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.28 }}
+      className="min-w-0 space-y-5"
+    >
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <CommandChip icon={BellRing}>Notification Center V3</CommandChip>
+              <CommandChip icon={ShieldCheck}>Cross-System Intelligence</CommandChip>
+              <CommandChip icon={CircleGauge}>Live Alert Evidence</CommandChip>
+            </div>
 
-        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-300">
-              Notification Center V3
-            </p>
-
-            <h2 className="mt-2 text-3xl font-black" style={{ color: "#FFFFFF" }}>
+            <h2 className="mt-4 max-w-5xl break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
               Executive Alert Command Center
             </h2>
 
-            <p className="mt-2 max-w-4xl text-sm font-semibold leading-6" style={{ color: "#F8FAFC" }}>
-              Centralized alert intelligence for executive risk, payments, visa,
-              portal access, support requests, automation failures, approvals,
-              duplicate protection, and operational recovery.
+            <p className="mt-3 max-w-5xl break-words text-sm font-semibold leading-6 text-slate-100">
+              Centralized command intelligence for executive risk, payments,
+              visa, portal access, support requests, automation failures,
+              approvals, duplicate protection and operational recovery.
             </p>
+
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric label="Alert Groups" value={visibleGroups.length} />
+              <DarkMetric label="Total Alerts" value={totalAlerts} />
+              <DarkMetric label="Warnings" value={warningGroups} />
+              <DarkMetric label="Queue Items" value={visibleResolutionQueue.length} />
+            </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <HeroKpi label="Total Alerts" value={totalAlerts} tone={totalAlerts > 0 ? "warning" : "success"} />
-            <HeroKpi label="Critical Groups" value={criticalGroups} tone={criticalGroups > 0 ? "critical" : "success"} />
-            <HeroKpi label="Stable Health" value={`${resolvedHealth}%`} tone={resolvedHealth >= 60 ? "success" : "warning"} />
-          </div>
-        </div>
-      </motion.div>
-
-      <section className="rounded-[1.7rem] border-[3px] border-[#E9802D]/55 bg-[#FFF8EE] p-4 shadow-[0_12px_30px_rgba(18,56,101,0.07)] sm:p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border-2 border-[#E9802D]/55 bg-[#FFF1E3] px-3 py-1.5">
-              <Filter size={13} className="text-[#B84F0E]" />
-              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
-                Alert Filters
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <div className="flex items-center gap-2">
+              <Activity size={18} />
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                Alert Operating Position
               </p>
             </div>
-            <h3 className="mt-2 text-lg font-black text-[#10233f]">
-              Focus the command center
-            </h3>
-          </div>
 
-          <div className="grid gap-2 sm:grid-cols-3 xl:min-w-[620px]">
-            <select
-              value={toneFilter}
-              onChange={(event) => setToneFilter(event.target.value)}
-              className="min-h-11 rounded-xl border-2 border-[#123865]/30 bg-[#FFFDF8] px-4 text-sm font-black text-[#10233f] outline-none transition focus:border-[#E9802D] focus:ring-4 focus:ring-orange-100"
-            >
-              <option value="all">All Severity</option>
-              <option value="critical">Critical</option>
-              <option value="warning">Warning</option>
-              <option value="stable">Stable</option>
-            </select>
+            <p className="mt-3 text-5xl font-black text-white">
+              {activePressure}
+            </p>
 
-            <select
-              value={groupFilter}
-              onChange={(event) => setGroupFilter(event.target.value)}
-              className="min-h-11 rounded-xl border-2 border-[#123865]/30 bg-[#FFFDF8] px-4 text-sm font-black text-[#10233f] outline-none transition focus:border-[#E9802D] focus:ring-4 focus:ring-orange-100"
-            >
-              <option value="all">All Categories</option>
-              {alertGroups.map((group) => (
-                <option key={group.key} value={group.key}>
-                  {group.title.replace(" Alerts", "")}
-                </option>
-              ))}
-            </select>
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+              {commandState}
+            </p>
 
-            <label className="relative block">
-              <Search
-                size={15}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search alerts..."
-                className="min-h-11 w-full rounded-xl border-2 border-[#123865]/30 bg-[#FFFDF8] pl-10 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 transition focus:border-[#E9802D] focus:ring-4 focus:ring-orange-100"
-              />
-            </label>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeMetric label="Critical" value={criticalGroups} />
+              <OrangeMetric label="Warnings" value={warningGroups} />
+              <OrangeMetric label="Stable Health" value={`${resolvedHealth}%`} />
+              <OrangeMetric label="Resolution" value={visibleResolutionQueue.length} />
+            </div>
+
+            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Command Rule
+              </p>
+              <p className="mt-1 text-xs font-black leading-5 text-white">
+                Clear critical groups first, then warning queues, while stable
+                categories remain visible for operating assurance.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
-            Command Categories
-          </p>
-          <h3 className="mt-1 text-xl font-black text-[#10233f]">
-            Cross-system alert pressure
-          </h3>
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Alert Operations Board
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Cross-system command pressure
+            </h3>
+            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-slate-200">
+              Grouped alert intelligence replaces the old isolated KPI strip.
+            </p>
+          </div>
+
+          <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+            {totalAlerts} active alerts
+          </span>
         </div>
-        <span className="rounded-full border-2 border-[#123865]/30 bg-[#FFF8EE] px-3 py-1.5 text-xs font-black text-[#123865]">
-          {visibleGroups.length} visible group{visibleGroups.length === 1 ? "" : "s"}
-        </span>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        {visibleGroups.map((group, index) => (
-          <AlertCommandCard key={group.key} group={group} index={index} />
-        ))}
-      </div>
-
-      <div className="grid gap-6 2xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[2rem] border-[3px] border-[#123865]/45 bg-[#FFFDF8] p-5 shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
-          <SectionHeader
-            eyebrow="Resolution Queue"
-            title="Highest priority alerts to clear first"
-            subtitle="Critical and warning alerts across payment, visa, portal, support, and automation."
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+          <BoardMetric
+            label="Outstanding Revenue"
+            value={formatMoney(metrics.outstandingValue)}
+            detail={`${metrics.collectionRate}% collection rate`}
+            tone="orange"
+            icon={CircleGauge}
           />
+          <BoardMetric
+            label="Overdue Tasks"
+            value={metrics.overdueTasks}
+            detail={`${metrics.pendingTasks} pending tasks`}
+            tone={metrics.overdueTasks ? "red" : "green"}
+            icon={AlertTriangle}
+          />
+          <BoardMetric
+            label="Pending Documents"
+            value={metrics.pendingDocuments}
+            detail="Documents awaiting completion or review"
+            tone={metrics.pendingDocuments ? "navy" : "green"}
+            icon={Filter}
+          />
+          <BoardMetric
+            label="University Plans"
+            value={metrics.universityPlans}
+            detail="Connected university planning records"
+            tone="navy"
+            icon={Sparkles}
+          />
+          <BoardMetric
+            label="Portal Activation"
+            value={`${metrics.portalActivationRate}%`}
+            detail={`${metrics.portalRecentActivityRate}% active in 7 days`}
+            tone={metrics.portalActivationRate >= 70 ? "green" : "orange"}
+            icon={ShieldCheck}
+          />
+          <BoardMetric
+            label="Receipt Approval"
+            value={`${metrics.receiptApprovalRate}%`}
+            detail="Connected receipt approval health"
+            tone={metrics.receiptApprovalRate >= 70 ? "green" : "orange"}
+            icon={CheckCircle2}
+          />
+          <BoardMetric
+            label="Automation Success"
+            value={`${metrics.automationSuccessRate}%`}
+            detail="Connected executive automation health"
+            tone={metrics.automationSuccessRate >= 70 ? "green" : "red"}
+            icon={Activity}
+          />
+          <BoardMetric
+            label="Resolution Queue"
+            value={visibleResolutionQueue.length}
+            detail="Highest-priority records to clear"
+            tone={visibleResolutionQueue.length ? "red" : "green"}
+            icon={BellRing}
+          />
+        </div>
+      </section>
 
-          <div className="mt-5 space-y-3">
+      <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_32px_rgba(18,56,101,0.07)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Alert Filters
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Focus the command center
+            </h3>
+          </div>
+
+          <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+            {visibleResolutionQueue.length} queue item
+            {visibleResolutionQueue.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:p-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.25fr)_auto]">
+          <select
+            value={toneFilter}
+            onChange={(event) => setToneFilter(event.target.value)}
+            className="min-h-11 min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
+          >
+            <option value="all">All Severity</option>
+            <option value="critical">Critical</option>
+            <option value="warning">Warning</option>
+            <option value="stable">Stable</option>
+          </select>
+
+          <select
+            value={groupFilter}
+            onChange={(event) => setGroupFilter(event.target.value)}
+            className="min-h-11 min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
+          >
+            <option value="all">All Categories</option>
+            {alertGroups.map((group) => (
+              <option key={group.key} value={group.key}>
+                {group.title.replace(" Alerts", "")}
+              </option>
+            ))}
+          </select>
+
+          <label className="relative block min-w-0">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search alerts, students, groups..."
+              className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-10 pr-4 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={clearFilters}
+            disabled={!filtersActive}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-white px-4 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF4E8] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <X size={14} />
+            Reset
+          </button>
+        </div>
+      </section>
+
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-2 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Command Categories
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Alert intelligence by operating system
+            </h3>
+          </div>
+
+          <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+            {visibleGroups.length} visible group
+            {visibleGroups.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
+          {visibleGroups.map((group, index) => (
+            <AlertCommandCard
+              key={group.key}
+              group={group}
+              index={index}
+              reduceMotion={reduceMotion}
+            />
+          ))}
+        </div>
+      </section>
+
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(21rem,0.85fr)]">
+        <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+          <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white">
+            <SectionHeader
+              inverse
+              eyebrow="Resolution Command"
+              title="Highest-priority alerts to clear first"
+              subtitle="Critical and warning records across payment, visa, portal, support and automation."
+            />
+          </div>
+
+          <div className="space-y-3 bg-[#FFF8EF] p-4 sm:p-5">
             {visibleResolutionQueue.length ? (
               visibleResolutionQueue.map((item, index) => (
-                <ResolutionRow key={`${item.group}-${item.title}-${index}`} item={item} index={index} />
+                <ResolutionRow
+                  key={`${item.group}-${item.title}-${index}`}
+                  item={item}
+                  index={index}
+                  reduceMotion={reduceMotion}
+                />
               ))
             ) : (
               <EmptyState text="No alert resolution items detected. Current systems look stable." />
             )}
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-6">
-          <div className="rounded-[2rem] border-[3px] border-[#E9802D]/65 bg-[#FFF1E3] p-5 shadow-[0_12px_30px_rgba(217,108,31,0.08)]">
-            <SectionHeader
-              eyebrow="Alert Analytics"
-              title="Operating alert health"
-              subtitle="High-level health of cross-system alert pressure."
-            />
+        <div className="min-w-0 space-y-5">
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+            <div className="border-b-[3px] border-[#FF5A0A] bg-[#FFF4E8] px-5 py-4">
+              <SectionHeader
+                eyebrow="Alert Analytics"
+                title="Operating alert health"
+                subtitle="Cross-system collection, portal and automation health."
+              />
+            </div>
 
-            <div className="mt-5 grid gap-3">
+            <div className="grid gap-3 bg-[#FFF8EF] p-4 sm:p-5">
               <HealthBar label="Collection Rate" value={metrics.collectionRate} />
               <HealthBar label="Receipt Approval" value={metrics.receiptApprovalRate} />
               <HealthBar label="Portal Activation" value={metrics.portalActivationRate} />
               <HealthBar label="Portal 7-Day Activity" value={metrics.portalRecentActivityRate} />
               <HealthBar label="Automation Success" value={metrics.automationSuccessRate} />
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-[2rem] border-[3px] border-[#123865]/45 bg-[#FFFDF8] p-5 shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
-            <SectionHeader
-              eyebrow="Executive Feed"
-              title="Latest command signals"
-              subtitle="Fast feed of urgent events for leadership review."
-            />
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+            <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white">
+              <SectionHeader
+                inverse
+                eyebrow="Executive Feed"
+                title="Latest command signals"
+                subtitle="Fast leadership feed of urgent cross-system events."
+              />
+            </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="space-y-3 bg-[#FFF8EF] p-4 sm:p-5">
               {executiveFeed.length ? (
                 executiveFeed.map((item, index) => (
-                  <FeedRow key={`${item.title}-${index}`} item={item} index={index} />
+                  <FeedRow
+                    key={`${item.title}-${index}`}
+                    item={item}
+                    index={index}
+                    reduceMotion={reduceMotion}
+                  />
                 ))
               ) : (
                 <EmptyState text="No urgent executive feed items loaded yet." />
               )}
             </div>
-          </div>
+          </section>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MiniKpi label="Outstanding Revenue" value={formatMoney(metrics.outstandingValue)} icon="💷" />
-        <MiniKpi label="Overdue Tasks" value={metrics.overdueTasks} icon="⏳" />
-        <MiniKpi label="Pending Documents" value={metrics.pendingDocuments} icon="📂" />
-        <MiniKpi label="University Plans" value={metrics.universityPlans} icon="🏛️" />
-      </div>
+      <section className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white">
+            <div className="flex items-start gap-3">
+              <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-orange-200" />
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+                  Founder Interpretation
+                </p>
+                <p className="mt-2 text-sm font-black leading-6 text-white">
+                  {criticalGroups > 0
+                    ? `${criticalGroups} critical alert group${
+                        criticalGroups === 1 ? "" : "s"
+                      } require immediate leadership attention before normal queue work.`
+                    : warningGroups > 0
+                      ? `${warningGroups} warning group${
+                          warningGroups === 1 ? "" : "s"
+                        } remain. Clear the resolution queue in severity order to improve operating health.`
+                      : "No critical or warning alert groups are currently detected. Maintain follow-up, finance, portal and automation discipline."}
+                </p>
+              </div>
+            </div>
+          </div>
 
-      <div className="rounded-[1.6rem] border-[3px] border-[#E9802D] bg-[#123865] p-5 shadow-[0_12px_30px_rgba(18,56,101,0.12)]">
-        <div className="flex items-start gap-3">
-          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-orange-300" />
-          <div>
-            <p className="font-black text-white">Founder interpretation</p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-white/90">
-              {criticalGroups > 0
-                ? `${criticalGroups} critical alert group${criticalGroups === 1 ? "" : "s"} require immediate leadership attention before normal queue work.`
-                : warningGroups > 0
-                ? `${warningGroups} warning group${warningGroups === 1 ? "" : "s"} remain. Clear the resolution queue in severity order to improve operating health.`
-                : "No critical or warning alert groups are currently detected. Maintain follow-up, finance, portal, and automation discipline."}
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-5 lg:border-l-[3px] lg:border-t-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              Current Command State
+            </p>
+            <p className="mt-2 text-2xl font-black text-[#10233F]">
+              {commandState}
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              Evidence remains read-only here. Resolution belongs inside the
+              owning operational workspace.
             </p>
           </div>
         </div>
-      </div>
+      </section>
+    </motion.section>
+  );
+}
+
+
+
+function CommandChip({ icon: Icon, children }) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+      <Icon size={11} className="shrink-0 text-orange-200" />
+      <span className="truncate">{children}</span>
+    </span>
+  );
+}
+
+function DarkMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value ?? 0}
+      </p>
     </div>
   );
 }
+
+function OrangeMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value ?? 0}
+      </p>
+    </div>
+  );
+}
+
+function BoardMetric({
+  label,
+  value,
+  detail,
+  tone = "navy",
+  icon: Icon,
+}) {
+  const classes =
+    tone === "green"
+      ? "border-emerald-400 bg-emerald-50"
+      : tone === "red"
+        ? "border-red-400 bg-red-50"
+        : tone === "orange"
+          ? "border-[#FF5A0A] bg-[#FFF4E8]"
+          : "border-[#123865] bg-[#F2F7FF]";
+
+  return (
+    <article className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${classes}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
+            {label}
+          </p>
+          <p className="mt-2 break-words text-3xl font-black text-[#10233F]">
+            {value ?? 0}
+          </p>
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865]">
+          <Icon size={16} />
+        </span>
+      </div>
+      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-600">
+        {detail}
+      </p>
+    </article>
+  );
+}
+
 
 function HeroKpi({ label, value, tone = "stable" }) {
   const style = toneClasses[tone] || toneClasses.stable;
 
   return (
-    <div className={`rounded-2xl border-2 ${style.border} ${style.bg} p-4 text-center ${style.glow}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
+    <div
+      className={`min-w-0 rounded-xl border-[3px] ${style.border} ${style.bg} p-3.5 text-center shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${style.glow}`}
+    >
+      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-slate-600">
         {label}
       </p>
-      <p className={`mt-2 text-3xl font-black ${style.text}`}>{value}</p>
+      <p className={`mt-2 text-2xl font-black ${style.text}`}>
+        {value}
+      </p>
     </div>
   );
 }
 
-function AlertCommandCard({ group, index }) {
+function DarkAlertMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function OrangeAlertMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function AlertCommandCard({
+  group,
+  index,
+  reduceMotion,
+}) {
   const style = toneClasses[group.tone] || toneClasses.stable;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, delay: index * 0.035 }}
-      className={`rounded-[1.75rem] border-2 ${style.border} ${style.bg} p-5 shadow-[0_7px_20px_rgba(15,35,63,0.04)] ${style.glow}`}
+      transition={{
+        duration: reduceMotion ? 0 : 0.22,
+        delay: reduceMotion ? 0 : Math.min(index * 0.03, 0.15),
+      }}
+      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] ${style.border} ${style.bg} p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style.glow}`}
     >
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-65" />
+
       <div className="flex items-start justify-between gap-3">
-        <div className="text-3xl">{group.icon}</div>
-        <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${style.pill}`}>
+        <span className="text-2xl" aria-hidden="true">
+          {group.icon}
+        </span>
+
+        <span
+          className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${style.pill}`}
+        >
           {group.tone}
         </span>
       </div>
 
-      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+      <p className="mt-4 break-words text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
         {group.title}
       </p>
 
-      <p className={`mt-2 text-4xl font-black ${style.text}`}>
+      <p className={`mt-2 text-3xl font-black ${style.text}`}>
         {group.count}
       </p>
 
-      <p className="mt-2 text-xs leading-5 text-slate-600">{group.summary}</p>
-      <p className="mt-3 text-xs leading-5 text-slate-500">{group.description}</p>
-    </motion.div>
+      <p className="mt-2 break-words text-[10px] font-semibold leading-4 text-slate-600">
+        {group.summary}
+      </p>
+
+      <p className="mt-3 break-words text-[10px] leading-4 text-slate-500">
+        {group.description}
+      </p>
+    </motion.article>
   );
 }
 
-function ResolutionRow({ item, index }) {
+function ResolutionRow({
+  item,
+  index,
+  reduceMotion,
+}) {
   const style = toneClasses[item.tone] || toneClasses.stable;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -12 }}
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.22, delay: index * 0.025 }}
-      className="rounded-2xl border-2 border-slate-300 bg-[#fffaf2] p-4"
+      transition={{
+        duration: reduceMotion ? 0 : 0.2,
+        delay: reduceMotion ? 0 : Math.min(index * 0.02, 0.12),
+      }}
+      className="min-w-0 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A] hover:shadow-md"
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="font-black text-[#10233f]">
+          <p className="break-words font-black text-[#10233F]">
             {item.groupIcon} {item.title}
           </p>
-          <p className="mt-1 text-xs text-slate-500">{item.group} • {item.meta}</p>
-          <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">{item.body}</p>
+
+          <p className="mt-1 break-words text-xs font-semibold text-slate-500">
+            {item.group} • {item.meta}
+          </p>
+
+          <p className="mt-2 line-clamp-2 break-words text-xs leading-5 text-slate-600">
+            {item.body}
+          </p>
         </div>
 
-        <span className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${style.pill}`}>
+        <span
+          className={`w-fit shrink-0 rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${style.pill}`}
+        >
           {item.tone}
         </span>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
 
-function FeedRow({ item, index }) {
+function FeedRow({
+  item,
+  index,
+  reduceMotion,
+}) {
   const style = toneClasses[item.tone] || toneClasses.stable;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.025 }}
-      className="flex items-center justify-between gap-3 rounded-2xl border-2 border-slate-300 bg-[#fffaf2] p-4"
+      transition={{
+        duration: reduceMotion ? 0 : 0.18,
+        delay: reduceMotion ? 0 : Math.min(index * 0.02, 0.12),
+      }}
+      className="flex min-w-0 items-center justify-between gap-3 rounded-[1.1rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A]"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <span className="text-2xl">{item.icon}</span>
+        <span className="text-xl" aria-hidden="true">
+          {item.icon}
+        </span>
+
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-[#10233f]">{item.title}</p>
-          <p className="truncate text-xs text-slate-500">{item.meta}</p>
+          <p className="truncate text-sm font-black text-[#10233F]">
+            {item.title}
+          </p>
+          <p className="truncate text-xs font-semibold text-slate-500">
+            {item.meta}
+          </p>
         </div>
       </div>
 
-      <span className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${style.pill}`}>
+      <span
+        className={`shrink-0 rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${style.pill}`}
+      >
         {item.tone}
       </span>
-    </motion.div>
+    </motion.article>
   );
 }
 
 function HealthBar({ label, value }) {
-  const clean = Math.max(0, Math.min(100, Number(value || 0)));
-  const tone = clean >= 70 ? "success" : clean >= 40 ? "warning" : "critical";
+  const clean = Math.max(
+    0,
+    Math.min(100, Number(value || 0))
+  );
+
+  const tone =
+    clean >= 70
+      ? "success"
+      : clean >= 40
+        ? "warning"
+        : "critical";
+
   const style = toneClasses[tone];
 
   return (
-    <div className="rounded-2xl border-2 border-[#123865]/25 bg-[#FFFDF8] p-4">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-[#10233f]">{label}</span>
-        <span className={`font-black ${style.text}`}>{clean}%</span>
+    <div className="min-w-0 rounded-[1.1rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="break-words font-black text-[#10233F]">
+          {label}
+        </span>
+        <span className={`shrink-0 font-black ${style.text}`}>
+          {clean}%
+        </span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-        <div className={`h-full rounded-full ${tone === "success" ? "bg-emerald-500" : tone === "warning" ? "bg-orange-500" : "bg-red-500"}`} style={{ width: `${clean}%` }} />
+
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+        <div
+          className={`h-full rounded-full ${
+            tone === "success"
+              ? "bg-emerald-500"
+              : tone === "warning"
+                ? "bg-[#FF5A0A]"
+                : "bg-red-500"
+          }`}
+          style={{ width: `${clean}%` }}
+        />
       </div>
     </div>
   );
@@ -962,27 +1343,55 @@ function HealthBar({ label, value }) {
 
 function MiniKpi({ label, value, icon }) {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-[#123865]/35 bg-[#FFFDF8] p-5 shadow-[0_6px_18px_rgba(15,35,63,0.035)]">
+    <div className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
-          <p className="mt-2 text-2xl font-black text-[#10233f]">{value}</p>
+        <div className="min-w-0">
+          <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
+            {label}
+          </p>
+          <p className="mt-2 break-words text-xl font-black text-[#10233F]">
+            {value}
+          </p>
         </div>
-        <span className="text-3xl">{icon}</span>
+
+        <span className="text-2xl" aria-hidden="true">
+          {icon}
+        </span>
       </div>
     </div>
   );
 }
 
-function SectionHeader({ eyebrow, title, subtitle }) {
+function SectionHeader({
+  eyebrow,
+  title,
+  subtitle,
+  inverse = false,
+}) {
   return (
-    <div>
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#B84F0E]">
+    <div className="min-w-0">
+      <p
+        className={`text-[9px] font-black uppercase tracking-[0.14em] ${
+          inverse ? "text-orange-200" : "text-orange-700"
+        }`}
+      >
         {eyebrow}
       </p>
-      <h3 className="mt-1 text-xl font-black text-[#10233f]">{title}</h3>
+
+      <h3
+        className={`mt-1 break-words text-xl font-black ${
+          inverse ? "text-white" : "text-[#10233F]"
+        }`}
+      >
+        {title}
+      </h3>
+
       {subtitle ? (
-        <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+        <p
+          className={`mt-1 break-words text-xs font-semibold leading-5 ${
+            inverse ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
           {subtitle}
         </p>
       ) : null}
@@ -992,7 +1401,7 @@ function SectionHeader({ eyebrow, title, subtitle }) {
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-[#fffaf2] p-5 text-sm font-semibold text-slate-500">
+    <div className="rounded-[1.2rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-5 text-sm font-semibold text-slate-500">
       {text}
     </div>
   );

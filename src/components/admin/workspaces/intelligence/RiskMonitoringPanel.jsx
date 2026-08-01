@@ -1,4 +1,4 @@
-// RiskMonitoringPanel V3 MAXIMUM — Executive Risk Command Center
+// RiskMonitoringPanel V4 PARTNER OS — Command Readiness Card
 // src/components/admin/RiskMonitoringPanel.jsx
 //
 // Maximum pass:
@@ -988,154 +988,78 @@ function RiskMonitoringPanel({
       transition={{
         duration: reduceMotion ? 0 : 0.28,
       }}
-      className="rounded-[1.9rem] border-[3px] border-orange-400 bg-[#fff8ee] p-3 shadow-[0_14px_36px_rgba(15,35,63,0.07)] sm:p-4"
+      className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_16px_42px_rgba(18,56,101,0.10)]"
     >
-      <div className="grid overflow-hidden rounded-[1.55rem] border-2 border-[#234e78] xl:grid-cols-[1.25fr_0.75fr]">
-        <div
-          className="bg-[#123865] p-5 sm:p-6"
-          style={{ color: "#FFFFFF" }}
-        >
-          <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
-            <ShieldAlert
-              size={13}
-              style={{ color: "#FDBA74" }}
+      <div className="min-w-0 bg-[#FFF8EF] p-5 sm:p-6">
+        <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] sm:p-5">
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+                Risk Operations Extension
+              </p>
+              <h4 className="mt-1 text-lg font-black text-[#10233F] sm:text-xl">
+                Command Readiness Snapshot
+              </h4>
+              <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-slate-600">
+                Rule-based risk monitoring across applications, CAS, visa,
+                documents, tasks, inactivity and university planning.
+              </p>
+            </div>
+
+            <div className="shrink-0 rounded-[1.15rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-3 text-center sm:min-w-[140px]">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
+                Risk Portfolio
+              </p>
+              <p className="mt-1 text-3xl font-black text-[#C2410C]">
+                {riskyStudents.length}
+              </p>
+              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#53657D]">
+                Cases to review
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <ReadinessMetric
+              label="Critical Cases"
+              value={metrics.critical}
+              helper="Severity 90+ requiring immediate attention."
+              icon={Flame}
             />
-
-            <p
-              className="text-[9px] font-black uppercase tracking-[0.1em]"
-              style={{ color: "#FFFFFF" }}
-            >
-              Executive Risk
-            </p>
+            <ReadinessMetric
+              label="Rescue Cases"
+              value={riskCommand.rescue.length}
+              helper="High risk plus high opportunity."
+              icon={TrendingUp}
+            />
+            <ReadinessMetric
+              label="Visa / CAS Watch"
+              value={riskCommand.visaCases.length}
+              helper="Late-stage movement requiring monitoring."
+              icon={Plane}
+            />
+            <ReadinessMetric
+              label="Task Pressure"
+              value={riskCommand.taskCases.length}
+              helper="Overdue, overloaded or weak task execution."
+              icon={TimerReset}
+            />
+            <ReadinessMetric
+              label="Document Pressure"
+              value={riskCommand.documentCases.length}
+              helper="Missing, weak or unknown readiness."
+              icon={FileWarning}
+            />
+            <ReadinessMetric
+              label="Planning Gaps"
+              value={riskCommand.planningCases.length}
+              helper="No plan or no safer university option."
+              icon={GraduationCap}
+            />
           </div>
+        </section>
 
-          <h3
-            className="mt-3 text-2xl font-black sm:text-3xl"
-            style={{ color: "#FFFFFF" }}
-          >
-            Student Risk Monitoring
-          </h3>
-
-          <p
-            className="mt-2 max-w-3xl text-sm font-semibold leading-6"
-            style={{ color: "#F8FAFC" }}
-          >
-            Rule-based risk monitoring across applications, CAS, visa,
-            documents, tasks, inactivity, and university planning.
-          </p>
-        </div>
-
-        <div
-          className="border-t-2 border-orange-300 bg-orange-500 p-5 xl:border-l-2 xl:border-t-0 sm:p-6"
-          style={{ color: "#FFFFFF" }}
-        >
-          <div className="flex items-center gap-2">
-            <CircleGauge size={18} />
-
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
-              Risk Portfolio
-            </p>
-          </div>
-
-          <p className="mt-3 text-4xl font-black text-white">
-            {riskyStudents.length}
-          </p>
-
-          <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
-            Cases Needing Review
-          </p>
-
-          <p className="mt-4 text-xs font-semibold leading-5 text-white">
-            Avg risk {metrics.averageRisk}/100 · avg opportunity{" "}
-            {metrics.averageOpportunity}/100.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-3 rounded-[1.55rem] border-2 border-orange-200 bg-[#fff8ee] p-5 sm:p-6">
-        <div className="mb-4 flex flex-col gap-2 rounded-[1.2rem] border-2 border-[#c8d8e8] bg-[#edf4fb] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#234e78]">
-              How to use this panel
-            </p>
-            <p className="mt-1 text-xs font-semibold text-slate-600">
-              Summary and student cards are read-only intelligence. Use the search and dropdown controls below to interact with the view.
-            </p>
-          </div>
-          <span className="shrink-0 rounded-full border-2 border-[#234e78] bg-[#123865] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
-            Read-only cards
-          </span>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <RiskCommandCard
-            label="Critical Cases"
-            value={metrics.critical}
-            detail="Severity 90+ requiring immediate attention."
-            tone="red"
-            icon={Flame}
-          />
-
-          <RiskCommandCard
-            label="Rescue Cases"
-            value={riskCommand.rescue.length}
-            detail="High risk + high opportunity; protect the upside."
-            tone="orange"
-            icon={TrendingUp}
-          />
-
-          <RiskCommandCard
-            label="Task Pressure"
-            value={riskCommand.taskCases.length}
-            detail="Overdue, overloaded, or weak task execution."
-            tone="warning"
-            icon={TimerReset}
-          />
-
-          <RiskCommandCard
-            label="Visa Risk"
-            value={riskCommand.visaCases.length}
-            detail="Pending, rejected, or not-started visa pressure."
-            tone="navy"
-            icon={Plane}
-          />
-        </div>
-
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <PortfolioMetric
-            label="High Severity"
-            value={metrics.high}
-            helper="Severity 70–89 cases."
-            icon={AlertTriangle}
-            tone="warning"
-          />
-
-          <PortfolioMetric
-            label="Medium Severity"
-            value={metrics.medium}
-            helper="Severity 55–69 cases."
-            icon={ShieldCheck}
-            tone="orange"
-          />
-
-          <PortfolioMetric
-            label="Document Pressure"
-            value={riskCommand.documentCases.length}
-            helper="Missing, weak, or unknown readiness."
-            icon={FileWarning}
-            tone="danger"
-          />
-
-          <PortfolioMetric
-            label="Planning Gaps"
-            value={riskCommand.planningCases.length}
-            helper="No plan or no safer university option."
-            icon={GraduationCap}
-            tone="navy"
-          />
-        </div>
-
-        <div className="mt-5 grid gap-5 xl:grid-cols-4">
+        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-4">
           <RiskMiniBoard
             title="Rescue Board"
             items={riskCommand.rescue.slice(0, 4)}
@@ -1161,8 +1085,8 @@ function RiskMonitoringPanel({
           />
         </div>
 
-        <section className="mt-5 rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)]">
-          <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto_auto]">
+        <section className="mt-5 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)]">
+          <div className="grid min-w-0 gap-3 xl:grid-cols-[1fr_auto_auto_auto_auto]">
             <label className="relative block">
               <Search
                 size={16}
@@ -1175,7 +1099,7 @@ function RiskMonitoringPanel({
                   setQuery(event.target.value)
                 }
                 placeholder="Search student, risk, stage, blocker..."
-                className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
               />
             </label>
 
@@ -1186,7 +1110,7 @@ function RiskMonitoringPanel({
                   event.target.value
                 )
               }
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none focus:border-[#FF5A0A]"
             >
               <option value="all">
                 All Severity
@@ -1208,7 +1132,7 @@ function RiskMonitoringPanel({
                   event.target.value
                 )
               }
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none focus:border-[#FF5A0A]"
             >
               <option value="all">
                 All Risk Domains
@@ -1231,7 +1155,7 @@ function RiskMonitoringPanel({
                   event.target.value
                 )
               }
-              className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+              className="min-h-11 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none focus:border-[#FF5A0A]"
             >
               <option value="all">
                 All Journey Stages
@@ -1250,20 +1174,20 @@ function RiskMonitoringPanel({
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#FFB38A] hover:bg-[#FFF4E8] hover:text-orange-700"
             >
               <X size={13} />
               Clear
             </button>
           </div>
 
-          <p className="mt-3 text-xs font-semibold text-slate-500">
+          <p className="mt-3 text-xs font-semibold text-[#65748B]">
             Showing {visibleStudents.length} of{" "}
             {filteredStudents.length} matching risk cases.
           </p>
         </section>
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-5 min-w-0 space-y-3">
           {visibleStudents.length ? (
             visibleStudents.map(
               (
@@ -1364,16 +1288,16 @@ function RiskMonitoringPanel({
                         ? 0
                         : index * 0.025,
                     }}
-                    className="cursor-default rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]"
+                    className="cursor-default rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]"
                   >
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="min-w-0 break-words text-base font-black leading-5 text-[#10233f]">
+                          <p className="min-w-0 break-words text-base font-black leading-5 text-[#10233F]">
                             {name}
                           </p>
 
-                          <span className="rounded-full border-2 border-slate-300 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600">
+                          <span className="rounded-full border-2 border-[#C9D7E6] bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#51627A]">
                             {formatStage(
                               journeyStage
                             )}
@@ -1391,19 +1315,19 @@ function RiskMonitoringPanel({
                           )}
                         </p>
 
-                        <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+                        <p className="mt-2 text-xs font-semibold leading-5 text-[#51627A]">
                           {getRiskReason(
                             student,
                             signals
                           )}
                         </p>
 
-                        <div className="mt-3 rounded-xl border-2 border-orange-200 bg-orange-50 px-3 py-3">
+                        <div className="mt-3 rounded-xl border-2 border-orange-200 bg-[#FFF4E8] px-3 py-3">
                           <p className="text-[9px] font-black uppercase tracking-[0.08em] text-orange-700">
                             Next Action
                           </p>
 
-                          <p className="mt-1 text-xs font-black leading-5 text-[#10233f]">
+                          <p className="mt-1 text-xs font-black leading-5 text-[#10233F]">
                             {getRecommendedAction(
                               student,
                               signals
@@ -1462,11 +1386,11 @@ function RiskMonitoringPanel({
                         </div>
                       </div>
 
-                      <div className="shrink-0 rounded-[1.35rem] border-[3px] border-[#234e78] bg-[#edf4fb] p-3 xl:w-[330px]">
-                        <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#234e78]">
+                      <div className="shrink-0 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#edf4fb] p-3 xl:w-[330px]">
+                        <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#123865]">
                           Student scoring
                         </p>
-                        <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-600">
+                        <p className="mt-1 text-[10px] font-semibold leading-4 text-[#51627A]">
                           Risk and opportunity are student scores. Rule severity comes from the strongest active risk signal and can repeat across students.
                         </p>
 
@@ -1490,11 +1414,11 @@ function RiskMonitoringPanel({
                           />
                         </div>
 
-                        <div className="mt-2 rounded-xl border-2 border-orange-300 bg-white px-3 py-2">
+                        <div className="mt-2 rounded-xl border-2 border-[#FFB38A] bg-white px-3 py-2">
                           <p className="text-[8px] font-black uppercase tracking-[0.1em] text-orange-700">
                             Strongest signal
                           </p>
-                          <p className="mt-1 break-words text-xs font-black text-[#10233f]">
+                          <p className="mt-1 break-words text-xs font-black text-[#10233F]">
                             {signals[0]?.label || "No active risk rule"}
                           </p>
                         </div>
@@ -1525,6 +1449,38 @@ function RiskMonitoringPanel({
   );
 }
 
+
+function ReadinessMetric({
+  label,
+  value,
+  helper,
+  icon: Icon,
+}) {
+  return (
+    <article className="min-w-0 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.035)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
+            {label}
+          </p>
+          <p className="mt-2 text-2xl font-black text-[#10233F]">
+            {value ?? 0}
+          </p>
+        </div>
+
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]">
+          <Icon size={14} />
+        </span>
+      </div>
+
+      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
+        {helper}
+      </p>
+    </article>
+  );
+}
+
+
 function RiskCommandCard({
   label,
   value,
@@ -1536,7 +1492,7 @@ function RiskCommandCard({
 
   const style =
     tone === "orange"
-      ? "border-orange-300 bg-orange-50"
+      ? "border-[#FFB38A] bg-[#FFF4E8]"
       : tone === "warning"
       ? "border-amber-300 bg-amber-50"
       : tone === "navy"
@@ -1617,7 +1573,7 @@ function PortfolioMetric({
       ? "border-amber-300 bg-amber-50"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-orange-300 bg-orange-50";
+      : "border-[#FFB38A] bg-[#FFF4E8]";
 
   return (
     <div
@@ -1684,7 +1640,7 @@ function RiskMiniBoard({
 
   const scoreClass =
     tone === "orange"
-      ? "border-orange-300 bg-orange-50 text-orange-700"
+      ? "border-[#FFB38A] bg-[#FFF4E8] text-orange-700"
       : tone === "warning"
       ? "border-amber-300 bg-amber-50 text-amber-800"
       : tone === "navy"
@@ -1692,12 +1648,12 @@ function RiskMiniBoard({
       : "border-red-300 bg-red-50 text-red-700";
 
   return (
-    <div className="rounded-[1.4rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
-      <h3 className="font-black text-[#10233f]">
+    <div className="rounded-[1.4rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+      <h3 className="font-black text-[#10233F]">
         {title}
       </h3>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 min-w-0 space-y-3">
         {items.length ? (
           items.map(
             (
@@ -1714,15 +1670,15 @@ function RiskMiniBoard({
             ) => (
               <div
                 key={`${title}-${key}-${index}`}
-                className="rounded-xl border-2 border-slate-300 bg-[#fffaf2] p-4"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-black text-[#10233f]">
+                    <p className="truncate font-black text-[#10233F]">
                       {name}
                     </p>
 
-                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                    <p className="mt-1 text-xs font-semibold text-[#65748B]">
                       {formatStage(
                         journeyStage
                       )}{" "}
@@ -1740,7 +1696,7 @@ function RiskMiniBoard({
                   </span>
                 </div>
 
-                <p className="mt-2 line-clamp-2 text-xs font-semibold leading-5 text-slate-600">
+                <p className="mt-2 line-clamp-2 text-xs font-semibold leading-5 text-[#51627A]">
                   {getRiskReason(
                     student,
                     getRiskSignals(student)
@@ -1750,7 +1706,7 @@ function RiskMiniBoard({
             )
           )
         ) : (
-          <p className="rounded-xl border-2 border-dashed border-slate-300 bg-[#fffaf2] p-4 text-sm font-semibold text-slate-500">
+          <p className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-4 text-sm font-semibold text-[#65748B]">
             No records.
           </p>
         )}
@@ -1764,12 +1720,12 @@ function MiniMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-[#fffaf2] px-3 py-2">
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2">
+      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#65748B]">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-black text-[#10233f]">
+      <p className="mt-1 text-sm font-black text-[#10233F]">
         {value}
       </p>
     </div>
@@ -1788,7 +1744,7 @@ function ScoreCard({
       ? "border-red-400 bg-[#fff0f0]"
       : tone === "navy"
       ? "border-[#123865] bg-[#123865]"
-      : "border-orange-400 bg-[#fff3e5]";
+      : "border-[#FF5A0A] bg-[#fff3e5]";
 
   return (
     <div
@@ -1831,8 +1787,8 @@ function SeverityBadge({ severity }) {
       : band === "high"
       ? "border-amber-300 bg-amber-50 text-amber-800"
       : band === "medium"
-      ? "border-orange-300 bg-orange-50 text-orange-700"
-      : "border-slate-300 bg-slate-50 text-slate-700";
+      ? "border-[#FFB38A] bg-[#FFF4E8] text-orange-700"
+      : "border-[#C9D7E6] bg-slate-50 text-slate-700";
 
   return (
     <span

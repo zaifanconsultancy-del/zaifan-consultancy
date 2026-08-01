@@ -1,5 +1,5 @@
-// EmailWorkspace V4 MAXIMUM — Student Communication Composer
-// src/components/admin/EmailWorkspace.jsx
+// EmailWorkspace V6 PARTNER OS — Student Communication Composer
+// src/components/admin/workspaces/communications/EmailWorkspace.jsx
 //
 // Maximum pass:
 // - preserves student / saving / onSaveDraft API
@@ -20,6 +20,9 @@
 // - explicit white text on navy surfaces
 // - stronger Zaifan Admin OS orange/navy structure
 // - no fake Supabase write added; draft persistence remains parent-controlled
+// - complete Partner OS workspace alignment with stronger hierarchy and action clarity
+// - neutral structural borders, cream workspace canvas, orange reserved for action emphasis
+// - preserves all existing composer behavior and parent contracts
 
 import {
   CheckCircle2,
@@ -477,7 +480,7 @@ Zaifan Consultancy Team`,
             ? 0
             : 0.26,
       }}
-      className="overflow-hidden rounded-[1.9rem] border-[3px] border-orange-300 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.07)]"
+      className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_18px_46px_rgba(15,35,63,0.10)]"
       onKeyDown={
         handleKeyDown
       }
@@ -543,12 +546,12 @@ Zaifan Consultancy Team`,
           </div>
         </div>
 
-        <div className="bg-orange-500 p-5 text-white sm:p-6">
-          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+        <div className="border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-5 text-[#10233F] xl:border-l-[3px] xl:border-t-0 sm:p-6">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#B84F0E]">
             Composer Status
           </p>
 
-          <p className="mt-3 break-words text-lg font-black text-white">
+          <p className="mt-3 break-words text-lg font-black text-[#10233F]">
             {email ||
               "No student email"}
           </p>
@@ -565,12 +568,12 @@ Zaifan Consultancy Team`,
             />
           </div>
 
-          <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-            <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+          <div className="mt-4 rounded-xl border-2 border-[#C9D7E6] bg-white p-3 text-[#10233F]">
+            <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
               Draft State
             </p>
 
-            <p className="mt-1 text-sm font-black text-white">
+            <p className="mt-1 text-sm font-black text-[#10233F]">
               {isDirty
                 ? "Customized"
                 : "Template unchanged"}
@@ -579,7 +582,7 @@ Zaifan Consultancy Team`,
         </div>
       </div>
 
-      <div className="space-y-5 bg-[#fff8ee] p-4 sm:p-5">
+      <div className="space-y-5 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:p-5 lg:p-6">
         {feedback ? (
           <FeedbackBanner
             feedback={
@@ -591,21 +594,21 @@ Zaifan Consultancy Team`,
           />
         ) : null}
 
-        <section className="rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+        <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.06)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <Sparkles
                   size={14}
-                  className="text-orange-700"
+                  className="text-[#FF5A0A]"
                 />
 
-                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
+                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#B84F0E]">
                   Quick Templates
                 </p>
               </div>
 
-              <h3 className="mt-1 text-lg font-black text-[#10233f]">
+              <h3 className="mt-1 text-lg font-black text-[#10233F]">
                 Choose a communication starting point
               </h3>
 
@@ -614,7 +617,7 @@ Zaifan Consultancy Team`,
               </p>
             </div>
 
-            <span className="rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-orange-800">
+            <span className="rounded-full border-2 border-[#FF5A0A] bg-[#FFF8EF] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
               Active: {activeTemplate}
             </span>
           </div>
@@ -640,10 +643,10 @@ Zaifan Consultancy Team`,
                     aria-pressed={
                       active
                     }
-                    className={`rounded-[1.25rem] border-[3px] p-4 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
+                    className={`rounded-[1.25rem] border-[3px] p-4 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FFE1CF] ${
                       active
-                        ? "border-orange-400 bg-orange-50 shadow-[0_8px_20px_rgba(249,115,22,0.08)]"
-                        : "border-slate-300 bg-white hover:-translate-y-0.5 hover:border-orange-300"
+                        ? "border-[#FF5A0A] bg-[#FFF8EF] shadow-[0_8px_22px_rgba(15,35,63,0.06)]"
+                        : "border-[#C9D7E6] bg-white hover:-translate-y-0.5 hover:border-[#FF5A0A]"
                     }`}
                   >
                     <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
@@ -652,7 +655,7 @@ Zaifan Consultancy Team`,
                       }
                     </p>
 
-                    <p className="mt-2 text-sm font-black text-[#10233f]">
+                    <p className="mt-2 text-sm font-black text-[#10233F]">
                       {
                         template.label
                       }
@@ -670,7 +673,7 @@ Zaifan Consultancy Team`,
           </div>
         </section>
 
-        <section className="rounded-[1.5rem] border-[3px] border-orange-300 bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)]">
+        <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.06)]">
           <div className="grid gap-4">
             <ComposerField
               label="Recipient"
@@ -684,8 +687,8 @@ Zaifan Consultancy Team`,
               <div
                 className={`rounded-xl border-2 px-4 py-3 text-sm font-bold ${
                   hasRecipient
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                    : "border-red-300 bg-red-50 text-red-800"
+                    ? "border-[#34D399] bg-[#F0FFF8] text-emerald-800"
+                    : "border-[#FB7185] bg-[#FFF4F4] text-red-800"
                 }`}
               >
                 {email ||
@@ -712,7 +715,7 @@ Zaifan Consultancy Team`,
                   )
                 }
                 placeholder="Email subject"
-                className="w-full rounded-xl border-2 border-slate-300 bg-[#fffaf4] px-4 py-3 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDFC] px-4 py-3 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FFE1CF]"
               />
             </ComposerField>
 
@@ -737,13 +740,13 @@ Zaifan Consultancy Team`,
                   )
                 }
                 placeholder="Email body"
-                className="min-h-[260px] w-full resize-y rounded-[1.35rem] border-2 border-slate-300 bg-[#fffaf4] p-4 text-sm font-semibold leading-7 text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-[260px] w-full resize-y rounded-[1.35rem] border-2 border-[#C9D7E6] bg-[#FFFDFC] p-4 text-sm font-semibold leading-7 text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FFE1CF]"
               />
             </ComposerField>
           </div>
 
-          <div className="mt-4 rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
-            <p className="text-xs font-black text-[#10233f]">
+          <div className="mt-4 rounded-xl border-2 border-[#60A5FA] bg-[#F2F7FF] p-4">
+            <p className="text-xs font-black text-[#10233F]">
               Composer shortcut
             </p>
 
@@ -754,7 +757,7 @@ Zaifan Consultancy Team`,
           </div>
         </section>
 
-        <section className="flex flex-col gap-3 rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <section className="flex flex-col gap-3 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -764,7 +767,7 @@ Zaifan Consultancy Team`,
               disabled={
                 !canSend
               }
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-600 bg-orange-500 px-5 text-sm font-black text-white shadow-[0_8px_20px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#D94D08] bg-[#FF5A0A] px-5 text-sm font-black text-white shadow-[0_10px_24px_rgba(255,90,10,0.24)] transition hover:-translate-y-0.5 hover:bg-[#D94D08] disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Send size={15} />
               Open Email
@@ -781,7 +784,7 @@ Zaifan Consultancy Team`,
                 !hasBody ||
                 !withinLimits
               }
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-300 bg-orange-50 px-5 text-sm font-black text-orange-800 transition hover:-translate-y-0.5 hover:border-orange-400 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF8EF] px-5 text-sm font-black text-[#B84F0E] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Save size={15} />
               {saving
@@ -799,7 +802,7 @@ Zaifan Consultancy Team`,
                 !hasSubject ||
                 !hasBody
               }
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 text-sm font-black text-[#10233f] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-5 text-sm font-black text-[#10233F] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF3E8] disabled:cursor-not-allowed disabled:opacity-45"
             >
               {copying ? (
                 <Clipboard
@@ -822,7 +825,7 @@ Zaifan Consultancy Team`,
               disabled={
                 !isDirty
               }
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 text-sm font-black text-slate-700 transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-5 text-sm font-black text-[#10233F] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF3E8] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <RefreshCw size={15} />
               Reset Template
@@ -867,7 +870,7 @@ function ComposerField({
         <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
           <Icon
             size={13}
-            className="text-orange-700"
+            className="text-[#FF5A0A]"
           />
           {label}
         </span>
@@ -890,8 +893,8 @@ function ReadinessBadge({
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${
         ready
-          ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-          : "border-red-300 bg-red-50 text-red-800"
+          ? "border-[#34D399] bg-[#F0FFF8] text-emerald-800"
+          : "border-[#FB7185] bg-[#FFF4F4] text-red-800"
       }`}
     >
       {ready ? (
@@ -914,11 +917,11 @@ function FeedbackBanner({
   const style =
     feedback.tone ===
     "success"
-      ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+      ? "border-[#34D399] bg-[#F0FFF8] text-emerald-900"
       : feedback.tone ===
         "info"
-      ? "border-blue-300 bg-blue-50 text-blue-900"
-      : "border-red-300 bg-red-50 text-red-900";
+      ? "border-[#60A5FA] bg-[#F2F7FF] text-blue-900"
+      : "border-[#FB7185] bg-[#FFF4F4] text-red-900";
 
   const Icon =
     feedback.tone ===

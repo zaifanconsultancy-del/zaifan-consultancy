@@ -16,6 +16,7 @@ import {
   WalletCards,
 } from "lucide-react";
 
+// StudentCaseOverviewPanel PARTNER OS EXTREME V2 — Refined Counselor Control
 function StudentCaseOverviewPanel({
   workingStudent,
   studentType,
@@ -436,12 +437,12 @@ const cleanTaskStatus = (value = "") =>
                 ];
 
                 return (
-                  <div className="space-y-5">
-                    <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-white shadow-[0_16px_42px_rgba(15,35,63,0.08)]">
-                      <div className="grid xl:grid-cols-[1.25fr_0.75fr]">
-                        <div className="bg-[#123865] p-5 text-white sm:p-6">
+                  <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+                    <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+                      <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+                        <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-orange-300/30 bg-orange-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
+                            <span className="rounded-full border border-[#FF5A0A]/30 bg-orange-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
                               Student Command Center
                             </span>
 
@@ -450,16 +451,16 @@ const cleanTaskStatus = (value = "") =>
                             </span>
                           </div>
 
-                          <h3 className="mt-3 text-2xl font-black text-white sm:text-3xl">
+                          <h3 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
                             {fullName}
                           </h3>
 
-                          <p className="mt-2 max-w-3xl text-sm leading-6 text-white">
+                          <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
                             One operational view for identity, readiness, applications,
                             documents, finance, portal access, tasks, support and next actions.
                           </p>
 
-                          <div className="mt-5 grid gap-2 sm:grid-cols-4">
+                          <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
                             <CommandHeroStat
                               label="Profile Ready"
                               value={`${profileReadiness}%`}
@@ -479,7 +480,7 @@ const cleanTaskStatus = (value = "") =>
                           </div>
                         </div>
 
-                        <div className="bg-orange-500 p-5 text-white sm:p-6">
+                        <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
                           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
                             Needs Attention Now
                           </p>
@@ -516,7 +517,7 @@ const cleanTaskStatus = (value = "") =>
                       </div>
                     </section>
 
-                    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+                    <section className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                       {commandCards.map((card) => {
                         const Icon = card.icon;
 
@@ -524,15 +525,15 @@ const cleanTaskStatus = (value = "") =>
                           card.accent === "navy"
                             ? "border-[#123865] bg-[#123865] text-white"
                             : card.accent === "orange"
-                              ? "border-orange-500 bg-orange-500 text-white"
-                              : "border-orange-300 bg-white text-[#10233f]";
+                              ? "border-orange-500 bg-[#FF5A0A] text-white"
+                              : "border-[#FF5A0A] bg-white text-[#10233F]";
 
                         return (
                           <button
                             key={card.label}
                             type="button"
                             onClick={() => setActivePanel(card.panel)}
-                            className={`group rounded-[1.35rem] border-[3px] p-4 text-left shadow-[0_5px_16px_rgba(15,35,63,0.04)] transition hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(15,35,63,0.10)] ${className}`}
+                            className={`group min-w-0 rounded-[1.4rem] border-[3px] p-4 text-left shadow-[0_7px_20px_rgba(18,56,101,0.05)] transition hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(18,56,101,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${className}`}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <span
@@ -540,7 +541,7 @@ const cleanTaskStatus = (value = "") =>
                                   card.accent === "navy" ||
                                   card.accent === "orange"
                                     ? "border border-white/20 bg-white/10 text-white"
-                                    : "border-2 border-orange-200 bg-orange-50 text-orange-700"
+                                    : "border-2 border-[#FFB37A] bg-orange-50 text-orange-700"
                                 }`}
                               >
                                 <Icon size={15} />
@@ -568,7 +569,7 @@ const cleanTaskStatus = (value = "") =>
                                 card.accent === "navy" ||
                                 card.accent === "orange"
                                   ? "text-white"
-                                  : "text-[#10233f]"
+                                  : "text-[#10233F]"
                               }`}
                             >
                               {card.value}
@@ -590,13 +591,13 @@ const cleanTaskStatus = (value = "") =>
                     </section>
 
                     {attentionSignals.length ? (
-                      <section className="rounded-[1.7rem] border-[3px] border-red-300 bg-white p-4 sm:p-5">
+                      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FB7185] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.06)]">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-red-700">
                               Intervention Queue
                             </p>
-                            <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                            <h3 className="mt-1 text-xl font-black text-[#10233F]">
                               What needs attention before this case moves?
                             </h3>
                           </div>
@@ -607,7 +608,7 @@ const cleanTaskStatus = (value = "") =>
                           </span>
                         </div>
 
-                        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                        <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-2">
                           {attentionSignals.slice(0, 6).map((signal) => {
                             const danger = signal.tone === "danger";
 
@@ -616,12 +617,12 @@ const cleanTaskStatus = (value = "") =>
                                 key={signal.id}
                                 type="button"
                                 onClick={() => setActivePanel(signal.panel)}
-                                className={`group rounded-2xl border-2 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
+                                className={`group min-w-0 rounded-[1.3rem] border-[3px] p-4 text-left shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
                                   danger
                                     ? "border-red-300 bg-red-50"
                                     : signal.tone === "info"
                                       ? "border-blue-300 bg-blue-50"
-                                      : "border-orange-300 bg-orange-50"
+                                      : "border-[#FF5A0A] bg-orange-50"
                                 }`}
                               >
                                 <div className="flex items-start gap-3">
@@ -631,14 +632,14 @@ const cleanTaskStatus = (value = "") =>
                                         ? "border-red-300 text-red-700"
                                         : signal.tone === "info"
                                           ? "border-blue-300 text-blue-700"
-                                          : "border-orange-300 text-orange-700"
+                                          : "border-[#FF5A0A] text-orange-700"
                                     }`}
                                   >
                                     <CircleAlert size={15} />
                                   </span>
 
                                   <span className="min-w-0 flex-1">
-                                    <span className="block font-black text-[#10233f]">
+                                    <span className="block font-black text-[#10233F]">
                                       {signal.title}
                                     </span>
                                     <span className="mt-1 block text-xs font-medium leading-5 text-slate-600">
@@ -657,7 +658,7 @@ const cleanTaskStatus = (value = "") =>
                         </div>
                       </section>
                     ) : (
-                      <section className="rounded-[1.7rem] border-[3px] border-emerald-300 bg-emerald-50 p-5">
+                      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#34D399] bg-[#F0FFF8] p-5 shadow-[0_12px_34px_rgba(18,56,101,0.05)]">
                         <div className="flex items-start gap-3">
                           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-emerald-300 bg-white text-emerald-700">
                             <CheckCircle2 size={18} />
@@ -666,7 +667,7 @@ const cleanTaskStatus = (value = "") =>
                             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-700">
                               Operational Health
                             </p>
-                            <h3 className="mt-1 text-lg font-black text-[#10233f]">
+                            <h3 className="mt-1 text-lg font-black text-[#10233F]">
                               No immediate blockers detected
                             </h3>
                             <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -678,14 +679,14 @@ const cleanTaskStatus = (value = "") =>
                       </section>
                     )}
 
-                    <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-                      <div className="rounded-[1.7rem] border-[3px] border-[#123865] bg-white p-5">
+                    <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
+                      <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">
                               Case Identity
                             </p>
-                            <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                            <h3 className="mt-1 text-xl font-black text-[#10233F]">
                               Student Master Record
                             </h3>
                           </div>
@@ -699,12 +700,12 @@ const cleanTaskStatus = (value = "") =>
                           {infoRows.map(([label, value]) => (
                             <div
                               key={label}
-                              className="rounded-xl border-2 border-slate-200 bg-[#fffaf4] p-3"
+                              className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)]"
                             >
                               <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">
                                 {label}
                               </p>
-                              <p className="mt-1 break-words text-sm font-black text-[#10233f]">
+                              <p className="mt-1 break-words text-sm font-black text-[#10233F]">
                                 {value}
                               </p>
                             </div>
@@ -716,12 +717,12 @@ const cleanTaskStatus = (value = "") =>
                             {appointmentRows.map(([label, value]) => (
                               <div
                                 key={label}
-                                className="rounded-xl border-2 border-orange-300 bg-orange-50 p-3"
+                                className="rounded-xl border-2 border-[#FF5A0A] bg-orange-50 p-3"
                               >
                                 <p className="text-[8px] font-black uppercase tracking-[0.12em] text-orange-700">
                                   {label}
                                 </p>
-                                <p className="mt-1 break-words text-xs font-black text-[#10233f]">
+                                <p className="mt-1 break-words text-xs font-black text-[#10233F]">
                                   {value}
                                 </p>
                               </div>
@@ -730,7 +731,7 @@ const cleanTaskStatus = (value = "") =>
                         ) : null}
                       </div>
 
-                      <div className="rounded-[1.7rem] border-[3px] border-orange-500 bg-orange-500 p-5 text-white">
+                      <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white shadow-[0_12px_34px_rgba(18,56,101,0.09)]">
                         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
                           Academic Route
                         </p>
@@ -775,14 +776,14 @@ const cleanTaskStatus = (value = "") =>
                       </div>
                     </section>
 
-                    <section className="grid gap-4 lg:grid-cols-3">
-                      <div className="rounded-[1.65rem] border-[3px] border-orange-300 bg-white p-5">
+                    <section className="grid min-w-0 gap-4 lg:grid-cols-3">
+                      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
                         <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
                           Document Readiness
                         </p>
                         <div className="mt-3 flex items-end justify-between gap-3">
                           <div>
-                            <p className="text-3xl font-black text-[#10233f]">
+                            <p className="text-3xl font-black text-[#10233F]">
                               {documentHealthScore}%
                             </p>
                             <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -794,7 +795,7 @@ const cleanTaskStatus = (value = "") =>
                           <button
                             type="button"
                             onClick={() => setActivePanel("documents")}
-                            className="rounded-xl border-2 border-orange-300 bg-orange-50 px-3 py-2 text-xs font-black text-orange-800 transition hover:bg-orange-100"
+                            className="rounded-xl border-2 border-[#FF5A0A] bg-orange-50 px-3 py-2 text-xs font-black text-orange-800 transition hover:bg-orange-100"
                           >
                             Master File
                           </button>
@@ -802,13 +803,13 @@ const cleanTaskStatus = (value = "") =>
 
                         <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
                           <div
-                            className="h-full rounded-full bg-orange-500 transition-all duration-500"
+                            className="h-full rounded-full bg-[#FF5A0A] transition-all duration-500"
                             style={{ width: `${documentHealthScore}%` }}
                           />
                         </div>
                       </div>
 
-                      <div className="rounded-[1.65rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
+                      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white shadow-[0_10px_28px_rgba(18,56,101,0.09)]">
                         <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-300">
                           Portal & Communication
                         </p>
@@ -838,11 +839,11 @@ const cleanTaskStatus = (value = "") =>
                         </div>
                       </div>
 
-                      <div className="rounded-[1.65rem] border-[3px] border-orange-300 bg-white p-5">
+                      <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
                         <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
                           Finance Health
                         </p>
-                        <p className="mt-3 text-2xl font-black text-[#10233f]">
+                        <p className="mt-3 text-2xl font-black text-[#10233F]">
                           {totalOutstanding > 0
                             ? formatMoney(totalOutstanding)
                             : "No outstanding balance"}
@@ -856,49 +857,52 @@ const cleanTaskStatus = (value = "") =>
                         <button
                           type="button"
                           onClick={() => setActivePanel("payments")}
-                          className="mt-4 rounded-xl border-2 border-orange-400 bg-orange-500 px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600"
+                          className="mt-4 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600"
                         >
                           Open Finance Center
                         </button>
                       </div>
                     </section>
 
-                    <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-[#fff8ee] p-5">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">
+                    <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+                      <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
                             Counselor Control
                           </p>
-                          <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                          <h3 className="mt-1 break-words text-xl font-black text-white">
                             Pipeline, Priority & CRM Status
                           </h3>
-                          <p className="mt-1 text-sm leading-6 text-slate-600">
-                            Keep the student's operational state current without
-                            leaving the Command Overview.
+                          <p className="mt-1 max-w-3xl text-sm font-semibold leading-5 text-slate-200">
+                            Keep the student's live operating state current from one command surface.
                           </p>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => setActivePanel("assignment")}
-                          className="inline-flex items-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:shadow-md"
+                          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
                         >
                           <UsersRound size={14} />
                           Ownership
                         </button>
                       </div>
 
-                      <div className="mt-4 grid gap-4 xl:grid-cols-3">
-                        <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
-                              Journey Stage
-                            </p>
-                            {savingStage ? (
-                              <span className="text-[10px] font-bold text-orange-700">
-                                Saving...
-                              </span>
-                            ) : null}
+                      <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.95fr)]">
+                        <div className="min-w-0 border-b-[3px] border-[#DCE5EE] p-4 lg:border-b-0 lg:border-r-[3px]">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[8px] font-black uppercase tracking-[0.15em] text-slate-500">
+                                Journey Stage
+                              </p>
+                              <p className="mt-1 truncate text-sm font-black text-[#10233F]">
+                                {currentStage?.label || "Select stage"}
+                              </p>
+                            </div>
+
+                            <span className="rounded-full border-2 border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-[9px] font-black text-orange-700">
+                              {pipelineProgress || 0}%
+                            </span>
                           </div>
 
                           <select
@@ -907,7 +911,7 @@ const cleanTaskStatus = (value = "") =>
                               handleStageChange(event.target.value)
                             }
                             disabled={savingStage}
-                            className="mt-3 w-full rounded-xl border-2 border-slate-300 bg-[#fffaf4] px-3 py-2.5 text-sm font-black text-[#10233f] outline-none transition focus:border-orange-400 disabled:opacity-50"
+                            className="mt-3 min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2.5 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {stages.map((stage) => (
                               <option key={stage.id} value={stage.id}>
@@ -916,85 +920,113 @@ const cleanTaskStatus = (value = "") =>
                             ))}
                           </select>
 
-                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
                             <div
-                              className="h-full rounded-full bg-orange-500 transition-all duration-500"
+                              className="h-full rounded-full bg-[#FF5A0A] transition-all duration-500"
                               style={{ width: `${pipelineProgress || 0}%` }}
                             />
                           </div>
+
+                          {savingStage ? (
+                            <p className="mt-2 text-[10px] font-black text-orange-700">
+                              Saving stage...
+                            </p>
+                          ) : null}
                         </div>
 
-                        <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
-                              Priority
-                            </p>
+                        <div className="min-w-0 border-b-[3px] border-[#DCE5EE] p-4 lg:border-b-0 lg:border-r-[3px]">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-[8px] font-black uppercase tracking-[0.15em] text-slate-500">
+                                Priority
+                              </p>
+                              <p className="mt-1 text-sm font-black capitalize text-[#10233F]">
+                                {priority || "Not set"}
+                              </p>
+                            </div>
+
                             {savingPriority ? (
-                              <span className="text-[10px] font-bold text-orange-700">
+                              <span className="text-[10px] font-black text-orange-700">
                                 Saving...
                               </span>
                             ) : null}
                           </div>
 
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {priorityOptions.map((item) => (
-                              <button
-                                key={item}
-                                type="button"
-                                disabled={
-                                  !safePermissions.canUpdatePriority ||
-                                  savingPriority
-                                }
-                                onClick={() => handlePriorityChange(item)}
-                                className={`rounded-xl border-2 px-3 py-2 text-xs font-black capitalize transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${
-                                  priority === item
-                                    ? getPriorityStyle(item)
-                                    : "border-slate-300 bg-[#fffaf4] text-[#10233f] hover:border-orange-400 hover:bg-orange-50"
-                                }`}
-                              >
-                                {item}
-                              </button>
-                            ))}
+                          <div className="mt-3 grid min-w-0 grid-cols-2 gap-2">
+                            {priorityOptions.map((item) => {
+                              const isSelected = priority === item;
+
+                              return (
+                                <button
+                                  key={item}
+                                  type="button"
+                                  aria-pressed={isSelected}
+                                  disabled={
+                                    !safePermissions.canUpdatePriority ||
+                                    savingPriority
+                                  }
+                                  onClick={() => handlePriorityChange(item)}
+                                  className={`min-h-10 min-w-0 rounded-xl border-2 px-3 text-xs font-black capitalize transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-40 ${
+                                    isSelected
+                                      ? getPriorityStyle(item)
+                                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
+                                  }`}
+                                >
+                                  {item}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
 
-                        <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
-                              CRM Status
-                            </p>
+                        <div className="min-w-0 p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-[8px] font-black uppercase tracking-[0.15em] text-slate-500">
+                                CRM Status
+                              </p>
+                              <p className="mt-1 text-sm font-black capitalize text-[#10233F]">
+                                {status || "Not set"}
+                              </p>
+                            </div>
+
                             {savingStatus ? (
-                              <span className="text-[10px] font-bold text-orange-700">
+                              <span className="text-[10px] font-black text-orange-700">
                                 Saving...
                               </span>
                             ) : null}
                           </div>
 
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {statusOptions.map((item) => (
-                              <button
-                                key={item}
-                                type="button"
-                                disabled={
-                                  !safePermissions.canUpdateStatus || savingStatus
-                                }
-                                onClick={() => handleStatusChange(item)}
-                                className={`rounded-xl border-2 px-3 py-2 text-xs font-black capitalize transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${
-                                  status === item
-                                    ? getStatusStyle(item)
-                                    : "border-slate-300 bg-[#fffaf4] text-[#10233f] hover:border-orange-400 hover:bg-orange-50"
-                                }`}
-                              >
-                                {item}
-                              </button>
-                            ))}
+                          <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                            {statusOptions.map((item) => {
+                              const isSelected = status === item;
+
+                              return (
+                                <button
+                                  key={item}
+                                  type="button"
+                                  aria-pressed={isSelected}
+                                  disabled={
+                                    !safePermissions.canUpdateStatus || savingStatus
+                                  }
+                                  onClick={() => handleStatusChange(item)}
+                                  className={`min-h-10 min-w-0 rounded-xl border-2 px-3 text-xs font-black capitalize transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-40 ${
+                                    isSelected
+                                      ? getStatusStyle(item)
+                                      : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#FF5A0A] hover:bg-[#FFF4E8]"
+                                  }`}
+                                >
+                                  {item}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
                     </section>
 
-                    <section className="grid gap-4 xl:grid-cols-[1fr_0.75fr]">
-                      <div className="rounded-[1.7rem] border-[3px] border-[#123865] bg-[#123865] p-5 text-white">
+                    <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.75fr)]">
+                      <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white shadow-[0_12px_34px_rgba(18,56,101,0.09)]">
                         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
                           Counselor Context
                         </p>
@@ -1006,7 +1038,7 @@ const cleanTaskStatus = (value = "") =>
                         </p>
                       </div>
 
-                      <div className="rounded-[1.7rem] border-[3px] border-orange-500 bg-orange-500 p-5 text-white">
+                      <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white shadow-[0_12px_34px_rgba(18,56,101,0.09)]">
                         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
                           Real GPT Counselor Desk
                         </p>
@@ -1028,17 +1060,17 @@ const cleanTaskStatus = (value = "") =>
                       </div>
                     </section>
 
-                    <section className="rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-5">
+                    <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
                       <div>
                         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">
                           Quick Navigation
                         </p>
-                        <h3 className="mt-1 text-xl font-black text-[#10233f]">
+                        <h3 className="mt-1 text-xl font-black text-[#10233F]">
                           Move directly to the operating module
                         </h3>
                       </div>
 
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {actionCards.map((action) => {
                           const Icon = action.icon;
 
@@ -1047,15 +1079,15 @@ const cleanTaskStatus = (value = "") =>
                               key={action.label}
                               type="button"
                               onClick={() => setActivePanel(action.panel)}
-                              className="group rounded-2xl border-2 border-slate-300 bg-[#fffaf4] p-4 text-left transition hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md"
+                              className="group min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 text-left shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
                             >
                               <div className="flex items-start gap-3">
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-white text-orange-700">
                                   <Icon size={16} />
                                 </span>
 
                                 <span className="min-w-0 flex-1">
-                                  <span className="block font-black text-[#10233f]">
+                                  <span className="block font-black text-[#10233F]">
                                     {action.label}
                                   </span>
                                   <span className="mt-1 block text-xs font-medium leading-5 text-slate-600">
@@ -1080,7 +1112,7 @@ const cleanTaskStatus = (value = "") =>
 
 function CommandHeroStat({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">
         {label}
       </p>
@@ -1091,7 +1123,7 @@ function CommandHeroStat({ label, value }) {
 
 function CommandOrangeStat({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/25 bg-white/10 p-3">
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 shadow-inner">
       <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white">
         {label}
       </p>

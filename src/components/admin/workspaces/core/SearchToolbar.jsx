@@ -1,5 +1,5 @@
 // SearchToolbar V4 — contextual Leads pipeline toolbar
-// src/components/admin/SearchToolbar.jsx
+// src/components/admin/core/SearchToolbar.jsx
 //
 // Batch 19 ownership cleanup:
 // - only owns local Inquiry/Appointment search + status/priority filtering
@@ -25,8 +25,8 @@ const PRIORITY_FILTERS = ["VIP", "High", "Medium", "Low"];
 
 const PRIORITY_STYLES = {
   VIP: {
-    idle: "border-orange-300 bg-orange-50 text-orange-700",
-    active: "border-orange-600 bg-orange-500 text-white",
+    idle: "border-[#FF5A0A] bg-[#FFF4EA] text-[#B84F0E]",
+    active: "border-orange-600 bg-[#FF5A0A] text-white",
   },
   High: {
     idle: "border-red-200 bg-red-50 text-red-700",
@@ -192,9 +192,9 @@ function SearchToolbar({
         className={`inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-lg border-2 px-2.5 py-1.5 text-[10px] font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
           isActive
             ? priorityStyle?.active ||
-              "border-orange-600 bg-orange-500 text-white"
+              "border-orange-600 bg-[#FF5A0A] text-white"
             : priorityStyle?.idle ||
-              "border-slate-200 bg-white text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+              "border-slate-200 bg-white text-slate-600 hover:border-orange-300 hover:bg-[#FFF4EA] hover:text-[#B84F0E]"
         }`}
       >
         {isActive ? <Check size={11} /> : null}
@@ -207,7 +207,7 @@ function SearchToolbar({
     <section className="overflow-hidden rounded-[1.25rem] border-2 border-[#123865] bg-[#FFFDF8]">
       <div className="flex flex-col gap-3 p-3 sm:p-3.5 lg:flex-row lg:items-center">
         <div className="flex min-w-0 items-center gap-2 lg:w-[180px]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-orange-200 bg-orange-50 text-orange-700">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-orange-200 bg-orange-50 text-[#B84F0E]">
             <SlidersHorizontal size={15} />
           </span>
 
@@ -224,7 +224,7 @@ function SearchToolbar({
         <div className="relative min-w-0 flex-1">
           <Search
             size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-700"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B84F0E]"
           />
 
           <input
@@ -234,7 +234,7 @@ function SearchToolbar({
             onChange={(event) => safeSetSearch(event.target.value)}
             placeholder={placeholder}
             aria-label={`Search ${contextLabel.toLowerCase()}`}
-            className="h-11 w-full rounded-xl border-2 border-slate-200 bg-white pl-10 pr-10 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+            className="h-11 w-full rounded-xl border-2 border-slate-200 bg-white pl-10 pr-10 text-sm font-semibold text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-[#FF5A0A]/15"
           />
 
           {hasSearch ? (
@@ -242,7 +242,7 @@ function SearchToolbar({
               type="button"
               onClick={() => safeSetSearch("")}
               aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-orange-50 hover:text-orange-700"
+              className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#FFF4EA] hover:text-[#B84F0E]"
             >
               <X size={13} />
             </button>
@@ -256,14 +256,14 @@ function SearchToolbar({
             aria-expanded={filtersOpen}
             className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 px-3 text-xs font-black transition ${
               filtersOpen || hasFilter
-                ? "border-orange-500 bg-orange-50 text-orange-700"
+                ? "border-orange-500 bg-orange-50 text-[#B84F0E]"
                 : "border-[#123865] bg-white text-[#123865] hover:border-orange-300"
             }`}
           >
             <Filter size={14} />
             Filters
             {hasFilter ? (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[9px] text-white">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF5A0A] px-1 text-[9px] text-white">
                 1
               </span>
             ) : null}
@@ -277,7 +277,7 @@ function SearchToolbar({
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:border-orange-300 hover:bg-[#FFF4EA] hover:text-[#B84F0E]"
             >
               <RotateCcw size={14} />
               <span className="hidden sm:inline">Reset</span>
@@ -288,7 +288,7 @@ function SearchToolbar({
 
       {filtersOpen ? (
         <div className="border-t-2 border-[#123865]/15 bg-[#FFF8EF] px-3 py-3 sm:px-3.5">
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
             <div>
               <p className="mb-2 text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
                 Workflow
@@ -314,7 +314,7 @@ function SearchToolbar({
 
       {activeCount > 0 ? (
         <div className="flex flex-wrap items-center gap-2 border-t-2 border-orange-300 bg-orange-50 px-3 py-2">
-          <span className="text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
+          <span className="text-[9px] font-black uppercase tracking-[0.1em] text-[#B84F0E]">
             Active:
           </span>
 

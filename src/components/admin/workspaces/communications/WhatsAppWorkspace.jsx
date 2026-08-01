@@ -1,5 +1,5 @@
-// WhatsAppWorkspace V3 MAXIMUM — Student Communication Command Center
-// src/components/admin/WhatsAppWorkspace.jsx
+// WhatsAppWorkspace V5 PARTNER OS ALIGNMENT — Student Communication Command Center
+// src/components/admin/workspaces/communications/WhatsAppWorkspace.jsx
 //
 // Maximum Zaifan Admin OS pass:
 // - preserves template generation, personalization, WhatsApp deep-link, copy and draft saving
@@ -446,14 +446,14 @@ function WhatsAppWorkspace({
   };
 
   return (
-    <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-300 bg-white shadow-[0_12px_30px_rgba(15,35,63,0.06)]">
+    <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_18px_46px_rgba(15,35,63,0.12)]">
       <div
-        className="bg-[#0b2a57] p-5 sm:p-6"
+        className="border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 sm:p-6"
         style={{ color: "#ffffff" }}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1.5">
+            <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
               <MessageCircle
                 className="h-4 w-4"
                 style={{ color: "#FDBA74" }}
@@ -501,7 +501,7 @@ function WhatsAppWorkspace({
         </div>
       </div>
 
-      <div className="space-y-5 bg-[#fffaf4] p-4 sm:p-5">
+      <div className="space-y-5 bg-[#FFF8EF] p-4 sm:p-5">
         {feedback ? (
           <Feedback
             tone={feedback.tone}
@@ -534,14 +534,14 @@ function WhatsAppWorkspace({
           />
         </div>
 
-        <section className="rounded-[1.5rem] border-2 border-slate-300 bg-white p-4">
+        <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.06)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#A94308]">
                 Message Templates
               </p>
 
-              <h4 className="mt-1 text-lg font-black text-[#10233f]">
+              <h4 className="mt-1 text-lg font-black text-[#10233F]">
                 Counselor Quick Actions
               </h4>
 
@@ -551,7 +551,7 @@ function WhatsAppWorkspace({
               </p>
             </div>
 
-            <span className="w-fit rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1 text-[10px] font-black text-orange-800">
+            <span className="w-fit rounded-full border-2 border-[#FF5A0A] bg-[#FFF3E8] px-3 py-1 text-[10px] font-black text-[#A94308]">
               {templates.length} templates
             </span>
           </div>
@@ -572,8 +572,8 @@ function WhatsAppWorkspace({
                   aria-pressed={active}
                   className={`rounded-2xl border-2 p-4 text-left transition ${
                     active
-                      ? "border-orange-500 bg-orange-500 text-white shadow-[0_8px_18px_rgba(249,115,22,0.16)]"
-                      : "border-slate-300 bg-[#fffaf4] text-[#10233f] hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50"
+                      ? "border-[#FF5A0A] bg-[#FF5A0A] text-white shadow-[0_8px_18px_rgba(255,90,10,0.16)]"
+                      : "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F] hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF3E8]"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -581,7 +581,7 @@ function WhatsAppWorkspace({
                       className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${
                         active
                           ? "border-white/40 bg-white/10"
-                          : "border-orange-300 bg-white text-orange-700"
+                          : "border-[#C9D7E6] bg-white text-[#123865]"
                       }`}
                     >
                       <Icon size={16} />
@@ -616,14 +616,14 @@ function WhatsAppWorkspace({
           </div>
         </section>
 
-        <section className="rounded-[1.5rem] border-[3px] border-orange-300 bg-white p-4">
+        <section className="rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,63,0.06)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#A94308]">
                 Message Composer
               </p>
 
-              <h4 className="mt-1 text-lg font-black text-[#10233f]">
+              <h4 className="mt-1 text-lg font-black text-[#10233F]">
                 {activeTemplate?.label || "Custom WhatsApp Message"}
               </h4>
             </div>
@@ -646,11 +646,11 @@ function WhatsAppWorkspace({
               setFeedback(null);
             }}
             placeholder="Choose a template or write a custom WhatsApp message..."
-            className="mt-4 min-h-[170px] w-full resize-y rounded-2xl border-2 border-slate-300 bg-[#fffaf4] p-4 text-sm font-semibold leading-7 text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100"
+            className="mt-4 min-h-[170px] w-full resize-y rounded-2xl border-2 border-[#C9D7E6] bg-[#FFFDF8] p-4 text-sm font-semibold leading-7 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:bg-white focus:ring-4 focus:ring-[#FF5A0A]/15"
           />
 
           {!selectedMessage ? (
-            <div className="mt-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">
+            <div className="mt-2 rounded-xl border-2 border-[#60A5FA] bg-[#F2F7FF] px-3 py-2 text-xs font-semibold text-blue-800">
               Preview uses the default follow-up until you select a template or
               type a custom message.
             </div>
@@ -688,7 +688,7 @@ function WhatsAppWorkspace({
             type="button"
             onClick={openWhatsApp}
             disabled={!whatsappReady}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#0b2a57] bg-[#0b2a57] px-5 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(15,35,63,0.16)] transition hover:-translate-y-0.5 hover:bg-[#183f72] disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-5 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(15,35,63,0.14)] transition duration-200 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#102F56] disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
           >
             <Send size={16} />
             Open WhatsApp
@@ -698,7 +698,7 @@ function WhatsAppWorkspace({
             type="button"
             onClick={saveDraft}
             disabled={isSaving || !trimmedMessage}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-400 bg-orange-50 px-5 py-3 text-sm font-black text-orange-800 transition hover:-translate-y-0.5 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF3E8] px-5 py-3 text-sm font-black text-[#A94308] transition hover:-translate-y-0.5 hover:bg-[#FFE2CE] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save size={16} />
             {isSaving ? "Saving Draft..." : "Save Draft"}
@@ -708,7 +708,7 @@ function WhatsAppWorkspace({
             type="button"
             onClick={copyMessage}
             disabled={!trimmedMessage}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-sm font-black text-[#10233f] transition hover:-translate-y-0.5 hover:border-orange-400 hover:bg-orange-50 hover:text-orange-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-5 py-3 text-sm font-black text-[#10233F] transition duration-200 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF3E8] hover:text-[#A94308] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Clipboard size={16} />
             Copy Message
@@ -771,7 +771,7 @@ function HeaderMetric({
   alert = false,
 }) {
   return (
-    <div className="rounded-xl border border-white/25 bg-white/10 p-3">
+    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3">
       <div className="flex items-center gap-2">
         <Icon
           size={14}
@@ -805,12 +805,12 @@ function ContextCard({
   icon: Icon,
 }) {
   return (
-    <div className="rounded-2xl border-2 border-slate-300 bg-white p-4">
+    <div className="rounded-2xl border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(15,35,63,0.035)]">
       <div className="flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-[#FFF8EF]">
           <Icon
             size={15}
-            className="text-orange-700"
+            className="text-[#123865]"
           />
         </div>
 
@@ -820,7 +820,7 @@ function ContextCard({
           </p>
 
           <p
-            className="mt-0.5 truncate text-sm font-black text-[#10233f]"
+            className="mt-0.5 truncate text-sm font-black text-[#10233F]"
             title={String(value || "")}
           >
             {value}
@@ -839,7 +839,7 @@ function ComposerBadge({
     slate:
       "border-slate-300 bg-slate-50 text-slate-700",
     orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
+      "border-[#FF5A0A] bg-[#FFF3E8] text-[#A94308]",
     green:
       "border-emerald-300 bg-emerald-50 text-emerald-800",
     red:

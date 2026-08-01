@@ -1,4 +1,4 @@
-// AuditCenter V3 EXTREME — Zaifan Compliance OS
+// AuditCenter V4 PARTNER-OS ALIGNED — Zaifan Compliance OS
 // Full replacement for:
 // src/components/admin/compliance/AuditCenter.jsx
 //
@@ -66,7 +66,7 @@ function severityTone(value = "") {
   }
 
   if (clean.includes("high")) {
-    return "border-orange-300 bg-orange-50 text-orange-800";
+    return "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]";
   }
 
   if (clean.includes("medium")) {
@@ -74,10 +74,10 @@ function severityTone(value = "") {
   }
 
   if (clean.includes("low")) {
-    return "border-blue-300 bg-blue-50 text-blue-800";
+    return "border-[#60A5FA] bg-[#F2F7FF] text-blue-700";
   }
 
-  return "border-slate-300 bg-slate-50 text-slate-700";
+  return "border-[#C9D7E6] bg-[#F7FAFC] text-slate-700";
 }
 
 function statusTone(value = "") {
@@ -89,7 +89,7 @@ function statusTone(value = "") {
     clean.includes("closed") ||
     clean.includes("approved")
   ) {
-    return "border-emerald-300 bg-emerald-50 text-emerald-800";
+    return "border-[#34D399] bg-[#F0FFF8] text-emerald-700";
   }
 
   if (
@@ -105,10 +105,10 @@ function statusTone(value = "") {
     clean.includes("review") ||
     clean.includes("open")
   ) {
-    return "border-orange-300 bg-orange-50 text-orange-800";
+    return "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]";
   }
 
-  return "border-slate-300 bg-slate-50 text-slate-700";
+  return "border-[#C9D7E6] bg-[#F7FAFC] text-slate-700";
 }
 
 export default function AuditCenter({ compliance = {} }) {
@@ -175,7 +175,7 @@ export default function AuditCenter({ compliance = {} }) {
 
   return (
     <section className="space-y-4">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EF] shadow-[0_16px_42px_rgba(23,36,61,0.07)]">
+      <header className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
         <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
@@ -201,7 +201,7 @@ export default function AuditCenter({ compliance = {} }) {
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
@@ -231,7 +231,7 @@ export default function AuditCenter({ compliance = {} }) {
         </div>
       </header>
 
-      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EF] p-3">
+      <div className="rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-3 shadow-[0_8px_22px_rgba(15,35,63,0.045)]">
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
           <div className="relative">
             <Search
@@ -244,7 +244,7 @@ export default function AuditCenter({ compliance = {} }) {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search actor, action, category, status, source..."
               aria-label="Search audit logs"
-              className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
             />
 
             {query ? (
@@ -263,7 +263,7 @@ export default function AuditCenter({ compliance = {} }) {
             value={severity}
             onChange={(event) => setSeverity(event.target.value)}
             aria-label="Filter audit logs by severity"
-            className="min-h-12 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+            className="min-h-12 rounded-xl border-2 border-[#C9D7E6] bg-white px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">All severity</option>
             <option value="critical">Critical</option>
@@ -275,7 +275,7 @@ export default function AuditCenter({ compliance = {} }) {
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
+      <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8]">
         <SectionHeader
           eyebrow="Audit Evidence"
           title="Recorded Events"
@@ -345,7 +345,7 @@ export default function AuditCenter({ compliance = {} }) {
 
 function AuditRow({ item }) {
   return (
-    <article className="rounded-[1.25rem] border-2 border-slate-300 bg-white p-4">
+    <article className="rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white p-4">
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_220px_140px] xl:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -367,7 +367,7 @@ function AuditRow({ item }) {
           </p>
 
           {item.source ? (
-            <span className="mt-3 inline-flex rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+            <span className="mt-3 inline-flex rounded-md border border-[#C9D7E6] bg-[#F7FAFC] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
               Source: {item.source}
             </span>
           ) : null}
@@ -422,7 +422,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white">
       <div>
         <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
           {eyebrow}
@@ -472,7 +472,7 @@ function EvidenceMetric({ icon: Icon, label, value, detail, tone }) {
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-[1.25rem] border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+    <div className="rounded-[1.25rem] border-2 border-dashed border-[#C9D7E6] bg-[#F7FAFC] p-6 text-center">
       <Info size={20} className="mx-auto text-orange-600" />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600">
@@ -483,7 +483,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear filters
         </button>
@@ -494,7 +494,7 @@ function EmptyState({ title, text, onClear }) {
 
 function toneClass(tone) {
   if (tone === "red") return "border-red-400 bg-red-50";
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
+  if (tone === "orange") return "border-[#F97316] bg-[#FFF4EA]";
   if (tone === "blue") return "border-blue-400 bg-blue-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
+  return "border-[#234E78] bg-[#F2F7FF]";
 }

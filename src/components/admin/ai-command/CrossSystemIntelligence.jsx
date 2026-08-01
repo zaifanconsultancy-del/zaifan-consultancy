@@ -1,4 +1,4 @@
-// CrossSystemIntelligence V3 EXTREME — Zaifan AI Command OS
+// CrossSystemIntelligence V4 PARTNER-OS ALIGNED — Zaifan AI Command OS
 // Full replacement for:
 // src/components/admin/ai-command/CrossSystemIntelligence.jsx
 //
@@ -748,8 +748,8 @@ export default function CrossSystemIntelligence({
   return (
     <section className="space-y-4 p-3 sm:space-y-5 sm:p-5">
       <AICommandModuleNav activeModule="cross-system-intelligence" onOpenModule={onOpenModule} />
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_18px_48px_rgba(23,36,61,0.09)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.5fr)]">
+      <header className="overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
+        <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="bg-[#123865] p-5 text-white sm:p-7">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderChip icon={Network} label="Cross-System Intelligence" />
@@ -779,7 +779,7 @@ export default function CrossSystemIntelligence({
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-7">
+          <div className="border-t-[3px] border-[#F97316] bg-[#FF5A0A] p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -838,7 +838,7 @@ export default function CrossSystemIntelligence({
           </div>
         </div>
 
-        <div className="border-t-[3px] border-orange-300 bg-[#FFF8EE] p-3 sm:p-4">
+        <div className="border-t-[3px] border-[#F97316] bg-[#FFF8EF] p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)_auto]">
             <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1">
               {VIEW_OPTIONS.map((option) => {
@@ -853,7 +853,7 @@ export default function CrossSystemIntelligence({
                     className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl border-2 px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                       activeView === option.id
                         ? "border-[#123865] bg-[#123865] text-white"
-                        : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                        : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                     }`}
                   >
                     <Icon size={14} />
@@ -874,7 +874,7 @@ export default function CrossSystemIntelligence({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search systems, signals, correlations or risks..."
                 aria-label="Search cross-system intelligence"
-                className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                className="min-h-12 w-full rounded-xl border-2 border-[#C9D7E6] bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
               />
 
               {search ? (
@@ -898,7 +898,7 @@ export default function CrossSystemIntelligence({
                   ? "Refresh connected cross-system intelligence"
                   : "No refresh handler is connected"
               }
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 text-xs font-black text-white transition hover:bg-[#E94F00] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500"
             >
               <RefreshCw
                 size={15}
@@ -915,7 +915,7 @@ export default function CrossSystemIntelligence({
           <div className="mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             {activeView === "signals" ? (
               <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1">
-                <span className="flex shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+                <span className="flex shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#234E78] bg-[#F2F7FF] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
                   <Filter size={12} />
                   Impact filter
                 </span>
@@ -928,8 +928,8 @@ export default function CrossSystemIntelligence({
                     aria-pressed={signalFilter === filter.id}
                     className={`shrink-0 rounded-lg border-2 px-3 py-2 text-[10px] font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                       signalFilter === filter.id
-                        ? "border-orange-500 bg-orange-500 text-white"
-                        : "border-slate-300 bg-white text-[#10233F] hover:border-orange-300 hover:bg-orange-50"
+                        ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
+                        : "border-[#C9D7E6] bg-white text-[#10233F] hover:border-[#F97316] hover:bg-[#FFF4EA]"
                     }`}
                   >
                     {filter.label}
@@ -938,7 +938,7 @@ export default function CrossSystemIntelligence({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="rounded-lg border-2 border-[#234E78] bg-[#EEF4FA] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
+                <span className="rounded-lg border-2 border-[#234E78] bg-[#F2F7FF] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-[#123865]">
                   {activeView === "correlations"
                     ? "Relationship analysis"
                     : "Cross-system risk review"}
@@ -1084,7 +1084,7 @@ export default function CrossSystemIntelligence({
       </div>
 
       <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4">
           <div className="flex items-start gap-3">
             <ShieldCheck
               className="mt-0.5 shrink-0 text-[#123865]"
@@ -1106,10 +1106,10 @@ export default function CrossSystemIntelligence({
           </div>
         </div>
 
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
+        <div className="rounded-[1.35rem] border-[3px] border-[#F97316] bg-[#FFF4EA] p-4">
           <div className="flex items-start gap-3">
             <Network
-              className="mt-0.5 shrink-0 text-orange-700"
+              className="mt-0.5 shrink-0 text-[#B84F0E]"
               size={18}
             />
 
@@ -1141,7 +1141,7 @@ function SignalsView({
   onClear,
 }) {
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-orange-400 bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,36,61,0.06)]">
+    <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#F97316] bg-[#FFFDF8] shadow-[0_12px_32px_rgba(23,36,61,0.06)]">
       <SectionHeader
         eyebrow="Live Intelligence Feed"
         title="Cross-System Signals"
@@ -1254,7 +1254,7 @@ function CorrelationsView({
                     ].map((heading) => (
                       <th
                         key={heading || "action"}
-                        className="border-b-2 border-slate-300 bg-[#F7F1E8] px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.09em] text-slate-600"
+                        className="border-b-2 border-[#C9D7E6] bg-[#F7F1E8] px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.09em] text-slate-600"
                       >
                         {heading}
                       </th>
@@ -1558,11 +1558,11 @@ function RiskCard({ risk, canInspect, onInspect }) {
 function CorrelationTableRow({ item, canInspect, onInspect }) {
   return (
     <tr>
-      <td className="border-b border-slate-200 px-3 py-3 font-black text-[#10233F]">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-black text-[#10233F]">
         {item.source}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3">
+      <td className="border-b border-[#E1E8F0] px-3 py-3">
         <div className="flex items-center gap-2 text-slate-500">
           <span className="h-px w-5 bg-slate-300" />
           <ChevronRight size={14} />
@@ -1570,15 +1570,15 @@ function CorrelationTableRow({ item, canInspect, onInspect }) {
         </div>
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-black text-[#10233F]">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-black text-[#10233F]">
         {item.target}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3">
+      <td className="border-b border-[#E1E8F0] px-3 py-3">
         <DirectionBadge value={item.impact || item.direction} />
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-bold text-[#10233F]">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-bold text-[#10233F]">
         {hasValue(item.strength)
           ? typeof item.strength === "number"
             ? formatPercent(item.strength)
@@ -1586,15 +1586,15 @@ function CorrelationTableRow({ item, canInspect, onInspect }) {
           : "—"}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-bold text-[#10233F]">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-bold text-[#10233F]">
         {formatPercent(item.confidence)}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 font-bold text-[#10233F]">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 font-bold text-[#10233F]">
         {formatCount(item.evidenceCount)}
       </td>
 
-      <td className="border-b border-slate-200 px-3 py-3 text-right">
+      <td className="border-b border-[#E1E8F0] px-3 py-3 text-right">
         {canInspect ? (
           <ActionButton label="Inspect" onClick={onInspect} />
         ) : (
@@ -1611,7 +1611,7 @@ function CorrelationMobileCard({ item, canInspect, onInspect }) {
   return (
     <article className="rounded-[1.2rem] border-[3px] border-[#234E78] bg-white p-4">
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <div className="min-w-0 rounded-lg border-2 border-slate-200 bg-slate-50 p-3">
+        <div className="min-w-0 rounded-lg border-2 border-[#E1E8F0] bg-[#F7FAFC] p-3">
           <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
             Source
           </p>
@@ -1622,7 +1622,7 @@ function CorrelationMobileCard({ item, canInspect, onInspect }) {
 
         <ChevronRight size={18} className="text-orange-600" />
 
-        <div className="min-w-0 rounded-lg border-2 border-slate-200 bg-slate-50 p-3">
+        <div className="min-w-0 rounded-lg border-2 border-[#E1E8F0] bg-[#F7FAFC] p-3">
           <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
             Target
           </p>
@@ -1725,7 +1725,7 @@ function MetricCard({
         </span>
 
         {derived ? (
-          <span className="rounded-md border border-orange-300 bg-white px-2 py-0.5 text-[8px] font-black uppercase text-orange-800">
+          <span className="rounded-md border border-[#F97316] bg-white px-2 py-0.5 text-[8px] font-black uppercase text-[#B84F0E]">
             Calculated
           </span>
         ) : null}
@@ -1742,7 +1742,7 @@ function SectionHeader({
   count,
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white sm:px-5">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#F97316] bg-[#123865] px-4 py-4 text-white sm:px-5">
       <div className="min-w-0">
         <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
           {eyebrow}
@@ -1795,7 +1795,7 @@ function AnalysisCard({ icon: Icon, label, value, detail, tone }) {
 
 function ReadinessCard({ icon: Icon, label, value, detail }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-4">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.09em] text-slate-500">
@@ -1837,7 +1837,7 @@ function DarkMetric({ label, value }) {
 
 function StatusMeta({ icon: Icon, label }) {
   return (
-    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5">
+    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#C9D7E6] bg-white px-2.5 py-1.5">
       <Icon size={12} className="shrink-0 text-[#123865]" />
       <span>{label}</span>
     </span>
@@ -1846,7 +1846,7 @@ function StatusMeta({ icon: Icon, label }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="min-w-0 rounded-lg border-2 border-slate-200 bg-slate-50 p-2.5">
+    <div className="min-w-0 rounded-lg border-2 border-[#E1E8F0] bg-[#F7FAFC] p-2.5">
       <p className="truncate text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
         {label}
       </p>
@@ -1873,10 +1873,10 @@ function SystemStateBadge({ state, status }) {
     state === "healthy"
       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
       : state === "warning"
-        ? "border-orange-300 bg-orange-50 text-orange-800"
+        ? "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]"
         : state === "critical"
           ? "border-red-300 bg-red-50 text-red-800"
-          : "border-slate-300 bg-slate-50 text-slate-600";
+          : "border-[#C9D7E6] bg-[#F7FAFC] text-slate-600";
 
   return (
     <span
@@ -1889,7 +1889,7 @@ function SystemStateBadge({ state, status }) {
 
 function SourceBadge({ source }) {
   return (
-    <span className="inline-flex max-w-full truncate rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
+    <span className="inline-flex max-w-full truncate rounded-md border border-[#C9D7E6] bg-[#F7FAFC] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
       {source}
     </span>
   );
@@ -1898,7 +1898,7 @@ function SourceBadge({ source }) {
 function DirectionBadge({ value }) {
   if (!hasValue(value)) {
     return (
-      <span className="rounded-lg border-2 border-slate-300 bg-slate-50 px-2.5 py-1 text-[8px] font-black uppercase text-slate-600">
+      <span className="rounded-lg border-2 border-[#C9D7E6] bg-[#F7FAFC] px-2.5 py-1 text-[8px] font-black uppercase text-slate-600">
         —
       </span>
     );
@@ -1977,7 +1977,7 @@ function InlineNotice({
           <button
             type="button"
             onClick={onAction}
-            className="shrink-0 rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F] transition hover:border-[#F97316] hover:bg-[#FFF4EA]"
           >
             {actionLabel}
           </button>
@@ -1989,7 +1989,7 @@ function InlineNotice({
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+    <div className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F7FAFC] p-5 text-center">
       <Sparkles className="mx-auto text-orange-600" size={20} />
 
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
@@ -2002,7 +2002,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 rounded-lg border-2 border-[#F97316] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4EA]"
         >
           Clear search & filters
         </button>
@@ -2014,19 +2014,19 @@ function EmptyState({ title, text, onClear }) {
 function toneClass(tone = "navy") {
   if (tone === "red") return "border-red-400 bg-red-50 text-red-800";
   if (tone === "orange")
-    return "border-orange-400 bg-orange-50 text-orange-800";
+    return "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]";
   if (tone === "green")
     return "border-emerald-400 bg-emerald-50 text-emerald-800";
   if (tone === "blue") return "border-blue-400 bg-blue-50 text-blue-800";
   if (tone === "muted")
-    return "border-slate-300 bg-slate-50 text-slate-500";
+    return "border-[#C9D7E6] bg-[#F7FAFC] text-slate-500";
 
-  return "border-[#234E78] bg-[#EEF4FA] text-[#123865]";
+  return "border-[#234E78] bg-[#F2F7FF] text-[#123865]";
 }
 
 function outerBorder(tone = "navy") {
   if (tone === "red") return "border-red-400";
-  if (tone === "orange") return "border-orange-400";
+  if (tone === "orange") return "border-[#F97316]";
   if (tone === "green") return "border-emerald-400";
   if (tone === "blue") return "border-blue-400";
 
@@ -2035,7 +2035,7 @@ function outerBorder(tone = "navy") {
 
 function accentBar(tone = "navy") {
   if (tone === "red") return "bg-red-500";
-  if (tone === "orange") return "bg-orange-500";
+  if (tone === "orange") return "bg-[#FF5A0A]";
   if (tone === "green") return "bg-emerald-500";
   if (tone === "blue") return "bg-blue-500";
 
@@ -2046,8 +2046,8 @@ function stateCardClass(state) {
   if (state === "healthy")
     return "border-emerald-400 bg-emerald-50";
   if (state === "warning")
-    return "border-orange-400 bg-orange-50";
+    return "border-[#F97316] bg-[#FFF4EA]";
   if (state === "critical") return "border-red-400 bg-red-50";
 
-  return "border-slate-300 bg-slate-50";
+  return "border-[#C9D7E6] bg-[#F7FAFC]";
 }

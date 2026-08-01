@@ -1,4 +1,4 @@
-// MyLeadsPanel V4 — Identity-Based Assigned Work Queue
+// MyLeadsPanel PARTNER OS EXTREME — Compact Assigned Work Command
 // src/components/admin/MyLeadsPanel.jsx
 //
 // Maximum pass:
@@ -249,6 +249,7 @@ function MyLeadsPanel({
   const [search, setSearch] = useState("");
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const [copiedKey, setCopiedKey] = useState("");
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
 
   const mountedRef = useRef(true);
   const requestRef = useRef(0);
@@ -661,12 +662,12 @@ function MyLeadsPanel({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="space-y-6 text-[#10233f]"
+      className="min-w-0 space-y-5 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-4 text-[#10233F] shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-5"
     >
-      <section className="overflow-hidden rounded-[2rem] border-[3px] border-orange-300 bg-white shadow-[0_14px_36px_rgba(15,35,63,0.06)]">
-        <div className="grid xl:grid-cols-[1.3fr_0.7fr]">
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_46px_rgba(18,56,101,0.10)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.55fr)_minmax(19rem,0.45fr)]">
           <div
-            className="bg-[#123865] p-5 sm:p-7"
+            className="min-w-0 bg-[#123865] p-4 sm:p-5 lg:p-6"
             style={{ color: "#FFFFFF" }}
           >
             <div className="inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5">
@@ -684,7 +685,7 @@ function MyLeadsPanel({
             </div>
 
             <h2
-              className="mt-3 text-3xl font-black"
+              className="mt-3 break-words text-2xl font-black tracking-[-0.03em] sm:text-3xl"
               style={{ color: "#FFFFFF" }}
             >
               My Leads
@@ -698,7 +699,7 @@ function MyLeadsPanel({
               Zaifan identity, regardless of whether you enter through Admin or Counselor access.
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-4 flex min-w-0 flex-wrap gap-2">
               <span
                 className="rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em]"
                 style={{ color: "#FFFFFF" }}
@@ -717,10 +718,30 @@ function MyLeadsPanel({
                 </span>
               ) : null}
             </div>
+
+            <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
+              {[
+                ["Assigned", assignments.length],
+                ["Inquiries", inquiries.length],
+                ["Appointments", appointments.length],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="min-w-0 rounded-2xl border-2 border-white/25 bg-white/10 px-4 py-3"
+                >
+                  <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white/80">
+                    {label}
+                  </p>
+                  <p className="mt-1 text-2xl font-black text-white">
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div
-            className="bg-orange-500 p-5 sm:p-7"
+            className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-4 sm:p-5 lg:border-l-[3px] lg:border-t-0 lg:p-6"
             style={{ color: "#FFFFFF" }}
           >
             <div className="flex items-center gap-2">
@@ -731,19 +752,39 @@ function MyLeadsPanel({
               </p>
             </div>
 
-            <p className="mt-3 text-4xl font-black text-white">
-              {filteredLeads.length}
+            <p className="mt-3 text-3xl font-black text-white">
+              {metrics.urgent + metrics.stale + metrics.firstContactNeeded > 0
+                ? "Needs action"
+                : "Queue healthy"}
             </p>
 
-            <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
-              Visible Leads
+            <p className="mt-2 text-sm font-bold leading-6 text-white">
+              {metrics.urgent + metrics.stale + metrics.firstContactNeeded > 0
+                ? `${metrics.urgent + metrics.stale + metrics.firstContactNeeded} priority signal${
+                    metrics.urgent + metrics.stale + metrics.firstContactNeeded === 1 ? "" : "s"
+                  } currently need attention.`
+                : "No urgent, stale, or first-contact work is waiting."}
             </p>
+
+            <div className="mt-5 rounded-2xl border-2 border-white/35 bg-white/10 p-4">
+              <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white/80">
+                Visible queue
+              </p>
+              <div className="mt-1 flex items-end justify-between gap-3">
+                <p className="text-3xl font-black text-white">
+                  {filteredLeads.length}
+                </p>
+                <p className="pb-1 text-xs font-black uppercase tracking-[0.08em] text-white">
+                  Leads
+                </p>
+              </div>
+            </div>
 
             <button
               type="button"
               onClick={() => fetchMyLeads()}
               disabled={loading}
-              className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white text-sm font-black text-orange-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white text-sm font-black text-orange-700 transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <RefreshCw
                 size={15}
@@ -755,7 +796,7 @@ function MyLeadsPanel({
         </div>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           label="Total Assigned"
           value={assignments.length}
@@ -786,7 +827,7 @@ function MyLeadsPanel({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <OperationalCard
           label="First Contact Needed"
           value={metrics.firstContactNeeded}
@@ -828,11 +869,58 @@ function MyLeadsPanel({
         />
       </div>
 
+      <section className="overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-white shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+        <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-3 text-white">
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white/75">
+            Assigned lead workspace
+          </p>
+          <div className="mt-1 flex min-w-0 flex-wrap items-end justify-between gap-2">
+            <p className="text-xl font-black text-white">
+              {filteredLeads.length} lead{filteredLeads.length === 1 ? "" : "s"} in view
+            </p>
+            <p className="text-xs font-bold text-white/80">
+              Search, filter, contact, and progress owned records.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setWorkspaceExpanded((current) => !current)
+          }
+          aria-expanded={workspaceExpanded}
+          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+              My Leads Workspace
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              {workspaceExpanded
+                ? "Hide filters, assigned lead cards and follow-up focus."
+                : "Open filters, assigned lead cards and follow-up focus."}
+            </p>
+          </div>
+
+          <Target
+            size={17}
+            className={`shrink-0 text-[#123865] transition ${
+              workspaceExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+        </div>
+      </section>
+
+      {workspaceExpanded ? (
+        <div className="min-w-0 space-y-4">
       <section
-        className={`${cardClass} rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-4 shadow-[0_7px_20px_rgba(15,35,63,0.04)]`}
+        className={`${cardClass} min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_9px_24px_rgba(18,56,101,0.05)]`}
       >
-        <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
-          <label className="relative block">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+          <label className="relative block min-w-0">
             <Search
               size={16}
               className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -844,7 +932,7 @@ function MyLeadsPanel({
                 setSearch(event.target.value)
               }
               placeholder="Search name, email, phone, country, service, status..."
-              className="min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-11 pr-4 text-sm font-semibold text-[#10233f] outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
             />
           </label>
 
@@ -853,7 +941,7 @@ function MyLeadsPanel({
             onChange={(event) =>
               setActiveView(event.target.value)
             }
-            className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">All Leads</option>
             <option value="inquiry">Inquiries</option>
@@ -865,7 +953,7 @@ function MyLeadsPanel({
             onChange={(event) =>
               setPriorityFilter(event.target.value)
             }
-            className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">All Priorities</option>
             <option value="vip">VIP</option>
@@ -879,7 +967,7 @@ function MyLeadsPanel({
             onChange={(event) =>
               setWorkFilter(event.target.value)
             }
-            className="min-h-11 rounded-xl border-2 border-slate-300 bg-white px-4 text-sm font-black text-[#10233f] outline-none focus:border-orange-400"
+            className="min-h-11 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 text-sm font-black text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"
           >
             <option value="all">All Workload</option>
             <option value="urgent">Urgent</option>
@@ -898,7 +986,7 @@ function MyLeadsPanel({
           <button
             type="button"
             onClick={clearFilters}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:bg-orange-50 hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
           >
             <X size={13} />
             Clear Filters
@@ -907,7 +995,7 @@ function MyLeadsPanel({
       </section>
 
       {loadWarning ? (
-        <div className="rounded-[1.4rem] border-2 border-amber-300 bg-amber-50 p-4">
+        <div role="status" className="rounded-[1.4rem] border-[3px] border-amber-300 bg-amber-50 p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]">
           <div className="flex items-start gap-3">
             <AlertTriangle
               size={17}
@@ -928,7 +1016,7 @@ function MyLeadsPanel({
 
       {loadError ? (
         <div
-          className={`${cardClass} rounded-[1.5rem] border-[3px] border-red-300 bg-red-50 p-5`}
+          role="alert" className={`${cardClass} min-w-0 rounded-[1.5rem] border-[3px] border-red-300 bg-red-50 p-5 shadow-[0_8px_22px_rgba(239,68,68,0.08)]`}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
@@ -950,7 +1038,7 @@ function MyLeadsPanel({
             <button
               type="button"
               onClick={() => fetchMyLeads()}
-              className="rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-black text-white transition hover:bg-orange-600"
+              className="rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 py-2.5 text-xs font-black text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
             >
               Retry
             </button>
@@ -964,7 +1052,7 @@ function MyLeadsPanel({
         <EmptyState cardClass={cardClass} />
       ) : filteredLeads.length === 0 ? (
         <div
-          className={`${cardClass} rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-8 text-center shadow-[0_8px_24px_rgba(15,35,63,0.04)]`}
+          className={`${cardClass} min-w-0 rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white p-8 text-center shadow-[0_8px_24px_rgba(18,56,101,0.05)]`}
         >
           <Search className="mx-auto h-9 w-9 text-orange-600" />
 
@@ -985,7 +1073,7 @@ function MyLeadsPanel({
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid min-w-0 gap-4">
           {filteredLeads.map((lead, index) => (
             <LeadCard
               key={`${lead.leadType}-${lead.id}`}
@@ -1000,7 +1088,7 @@ function MyLeadsPanel({
       )}
 
       {assignments.length > 0 ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-4">
           <MiniSummary
             title="Follow-up Focus"
             icon={Target}
@@ -1022,6 +1110,8 @@ function MyLeadsPanel({
                 : "good"
             }
           />
+        </div>
+      ) : null}
         </div>
       ) : null}
     </motion.div>
@@ -1049,10 +1139,10 @@ function StatCard({
 
   return (
     <div
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)] ${surface}`}
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(18,56,101,0.05)] ${surface}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div>
           <p
             className="text-[9px] font-black uppercase tracking-[0.1em]"
@@ -1098,7 +1188,7 @@ function OperationalCard({
 
   return (
     <div
-      className={`rounded-[1.35rem] border-[3px] p-4 ${surface}`}
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(18,56,101,0.04)] ${surface}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -1178,7 +1268,7 @@ function LeadCard({
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : index * 0.025,
       }}
-      className="rounded-[1.6rem] border-[3px] border-slate-300 bg-white p-5 shadow-[0_7px_20px_rgba(15,35,63,0.04)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300"
+      className="min-w-0 rounded-[1.45rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_20px_rgba(18,56,101,0.05)] transition duration-300 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md sm:p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -1228,7 +1318,7 @@ function LeadCard({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
         <InfoLine
           label="Email"
           value={lead.email || "No email"}
@@ -1305,7 +1395,7 @@ function LeadCard({
                 lead.email
               )
             }
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black text-slate-700 transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
           >
             {copiedKey === `${cardKey}-email` ? (
               <CheckCircle2 size={13} />
@@ -1352,7 +1442,7 @@ function QuickAction({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noreferrer noopener" : undefined}
-      className={`inline-flex min-h-10 items-center gap-2 rounded-xl border-2 px-3 text-xs font-black transition ${
+      className={`inline-flex min-h-10 items-center gap-2 rounded-xl border-2 px-3 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
         primary
           ? "border-orange-600 bg-orange-500 text-white hover:bg-orange-600"
           : "border-slate-300 bg-white text-[#10233f] hover:border-orange-300 hover:bg-orange-50"
@@ -1441,7 +1531,7 @@ function MiniSummary({
 function LoadingState({ cardClass }) {
   return (
     <div
-      className={`${cardClass} rounded-[1.5rem] border-[3px] border-slate-300 bg-white p-6`}
+      className={`${cardClass} min-w-0 rounded-[1.5rem] border-[3px] border-[#C9D7E6] bg-white p-6`}
     >
       <div className="flex items-center gap-3 text-sm font-semibold text-slate-600">
         <div className="h-5 w-5 animate-spin rounded-full border-[3px] border-orange-200 border-t-orange-600" />
@@ -1454,7 +1544,7 @@ function LoadingState({ cardClass }) {
 function EmptyState({ cardClass }) {
   return (
     <div
-      className={`${cardClass} rounded-[1.7rem] border-[3px] border-orange-300 bg-white p-8 text-center shadow-[0_8px_24px_rgba(15,35,63,0.04)]`}
+      className={`${cardClass} min-w-0 rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white p-8 text-center shadow-[0_8px_24px_rgba(18,56,101,0.05)]`}
     >
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
         <UserRoundCheck size={28} />

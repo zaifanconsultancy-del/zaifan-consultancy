@@ -1,4 +1,4 @@
-// ExecutivePortfolioSummary V4 MAXIMUM — Portfolio Health & Executive Board
+// ExecutivePortfolioSummary V5 PARTNER OS EXTREME — Portfolio Command Intelligence
 // src/components/admin/ExecutivePortfolioSummary.jsx
 //
 // Maximum pass:
@@ -452,11 +452,11 @@ function ExecutivePortfolioSummary({ students = [] }) {
       transition={{
         duration: reduceMotion ? 0 : 0.26,
       }}
-      className="space-y-5"
+      className="min-w-0 space-y-5"
     >
-      <section className="rounded-[2rem] border-[3px] border-orange-400 bg-[#fff8ee] p-3 shadow-[0_18px_55px_rgba(15,35,63,0.08)] sm:p-4">
-        <div className="grid overflow-hidden rounded-[1.65rem] border-2 border-[#234e78] xl:grid-cols-[1.32fr_0.68fr]">
-          <div className="bg-[#123865] p-5 text-white sm:p-7">
+      <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <HeaderChip icon={BriefcaseBusiness}>
                 Executive Portfolio
@@ -471,16 +471,16 @@ function ExecutivePortfolioSummary({ students = [] }) {
               </HeaderChip>
             </div>
 
-            <h2 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
+            <h2 className="mt-4 max-w-4xl text-2xl font-black tracking-[-0.025em] text-white sm:text-[2rem]">
               Student Portfolio Command View
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white">
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-200">
               Executive visibility across risk, opportunity, applications,
               offers, CAS, visa, documents, tasks, and university planning.
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <DarkMetric
                 label="Students"
                 value={health.total}
@@ -509,7 +509,7 @@ function ExecutivePortfolioSummary({ students = [] }) {
             </div>
           </div>
 
-          <div className="border-t-2 border-orange-300 bg-orange-500 p-5 text-white xl:border-l-2 xl:border-t-0 sm:p-7">
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
             <div className="flex items-center gap-2">
               <CircleGauge size={18} />
 
@@ -558,6 +558,17 @@ function ExecutivePortfolioSummary({ students = [] }) {
                   .message
               }
             </p>
+
+            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Command Rule
+              </p>
+              <p className="mt-1 text-xs font-black leading-5 text-white">
+                Stabilize critical and high-risk students first, then remove
+                weak document, task and university-planning pressure before
+                pushing conversion-ready cases forward.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -566,25 +577,57 @@ function ExecutivePortfolioSummary({ students = [] }) {
         <EmptyPortfolioState />
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {commandMetrics.map(
-              (item) => (
-                <MetricCard
-                  key={item.label}
-                  {...item}
-                />
-              )
-            )}
-          </div>
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+            <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+                  Portfolio Operations Board
+                </p>
+                <h3 className="mt-1 text-xl font-black text-white">
+                  Executive risk, opportunity and operating load
+                </h3>
+                <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-slate-200">
+                  Grouped portfolio intelligence replaces the loose eight-card metric wall.
+                </p>
+              </div>
 
-          <SectionHeader
-            eyebrow="Executive Forecast"
-            title="Portfolio Movement Board"
-            description="Near-term opportunity, visa movement, operational pressure, and recovery demand."
-            icon={TrendingUp}
-          />
+              <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+                {health.total} students
+              </span>
+            </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+              {commandMetrics.map((item) => (
+                <MetricCard key={item.label} {...item} />
+              ))}
+            </div>
+          </section>
+
+          <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+            <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-orange-200">
+                  <TrendingUp size={17} />
+                </span>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+                    Executive Forecast
+                  </p>
+                  <h3 className="mt-1 text-xl font-black text-white">
+                    Portfolio Movement Board
+                  </h3>
+                  <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-slate-200">
+                    Near-term opportunity, visa movement, operational pressure and recovery demand.
+                  </p>
+                </div>
+              </div>
+
+              <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+                {health.commandReadiness.score}% ready
+              </span>
+            </div>
+
+            <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3 xl:grid-cols-6">
             <BoardCard
               label="Expected Offers"
               value={
@@ -649,9 +692,10 @@ function ExecutivePortfolioSummary({ students = [] }) {
               tone="orange"
               icon={Workflow}
             />
-          </div>
+            </div>
+          </section>
 
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-3">
             <BoardList
               title="Risk Board"
               subtitle="Highest portfolio risk"
@@ -697,7 +741,7 @@ function ExecutivePortfolioSummary({ students = [] }) {
             onToggle={() => setShowHealthMatrix((current) => !current)}
             icon={Workflow}
           >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             <HealthBlock
               icon={ClipboardCheck}
               title="Application Health"
@@ -965,7 +1009,7 @@ function ExecutivePortfolioSummary({ students = [] }) {
             icon={Crown}
           >
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
 
             <PortfolioList
               title="Highest Risk Students"
@@ -1003,7 +1047,7 @@ function HeaderChip({
   children,
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-white">
+    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.09em] text-[#FFB38A]">
       <Icon size={11} />
       {children}
     </span>
@@ -1015,7 +1059,7 @@ function DarkMetric({
   value,
 }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
+    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
       <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
         {label}
       </p>
@@ -1037,23 +1081,23 @@ function ExecutiveDisclosure({
   children,
 }) {
   return (
-    <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#234e78] bg-[#fff8ee] shadow-[0_10px_28px_rgba(15,35,63,0.06)]">
+    <section className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_10px_28px_rgba(15,35,63,0.07)]">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 border-b-[3px] border-orange-400 bg-[#123865] px-5 py-4 text-left text-white transition hover:bg-[#0f3158]"
+        className="flex w-full min-w-0 items-center justify-between gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-3.5 text-left text-white transition hover:bg-[#0F3158] sm:px-5"
       >
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300/60 bg-white/10 text-white">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A]/60 bg-white/10 text-white">
             <Icon size={18} />
           </div>
 
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-300">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#FFB38A]">
               {eyebrow}
             </p>
-            <h3 className="mt-0.5 text-xl font-black text-white">{title}</h3>
+            <h3 className="mt-0.5 text-lg font-black text-white sm:text-xl">{title}</h3>
             {description ? (
               <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-white/80">
                 {description}
@@ -1067,7 +1111,7 @@ function ExecutiveDisclosure({
         </span>
       </button>
 
-      {open ? <div className="p-4 sm:p-5">{children}</div> : null}
+      {open ? <div className="min-w-0 p-4 sm:p-5">{children}</div> : null}
     </section>
   );
 }
@@ -1079,17 +1123,17 @@ function SectionHeader({
   icon: Icon = Sparkles,
 }) {
   return (
-    <div className="flex items-start gap-3 border-l-[5px] border-orange-500 pl-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="flex min-w-0 items-start gap-3 rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white px-4 py-3 shadow-[0_6px_18px_rgba(15,35,63,0.04)]">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-[#FFF4E8] text-[#FF5A0A]">
         <Icon size={18} />
       </div>
 
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#D94B00]">
           {eyebrow}
         </p>
 
-        <h3 className="mt-0.5 text-xl font-black text-[#10233f]">
+        <h3 className="mt-0.5 text-xl font-black text-[#10233F]">
           {title}
         </h3>
 
@@ -1113,12 +1157,12 @@ function MetricCard({
 
   return (
     <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] p-4 shadow-[0_10px_26px_rgba(15,35,63,0.06)] ${style}`}
+      className={`relative min-w-0 overflow-hidden rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
     >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-80" />
 
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233f]">
+        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233F]">
           {label}
         </p>
 
@@ -1127,7 +1171,7 @@ function MetricCard({
         </span>
       </div>
 
-      <p className="mt-3 break-words text-3xl font-black leading-none tracking-[-0.025em] text-[#10233f]">
+      <p className="mt-3 break-words text-2xl font-black leading-none tracking-[-0.025em] text-[#10233F] sm:text-3xl">
         {value ?? 0}
       </p>
 
@@ -1149,12 +1193,12 @@ function BoardCard({
 
   return (
     <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] p-4 shadow-[0_10px_26px_rgba(15,35,63,0.055)] ${style}`}
+      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${style}`}
     >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-80" />
 
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233f]">
+        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233F]">
           {label}
         </p>
 
@@ -1163,7 +1207,7 @@ function BoardCard({
         </span>
       </div>
 
-      <p className="mt-3 break-words text-3xl font-black leading-none tracking-[-0.025em] text-[#10233f]">
+      <p className="mt-3 break-words text-2xl font-black leading-none tracking-[-0.025em] text-[#10233F] sm:text-3xl">
         {value ?? 0}
       </p>
 
@@ -1185,8 +1229,8 @@ function BoardList({
   const style = getToneStyle(tone);
 
   return (
-    <div className={`overflow-hidden rounded-[1.6rem] border-[3px] bg-[#fffdf8] shadow-[0_10px_28px_rgba(15,35,63,0.06)] ${getOuterBorder(tone)}`}>
-      <div className="flex items-start justify-between gap-3 border-b-2 border-orange-300 bg-[#123865] px-4 py-4 text-white">
+    <div className={`min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] bg-[#FFF8EF] shadow-[0_8px_24px_rgba(15,35,63,0.055)] ${getOuterBorder(tone)}`}>
+      <div className="flex min-w-0 items-start justify-between gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-3.5 text-white">
         <div>
           <h3 className="font-black text-white">{title}</h3>
           <p className="mt-1 text-xs font-semibold text-white/75">{subtitle}</p>
@@ -1207,11 +1251,11 @@ function BoardList({
             return (
               <div
                 key={`${title}-${name}-${index}`}
-                className={`rounded-[1.15rem] border-2 bg-white p-4 ${getOuterBorder(tone)}`}
+                className={`min-w-0 rounded-[1.1rem] border-2 bg-white p-3.5 ${getOuterBorder(tone)}`}
               >
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_95px]">
                   <div className="min-w-0">
-                    <p className="break-words font-black leading-5 text-[#10233f]">
+                    <p className="break-words font-black leading-5 text-[#10233F]">
                       {name}
                     </p>
 
@@ -1252,8 +1296,8 @@ function HealthBlock({
   icon: Icon = Workflow,
 }) {
   return (
-    <div className="overflow-hidden rounded-[1.55rem] border-[3px] border-[#234e78] bg-[#fffdf8] shadow-[0_10px_28px_rgba(15,35,63,0.055)]">
-      <div className="flex items-center gap-3 border-b-2 border-orange-300 bg-[#123865] px-4 py-4 text-white">
+    <div className="min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_8px_24px_rgba(15,35,63,0.055)]">
+      <div className="flex min-w-0 items-center gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-3.5 text-white">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-white">
           <Icon size={16} />
         </div>
@@ -1286,7 +1330,7 @@ function HealthRow({
   return (
     <div className={`rounded-xl border-2 p-3 ${getToneStyle(tone)}`}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-black text-[#10233f]">{label}</p>
+        <p className="text-xs font-black text-[#10233F]">{label}</p>
 
         <p className={`shrink-0 text-xs font-black ${textStyle}`}>
           {value ?? 0} • {percent}
@@ -1314,8 +1358,8 @@ function PortfolioList({
   const style = getToneStyle(tone);
 
   return (
-    <div className={`overflow-hidden rounded-[1.6rem] border-[3px] bg-[#fffdf8] shadow-[0_10px_28px_rgba(15,35,63,0.06)] ${getOuterBorder(tone)}`}>
-      <div className="flex items-center justify-between gap-3 border-b-2 border-orange-300 bg-[#123865] px-4 py-4 text-white">
+    <div className={`min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] bg-[#FFF8EF] shadow-[0_8px_24px_rgba(15,35,63,0.055)] ${getOuterBorder(tone)}`}>
+      <div className="flex items-center justify-between gap-3 border-b-2 border-[#FFB38A] bg-[#123865] px-4 py-4 text-white">
         <h3 className="font-black text-white">{title}</h3>
 
         <div className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${style}`}>
@@ -1333,11 +1377,11 @@ function PortfolioList({
             return (
               <div
                 key={`${name}-${index}`}
-                className={`rounded-[1.2rem] border-2 bg-white p-4 ${getOuterBorder(tone)}`}
+                className={`min-w-0 rounded-[1.1rem] border-2 bg-white p-3.5 ${getOuterBorder(tone)}`}
               >
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_100px]">
                   <div className="min-w-0">
-                    <p className="break-words font-black leading-5 text-[#10233f]">
+                    <p className="break-words font-black leading-5 text-[#10233F]">
                       {name}
                     </p>
 
@@ -1392,7 +1436,7 @@ function MiniFact({
   value,
 }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-slate-200 bg-[#F8FAFC] px-3 py-2">
+    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2.5">
       <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
         {label}
       </p>
@@ -1405,12 +1449,12 @@ function MiniFact({
 
 function EmptyPortfolioState() {
   return (
-    <div className="rounded-[1.6rem] border-[3px] border-dashed border-orange-300 bg-white p-8 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700">
+    <div className="min-w-0 rounded-[1.6rem] border-[3px] border-dashed border-[#FFB38A] bg-[#FFF8EF] p-8 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#FFB38A] bg-[#FFF4E8] text-[#D94B00]">
         <UsersRound size={26} />
       </div>
 
-      <h3 className="mt-4 text-xl font-black text-[#10233f]">
+      <h3 className="mt-4 text-xl font-black text-[#10233F]">
         No portfolio records yet
       </h3>
 
@@ -1423,14 +1467,14 @@ function EmptyPortfolioState() {
 
 function MethodologyNote() {
   return (
-    <div className="rounded-[1.5rem] border-[3px] border-orange-300 bg-orange-50 p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-300 bg-white text-orange-700">
+    <div className="min-w-0 rounded-[1.45rem] border-[3px] border-[#FFB38A] bg-[#FFF4E8] p-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFB38A] bg-white text-[#D94B00]">
           <CheckCircle2 size={17} />
         </div>
 
         <div>
-          <p className="text-sm font-black text-[#10233f]">
+          <p className="text-sm font-black text-[#10233F]">
             Portfolio methodology
           </p>
 
@@ -1454,7 +1498,7 @@ function getToneStyle(
   }
 
   if (tone === "orange") {
-    return "border-orange-400 bg-orange-50 text-orange-800";
+    return "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
   }
 
   if (tone === "green") {
@@ -1466,20 +1510,20 @@ function getToneStyle(
   }
 
   if (tone === "gold") {
-    return "border-orange-400 bg-orange-50 text-orange-800";
+    return "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
   }
 
-  return "border-[#234e78] bg-[#edf4fb] text-[#123865]";
+  return "border-[#123865] bg-[#edf4fb] text-[#123865]";
 }
 
 function getToneText(
   tone = ""
 ) {
   if (tone === "red") return "text-red-700";
-  if (tone === "orange") return "text-orange-700";
+  if (tone === "orange") return "text-[#D94B00]";
   if (tone === "green") return "text-emerald-700";
   if (tone === "blue") return "text-blue-700";
-  if (tone === "gold") return "text-orange-700";
+  if (tone === "gold") return "text-[#D94B00]";
   return "text-[#123865]";
 }
 
@@ -1487,10 +1531,10 @@ function getToneBar(
   tone = ""
 ) {
   if (tone === "red") return "bg-red-500";
-  if (tone === "orange") return "bg-orange-500";
+  if (tone === "orange") return "bg-[#FF5A0A]";
   if (tone === "green") return "bg-emerald-500";
   if (tone === "blue") return "bg-blue-500";
-  if (tone === "gold") return "bg-orange-500";
+  if (tone === "gold") return "bg-[#FF5A0A]";
   return "bg-[#123865]";
 }
 
@@ -1498,11 +1542,11 @@ function getOuterBorder(
   tone = ""
 ) {
   if (tone === "red") return "border-red-400";
-  if (tone === "orange") return "border-orange-400";
+  if (tone === "orange") return "border-[#FF5A0A]";
   if (tone === "green") return "border-emerald-400";
   if (tone === "blue") return "border-blue-400";
-  if (tone === "gold") return "border-orange-400";
-  return "border-[#234e78]";
+  if (tone === "gold") return "border-[#FF5A0A]";
+  return "border-[#123865]";
 }
 
 

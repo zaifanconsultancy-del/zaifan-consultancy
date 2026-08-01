@@ -83,7 +83,7 @@ function MetricCard({
   badge = "",
 }) {
   const tones = {
-    navy: "border-[#173F6B] bg-[#173F6B]",
+    navy: "border-[#123865] bg-[#123865]",
     blue: "border-[#60A5FA] bg-[#F2F7FF]",
     green: "border-[#34D399] bg-[#F0FFF8]",
     amber: "border-[#F59E0B] bg-[#FFF8E8]",
@@ -94,7 +94,7 @@ function MetricCard({
 
   return (
     <article
-      className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.05)] ${
+      className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)] transition hover:-translate-y-0.5 ${
         tones[tone] || tones.blue
       }`}
     >
@@ -109,7 +109,7 @@ function MetricCard({
           </p>
 
           <p
-            className={`mt-2 break-words text-2xl font-black ${
+            className={`mt-2 whitespace-normal break-normal text-2xl font-black [overflow-wrap:normal] [word-break:normal] ${
               dark ? "text-white" : "text-[#10233F]"
             }`}
           >
@@ -122,7 +122,7 @@ function MetricCard({
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
               dark
                 ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-[#173F6B]/15 bg-white text-[#173F6B]"
+                : "border-[#123865]/15 bg-white text-[#123865]"
             }`}
           >
             <Icon size={16} />
@@ -170,7 +170,7 @@ function CategoryBar({ item, max }) {
       <div className="h-2 overflow-hidden rounded-full bg-[#DDE7F0]">
         {width > 0 ? (
           <div
-            className="h-full rounded-full bg-[#173F6B] transition-[width] duration-500"
+            className="h-full rounded-full bg-[#123865] transition-[width] duration-500"
             style={{ width: `${width}%` }}
           />
         ) : null}
@@ -280,7 +280,7 @@ export default function PushNotificationPanel({
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.9rem] border-[3px] border-[#C9D7E6] bg-[#FFFDF8] shadow-[0_14px_38px_rgba(15,35,63,0.07)]">
       <div className="grid border-b-[3px] border-[#F97316] xl:grid-cols-[minmax(0,1.2fr)_minmax(16rem,0.8fr)]">
-        <div className="bg-[#173F6B] p-5 text-white sm:p-6">
+        <div className="bg-[#123865] p-5 text-white sm:p-6">
           <div className="inline-flex items-center gap-2 rounded-full border-2 border-orange-300/30 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-300">
             <BellRing size={12} />
             Push Notifications
@@ -297,7 +297,7 @@ export default function PushNotificationPanel({
           </p>
         </div>
 
-        <div className="bg-[#E96512] p-5 text-white sm:p-6">
+        <div className="bg-[#FF5A0A] p-5 text-white sm:p-6">
           <p className="text-[9px] font-black uppercase tracking-[0.12em]">
             Delivery Evidence
           </p>
@@ -390,7 +390,7 @@ export default function PushNotificationPanel({
                     setDraft(template);
                     setStatus(null);
                   }}
-                  className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EE] px-3 py-2 text-left text-xs font-black text-[#10233F] transition hover:border-[#F97316]"
+                  className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2 text-left text-xs font-black text-[#10233F] transition hover:border-[#F97316]"
                 >
                   {template}
                 </button>
@@ -405,7 +405,7 @@ export default function PushNotificationPanel({
               }}
               rows={4}
               placeholder="Write push notification..."
-              className="w-full resize-none rounded-[1.2rem] border-2 border-[#C9D7E6] bg-[#FFF8EE] px-4 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#F97316]"
+              className="w-full resize-none rounded-[1.2rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none placeholder:text-slate-400 focus:border-[#F97316]"
             />
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -417,7 +417,7 @@ export default function PushNotificationPanel({
                 type="button"
                 onClick={preparePush}
                 disabled={preparing}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#173F6B] bg-[#173F6B] px-5 text-sm font-black text-white transition hover:border-[#F97316] hover:bg-[#245886] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-5 text-sm font-black text-white transition hover:border-[#F97316] hover:bg-[#245886] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Send size={15} />
                 {preparing ? "Preparing..." : "Prepare Push"}
@@ -463,7 +463,7 @@ export default function PushNotificationPanel({
                 />
               ))
             ) : (
-              <div className="rounded-[1.2rem] border-2 border-dashed border-[#C9D7E6] bg-[#FFF8EE] p-6 text-center">
+              <div className="rounded-[1.2rem] border-2 border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-6 text-center">
                 <BellRing size={22} className="mx-auto text-orange-700" />
                 <p className="mt-3 font-black text-[#10233F]">
                   No notification history yet

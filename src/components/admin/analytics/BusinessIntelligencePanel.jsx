@@ -1,4 +1,4 @@
-// BusinessIntelligencePanel V3 EXTREME — Zaifan Analytics OS
+// BusinessIntelligencePanel V5 PARTNER OS EXTREME — Growth Intelligence Command
 // Full replacement for:
 // src/components/admin/analytics/BusinessIntelligencePanel.jsx
 //
@@ -307,230 +307,178 @@ export default function BusinessIntelligencePanel({
 
   if (compact) {
     return (
-      <section className="overflow-hidden rounded-[1.5rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
-        <div className="flex items-center justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-3 text-white">
-          <div>
-            <p className="text-[8px] font-black uppercase tracking-[0.13em] text-orange-300">
-              Analytics OS
-            </p>
-            <h2 className="mt-0.5 text-base font-black text-white">
-              Business Intelligence
-            </h2>
-          </div>
-
-          <Landmark size={18} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 p-4">
-          {funnel.map((item) => (
-            <CompactMetric key={item.key} item={item} />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="space-y-4 sm:space-y-5">
-      <header className="overflow-hidden rounded-[1.8rem] border-[3px] border-orange-400 bg-[#FFF8EE] shadow-[0_16px_42px_rgba(23,36,61,0.07)]">
-        <div className="grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          <div className="bg-[#123865] p-5 text-white sm:p-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <HeaderChip icon={Landmark} label="Business Intelligence" />
-              <HeaderChip icon={ShieldCheck} label="Read Only" />
+    <section className="min-w-0 space-y-5">
+      <header className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <HeaderChip icon={Landmark} label="Founder Growth OS" />
+              <HeaderChip icon={ShieldCheck} label="Business Intelligence" />
+              <HeaderChip icon={Database} label="Evidence First" />
             </div>
 
-            <h1 className="mt-4 text-2xl font-black tracking-[-0.025em] text-white sm:text-3xl">
-              Business Intelligence Center
+            <h1 className="mt-4 max-w-5xl break-words text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
+              Business Intelligence Command
             </h1>
 
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/90">
-              Inspect the real student funnel, conversion indicators and
-              optional geography, counselor and acquisition-source breakdowns
-              without inventing market demand or performance claims.
+            <p className="mt-3 max-w-5xl break-words text-sm font-semibold leading-6 text-slate-100">
+              Pipeline conversion, geography, counselor performance and
+              acquisition-source evidence in one founder-level operating workspace.
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkMetric label="Students" value={metrics.students ?? 0} />
-              <DarkMetric label="Applications" value={metrics.applications ?? 0} />
-              <DarkMetric label="Offers" value={metrics.offers ?? 0} />
-              <DarkMetric label="Visas" value={metrics.visas ?? 0} />
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+              <DarkMetric label="Students" value={metrics.students ?? funnel[0]?.value ?? 0} />
+              <DarkMetric label="Applications" value={metrics.applications ?? funnel[1]?.value ?? 0} />
+              <DarkMetric label="Offers" value={metrics.offers ?? funnel[2]?.value ?? 0} />
+              <DarkMetric label="Visas" value={metrics.visas ?? funnel[3]?.value ?? 0} />
             </div>
           </div>
 
-          <div className="border-t-[3px] border-orange-300 bg-orange-500 p-5 text-white xl:border-l-[3px] xl:border-t-0 sm:p-6">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                  BI data depth
-                </p>
-                <p className="mt-2 text-4xl font-black text-white">
-                  {connectedBreakdowns}/3
-                </p>
-                <p className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-white">
-                  optional breakdowns connected
-                </p>
-              </div>
-
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10">
-                <BarChart3 size={22} />
-              </span>
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
+            <div className="flex items-center gap-2">
+              <CircleGauge size={18} />
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                Business Operating Position
+              </p>
             </div>
 
-            <div className="mt-5 rounded-2xl border-2 border-white/25 bg-white/10 p-3">
-              <p className="text-xs font-black text-white">
-                Funnel works today
+            <p className="mt-3 text-5xl font-black text-white">
+              {formatPercent(visaRate)}
+            </p>
+
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
+              End-to-End Conversion
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <OrangeMetric label="Application" value={formatPercent(applicationRate)} />
+              <OrangeMetric label="Offer" value={formatPercent(offerRate)} />
+              <OrangeMetric label="Visa" value={formatPercent(visaRate)} />
+              <OrangeMetric label="Revenue" value={money(metrics.revenue)} />
+            </div>
+
+            <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
+                Command Rule
               </p>
-              <p className="mt-1 text-[10px] font-semibold leading-4 text-white/85">
-                Geography, counselor and source intelligence activate only when
-                their real breakdown arrays are supplied.
+              <p className="mt-1 text-xs font-black leading-5 text-white">
+                Fix the weakest funnel stage first, then assign ownership using
+                only the geography, counselor and source evidence supplied.
               </p>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="rounded-[1.45rem] border-[3px] border-[#234E78] bg-[#FFF8EE] p-3">
-        <div className="grid gap-3 xl:grid-cols-[auto_minmax(260px,1fr)]">
-          <div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:pb-0">
-            {[
-              ["funnel", "Funnel"],
-              ["geography", "Geography"],
-              ["counselors", "Counselors"],
-              ["sources", "Sources"],
-            ].map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setActiveView(key)}
-                className={`min-h-12 shrink-0 rounded-xl border-2 px-4 text-[10px] font-black uppercase tracking-[0.06em] transition ${
-                  activeView === key
-                    ? "border-[#123865] bg-[#123865] text-white"
-                    : "border-slate-300 bg-white text-[#10233F] hover:border-orange-400 hover:bg-orange-50"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Growth Operations Board
+            </p>
+            <h2 className="mt-1 text-xl font-black text-white">
+              Funnel health and connected business evidence
+            </h2>
+            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-slate-200">
+              Grouped founder intelligence replaces the loose signal-card row.
+            </p>
           </div>
 
-          <div className="relative">
-            <Search
-              size={17}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-            />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search geography, counselor or acquisition-source intelligence..."
-              aria-label="Search Business Intelligence"
-              className="min-h-12 w-full rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-11 pr-11 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-            />
-            {search ? (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                aria-label="Clear BI search"
-                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#123865]"
-              >
-                <X size={16} />
-              </button>
-            ) : null}
+          <span className="w-fit rounded-full border-2 border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase text-white">
+            {connectedBreakdowns}/3 breakdowns connected
+          </span>
+        </div>
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+          <SignalCard
+            label="Student Volume"
+            value={metrics.students ?? funnel[0]?.value ?? 0}
+            detail="Student records represented in this snapshot."
+            tone="navy"
+            icon={Users}
+          />
+          <SignalCard
+            label="Application Rate"
+            value={formatPercent(applicationRate)}
+            detail="Student-to-application conversion indicator."
+            tone="blue"
+            icon={CircleGauge}
+          />
+          <SignalCard
+            label="Offer Rate"
+            value={formatPercent(offerRate)}
+            detail="Application-to-offer conversion indicator."
+            tone="green"
+            icon={Target}
+          />
+          <SignalCard
+            label="Visa Rate"
+            value={formatPercent(visaRate)}
+            detail="Offer-to-visa conversion indicator."
+            tone="orange"
+            icon={ShieldCheck}
+          />
+        </div>
+      </section>
+
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)]">
+        <div className="flex min-w-0 flex-col gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">BI Command Workspace</p>
+            <h2 className="mt-1 text-xl font-black text-white">Business evidence portfolio</h2>
+            <p className="mt-1 max-w-3xl text-xs font-semibold text-slate-200">
+              One dominant workspace for funnel and supplied breakdown evidence.
+            </p>
+          </div>
+          <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(14rem,1fr)_10rem]">
+            <label className="relative block">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search BI evidence..." className="min-h-10 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] pl-9 pr-3 text-xs font-semibold" />
+            </label>
+            <select value={activeView} onChange={(event) => setActiveView(event.target.value)} className="min-h-10 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black">
+              <option value="funnel">Funnel</option>
+              <option value="geography">Geography</option>
+              <option value="counselors">Counselors</option>
+              <option value="sources">Sources</option>
+            </select>
           </div>
         </div>
+
+        <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
+        {activeView === "funnel" ? <FunnelWorkspace funnel={funnel} metrics={metrics} /> : null}
+        {activeView === "geography" ? <BreakdownWorkspace title="Geography evidence" icon={Globe2} rows={visibleGeography} emptyText="No geography evidence supplied." /> : null}
+        {activeView === "counselors" ? <BreakdownWorkspace title="Counselor evidence" icon={Users} rows={visibleCounselors} emptyText="No counselor evidence supplied." /> : null}
+        {activeView === "sources" ? <BreakdownWorkspace title="Source evidence" icon={Database} rows={visibleSources} emptyText="No source evidence supplied." /> : null}
+        </div>
+      </section>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <SignalCard label="Evidence Integrity" value="No synthetic rankings" detail="Breakdowns appear only when supplied." tone="green" icon={ShieldCheck} />
+        <SignalCard label="Revenue Evidence" value={money(metrics.revenue)} detail="Connected collected value in the snapshot." tone="blue" icon={WalletCards} />
+        <SignalCard label="Coverage" value={`${geography.length + counselors.length + sources.length} rows`} detail="Optional BI evidence currently connected." tone="orange" icon={Database} />
       </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {conversionSignals.map((item) => (
-          <SignalCard key={item.label} {...item} />
-        ))}
-      </div>
-
-      {activeView === "funnel" ? (
-        <FunnelWorkspace funnel={funnel} metrics={metrics} />
-      ) : null}
-
-      {activeView === "geography" ? (
-        <BreakdownWorkspace
-          eyebrow="Geography Intelligence"
-          title="Country Performance"
-          description="Country intelligence only appears when a real geography breakdown is supplied."
-          icon={Globe2}
-          items={visibleGeography}
-          emptyTitle="No geography breakdown connected"
-          emptyText="This workspace will not guess that the UK is high demand, Australia is growing or Canada is stable. Supply analytics.geography to activate country intelligence."
-          query={query}
-          onClear={() => setSearch("")}
-        />
-      ) : null}
-
-      {activeView === "counselors" ? (
-        <BreakdownWorkspace
-          eyebrow="Counselor Intelligence"
-          title="Counselor Performance"
-          description="Counselor-level operating metrics appear only when a real counselor breakdown is supplied."
-          icon={Users}
-          items={visibleCounselors}
-          emptyTitle="No counselor analytics connected"
-          emptyText="Supply analytics.counselors before this workspace labels or ranks counselor performance."
-          query={query}
-          onClear={() => setSearch("")}
-        />
-      ) : null}
-
-      {activeView === "sources" ? (
-        <BreakdownWorkspace
-          eyebrow="Acquisition Intelligence"
-          title="Lead & Referral Sources"
-          description="Source-level volume and outcome intelligence appears only when supplied."
-          icon={Activity}
-          items={visibleSources}
-          emptyTitle="No acquisition-source breakdown connected"
-          emptyText="Supply analytics.sources to compare real lead, agent, referral or campaign sources."
-          query={query}
-          onClear={() => setSearch("")}
-        />
-      ) : null}
-
-      <footer className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[1.35rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#123865]" />
-            <div>
-              <p className="font-black text-[#10233F]">
-                BI integrity
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                The old static UK, Australia and Canada demand labels are gone.
-                Funnel values remain deterministic; richer breakdowns stay
-                unavailable until real data exists.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[1.35rem] border-[3px] border-orange-400 bg-orange-50 p-4">
-          <div className="flex items-start gap-3">
-            <Database size={18} className="mt-0.5 shrink-0 text-orange-700" />
-            <div>
-              <p className="font-black text-[#10233F]">
-                Extensible data contract
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-                Geography, counselor and acquisition intelligence can be added
-                later without redesigning this component.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </section>
   );
 }
 
+
+function OrangeMetric({ label, value }) {
+  return (
+    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
+      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-lg font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+
 function FunnelWorkspace({ funnel, metrics }) {
   return (
-    <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
+    <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-[#FFF8EF]">
       <SectionHeader
         eyebrow="Pipeline Intelligence"
         title="Student Journey Funnel"
@@ -604,7 +552,7 @@ function FunnelCard({ item, index, previous }) {
       </p>
 
       {previous ? (
-        <div className="mt-3 rounded-lg border-2 border-slate-300 bg-white/75 p-2.5">
+        <div className="mt-3 rounded-lg border-2 border-[#C9D7E6] bg-white/75 p-2.5">
           <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
             From {previous.label}
           </p>
@@ -621,7 +569,7 @@ function ConversionRow({ label, numerator, denominator }) {
   const value = percentage(numerator, denominator);
 
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-4">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
       <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
         {label}
       </p>
@@ -647,7 +595,7 @@ function BreakdownWorkspace({
   onClear,
 }) {
   return (
-    <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#234E78] bg-[#FFFDF8]">
+    <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-[#FFF8EF]">
       <SectionHeader
         eyebrow={eyebrow}
         title={title}
@@ -678,7 +626,7 @@ function BreakdownCard({ item }) {
   const label = item.country || item.name || "Unnamed segment";
 
   return (
-    <article className="rounded-[1.25rem] border-[3px] border-[#234E78] bg-[#EEF4FA] p-4">
+    <article className="rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -697,8 +645,8 @@ function BreakdownCard({ item }) {
         <MiniStat label="Visas" value={item.visas} />
       </div>
 
-      <div className="mt-3 rounded-lg border-2 border-orange-300 bg-orange-50 p-3">
-        <p className="text-[8px] font-black uppercase tracking-[0.07em] text-orange-800">
+      <div className="mt-3 rounded-lg border-2 border-[#FF5A0A] bg-[#FFF4E8] p-3">
+        <p className="text-[8px] font-black uppercase tracking-[0.07em] text-[#B84F0E]">
           Revenue
         </p>
         <p className="mt-1 text-lg font-black text-[#10233F]">
@@ -734,7 +682,7 @@ function SignalCard({ label, value, detail, tone, icon: Icon }) {
 
 function SectionHeader({ eyebrow, title, description, icon: Icon }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b-[3px] border-orange-400 bg-[#123865] px-4 py-4 text-white">
+    <div className="flex items-start justify-between gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-4 text-white">
       <div>
         <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-300">
           {eyebrow}
@@ -776,7 +724,7 @@ function DarkMetric({ label, value }) {
 
 function CompactMetric({ item }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-white p-3">
+    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
       <p className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
         {item.label}
       </p>
@@ -789,7 +737,7 @@ function CompactMetric({ item }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-lg border-2 border-slate-200 bg-white p-2.5">
+    <div className="rounded-lg border-2 border-[#E1E8F0] bg-white p-2.5">
       <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
         {label}
       </p>
@@ -802,7 +750,7 @@ function MiniStat({ label, value }) {
 
 function EmptyState({ title, text, onClear }) {
   return (
-    <div className="rounded-[1.25rem] border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+    <div className="rounded-[1.25rem] border-2 border-dashed border-[#C9D7E6] bg-slate-50 p-6 text-center">
       <Info size={20} className="mx-auto text-orange-600" />
       <p className="mt-2 text-sm font-black text-[#10233F]">{title}</p>
       <p className="mx-auto mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600">
@@ -813,7 +761,7 @@ function EmptyState({ title, text, onClear }) {
         <button
           type="button"
           onClick={onClear}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border-2 border-orange-400 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-orange-800 transition hover:bg-orange-50"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border-2 border-[#FF5A0A] bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.07em] text-[#B84F0E] transition hover:bg-[#FFF4E8]"
         >
           Clear search
           <ArrowRight size={12} />
@@ -824,8 +772,9 @@ function EmptyState({ title, text, onClear }) {
 }
 
 function toneClass(tone) {
-  if (tone === "orange") return "border-orange-400 bg-orange-50";
+  if (tone === "orange") return "border-[#FF5A0A] bg-[#FFF4E8]";
   if (tone === "green") return "border-emerald-400 bg-emerald-50";
   if (tone === "blue") return "border-blue-400 bg-blue-50";
-  return "border-[#234E78] bg-[#EEF4FA]";
+  return "border-[#C9D7E6] bg-[#FFF8EF]";
+}
 }

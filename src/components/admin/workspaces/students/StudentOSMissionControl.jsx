@@ -1,4 +1,4 @@
-// StudentOSMissionControl V11 MAXIMUM — Forced KPI Semantic Borders
+// StudentOSMissionControl PARTNER OS EXTREME — Executive Student OS Command
 // Preserves the complete 1700+ line mission-control analytics architecture:
 // journey, revenue, portal, support, notification, automation, risk, system health,
 // execution logs and connected MissionControlNotificationCenter.
@@ -1187,34 +1187,34 @@ function StudentOSMissionControl({
     automationPressure;
 
   return (
-    <div className="space-y-6 rounded-[2rem] border-[3px] border-[#173A67]/22 bg-[#FFF7EC] p-3 text-[#10233f] shadow-[0_18px_55px_rgba(16,47,92,0.10)] sm:p-4">
+    <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4">
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: reduceMotion ? 0 : 0.35 }}
-        className={`${cardClass} relative overflow-hidden rounded-[1.9rem] border-[3px] border-[#F97316] p-5 text-white shadow-[0_22px_60px_rgba(15,35,63,0.18)] sm:p-6`}
-        style={{ backgroundColor: "#173F6B", color: "#FFFFFF" }}
+        className={`${cardClass} relative min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] p-5 text-white shadow-[0_22px_60px_rgba(18,56,101,0.18)] sm:p-6 lg:p-7`}
+        style={{ backgroundColor: "#123865", color: "#FFFFFF" }}
       >
 
-        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+        <div className="relative grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:items-center">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-300">
               Executive Operations Center
             </p>
 
-            <h2 className="mt-3 text-3xl font-black text-white">
+            <h2 className="mt-3 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
               Student OS Mission Control V6
             </h2>
 
-            <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-white/90">
+            <p className="mt-3 max-w-4xl break-words text-sm font-semibold leading-6 text-slate-100">
               Unified command layer across Student Journey, Applications, Offers,
               CAS, Visa, Payments, Portal, Support, Executive AI, Automation,
               Execution Logs, Risk, Tasks, Documents, University Planning, Revenue Intelligence, Portal Analytics, and Notification Alerts.
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border-2 border-[#F59E0B]/70 bg-[#10345B] p-5 text-center shadow-inner">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+            <div className="min-w-0 rounded-[1.35rem] border-[3px] border-white/25 bg-white/10 p-5 text-center shadow-inner">
               <p className="text-[10px] uppercase tracking-[0.25em] text-white">
                 Operating Score
               </p>
@@ -1228,7 +1228,7 @@ function StudentOSMissionControl({
               </p>
             </div>
 
-            <div className="rounded-2xl border-2 border-[#FF9AA7] bg-[#FFF1F3] p-5 text-center shadow-[0_6px_16px_rgba(190,24,93,0.06)]">
+            <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#FB7185] bg-[#FFF4F4] p-5 text-center shadow-[0_8px_22px_rgba(190,24,93,0.08)]">
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-700">
                 Executive Pressure
               </p>
@@ -1251,7 +1251,7 @@ function StudentOSMissionControl({
         title="Mission Control Data Contract"
         subtitle="Checks merged sources before executive totals are calculated so duplicate connector rows do not inflate operations."
       >
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <IntegrityMetric
             label="Duplicates Prevented"
             value={duplicateRecordsPrevented}
@@ -1285,7 +1285,7 @@ function StudentOSMissionControl({
         </div>
       </SectionShell>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => (
           <MissionMetricCard
             key={stat.title}
@@ -1302,32 +1302,36 @@ function StudentOSMissionControl({
         title="Journey Pipeline"
         subtitle="Lead → Application → Offer → CAS → Visa progression"
       >
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
           {pipelineStages.map((stage, index) => (
             <motion.div
               key={stage.title}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className={`relative min-w-0 overflow-hidden rounded-2xl border-[3px] ${stage.border || "border-[#94A3B8]"} ${stage.color} p-5 shadow-[0_7px_18px_rgba(15,35,63,0.07)]`}
+              transition={{ duration: 0.28, delay: index * 0.04 }}
+              className={`relative min-h-[180px] min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] ${stage.border || "border-[#94A3B8]"} ${stage.color} p-5 shadow-[0_8px_22px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(18,56,101,0.10)]`}
             >
-              {index < pipelineStages.length - 1 && (
-                <div className="absolute right-3 top-1/2 hidden -translate-y-1/2 text-2xl text-slate-300 xl:block">
-                  →
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white text-2xl shadow-[0_4px_12px_rgba(18,56,101,0.08)]">
+                  {stage.icon}
                 </div>
-              )}
 
-              <div className="text-3xl">{stage.icon}</div>
+                {index < pipelineStages.length - 1 && (
+                  <span className="hidden text-2xl font-black text-[#B8C6D6] 2xl:block">
+                    →
+                  </span>
+                )}
+              </div>
 
-              <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-[#617187]">
+              <p className="mt-5 text-[9px] font-black uppercase tracking-[0.18em] text-[#617187]">
                 {stage.title}
               </p>
 
-              <p className={`mt-2 text-4xl font-black ${stage.text}`}>
+              <p className={`mt-2 text-4xl font-black leading-none ${stage.text}`}>
                 {stage.value}
               </p>
 
-              <p className="mt-2 text-xs font-semibold text-[#5b6e84]">
+              <p className="mt-4 border-t-2 border-black/10 pt-3 text-xs font-bold leading-5 text-[#5B6E84]">
                 {stage.subtitle}
               </p>
             </motion.div>
@@ -1335,7 +1339,7 @@ function StudentOSMissionControl({
         </div>
       </SectionShell>
 
-      <div className="grid gap-6 2xl:grid-cols-2">
+      <div className="grid min-w-0 gap-6 2xl:grid-cols-2">
         <div className="min-w-0">
           <SectionShell
             cardClass={cardClass}
@@ -1373,7 +1377,7 @@ function StudentOSMissionControl({
         title="Automation Health Center"
         subtitle="Execution logs, success rate, failures, approvals, duplicate protection, and queue pressure"
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {automationMetrics.map((item, index) => (
             <CompactMetric key={item.title} item={item} index={index} />
           ))}
@@ -1407,14 +1411,14 @@ function StudentOSMissionControl({
         title="Revenue Center"
         subtitle="Payment Center intelligence for invoices, payments, receipts, and outstanding balances"
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {revenueMetrics.map((item, index) => (
             <CompactMetric key={item.title} item={item} index={index} />
           ))}
         </div>
       </SectionShell>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)]">
+      <div className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)]">
         <div className="min-w-0">
           <SectionShell
             cardClass={cardClass}
@@ -1422,7 +1426,7 @@ function StudentOSMissionControl({
             title="Revenue Collection & Exposure Analytics"
             subtitle="Month-to-date revenue, collection rate, receipt approval, and verified outstanding exposure"
           >
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {revenueIntelligenceMetrics.map((item, index) => (
                 <CompactMetric key={item.title} item={item} index={index} />
               ))}
@@ -1453,7 +1457,7 @@ function StudentOSMissionControl({
         title="Executive Alert Command"
         subtitle="Payment, visa, portal, support, automation, and executive risk alerts in one command layer"
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {notificationAlerts.map((item, index) => (
             <AlertMetric key={item.title} item={item} index={index} />
           ))}
@@ -1490,7 +1494,7 @@ function StudentOSMissionControl({
         />
       </SectionShell>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
         <SectionShell
           cardClass={cardClass}
           eyebrow="Student Portal"
@@ -1518,7 +1522,7 @@ function StudentOSMissionControl({
         </SectionShell>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
         <SectionShell
           cardClass={cardClass}
           eyebrow="Portal Analytics"
@@ -1552,7 +1556,7 @@ function StudentOSMissionControl({
         title="Mission Control Operating Pressure"
         subtitle="Read-only leadership pressure indicators. These cards do not execute actions by themselves."
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-5">
           <OperatingActionCard title="Alert Pressure" value={notificationAlerts.reduce((sum, item) => sum + Number(item.value || 0), 0)} note="Cross-system alert pressure" icon="🔔" />
           <OperatingActionCard title="Revenue Exposure" value={formatMoney(outstandingValue)} note={`${unpaidInvoices} unpaid invoices`} icon="💷" />
           <OperatingActionCard title="Portal Pressure" value={portalRiskScore} note={`${stalePortalAccounts} stale portal accounts`} icon="🔐" />
@@ -1567,34 +1571,40 @@ function StudentOSMissionControl({
         title="Student OS Operating Map"
         subtitle="CRM-compatible health layer showing connected operating systems"
       >
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-5">
           {systemHealth.map((system, index) => (
             <motion.div
               key={system.title}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: index * 0.03 }}
-              className={`flex min-w-0 items-center justify-between gap-3 rounded-2xl border-2 p-4 shadow-[0_6px_16px_rgba(15,35,63,0.10)] ${
-                [1, 3, 5, 7, 9].includes(index)
-                  ? "border-[#C84F08] bg-[#E96512]"
-                  : "border-[#3B6288] bg-[#173F6B]"
+              className={`flex min-w-0 items-center justify-between gap-3 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(18,56,101,0.09)] ${
+                index % 5 === 0
+                  ? "border-blue-400 bg-[#F2F7FF]"
+                  : index % 5 === 1
+                  ? "border-emerald-400 bg-[#F0FFF8]"
+                  : index % 5 === 2
+                  ? "border-violet-400 bg-[#F8F5FF]"
+                  : index % 5 === 3
+                  ? "border-orange-400 bg-[#FFF7ED]"
+                  : "border-rose-400 bg-[#FFF4F4]"
               }`}
             >
               <div className="min-w-0">
-                <p className="break-words text-sm font-black text-white">
+                <p className="break-words text-sm font-black text-[#10233F]">
                   {system.title}
                 </p>
 
-                <p className="mt-1 break-words text-xs font-semibold leading-5 text-white">
+                <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
                   {system.detail}
                 </p>
               </div>
 
               <span
-                className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${
+                className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${
                   system.active
-                    ? "border border-emerald-200 bg-white text-emerald-700"
-                    : "border border-orange-200 bg-white text-orange-700"
+                    ? "border-emerald-300 bg-white text-emerald-700"
+                    : "border-orange-300 bg-white text-orange-700"
                 }`}
               >
                 {system.active ? "Live" : "Waiting"}
@@ -1612,7 +1622,7 @@ function IntegrityMetric({ label, value, note, tone = "navy" }) {
   const styles = {
     good: "border-emerald-400 bg-emerald-50",
     warning: "border-orange-400 bg-orange-50",
-    orange: "border-[#C84F08] bg-[#E96512]",
+    orange: "border-[#FF5A0A] bg-[#FF5A0A]",
     navy: "border-[#123865] bg-[#123865]",
   };
 
@@ -1620,7 +1630,7 @@ function IntegrityMetric({ label, value, note, tone = "navy" }) {
 
   return (
     <div
-      className={`rounded-2xl border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.06)] ${styles[tone] || styles.navy}`}
+      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${styles[tone] || styles.navy}`}
       style={{ color: dark ? "#FFFFFF" : "#10233F" }}
     >
       <p
@@ -1646,48 +1656,62 @@ function IntegrityMetric({ label, value, note, tone = "navy" }) {
 }
 
 function OperatingActionCard({ title, value, note, icon }) {
-  const orangeTitles = new Set([
-    "Revenue Exposure",
-    "Support Pressure",
-  ]);
+  const styles = {
+    "Alert Pressure": {
+      card: "border-orange-400 bg-[#FFF7ED]",
+      value: "text-orange-700",
+      icon: "border-orange-200 bg-white text-orange-700",
+    },
+    "Revenue Exposure": {
+      card: "border-emerald-400 bg-[#F0FFF8]",
+      value: "text-emerald-700",
+      icon: "border-emerald-200 bg-white text-emerald-700",
+    },
+    "Portal Pressure": {
+      card: "border-blue-400 bg-[#F2F7FF]",
+      value: "text-blue-700",
+      icon: "border-blue-200 bg-white text-blue-700",
+    },
+    "Support Pressure": {
+      card: "border-amber-400 bg-[#FFF8EE]",
+      value: "text-amber-800",
+      icon: "border-amber-200 bg-white text-amber-700",
+    },
+    "Automation Pressure": {
+      card: "border-violet-400 bg-[#F8F5FF]",
+      value: "text-violet-700",
+      icon: "border-violet-200 bg-white text-violet-700",
+    },
+  };
 
-  const orange = orangeTitles.has(title);
+  const visual = styles[title] || styles["Portal Pressure"];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24 }}
-      className={`min-w-0 rounded-2xl border-2 p-5 shadow-[0_7px_18px_rgba(15,35,63,0.12)] ${
-        orange
-          ? "border-[#C84F08] bg-[#E96512]"
-          : "border-[#F59E0B] bg-[#173F6B]"
-      }`}
-      style={{ color: "#FFFFFF" }}
+      className={`group min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(18,56,101,0.09)] ${visual.card}`}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p
-            className={`break-words text-[10px] font-black uppercase leading-4 tracking-[0.18em] ${
-              orange ? "text-white" : "text-orange-300"
-            }`}
-          >
+          <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.14em] text-slate-500">
             {title}
           </p>
 
-          <p className="mt-2 text-2xl font-black text-white">
+          <p className={`mt-2 break-words text-3xl font-black leading-none ${visual.value}`}>
             {value}
-          </p>
-
-          <p className="mt-2 break-words text-xs font-semibold leading-5 text-white">
-            {note}
           </p>
         </div>
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/25 bg-white/10 text-xl">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 text-lg shadow-[0_4px_10px_rgba(18,56,101,0.06)] transition group-hover:-translate-y-0.5 ${visual.icon}`}>
           {icon}
         </div>
       </div>
+
+      <p className="mt-3 break-words text-xs font-semibold leading-5 text-slate-600">
+        {note}
+      </p>
     </motion.div>
   );
 }
@@ -1695,11 +1719,11 @@ function OperatingActionCard({ title, value, note, icon }) {
 function SectionShell({ cardClass, eyebrow, title, subtitle, children }) {
   return (
     <section
-      className={`${cardClass} min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#C9D7E6] bg-[#FFFCF7] p-3 shadow-[0_12px_30px_rgba(15,35,63,0.08)] sm:p-4`}
+      className={`${cardClass} min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#C9D7E6] bg-white p-3 shadow-[0_12px_32px_rgba(18,56,101,0.07)] sm:p-4`}
     >
       <div
-        className="relative overflow-hidden rounded-[1.45rem] border-[3px] border-[#F97316] px-5 py-4 shadow-[0_8px_20px_rgba(18,56,101,0.14)] sm:px-6"
-        style={{ backgroundColor: "#173F6B", color: "#FFFFFF" }}
+        className="relative overflow-hidden rounded-[1.35rem] border-[3px] border-[#FF5A0A] px-5 py-4 shadow-[0_8px_20px_rgba(18,56,101,0.14)] sm:px-6"
+        style={{ backgroundColor: "#123865", color: "#FFFFFF" }}
       >
 
         <div className="relative">
@@ -1722,7 +1746,7 @@ function SectionShell({ cardClass, eyebrow, title, subtitle, children }) {
         </div>
       </div>
 
-      <div className="px-1 pb-1 pt-4 sm:px-2 sm:pb-2 sm:pt-5">
+      <div className="min-w-0 px-1 pb-1 pt-4 sm:px-2 sm:pb-2 sm:pt-5">
         {children}
       </div>
     </section>
@@ -1764,7 +1788,7 @@ function MissionMetricCard({ stat, index, cardClass }) {
         duration: 0.3,
         delay: index * 0.05,
       }}
-      className={`${cardClass} min-w-0 rounded-[1.5rem] border-[3px] p-5 shadow-[0_8px_20px_rgba(15,35,63,0.07)]`}
+      className={`${cardClass} min-w-0 rounded-[1.4rem] border-[3px] p-5 shadow-[0_8px_22px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md`}
       style={{
         borderColor: visual.borderColor,
         backgroundColor: visual.backgroundColor,
@@ -1813,7 +1837,7 @@ function CompactMetric({ item, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className={`min-w-0 rounded-2xl border-[3px] p-4 shadow-[0_7px_18px_rgba(15,35,63,0.07)] ${tone}`}
+      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${tone}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -1861,11 +1885,11 @@ function ExecutionLogRow({ log, index }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, delay: index * 0.03 }}
-      className="rounded-2xl border-2 border-[#c8d5e3] bg-[#fffaf4] p-4 shadow-[0_4px_12px_rgba(15,35,63,0.04)]"
+      className="min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A] hover:bg-white"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="text-sm font-black text-[#10233f]">
+          <p className="text-sm font-black text-[#10233F]">
             {log.action_type ||
               log.template_key ||
               log.recommendation_type ||
@@ -1897,7 +1921,7 @@ function ExecutionLogRow({ log, index }) {
           )}
 
           {log.priority && (
-            <span className="rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
+            <span className="rounded-full border border-[#FF5A0A]/20 bg-[#FF5A0A]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
               {log.priority}
             </span>
           )}
@@ -1920,12 +1944,12 @@ function RevenueTrendPanel({
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border-2 border-[#D3DEE9] bg-[#FFFDF9] p-4">
+    <div className="min-w-0 space-y-5 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
       <TrendGroup
         title="Invoice Trend"
         items={invoiceTrend}
         maxValue={maxInvoiceTrend}
-        tone="bg-[#F97316]"
+        tone="bg-[#FF5A0A]"
       />
 
       <TrendGroup
@@ -1938,7 +1962,7 @@ function RevenueTrendPanel({
   );
 }
 
-function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#F97316]" }) {
+function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#FF5A0A]" }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -1981,7 +2005,7 @@ function AlertMetric({ item, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className={`relative overflow-hidden rounded-2xl border-[3px] p-5 shadow-[0_7px_18px_rgba(15,35,63,0.07)] ${
+      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-5 shadow-[0_7px_18px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${
         active
           ? "border-[#F59E0B] bg-[#FFF7ED]"
           : "border-emerald-400 bg-[#F0FFF8]"
@@ -1989,7 +2013,7 @@ function AlertMetric({ item, index }) {
     >
       <div
         className={`absolute inset-x-0 top-0 h-1 ${
-          active ? "bg-[#F97316]" : "bg-emerald-500"
+          active ? "bg-[#FF5A0A]" : "bg-emerald-500"
         }`}
       />
 
@@ -2022,7 +2046,7 @@ function AlertMetric({ item, index }) {
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border-2 border-dashed border-[#B9C9D9] bg-[#F8FAFC] p-6 text-sm font-semibold text-[#5a6c82]">
+    <div className="rounded-[1.3rem] border-[3px] border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-6 text-sm font-semibold text-[#5a6c82]">
       {text}
     </div>
   );
