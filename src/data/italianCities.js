@@ -338,7 +338,7 @@ export const italianCities = [
       ["Application", "Track university deadlines and program-specific admission steps."],
       ["Visa", "Build a clean visa file after admission and funding planning."],
     ],
-  },,
+  },
   {
     slug: "florence",
     name: "Florence",
