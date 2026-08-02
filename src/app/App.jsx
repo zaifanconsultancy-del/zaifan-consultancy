@@ -8,6 +8,7 @@ import loadingLogo from "../assets/images/brand/loading-logo.webp";
 // Public shell is lazy as well, so portal-only visits do not eagerly pull
 // Navbar / floating CTA code into the initial route workload.
 const Navbar = lazy(() => import("../components/public/layout/Navbar"));
+const Footer = lazy(() => import("../components/public/layout/Footer"));
 const FloatingConsultationCTA = lazy(() =>
   import("../components/public/layout/FloatingConsultationCTA")
 );
@@ -31,6 +32,7 @@ const UniversityDetailPage = lazy(() =>
 const ScholarshipExplorer = lazy(() =>
   import("../components/public/scholarships/ScholarshipExplorer")
 );
+const ContactPage = lazy(() => import("../pages/public/ContactPage.jsx"));
 const AppointmentPage = lazy(() =>
   import("../pages/public/AppointmentPage.jsx")
 );
@@ -117,31 +119,6 @@ function PageTransition({ children }) {
   );
 }
 
-function ContactRoute() {
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const contactSection = document.getElementById("contact");
-
-      if (!contactSection) return;
-
-      const navbarOffset = 88;
-      const targetTop =
-        contactSection.getBoundingClientRect().top +
-        window.scrollY -
-        navbarOffset;
-
-      window.scrollTo({
-        top: targetTop,
-        behavior: "smooth",
-      });
-    }, 120);
-
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  return <Home />;
-}
-
 function PublicShell() {
   return (
     <Suspense fallback={null}>
@@ -149,6 +126,13 @@ function PublicShell() {
       <FloatingConsultationCTA />
     </Suspense>
   );
+}
+
+function shouldRenderGlobalFooter(pathname) {
+  if (isPortalPath(pathname)) return false;
+
+  // Home and Contact already render their own Footer internally.
+  return pathname !== "/" && pathname !== "/contact";
 }
 
 function App() {
@@ -267,7 +251,7 @@ function App() {
                   path="/contact"
                   element={
                     <PageTransition>
-                      <ContactRoute />
+                      <ContactPage />
                     </PageTransition>
                   }
                 />
@@ -276,7 +260,7 @@ function App() {
                   path="/consultation"
                   element={
                     <PageTransition>
-                      <ContactRoute />
+                      <AppointmentPage />
                     </PageTransition>
                   }
                 />
@@ -316,6 +300,12 @@ function App() {
               </Routes>
             </AnimatePresence>
           </Suspense>
+
+          {shouldRenderGlobalFooter(location.pathname) && (
+            <Suspense fallback={null}>
+              <Footer />
+            </Suspense>
+          )}
         </>
       )}
     </main>

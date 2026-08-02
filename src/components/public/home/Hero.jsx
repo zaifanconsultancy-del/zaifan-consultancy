@@ -103,7 +103,16 @@ const ITALY_STATS = [
   ["Planning", "Admission → Visa"],
 ];
 
-const ITALY_CITIES = ["Milan", "Rome", "Bologna", "Padua", "Turin"];
+const ITALY_CITIES = [
+  "Milan",
+  "Rome",
+  "Bologna",
+  "Padua",
+  "Florence",
+  "Turin",
+  "Pisa",
+  "Venice",
+];
 
 const INTERACTIVE_TRANSITION =
   "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
@@ -111,7 +120,7 @@ const INTERACTIVE_TRANSITION =
 function SoftCard({ children, className = "" }) {
   return (
     <div
-      className={`rounded-[22px] bg-white/72 shadow-[0_16px_42px_rgba(9,31,80,0.08)] ring-1 ring-orange-100/80 backdrop-blur ${className}`}
+      className={`rounded-[22px] border border-orange-100/80 bg-white/76 shadow-[0_16px_42px_rgba(9,31,80,0.08)] backdrop-blur ${className}`}
     >
       {children}
     </div>
@@ -265,14 +274,14 @@ export default function Hero() {
         ✦
       </div>
 
-      <div className="relative mx-auto max-w-[1780px] px-5 pb-4 pt-24 sm:px-7 lg:pb-3 lg:pt-20 xl:px-12">
-        <main className="mt-2 grid items-center gap-5 lg:mt-0 lg:grid-cols-[29%_34%_37%] lg:gap-3 xl:gap-5">
+      <div className="relative mx-auto max-w-[1780px] px-4 pb-5 pt-24 sm:px-7 lg:pb-4 lg:pt-20 xl:px-12">
+        <main className="mt-1 grid items-center gap-4 sm:gap-5 lg:mt-0 lg:grid-cols-[29%_34%_37%] lg:gap-3 xl:gap-5">
           <div className="order-1 lg:col-auto">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-100/70 px-4 py-2 text-xs font-black text-[#ff4b12] shadow-sm">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-orange-200/70 bg-white/75 px-4 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-[#ff4b12] shadow-[0_10px_28px_rgba(255,75,18,0.10)] backdrop-blur sm:text-xs sm:normal-case sm:tracking-normal">
               <Sparkles size={17} fill="currentColor" /> Your future, our guidance
             </div>
 
-            <h1 className="max-w-[430px] text-[40px] font-black leading-[0.92] tracking-[-0.045em] text-[#071f50] sm:text-[46px] lg:text-[44px] xl:text-[50px]">
+            <h1 className="max-w-[430px] text-[39px] font-black leading-[0.92] tracking-[-0.047em] text-[#071f50] sm:text-[46px] lg:text-[44px] xl:text-[50px]">
               Explore your <br /> study abroad <br />
               <span className="relative inline-block text-[#ff4b12]">
                 future
@@ -283,16 +292,16 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="mt-4 max-w-[390px] text-[13px] font-semibold leading-6 text-[#14305f]">
+            <p className="mt-4 max-w-[400px] text-[13px] font-semibold leading-5.5 text-[#274465] sm:leading-6">
               Dream big, we&apos;ll help you get there. Find the right course,
               win scholarships and start your journey with confidence.
             </p>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3 xl:flex-nowrap">
+            <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:gap-3 xl:flex-nowrap">
               <button
                 type="button"
                 onClick={() => goToRoute("/universities")}
-                className={`hero-motion-safe flex items-center gap-3 rounded-full bg-[#ff4b12] px-5 py-3 text-xs font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] hover:-translate-y-1 hover:bg-[#ff642f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
+                className={`hero-motion-safe flex items-center gap-2.5 rounded-full bg-[#ff4b12] px-5 py-3 text-xs font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] hover:-translate-y-1 hover:bg-[#ff642f] hover:shadow-[0_24px_48px_rgba(255,75,18,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
               >
                 Find My Course <Search size={18} />
               </button>
@@ -300,7 +309,7 @@ export default function Hero() {
               <button
                 type="button"
                 onClick={() => scrollToSection("countries")}
-                className={`hero-motion-safe flex items-center gap-3 rounded-full bg-white px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] hover:-translate-y-1 hover:text-[#ff4b12] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+                className={`hero-motion-safe flex items-center gap-2.5 rounded-full border border-orange-100/80 bg-white/90 px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:text-[#ff4b12] hover:shadow-[0_20px_44px_rgba(255,91,24,0.13)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
               >
                 Explore Countries <Globe2 size={18} />
               </button>
@@ -308,7 +317,7 @@ export default function Hero() {
               <button
                 type="button"
                 onClick={() => goToRoute("/services")}
-                className={`hero-motion-safe flex items-center gap-3 rounded-full bg-white px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] hover:-translate-y-1 hover:text-[#ff4b12] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+                className={`hero-motion-safe flex items-center gap-2.5 rounded-full border border-orange-100/80 bg-white/90 px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:text-[#ff4b12] hover:shadow-[0_20px_44px_rgba(255,91,24,0.13)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
               >
                 <CirclePlay size={18} /> How It Works
               </button>
@@ -321,7 +330,7 @@ export default function Hero() {
                 return (
                   <div
                     key={stat.label}
-                    className={`group hero-motion-safe rounded-[17px] bg-white/72 px-3 py-2.5 shadow-[0_13px_28px_rgba(9,31,80,0.07)] ring-1 ring-orange-100/70 backdrop-blur hover:-translate-y-1 hover:bg-white ${INTERACTIVE_TRANSITION}`}
+                    className={`group hero-motion-safe rounded-[17px] border border-orange-100/75 bg-white/76 px-3 py-2.5 shadow-[0_13px_28px_rgba(9,31,80,0.07)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:bg-white hover:shadow-[0_18px_36px_rgba(255,91,24,0.12)] ${INTERACTIVE_TRANSITION}`}
                   >
                     <Icon
                       size={17}
@@ -377,7 +386,7 @@ export default function Hero() {
             </div>
 
             <div
-              className={`group hero-motion-safe relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#fff1dd] via-[#fff9f1] to-[#ffe3c4] p-5 shadow-[0_25px_70px_rgba(255,91,24,0.14)] ring-1 ring-white/90 hover:-translate-y-2 hover:shadow-[0_35px_90px_rgba(255,91,24,0.22)] ${INTERACTIVE_TRANSITION}`}
+              className={`group hero-motion-safe relative overflow-hidden rounded-[32px] border border-orange-100/80 bg-gradient-to-br from-[#fff0da] via-[#fffaf3] to-[#ffe1bf] p-5 shadow-[0_25px_70px_rgba(255,91,24,0.14)] ring-1 ring-white/90 hover:-translate-y-2 hover:border-orange-200 hover:shadow-[0_35px_90px_rgba(255,91,24,0.22)] ${INTERACTIVE_TRANSITION}`}
             >
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(255,255,255,0.95),transparent_30%),radial-gradient(circle_at_88%_12%,rgba(255,107,26,0.22),transparent_25%),linear-gradient(135deg,rgba(255,255,255,0.60),rgba(255,255,255,0.14))]" />
               <div className={`absolute right-[-60px] top-[-60px] h-[180px] w-[180px] rounded-full bg-orange-300/30 opacity-0 blur-3xl group-hover:opacity-100 ${INTERACTIVE_TRANSITION}`} />
@@ -437,11 +446,11 @@ export default function Hero() {
                   </button>
                 </div>
 
-                <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:gap-2.5">
                   {ITALY_FEATURES.map(([icon, title, text]) => (
                     <div
                       key={title}
-                      className={`group/item hero-motion-safe flex items-start gap-2.5 rounded-2xl bg-white/64 px-3 py-2.5 shadow-sm ring-1 ring-white/70 hover:-translate-y-1 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
+                      className={`group/item hero-motion-safe flex items-start gap-2.5 rounded-2xl border border-white/80 bg-white/66 px-3 py-2.5 shadow-sm hover:-translate-y-1 hover:border-orange-100 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
                     >
                       <div
                         className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-orange-50 text-base shadow-inner group-hover/item:scale-110 ${INTERACTIVE_TRANSITION}`}
@@ -464,7 +473,7 @@ export default function Hero() {
                   {ITALY_STATS.map(([label, value]) => (
                     <div
                       key={label}
-                      className={`hero-motion-safe rounded-2xl bg-white/75 p-2.5 shadow-sm ring-1 ring-white/70 hover:-translate-y-1 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
+                      className={`hero-motion-safe rounded-2xl border border-white/80 bg-white/78 p-2.5 shadow-sm hover:-translate-y-1 hover:border-orange-100 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
                     >
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
                         {label}
@@ -480,7 +489,7 @@ export default function Hero() {
                   {ITALY_CITIES.map((city) => (
                     <span
                       key={city}
-                      className={`hero-motion-safe rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-black text-[#071f50] shadow-sm ring-1 ring-white/70 hover:-translate-y-1 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
+                      className={`hero-motion-safe rounded-full border border-white/80 bg-white/82 px-3 py-1.5 text-[11px] font-black text-[#071f50] shadow-sm hover:-translate-y-1 hover:border-orange-100 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
                     >
                       📍 {city}
                     </span>
@@ -507,7 +516,7 @@ export default function Hero() {
               <span className="text-[#ffb000]">✦</span>
             </h2>
 
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-0">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-0">
               {supportCards.map((card, index) => (
                 <div
                   key={card.title}
@@ -548,21 +557,6 @@ export default function Hero() {
             </div>
 
             <div className="relative grid grid-cols-5 items-start gap-1 sm:gap-4">
-              <svg
-                className="pointer-events-none absolute left-[12%] top-[25px] h-5 w-[76%] sm:top-[36px] sm:h-6"
-                viewBox="0 0 760 40"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M0 20 C45 0, 75 40, 120 20 S195 0, 240 20 S315 40, 360 20 S435 0, 480 20 S555 40, 600 20 S675 0, 760 20"
-                  fill="none"
-                  stroke="#ff6b2b"
-                  strokeWidth="2"
-                  className="map-line"
-                />
-              </svg>
-
               {adventureSteps.map((step, index) => (
                 <div key={step.title} className="relative z-10 text-center">
                   <div className="relative mx-auto h-[52px] w-[52px] sm:h-[82px] sm:w-[82px]">
@@ -605,7 +599,7 @@ export default function Hero() {
           {explorers.map((card) => (
             <article
               key={card.title}
-              className={`group hero-motion-safe relative min-h-[78px] overflow-hidden rounded-[20px] bg-white/72 p-3 pl-24 shadow-[0_18px_45px_rgba(9,31,80,0.07)] ring-1 ring-orange-100/80 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(255,91,24,0.14)] ${INTERACTIVE_TRANSITION}`}
+              className={`group hero-motion-safe relative min-h-[78px] overflow-hidden rounded-[20px] border border-orange-100/80 bg-white/76 p-3 pl-24 shadow-[0_18px_45px_rgba(9,31,80,0.07)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_24px_55px_rgba(255,91,24,0.14)] ${INTERACTIVE_TRANSITION}`}
             >
               <div
                 className={`absolute left-4 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-gradient-to-br from-orange-50 to-blue-50 text-4xl shadow-inner group-hover:scale-105 ${INTERACTIVE_TRANSITION}`}
@@ -630,10 +624,10 @@ export default function Hero() {
           ))}
         </section>
 
-        <section className="relative mt-4 h-[96px] overflow-visible rounded-[22px] bg-gradient-to-r from-[#071f50] via-[#0b3478] to-[#071f50] px-8 shadow-[0_22px_52px_rgba(7,31,80,0.28)]">
+        <section className="relative mt-4 h-[108px] overflow-visible rounded-[22px] border border-white/10 bg-gradient-to-r from-[#071f50] via-[#0b3478] to-[#071f50] px-5 shadow-[0_22px_52px_rgba(7,31,80,0.28)] sm:h-[96px] sm:px-8">
           <div className="absolute inset-0 overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_20%_50%,rgba(255,122,59,0.22),transparent_22%),radial-gradient(circle_at_82%_40%,rgba(255,255,255,0.16),transparent_20%)]" />
 
-          <div className="relative z-10 flex h-[96px] flex-col items-start justify-center gap-3 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:py-0">
+          <div className="relative z-10 flex h-[108px] flex-col items-start justify-center gap-2.5 py-4 sm:h-[96px] md:flex-row md:items-center md:justify-between md:gap-6 md:py-0">
             <div className="relative hidden h-[96px] w-[390px] shrink-0 overflow-visible lg:block">
               <div className="absolute bottom-0 left-[78px] z-20 h-[152px] w-[158px] overflow-hidden">
                 <img
@@ -657,7 +651,7 @@ export default function Hero() {
                 Let’s turn your dreams into reality!
               </h2>
               <p className="mt-1 text-xs font-semibold text-white/95">
-                Book a free 1-on-1 consultation with our study abroad experts.
+                Book a focused 1-on-1 planning session for your Italy study journey.
               </p>
             </div>
 

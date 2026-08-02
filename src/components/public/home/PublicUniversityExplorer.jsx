@@ -75,25 +75,25 @@ const journeySteps = [
   {
     step: "01",
     title: "Featured First",
-    copy: "Start with one strong Italy university so the homepage stays clean.",
+    copy: "Begin with a featured Italian university and understand the essentials clearly.",
     icon: Trophy,
   },
   {
     step: "02",
     title: "Explore More",
-    copy: "Open the full university database only when the student wants depth.",
+    copy: "Move into the full university directory when you are ready to compare more options.",
     icon: Search,
   },
   {
     step: "03",
     title: "Open Details",
-    copy: "Every university can open its own full profile page in a new tab.",
+    copy: "Open a dedicated profile for university fit, costs, programs and student context.",
     icon: BookOpenCheck,
   },
   {
     step: "04",
     title: "Book Guidance",
-    copy: "Students who are ready can book a shortlist consultation with Zaifan.",
+    copy: "Book shortlist guidance when you want help turning research into a clear next step.",
     icon: UsersRound,
   },
 ];
@@ -114,7 +114,7 @@ export default function PublicUniversityExplorer() {
   return (
     <section
       id="universities"
-      className="relative overflow-hidden bg-[#fff8f1] py-14 text-[#071b3a] sm:py-16 lg:py-20"
+      className="relative overflow-hidden bg-[#fff8f1] py-12 text-[#071b3a] sm:py-16 lg:py-20"
     >
       <style>{`
         @keyframes uniFloat {
@@ -181,33 +181,33 @@ export default function PublicUniversityExplorer() {
       <div className="pointer-events-none absolute right-[5%] top-52 text-5xl opacity-70 uni-float-delay">☁️</div>
 
       <div className="relative mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-10">
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div className="pt-2 text-center lg:pt-4 lg:text-left">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/85 px-5 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-orange-600 shadow-sm sm:text-xs sm:tracking-[0.18em]">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/90 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 shadow-[0_12px_30px_rgba(255,91,18,0.08)] backdrop-blur sm:mb-5 sm:px-5 sm:text-xs sm:tracking-[0.18em]">
               <Sparkles className="h-4 w-4 fill-orange-500" />
               Italy university hub — available now
             </div>
 
-            <h2 className="mx-auto max-w-4xl text-4xl font-black leading-[1.02] tracking-tight text-[#071b3a] sm:text-6xl lg:mx-0 lg:text-7xl lg:leading-[0.98]">
+            <h2 className="mx-auto max-w-4xl text-[2.55rem] font-black leading-[1] tracking-[-0.05em] text-[#071b3a] sm:text-6xl lg:mx-0 lg:text-7xl lg:leading-[0.98]">
               Explore <span className="text-orange-600">Italy's Top</span>
               <br />
               Universities
             </h2>
 
-            <p className="mx-auto mt-5 max-w-2xl text-base font-semibold leading-7 text-slate-700 sm:text-lg sm:leading-8 lg:mx-0">
-              Start with one strong university on the homepage, then turn high-intent visitors into leads with direct actions: view the profile, ask about the university, or book a shortlist consultation.
+            <p className="mx-auto mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-700 sm:mt-5 sm:text-lg sm:leading-8 lg:mx-0">
+              Start with a featured Italian university, compare the essentials, then open the full directory or ask for shortlist guidance when you need deeper support.
             </p>
 
-            <div className="mx-auto mt-7 grid max-w-3xl grid-cols-2 overflow-hidden rounded-3xl border border-orange-100 bg-white/90 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:grid-cols-4 lg:mx-0">
+            <div className="mx-auto mt-5 grid max-w-3xl grid-cols-2 overflow-hidden rounded-[1.35rem] border border-orange-100 bg-white/92 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:mt-7 sm:grid-cols-4 sm:rounded-3xl lg:mx-0">
               {[
                 [GraduationCap, "50+", "Universities"],
-                [Building2, "20+", "Student Cities"],
+                [Building2, "8+", "Student Cities"],
                 [BadgePercent, "DSU", "Scholarships"],
                 [UsersRound, "Italy", "Focused Help"],
               ].map(([Icon, value, label]) => (
                 <div
                   key={label}
-                  className="flex items-center justify-center gap-3 border-orange-100 px-4 py-5 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-orange-50/50 sm:border-r sm:last:border-r-0 lg:justify-start lg:px-5"
+                  className="flex items-center justify-center gap-2.5 border-orange-100 px-3 py-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-orange-50/60 sm:border-r sm:px-4 sm:py-5 sm:last:border-r-0 lg:justify-start lg:px-5"
                 >
                   <div className="rounded-2xl bg-orange-50 p-2 text-orange-600">
                     <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -220,12 +220,12 @@ export default function PublicUniversityExplorer() {
               ))}
             </div>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+            <div className="mt-5 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:justify-center sm:gap-3 lg:justify-start">
               <Link
                 to="/universities"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
+                className="inline-flex items-center justify-center gap-2.5 rounded-full bg-orange-600 px-5 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700 hover:shadow-[0_22px_46px_rgba(234,88,12,0.30)] focus:outline-none focus-visible:ring-4 focus:ring-orange-100 sm:px-6 sm:py-4"
               >
                 Explore More Universities
                 <ExternalLink className="h-4 w-4" />
@@ -233,7 +233,7 @@ export default function PublicUniversityExplorer() {
 
               <a
                 href="/appointment?country=Italy&service=University Selection"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-black text-[#071b3a] shadow-sm ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:text-orange-600 hover:ring-orange-300 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
+                className="inline-flex items-center justify-center gap-2.5 rounded-full border border-orange-100 bg-white/95 px-5 py-3.5 text-sm font-black text-[#071b3a] shadow-sm transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-orange-300 hover:text-orange-600 hover:shadow-[0_16px_34px_rgba(255,91,18,0.10)] focus:outline-none focus-visible:ring-4 focus:ring-orange-100 sm:px-6 sm:py-4"
               >
                 Get Shortlist Help
                 <ArrowRight className="h-4 w-4" />
@@ -307,24 +307,24 @@ export default function PublicUniversityExplorer() {
           </div>
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-[2rem] border border-orange-100 bg-white/80 p-4 shadow-[0_25px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:p-5">
-          <div className="flex flex-col gap-5 rounded-[1.6rem] bg-gradient-to-r from-orange-50 via-white to-orange-50 p-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-7 overflow-hidden rounded-[1.6rem] border border-orange-100 bg-white/84 p-3 shadow-[0_25px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:mt-8 sm:rounded-[2rem] sm:p-4 lg:p-5">
+          <div className="flex flex-col gap-4 rounded-[1.35rem] border border-orange-100/70 bg-gradient-to-r from-orange-50 via-white to-orange-50 p-4 sm:gap-5 sm:rounded-[1.6rem] sm:p-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="inline-flex rounded-full border border-orange-100 bg-white px-4 py-2 text-xs font-black uppercase tracking-wide text-orange-600">
                 Featured university spotlight
               </div>
 
               <h3 className="mt-4 text-3xl font-black leading-tight text-[#071b3a] sm:text-4xl">
-                One strong card here. <span className="text-orange-600">All universities live deeper.</span>
+                Start with a university spotlight. <span className="text-orange-600">Explore the full directory when ready.</span>
               </h3>
 
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-                The homepage should not show 30 cards. It should guide the student toward the full university page and detailed profiles.
+                Review the key facts here, then open the complete university directory and detailed profiles when you want a deeper comparison.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {["Milan", "Rome", "Bologna", "Padua", "Turin", "Pisa"].map((item) => (
+              {["Milan", "Rome", "Bologna", "Padua", "Florence", "Turin", "Pisa", "Venice"].map((item) => (
                 <Link
                   key={item}
                   to="/universities"
@@ -338,11 +338,11 @@ export default function PublicUniversityExplorer() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 xl:grid-cols-[1.1fr_0.9fr]">
             <FeaturedUniversityCard university={featuredUniversity} />
 
             <div className="grid gap-5">
-              <div className="rounded-[2rem] border border-orange-100 bg-white p-5 shadow-sm">
+              <div className="rounded-[1.6rem] border border-orange-100 bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-5">
                 <div className="inline-flex rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-orange-600 ring-1 ring-orange-100">
                   Next inside database
                 </div>
@@ -351,7 +351,7 @@ export default function PublicUniversityExplorer() {
                   {[secondUniversity, thirdUniversity].filter(Boolean).map((university) => (
                     <article
                       key={university.slug}
-                      className="group rounded-[1.4rem] border border-orange-100 bg-[#fff8f1] p-3 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-md"
+                      className="group rounded-[1.25rem] border border-orange-100 bg-[#fff8f1] p-3 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-orange-200 hover:bg-white hover:shadow-md sm:rounded-[1.4rem]"
                     >
                       <Link
                         to={`/universities/${university.slug}`}
@@ -410,7 +410,7 @@ export default function PublicUniversityExplorer() {
                 </Link>
               </div>
 
-              <div className="rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white via-orange-50 to-purple-50 p-5 shadow-sm">
+              <div className="rounded-[1.6rem] border border-orange-100 bg-gradient-to-br from-white via-orange-50 to-purple-50 p-4 shadow-sm sm:rounded-[2rem] sm:p-5">
                 <div className="flex items-start gap-4">
                   <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-600">
                     <BookOpenCheck className="h-7 w-7" />
@@ -418,13 +418,13 @@ export default function PublicUniversityExplorer() {
                   <div>
                     <h4 className="text-xl font-black text-[#071b3a]">Dedicated university pages</h4>
                     <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                      Each card opens its own profile page in a new tab. Later, those pages become the extreme-detail university guides.
+                      Each university opens into a dedicated profile with clearer context for programs, costs, scholarships, location and student fit.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-orange-100 bg-white p-5 shadow-sm">
+              <div className="rounded-[1.6rem] border border-orange-100 bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-5">
                 <img
                   src={mascotThumbsup}
                   alt="Zaifan university guide"
@@ -448,10 +448,10 @@ export default function PublicUniversityExplorer() {
           {journeySteps.map((item) => (
             <div
               key={item.title}
-              className="group rounded-[1.6rem] border border-orange-100 bg-white/85 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.05)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-[0_22px_60px_rgba(255,91,18,0.12)]"
+              className="group rounded-[1.6rem] border border-orange-100 bg-white/88 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.05)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-orange-200 hover:bg-white hover:shadow-[0_22px_60px_rgba(255,91,18,0.12)]"
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="grid h-13 w-13 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-orange-50 text-orange-600">
                   <item.icon className="h-7 w-7" />
                 </div>
                 <span className="rounded-full bg-[#fff8f1] px-3 py-1 text-xs font-black text-orange-600 ring-1 ring-orange-100">
@@ -464,7 +464,7 @@ export default function PublicUniversityExplorer() {
           ))}
         </div>
 
-        <div className="mt-6 hidden overflow-hidden rounded-[2rem] border border-orange-100 bg-white/85 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:block">
+        <div className="mt-6 hidden overflow-hidden rounded-[2rem] border border-orange-100 bg-white/88 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:block">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="inline-flex rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-orange-600 ring-1 ring-orange-100">
@@ -492,7 +492,7 @@ export default function PublicUniversityExplorer() {
             {comingSoonCountries.map((item) => (
               <article
                 key={item.name}
-                className="group overflow-hidden rounded-[1.5rem] border border-orange-100 bg-white shadow-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
+                className="group overflow-hidden rounded-[1.5rem] border border-orange-100 bg-white shadow-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:border-orange-200 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
               >
                 <div className="relative h-36 overflow-hidden bg-orange-50">
                   <img
@@ -525,12 +525,12 @@ export default function PublicUniversityExplorer() {
 
 function FeaturedUniversityCard({ university }) {
   return (
-    <article className="group overflow-hidden rounded-[1.9rem] border border-orange-100 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-[0_34px_90px_rgba(255,91,18,0.18)]">
+    <article className="group overflow-hidden rounded-[1.6rem] border border-orange-100 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:border-orange-200 hover:shadow-[0_34px_90px_rgba(255,91,18,0.18)] sm:rounded-[1.9rem]">
       <Link
         to={`/universities/${university.slug}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="relative block h-[330px] overflow-hidden bg-gradient-to-br from-orange-100 via-white to-emerald-50"
+        className="relative block h-[285px] overflow-hidden bg-gradient-to-br from-orange-100 via-white to-emerald-50 sm:h-[330px]"
         aria-label={`Open ${university.name} full university profile in a new tab`}
       >
         <img
@@ -563,8 +563,8 @@ function FeaturedUniversityCard({ university }) {
         </div>
       </Link>
 
-      <div className="p-5">
-        <div className="mb-4 flex flex-wrap gap-2">
+      <div className="p-4 sm:p-5">
+        <div className="mb-3 flex flex-wrap gap-2 sm:mb-4">
           <span className="rounded-full bg-green-50 px-3 py-1.5 text-[11px] font-black text-green-700 ring-1 ring-green-100">
             {getTuitionBadge(university.tuitionLevel)}
           </span>
@@ -603,13 +603,13 @@ function FeaturedUniversityCard({ university }) {
           ))}
         </div>
 
-        <div className="mt-5 rounded-[1.5rem] border border-orange-100 bg-white p-3 shadow-sm">
+        <div className="mt-4 rounded-[1.35rem] border border-orange-100 bg-white p-3 shadow-sm sm:mt-5 sm:rounded-[1.5rem]">
           <div className="mb-3 flex items-center gap-2 px-1 text-xs font-black uppercase tracking-[0.14em] text-orange-600">
             <Zap className="h-4 w-4 fill-orange-500" />
             Ready to compare this university?
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-3">
+          <div className="grid gap-2.5 sm:gap-3 lg:grid-cols-3">
             <Link
               to={`/universities/${university.slug}`}
               target="_blank"

@@ -13,6 +13,7 @@ import {
   FaPlaneDeparture,
 } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
+import { Link } from "react-router-dom";
 
 const whatsappNumber = "923305718131";
 const whatsappMessage = encodeURIComponent(
@@ -42,14 +43,24 @@ function Footer() {
   ];
 
   const destinations = [
-  { name: "Italy", live: true },
+    { name: "Italy", live: true, href: "/countries/italy" },
+    { name: "United Kingdom", live: false },
+    { name: "Canada", live: false },
+    { name: "Australia", live: false },
+    { name: "Germany", live: false },
+    { name: "Turkey", live: false },
+  ];
 
-  { name: "United Kingdom", live: false },
-  { name: "Canada", live: false },
-  { name: "Australia", live: false },
-  { name: "Germany", live: false },
-  { name: "Turkey", live: false },
-];
+  const italyCities = [
+    { name: "Milan", href: "/countries/italy/milan" },
+    { name: "Rome", href: "/countries/italy/rome" },
+    { name: "Bologna", href: "/countries/italy/bologna" },
+    { name: "Padua", href: "/countries/italy/padua" },
+    { name: "Florence", href: "/countries/italy/florence" },
+    { name: "Turin", href: "/countries/italy/turin" },
+    { name: "Pisa", href: "/countries/italy/pisa" },
+    { name: "Venice", href: "/countries/italy/venice" },
+  ];
 
   const highlights = [
     {
@@ -183,10 +194,10 @@ function Footer() {
 
           <div className="grid gap-10 lg:grid-cols-[1.45fr_0.8fr_0.95fr_0.9fr]">
             <div>
-              <a
-                href="#home"
+              <button
+                type="button"
                 onClick={scrollToTop}
-                className="group inline-flex items-center gap-4 rounded-[1.8rem] outline-none focus:ring-4 focus:ring-orange-100"
+                className="group inline-flex items-center gap-4 rounded-[1.8rem] text-left outline-none focus:ring-4 focus:ring-orange-100"
                 aria-label="Back to top"
               >
                 <div className="relative flex h-20 w-20 items-center justify-center rounded-[1.7rem] bg-gradient-to-br from-orange-500 to-orange-700 text-4xl font-black text-white shadow-2xl shadow-orange-600/25 transition group-hover:-translate-y-1 group-hover:scale-105">
@@ -204,7 +215,7 @@ function Footer() {
                     Study Abroad Guidance
                   </p>
                 </div>
-              </a>
+              </button>
 
               <p className="mt-6 max-w-xl text-base font-semibold leading-8 text-slate-600">
                 Helping students build a clear Italy study plan across
@@ -213,13 +224,13 @@ function Footer() {
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="/appointment?country=Italy&service=Free%20Italy%20Study%20Plan"
+                <Link
+                  to="/appointment?country=Italy&service=Free%20Italy%20Study%20Plan"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-7 py-4 font-black text-white shadow-xl shadow-orange-600/20 transition duration-300 hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200"
                 >
                   Book Consultation
                   <FaArrowRight className="text-sm" />
-                </a>
+                </Link>
 
                 <a
                   href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
@@ -261,7 +272,7 @@ function Footer() {
 
             <FooterColumn title="Services" items={services} />
 
-            <FooterColumn title="Destinations" items={destinations} destinations />
+            <FooterColumn title="Destinations" items={destinations} destinations italyCities={italyCities} />
           </div>
         </div>
 
@@ -269,7 +280,7 @@ function Footer() {
           <ContactCard
             icon={<FaPhoneAlt />}
             label="Phone"
-            value="+92 330 5718131"
+            value="03305718131"
             sub="WhatsApp consultation available"
             href="tel:+923305718131"
             color="orange"
@@ -290,6 +301,7 @@ function Footer() {
             value="Pakistan"
             sub="Online consultation available"
             href="/appointment"
+            internal
             color="green"
           />
         </div>
@@ -309,7 +321,7 @@ function Footer() {
   );
 }
 
-function FooterColumn({ title, items, links = false, destinations = false }) {
+function FooterColumn({ title, items, links = false, destinations = false, italyCities = [] }) {
   return (
     <div>
       <h3 className="text-sm font-black uppercase tracking-[0.24em] text-orange-600">
@@ -317,62 +329,85 @@ function FooterColumn({ title, items, links = false, destinations = false }) {
       </h3>
 
       <ul className="mt-6 space-y-3">
-  {items.map((item) => {
-    if (destinations) {
-      const destination = item;
+        {items.map((item) => {
+          if (destinations) {
+            if (!item.live) {
+              return (
+                <li key={item.name}>
+                  <div className="inline-flex items-center gap-2 rounded-lg font-bold text-slate-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-orange-200" />
+                    <span>{item.name}</span>
+                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-orange-700">
+                      Soon
+                    </span>
+                  </div>
+                </li>
+              );
+            }
 
-      if (!destination.live) {
-        return (
-          <li key={destination.name}>
-            <div className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-500">
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-200" />
+            return (
+              <li key={item.name}>
+                <Link
+                  to={item.href}
+                  className="group inline-flex items-center gap-2 rounded-lg font-black text-[#ff4b12] transition hover:translate-x-1"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#ff4b12]" />
+                  🇮🇹 Italy
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-black uppercase text-green-700">
+                    Live
+                  </span>
+                </Link>
+              </li>
+            );
+          }
 
-              <span>{destination.name}</span>
+          const name = typeof item === "string" ? item : item.name;
+          const href =
+            typeof item === "string"
+              ? buildAppointmentServiceLink(item)
+              : item.href;
 
-              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-orange-700">
-                Soon
-              </span>
-            </div>
-          </li>
-        );
-      }
+          return (
+            <li key={name}>
+              <Link
+                to={href}
+                className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-600 transition duration-300 hover:translate-x-1 hover:text-orange-600"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition duration-300 group-hover:bg-orange-600" />
+                {name}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
 
-      return (
-        <li key={destination.name}>
-          <a
-  href="/countries/italy"
-  className="group inline-flex items-center gap-2 rounded-lg font-black text-[#ff4b12] transition hover:translate-x-1"
->
-  <span className="h-1.5 w-1.5 rounded-full bg-[#ff4b12]" />
-  🇮🇹 Italy
+      {destinations && italyCities.length > 0 && (
+        <div className="mt-5">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-orange-200" />
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">
+              Italy City Guides
+            </p>
+            <span className="rounded-full bg-green-100 px-2 py-0.5 text-[9px] font-black uppercase text-green-700">
+              8 Live
+            </span>
+          </div>
 
-  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-black uppercase text-green-700">
-    Live
-  </span>
-</a>
-        </li>
-      );
-    }
-
-    const name = typeof item === "string" ? item : item.name;
-    const href =
-      typeof item === "string"
-        ? buildAppointmentServiceLink(item)
-        : item.href;
-
-    return (
-      <li key={name}>
-        <a
-          href={href}
-          className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-600 transition duration-300 hover:translate-x-1 hover:text-orange-600"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition duration-300 group-hover:bg-orange-600" />
-          {name}
-        </a>
-      </li>
-    );
-  })}
-</ul>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
+            {italyCities.map((city) => (
+              <li key={city.name}>
+                <Link
+                  to={city.href}
+                  className="group inline-flex items-center gap-2 rounded-lg text-xs font-bold text-slate-600 transition duration-300 hover:translate-x-1 hover:text-orange-600"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition duration-300 group-hover:bg-orange-600" />
+                  {city.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -408,7 +443,7 @@ function SocialIcon({ icon, label, href, external = false, disabled = false }) {
   );
 }
 
-function ContactCard({ icon, label, value, sub, href, color }) {
+function ContactCard({ icon, label, value, sub, href, color, internal = false }) {
   const colorMap = {
     orange: "bg-orange-50 text-orange-600 group-hover:bg-orange-600",
     purple: "bg-purple-50 text-purple-600 group-hover:bg-purple-600",
@@ -440,6 +475,17 @@ function ContactCard({ icon, label, value, sub, href, color }) {
   );
 
   if (!href) return content;
+
+  if (internal) {
+    return (
+      <Link
+        to={href}
+        className="block rounded-[2rem] outline-none focus:ring-4 focus:ring-orange-100"
+      >
+        {content}
+      </Link>
+    );
+  }
 
   return (
     <a

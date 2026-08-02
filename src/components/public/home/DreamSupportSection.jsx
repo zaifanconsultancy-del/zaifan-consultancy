@@ -139,7 +139,7 @@ export default function DreamSupportSection() {
   return (
     <section
       id="dream-support"
-      className="relative overflow-hidden bg-[#fff5e9] px-5 pb-12 pt-3 text-[#071f50] lg:pb-14 lg:pt-3"
+      className="relative overflow-hidden bg-[#fff5e9] px-4 pb-10 pt-2 text-[#071f50] sm:px-5 sm:pb-12 sm:pt-3 lg:pb-14 lg:pt-3"
     >
       <style>{`
         @keyframes zaifanDash {
@@ -172,20 +172,20 @@ export default function DreamSupportSection() {
       <div className="pointer-events-none absolute bottom-16 right-[-110px] h-72 w-72 rounded-full bg-[#ff4b12]/8 blur-3xl" />
 
       <div className="relative mx-auto max-w-[1660px]">
-        <div className="relative mb-4 overflow-hidden rounded-[34px] border border-orange-100/80 bg-gradient-to-br from-white/88 via-[#fff9f1] to-[#fff0df] px-6 py-3 shadow-[0_18px_58px_rgba(9,31,80,0.07)] ring-1 ring-white/75 sm:px-8 lg:px-12 lg:py-4 xl:px-14">
+        <div className="relative mb-4 overflow-hidden rounded-[28px] border border-orange-100/90 bg-gradient-to-br from-white/92 via-[#fff9f1] to-[#fff0df] px-4 py-4 shadow-[0_18px_58px_rgba(9,31,80,0.07)] ring-1 ring-white/75 sm:rounded-[34px] sm:px-8 lg:px-12 lg:py-4 xl:px-14">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(255,75,18,0.07),transparent_28%),radial-gradient(circle_at_82%_48%,rgba(255,178,87,0.15),transparent_36%),linear-gradient(90deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.68)_44%,rgba(255,241,222,0.16)_100%)]" />
           <div className="pointer-events-none absolute -left-28 -top-28 h-64 w-64 rounded-full bg-[#ff4b12]/8 blur-3xl" />
           <div className="pointer-events-none absolute right-[-160px] top-[-185px] hidden h-[690px] w-[690px] rounded-full bg-gradient-to-br from-orange-100/42 via-white/14 to-orange-200/26 lg:block xl:right-[-120px] xl:top-[-180px] xl:h-[740px] xl:w-[740px]" />
           <div className="pointer-events-none absolute right-[11%] top-[12%] hidden h-56 w-56 rounded-full bg-orange-300/10 blur-3xl xl:block" />
 
-          <div className="relative z-10 grid min-h-[370px] items-center gap-5 lg:grid-cols-[48%_52%] xl:min-h-[405px]">
+          <div className="relative z-10 grid min-h-[330px] items-center gap-4 sm:min-h-[350px] lg:min-h-[370px] lg:grid-cols-[48%_52%] lg:gap-5 xl:min-h-[405px]">
             <div className="relative z-30 max-w-[760px]">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-black text-[#ff4b12] shadow-[0_14px_35px_rgba(9,31,80,0.08)] ring-1 ring-orange-100">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/95 px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.08em] text-[#ff4b12] shadow-[0_14px_35px_rgba(9,31,80,0.08)] backdrop-blur sm:mb-4 sm:px-5 sm:text-sm sm:normal-case sm:tracking-normal">
                 <Sparkles size={17} fill="currentColor" />
                 Your future, our guidance
               </div>
 
-              <h2 className="max-w-[720px] text-5xl font-black leading-[0.92] tracking-[-0.06em] text-[#071f50] sm:text-6xl md:text-7xl xl:text-[80px]">
+              <h2 className="max-w-[720px] text-[2.65rem] font-black leading-[0.93] tracking-[-0.055em] text-[#071f50] sm:text-6xl md:text-7xl xl:text-[80px]">
                 Your{" "}
                 <span className="text-[#ff4b12] drop-shadow-[0_10px_22px_rgba(255,75,18,0.13)]">
                   dream,
@@ -199,16 +199,16 @@ export default function DreamSupportSection() {
                 </span>
               </h2>
 
-              <p className="mt-4 max-w-2xl text-lg font-semibold leading-8 text-[#526178] xl:text-[19px] xl:leading-8">
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-[#526178] sm:mt-4 sm:text-lg sm:leading-8 xl:text-[19px] xl:leading-8">
                 We’re with you at every step, turning your Italy study plan into
                 a clear, practical journey.
               </p>
 
-              <div className="relative z-40 mt-5 grid max-w-[650px] gap-2.5 sm:grid-cols-3">
+              <div className="relative z-40 mt-4 grid max-w-[650px] gap-2 sm:mt-5 sm:gap-2.5 sm:grid-cols-3">
                 {promiseChips.map((item) => (
                   <div
                     key={item}
-                    className="flex min-h-[58px] items-center gap-3 rounded-2xl bg-white/94 px-4 py-3 text-sm font-black text-[#071f50] shadow-[0_10px_28px_rgba(9,31,80,0.055)] ring-1 ring-orange-100/80 backdrop-blur"
+                    className="flex min-h-[52px] items-center gap-2.5 rounded-xl border border-orange-100/80 bg-white/94 px-3.5 py-2.5 text-xs font-black text-[#071f50] shadow-[0_10px_28px_rgba(9,31,80,0.055)] backdrop-blur sm:min-h-[58px] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm"
                   >
                     <CheckCircle2
                       size={17}
@@ -219,11 +219,11 @@ export default function DreamSupportSection() {
                 ))}
               </div>
 
-              <div className="relative z-40 mt-5 flex flex-wrap gap-3">
+              <div className="relative z-40 mt-4 flex flex-wrap gap-2.5 sm:mt-5 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => goToRoute("/services")}
-                  className={`dream-motion-safe inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-7 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.28)] hover:-translate-y-1 hover:bg-[#ff642f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
+                  className={`dream-motion-safe inline-flex items-center gap-2.5 rounded-full bg-[#ff4b12] px-5 py-3.5 text-xs font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.28)] hover:-translate-y-1 hover:bg-[#ff642f] hover:shadow-[0_24px_46px_rgba(255,75,18,0.34)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 sm:px-7 sm:py-4 sm:text-sm ${INTERACTIVE_TRANSITION}`}
                 >
                   Explore your support
                   <ArrowRight size={21} strokeWidth={3} />
@@ -232,7 +232,7 @@ export default function DreamSupportSection() {
                 <button
                   type="button"
                   onClick={() => goToRoute("/scholarships")}
-                  className={`dream-motion-safe inline-flex items-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-black text-[#071f50] shadow-[0_12px_30px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 hover:-translate-y-1 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+                  className={`dream-motion-safe inline-flex items-center gap-2.5 rounded-full border border-orange-100 bg-white/95 px-5 py-3.5 text-xs font-black text-[#071f50] shadow-[0_12px_30px_rgba(9,31,80,0.06)] hover:-translate-y-1 hover:border-orange-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 sm:px-7 sm:py-4 sm:text-sm ${INTERACTIVE_TRANSITION}`}
                 >
                   Explore scholarships
                 </button>
@@ -273,7 +273,7 @@ export default function DreamSupportSection() {
           </div>
         </div>
 
-        <div className="mb-5 grid gap-3 md:grid-cols-4">
+        <div className="mb-4 grid gap-2.5 sm:mb-5 sm:gap-3 md:grid-cols-4">
           {supportCards.map((card, index) => {
             const Icon = card.icon;
             const isActive = activeCard === index;
@@ -286,10 +286,10 @@ export default function DreamSupportSection() {
                 onMouseLeave={() => setActiveCard(null)}
                 onFocus={() => setActiveCard(index)}
                 onBlur={() => setActiveCard(null)}
-                className={`group dream-motion-safe relative overflow-hidden rounded-[20px] border bg-white/78 p-3.5 text-left shadow-[0_12px_32px_rgba(9,31,80,0.055)] ring-1 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION} ${
+                className={`group dream-motion-safe relative overflow-hidden rounded-[18px] border bg-white/82 p-3 text-left shadow-[0_12px_32px_rgba(9,31,80,0.055)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 sm:rounded-[20px] sm:p-3.5 ${INTERACTIVE_TRANSITION} ${
                   isActive
-                    ? "border-[#ff4b12]/25 ring-[#ff4b12]/20 shadow-[0_18px_45px_rgba(255,75,18,0.11)]"
-                    : "border-white/80 ring-orange-100/70"
+                    ? "border-[#ff4b12]/30 shadow-[0_18px_45px_rgba(255,75,18,0.11)]"
+                    : "border-orange-100/80"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -320,7 +320,7 @@ export default function DreamSupportSection() {
           })}
         </div>
 
-        <div className="grid gap-7 lg:grid-cols-2">
+        <div className="grid gap-5 sm:gap-7 lg:grid-cols-2">
           {supportCards.map((card, index) => {
             const Icon = card.icon;
             const isActive = activeCard === index;
@@ -330,7 +330,7 @@ export default function DreamSupportSection() {
                 key={card.number}
                 onMouseEnter={() => setActiveCard(index)}
                 onMouseLeave={() => setActiveCard(null)}
-                className={`group dream-motion-safe relative min-h-[430px] overflow-hidden rounded-[40px] border border-white/85 bg-gradient-to-br ${card.bg} p-6 shadow-[0_24px_65px_rgba(9,31,80,0.09)] ring-1 ${card.ring} hover:-translate-y-2 hover:shadow-[0_36px_95px_rgba(9,31,80,0.15)] ${INTERACTIVE_TRANSITION}`}
+                className={`group dream-motion-safe relative min-h-[390px] overflow-hidden rounded-[30px] border border-white/90 bg-gradient-to-br ${card.bg} p-4 shadow-[0_24px_65px_rgba(9,31,80,0.09)] ring-1 ${card.ring} hover:-translate-y-2 hover:shadow-[0_36px_95px_rgba(9,31,80,0.15)] sm:min-h-[430px] sm:rounded-[40px] sm:p-6 ${INTERACTIVE_TRANSITION}`}
               >
                 <div
                   className={`dream-motion-safe absolute -left-24 -top-24 h-64 w-64 rounded-full ${card.glow} blur-3xl group-hover:scale-125 ${INTERACTIVE_TRANSITION}`}
@@ -352,17 +352,17 @@ export default function DreamSupportSection() {
                   />
                 </svg>
 
-                <div className="absolute right-7 top-7 z-20 flex items-center gap-3">
+                <div className="absolute right-4 top-4 z-20 flex items-center gap-2 sm:right-7 sm:top-7 sm:gap-3">
                   <div className="hidden rounded-full bg-white/80 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#ff4b12] shadow-sm md:block">
                     {card.footer}
                   </div>
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#ffe5d6] text-lg font-black text-[#ff4b12] shadow-inner ring-8 ring-white/40">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ffe5d6] text-base font-black text-[#ff4b12] shadow-inner ring-4 ring-white/40 sm:h-16 sm:w-16 sm:text-lg sm:ring-8">
                     {card.number}
                   </div>
                 </div>
 
-                <div className="relative z-10 grid h-full items-center gap-6 md:grid-cols-[52%_48%]">
-                  <div className="relative flex min-h-[330px] items-center justify-center">
+                <div className="relative z-10 grid h-full items-center gap-4 sm:gap-6 md:grid-cols-[52%_48%]">
+                  <div className="relative flex min-h-[260px] items-center justify-center sm:min-h-[330px]">
                     <div className="absolute bottom-10 h-20 w-[78%] rounded-full bg-[#071f50]/10 blur-2xl" />
 
                     <div className="absolute left-2 top-8 z-20 hidden rounded-2xl bg-white/85 px-4 py-3 shadow-[0_14px_35px_rgba(9,31,80,0.10)] ring-1 ring-white/70 backdrop-blur md:block">
@@ -413,20 +413,20 @@ export default function DreamSupportSection() {
                   </div>
 
                   <div className="relative pr-2">
-                    <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#ff4b12] shadow-sm ring-1 ring-white/70">
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/88 px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-[#ff4b12] shadow-sm sm:mb-5 sm:px-4 sm:text-[11px] sm:tracking-[0.18em]">
                       <Icon size={15} />
                       {card.eyebrow}
                     </div>
 
-                    <h3 className="max-w-[350px] text-4xl font-black leading-[1.02] tracking-[-0.045em] text-[#071f50]">
+                    <h3 className="max-w-[350px] text-3xl font-black leading-[1.03] tracking-[-0.04em] text-[#071f50] sm:text-4xl">
                       {card.title}
                     </h3>
 
-                    <p className="mt-5 max-w-[340px] text-[16px] font-semibold leading-7 text-[#526178]">
+                    <p className="mt-3 max-w-[340px] text-sm font-semibold leading-6 text-[#526178] sm:mt-5 sm:text-[16px] sm:leading-7">
                       {card.text}
                     </p>
 
-                    <div className="mt-6 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-wrap gap-2 sm:mt-6">
                       {card.chips.map((chip) => (
                         <span
                           key={chip}
@@ -437,7 +437,7 @@ export default function DreamSupportSection() {
                       ))}
                     </div>
 
-                    <div className="mt-6 rounded-[24px] bg-white/70 p-4 shadow-[0_16px_36px_rgba(9,31,80,0.07)] ring-1 ring-white/80 backdrop-blur">
+                    <div className="mt-4 rounded-[20px] border border-white/80 bg-white/72 p-3.5 shadow-[0_16px_36px_rgba(9,31,80,0.07)] backdrop-blur sm:mt-6 sm:rounded-[24px] sm:p-4">
                       <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12]">
                         {index === 0 && <GraduationCap size={15} />}
                         {index === 1 && <BadgeDollarSign size={15} />}
@@ -464,7 +464,7 @@ export default function DreamSupportSection() {
                     <button
                       type="button"
                       onClick={() => handleSupportAction(index)}
-                      className={`dream-motion-safe mt-7 inline-flex items-center gap-3 rounded-full bg-[#ff4b12] px-6 py-4 text-sm font-black text-white shadow-[0_18px_35px_rgba(255,75,18,0.32)] hover:-translate-y-1 hover:bg-[#ff642f] group-hover:gap-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
+                      className={`dream-motion-safe mt-5 inline-flex items-center gap-2.5 rounded-full bg-[#ff4b12] px-5 py-3.5 text-xs font-black text-white shadow-[0_18px_35px_rgba(255,75,18,0.32)] hover:-translate-y-1 hover:bg-[#ff642f] group-hover:gap-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 sm:mt-7 sm:px-6 sm:py-4 sm:text-sm ${INTERACTIVE_TRANSITION}`}
                     >
                       Start this step
                       <ArrowRight size={22} strokeWidth={3} />
@@ -476,15 +476,15 @@ export default function DreamSupportSection() {
           })}
         </div>
 
-        <div className="relative mt-14 overflow-hidden rounded-[34px] bg-[#071f50] p-7 text-white shadow-[0_26px_70px_rgba(7,31,80,0.18)]">
+        <div className="relative mt-9 overflow-hidden rounded-[26px] border border-white/10 bg-[#071f50] p-5 text-white shadow-[0_26px_70px_rgba(7,31,80,0.18)] sm:mt-14 sm:rounded-[34px] sm:p-7">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_40%,rgba(255,75,18,0.32),transparent_30%),radial-gradient(circle_at_86%_40%,rgba(255,190,92,0.22),transparent_30%)]" />
 
-          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative z-10 flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-200">
                 Ready when you are
               </p>
-              <h3 className="mt-2 text-3xl font-black tracking-[-0.035em] md:text-4xl">
+              <h3 className="mt-2 text-2xl font-black tracking-[-0.035em] sm:text-3xl md:text-4xl">
                 Start with one step. We’ll guide the whole journey.
               </h3>
             </div>
@@ -505,29 +505,6 @@ export default function DreamSupportSection() {
           </div>
         </div>
 
-        <div className="relative mt-10">
-          <svg
-            className="pointer-events-none h-12 w-full text-[#ff8a4b]/35"
-            viewBox="0 0 1200 60"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M0 35 C180 0 320 60 500 30 S820 0 1020 30 S1160 55 1200 25"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="zaifan-dash-hover"
-            />
-          </svg>
-
-          <div className="pointer-events-none absolute -bottom-4 left-[9%] text-3xl">
-            💗
-          </div>
-          <div className="pointer-events-none absolute -bottom-6 right-[4%] text-5xl">
-            🎈
-          </div>
-        </div>
       </div>
     </section>
   );

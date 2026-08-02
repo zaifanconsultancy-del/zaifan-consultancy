@@ -351,7 +351,7 @@ function UniversitiesPage() {
     <>
       <main
         id="universities-page"
-        className="relative overflow-hidden bg-[#fff7ed] pt-28 text-[#071b3a]"
+        className="relative overflow-hidden bg-[#fff7ed] pt-24 text-[#071b3a] sm:pt-28"
       >
         <style>{`
           @media (prefers-reduced-motion: reduce) {
@@ -367,38 +367,38 @@ function UniversitiesPage() {
         `}</style>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_8%,rgba(255,91,18,0.14),transparent_27%),radial-gradient(circle_at_90%_12%,rgba(255,184,96,0.16),transparent_24%)]" />
 
-        <section className="relative mx-auto max-w-[1500px] px-4 pb-16 sm:px-6 lg:px-10">
+        <section className="relative mx-auto max-w-[1500px] px-4 pb-12 sm:px-6 sm:pb-16 lg:px-10">
           <motion.div
             initial={prefersReducedMotion ? false : "hidden"}
             animate="show"
             variants={fadeUp}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm ring-1 ring-orange-100">
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/95 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-orange-600 shadow-[0_12px_35px_rgba(255,91,18,0.10)] sm:px-5 sm:py-3 sm:text-xs sm:tracking-[0.18em]">
               <Sparkles className="h-4 w-4 fill-orange-500" />
               Smart Italy University Finder
             </div>
 
-            <h1 className="mx-auto mt-6 max-w-5xl text-5xl font-black leading-[0.95] tracking-[-0.06em] md:text-7xl">
+            <h1 className="mx-auto mt-5 max-w-5xl text-[2.65rem] font-black leading-[0.96] tracking-[-0.055em] sm:mt-6 sm:text-5xl md:text-7xl">
               Find the right{" "}
               <span className="text-orange-600">Italian university</span>.
             </h1>
 
-            <p className="mx-auto mt-6 max-w-3xl text-lg font-semibold leading-8 text-slate-600">
-              Search naturally, filter intelligently, and explore universities in
-              manageable pages instead of scrolling through fifty cards at once.
+            <p className="mx-auto mt-4 max-w-3xl text-base font-semibold leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
+              Compare tuition, scholarships, cities, and study strengths in one clear
+              place—without getting lost in an endless wall of options.
             </p>
           </motion.div>
 
-          <div className="mt-10 rounded-[2.3rem] bg-white/94 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
-            <div className="grid gap-4 lg:grid-cols-[1.6fr_repeat(5,1fr)_auto]">
+          <div className="mt-7 rounded-[1.8rem] border border-orange-100 bg-white/95 p-3.5 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:mt-10 sm:rounded-[2.3rem] sm:p-5">
+            <div className="grid gap-3 sm:gap-4 lg:grid-cols-[1.6fr_repeat(5,1fr)_auto]">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Try: CS, medicine, scholarship, cheap, Milan..."
-                  className="h-14 w-full rounded-2xl border border-orange-100 bg-[#fff8f1] pl-12 pr-4 text-sm font-bold outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:border-orange-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-orange-100"
+                  placeholder="Search CS, medicine, scholarships, Milan..."
+                  className="h-12 w-full rounded-xl border border-orange-100 bg-[#fff8f1] pl-11 pr-4 text-sm font-bold outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:border-orange-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-orange-100 sm:h-14 sm:rounded-2xl sm:pl-12"
                 />
               </div>
 
@@ -416,20 +416,20 @@ function UniversitiesPage() {
                 type="button"
                 onClick={resetFilters}
                 disabled={!hasFilters}
-                className={`inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#071b3a] px-5 text-sm font-black text-white hover:-translate-y-0.5 hover:bg-[#092b72] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-45 ${INTERACTIVE_TRANSITION}`}
+                className={`inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-5 text-sm font-black text-white hover:-translate-y-0.5 hover:bg-[#092b72] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-45 sm:h-14 sm:rounded-2xl ${INTERACTIVE_TRANSITION}`}
               >
                 <X className="h-4 w-4" />
                 Reset
               </button>
             </div>
 
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto pb-1 sm:mt-4 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
               {smartChips.map((chip) => (
                 <button
                   key={chip.label}
                   type="button"
                   onClick={() => applySmartChip(chip)}
-                  className={`rounded-full bg-white px-4 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 hover:-translate-y-0.5 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+                  className={`shrink-0 rounded-full bg-white px-3.5 py-2 text-[11px] font-black text-orange-700 ring-1 ring-orange-100 hover:-translate-y-0.5 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 sm:px-4 sm:text-xs ${INTERACTIVE_TRANSITION}`}
                 >
                   {chip.label}
                 </button>
@@ -466,9 +466,9 @@ function UniversitiesPage() {
             )}
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 rounded-[1.7rem] bg-white/84 p-5 shadow-sm ring-1 ring-orange-100 lg:flex-row lg:items-center lg:justify-between">
+          <div className="mt-4 flex flex-col gap-3 rounded-[1.4rem] border border-orange-100 bg-white/88 p-4 shadow-sm sm:mt-6 sm:rounded-[1.7rem] sm:p-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-50 text-orange-600 sm:h-12 sm:w-12 sm:rounded-2xl">
                 <Filter className="h-6 w-6" />
               </div>
 
@@ -485,7 +485,7 @@ function UniversitiesPage() {
 
             <Link
               to="/appointment?country=Italy&service=University%20Shortlist"
-              className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+              className={`inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-5 py-3.5 text-sm font-black text-white shadow-lg shadow-orange-600/20 hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 sm:rounded-2xl sm:px-6 sm:py-4 ${INTERACTIVE_TRANSITION}`}
             >
               Get Shortlist Help
               <ArrowRight className="h-4 w-4" />
@@ -494,19 +494,19 @@ function UniversitiesPage() {
 
           {/* FEATURED STRIP */}
           {featuredUniversities.length > 0 && (
-            <section className="mt-8">
-              <div className="mb-5 flex items-end justify-between gap-4">
+            <section className="mt-7 sm:mt-8">
+              <div className="mb-4 flex items-end justify-between gap-4 sm:mb-5">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
                     Quick Start
                   </p>
-                  <h2 className="mt-2 text-3xl font-black tracking-[-0.045em]">
+                  <h2 className="mt-1.5 text-2xl font-black tracking-[-0.04em] sm:mt-2 sm:text-3xl sm:tracking-[-0.045em]">
                     Four universities to start exploring.
                   </h2>
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {featuredUniversities.map((university) => (
                   <FeaturedUniversityCard
                     key={university.slug}
@@ -518,19 +518,18 @@ function UniversitiesPage() {
           )}
 
           {/* DIRECTORY CONTROLS */}
-          <section id="university-directory" className="mt-12 scroll-mt-28">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <section id="university-directory" className="mt-9 scroll-mt-28 sm:mt-12">
+            <div className="flex flex-col gap-4 sm:gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
                   University Directory
                 </p>
-                <h2 className="mt-2 text-3xl font-black tracking-[-0.045em] md:text-4xl">
+                <h2 className="mt-1.5 text-2xl font-black tracking-[-0.04em] sm:mt-2 sm:text-3xl md:text-4xl">
                   Browse in pages, not one endless wall.
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm font-semibold leading-7 text-slate-600">
-                  Use the quick views below or your filters above. Each page shows
-                  only twelve universities, so students can actually compare what
-                  they are seeing.
+                <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:leading-7">
+                  Use quick views or the filters above to narrow the list. Each page keeps
+                  comparison focused with only twelve universities at a time.
                 </p>
               </div>
 
@@ -568,7 +567,7 @@ function UniversitiesPage() {
 
             {paginatedUniversities.length > 0 ? (
               <>
-                <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-5 grid gap-3 sm:mt-7 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {paginatedUniversities.map((university) => (
                     <UniversityListCard
                       key={university.slug}
@@ -613,7 +612,7 @@ function FilterSelect({ value, onChange, options }) {
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-14 w-full rounded-2xl border border-orange-100 bg-[#fff8f1] px-4 text-sm font-black text-[#071b3a] outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:border-orange-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-orange-100"
+      className="h-12 w-full rounded-xl border border-orange-100 bg-[#fff8f1] px-3.5 text-sm font-black text-[#071b3a] outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:border-orange-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-orange-100 sm:h-14 sm:rounded-2xl sm:px-4"
     >
       {options.map((option) => (
         <option key={option} value={option}>
@@ -626,10 +625,10 @@ function FilterSelect({ value, onChange, options }) {
 
 function FeaturedUniversityCard({ university }) {
   return (
-    <article className="group overflow-hidden rounded-[1.7rem] bg-white shadow-[0_18px_46px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_28px_65px_rgba(255,91,18,0.14)]">
+    <article className="group overflow-hidden rounded-[1.45rem] border border-orange-100 bg-white shadow-[0_18px_46px_rgba(15,23,42,0.07)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_28px_65px_rgba(255,91,18,0.14)] sm:rounded-[1.7rem]">
       <Link
         to={`/universities/${university.slug}`}
-        className="relative block h-48 overflow-hidden bg-orange-50"
+        className="relative block h-44 overflow-hidden bg-orange-50 sm:h-48"
       >
         <img
           src={university.image}
@@ -660,7 +659,7 @@ function FeaturedUniversityCard({ university }) {
         </div>
       </Link>
 
-      <div className="p-4">
+      <div className="p-3.5 sm:p-4">
         <div className="flex flex-wrap gap-1.5">
           <span className="rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-black text-green-700 ring-1 ring-green-100">
             {getTuitionBadge(university.tuitionLevel)}
@@ -688,7 +687,7 @@ function FeaturedUniversityCard({ university }) {
 
 function UniversityListCard({ university }) {
   return (
-    <article className="group rounded-[1.55rem] bg-white p-5 shadow-[0_16px_42px_rgba(15,23,42,0.055)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:shadow-[0_22px_55px_rgba(255,91,18,0.10)]">
+    <article className="group rounded-[1.35rem] border border-orange-100 bg-white p-4 shadow-[0_16px_42px_rgba(15,23,42,0.055)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_22px_55px_rgba(255,91,18,0.10)] sm:rounded-[1.55rem] sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -715,7 +714,7 @@ function UniversityListCard({ university }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-bold text-slate-600">
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-600 sm:mt-4 sm:text-xs">
         <div className="rounded-xl bg-[#fffaf5] px-3 py-2 ring-1 ring-orange-100">
           💰 {university.tuition}
         </div>
@@ -724,7 +723,7 @@ function UniversityListCard({ university }) {
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl bg-[#fff8f1] p-3 ring-1 ring-orange-100">
+      <div className="mt-3 rounded-xl bg-[#fff8f1] p-3 ring-1 ring-orange-100 sm:mt-4">
         <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-600">
           Best For
         </p>
@@ -733,7 +732,7 @@ function UniversityListCard({ university }) {
         </p>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-1.5">
+      <div className="mt-3 flex flex-wrap gap-1.5 sm:mt-4">
         {university.programs.slice(0, 3).map((program) => (
           <span
             key={program}
@@ -744,7 +743,7 @@ function UniversityListCard({ university }) {
         ))}
       </div>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-3 flex gap-2 sm:mt-4">
         <Link
           to={`/universities/${university.slug}`}
           className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-4 py-3 text-xs font-black text-white hover:-translate-y-0.5 hover:bg-[#092b72] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
@@ -773,7 +772,7 @@ function Pagination({ page, totalPages, onChange }) {
   const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   return (
-    <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-[1.5rem] bg-white p-4 shadow-sm ring-1 ring-orange-100 sm:flex-row">
+    <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-[1.35rem] border border-orange-100 bg-white p-3.5 shadow-sm sm:mt-8 sm:flex-row sm:gap-4 sm:rounded-[1.5rem] sm:p-4">
       <button
         type="button"
         onClick={() => onChange(Math.max(1, page - 1))}

@@ -248,7 +248,7 @@ function FocusStat({ item }) {
     <div className="group/stat relative overflow-hidden rounded-[26px] bg-white/90 p-5 text-left shadow-[0_18px_42px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_58px_rgba(255,75,18,0.13)]">
       <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#fff1ea]" />
       <div className="relative flex items-start gap-4">
-        <div className="grid h-13 w-13 shrink-0 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] shadow-inner ring-1 ring-orange-100 transition duration-300 group-hover/stat:scale-105">
+        <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] shadow-inner ring-1 ring-orange-100 transition duration-300 group-hover/stat:scale-105">
           <Icon size={25} strokeWidth={2.7} />
         </div>
         <div>
@@ -294,12 +294,12 @@ function ItalyReasonPanel() {
           Live Destination
         </div>
 
-        <h3 className="mt-5 max-w-2xl text-5xl font-black leading-[0.92] tracking-[-0.06em] text-[#071f50] md:text-6xl">
+        <h3 className="mt-4 max-w-2xl text-[2.45rem] font-black leading-[0.94] tracking-[-0.055em] text-[#071f50] sm:mt-5 sm:text-5xl md:text-6xl">
           Why Italy is our{" "}
           <span className="text-[#ff4b12]">first destination.</span>
         </h3>
 
-        <p className="mt-5 max-w-2xl text-base font-semibold leading-8 text-[#526178]">
+        <p className="mt-4 max-w-2xl text-sm font-semibold leading-7 text-[#526178] sm:mt-5 sm:text-base sm:leading-8">
           Zaifan is choosing depth over quantity. Italy is our first deep-focus
           destination so we can build real guidance, real university profiles,
           real scholarships and a stronger student journey.
@@ -313,9 +313,9 @@ function ItalyReasonPanel() {
           return (
             <div
               key={item.title}
-              className="rounded-[24px] bg-white/90 p-5 text-center shadow-[0_16px_38px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(255,75,18,0.12)]"
+              className="rounded-[24px] border border-orange-100 bg-white/92 p-5 text-center shadow-[0_16px_38px_rgba(9,31,80,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_22px_50px_rgba(255,75,18,0.12)]"
             >
-              <div className="mx-auto grid h-13 w-13 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
                 <Icon size={25} strokeWidth={2.7} />
               </div>
               <h4 className="mt-4 text-sm font-black leading-tight text-[#071f50]">
@@ -329,7 +329,7 @@ function ItalyReasonPanel() {
         })}
       </div>
 
-      <div className="hidden rounded-[30px] bg-white/86 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 md:block">
+      <div className="hidden rounded-[30px] border border-orange-100 bg-white/88 p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] md:block">
         <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-[#ff4b12]">
           The Italy Journey With Zaifan
         </p>
@@ -359,7 +359,7 @@ function ItalyReasonPanel() {
         </div>
       </div>
 
-      <div className="hidden gap-4 rounded-[30px] bg-white/86 p-5 shadow-[0_18px_45px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 md:grid md:grid-cols-2 xl:grid-cols-4">
+      <div className="hidden gap-4 rounded-[30px] border border-orange-100 bg-white/88 p-5 shadow-[0_18px_45px_rgba(9,31,80,0.06)] md:grid md:grid-cols-2 xl:grid-cols-4">
   {focusStats.map((item) => {
     const Icon = item.icon;
 
@@ -398,9 +398,9 @@ function ItalySpotlightCard({ country, onActivate }) {
       onMouseEnter={onActivate}
       onFocus={onActivate}
       tabIndex={0}
-      className="group relative overflow-hidden rounded-[34px] bg-white shadow-[0_26px_75px_rgba(255,75,18,0.14)] ring-2 ring-[#ff4b12]/28 focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20"
+      className="group relative overflow-hidden rounded-[30px] border-2 border-[#ff4b12]/20 bg-white shadow-[0_26px_75px_rgba(255,75,18,0.14)] focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20 sm:rounded-[34px]"
     >
-      <div className="relative h-[380px] overflow-hidden bg-orange-50">
+      <div className="relative h-[300px] overflow-hidden bg-orange-50 sm:h-[340px] lg:h-[380px]">
         <img
           src={country.image}
           alt="Study in Italy with Zaifan"
@@ -411,12 +411,12 @@ function ItalySpotlightCard({ country, onActivate }) {
 
         <div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/72 via-[#071f50]/10 to-transparent" />
 
-        <div className="absolute left-6 top-6 inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#ff4b12] shadow-lg ring-1 ring-white/70 backdrop-blur">
+        <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#ff4b12] shadow-lg ring-1 ring-white/70 backdrop-blur sm:left-6 sm:top-6 sm:px-4 sm:text-[11px] sm:tracking-[0.14em]">
           <Star size={14} fill="currentColor" strokeWidth={3} />
           {country.badge}
         </div>
 
-        <div className="absolute bottom-6 left-6 max-w-[360px] rounded-[24px] bg-white/94 p-5 shadow-xl ring-1 ring-white/80 backdrop-blur">
+        <div className="absolute bottom-4 left-4 right-4 max-w-[360px] rounded-[20px] bg-white/94 p-4 shadow-xl ring-1 ring-white/80 backdrop-blur sm:bottom-6 sm:left-6 sm:right-auto sm:rounded-[24px] sm:p-5">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff4b12]">
             Featured Destination
           </p>
@@ -429,7 +429,7 @@ function ItalySpotlightCard({ country, onActivate }) {
         </div>
       </div>
 
-      <div className="relative bg-[#fffaf5] p-6 md:p-8">
+      <div className="relative bg-[#fffaf5] p-5 sm:p-6 md:p-8">
         <div className="absolute right-0 top-0 h-36 w-36 rounded-bl-[70px] bg-[#fff1ea]" />
 
         <div className="relative">
@@ -438,17 +438,17 @@ function ItalySpotlightCard({ country, onActivate }) {
             Italy-first study route
           </div>
 
-          <h3 className="mt-5 text-4xl font-black leading-[0.95] tracking-[-0.055em] text-[#071f50] md:text-5xl">
+          <h3 className="mt-4 text-3xl font-black leading-[0.96] tracking-[-0.05em] text-[#071f50] sm:mt-5 sm:text-4xl md:text-5xl">
             Your Italian Journey{" "}
             <span className="text-[#ff4b12]">Starts Here.</span>
           </h3>
 
-          <p className="mt-5 text-[15px] font-semibold leading-7 text-[#526178]">
+          <p className="mt-4 text-sm font-semibold leading-6 text-[#526178] sm:mt-5 sm:text-[15px] sm:leading-7">
             {country.description}
           </p>
         </div>
 
-        <div className="relative mt-6 grid gap-3 md:grid-cols-[1fr_0.9fr]">
+        <div className="relative mt-5 grid gap-3 sm:mt-6 md:grid-cols-[1fr_0.9fr]">
           <div className="rounded-[22px] bg-white/80 p-4 ring-1 ring-orange-100">
             <InfoRow icon="🎓" label="Focus" value={country.universities} />
             <InfoRow icon="💰" label="Funding" value={country.tuition} />
@@ -483,7 +483,7 @@ function ItalySpotlightCard({ country, onActivate }) {
           ))}
         </div>
 
-        <div className="relative mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="relative mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2">
           <a
             href={country.href}
             className="inline-flex items-center justify-center gap-3 rounded-2xl bg-[#ff4b12] px-5 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.28)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f]"
@@ -512,8 +512,8 @@ function ComingSoonCountryCard({ country, isActive, onActivate }) {
       onMouseEnter={onActivate}
       onFocus={onActivate}
       aria-label={`${country.name} study destination coming soon`}
-      className={`group relative flex h-full min-h-[268px] flex-col overflow-hidden rounded-[26px] bg-white shadow-[0_16px_34px_rgba(9,31,80,0.08)] ring-1 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(9,31,80,0.12)] focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20 ${
-        isActive ? "ring-[#ffb36d]/90" : "ring-orange-100/90"
+      className={`group relative flex h-full min-h-[268px] flex-col overflow-hidden rounded-[26px] border bg-white shadow-[0_16px_34px_rgba(9,31,80,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(9,31,80,0.12)] focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20 ${
+        isActive ? "border-[#ffb36d]/90" : "border-orange-100/90"
       }`}
     >
       <div className="relative h-[145px] overflow-hidden bg-orange-50">
@@ -566,7 +566,7 @@ function Milestone({ item, index }) {
       className="relative rounded-[26px] bg-white/90 p-5 shadow-[0_18px_44px_rgba(9,31,80,0.07)] ring-1 ring-orange-100"
     >
       <div className="mb-4 flex items-center justify-between">
-        <div className="grid h-13 w-13 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
+        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12] ring-1 ring-orange-100">
           <Icon size={25} strokeWidth={2.7} />
         </div>
         <span className="text-4xl font-black tracking-[-0.06em] text-orange-100">
@@ -599,7 +599,7 @@ function Countries() {
   return (
     <section
       id="countries"
-      className="relative overflow-hidden bg-[#fff5e9] px-5 py-28 text-[#071f50]"
+      className="relative overflow-hidden bg-[#fff5e9] px-4 py-20 text-[#071f50] sm:px-5 sm:py-24 lg:py-28"
     >
       <style>{`
         @keyframes countryFloat {
@@ -677,7 +677,7 @@ function Countries() {
       </div>
 
       <div className="relative mx-auto max-w-[1500px]">
-        <div className="relative pb-8 pt-4 text-center">
+        <div className="relative pb-6 pt-2 text-center sm:pb-8 sm:pt-4">
           <motion.img
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -695,7 +695,7 @@ function Countries() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: MOTION.duration, ease: MOTION.ease }}
             viewport={{ once: true }}
-            className="relative z-10 mx-auto mb-7 inline-flex items-center gap-2 rounded-full bg-white/85 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-[#ff4b12] shadow-[0_14px_34px_rgba(9,31,80,0.08)] ring-1 ring-orange-100"
+            className="relative z-10 mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/88 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-[#ff4b12] shadow-[0_14px_34px_rgba(9,31,80,0.08)] backdrop-blur sm:mb-7 sm:px-5 sm:py-3 sm:text-xs sm:tracking-[0.22em]"
           >
             <Sparkles size={16} fill="currentColor" />
             Italy first. More countries coming soon.
@@ -706,7 +706,7 @@ function Countries() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: MOTION.duration, delay: 0.05, ease: MOTION.ease }}
             viewport={{ once: true }}
-            className="relative z-10 mx-auto max-w-5xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-[#071f50] md:text-7xl xl:text-[82px]"
+            className="relative z-10 mx-auto max-w-5xl text-[2.7rem] font-black leading-[0.97] tracking-[-0.055em] text-[#071f50] sm:text-5xl md:text-7xl xl:text-[82px]"
           >
             We’re building the{" "}
             <span className="text-[#ff4b12]">Italy Study Hub</span> first.
@@ -717,7 +717,7 @@ function Countries() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: MOTION.duration, delay: 0.12, ease: MOTION.ease }}
             viewport={{ once: true }}
-            className="relative z-10 mx-auto mt-6 max-w-3xl text-lg font-semibold leading-8 text-[#526178]"
+            className="relative z-10 mx-auto mt-4 max-w-3xl text-base font-semibold leading-7 text-[#526178] sm:mt-6 sm:text-lg sm:leading-8"
           >
             Zaifan is going deep before going wide. Italy is live now, while
             other destinations will open when we have enough real guidance,
@@ -730,7 +730,7 @@ function Countries() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: MOTION.duration, delay: 0.16, ease: MOTION.ease }}
           viewport={{ once: true }}
-          className="relative z-20 mx-auto mt-8 flex max-w-5xl flex-wrap justify-center gap-2"
+          className="relative z-20 mx-auto mt-6 flex max-w-5xl flex-nowrap justify-start gap-2 overflow-x-auto pb-2 sm:mt-8 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0"
           aria-label="Country quick selector"
         >
           {destinations.map((country) => {
@@ -742,7 +742,7 @@ function Countries() {
                 key={country.name}
                 type="button"
                 onClick={() => setActiveCountry(country.name)}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-black shadow-sm ring-1 transition duration-300 focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20 ${
+                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-black shadow-sm ring-1 transition duration-300 focus:outline-none focus-visible:ring-4 focus:ring-[#ff4b12]/20 ${
                   isActive
                     ? isLive
                       ? "bg-[#ff4b12] text-white ring-[#ff4b12]"
@@ -767,7 +767,7 @@ function Countries() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: MOTION.ease }}
-          className="relative z-20 mx-auto mt-6 max-w-4xl rounded-[24px] bg-white/82 p-4 text-center shadow-[0_16px_38px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 backdrop-blur md:p-5"
+          className="relative z-20 mx-auto mt-4 max-w-4xl rounded-[20px] border border-orange-100 bg-white/84 p-3.5 text-center shadow-[0_16px_38px_rgba(9,31,80,0.07)] backdrop-blur sm:mt-6 sm:rounded-[24px] md:p-5"
         >
           <p className="text-sm font-black text-[#071f50] md:text-base">
             Selected:{" "}
@@ -788,7 +788,7 @@ function Countries() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.12 }}
-          className="relative z-20 mx-auto mt-12 grid max-w-[1350px] gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start"
+          className="relative z-20 mx-auto mt-9 grid max-w-[1350px] gap-6 sm:mt-12 sm:gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start"
         >
           <ItalyReasonPanel />
 
@@ -804,7 +804,7 @@ function Countries() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: MOTION.duration, delay: 0.08, ease: MOTION.ease }}
           viewport={{ once: true }}
-          className="relative z-20 mt-9 hidden overflow-hidden rounded-[34px] bg-white/86 p-5 shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 backdrop-blur md:block md:p-6"
+          className="relative z-20 mt-9 hidden overflow-hidden rounded-[34px] border border-orange-100 bg-white/88 p-5 shadow-[0_24px_70px_rgba(9,31,80,0.08)] backdrop-blur md:block md:p-6"
         >
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -854,9 +854,9 @@ function Countries() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: MOTION.duration, ease: MOTION.ease }}
           viewport={{ once: true }}
-          className="mt-9 overflow-hidden rounded-[34px] bg-[#071f50] p-5 text-white shadow-[0_28px_80px_rgba(9,31,80,0.18)] ring-1 ring-white/10 md:p-7"
+          className="mt-7 overflow-hidden rounded-[28px] border border-white/10 bg-[#071f50] p-3 text-white shadow-[0_28px_80px_rgba(9,31,80,0.18)] sm:mt-9 sm:rounded-[34px] sm:p-5 md:p-7"
         >
-          <div className="relative flex flex-col gap-6 overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_12%_20%,rgba(255,122,59,0.26),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03))] p-6 lg:flex-row lg:items-center lg:justify-between lg:p-8">
+          <div className="relative flex flex-col gap-5 overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_12%_20%,rgba(255,122,59,0.26),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03))] p-5 sm:rounded-[28px] sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:p-8">
             <div className="absolute right-8 top-6 text-6xl opacity-20 soft-pulse">
               🇮🇹
             </div>
@@ -866,10 +866,10 @@ function Countries() {
                 <MapPin size={46} className="text-[#ffb36d]" strokeWidth={2.4} />
               </div>
               <div>
-                <h3 className="text-2xl font-black tracking-[-0.035em] text-white md:text-3xl">
+                <h3 className="text-xl font-black tracking-[-0.035em] text-white sm:text-2xl md:text-3xl">
                   Want to study in Italy?
                 </h3>
-                <p className="mt-2 max-w-2xl text-[15px] font-semibold leading-7 text-white/76">
+                <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-white/76 sm:text-[15px] sm:leading-7">
                   Start with the destination Zaifan is focusing on first. We’ll
                   help you understand Italy, shortlist universities and plan the
                   next step based on your profile.
@@ -879,7 +879,7 @@ function Countries() {
 
             <a
               href="/appointment?country=Italy"
-              className="relative inline-flex min-w-[260px] items-center justify-center gap-3 rounded-[20px] bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus-visible:ring-4 focus:ring-white/20 md:min-w-[320px]"
+              className="relative inline-flex w-full items-center justify-center gap-3 rounded-[18px] bg-[#ff4b12] px-6 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#ff642f] focus:outline-none focus-visible:ring-4 focus:ring-white/20 sm:w-auto sm:min-w-[260px] sm:rounded-[20px] sm:px-8 sm:py-5 sm:text-base md:min-w-[320px]"
             >
               Get Free Italy Consultation
               <ArrowRight size={22} strokeWidth={3} />

@@ -33,7 +33,6 @@ import {
   getTuitionBadge,
   italianUniversities,
 } from "../../data/italianUniversities";
-import Footer from "../../components/public/layout/Footer";
 import NotFoundPage from "./NotFoundPage.jsx";
 
 const MOTION = {
@@ -65,6 +64,28 @@ const pageSections = [
   "Roadmap",
   "FAQs",
 ];
+
+
+const universityThemes = {
+  Technical: {
+    eyebrow: "Engineering & Innovation",
+    accent: "from-[#ff4b12] via-[#ff7a34] to-[#123865]",
+    soft: "from-[#fff1ea] via-white to-[#edf4ff]",
+    badge: "TECH",
+  },
+  Public: {
+    eyebrow: "Public University Route",
+    accent: "from-[#ff5a2f] via-[#ff955f] to-[#071f50]",
+    soft: "from-[#fff3ec] via-white to-[#eef5ff]",
+    badge: "PUBLIC",
+  },
+  Private: {
+    eyebrow: "Private University Route",
+    accent: "from-[#ff6035] via-[#ff9c61] to-[#5b315f]",
+    soft: "from-[#fff1eb] via-white to-[#f8efff]",
+    badge: "PRIVATE",
+  },
+};
 
 const cityFundingBodies = {
   Milan: {
@@ -399,6 +420,27 @@ function UniversityDetailPage() {
   const cityGuideHref = `/countries/italy/${buildCitySlug(university?.city)}`;
   const regionalFunding = cityFundingBodies[university?.city];
 
+  const universityTheme =
+    universityThemes[university?.type] || {
+      eyebrow: "Italian University Route",
+      accent: "from-[#ff4b12] via-[#ff8a4c] to-[#071f50]",
+      soft: "from-[#fff1ea] via-white to-[#eef4ff]",
+      badge: "ITALY",
+    };
+
+  const desktopSections = [
+    ["university-overview", "Overview"],
+    ["university-programs", "Programs"],
+    ["university-student-fit", "Student Fit"],
+    ["university-costs", "Costs"],
+    ["university-scholarships", "Scholarships"],
+    ["university-requirements", "Requirements"],
+    ["university-city-life", "City Life"],
+    ["university-compare", "Compare"],
+    ["university-roadmap", "Roadmap"],
+    ["university-faqs", "FAQs"],
+  ];
+
   if (!university || !detail) {
     return <NotFoundPage />;
   }
@@ -415,8 +457,7 @@ function UniversityDetailPage() {
   )}&city=${encodeURIComponent(university.city)}&service=University Guidance`;
 
   return (
-    <>
-      <main className="relative overflow-hidden bg-[#fff7ed] pt-28 text-[#071b3a]">
+      <main className={`relative overflow-hidden bg-gradient-to-br ${universityTheme.soft} pt-28 text-[#071b3a]`}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_8%,rgba(255,110,28,0.16),transparent_30%),radial-gradient(circle_at_12%_80%,rgba(255,172,92,0.16),transparent_28%)]" />
         <div className="pointer-events-none absolute left-[-140px] top-20 h-96 w-96 rounded-full bg-orange-300/20 blur-3xl" />
         <div className="pointer-events-none absolute right-[-140px] bottom-28 h-96 w-96 rounded-full bg-[#ff4b12]/10 blur-3xl" />
@@ -430,14 +471,14 @@ function UniversityDetailPage() {
             Back to all universities
           </Link>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_430px] lg:items-stretch">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.22fr)_430px] xl:items-stretch">
             <motion.div
               initial={shouldReduceMotion ? false : { opacity: 0, x: -24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: MOTION.duration, ease: MOTION.ease }}
-              className="h-full overflow-hidden rounded-[2.7rem] border border-orange-100 bg-white shadow-[0_28px_85px_rgba(15,23,42,0.09)]"
+              className="h-full overflow-hidden rounded-[2.7rem] border border-orange-100 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.13)]"
             >
-              <div className="relative h-full min-h-[500px] overflow-hidden bg-gradient-to-br from-orange-100 via-white to-emerald-50">
+              <div className="relative h-full min-h-[560px] overflow-hidden bg-gradient-to-br from-orange-100 via-white to-blue-50">
                 <img
                   src={university.image}
                   alt={`${university.name} Italy university`}
@@ -445,9 +486,14 @@ function UniversityDetailPage() {
                   fetchPriority="high"
                   className="absolute inset-0 h-full w-full object-cover object-center"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#071b3a]/90 via-[#071b3a]/64 to-[#071b3a]/20" />
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,27,58,0.94)_0%,rgba(7,27,58,0.78)_48%,rgba(7,27,58,0.22)_100%)]" />
 
-                <div className="relative z-10 flex h-full min-h-[500px] flex-col justify-end p-6 text-white sm:p-8 lg:p-10">
+                <div className="relative z-10 flex h-full min-h-[560px] flex-col justify-end p-6 text-white sm:p-8 lg:p-10 xl:p-12">
+                  <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full bg-white/12 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#ffb36d] ring-1 ring-white/15 backdrop-blur">
+                    <Sparkles size={14} fill="currentColor" />
+                    {universityTheme.eyebrow}
+                  </div>
+
                   <div className="mb-4 flex flex-wrap gap-2">
                     <span className="rounded-full bg-white/95 px-4 py-2 text-xs font-black text-orange-600 shadow-md">
                       {university.rank} Italy Choice
@@ -490,8 +536,9 @@ function UniversityDetailPage() {
               initial={shouldReduceMotion ? false : { opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: MOTION.duration, ease: MOTION.ease }}
-              className="rounded-[2.7rem] border border-orange-100 bg-white/94 p-6 shadow-[0_28px_85px_rgba(15,23,42,0.09)] backdrop-blur"
+              className={`rounded-[2.7rem] bg-gradient-to-br ${universityTheme.accent} p-[3px] shadow-[0_32px_95px_rgba(15,23,42,0.14)]`}
             >
+              <div className="h-full rounded-[2.55rem] bg-white/96 p-6 backdrop-blur">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
                 Quick decision card
               </p>
@@ -534,11 +581,12 @@ function UniversityDetailPage() {
                   </div>
                 </div>
               </div>
+              </div>
             </motion.aside>
           </div>
 
-          <div className="mt-6 rounded-[2rem] bg-white/88 p-4 shadow-[0_18px_48px_rgba(15,23,42,0.07)] ring-1 ring-orange-100">
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-6 lg:hidden">
+            <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {pageSections.map((item) => {
                 const id = `university-${item.toLowerCase().replace(/\s+/g, "-")}`;
                 return (
@@ -546,7 +594,7 @@ function UniversityDetailPage() {
                     key={item}
                     type="button"
                     onClick={() => scrollToId(id)}
-                    className="rounded-full bg-[#fff8f1] px-4 py-2 text-xs font-black text-[#071b3a] ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-50 hover:text-orange-600"
+                    className="min-w-fit snap-start rounded-full bg-white px-4 py-2.5 text-xs font-black text-[#071b3a] shadow-sm ring-1 ring-orange-100"
                   >
                     {item}
                   </button>
@@ -554,9 +602,25 @@ function UniversityDetailPage() {
               })}
             </div>
           </div>
+
+          <div className="mt-6 hidden rounded-[2rem] bg-white/94 p-3 shadow-[0_20px_55px_rgba(15,23,42,0.08)] ring-1 ring-orange-100 lg:flex lg:items-center lg:gap-2">
+            {desktopSections.map(([id, label], index) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => scrollToId(id)}
+                className="group flex min-w-fit items-center gap-2 rounded-full px-4 py-3 text-xs font-black text-[#071b3a] transition hover:bg-orange-50 hover:text-orange-600"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-orange-50 text-[10px] text-orange-600 ring-1 ring-orange-100">
+                  {index + 1}
+                </span>
+                {label}
+              </button>
+            ))}
+          </div>
         </section>
 
-        <section id="university-overview" className="relative px-4 py-10 sm:px-6 lg:px-10">
+        <section id="university-overview" className="relative px-4 py-14 sm:px-6 lg:px-10">
           <div className="mx-auto grid max-w-[1500px] gap-5 lg:grid-cols-[1fr_0.85fr]">
             <ContentCard title="Why choose this university?" icon={Sparkles}>
               <div className="grid gap-3 md:grid-cols-2">
@@ -585,7 +649,7 @@ function UniversityDetailPage() {
               text="These cards help students quickly understand the basic fit before moving into programs, cost, documents and application planning."
             />
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="relative mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:before:absolute xl:before:left-[12%] xl:before:right-[12%] xl:before:top-7 xl:before:h-px xl:before:bg-orange-200">
               <FactCard icon={MapPin} label="Location" value={`${university.city}, ${university.region}`} />
               <FactCard icon={Landmark} label="University Type" value={university.type} />
               <FactCard icon={Wallet} label="Tuition Direction" value={university.tuition} />
@@ -594,17 +658,23 @@ function UniversityDetailPage() {
           </div>
         </section>
 
-        <section id="university-programs" className="relative px-4 py-10 sm:px-6 lg:px-10">
+        <section id="university-programs" className="relative bg-white/45 px-4 py-16 sm:px-6 lg:px-10">
           <div className="mx-auto grid max-w-[1500px] gap-5 lg:grid-cols-[0.95fr_1.05fr]">
             <ContentCard title="Popular programs" icon={BookOpenCheck}>
-              <div className="flex flex-wrap gap-2">
-                {university.programs.map((program) => (
-                  <span
+              <div className="grid gap-3 sm:grid-cols-2">
+                {university.programs.map((program, index) => (
+                  <div
                     key={program}
-                    className="rounded-full bg-orange-50 px-4 py-2 text-sm font-black text-orange-700 ring-1 ring-orange-100"
+                    className="group flex items-center justify-between rounded-[1.35rem] bg-[#fff8f1] px-4 py-4 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-white"
                   >
-                    {program}
-                  </span>
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[10px] font-black text-orange-600 ring-1 ring-orange-100">
+                        0{index + 1}
+                      </span>
+                      <span className="text-sm font-black text-[#071b3a]">{program}</span>
+                    </div>
+                    <ArrowRight size={15} className="text-orange-300 transition group-hover:translate-x-1 group-hover:text-orange-600" />
+                  </div>
                 ))}
               </div>
               <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">
@@ -623,9 +693,9 @@ function UniversityDetailPage() {
           </div>
         </section>
 
-        <section id="university-student-fit" className="relative px-4 py-10 sm:px-6 lg:px-10">
+        <section id="university-student-fit" className="relative px-4 py-16 sm:px-6 lg:px-10">
           <div className="mx-auto grid max-w-[1500px] gap-5 lg:grid-cols-[1fr_0.9fr]">
-            <ContentCard title="Perfect for students who..." icon={CheckCircle2}>
+            <ContentCard title="Perfect for students who..." icon={CheckCircle2} tone="positive">
               <div className="grid gap-3 md:grid-cols-2">
                 {studentFitItems.map((item) => (
                   <CheckItem key={item}>{item}</CheckItem>
@@ -633,7 +703,7 @@ function UniversityDetailPage() {
               </div>
             </ContentCard>
 
-            <ContentCard title="Avoid this route if..." icon={ShieldCheck}>
+            <ContentCard title="Avoid this route if..." icon={ShieldCheck} tone="warning">
               <div className="grid gap-3">
                 {avoidItems.map((item) => (
                   <WarningItem key={item}>{item}</WarningItem>
@@ -670,7 +740,7 @@ function UniversityDetailPage() {
           </div>
         </section>
 
-        <section id="university-costs" className="relative px-4 py-10 sm:px-6 lg:px-10">
+        <section id="university-costs" className="relative bg-[#fff1ea] px-4 py-16 sm:px-6 lg:px-10">
           <div className="mx-auto max-w-[1500px]">
             <ContentCard title="Estimated cost & scholarship snapshot" icon={Wallet}>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -779,7 +849,7 @@ function UniversityDetailPage() {
           </div>
         </section>
 
-        <section id="university-requirements" className="relative px-4 py-12 sm:px-6 lg:px-10">
+        <section id="university-requirements" className="relative px-4 py-16 sm:px-6 lg:px-10">
           <div className="mx-auto grid max-w-[1500px] gap-5 lg:grid-cols-2">
             <ContentCard title="General admission requirements" icon={GraduationCap}>
               <div className="grid gap-2">
@@ -875,11 +945,13 @@ function UniversityDetailPage() {
             />
 
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {relatedUniversities.map((item) => (
+              {relatedUniversities.map((item, index) => (
                 <Link
                   key={item.slug}
                   to={`/universities/${item.slug}`}
-                  className="group overflow-hidden rounded-[2rem] bg-white shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,91,18,0.14)]"
+                  className={`group overflow-hidden rounded-[2rem] bg-white shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,91,18,0.14)] ${
+                    index === 0 ? "md:col-span-2 xl:col-span-1" : ""
+                  }`}
                 >
                   <div className="relative h-40 overflow-hidden bg-orange-50">
                     <img
@@ -992,7 +1064,12 @@ function UniversityDetailPage() {
 
             <div className="mt-8 overflow-hidden rounded-[2rem] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
               {detail.timeline.map(([title, text], index) => (
-                <div key={title} className="flex gap-5 border-b border-orange-100 p-5 last:border-b-0 md:p-6">
+                <div
+                  key={title}
+                  className={`flex gap-5 border-b border-orange-100 p-5 last:border-b-0 md:p-6 ${
+                    index % 2 === 0 ? "bg-white" : "bg-[#fff8f1]"
+                  }`}
+                >
                   <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-600 text-sm font-black text-white">
                     {index + 1}
                   </div>
@@ -1097,9 +1174,6 @@ function UniversityDetailPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </>
   );
 }
 
@@ -1138,17 +1212,31 @@ function DecisionRow({ icon: Icon, label, value }) {
   );
 }
 
-function ContentCard({ title, icon: Icon, children }) {
+function ContentCard({ title, icon: Icon, children, tone = "default" }) {
+  const toneClass =
+    tone === "positive"
+      ? "border-emerald-100 bg-gradient-to-br from-white to-emerald-50/75"
+      : tone === "warning"
+        ? "border-red-100 bg-gradient-to-br from-white to-red-50/70"
+        : "border-orange-100 bg-white/92";
+
+  const iconClass =
+    tone === "positive"
+      ? "bg-emerald-50 text-emerald-600"
+      : tone === "warning"
+        ? "bg-red-50 text-red-500"
+        : "bg-orange-50 text-orange-600";
+
   return (
     <motion.section
       variants={fadeUp}
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.18 }}
-      className="rounded-[2rem] border border-orange-100 bg-white/92 p-6 shadow-[0_18px_55px_rgba(15,23,42,0.07)]"
+      className={`rounded-[2rem] border p-6 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ${toneClass}`}
     >
       <div className="mb-5 flex items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${iconClass}`}>
           <Icon className="h-6 w-6" />
         </div>
         <h2 className="text-2xl font-black tracking-[-0.035em]">{title}</h2>

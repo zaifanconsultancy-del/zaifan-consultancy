@@ -107,6 +107,13 @@ const decisionPoints = [
   { icon: ShieldCheck, title: "Trust honest availability", text: "Italy is live now. Other countries are visible, but not pretending to be finished." },
 ];
 
+const countryCommandStats = [
+  { value: "1", label: "Live Destination" },
+  { value: "8", label: "City Guides" },
+  { value: "50", label: "University Target" },
+  { value: "DSU", label: "Funding Route" },
+];
+
 const italyJourney = [
   { icon: Compass, title: "Discover Italy", text: "Understand why Italy may fit your academic, financial and lifestyle goals.", href: "/countries/italy" },
   { icon: Building2, title: "Compare Cities", text: "Choose between Milan, Rome, Bologna, Padua, Turin and other student cities.", href: "/countries/italy" },
@@ -128,7 +135,7 @@ const hoverCard =
 
 function CountriesPage() {
   return (
-    <section className="relative overflow-hidden bg-[#fff5e9] px-5 pb-24 pt-28 text-[#071f50]">
+    <section className="relative overflow-hidden bg-[linear-gradient(180deg,#fff8f1_0%,#fff5e9_58%,#fff1e3_100%)] px-4 pb-20 pt-28 text-[#071f50] sm:px-5 sm:pb-24">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_12%,rgba(255,75,18,0.13),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(255,190,92,0.18),transparent_28%)]" />
       <div className="pointer-events-none absolute -left-36 top-28 h-96 w-96 rounded-full bg-orange-300/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-36 bottom-32 h-96 w-96 rounded-full bg-orange-500/10 blur-3xl" />
@@ -139,18 +146,18 @@ function CountriesPage() {
             <Sparkles size={16} fill="currentColor" />
             Italy live. More countries coming soon.
           </div>
-          <h1 className="mx-auto mt-6 max-w-5xl text-5xl font-black leading-[0.98] tracking-[-0.06em] md:text-7xl">
+          <h1 className="mx-auto mt-5 max-w-5xl text-[2.8rem] font-black leading-[0.96] tracking-[-0.055em] sm:mt-6 sm:text-5xl md:text-7xl md:tracking-[-0.06em]">
             Start with the destination we’re building <span className="text-[#ff4b12]">properly.</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-3xl text-lg font-semibold leading-8 text-[#526178]">
+          <p className="mx-auto mt-4 max-w-3xl text-sm font-semibold leading-7 text-[#526178] sm:mt-6 sm:text-lg sm:leading-8">
             This hub is not just country cards. It shows which destination is ready, what ecosystem exists inside it, and what future destinations will unlock later.
           </p>
         </motion.div>
 
         <div className="mx-auto grid max-w-[1450px] gap-7 xl:grid-cols-[minmax(0,1.55fr)_minmax(380px,0.85fr)]">
-          <motion.article initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} transition={MOTION} viewport={{ once: true, amount: 0.15 }} className="group relative overflow-hidden rounded-[42px] bg-white shadow-[0_34px_95px_rgba(255,75,18,0.16)] ring-1 ring-orange-100">
+          <motion.article initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} transition={MOTION} viewport={{ once: true, amount: 0.15 }} className="group relative overflow-hidden rounded-[36px] bg-white shadow-[0_38px_110px_rgba(255,75,18,0.18)] ring-1 ring-orange-100 sm:rounded-[42px]">
             <div className="grid md:grid-cols-[1.05fr_1.15fr]">
-              <div className="relative min-h-[410px] overflow-hidden bg-orange-50 md:h-full">
+              <div className="relative min-h-[360px] overflow-hidden bg-orange-50 sm:min-h-[410px] md:h-full">
                 <img src={liveCountry.image} alt="Study in Italy" className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/62 via-transparent to-transparent" />
                 <div className="absolute left-6 top-6 inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#ff4b12] shadow-lg">
@@ -184,6 +191,20 @@ function CountriesPage() {
                     Book Italy Consultation
                   </Link>
                 </div>
+                <div className="mt-5 hidden items-center gap-2 overflow-x-auto rounded-[1.4rem] bg-[#fffaf5] p-3 ring-1 ring-orange-100 md:flex">
+                  {["Italy", "Cities", "Universities", "Scholarships", "Appointment"].map((item, index) => (
+                    <div key={item} className="flex min-w-fit items-center gap-2">
+                      <span className={`rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] ${
+                        index === 0
+                          ? "bg-[#ff4b12] text-white"
+                          : "bg-white text-[#071f50] ring-1 ring-orange-100"
+                      }`}>
+                        {item}
+                      </span>
+                      {index !== 4 && <ArrowRight size={13} className="text-orange-300" />}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="border-t border-orange-100 bg-[#fffaf5] p-6 md:col-span-2 md:p-7">
@@ -192,7 +213,7 @@ function CountriesPage() {
                     <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12] shadow-sm ring-1 ring-orange-100"><Route size={15} /> Italy depth map</div>
                     <h3 className="mt-3 text-2xl font-black tracking-[-0.04em] text-[#071f50] md:text-3xl">Everything inside Italy connects to the next step.</h3>
                   </div>
-                  <p className="max-w-xl text-sm font-semibold leading-7 text-[#526178]">Country, cities, universities, scholarships, documents and action — all connected in one useful ecosystem.</p>
+                  <p className="hidden max-w-xl text-sm font-semibold leading-7 text-[#526178] sm:block">Country, cities, universities, scholarships, documents and action — all connected in one useful ecosystem.</p>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -213,7 +234,7 @@ function CountriesPage() {
           </motion.article>
 
           <motion.aside initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} transition={MOTION} viewport={{ once: true, amount: 0.15 }} className="rounded-[42px] bg-[#071f50] p-7 text-white shadow-[0_32px_90px_rgba(7,31,80,0.18)]">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#ffb36d] ring-1 ring-white/10"><Clock3 size={15} /> How to use this hub</div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#ffb36d] ring-1 ring-white/10"><Clock3 size={15} /> Country Command Center</div>
             <h3 className="mt-5 text-4xl font-black leading-tight tracking-[-0.05em]">No fake country wall. Just a real path.</h3>
             <p className="mt-4 text-sm font-semibold leading-7 text-white/72">This page guides students toward the destination with the most complete ecosystem first, while still making it clear Zaifan will expand beyond Italy.</p>
             <div className="mt-7 space-y-4">
@@ -231,12 +252,25 @@ function CountriesPage() {
               <h4 className="mt-2 text-2xl font-black">Start with Italy.</h4>
               <p className="mt-2 text-sm font-semibold leading-7 text-white/70">Italy has the guide, university finder, city pages and scholarship ecosystem ready now.</p>
             </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {countryCommandStats.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[22px] bg-white/10 px-4 py-4 text-center ring-1 ring-white/10"
+                >
+                  <p className="text-2xl font-black text-white">{item.value}</p>
+                  <p className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#ffb36d]">
+                    {item.label}
+                  </p>
+                </div>
+              ))}
+            </div>
           </motion.aside>
         </div>
 
         <section className="mx-auto mt-10 max-w-[1450px] rounded-[42px] bg-white/88 p-6 shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 md:p-8">
           <div className="mb-7"><div className="inline-flex items-center gap-2 rounded-full bg-[#fff1ea] px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12] ring-1 ring-orange-100"><Route size={15} /> Italy ecosystem</div><h3 className="mt-4 max-w-4xl text-4xl font-black leading-tight tracking-[-0.05em]">Italy is not just one page — it is a connected student journey.</h3></div>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="relative grid gap-5 md:grid-cols-2 xl:grid-cols-4 xl:before:absolute xl:before:left-[10%] xl:before:right-[10%] xl:before:top-7 xl:before:h-px xl:before:bg-orange-200">
             {liveCountry.ecosystem.map((item) => {
               const Icon = item.icon;
               return (
@@ -255,9 +289,23 @@ function CountriesPage() {
             {italyJourney.map((step, index) => {
               const Icon = step.icon;
               return (
-                <Link key={step.title} to={step.href} className="group rounded-[28px] bg-white/10 p-5 ring-1 ring-white/10 transition duration-300 ease-out hover:-translate-y-1 hover:bg-white/14">
-                  <div className="mb-5 flex items-center justify-between gap-3"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#ff4b12] text-white"><Icon size={23} strokeWidth={3} /></div><span className="text-3xl font-black tracking-[-0.06em] text-white/15">0{index + 1}</span></div>
-                  <h4 className="text-lg font-black text-white">{step.title}</h4><p className="mt-3 text-xs font-semibold leading-6 text-white/68">{step.text}</p>
+                <Link
+                  key={step.title}
+                  to={step.href}
+                  className="group relative overflow-hidden rounded-[28px] bg-[linear-gradient(145deg,rgba(255,255,255,0.13),rgba(255,255,255,0.07))] p-5 shadow-[0_16px_36px_rgba(0,0,0,0.10)] ring-1 ring-white/12 transition duration-300 ease-out hover:-translate-y-1.5 hover:bg-white/14 hover:shadow-[0_24px_55px_rgba(0,0,0,0.18)]"
+                >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#ff4b12] via-[#ff8a42] to-transparent opacity-90" />
+                  <div className="relative mb-5 flex items-center justify-between gap-3">
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#ff4b12] text-white shadow-[0_12px_24px_rgba(255,75,18,0.28)] transition duration-300 group-hover:scale-105">
+                      <Icon size={23} strokeWidth={3} />
+                    </div>
+                    <span className="rounded-full bg-white/8 px-3 py-1 text-sm font-black tracking-[0.08em] text-white/35 ring-1 ring-white/10">
+                      0{index + 1}
+                    </span>
+                  </div>
+                  <h4 className="text-lg font-black text-white">{step.title}</h4>
+                  <div className="mt-3 h-0.5 w-10 rounded-full bg-[#ff4b12] transition-all duration-300 group-hover:w-16" />
+                  <p className="mt-3 text-xs font-semibold leading-6 text-white/68">{step.text}</p>
                 </Link>
               );
             })}
@@ -272,7 +320,7 @@ function CountriesPage() {
           <div className="overflow-hidden rounded-[28px] ring-1 ring-orange-100">
             <div className="hidden grid-cols-[0.9fr_1.1fr_1.1fr] bg-[#071f50] px-5 py-4 text-xs font-black uppercase tracking-[0.14em] text-white md:grid"><div>Factor</div><div>Italy</div><div>Other Countries</div></div>
             <div className="divide-y divide-orange-100 bg-white">
-              {comparisonRows.map(([factor, italy, others]) => <div key={factor} className="grid gap-3 px-5 py-5 text-sm font-bold text-[#526178] transition duration-300 hover:bg-[#fffaf5] md:grid-cols-[0.9fr_1.1fr_1.1fr]"><div className="font-black text-[#071f50]">{factor}</div><div>{italy}</div><div>{others}</div></div>)}
+              {comparisonRows.map(([factor, italy, others]) => <div key={factor} className="grid grid-cols-1 gap-3 px-4 py-4 text-sm font-bold text-[#526178] transition duration-300 hover:bg-[#fffaf5] sm:px-5 sm:py-5 md:grid-cols-[0.9fr_1.1fr_1.1fr]"><div className="font-black text-[#071f50]">{factor}</div><div>{italy}</div><div>{others}</div></div>)}
             </div>
           </div>
         </section>
@@ -286,14 +334,14 @@ function CountriesPage() {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
             {roadmapCountries.map((country, index) => (
               <motion.article key={country.name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: MOTION.duration, delay: index * 0.06, ease: MOTION.ease }} viewport={{ once: true, amount: 0.15 }} className="group overflow-hidden rounded-[28px] bg-white shadow-[0_18px_45px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(9,31,80,0.12)]">
-                <div className="relative h-40 overflow-hidden bg-orange-50"><img src={country.image} alt={`${country.name} coming soon`} loading="lazy" decoding="async" className="h-full w-full object-cover opacity-75 grayscale transition duration-700 ease-out group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/40 to-transparent" /><div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-black text-[#071f50] shadow-sm">{country.code} {country.name}</div><div className="absolute bottom-4 left-4 rounded-full bg-[#ff4b12] px-3 py-1.5 text-xs font-black uppercase text-white shadow-lg">{country.priority}</div></div>
+                <div className="relative h-40 overflow-hidden bg-orange-50"><img src={country.image} alt={`${country.name} coming soon`} loading="lazy" decoding="async" className="h-full w-full object-cover opacity-75 grayscale transition duration-700 ease-out group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/40 to-transparent" /><div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-black text-[#071f50] shadow-sm">{country.code} {country.name}</div><div className={`absolute bottom-4 left-4 rounded-full px-3 py-1.5 text-xs font-black uppercase text-white shadow-lg ${index === 0 ? "bg-[#071f50]" : "bg-[#ff4b12]"}`}>{country.priority}</div></div>
                 <div className="p-5"><h4 className="text-xl font-black tracking-[-0.035em] text-[#071f50]">{country.flag} {country.name}</h4><p className="mt-3 text-sm font-bold leading-7 text-[#526178]">{country.focus}</p><div className="mt-4 flex flex-wrap gap-2">{country.modules.map((module) => <span key={module} className="rounded-full bg-[#fff1ea] px-3 py-1 text-[10px] font-black text-[#ff4b12] ring-1 ring-orange-100">{module}</span>)}</div></div>
               </motion.article>
             ))}
           </div>
         </section>
 
-        <section className="mx-auto mt-10 max-w-[1450px] overflow-hidden rounded-[42px] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-7 text-white shadow-[0_24px_70px_rgba(255,75,18,0.24)] md:p-9">
+        <section className="mx-auto mt-10 max-w-[1450px] overflow-hidden rounded-[34px] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-6 text-white shadow-[0_30px_90px_rgba(255,75,18,0.28)] sm:rounded-[42px] md:p-9">
           <div className="grid gap-7 lg:grid-cols-[1fr_auto] lg:items-center">
             <div><p className="text-xs font-black uppercase tracking-[0.2em] text-white/76">Ready to choose smartly?</p><h3 className="mt-3 text-3xl font-black tracking-[-0.045em] md:text-5xl">Start with the country that has the deepest guide.</h3><p className="mt-4 max-w-3xl text-base font-semibold leading-8 text-white/88">Italy is live now with universities, cities, scholarships and consultation pathways. More destinations will unlock when they can be built properly.</p></div>
             <Link to="/countries/italy" className="inline-flex items-center justify-center gap-3 rounded-full bg-[#071f50] px-9 py-5 font-black text-white shadow-[0_20px_44px_rgba(7,31,80,0.28)] transition duration-300 ease-out hover:-translate-y-1 hover:bg-[#092b72]">Explore Italy Ecosystem <ArrowRight size={22} strokeWidth={3} /></Link>

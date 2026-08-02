@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 
 import { italianUniversities } from "../../data/italianUniversities";
+import { italianCities } from "../../data/italianCities";
 
 const italyHighlights = [
   {
@@ -232,72 +233,16 @@ const universities = [
   },
 ];
 
-const cityCards = [
-  {
-    emoji: "🏙️",
-    city: "Milan",
-    slug: "milan",
-    vibe: "Business, fashion, design, technology",
-    icon: Building2,
-    status: "Live City Guide",
-  },
-  {
-    emoji: "🏛️",
-    city: "Rome",
-    slug: "rome",
-    vibe: "History, culture, international student life",
-    icon: Landmark,
-    status: "Live City Guide",
-  },
-  {
-    emoji: "🎒",
-    city: "Bologna",
-    slug: "bologna",
-    vibe: "Classic student city with strong academic identity",
-    icon: GraduationCap,
-    status: "Live City Guide",
-  },
-  {
-    emoji: "📚",
-    city: "Padua",
-    slug: "padua",
-    vibe: "Historic, student-friendly and education focused",
-    icon: BookOpenCheck,
-    status: "Live City Guide",
-  },
-  {
-    emoji: "🎨",
-    city: "Florence",
-    slug: "florence",
-    vibe: "Arts, architecture, culture and Tuscany lifestyle",
-    icon: Landmark,
-    status: "Live City Guide",
-  },
-  {
-    emoji: "🏎️",
-    city: "Turin",
-    slug: "turin",
-    vibe: "Engineering, automotive, business and value",
-    icon: Building2,
-    status: "Live City Guide",
-  },
-  {
-    emoji: "🔬",
-    city: "Pisa",
-    slug: "pisa",
-    vibe: "Science, research and focused student life",
-    icon: BookOpenCheck,
-    status: "Live City Guide",
-  },
-  {
-    emoji: "🚤",
-    city: "Venice",
-    slug: "venice",
-    vibe: "Languages, business, tourism and culture",
-    icon: Landmark,
-    status: "Live City Guide",
-  },
-];
+const cityIconMap = {
+  milan: Building2,
+  rome: Landmark,
+  bologna: GraduationCap,
+  padua: BookOpenCheck,
+  florence: Landmark,
+  turin: Building2,
+  pisa: BookOpenCheck,
+  venice: Landmark,
+};
 
 const scholarshipCards = [
   {
@@ -400,6 +345,15 @@ const comparisonRows = [
     vibe: "Unique, cultural, international",
     difficulty: "Lifestyle-sensitive",
   },
+];
+
+const comparisonFilters = [
+  { id: "all", label: "All Cities" },
+  { id: "value", label: "Best Value" },
+  { id: "scholarship", label: "Scholarships" },
+  { id: "engineering", label: "Engineering" },
+  { id: "business", label: "Business" },
+  { id: "medicine", label: "Medicine" },
 ];
 
 const dsuDeepDive = [
@@ -553,6 +507,8 @@ const cityGoals = [
   { goal: "Research", city: "Padua", slug: "padua", icon: BookOpenCheck, emoji: "🔬", reason: "Strong research identity, scholarship-friendly positioning and student focus." },
   { goal: "Student Life", city: "Bologna", slug: "bologna", icon: GraduationCap, emoji: "🎒", reason: "Classic student-city atmosphere with deep academic identity." },
   { goal: "Arts & Architecture", city: "Florence", slug: "florence", icon: Landmark, emoji: "🎨", reason: "Culture, architecture, museums, heritage and creative pathways." },
+  { goal: "Computer Science", city: "Pisa", slug: "pisa", icon: BookOpenCheck, emoji: "💻", reason: "Strong computer science, physics and research routes in a compact student city." },
+  { goal: "Languages & Tourism", city: "Venice", slug: "venice", icon: Globe2, emoji: "🌍", reason: "Languages, tourism, business and international study in a uniquely global setting." },
 ];
 
 const realityChecks = [
@@ -696,11 +652,11 @@ function SectionHeader({ eyebrow, title, text, align = "center" }) {
   return (
     <div className={centered ? "mx-auto max-w-4xl text-center" : "max-w-4xl"}>
       <Badge>{eyebrow}</Badge>
-      <h2 className={`mt-5 text-4xl font-black leading-[0.96] tracking-[-0.06em] text-[#071f50] md:text-6xl ${centered ? "" : "max-w-3xl"}`}>
+      <h2 className={`mt-4 text-3xl font-black leading-[0.98] tracking-[-0.05em] text-[#071f50] sm:text-4xl md:mt-5 md:text-6xl md:tracking-[-0.06em] ${centered ? "" : "max-w-3xl"}`}>
         {title}
       </h2>
       {text && (
-        <p className={`${centered ? "mx-auto" : ""} mt-5 max-w-3xl text-base font-semibold leading-8 text-[#5f6f89] md:text-lg`}>
+        <p className={`${centered ? "mx-auto" : ""} mt-3 max-w-3xl text-sm font-semibold leading-7 text-[#5f6f89] sm:text-base md:mt-5 md:text-lg md:leading-8`}>
           {text}
         </p>
       )}
@@ -724,9 +680,30 @@ function InfoCard({ icon: Icon, title, text }) {
 }
 
 function ItalyGuide() {
+  const location = useLocation();
   const [openFaq, setOpenFaq] = useState(0);
+  const [comparisonFilter, setComparisonFilter] = useState("all");
 
   const toc = useMemo(() => tableOfContents, []);
+
+  const cityCards = useMemo(
+    () =>
+      italianCities
+        .filter(Boolean)
+        .map((city) => ({
+          emoji: city.emoji,
+          city: city.name,
+          slug: city.slug,
+          vibe:
+            city.headline ||
+            city.intro ||
+            city.bestFor?.slice(0, 4).join(", ") ||
+            "Explore this Italian student city.",
+          icon: cityIconMap[city.slug] || MapPinned,
+          status: "Live City Guide",
+        })),
+    []
+  );
 
   const universityCategories = useMemo(() => {
     return universityCategoryBlocks.map((block) => {
@@ -762,6 +739,24 @@ function ItalyGuide() {
     }));
   }, []);
 
+  const filteredComparisonRows = useMemo(() => {
+    if (comparisonFilter === "all") return comparisonRows;
+
+    if (comparisonFilter === "value") {
+      return comparisonRows.filter((row) => row.cost !== "High");
+    }
+
+    if (comparisonFilter === "scholarship") {
+      return comparisonRows.filter((row) =>
+        /dsu|er\.go|edisu|laziodisco|regional/i.test(row.scholarship)
+      );
+    }
+
+    return comparisonRows.filter((row) =>
+      row.bestFor.toLowerCase().includes(comparisonFilter)
+    );
+  }, [comparisonFilter]);
+
   const scrollToId = (id) => {
     const target = document.getElementById(id);
     if (!target) return;
@@ -769,25 +764,38 @@ function ItalyGuide() {
     window.scrollTo({ top: y, behavior: "smooth" });
   };
 
+  useEffect(() => {
+    if (!location.hash) return undefined;
+
+    const requestedId = location.hash.replace("#", "");
+    const resolvedId = requestedId === "cities" ? "italy-cities" : requestedId;
+
+    const timer = window.setTimeout(() => {
+      scrollToId(resolvedId);
+    }, 180);
+
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
+
   return (
     <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
-      <section className="relative isolate min-h-[820px] overflow-hidden px-5 pb-16 pt-28 md:pt-32">
+      <section className="relative isolate overflow-hidden px-4 pb-10 pt-24 sm:px-5 sm:pb-12 md:min-h-[820px] md:pb-16 md:pt-32">
         <div className="pointer-events-none absolute inset-0 -z-20 bg-[#fff7ed]" />
         <div className="pointer-events-none absolute left-[-8%] top-[10%] -z-10 h-[460px] w-[460px] rounded-full bg-orange-300/28 blur-[95px]" />
         <div className="pointer-events-none absolute right-[-5%] top-[4%] -z-10 h-[520px] w-[520px] rounded-full bg-[#ff4b12]/14 blur-[110px]" />
         <div className="pointer-events-none absolute bottom-[-18%] left-[32%] -z-10 h-[420px] w-[420px] rounded-full bg-amber-200/28 blur-[100px]" />
 
         <div className="mx-auto max-w-[1450px]">
-          <div className="grid items-center gap-12 lg:grid-cols-[0.94fr_1.06fr]">
+          <div className="grid items-center gap-8 md:gap-10 lg:grid-cols-[0.94fr_1.06fr] lg:gap-12">
             <motion.div initial="hidden" animate="show" variants={fadeUp} className="relative z-10">
               <Badge>Italy Destination Experience</Badge>
 
-              <div className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#071f50] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_35px_rgba(7,31,80,0.18)]">
+              <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full bg-[#071f50] px-3 py-2 text-[9px] font-black uppercase tracking-[0.11em] text-white shadow-[0_14px_35px_rgba(7,31,80,0.18)] sm:mt-7 sm:px-4 sm:text-xs sm:tracking-[0.16em]">
                 <Zap size={14} className="text-[#ffb36d]" fill="currentColor" />
                 Built for students who want clarity, not brochure talk
               </div>
 
-              <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.88] tracking-[-0.075em] text-[#071f50] sm:text-6xl md:text-7xl xl:text-[92px]">
+              <h1 className="mt-5 max-w-4xl text-[2.65rem] font-black leading-[0.9] tracking-[-0.06em] text-[#071f50] sm:mt-6 sm:text-6xl sm:tracking-[-0.075em] md:text-7xl xl:text-[92px]">
                 Your complete
                 <span className="ml-3 inline-block text-[#ff4b12]">
                   Italy
@@ -797,31 +805,31 @@ function ItalyGuide() {
                 study game plan.
               </h1>
 
-              <p className="mt-7 max-w-2xl text-lg font-semibold leading-9 text-[#526178]">
+              <p className="mt-4 max-w-2xl text-[15px] font-semibold leading-7 text-[#526178] sm:mt-7 sm:text-lg sm:leading-9">
                 Compare cities, universities, costs, scholarships and the application journey in one place—then turn everything into a clear next-step plan.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a
-                  href="/appointment?country=Italy"
-                  className="inline-flex items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-8 py-5 text-base font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f]"
+              <div className="mt-5 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+                <Link
+                  to="/appointment?country=Italy"
+                  className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#ff4b12] px-6 py-4 text-sm font-black text-white shadow-[0_20px_44px_rgba(255,75,18,0.3)] transition hover:-translate-y-1 hover:bg-[#ff642f] sm:w-auto sm:px-8 sm:py-5 sm:text-base"
                 >
                   Build My Italy Plan
                   <ArrowRight size={21} strokeWidth={3} />
-                </a>
+                </Link>
                 <button
                   type="button"
                   onClick={() => scrollToId("italy-comparison-center")}
-                  className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-base font-black text-[#071f50] shadow-[0_14px_32px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-[#ff4b12]"
+                  className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-black text-[#071f50] shadow-[0_14px_32px_rgba(9,31,80,0.08)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-[#ff4b12] sm:w-auto sm:px-8 sm:py-5 sm:text-base"
                 >
                   <MousePointer2 size={19} />
                   Explore the Guide
                 </button>
               </div>
 
-              <div className="mt-9 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-6 grid max-w-2xl grid-cols-2 gap-2.5 sm:mt-9 sm:grid-cols-4 sm:gap-3">
                 {journeySignals.map((item, index) => (
-                  <div key={item.title} className="relative rounded-[22px] bg-white/88 p-4 shadow-[0_14px_35px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 backdrop-blur">
+                  <div key={item.title} className="relative rounded-[18px] bg-white/88 p-3 shadow-[0_14px_35px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 backdrop-blur sm:rounded-[22px] sm:p-4">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#fff1ea] text-[#ff4b12]">
                         <item.icon size={17} strokeWidth={2.8} />
@@ -829,7 +837,7 @@ function ItalyGuide() {
                       <span className="text-[10px] font-black text-orange-200">0{index + 1}</span>
                     </div>
                     <p className="text-sm font-black text-[#071f50]">{item.title}</p>
-                    <p className="mt-1 text-[11px] font-semibold leading-5 text-[#7a879c]">{item.text}</p>
+                    <p className="mt-1 hidden text-[11px] font-semibold leading-5 text-[#7a879c] sm:block">{item.text}</p>
                   </div>
                 ))}
               </div>
@@ -841,31 +849,31 @@ function ItalyGuide() {
               transition={{ duration: 0.75, delay: 0.08 }}
               className="relative"
             >
-              <div className="relative overflow-hidden rounded-[34px] bg-white/96 p-6 shadow-[0_32px_90px_rgba(9,31,80,0.12)] ring-1 ring-orange-100 md:p-8">
+              <div className="relative overflow-hidden rounded-[26px] bg-white/96 p-4 shadow-[0_24px_65px_rgba(9,31,80,0.10)] ring-1 ring-orange-100 sm:rounded-[34px] sm:p-6 md:p-8">
                 <div className="pointer-events-none absolute -right-14 -top-12 h-44 w-44 rounded-full border-[28px] border-[#ff4b12]/7" />
                 <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-orange-100/50 blur-2xl" />
                 <div className="relative">
                   <div className="pointer-events-none absolute right-[-70px] top-[-70px] h-52 w-52 rounded-full border-[34px] border-[#ff4b12]/8" />
                   <div className="pointer-events-none absolute bottom-[-90px] left-[-70px] h-64 w-64 rounded-full border-[44px] border-[#071f50]/5" />
 
-                  <div className="relative flex items-start justify-between">
+                  <div className="relative flex items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12]">Live Italy Dashboard</p>
-                      <h2 className="mt-2 text-4xl font-black tracking-[-0.06em] text-[#071f50] md:text-5xl">
+                      <h2 className="mt-2 text-3xl font-black tracking-[-0.055em] text-[#071f50] sm:text-4xl md:text-5xl">
                         Know before you decide.
                       </h2>
                       <p className="mt-3 max-w-md text-sm font-semibold leading-7 text-[#61708a]">
                         A quick overview of the things that actually shape your decision.
                       </p>
                     </div>
-                    <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-[#fffaf5] text-3xl font-black text-[#071f50] shadow-inner ring-[12px] ring-[#fff1ea]">
+                    <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#fffaf5] text-xl font-black text-[#071f50] shadow-inner ring-[8px] ring-[#fff1ea] sm:h-20 sm:w-20 sm:text-3xl sm:ring-[12px]">
                       IT
                     </div>
                   </div>
 
-                  <div className="relative mt-7 grid gap-3 sm:grid-cols-2">
+                  <div className="relative mt-5 grid grid-cols-2 gap-2.5 sm:mt-7 sm:gap-3">
                     {italySnapshot.map((item) => (
-                      <div key={item.label} className="group rounded-[24px] bg-white p-5 shadow-[0_10px_28px_rgba(9,31,80,0.045)] ring-1 ring-orange-100/80 transition hover:-translate-y-1">
+                      <div key={item.label} className="group rounded-[18px] bg-white p-3 shadow-[0_10px_28px_rgba(9,31,80,0.045)] ring-1 ring-orange-100/80 transition hover:-translate-y-1 sm:rounded-[24px] sm:p-5">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fff1ea] text-[#ff4b12]">
@@ -879,12 +887,12 @@ function ItalyGuide() {
                         <p className="mt-1 text-2xl font-black tracking-[-0.04em] text-[#071f50]">
                           {item.value} <span className="text-xs text-[#7c899b]">{item.suffix}</span>
                         </p>
-                        <p className="mt-2 text-xs font-semibold leading-5 text-[#7a879c]">{item.note}</p>
+                        <p className="mt-2 hidden text-xs font-semibold leading-5 text-[#7a879c] sm:block">{item.note}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="relative mt-4 rounded-[24px] bg-[#fff7ed] p-5 ring-1 ring-orange-100">
+                  <div className="relative mt-4 hidden rounded-[24px] bg-[#fff7ed] p-5 ring-1 ring-orange-100 sm:block">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-3">
                         <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#ffe7d7] text-[#ff4b12]">
@@ -912,13 +920,13 @@ function ItalyGuide() {
             </motion.div>
           </div>
 
-          <div className="mt-12 grid gap-4 lg:grid-cols-3">
+          <div className="mt-12 hidden gap-4 md:grid md:grid-cols-2 lg:grid-cols-3">
             {quickChoices.map((item, index) => (
               <button
                 key={item.title}
                 type="button"
                 onClick={() => scrollToId(item.target)}
-                className="group relative overflow-hidden rounded-[28px] bg-white p-5 text-left shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,75,18,0.12)]"
+                className="group relative overflow-hidden rounded-[22px] bg-white p-4 text-left shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,75,18,0.12)] sm:rounded-[28px] sm:p-5"
               >
                 <div className="absolute right-4 top-4 text-5xl font-black tracking-[-0.08em] text-orange-50">0{index + 1}</div>
                 <div className="relative">
@@ -936,7 +944,7 @@ function ItalyGuide() {
               </button>
             ))}
           </div>
-          <div className="mt-10 rounded-[30px] bg-white/88 p-5 shadow-[0_20px_55px_rgba(9,31,80,0.06)] ring-1 ring-orange-100">
+          <div className="mt-10 hidden rounded-[30px] bg-white/88 p-5 shadow-[0_20px_55px_rgba(9,31,80,0.06)] ring-1 ring-orange-100 md:block">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ff4b12]">Italy Pulse</p>
@@ -955,34 +963,39 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section className="relative z-30 -mt-2 px-5 pb-12">
-        <div className="mx-auto max-w-[1320px] overflow-hidden rounded-[34px] bg-white shadow-[0_28px_80px_rgba(9,31,80,0.10)] ring-1 ring-orange-100">
-          <div className="flex flex-col gap-3 border-b border-orange-100 bg-[#071f50] px-6 py-5 text-white md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-[#ffb36d]">
-                <Route size={21} strokeWidth={3} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">Explore your way</p>
-                <h3 className="mt-1 text-lg font-black">Choose what you want to explore first</h3>
-              </div>
+      <section className="relative z-30 -mt-2 hidden px-5 pb-10 md:block">
+        <div className="mx-auto max-w-[1380px] overflow-hidden rounded-[28px] bg-white/94 shadow-[0_22px_65px_rgba(9,31,80,0.10)] ring-1 ring-orange-100 backdrop-blur-xl md:sticky md:top-[94px] md:z-40">
+          <div className="flex items-center gap-3 border-b border-orange-100 bg-[#071f50] px-4 py-3 text-white sm:px-5">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#ffb36d]">
+              <Route size={18} strokeWidth={3} />
             </div>
-            <p className="max-w-xl text-xs font-semibold leading-5 text-white/64">
-              You do not have to read this page top to bottom. Pick a topic and build your own Italy journey.
-            </p>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">
+                Explore your way
+              </p>
+              <p className="truncate text-sm font-black text-white">
+                Jump directly to any part of the Italy guide
+              </p>
+            </div>
           </div>
-          <div className="grid gap-2 p-4 sm:grid-cols-2 md:p-5 lg:grid-cols-4">
+
+          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {toc.map((item) => {
               const id = `italy-${item.toLowerCase().replace(/\s+/g, "-")}`;
+
               return (
                 <button
                   key={item}
                   type="button"
                   onClick={() => scrollToId(id)}
-                  className="group flex items-center justify-between gap-3 rounded-2xl bg-[#fffaf5] px-4 py-3 text-left text-sm font-black text-[#071f50] ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-[#fff1ea] hover:text-[#ff4b12]"
+                  className="group flex min-w-fit snap-start items-center gap-2 rounded-full bg-[#fffaf5] px-4 py-2.5 text-xs font-black text-[#071f50] ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-[#fff1ea] hover:text-[#ff4b12]"
                 >
-                  <span className="flex items-center gap-3"><CheckCircle2 size={17} className="text-[#ff4b12]" strokeWidth={3} />{item}</span>
-                  <ArrowRight size={14} className="text-orange-200 transition group-hover:translate-x-1 group-hover:text-[#ff4b12]" strokeWidth={3} />
+                  <CheckCircle2
+                    size={15}
+                    className="text-[#ff4b12]"
+                    strokeWidth={3}
+                  />
+                  {item}
                 </button>
               );
             })}
@@ -990,7 +1003,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-why-italy" className="px-5 py-16">
+      <section id="italy-why-italy" className="px-4 py-8 sm:px-5 md:py-16">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Why Italy"
@@ -1039,7 +1052,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-study-pathway" className="relative overflow-hidden bg-[#071f50] px-5 py-20 text-white">
+      <section id="italy-study-pathway" className="hidden overflow-hidden bg-[#071f50] px-5 py-20 text-white md:block">
         <div className="mx-auto max-w-[1350px]">
           <div className="mx-auto max-w-4xl text-center">
             <Badge>Study Pathway</Badge>
@@ -1070,7 +1083,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-costs" className="relative bg-[linear-gradient(180deg,#fff7ed_0%,#fff1ea_100%)] px-5 py-20">
+      <section id="italy-costs" className="relative bg-[linear-gradient(180deg,#fff7ed_0%,#fff1ea_100%)] px-4 py-8 sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1250px]">
           <SectionHeader eyebrow="Costs" title="Understand costs before you fall in love with the destination." text="Italy can be affordable compared with many popular routes, but students still need realistic budgeting by city, university and scholarship status." />
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
@@ -1086,7 +1099,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section className="bg-white/52 px-5 py-16">
+      <section className="hidden bg-white/52 px-5 py-16 md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Admission Planning"
@@ -1111,7 +1124,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section className="px-5 py-16">
+      <section className="hidden px-5 py-16 md:block">
         <div className="mx-auto max-w-[1250px]">
           <SectionHeader
             eyebrow="Realistic Budget"
@@ -1136,7 +1149,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section className="bg-[#fff1ea] px-5 py-16">
+      <section className="hidden bg-[#fff1ea] px-5 py-16 md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Application Timeline"
@@ -1160,7 +1173,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-comparison-center" className="bg-white/52 px-5 py-16">
+      <section id="italy-comparison-center" className="bg-white/52 px-4 py-8 sm:px-5 md:py-16">
         <div className="mx-auto max-w-[1450px]">
           <SectionHeader
             eyebrow="Comparison Center"
@@ -1168,7 +1181,42 @@ function ItalyGuide() {
             text="This is where the Italy guide becomes useful: city, cost, scholarship region, program strength and lifestyle should be compared together before a student falls in love with one destination."
           />
 
-          <div className="mt-12 overflow-hidden rounded-[34px] bg-white shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100">
+          <div className="-mx-1 mt-8 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {comparisonFilters.map((filter) => {
+              const isActive = comparisonFilter === filter.id;
+
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setComparisonFilter(filter.id)}
+                  className={`min-w-fit snap-start rounded-full px-5 py-3 text-xs font-black transition ${
+                    isActive
+                      ? "bg-[#ff4b12] text-white shadow-[0_14px_30px_rgba(255,75,18,0.24)]"
+                      : "bg-white text-[#071f50] ring-1 ring-orange-100 hover:-translate-y-0.5 hover:text-[#ff4b12]"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-[34px] bg-white shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100">
+            <div className="flex items-center justify-between gap-4 border-b border-orange-100 bg-[#fffaf5] px-5 py-4">
+              <p className="text-sm font-black text-[#071f50]">
+                Showing {filteredComparisonRows.length} city
+                {filteredComparisonRows.length === 1 ? "" : "ies"}
+              </p>
+              <button
+                type="button"
+                onClick={() => setComparisonFilter("all")}
+                className="text-xs font-black text-[#ff4b12] transition hover:opacity-70"
+              >
+                Reset filters
+              </button>
+            </div>
+
             <div className="hidden grid-cols-[0.75fr_0.65fr_1fr_1.15fr_1.05fr_0.75fr] bg-[#071f50] px-5 py-4 text-xs font-black uppercase tracking-[0.14em] text-white lg:grid">
               <div>City</div>
               <div>Cost</div>
@@ -1179,11 +1227,11 @@ function ItalyGuide() {
             </div>
 
             <div className="divide-y divide-orange-100">
-              {comparisonRows.map((row) => (
+              {filteredComparisonRows.map((row) => (
                 <Link
                   key={row.city}
                   to={`/countries/italy/${row.slug}`}
-                  className="grid gap-3 px-5 py-5 transition hover:bg-[#fff7ed] lg:grid-cols-[0.75fr_0.65fr_1fr_1.15fr_1.05fr_0.75fr] lg:items-center"
+                  className="grid grid-cols-2 gap-3 px-4 py-4 transition hover:bg-[#fff7ed] sm:px-5 sm:py-5 lg:grid-cols-[0.75fr_0.65fr_1fr_1.15fr_1.05fr_0.75fr] lg:items-center"
                 >
                   <div>
                     <p className="text-lg font-black text-[#071f50]">{row.city}</p>
@@ -1206,7 +1254,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-dsu-scholarship" className="bg-[#071f50] px-5 py-16 text-white">
+      <section id="italy-dsu-scholarship" className="bg-[#071f50] px-4 py-9 text-white sm:px-5 md:py-16">
         <div className="mx-auto grid max-w-[1350px] gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
           <div>
             <Badge>DSU Scholarship</Badge>
@@ -1282,7 +1330,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-universities" className="relative overflow-hidden bg-[radial-gradient(circle_at_80%_10%,rgba(255,75,18,0.10),transparent_28%),#fff7ed] px-5 py-20">
+      <section id="italy-universities" className="relative overflow-hidden bg-[radial-gradient(circle_at_80%_10%,rgba(255,75,18,0.10),transparent_28%),#fff7ed] px-4 py-9 sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1250px]">
           <SectionHeader
             eyebrow="Universities"
@@ -1374,7 +1422,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-scholarship-map" className="bg-[#071f50] px-5 py-16 text-white">
+      <section id="italy-scholarship-map" className="hidden bg-[#071f50] px-5 py-16 text-white md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Scholarship Map"
@@ -1382,7 +1430,7 @@ function ItalyGuide() {
             text="Italy scholarship planning becomes much clearer when students understand which regional body connects to which city and university cluster."
           />
 
-          <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {scholarshipRegionMap.map((region) => (
               <Link
                 key={region.region}
@@ -1427,7 +1475,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-scholarships" className="bg-[#fff1ea] px-5 py-16">
+      <section id="italy-scholarships" className="hidden bg-[#fff1ea] px-5 py-16 md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Scholarships"
@@ -1469,9 +1517,14 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-cities" className="relative overflow-hidden bg-[linear-gradient(180deg,#fff_0%,#fff7ed_100%)] px-5 py-20">
+      <section id="italy-cities" className="relative overflow-hidden bg-[linear-gradient(180deg,#fff_0%,#fff7ed_100%)] px-4 py-9 sm:px-5 md:py-20">
+        <span id="cities" className="pointer-events-none absolute -top-24" aria-hidden="true" />
         <div className="mx-auto max-w-[1350px]">
-          <SectionHeader eyebrow="Cities" title="The city matters almost as much as the university." />
+          <SectionHeader
+            eyebrow={`${cityCards.length} Live City Guides`}
+            title="The city matters almost as much as the university."
+            text="Explore every currently published Italian city from one reliable data source, so the guide, routes and city count stay synchronized."
+          />
           <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {cityCards.map((city) => (
               <Link
@@ -1499,7 +1552,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-student-life" className="px-5 py-16">
+      <section id="italy-student-life" className="hidden px-5 py-16 md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader eyebrow="Student Life" title="Italy is not only study. It is lifestyle, culture and adjustment." />
           <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -1539,7 +1592,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-decision-framework" className="bg-white/52 px-5 py-16">
+      <section id="italy-decision-framework" className="hidden bg-white/52 px-5 py-16 md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Decision Framework"
@@ -1587,7 +1640,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-city-goals" className="px-5 py-16">
+      <section id="italy-city-goals" className="hidden px-5 py-16 md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
             eyebrow="Best Cities By Goal"
@@ -1635,7 +1688,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-reality-check" className="bg-[#071f50] px-5 py-16 text-white">
+      <section id="italy-reality-check" className="hidden bg-[#071f50] px-5 py-16 text-white md:block">
         <div className="mx-auto max-w-[1350px]">
           <div className="mx-auto max-w-4xl text-center">
             <Badge>Reality Check</Badge>
@@ -1664,7 +1717,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-university-pathways" className="bg-white/52 px-5 py-16">
+      <section id="italy-university-pathways" className="hidden bg-white/52 px-5 py-16 md:block">
         <div className="mx-auto max-w-[1450px]">
           <SectionHeader
             eyebrow="University Pathways"
@@ -1703,7 +1756,7 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-visa-roadmap" className="bg-[#fff1ea] px-5 py-16">
+      <section id="italy-visa-roadmap" className="bg-[#fff1ea] px-4 py-9 sm:px-5 md:py-16">
         <div className="mx-auto max-w-[1150px]">
           <SectionHeader eyebrow="Visa Roadmap" title="A clear visa file starts before the appointment." text="The exact process depends on your profile and the official procedure for your country, but this is the high-level student journey." />
           <div className="mt-12 overflow-hidden rounded-[34px] bg-white shadow-[0_24px_70px_rgba(9,31,80,0.08)] ring-1 ring-orange-100">
@@ -1720,10 +1773,10 @@ function ItalyGuide() {
         </div>
       </section>
 
-      <section id="italy-faqs" className="px-5 py-16">
+      <section id="italy-faqs" className="px-4 py-9 sm:px-5 md:py-16">
         <div className="mx-auto max-w-[1050px]">
           <SectionHeader eyebrow="FAQs" title="Common Italy questions students ask first." />
-          <div className="mt-12 space-y-3">
+          <div className="mt-7 space-y-2.5 md:mt-12 md:space-y-3">
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (

@@ -33,7 +33,6 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import Footer from "../../components/public/layout/Footer";
 import NotFoundPage from "./NotFoundPage.jsx";
 import { findItalianCityBySlug } from "../../data/italianCities";
 import { italianUniversities } from "../../data/italianUniversities";
@@ -69,6 +68,66 @@ const fadeScale = {
 
 const iconCycle = [BriefcaseBusiness, Building2, GraduationCap, Landmark];
 const lifeIcons = [Coffee, Utensils, Train, Home];
+
+const cityThemes = {
+  milan: {
+    eyebrow: "Career Capital",
+    accent: "from-[#ff4b12] via-[#ff7a32] to-[#071f50]",
+    soft: "from-[#fff1ea] via-white to-[#eef4ff]",
+    symbol: "MI",
+    signals: ["Career exposure", "Design culture", "International network"],
+  },
+  rome: {
+    eyebrow: "Capital Experience",
+    accent: "from-[#e9542f] via-[#ff8d52] to-[#071f50]",
+    soft: "from-[#fff0e8] via-white to-[#f4eee8]",
+    symbol: "RM",
+    signals: ["Historic capital", "Major universities", "Broad opportunity"],
+  },
+  bologna: {
+    eyebrow: "Student City",
+    accent: "from-[#c84d2f] via-[#ff7144] to-[#071f50]",
+    soft: "from-[#fff1e9] via-white to-[#fff7e8]",
+    symbol: "BO",
+    signals: ["Academic identity", "Student community", "Balanced lifestyle"],
+  },
+  padua: {
+    eyebrow: "Research City",
+    accent: "from-[#ff5a32] via-[#ff9663] to-[#123865]",
+    soft: "from-[#fff0e8] via-white to-[#eef5ff]",
+    symbol: "PD",
+    signals: ["Research focus", "Historic university", "Connected location"],
+  },
+  florence: {
+    eyebrow: "Creative City",
+    accent: "from-[#e85b32] via-[#ff9a5e] to-[#5c315f]",
+    soft: "from-[#fff0e8] via-white to-[#f7efff]",
+    symbol: "FI",
+    signals: ["Arts and culture", "Architecture", "International visibility"],
+  },
+  turin: {
+    eyebrow: "Engineering City",
+    accent: "from-[#ff5b2d] via-[#ff8b44] to-[#123865]",
+    soft: "from-[#fff1e9] via-white to-[#edf3fb]",
+    symbol: "TO",
+    signals: ["Engineering", "Industry links", "Northern Italy value"],
+  },
+  pisa: {
+    eyebrow: "Compact Research City",
+    accent: "from-[#ff6035] via-[#ffa05d] to-[#254b77]",
+    soft: "from-[#fff2ea] via-white to-[#eef7ff]",
+    symbol: "PI",
+    signals: ["Computer science", "Research", "Compact student life"],
+  },
+  venice: {
+    eyebrow: "Global Culture City",
+    accent: "from-[#ff5b32] via-[#ff9c67] to-[#305b77]",
+    soft: "from-[#fff0e8] via-white to-[#edf8fb]",
+    symbol: "VE",
+    signals: ["Languages", "Tourism", "Unique international setting"],
+  },
+};
+
 
 function Badge({ children }) {
   return (
@@ -222,14 +281,21 @@ function buildCityFit(city) {
 
 function CityDetailPage() {
   const { citySlug } = useParams();
-  const city = findItalianCityBySlug(citySlug);
+  const normalizedCitySlug = String(citySlug || "").trim().toLowerCase();
+  const city = findItalianCityBySlug(normalizedCitySlug);
 
   const cityUniversities = useMemo(() => {
-    if (!city) return [];
+    if (!city?.name) return [];
 
-    return italianUniversities.filter(
-      (university) => university.city.toLowerCase() === city.name.toLowerCase()
-    );
+    const normalizedCityName = city.name.trim().toLowerCase();
+
+    return italianUniversities
+      .filter(Boolean)
+      .filter(
+        (university) =>
+          String(university?.city || "").trim().toLowerCase() ===
+          normalizedCityName
+      );
   }, [city]);
 
   const decisionFactors = useMemo(
@@ -242,14 +308,40 @@ function CityDetailPage() {
     [city]
   );
 
+  const cityTheme =
+    cityThemes[normalizedCitySlug] || {
+      eyebrow: "Italian Student City",
+      accent: "from-[#ff4b12] via-[#ff8a4c] to-[#071f50]",
+      soft: "from-[#fff1ea] via-white to-[#eef4ff]",
+      symbol: city?.name?.slice(0, 2).toUpperCase() || "IT",
+      signals: ["University fit", "Budget reality", "Student lifestyle"],
+    };
+
+  const cityChapters = [
+    ["city-why", "Why this city"],
+    ["city-universities", "Universities"],
+    ["city-costs", "Costs"],
+    ["city-scholarships", "Scholarships"],
+    ["city-life", "Student life"],
+    ["city-fit", "Fit check"],
+    ["city-roadmap", "Roadmap"],
+  ];
+
+  const scrollToChapter = (id) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    const y = target.getBoundingClientRect().top + window.scrollY - 108;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  };
+
   if (!city) {
     return <NotFoundPage />;
   }
 
   return (
-    <>
-      <main
-        id="city-detail-page"
+    <main
+      id="city-detail-page"
         className="overflow-hidden bg-[#fff7ed] text-[#071f50]"
       >
         <style>{`
@@ -264,7 +356,7 @@ function CityDetailPage() {
             }
           }
         `}</style>
-        <section className="relative px-5 pb-20 pt-32 md:pt-36">
+        <section className={`relative overflow-hidden bg-gradient-to-br ${cityTheme.soft} px-5 pb-20 pt-32 md:pt-36`}>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_22%,rgba(255,75,18,0.16),transparent_30%),radial-gradient(circle_at_84%_12%,rgba(255,178,89,0.18),transparent_26%)]" />
           <div className="pointer-events-none absolute -left-28 top-16 h-96 w-96 rounded-full bg-orange-300/20 blur-3xl" />
           <div className="pointer-events-none absolute -right-28 top-32 h-96 w-96 rounded-full bg-[#ff4b12]/10 blur-3xl" />
@@ -281,6 +373,11 @@ function CityDetailPage() {
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
               <motion.div initial="hidden" animate="show" variants={fadeUp}>
                 <Badge>{city.name} Student City Guide</Badge>
+
+                <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#071f50] px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-[0_14px_34px_rgba(7,31,80,0.16)]">
+                  <Star size={14} className="text-[#ffb36d]" fill="currentColor" />
+                  {cityTheme.eyebrow}
+                </div>
 
                 <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.9] tracking-[-0.07em] text-[#071f50] md:text-7xl xl:text-[88px]">
                   Study in <span className="text-[#ff4b12]">{city.name}</span>.
@@ -314,9 +411,9 @@ function CityDetailPage() {
                 variants={fadeScale}
                 className="relative"
               >
-                <div className="relative overflow-hidden rounded-[42px] bg-[#071f50] p-6 text-white shadow-[0_35px_100px_rgba(9,31,80,0.18)]">
-                  <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full border-[34px] border-white/5" />
-                  <div className="relative">
+                <div className={`relative overflow-hidden rounded-[42px] bg-gradient-to-br ${cityTheme.accent} p-[3px] text-white shadow-[0_38px_110px_rgba(9,31,80,0.22)]`}>
+                  <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full border-[34px] border-white/10" />
+                  <div className="relative rounded-[39px] bg-[#071f50]/94 p-6 backdrop-blur-xl">
                     <div className="flex items-start justify-between gap-5">
                       <div>
                         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ffb36d]">
@@ -329,8 +426,11 @@ function CityDetailPage() {
                           A quick decision view combining universities, cost direction, funding and city fit.
                         </p>
                       </div>
-                      <div className="grid h-20 w-20 shrink-0 place-items-center rounded-[26px] bg-white text-5xl text-[#071f50] shadow-xl">
-                        {city.emoji}
+                      <div className="relative grid h-24 w-24 shrink-0 place-items-center rounded-[28px] bg-white text-[#071f50] shadow-xl">
+                        <span className="text-4xl">{city.emoji}</span>
+                        <span className="absolute -bottom-2 -right-2 rounded-full bg-[#ff4b12] px-3 py-1 text-[10px] font-black tracking-[0.12em] text-white shadow-lg">
+                          {cityTheme.symbol}
+                        </span>
                       </div>
                     </div>
 
@@ -368,10 +468,43 @@ function CityDetailPage() {
                         </div>
                       </div>
                     </div>
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      {cityTheme.signals.map((signal, index) => (
+                        <div
+                          key={signal}
+                          className="rounded-2xl bg-white/10 px-3 py-3 text-center ring-1 ring-white/10"
+                        >
+                          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#ffb36d]">
+                            Signal 0{index + 1}
+                          </p>
+                          <p className="mt-1 text-xs font-black leading-5 text-white">
+                            {signal}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </motion.div>
             </div>
+          </div>
+        </section>
+
+        <section className="relative z-20 -mt-8 hidden px-5 pb-8 lg:block">
+          <div className="mx-auto flex max-w-[1250px] items-center gap-2 overflow-x-auto rounded-[26px] bg-white/96 p-3 shadow-[0_22px_65px_rgba(9,31,80,0.10)] ring-1 ring-orange-100 backdrop-blur-xl">
+            {cityChapters.map(([id, label], index) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => scrollToChapter(id)}
+                className="group flex min-w-fit items-center gap-2 rounded-full px-4 py-3 text-xs font-black text-[#071f50] transition hover:bg-[#fff1ea] hover:text-[#ff4b12]"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-[#fff1ea] text-[10px] text-[#ff4b12] ring-1 ring-orange-100">
+                  {index + 1}
+                </span>
+                {label}
+              </button>
+            ))}
           </div>
         </section>
 
@@ -416,7 +549,7 @@ function CityDetailPage() {
           </div>
         </section>
 
-        <section className="px-5 py-20">
+        <section id="city-why" className="px-5 py-20">
           <div className="mx-auto max-w-[1350px]">
             <SectionHeader
               eyebrow={`Why ${city.name}`}
@@ -455,8 +588,10 @@ function CityDetailPage() {
           </div>
         </section>
 
-        <section className="bg-white/52 px-5 py-20">
-          <div className="mx-auto max-w-[1350px]">
+        <section id="city-universities" className="relative overflow-hidden bg-white/52 px-5 py-20">
+          <div className="pointer-events-none absolute -right-24 top-10 h-80 w-80 rounded-full bg-orange-200/30 blur-3xl" />
+          <div className="pointer-events-none absolute -left-24 bottom-10 h-72 w-72 rounded-full bg-blue-100/35 blur-3xl" />
+          <div className="relative mx-auto max-w-[1350px]">
             <SectionHeader
               eyebrow={`${city.name} Universities`}
               title={`Universities in ${city.name} from your live database.`}
@@ -465,13 +600,15 @@ function CityDetailPage() {
 
             {cityUniversities.length > 0 ? (
               <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {cityUniversities.map((university) => (
+                {cityUniversities.map((university, index) => (
                   <Link
                     key={university.slug}
                     to={`/universities/${university.slug}`}
-                    className="group overflow-hidden rounded-[30px] bg-white shadow-[0_18px_48px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,75,18,0.13)]"
+                    className={`group overflow-hidden rounded-[30px] bg-white shadow-[0_18px_48px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_26px_65px_rgba(255,75,18,0.13)] ${
+                      index === 0 && cityUniversities.length > 3 ? "lg:col-span-2" : ""
+                    }`}
                   >
-                    <div className="relative h-52 overflow-hidden">
+                    <div className={`relative overflow-hidden ${index === 0 && cityUniversities.length > 3 ? "h-64 lg:h-72" : "h-52"}`}>
                       <img
                         src={university.image}
                         alt={`${university.name} campus`}
@@ -550,7 +687,7 @@ function CityDetailPage() {
           </div>
         </section>
 
-        <section className="px-5 py-20">
+        <section id="city-costs" className="px-5 py-20">
           <div className="mx-auto max-w-[1250px]">
             <SectionHeader
               eyebrow="Cost of Living"
@@ -584,7 +721,7 @@ function CityDetailPage() {
           </div>
         </section>
 
-        <section className="bg-[#071f50] px-5 py-20 text-white">
+        <section id="city-scholarships" className="relative overflow-hidden bg-[#071f50] px-5 py-20 text-white">
           <div className="mx-auto grid max-w-[1350px] gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div>
               <Badge>Scholarships in {city.name}</Badge>
@@ -630,7 +767,7 @@ function CityDetailPage() {
           </div>
         </section>
 
-        <section className="px-5 py-20">
+        <section id="city-life" className="px-5 py-20">
           <div className="mx-auto max-w-[1350px]">
             <SectionHeader
               eyebrow="Student Life"
@@ -667,7 +804,7 @@ function CityDetailPage() {
           </div>
         </section>
 
-        <section className="px-5 py-20">
+        <section id="city-fit" className="px-5 py-20">
           <div className="mx-auto max-w-[1350px]">
             <SectionHeader
               eyebrow="City Fit Check"
@@ -728,7 +865,7 @@ function CityDetailPage() {
           </div>
         </section>
 
-        <section className="bg-[#fff1ea] px-5 py-20">
+        <section id="city-roadmap" className="bg-[#fff1ea] px-5 py-20">
           <div className="mx-auto max-w-[1150px]">
             <SectionHeader
               eyebrow={`${city.name} Roadmap`}
@@ -781,10 +918,7 @@ function CityDetailPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </>
+    </main>
   );
 }
 

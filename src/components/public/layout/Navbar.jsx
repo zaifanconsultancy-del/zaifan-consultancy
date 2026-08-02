@@ -18,15 +18,22 @@ const italyLinks = [
   { name: "Italy Guide", path: "/countries/italy", badge: "Live" },
   { name: "Italian Universities", path: "/universities", badge: "Finder" },
   { name: "Scholarships", path: "/scholarships", badge: "DSU" },
-  { name: "Milan City Guide", path: "/countries/italy/milan", badge: "City" },
-  { name: "Rome City Guide", path: "/countries/italy/rome", badge: "City" },
-  { name: "Bologna City Guide", path: "/countries/italy/bologna", badge: "City" },
-  { name: "Padua City Guide", path: "/countries/italy/padua", badge: "City" },
   {
     name: "Book Italy Consultation",
     path: "/appointment?country=Italy&service=Free Italy Study Plan",
     badge: "Free",
   },
+];
+
+const italyCityLinks = [
+  { name: "Milan", path: "/countries/italy/milan", emoji: "🏙️" },
+  { name: "Rome", path: "/countries/italy/rome", emoji: "🏛️" },
+  { name: "Bologna", path: "/countries/italy/bologna", emoji: "🎒" },
+  { name: "Padua", path: "/countries/italy/padua", emoji: "📚" },
+  { name: "Florence", path: "/countries/italy/florence", emoji: "🎨" },
+  { name: "Turin", path: "/countries/italy/turin", emoji: "🏎️" },
+  { name: "Pisa", path: "/countries/italy/pisa", emoji: "🔬" },
+  { name: "Venice", path: "/countries/italy/venice", emoji: "🚤" },
 ];
 
 const serviceLinks = [
@@ -217,14 +224,14 @@ function Navbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.98 }}
                         transition={NAV_MOTION}
-                        className="absolute left-1/2 top-[calc(100%+12px)] w-[390px] -translate-x-1/2 rounded-[28px] bg-white p-3 shadow-[0_24px_70px_rgba(120,70,20,0.16)] ring-1 ring-orange-100"
+                        className="absolute left-1/2 top-[calc(100%+12px)] w-[430px] -translate-x-1/2 rounded-[28px] bg-white p-3 shadow-[0_24px_70px_rgba(120,70,20,0.16)] ring-1 ring-orange-100"
                       >
                         <div className="mb-2 rounded-[22px] bg-[#fff8ec] px-4 py-3 ring-1 ring-orange-100">
                           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-600">
                             Italy Ecosystem
                           </p>
                           <p className="mt-1 text-xs font-bold leading-5 text-slate-600">
-                            Country guide, live city pages, university finder, DSU scholarship hub and consultation route.
+                            Country guide, university finder, DSU scholarship hub and direct access to all 8 live city guides.
                           </p>
                         </div>
 
@@ -250,6 +257,31 @@ function Navbar() {
                               </span>
                             </button>
                           ))}
+                        </div>
+
+                        <div className="mt-2 rounded-[22px] bg-[#fff8ec] p-3 ring-1 ring-orange-100">
+                          <div className="mb-2 flex items-center justify-between gap-3 px-1">
+                            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-orange-600">
+                              Student Cities
+                            </p>
+                            <span className="rounded-full bg-orange-100 px-2 py-1 text-[9px] font-black uppercase text-orange-700">
+                              8 Live
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {italyCityLinks.map((city) => (
+                              <button
+                                key={city.name}
+                                type="button"
+                                onClick={() => goToRoute(city.path)}
+                                className="flex items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-left text-xs font-black text-[#2d145f] shadow-sm ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-50 hover:text-orange-600"
+                              >
+                                <span aria-hidden="true">{city.emoji}</span>
+                                <span>{city.name}</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -470,6 +502,31 @@ function Navbar() {
                                     </span>
                                   </button>
                                 ))}
+
+                                <div className="rounded-2xl bg-orange-50 p-3 ring-1 ring-orange-100">
+                                  <div className="mb-2 flex items-center justify-between gap-3">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-600">
+                                      Student Cities
+                                    </p>
+                                    <span className="rounded-full bg-white px-2 py-1 text-[9px] font-black uppercase text-orange-700 ring-1 ring-orange-100">
+                                      8 Live
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {italyCityLinks.map((city) => (
+                                      <button
+                                        key={city.name}
+                                        type="button"
+                                        onClick={() => goToRoute(city.path)}
+                                        className="flex items-center gap-2 rounded-xl bg-white px-3 py-3 text-left text-xs font-black text-[#2d145f] ring-1 ring-orange-100"
+                                      >
+                                        <span aria-hidden="true">{city.emoji}</span>
+                                        <span>{city.name}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
                             </motion.div>
                           )}

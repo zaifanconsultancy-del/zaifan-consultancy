@@ -103,11 +103,11 @@ const journeySteps = [
 ];
 
 const stats = [
-  { icon: GraduationCap, value: "30+", label: "Italy Universities", color: "text-orange-500", bg: "bg-orange-50" },
-  { icon: UsersRound, value: "18+", label: "Student Cities", color: "text-[#071d43]", bg: "bg-blue-50" },
-  { icon: FileCheck2, value: "DSU", label: "Scholarship Routes", color: "text-blue-500", bg: "bg-blue-50" },
-  { icon: BadgeDollarSign, value: "Visa", label: "Roadmap Support", color: "text-emerald-500", bg: "bg-emerald-50" },
-  { icon: Trophy, value: "Free", label: "Consultation", color: "text-rose-500", bg: "bg-rose-50" },
+  { icon: GraduationCap, value: "Italy", label: "Focused Guidance", color: "text-orange-500", bg: "bg-orange-50" },
+  { icon: UsersRound, value: "8", label: "City Guides", color: "text-[#071d43]", bg: "bg-blue-50" },
+  { icon: FileCheck2, value: "DSU", label: "Scholarship Guidance", color: "text-blue-500", bg: "bg-blue-50" },
+  { icon: BadgeDollarSign, value: "Visa", label: "Planning Support", color: "text-emerald-500", bg: "bg-emerald-50" },
+  { icon: Trophy, value: "Free", label: "First Consultation", color: "text-rose-500", bg: "bg-rose-50" },
 ];
 
 const trustCards = [
@@ -132,7 +132,7 @@ const italyBenefits = [
   "Clear visa document roadmap",
 ];
 
-const popularCities = ["Milan", "Rome", "Bologna", "Padua", "Turin", "Pisa"];
+const popularCities = ["Milan", "Rome", "Bologna", "Padua", "Florence", "Turin", "Pisa", "Venice"];
 
 
 const afterBookingSteps = [
@@ -322,6 +322,7 @@ function AppointmentPage() {
   const [submittedAppointment, setSubmittedAppointment] = useState(null);
   const [prefillNotice, setPrefillNotice] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -335,6 +336,7 @@ function AppointmentPage() {
     const countryParam = params.get("country") || "Italy";
     const serviceParam = params.get("service") || params.get("consultation");
     const universityParam = params.get("university");
+    const cityParam = params.get("city");
     const dateParam = params.get("date");
     const timeParam = params.get("time");
     const nameParam = params.get("name");
@@ -360,10 +362,17 @@ function AppointmentPage() {
 
     if (messageParam) messageParts.push(messageParam);
 
+    if (cityParam) {
+      setSelectedCity(cityParam);
+      messageParts.push(`Preferred Italy city: ${cityParam}.`);
+    }
+
     if (universityParam) {
       setSelectedUniversity(universityParam);
       messageParts.push(
-        `I would like guidance for ${universityParam} in ${countryParam || "Italy"}.`
+        `I would like guidance for ${universityParam}${
+          cityParam ? ` in ${cityParam}` : ""
+        } in ${countryParam || "Italy"}.`
       );
     }
 
@@ -377,7 +386,7 @@ function AppointmentPage() {
 
     setFormData((prev) => ({ ...prev, ...nextData }));
 
-    if (universityParam || serviceParam || countryParam) {
+    if (universityParam || cityParam || serviceParam || countryParam) {
       setPrefillNotice("We prefilled your appointment details from the link.");
     }
   }, [minDate]);
@@ -386,11 +395,12 @@ function AppointmentPage() {
     return [
       { icon: MapPin, label: "Country", value: formData.country_interest },
       { icon: Sparkles, label: "Service", value: formData.consultation_type },
+      { icon: MapPin, label: "City", value: selectedCity },
       { icon: GraduationCap, label: "University", value: selectedUniversity },
       { icon: CalendarDays, label: "Date", value: formData.appointment_date },
       { icon: Clock, label: "Time", value: formData.appointment_time },
     ].filter((item) => item.value);
-  }, [formData, selectedUniversity]);
+  }, [formData, selectedCity, selectedUniversity]);
 
   const completionPercentage = useMemo(() => {
     const fields = [
@@ -432,9 +442,11 @@ function AppointmentPage() {
     const text = encodeURIComponent(
       `Hi Zaifan Consultancy, I want to book an Italy study consultation.\n\nName: ${
         formData.full_name || "-"
-      }\nCountry: Italy\nUniversity: ${selectedUniversity || "-"}\nService: ${
-        formData.consultation_type || "-"
-      }\nPreferred Date: ${formData.appointment_date || "-"}\nPreferred Time: ${
+      }\nCountry: Italy\nCity: ${selectedCity || "-"}\nUniversity: ${
+        selectedUniversity || "-"
+      }\nService: ${formData.consultation_type || "-"}\nPreferred Date: ${
+        formData.appointment_date || "-"
+      }\nPreferred Time: ${
         formData.appointment_time || "-"
       }\nMessage: ${formData.message || "-"}`
     );
@@ -455,6 +467,7 @@ function AppointmentPage() {
 
     try {
       const finalMessage = [
+        selectedCity ? `Selected city: ${selectedCity}` : "",
         selectedUniversity ? `Selected university: ${selectedUniversity}` : "",
         formData.message.trim(),
       ]
@@ -513,6 +526,7 @@ function AppointmentPage() {
 
       setSuccess("Your Italy consultation request is confirmed. Our team will contact you soon.");
       setFormData(initialFormData);
+      setSelectedCity("");
       setSelectedUniversity("");
       setPrefillNotice("");
     } catch (err) {
@@ -526,7 +540,7 @@ function AppointmentPage() {
   return (
     <section
       id="appointment-page"
-      className="relative overflow-hidden bg-[#fff4e8] px-4 pb-8 pt-28 text-[#071d43] sm:px-6 lg:px-8"
+      className="relative overflow-hidden bg-[linear-gradient(180deg,#fff7ee_0%,#fff4e8_58%,#fff1e2_100%)] px-4 pb-10 pt-28 text-[#071d43] sm:px-6 lg:px-8"
     >
       <style>{`
         @media (prefers-reduced-motion: reduce) {
@@ -550,7 +564,7 @@ function AppointmentPage() {
             initial="hidden"
             animate="show"
             variants={fadeUp}
-            className="overflow-hidden rounded-[2.5rem] bg-[#fff7ee] shadow-[0_24px_70px_rgba(120,70,20,0.12)] ring-1 ring-orange-100"
+            className="overflow-hidden rounded-[2.5rem] bg-[#fff7ee] shadow-[0_30px_90px_rgba(120,70,20,0.14)] ring-1 ring-orange-100"
           >
             <div className="relative p-5 sm:p-7">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.95),transparent_36%),radial-gradient(circle_at_28%_80%,rgba(255,180,90,0.22),transparent_32%)]" />
@@ -690,9 +704,9 @@ function AppointmentPage() {
             initial="hidden"
             animate="show"
             variants={fadeUp}
-            className="rounded-[2.5rem] bg-white p-5 shadow-[0_24px_70px_rgba(120,70,20,0.12)] ring-1 ring-orange-100 sm:p-6"
+            className="rounded-[2.5rem] bg-white p-5 shadow-[0_30px_90px_rgba(120,70,20,0.14)] ring-1 ring-orange-100 sm:p-6"
           >
-            <div className="mb-5 rounded-[1.7rem] border border-orange-100 bg-[#fff8ef] p-5">
+            <div className="mb-5 rounded-[1.7rem] border border-orange-100 bg-[linear-gradient(135deg,#fff8ef_0%,#fffdf9_100%)] p-5">
               <div className="flex items-start gap-4">
                 <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-500/20">
                   <CalendarDays size={25} />
@@ -724,7 +738,7 @@ function AppointmentPage() {
 
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
                 <motion.div
-                  className="h-full rounded-full bg-[#0a4aa6]"
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#ff5a0a_0%,#0a4aa6_100%)]"
                   initial={prefersReducedMotion ? false : { width: 0 }}
                   animate={{ width: `${completionPercentage}%` }}
                   transition={
@@ -746,17 +760,35 @@ function AppointmentPage() {
               </div>
             )}
 
-            {selectedUniversity && (
-              <div className="mb-4 rounded-[1.6rem] border border-orange-100 bg-[#fff8ef] p-5">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
-                  Selected University
-                </p>
-                <h3 className="mt-2 text-xl font-black text-[#071d43]">
-                  {selectedUniversity}
-                </h3>
-                <p className="mt-2 text-sm font-bold text-slate-600">
-                  Your consultation will focus on this university.
-                </p>
+            {(selectedCity || selectedUniversity) && (
+              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                {selectedCity && (
+                  <div className="rounded-[1.6rem] border border-orange-100 bg-[#fff8ef] p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
+                      Selected City
+                    </p>
+                    <h3 className="mt-2 text-xl font-black text-[#071d43]">
+                      {selectedCity}
+                    </h3>
+                    <p className="mt-2 text-sm font-bold text-slate-600">
+                      We will include city fit, costs and local study routes.
+                    </p>
+                  </div>
+                )}
+
+                {selectedUniversity && (
+                  <div className="rounded-[1.6rem] border border-orange-100 bg-[#fff8ef] p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
+                      Selected University
+                    </p>
+                    <h3 className="mt-2 text-xl font-black text-[#071d43]">
+                      {selectedUniversity}
+                    </h3>
+                    <p className="mt-2 text-sm font-bold text-slate-600">
+                      Your consultation will focus on this university.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

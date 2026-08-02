@@ -191,7 +191,7 @@ export default function MoreWaysWeHelp() {
   return (
     <section
       id="more-help"
-      className="relative overflow-hidden bg-[#fff7ed] py-20 sm:py-24"
+      className="relative overflow-hidden bg-[#fff7ed] py-16 sm:py-20 lg:py-24"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}
@@ -269,7 +269,7 @@ export default function MoreWaysWeHelp() {
         </svg>
       </div>
 
-      <div className="relative mx-auto max-w-[1460px] px-5 sm:px-8 lg:px-24">
+      <div className="relative mx-auto max-w-[1460px] px-4 sm:px-8 lg:px-24">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -277,19 +277,19 @@ export default function MoreWaysWeHelp() {
           transition={{ duration: MOTION.duration, ease: MOTION.ease }}
           className="mx-auto max-w-5xl text-center"
         >
-          <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-6 py-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600 shadow-sm sm:text-sm">
+          <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/95 px-5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm sm:mb-5 sm:px-6 sm:text-sm sm:tracking-[0.28em]">
             <span>✈</span>
             Explore the support before you book
           </div>
 
-          <h2 className="text-4xl font-black tracking-tight text-[#071f50] sm:text-6xl lg:text-7xl">
+          <h2 className="text-[2.6rem] font-black tracking-[-0.05em] text-[#071f50] sm:text-6xl lg:text-7xl">
             More Ways{" "}
             <span className="text-orange-600">
               We Help Students
             </span>
           </h2>
 
-          <p className="mx-auto mt-5 max-w-3xl text-lg font-semibold leading-8 text-slate-700 sm:text-xl">
+          <p className="mx-auto mt-4 max-w-3xl text-base font-semibold leading-7 text-slate-700 sm:mt-5 sm:text-xl sm:leading-8">
             Six real service routes. Each one now leads to useful guidance instead of sending you straight to a booking form.
           </p>
 
@@ -351,7 +351,7 @@ export default function MoreWaysWeHelp() {
                   duration: MOTION.duration,
                   ease: MOTION.ease,
                 }}
-                className="grid grid-cols-3 gap-6"
+                className="grid grid-cols-3 gap-5"
               >
                 {visibleServices.map((service) => (
                   <ServiceCard key={service.title} service={service} />
@@ -484,7 +484,7 @@ export default function MoreWaysWeHelp() {
           </div>
         </div>
 
-        <div className="relative z-20 mx-auto mt-12 hidden max-w-7xl gap-5 rounded-[34px] border border-orange-100 bg-white p-6 shadow-[0_18px_55px_rgba(251,146,60,0.12)] md:grid md:grid-cols-2 lg:grid-cols-4">
+        <div className="relative z-20 mx-auto mt-10 hidden max-w-7xl gap-5 rounded-[30px] border border-orange-100 bg-white p-5 shadow-[0_18px_55px_rgba(251,146,60,0.12)] md:grid md:grid-cols-2 lg:grid-cols-4">
           {trustItems.map((item) => {
             const Icon = item.icon;
 
@@ -510,7 +510,7 @@ export default function MoreWaysWeHelp() {
           })}
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-7 flex justify-center">
           <Link
             to="/services"
             className="inline-flex items-center gap-3 rounded-full bg-[#071f50] px-8 py-4 font-black text-white transition-all duration-300 hover:-translate-y-1 hover:bg-orange-600"
@@ -556,7 +556,13 @@ function ServiceCard({ service }) {
           <Icon size={20} />
         </div>
 
-        <h3 className="max-w-[245px] break-words text-[25px] font-black leading-[1.15] text-[#071f50] xl:text-[27px]">
+        <h3
+          className={`max-w-[250px] whitespace-normal break-normal font-black leading-[1.08] text-[#071f50] ${
+            service.title === "SOP & Documentation"
+              ? "text-[22px] xl:text-[24px]"
+              : "text-[25px] xl:text-[27px]"
+          }`}
+        >
           {service.title}
         </h3>
 

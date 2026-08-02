@@ -13,7 +13,6 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import Footer from "../../components/public/layout/Footer.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
 import { findServiceBySlug } from "../../data/servicesData.js";
 
@@ -42,6 +41,51 @@ const fadeUp = {
   },
 };
 
+const serviceThemes = {
+  "free-consultation": {
+    eyebrow: "Start Here",
+    code: "START",
+    accent: "from-[#ff4b12] via-[#ff8b4a] to-[#071b3a]",
+    soft: "from-[#fff1ea] via-white to-[#eef4ff]",
+    signal: "Clarity before commitment",
+  },
+  "university-selection": {
+    eyebrow: "University Strategy",
+    code: "UNI",
+    accent: "from-[#ff5a22] via-[#ff9a62] to-[#123865]",
+    soft: "from-[#fff2ea] via-white to-[#eef5ff]",
+    signal: "Fit over fame",
+  },
+  "scholarship-guidance": {
+    eyebrow: "Funding Strategy",
+    code: "FUND",
+    accent: "from-[#ff5b20] via-[#ffad5e] to-[#071b3a]",
+    soft: "from-[#fff4e9] via-white to-[#f6f3ea]",
+    signal: "Plan before deadlines",
+  },
+  "application-support": {
+    eyebrow: "Application Readiness",
+    code: "APPLY",
+    accent: "from-[#ff6035] via-[#ff985d] to-[#30567a]",
+    soft: "from-[#fff1eb] via-white to-[#edf5fb]",
+    signal: "Preparation beats panic",
+  },
+  "visa-guidance": {
+    eyebrow: "Visa Planning",
+    code: "VISA",
+    accent: "from-[#ff5b2e] via-[#ff8d52] to-[#071b3a]",
+    soft: "from-[#fff1ea] via-white to-[#eef3fb]",
+    signal: "No shortcuts, only readiness",
+  },
+  "pre-departure-support": {
+    eyebrow: "Arrival Readiness",
+    code: "ARRIVE",
+    accent: "from-[#ff673d] via-[#ff9b64] to-[#315a70]",
+    soft: "from-[#fff2eb] via-white to-[#edf7f8]",
+    signal: "Prepare before you fly",
+  },
+};
+
 function ServiceDetailPage() {
   const prefersReducedMotion = useReducedMotion();
   const { serviceSlug } = useParams();
@@ -62,11 +106,39 @@ function ServiceDetailPage() {
     ["03", "Act", service.outcomes?.[1] || "Leave with practical next steps."],
   ];
 
+  const serviceTheme =
+    serviceThemes[service.slug] || {
+      eyebrow: "Zaifan Service",
+      code: "SERVICE",
+      accent: "from-[#ff4b12] via-[#ff8a4c] to-[#071b3a]",
+      soft: "from-[#fff1ea] via-white to-[#eef4ff]",
+      signal: "Clear next steps",
+    };
+
+  const serviceChapters = [
+    ["service-fit", "Who it helps"],
+    ["service-framework", "Framework"],
+    ["service-process", "Process"],
+    ["service-prepare", "Prepare"],
+    ["service-expectations", "Expectations"],
+    ["service-faqs", "FAQs"],
+  ];
+
+  const scrollToChapter = (id) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    const y = target.getBoundingClientRect().top + window.scrollY - 102;
+    window.scrollTo({
+      top: y,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  };
+
   return (
-    <>
       <main
         id="service-detail-page"
-        className="overflow-hidden bg-[#fff7ee] text-[#071b3a]"
+        className={`overflow-hidden bg-gradient-to-br ${serviceTheme.soft} text-[#071b3a]`}
       >
         <style>{`
           @media (prefers-reduced-motion: reduce) {
@@ -80,8 +152,10 @@ function ServiceDetailPage() {
             }
           }
         `}</style>
-        <section className="relative px-5 pb-16 pt-32">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_20%,rgba(255,91,18,0.14),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(255,190,92,0.16),transparent_28%)]" />
+        <section className="relative overflow-hidden px-5 pb-20 pt-32">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_20%,rgba(255,91,18,0.16),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(255,190,92,0.18),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.48),rgba(255,247,238,0))]" />
+          <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-orange-200/35 blur-3xl" />
+          <div className="pointer-events-none absolute -right-24 top-32 h-80 w-80 rounded-full bg-[#071b3a]/8 blur-3xl" />
 
           <div className="relative mx-auto max-w-[1400px]">
             <Link
@@ -92,14 +166,19 @@ function ServiceDetailPage() {
               Back to Services
             </Link>
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
+            <div className="mt-8 grid gap-10 xl:grid-cols-[0.92fr_1.08fr] xl:items-center">
               <motion.div initial="hidden" animate="show" variants={fadeUp}>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-orange-600 ring-1 ring-orange-100">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-orange-600 shadow-sm ring-1 ring-orange-100">
                   <Sparkles size={14} />
                   {service.eyebrow}
                 </div>
 
-                <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.94] tracking-[-0.06em] sm:text-6xl lg:text-7xl">
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#071b3a] px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-[0_14px_34px_rgba(7,27,58,0.16)]">
+                  <ShieldCheck size={14} className="text-orange-300" />
+                  {serviceTheme.eyebrow} · {serviceTheme.code}
+                </div>
+
+                <h1 className="mt-5 max-w-[850px] text-5xl font-black leading-[0.92] tracking-[-0.065em] sm:text-6xl lg:text-7xl xl:text-[80px]">
                   {service.title}
                 </h1>
 
@@ -149,8 +228,9 @@ function ServiceDetailPage() {
                 initial="hidden"
                 animate="show"
                 variants={fadeUp}
-                className="group relative overflow-hidden rounded-[2.6rem] bg-[#071b3a] p-7 text-white shadow-[0_30px_90px_rgba(7,27,58,0.2)] ring-1 ring-white/5"
+                className={`group relative overflow-hidden rounded-[2.8rem] bg-gradient-to-br ${serviceTheme.accent} p-[3px] text-white shadow-[0_38px_105px_rgba(7,27,58,0.24)]`}
               >
+                <div className="relative rounded-[2.62rem] bg-[#071b3a]/96 p-7 backdrop-blur-xl">
                 <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full border-[34px] border-white/5" />
                 <div className="pointer-events-none absolute -bottom-20 -left-14 h-48 w-48 rounded-full bg-orange-500/10 blur-3xl" />
 
@@ -158,7 +238,16 @@ function ServiceDetailPage() {
                   <ServiceIcon size={30} />
                 </div>
 
-                <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-orange-300">
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">
+                    Service Command Center
+                  </p>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-orange-200 ring-1 ring-white/10">
+                    {serviceTheme.signal}
+                  </span>
+                </div>
+
+                <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
                   What this service solves
                 </p>
 
@@ -177,15 +266,51 @@ function ServiceDetailPage() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-5 grid grid-cols-3 gap-2">
+                  {[
+                    [service.audience.length, "Student fits"],
+                    [service.outcomes.length, "Outcomes"],
+                    [service.process.length, "Process steps"],
+                  ].map(([value, label]) => (
+                    <div
+                      key={label}
+                      className="rounded-2xl bg-white/10 px-3 py-3 text-center ring-1 ring-white/10"
+                    >
+                      <p className="text-xl font-black text-white">{value}</p>
+                      <p className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-orange-200">
+                        {label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                </div>
               </motion.div>
             </div>
           </div>
         </section>
 
-        <section className="px-5 py-16">
+        <section className="relative z-20 -mt-8 hidden px-5 pb-8 lg:block">
+          <div className="mx-auto flex max-w-[1200px] items-center gap-2 overflow-x-auto rounded-[2rem] bg-white/96 p-3 shadow-[0_22px_65px_rgba(15,23,42,0.09)] ring-1 ring-orange-100 backdrop-blur-xl">
+            {serviceChapters.map(([id, label], index) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => scrollToChapter(id)}
+                className="group flex min-w-fit items-center gap-2 rounded-full px-4 py-3 text-xs font-black text-[#071b3a] transition hover:bg-orange-50 hover:text-orange-600"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-orange-50 text-[10px] text-orange-600 ring-1 ring-orange-100">
+                  {index + 1}
+                </span>
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section id="service-fit" className="px-5 py-16">
           <div className="mx-auto max-w-[1350px]">
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[2.4rem] bg-white p-7 shadow-[0_22px_65px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
+              <div className="rounded-[2.4rem] bg-gradient-to-br from-white to-emerald-50/70 p-7 shadow-[0_22px_65px_rgba(15,23,42,0.08)] ring-1 ring-emerald-100">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
                   Who this is for
                 </p>
@@ -203,7 +328,7 @@ function ServiceDetailPage() {
                 </div>
               </div>
 
-              <div className="rounded-[2.4rem] bg-white p-7 shadow-[0_22px_65px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
+              <div className="rounded-[2.4rem] bg-gradient-to-br from-white to-orange-50/70 p-7 shadow-[0_22px_65px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
                   What you should leave with
                 </p>
@@ -223,7 +348,7 @@ function ServiceDetailPage() {
           </div>
         </section>
 
-        <section className="px-5 py-16">
+        <section id="service-framework" className="px-5 py-16">
           <div className="mx-auto max-w-[1350px] rounded-[2.7rem] bg-white p-7 shadow-[0_24px_70px_rgba(15,23,42,0.08)] ring-1 ring-orange-100 md:p-9">
             <div className="mx-auto max-w-4xl text-center">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
@@ -245,13 +370,23 @@ function ServiceDetailPage() {
                   whileInView="show"
                   viewport={{ once: true, amount: 0.2 }}
                   variants={fadeUp}
-                  className="rounded-[1.8rem] bg-[#fff8f1] p-5 ring-1 ring-orange-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+                  className={`rounded-[1.8rem] p-5 ring-1 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] ${
+                    index === 0
+                      ? "bg-[#071b3a] text-white ring-[#071b3a] xl:col-span-2"
+                      : index === 1
+                        ? "bg-orange-600 text-white ring-orange-600"
+                        : "bg-[#fff8f1] text-[#071b3a] ring-orange-100 hover:bg-white"
+                  }`}
                 >
-                  <span className="text-xs font-black text-orange-500">
+                  <span className={`text-xs font-black ${
+                    index < 2 ? "text-orange-200" : "text-orange-500"
+                  }`}>
                     0{index + 1}
                   </span>
                   <h3 className="mt-2 text-xl font-black">{title}</h3>
-                  <p className="mt-2 text-sm font-bold leading-6 text-slate-600">
+                  <p className={`mt-2 text-sm font-bold leading-6 ${
+                    index < 2 ? "text-white/72" : "text-slate-600"
+                  }`}>
                     {text}
                   </p>
                 </motion.div>
@@ -260,7 +395,7 @@ function ServiceDetailPage() {
           </div>
         </section>
 
-        <section className="bg-[#071b3a] px-5 py-16 text-white">
+        <section id="service-process" className="bg-[#071b3a] px-5 py-16 text-white">
           <div className="mx-auto max-w-[1350px]">
             <div className="mx-auto max-w-4xl text-center">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">
@@ -271,7 +406,7 @@ function ServiceDetailPage() {
               </h2>
             </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="relative mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:before:absolute xl:before:left-[12%] xl:before:right-[12%] xl:before:top-5 xl:before:h-px xl:before:bg-white/15">
               {service.process.map(([title, text], index) => (
                 <div
                   key={title}
@@ -290,7 +425,7 @@ function ServiceDetailPage() {
           </div>
         </section>
 
-        <section className="px-5 py-16">
+        <section id="service-prepare" className="px-5 py-16">
           <div className="mx-auto grid max-w-[1350px] gap-6 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="rounded-[2.4rem] bg-orange-50 p-7 ring-1 ring-orange-100">
               <ClipboardCheck className="text-orange-600" size={30} />
@@ -312,7 +447,7 @@ function ServiceDetailPage() {
               </div>
             </div>
 
-            <div className="rounded-[2.4rem] bg-white p-7 shadow-[0_22px_65px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
+            <div id="service-expectations" className="rounded-[2.4rem] bg-white p-7 shadow-[0_22px_65px_rgba(15,23,42,0.08)] ring-1 ring-orange-100">
               <div className="flex items-center gap-3">
                 <ShieldCheck className="text-orange-600" />
                 <h2 className="text-3xl font-black">Clear expectations.</h2>
@@ -347,13 +482,13 @@ function ServiceDetailPage() {
           </div>
         </section>
 
-        <section className="px-5 pb-20">
+        <section id="service-faqs" className="px-5 pb-20">
           <div className="mx-auto max-w-[1050px]">
             <div className="text-center">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
                 FAQs
               </p>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.05em]">
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.05em] sm:text-4xl">
                 Questions before choosing this service.
               </h2>
             </div>
@@ -370,7 +505,7 @@ function ServiceDetailPage() {
                     <button
                       type="button"
                       onClick={() => setOpenFaq(isOpen ? -1 : index)}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left font-black transition-colors duration-300 hover:bg-orange-50/70 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-200"
+                      className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left text-sm font-black leading-6 transition-colors duration-300 hover:bg-orange-50/70 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-200 sm:px-5 sm:py-5 sm:text-base"
                     >
                       <span>{question}</span>
                       <ChevronDown
@@ -421,9 +556,6 @@ function ServiceDetailPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </>
   );
 }
 

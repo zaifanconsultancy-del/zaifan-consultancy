@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   BadgePercent,
@@ -62,6 +63,30 @@ const scholarshipTypes = [
     items: ["High grades", "Strong profile", "Competitive awards"],
   },
 ];
+
+
+const routeVisuals = {
+  "DSU Scholarship": {
+    code: "DSU",
+    eyebrow: "Regional Need-Based Route",
+    signal: "Best first affordability check",
+  },
+  "Regional Grants": {
+    code: "REG",
+    eyebrow: "City + Region Funding",
+    signal: "Funding changes with location",
+  },
+  "University Scholarships": {
+    code: "UNI",
+    eyebrow: "Institution-Based Awards",
+    signal: "Profile and course dependent",
+  },
+  "Merit Scholarships": {
+    code: "MERIT",
+    eyebrow: "Competitive Profile Route",
+    signal: "Built for stronger academics",
+  },
+};
 
 const scholarshipRoutes = [
   {
@@ -484,6 +509,16 @@ export default function ScholarshipExplorer() {
   const [activeRoute, setActiveRoute] = useState("DSU Scholarship");
   const [openFaq, setOpenFaq] = useState(0);
 
+  const scholarshipChapters = [
+    ["scholarship-types", "Types"],
+    ["scholarship-dsu", "Route Deep Dive"],
+    ["scholarship-comparison", "Compare"],
+    ["scholarship-regions", "Regions"],
+    ["scholarship-documents", "Documents"],
+    ["scholarship-calculator", "Planner"],
+    ["scholarship-faq", "FAQs"],
+  ];
+
   const selectedRoute =
     scholarshipRoutes.find((route) => route.title === activeRoute) ||
     scholarshipRoutes[0];
@@ -494,11 +529,14 @@ export default function ScholarshipExplorer() {
     const before = tuition + living;
     const appliedSupport = Math.min(Math.max(supportScenario, 0), before);
     const after = Math.max(0, before - appliedSupport);
+    const coverage =
+      before > 0 ? Math.round((appliedSupport / before) * 100) : 0;
 
     return {
       before,
       after,
       appliedSupport,
+      coverage,
     };
   }, [tuition, living, supportScenario]);
 
@@ -517,7 +555,7 @@ export default function ScholarshipExplorer() {
   return (
     <section
       id="scholarships"
-      className="relative overflow-hidden bg-[#fff7ed] py-16 text-[#071f50] sm:py-20 lg:py-24"
+      className="relative overflow-hidden bg-[linear-gradient(180deg,#fffaf5_0%,#fff7ed_58%,#fff1e7_100%)] py-14 text-[#071f50] sm:py-20 lg:py-24"
     >
       <style>{`
         @keyframes scholarshipFloat {
@@ -546,44 +584,44 @@ export default function ScholarshipExplorer() {
       <div className="pointer-events-none absolute right-[-110px] bottom-20 h-[320px] w-[320px] rounded-full bg-amber-300/20 blur-3xl" />
 
       <div className="relative mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-10">
-        <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div className="grid gap-10 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/90 px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-600 shadow-sm">
               <Sparkles className="h-4 w-4 fill-orange-500" />
               Italy Scholarship Intelligence
             </div>
 
-            <h2 className="mt-6 max-w-5xl text-5xl font-black leading-[0.94] tracking-[-0.06em] sm:text-6xl lg:text-7xl">
+            <h2 className="mt-5 max-w-[780px] text-[2.65rem] font-black leading-[0.93] tracking-[-0.06em] sm:mt-6 sm:text-6xl sm:tracking-[-0.065em] lg:text-7xl xl:text-[78px]">
               Build your funding plan
               <span className="text-orange-600"> before the deadline builds pressure.</span>
             </h2>
 
-            <p className="mt-6 max-w-3xl text-base font-semibold leading-8 text-slate-700 md:text-lg">
+            <p className="mt-4 max-w-3xl text-sm font-semibold leading-7 text-slate-700 sm:mt-6 sm:text-base md:text-lg md:leading-8">
               DSU, regional support, university awards and merit scholarships only make sense when they are connected to the right university, city, documents and timeline.
             </p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="/appointment?country=Italy&service=Scholarship Guidance"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-8 py-5 text-base font-black text-white shadow-[0_20px_44px_rgba(255,91,18,0.28)] transition hover:-translate-y-1 hover:bg-orange-700"
+            <div className="mt-5 flex flex-col gap-3 sm:mt-7 sm:flex-row">
+              <Link
+                to="/appointment?country=Italy&service=Scholarship Guidance"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-600 px-7 py-4 text-sm font-black text-white shadow-[0_20px_44px_rgba(255,91,18,0.28)] transition hover:-translate-y-1 hover:bg-orange-700 sm:px-8 sm:py-5 sm:text-base"
               >
                 Build My Scholarship Plan
                 <ArrowRight className="h-5 w-5" />
-              </a>
+              </Link>
 
               <button
                 type="button"
                 onClick={() => scrollToId("scholarship-calculator")}
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-base font-black text-[#071f50] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-orange-600"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-black text-[#071f50] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-orange-600 sm:px-8 sm:py-5 sm:text-base"
               >
                 Check My Profile
                 <ArrowRight className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-8 sm:gap-3 xl:grid-cols-4">
               {scholarshipJourneySignals.map((item, index) => (
-                <div key={item.title} className="rounded-[1.5rem] bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.055)] ring-1 ring-orange-100">
+                <div key={item.title} className="rounded-[1.25rem] bg-white/90 p-3 shadow-[0_14px_36px_rgba(15,23,42,0.055)] ring-1 ring-orange-100 sm:rounded-[1.5rem] sm:p-4">
                   <div className="flex items-center justify-between">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-orange-50 text-orange-600">
                       <item.icon className="h-5 w-5" />
@@ -597,13 +635,14 @@ export default function ScholarshipExplorer() {
             </div>
           </div>
 
-          <div className="rounded-[2.6rem] bg-[#071f50] p-6 text-white shadow-[0_32px_90px_rgba(7,31,80,0.20)] sm:p-8">
+          <div className="rounded-[2.8rem] bg-[linear-gradient(135deg,#ff5a12_0%,#ff934d_34%,#071f50_74%)] p-[3px] text-white shadow-[0_38px_105px_rgba(7,31,80,0.23)]">
+            <div className="rounded-[2.15rem] bg-[#071f50]/96 p-4 backdrop-blur-xl sm:rounded-[2.62rem] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">
                   Funding Command Center
                 </p>
-                <h3 className="mt-3 text-4xl font-black leading-[0.98] tracking-[-0.05em]">
+                <h3 className="mt-3 text-3xl font-black leading-[0.98] tracking-[-0.05em] sm:text-4xl">
                   Start with the right route.
                 </h3>
                 <p className="mt-4 max-w-xl text-sm font-semibold leading-7 text-white/70">
@@ -616,7 +655,10 @@ export default function ScholarshipExplorer() {
             </div>
 
             <div className="mt-6 grid gap-3">
-              {scholarshipRoutes.map((route) => (
+              {scholarshipRoutes.map((route) => {
+                const visual = routeVisuals[route.title];
+
+                return (
                 <button
                   key={route.title}
                   type="button"
@@ -637,7 +679,16 @@ export default function ScholarshipExplorer() {
                     <route.icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-black">{route.title}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-black">{route.title}</p>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${
+                        activeRoute === route.title
+                          ? "bg-orange-50 text-orange-700"
+                          : "bg-white/10 text-orange-200"
+                      }`}>
+                        {visual?.code}
+                      </span>
+                    </div>
                     <p
                       className={`mt-1 text-xs font-semibold ${
                         activeRoute === route.title
@@ -652,22 +703,29 @@ export default function ScholarshipExplorer() {
                     activeRoute === route.title ? "text-orange-600" : "text-white/40"
                   }`} />
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-5 rounded-[1.8rem] bg-white/10 p-5 ring-1 ring-white/10">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-300">
-                Selected Route
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-300">
+                  Selected Route
+                </p>
+                <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase text-orange-200 ring-1 ring-white/10">
+                  {routeVisuals[selectedRoute.title]?.signal}
+                </span>
+              </div>
               <h4 className="mt-2 text-2xl font-black">{selectedRoute.title}</h4>
               <p className="mt-3 text-sm font-semibold leading-7 text-white/72">
                 {selectedRoute.text}
               </p>
             </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-7 grid gap-3 md:mt-10 md:grid-cols-2 md:gap-4 xl:grid-cols-[1.15fr_1.15fr_0.85fr_0.85fr]">
           {fundingDecisionCards.map((item, index) => (
             <article
               key={item.title}
@@ -699,49 +757,73 @@ export default function ScholarshipExplorer() {
           ))}
         </div>
 
-        <div className="mt-7 flex flex-wrap justify-center gap-2 rounded-[1.6rem] bg-white/80 p-3 ring-1 ring-orange-100">
-          {[
-            ["Types", "scholarship-types"],
-            ["DSU", "scholarship-dsu"],
-            ["Documents", "scholarship-documents"],
-            ["Regions", "scholarship-regions"],
-            ["Compare", "scholarship-comparison"],
-            ["Calculator", "scholarship-calculator"],
-            ["FAQ", "scholarship-faq"],
-          ].map(([label, id]) => (
+        <div className="mt-8 lg:hidden">
+          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {scholarshipChapters.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => scrollToId(id)}
+                className="min-w-fit snap-start rounded-full bg-white px-4 py-2.5 text-xs font-black text-orange-700 shadow-sm ring-1 ring-orange-100"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 hidden items-center gap-2 rounded-[1.9rem] bg-white/92 p-3 shadow-[0_20px_55px_rgba(15,23,42,0.08)] ring-1 ring-orange-100 lg:flex">
+          {scholarshipChapters.map(([id, label], index) => (
             <button
-              key={label}
+              key={id}
               type="button"
               onClick={() => scrollToId(id)}
-              className="rounded-full bg-white px-4 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-50"
+              className="group flex min-w-fit items-center gap-2 rounded-full px-4 py-3 text-xs font-black text-[#071f50] transition hover:bg-orange-50 hover:text-orange-600"
             >
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-orange-50 text-[10px] text-orange-600 ring-1 ring-orange-100">
+                {index + 1}
+              </span>
               {label}
             </button>
           ))}
         </div>
 
-        <section id="scholarship-types" className="mt-6">
+        <section id="scholarship-types" className="mt-8 hidden md:block">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {scholarshipTypes.map((type) => {
+            {scholarshipTypes.map((type, index) => {
               const Icon = type.icon;
 
               return (
                 <article
                   key={type.title}
-                  className="rounded-[1.8rem] bg-white/92 p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-white"
+                  className={`rounded-[1.8rem] p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] ring-1 transition hover:-translate-y-1 ${
+                    index === 0
+                      ? "bg-[#071f50] text-white ring-[#071f50] xl:col-span-2"
+                      : index === 1
+                        ? "bg-orange-600 text-white ring-orange-600"
+                        : "bg-white/92 text-[#071f50] ring-orange-100 hover:bg-white"
+                  }`}
                 >
-                  <div className="grid h-13 w-13 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+                  <div className={`grid h-13 w-13 place-items-center rounded-2xl ${
+                    index < 2 ? "bg-white/12 text-orange-200" : "bg-orange-50 text-orange-600"
+                  }`}>
                     <Icon className="h-6 w-6" />
                   </div>
                   <h3 className="mt-4 text-xl font-black">{type.title}</h3>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                  <p className={`mt-2 text-sm font-semibold leading-6 ${
+                    index < 2 ? "text-white/72" : "text-slate-600"
+                  }`}>
                     {type.text}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {type.items.map((item) => (
                       <span
                         key={item}
-                        className="rounded-full bg-[#fff7ed] px-3 py-1.5 text-[11px] font-black text-orange-700 ring-1 ring-orange-100"
+                        className={`rounded-full px-3 py-1.5 text-[11px] font-black ring-1 ${
+                          index < 2
+                            ? "bg-white/10 text-white ring-white/10"
+                            : "bg-[#fff7ed] text-orange-700 ring-orange-100"
+                        }`}
                       >
                         {item}
                       </span>
@@ -753,7 +835,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section id="scholarship-dsu" className="mt-6">
+        <section id="scholarship-dsu" className="mt-8">
           <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
             <div className="rounded-[2rem] bg-white/92 p-6 shadow-[0_20px_65px_rgba(15,23,42,0.07)] ring-1 ring-orange-100">
               <div
@@ -762,7 +844,7 @@ export default function ScholarshipExplorer() {
                 <selectedRoute.icon className="h-8 w-8" />
               </div>
 
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-300">
                 Funding route deep dive
               </p>
               <h3 className="mt-2 text-3xl font-black tracking-[-0.04em]">
@@ -802,7 +884,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section className="mt-6">
+        <section className="mt-8 hidden md:block">
           <div className="rounded-[2.3rem] bg-white/92 p-5 shadow-[0_20px_65px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 md:p-7">
             <div className="mb-6 flex items-center gap-3">
               <BookOpenCheck className="h-7 w-7 text-orange-600" />
@@ -837,7 +919,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section id="scholarship-comparison" className="mt-6">
+        <section id="scholarship-comparison" className="mt-8">
           <div className="rounded-[2.3rem] bg-white/92 p-5 shadow-[0_20px_65px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 md:p-7">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
@@ -848,7 +930,7 @@ export default function ScholarshipExplorer() {
                 <h3 className="mt-4 text-3xl font-black tracking-[-0.04em] md:text-4xl">
                   Italy scholarships are not one single thing.
                 </h3>
-                <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-slate-600">
+                <p className="mt-3 hidden max-w-3xl text-sm font-semibold leading-7 text-slate-600 sm:block">
                   Students usually hear “DSU” and think everything is solved.
                   Real planning means comparing DSU, regional support,
                   university awards and merit scholarships with documents and
@@ -856,13 +938,13 @@ export default function ScholarshipExplorer() {
                 </p>
               </div>
 
-              <a
-                href="/appointment?country=Italy&service=Scholarship Comparison"
+              <Link
+                to="/appointment?country=Italy&service=Scholarship Comparison"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#071f50] px-6 py-4 text-sm font-black text-white transition hover:-translate-y-1 hover:bg-[#092b72]"
               >
                 Compare My Options
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
 
             <div className="overflow-hidden rounded-[1.7rem] ring-1 ring-orange-100">
@@ -899,7 +981,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section id="scholarship-regions" className="mt-6">
+        <section id="scholarship-regions" className="mt-8">
           <div className="rounded-[2.3rem] bg-white/88 p-5 shadow-[0_20px_65px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 md:p-7">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
@@ -910,19 +992,19 @@ export default function ScholarshipExplorer() {
                 <h3 className="mt-4 text-3xl font-black tracking-[-0.04em] md:text-4xl">
                   The scholarship route changes by region.
                 </h3>
-                <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-slate-600">
+                <p className="mt-3 hidden max-w-3xl text-sm font-semibold leading-7 text-slate-600 sm:block">
                   This is why Zaifan should not shortlist universities without
                   checking the city, region and funding system together.
                 </p>
               </div>
 
-              <a
-                href="/universities"
+              <Link
+                to="/universities"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#071f50] px-6 py-4 text-sm font-black text-white transition hover:-translate-y-1 hover:bg-[#092b72]"
               >
                 View Italy Universities
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
 
             <div className="mb-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
@@ -957,30 +1039,60 @@ export default function ScholarshipExplorer() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {cityFundingRoutes.map((route) => (
-                <a
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              {cityFundingRoutes.map((route, index) => (
+                <Link
                   key={`${route.city}-${route.funding}`}
-                  href={route.link}
-                  className="rounded-[1.7rem] bg-[#fff7ed] p-5 ring-1 ring-orange-100 transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(15,23,42,0.07)]"
+                  to={route.link}
+                  className={`group relative overflow-hidden rounded-[1.85rem] p-5 ring-1 transition hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.09)] ${
+                    index === 0
+                      ? "bg-[#071f50] text-white ring-[#071f50] xl:col-span-2"
+                      : index === 1
+                        ? "bg-orange-600 text-white ring-orange-600"
+                        : "bg-[#fff7ed] text-[#071f50] ring-orange-100 hover:bg-white"
+                  }`}
                 >
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
-                    {route.region}
-                  </p>
-                  <h4 className="mt-2 text-xl font-black">{route.city}</h4>
-                  <p className="mt-2 rounded-full bg-white px-3 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100">
-                    {route.funding}
-                  </p>
-                  <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">
-                    {route.vibe}
-                  </p>
-                </a>
+                  <div className="absolute right-4 top-3 text-6xl font-black tracking-[-0.08em] opacity-[0.06]">
+                    0{index + 1}
+                  </div>
+
+                  <div className="relative">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className={`text-xs font-black uppercase tracking-[0.16em] ${
+                        index < 2 ? "text-orange-200" : "text-orange-600"
+                      }`}>
+                        {route.region}
+                      </p>
+                      <ArrowUpRight
+                        className={`h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
+                          index < 2 ? "text-white/60" : "text-orange-400"
+                        }`}
+                      />
+                    </div>
+
+                    <h4 className="mt-2 text-2xl font-black">{route.city}</h4>
+
+                    <p className={`mt-3 inline-flex rounded-full px-3 py-2 text-xs font-black ring-1 ${
+                      index < 2
+                        ? "bg-white/10 text-white ring-white/10"
+                        : "bg-white text-orange-700 ring-orange-100"
+                    }`}>
+                      {route.funding}
+                    </p>
+
+                    <p className={`mt-4 max-w-xl text-sm font-semibold leading-6 ${
+                      index < 2 ? "text-white/72" : "text-slate-600"
+                    }`}>
+                      {route.vibe}
+                    </p>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="scholarship-documents" className="mt-6">
+        <section id="scholarship-documents" className="mt-8">
           <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="rounded-[2rem] bg-[#071f50] p-6 text-white shadow-[0_24px_70px_rgba(7,31,80,0.18)]">
               <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-orange-300 ring-1 ring-white/10">
@@ -995,13 +1107,13 @@ export default function ScholarshipExplorer() {
                 This section helps them understand preparation before panic.
               </p>
 
-              <a
-                href="/appointment?country=Italy&service=DSU Document Planning"
+              <Link
+                to="/appointment?country=Italy&service=DSU Document Planning"
                 className="mt-6 inline-flex items-center gap-3 rounded-full bg-orange-500 px-7 py-4 text-sm font-black text-white transition hover:-translate-y-1 hover:bg-orange-600"
               >
                 Check My Documents
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
 
             <div className="rounded-[2rem] bg-white/92 p-5 shadow-[0_20px_65px_rgba(15,23,42,0.07)] ring-1 ring-orange-100">
@@ -1026,22 +1138,49 @@ export default function ScholarshipExplorer() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {documentGroups.map((group) => {
+          <div className="relative mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:before:absolute xl:before:left-[12%] xl:before:right-[12%] xl:before:top-7 xl:before:h-px xl:before:bg-orange-200">
+            {documentGroups.map((group, index) => {
               const Icon = group.icon;
 
               return (
                 <article
                   key={group.title}
-                  className="rounded-[1.7rem] bg-white/92 p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] ring-1 ring-orange-100"
+                  className={`relative rounded-[1.8rem] p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] ring-1 ${
+                    index === 0
+                      ? "bg-[#071f50] text-white ring-[#071f50]"
+                      : index === 1
+                        ? "bg-orange-600 text-white ring-orange-600"
+                        : "bg-white/92 text-[#071f50] ring-orange-100"
+                  }`}
                 >
-                  <Icon className="h-7 w-7 text-orange-600" />
-                  <h4 className="mt-4 text-xl font-black">{group.title}</h4>
-                  <div className="mt-3 space-y-2">
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <div className={`grid h-12 w-12 place-items-center rounded-2xl ${
+                      index < 2
+                        ? "bg-white/10 text-orange-200"
+                        : "bg-orange-50 text-orange-600"
+                    }`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <span className={`grid h-9 w-9 place-items-center rounded-full text-xs font-black ${
+                      index < 2
+                        ? "bg-white/10 text-white"
+                        : "bg-orange-50 text-orange-600"
+                    }`}>
+                      {index + 1}
+                    </span>
+                  </div>
+
+                  <h4 className="text-xl font-black">{group.title}</h4>
+
+                  <div className="mt-4 space-y-2">
                     {group.items.map((item) => (
                       <p
                         key={item}
-                        className="rounded-2xl bg-[#fff7ed] px-3 py-2 text-xs font-black text-slate-700 ring-1 ring-orange-100"
+                        className={`rounded-2xl px-3 py-2 text-xs font-black ring-1 ${
+                          index < 2
+                            ? "bg-white/10 text-white/86 ring-white/10"
+                            : "bg-[#fff7ed] text-slate-700 ring-orange-100"
+                        }`}
                       >
                         {item}
                       </p>
@@ -1053,7 +1192,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section className="mt-6">
+        <section className="mt-8 hidden md:block">
           <div className="rounded-[2.3rem] bg-white/92 p-5 shadow-[0_20px_65px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 md:p-7">
             <div className="mb-6 flex items-center gap-3">
               <AlertTriangle className="h-7 w-7 text-orange-600" />
@@ -1083,18 +1222,56 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section id="scholarship-calculator" className="mt-6">
-          <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-[2rem] border border-orange-100 bg-white/92 p-6 shadow-[0_20px_65px_rgba(15,23,42,0.07)]">
+        <section id="scholarship-calculator" className="mt-8">
+          <div className="mb-5 overflow-hidden rounded-[2.2rem] bg-[#071f50] p-6 text-white shadow-[0_24px_70px_rgba(7,31,80,0.18)]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+                  Live Funding Scenario
+                </p>
+                <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] md:text-4xl">
+                  Test the plan without pretending the outcome is guaranteed.
+                </h3>
+                <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-white/72">
+                  Change tuition, living cost and a hypothetical support amount. The planner only shows budget impact—not eligibility or a scholarship prediction.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-white/10 px-4 py-4 text-center ring-1 ring-white/10">
+                  <p className="text-[9px] font-black uppercase tracking-wide text-orange-300">Before</p>
+                  <p className="mt-1 text-lg font-black">€{scholarshipImpact.before.toLocaleString()}</p>
+                </div>
+                <div className="rounded-2xl bg-orange-500 px-4 py-4 text-center shadow-lg">
+                  <p className="text-[9px] font-black uppercase tracking-wide text-white/75">Coverage</p>
+                  <p className="mt-1 text-lg font-black">{scholarshipImpact.coverage}%</p>
+                </div>
+                <div className="rounded-2xl bg-white px-4 py-4 text-center text-[#071f50]">
+                  <p className="text-[9px] font-black uppercase tracking-wide text-orange-600">After</p>
+                  <p className="mt-1 text-lg font-black">€{scholarshipImpact.after.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-orange-500 transition-all duration-300"
+                style={{ width: `${Math.min(scholarshipImpact.coverage, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-[0.88fr_1.12fr]">
+            <div className="rounded-[2rem] bg-[#071f50] p-6 text-white shadow-[0_24px_70px_rgba(7,31,80,0.18)]">
               <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-orange-300 ring-1 ring-white/10">
                   <Search className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
                     Scholarship route finder
                   </p>
-                  <h3 className="text-2xl font-black">Which routes should you investigate?</h3>
+                  <h3 className="text-2xl font-black text-white">Which routes should you investigate?</h3>
                 </div>
               </div>
 
@@ -1125,24 +1302,24 @@ export default function ScholarshipExplorer() {
                 />
               </div>
 
-              <div className="mt-5 rounded-[1.5rem] bg-[#fff7ed] p-4 ring-1 ring-orange-100">
-                <p className="text-sm font-black text-[#071f50]">
+              <div className="mt-5 rounded-[1.5rem] bg-white/10 p-4 ring-1 ring-white/10">
+                <p className="text-sm font-black text-white">
                   Recommended opportunities
                 </p>
                 <div className="mt-3 grid gap-2">
                   {recommendations.map((item) => (
                     <div
                       key={item}
-                      className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 ring-1 ring-orange-100"
+                      className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10"
                     >
-                      <span className="text-sm font-black text-slate-700">
+                      <span className="text-sm font-black text-white/86">
                         {item}
                       </span>
                       <BadgePercent className="h-4 w-4 text-orange-600" />
                     </div>
                   ))}
                 </div>
-                <p className="mt-3 text-[11px] font-bold leading-5 text-slate-500">
+                <p className="mt-3 text-[11px] font-bold leading-5 text-white/55">
                   These are planning routes to investigate, not eligibility results or scholarship guarantees.
                 </p>
               </div>
@@ -1223,24 +1400,38 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section className="mt-6">
+        <section className="mt-8 hidden md:block">
           <div className="rounded-[2rem] bg-white/88 p-5 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-orange-100">
             <div className="mb-5 flex items-center gap-3">
               <Route className="h-6 w-6 text-orange-600" />
               <h3 className="text-2xl font-black">Scholarship journey</h3>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-5">
+            <div className="relative grid gap-3 md:grid-cols-5 md:before:absolute md:before:left-[10%] md:before:right-[10%] md:before:top-5 md:before:h-px md:before:bg-orange-200">
               {timelineSteps.map((step, index) => (
                 <div
                   key={step.title}
-                  className="rounded-[1.5rem] bg-[#fff7ed] p-4 ring-1 ring-orange-100"
+                  className={`relative rounded-[1.5rem] p-4 ring-1 ${
+                    index === 0
+                      ? "bg-[#071f50] text-white ring-[#071f50]"
+                      : index === timelineSteps.length - 1
+                        ? "bg-orange-600 text-white ring-orange-600"
+                        : "bg-[#fff7ed] text-[#071f50] ring-orange-100"
+                  }`}
                 >
-                  <div className="grid h-10 w-10 place-items-center rounded-full bg-orange-600 text-sm font-black text-white">
+                  <div className={`grid h-10 w-10 place-items-center rounded-full text-sm font-black ${
+                    index === 0 || index === timelineSteps.length - 1
+                      ? "bg-white/12 text-white ring-1 ring-white/10"
+                      : "bg-orange-600 text-white"
+                  }`}>
                     {index + 1}
                   </div>
                   <h4 className="mt-4 font-black">{step.title}</h4>
-                  <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
+                  <p className={`mt-2 text-xs font-semibold leading-5 ${
+                    index === 0 || index === timelineSteps.length - 1
+                      ? "text-white/72"
+                      : "text-slate-600"
+                  }`}>
                     {step.text}
                   </p>
                 </div>
@@ -1249,7 +1440,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section id="scholarship-pathways" className="mt-6">
+        <section id="scholarship-pathways" className="mt-8 hidden md:block">
           <div className="rounded-[2.3rem] bg-white/92 p-5 shadow-[0_20px_65px_rgba(15,23,42,0.07)] ring-1 ring-orange-100 md:p-7">
             <div className="mb-6">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
@@ -1273,14 +1464,14 @@ export default function ScholarshipExplorer() {
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     {card.links.map(([label, href]) => (
-                      <a
+                      <Link
                         key={label}
-                        href={href}
+                        to={href}
                         className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 transition hover:-translate-y-0.5"
                       >
                         {label}
                         <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </article>
@@ -1289,7 +1480,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <section id="scholarship-countries" className="mt-6">
+        <section id="scholarship-countries" className="mt-8 hidden lg:block">
           <div className="rounded-[2.3rem] bg-[#071f50] p-5 text-white shadow-[0_24px_70px_rgba(7,31,80,0.18)] md:p-7">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
@@ -1308,13 +1499,13 @@ export default function ScholarshipExplorer() {
                 </p>
               </div>
 
-              <a
-                href="/appointment?service=Request Country Scholarship Guide"
+              <Link
+                to="/appointment?service=Request Country Scholarship Guide"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-4 text-sm font-black text-white transition hover:-translate-y-1 hover:bg-orange-600"
               >
                 Request a Country Guide
                 <Send className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -1351,7 +1542,7 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <div className="mt-6 grid gap-4 rounded-[2rem] border border-orange-100 bg-white/85 p-5 shadow-[0_18px_55px_rgba(15,23,42,0.07)] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 hidden gap-4 rounded-[2rem] border border-orange-100 bg-white/85 p-5 shadow-[0_18px_55px_rgba(15,23,42,0.07)] md:grid md:grid-cols-2 lg:grid-cols-4">
           {facts.map((fact) => {
             const Icon = fact.icon;
 
@@ -1374,14 +1565,14 @@ export default function ScholarshipExplorer() {
           })}
         </div>
 
-        <section id="scholarship-faq" className="mt-6">
+        <section id="scholarship-faq" className="mt-10">
           <div className="mx-auto max-w-[1050px]">
             <div className="mb-6 text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-orange-600 shadow-sm ring-1 ring-orange-100">
                 <CircleHelp className="h-4 w-4" />
                 Scholarship FAQs
               </div>
-              <h3 className="mt-4 text-4xl font-black tracking-[-0.05em]">
+              <h3 className="mt-4 text-3xl font-black tracking-[-0.05em] sm:text-4xl">
                 Questions students ask before planning DSU.
               </h3>
             </div>
@@ -1398,7 +1589,7 @@ export default function ScholarshipExplorer() {
                     <button
                       type="button"
                       onClick={() => setOpenFaq(isOpen ? -1 : index)}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left font-black text-[#071f50] md:px-6"
+                      className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left text-sm font-black leading-6 text-[#071f50] sm:text-base md:px-6 md:py-5"
                     >
                       <span className="flex items-center gap-3">
                         <CircleHelp className="text-orange-600" size={21} />
@@ -1423,13 +1614,13 @@ export default function ScholarshipExplorer() {
           </div>
         </section>
 
-        <div className="mt-6 rounded-[1.7rem] bg-white/85 p-5 text-center ring-1 ring-orange-100">
+        <div className="mt-8 rounded-[1.4rem] bg-white/85 p-4 text-center ring-1 ring-orange-100 sm:rounded-[1.7rem] sm:p-5">
           <p className="mx-auto max-w-4xl text-xs font-bold leading-6 text-slate-500">
             Scholarship values, eligibility rules, deadlines and benefits can change. This page is a planning tool, not a guarantee of funding. Always verify the current official rules for the relevant university and region.
           </p>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-6 text-white shadow-[0_24px_70px_rgba(255,75,18,0.24)] sm:p-7">
+        <div className="mt-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-5 text-white shadow-[0_24px_70px_rgba(255,75,18,0.24)] sm:rounded-[2rem] sm:p-7">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-white/75">
@@ -1445,13 +1636,13 @@ export default function ScholarshipExplorer() {
               </p>
             </div>
 
-            <a
-              href="/appointment?country=Italy&service=Scholarship Guidance"
+            <Link
+              to="/appointment?country=Italy&service=Scholarship Guidance"
               className="inline-flex shrink-0 items-center justify-center gap-3 rounded-full bg-[#071f50] px-7 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(7,31,80,0.26)] transition hover:-translate-y-1 hover:bg-[#092b72]"
             >
               Find My Best Scholarship
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
         </div>
       </div>
