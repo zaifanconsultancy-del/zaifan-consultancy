@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const ActivityLogsPage = lazy(() => import("./ActivityLogsPage"));
 const SettingsPage = lazy(() => import("./SettingsPage"));
@@ -428,17 +429,7 @@ function DestinationCard({
 }
 
 function HeaderMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 px-3 py-2.5 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 truncate text-xs font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function WorkspaceLoader() {
@@ -459,6 +450,51 @@ function WorkspaceLoader() {
       </div>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default SystemPage;

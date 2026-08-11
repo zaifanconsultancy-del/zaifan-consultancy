@@ -6,11 +6,22 @@ import {
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
 import { updateFollowUpReminderStatus, deleteFollowUpReminder } from "../../../../lib/followUpReminders";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const LOAD_TIMEOUT_MS = 12000;
 const ACTION_TIMEOUT_MS = 12000;
 const normalize = (value = "") => String(value || "").toLowerCase().trim();
 const dateKey = (value) => value ? String(value).slice(0, 10) : "";
+
+function canonicalStatus(value = "pending") {
+  const status = normalize(value || "pending");
+
+  if (status === "completed" || status === "complete") return "done";
+  if (status === "canceled") return "cancelled";
+  if (!status) return "pending";
+
+  return status;
+}
 
 function withTimeout(promise, ms, message) {
   let timer;
@@ -69,7 +80,7 @@ function FollowUpDashboard({ cardClass = "" }) {
     let cancelled = 0;
 
     for (const item of reminders) {
-      const status = normalize(item.status);
+      const status = canonicalStatus(item.status);
       const due = dateKey(item.due_date);
 
       if (status === "pending") {
@@ -100,7 +111,7 @@ function FollowUpDashboard({ cardClass = "" }) {
   const filteredReminders = useMemo(() => {
     const cleanQuery = normalize(query);
     return reminders.filter((reminder) => {
-      const status = normalize(reminder.status || "pending");
+      const status = canonicalStatus(reminder.status);
       const due = dateKey(reminder.due_date);
       let match = true;
       if (filter === "today") match = status === "pending" && due === today;
@@ -130,17 +141,34 @@ function FollowUpDashboard({ cardClass = "" }) {
     await runAction(id, () => deleteFollowUpReminder(id));
   };
   const getBadge = (r) => {
-    const status = normalize(r.status || "pending"), due = dateKey(r.due_date);
+    const status = canonicalStatus(r.status), due = dateKey(r.due_date);
     if (status !== "pending") return status;
     if (due && due < today) return "overdue";
     if (due === today) return "due today";
     return "upcoming";
   };
-  const queueHealth = stats.pending === 0 ? "Clear" : stats.overdue > 0 ? "Needs action" : stats.today > 0 ? "Due today" : "On track";
+  const hasReminderData = reminders.length > 0;
+  const queueHealth = !hasReminderData
+    ? "No reminders"
+    : stats.pending === 0
+    ? "Clear"
+    : stats.overdue > 0
+    ? "Needs action"
+    : stats.today > 0
+    ? "Due today"
+    : "On track";
+
+  const queueHealthDetail = !hasReminderData
+    ? "No follow-up reminder records are stored yet."
+    : `${stats.pending} reminder${stats.pending === 1 ? "" : "s"} still operational.`;
+
   const statCards = [
-    ["Total", stats.total, "all", "navy"], ["Pending", stats.pending, "pending", "blue"],
-    ["Due Today", stats.today, "today", "orange"], ["Overdue", stats.overdue, "overdue", "red"],
-    ["Done", stats.done, "done", "green"], ["Cancelled", stats.cancelled, "cancelled", "slate"],
+    ["Total", stats.total, "all", "navy"],
+    ["Pending", stats.pending, "pending", "blue"],
+    ["Due Today", stats.today, "today", "orange"],
+    ["Overdue", stats.overdue, "overdue", "red"],
+    ["Done", stats.done, "done", "green"],
+    ["Cancelled", stats.cancelled, "cancelled", "slate"],
   ];
 
   return <section className={`${cardClass} min-w-0 space-y-5 !rounded-[2.2rem] !border-[4px] !border-solid !border-[#123865] !bg-[#FFF8EF] !p-5 shadow-[0_20px_55px_rgba(18,56,101,.12)] sm:!p-5`}>
@@ -155,7 +183,9 @@ function FollowUpDashboard({ cardClass = "" }) {
               <h2 className="mt-4 max-w-4xl text-2xl font-black tracking-[-0.02em] text-white sm:text-3xl lg:text-[2.15rem]">Follow-up Command Center</h2>
               <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-100">Prioritize student contact, clear overdue work, and close every reminder without losing queue context.</p>
               <div className="mt-5 grid max-w-3xl gap-2 sm:grid-cols-3">
-                <HeroMetric label="Open Queue" value={stats.pending}/><HeroMetric label="Due Today" value={stats.today}/><HeroMetric label="Overdue" value={stats.overdue}/>
+                <HeroMetric label="Open Queue" value={hasReminderData ? stats.pending : "—"} />
+                <HeroMetric label="Due Today" value={hasReminderData ? stats.today : "—"} />
+                <HeroMetric label="Overdue" value={hasReminderData ? stats.overdue : "—"} />
               </div>
             </div>
             <button type="button" onClick={() => fetchReminders()} disabled={loading} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-white/35 bg-white/10 px-5 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50">
@@ -165,12 +195,51 @@ function FollowUpDashboard({ cardClass = "" }) {
         </div>
         <aside className="border-t-[3px] border-orange-300 bg-[#FF5A0A] p-5 text-white lg:border-l-[3px] lg:border-t-0 lg:p-6">
           <p className="text-[9px] font-black uppercase tracking-[.18em] text-white">Queue Health</p>
-          <div className="mt-3 flex items-start justify-between gap-3"><div><p className="text-3xl font-black text-white">{queueHealth}</p><p className="mt-1 text-xs font-bold text-white">{stats.pending} reminder{stats.pending===1?"":"s"} still operational.</p></div><Sparkles size={28}/></div>
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-3xl font-black text-white">{queueHealth}</p>
+              <p className="mt-1 text-xs font-bold leading-5 text-white">{queueHealthDetail}</p>
+            </div>
+            <Sparkles size={28}/>
+          </div>
           <div className="mt-5 rounded-2xl border-2 border-white/30 bg-white/10 p-4 shadow-inner"><p className="text-[9px] font-black uppercase tracking-[.12em] text-white">Last synced</p><p className="mt-1 text-lg font-black text-white">{lastUpdated ? lastUpdated.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "Waiting…"}</p></div>
         </aside>
       </div>
       <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">{statCards.map(([label,value,f,tone]) => <StatCard key={label} label={label} value={value} tone={tone} active={filter===f} onClick={()=>setFilter(f)}/>)}</div>
+        {hasReminderData ? (
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            {statCards.map(([label, value, f, tone]) => (
+              <StatCard
+                key={label}
+                label={label}
+                value={value}
+                tone={tone}
+                active={filter === f}
+                onClick={() => setFilter(f)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-6 shadow-[0_8px_24px_rgba(18,56,101,.05)] sm:p-7">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-orange-200 bg-orange-50 text-orange-700">
+                <CalendarClock size={22} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[.14em] text-[#61738D]">
+                  Follow-up evidence
+                </p>
+                <h3 className="mt-1 text-xl font-black text-[#10233F]">
+                  No reminder records yet
+                </h3>
+                <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-[#5A6D85]">
+                  This dashboard reads the real follow_up_reminders table. Create a reminder from a student/lead workflow or the AI reminder tools, then the queue metrics will populate automatically.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 min-w-0 rounded-[1.5rem] border-[3px] border-[#123865] bg-white p-3 shadow-[0_8px_24px_rgba(18,56,101,.06)]">
           <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
             <label className="relative min-w-0"><Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search title, notes, student type, creator or deadline..." className="min-h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] py-2.5 pl-11 pr-4 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100"/></label>
@@ -190,8 +259,8 @@ function FollowUpDashboard({ cardClass = "" }) {
       </div>
       <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
         {loading && reminders.length===0 ? <Empty icon={RefreshCw} text="Loading follow-up reminders..." spin/> :
-        filteredReminders.length===0 ? <Empty icon={CheckCircle2} text="Queue is clear — nothing matches this view."/> :
-        <div className="space-y-3">{filteredReminders.map(r=><ReminderCard key={r.id} reminder={r} badge={getBadge(r)} status={normalize(r.status||"pending")} busy={busyId===r.id} compact={compactQueue} onDone={()=>updateStatus(r.id,"done")} onReopen={()=>updateStatus(r.id,"pending")} onCancel={()=>updateStatus(r.id,"cancelled")} onDelete={()=>removeReminder(r.id)}/>)}</div>}
+        filteredReminders.length===0 ? <Empty icon={hasReminderData ? CheckCircle2 : CalendarClock} text={hasReminderData ? "Nothing matches this view." : "No follow-up reminders have been created yet."}/> :
+        <div className="space-y-3">{filteredReminders.map(r=><ReminderCard key={r.id} reminder={r} badge={getBadge(r)} status={canonicalStatus(r.status)} busy={busyId===r.id} compact={compactQueue} onDone={()=>updateStatus(r.id,"done")} onReopen={()=>updateStatus(r.id,"pending")} onCancel={()=>updateStatus(r.id,"cancelled")} onDelete={()=>removeReminder(r.id)}/>)}</div>}
       </div>
     </div>
   </section>;
@@ -199,9 +268,23 @@ function FollowUpDashboard({ cardClass = "" }) {
 
 function Pill({icon:Icon,children}) { return <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.14em] text-white">{Icon&&<Icon size={14}/>} {children}</span>; }
 function HeroMetric({label,value}) { return <div className="rounded-2xl border border-white/25 bg-white/10 px-4 py-3"><p className="text-[8px] font-black uppercase tracking-[.12em] text-white">{label}</p><p className="mt-1 text-2xl font-black text-white">{value}</p></div>; }
-function StatCard({label,value,active,onClick,tone}) {
-  const tones={navy:"border-[#123865] bg-[#edf3f9] text-[#123865]",blue:"border-blue-400 bg-blue-50 text-blue-700",orange:"border-orange-400 bg-orange-50 text-orange-700",red:"border-red-400 bg-red-50 text-red-700",green:"border-emerald-400 bg-emerald-50 text-emerald-700",slate:"border-slate-400 bg-slate-50 text-slate-700"};
-  return <button type="button" onClick={onClick} className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 text-left shadow-[0_7px_20px_rgba(18,56,101,.05)] transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${tones[tone]} ${active?"ring-4 ring-orange-100 shadow-md":""}`}><p className="text-[9px] font-black uppercase tracking-[.1em]">{label}</p><p className="mt-2 text-3xl font-black">{value}</p></button>;
+function StatCard({ label, value, active, onClick, tone }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`min-w-0 rounded-[1.45rem] text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${active ? "ring-4 ring-orange-100" : ""}`}
+    >
+      <ZaifanMetricCard
+        level="coBoss"
+        label={label}
+        value={value}
+        tone={toZaifanMetricTone(tone)}
+        className="h-full"
+      />
+    </button>
+  );
 }
 function ReminderCard({reminder,badge,status,busy,compact,onDone,onReopen,onCancel,onDelete}) {
   const t=getTone(badge), closed=status==="done"||status==="cancelled";
@@ -234,4 +317,42 @@ function ActionButton({icon:Icon,label,onClick,disabled,tone="default"}) {
 }
 function MessageBox({title,message,action}) { return <div role="alert" aria-live="assertive" className="rounded-[1.4rem] border-[3px] border-red-300 bg-red-50 p-4 shadow-[0_8px_24px_rgba(239,68,68,.08)]"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="flex items-start gap-3"><AlertTriangle size={18} className="mt-.5 text-red-700"/><div><p className="font-black text-[#10233f]">{title}</p><p className="mt-1 text-sm font-semibold leading-6 text-slate-600">{message}</p></div></div>{action}</div></div>; }
 function Empty({icon:Icon,text,spin}) { return <div className="rounded-2xl border-[3px] border-dashed border-orange-300 bg-white p-8 text-center"><Icon className={`mx-auto text-orange-600 ${spin?"animate-spin":""}`} size={28}/><p className="mt-3 font-black text-[#10233f]">{text}</p></div>; }
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
+}
+
 export default FollowUpDashboard;

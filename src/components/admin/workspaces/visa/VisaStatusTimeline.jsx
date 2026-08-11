@@ -23,6 +23,7 @@ import {
   Stamp,
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 12000;
 
@@ -879,16 +880,7 @@ function VisaStatusTimeline({
 }
 
 function HeroMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 
@@ -975,46 +967,15 @@ function MilestoneRow({ stage, compact }) {
 }
 
 function SummaryCard({ icon: Icon, label, value, helper, tone = "slate" }) {
-  const tones = {
-    slate: "border-slate-300 bg-white",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8]",
-    red: "border-red-300 bg-red-50",
-    green: "border-emerald-300 bg-emerald-50",
-  };
-
-  const iconTones = {
-    slate: "border-slate-300 bg-slate-50 text-slate-700",
-    orange: "border-[#FF5A0A] bg-white text-orange-700",
-    red: "border-red-300 bg-white text-red-700",
-    green: "border-emerald-300 bg-white text-emerald-700",
-  };
-
   return (
-    <div
-      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <div
-        className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 ${
-          iconTones[tone] || iconTones.slate
-        }`}
-      >
-        <Icon size={16} />
-      </div>
-
-      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-sm font-black text-[#10233F]">
-        {value}
-      </p>
-
-      <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-600">
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1140,6 +1101,44 @@ function datePressureText(days, subject) {
   }
 
   return `${days} days remaining`;
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default VisaStatusTimeline;

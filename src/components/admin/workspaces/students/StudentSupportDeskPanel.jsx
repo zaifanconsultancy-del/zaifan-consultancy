@@ -33,6 +33,7 @@ import {
   MessageSquareText,
   RefreshCw,
   Search,
+  Send,
   ShieldAlert,
   SlidersHorizontal,
   TimerReset,
@@ -40,6 +41,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
 import { addTimelineEvent } from "../../../../lib/crmTimeline";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 18000;
 
@@ -56,6 +58,73 @@ const pretty = (value = "") =>
   String(value || "")
     .replaceAll("_", " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const getAdminDisplayName = (adminProfile = {}) =>
+  String(
+    adminProfile?.full_name ||
+      adminProfile?.name ||
+      adminProfile?.display_name ||
+      "Zaifan Admin"
+  ).trim();
+
+const getStudentDisplayName = (student = {}) =>
+  String(
+    student?.full_name ||
+      student?.student_name ||
+      student?.name ||
+      student?.first_name ||
+      "Student"
+  ).trim();
+
+const getRequestLabel = (request = {}) =>
+  String(
+    request?.subject ||
+      pretty(request?.request_type || "support_request") ||
+      "Support Request"
+  ).trim();
+
+const buildStatusLanguage = ({
+  nextStatus,
+  request,
+  studentName,
+  adminName,
+}) => {
+  const label = getRequestLabel(request);
+
+  if (nextStatus === "in_progress") {
+    return {
+      title: "Support Review Started",
+      description: `${adminName} started working on ${studentName}'s ${label}. The request is now under active review.`,
+      action: "Marked Support In Progress",
+      success: "Support request is now in progress.",
+    };
+  }
+
+  if (nextStatus === "resolved") {
+    return {
+      title: "Support Request Successfully Resolved",
+      description: `${adminName} resolved ${studentName}'s ${label}. No further action is currently required unless the student needs additional help.`,
+      action: "Resolved Support Request",
+      success: "Support request resolved successfully.",
+    };
+  }
+
+  if (nextStatus === "closed") {
+    return {
+      title: "Support Request Closed",
+      description: `${adminName} closed ${studentName}'s ${label} after completing the required support actions.`,
+      action: "Closed Support Request",
+      success: "Support request closed successfully.",
+    };
+  }
+
+  return {
+    title: "Support Request Reopened",
+    description: `${adminName} reopened ${studentName}'s ${label} because further review or student assistance is required.`,
+    action: "Reopened Support Request",
+    success: "Support request reopened successfully.",
+  };
+};
 
 const formatDateTime = (value) => {
   if (!value) return "Not recorded";
@@ -113,6 +182,51 @@ const ageMeta = (createdAt, status) => {
   };
 };
 
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
+}
+
 export default function StudentSupportDeskPanel({
   student = {},
   studentType = "inquiry",
@@ -122,7 +236,9 @@ export default function StudentSupportDeskPanel({
   onOpenTimeline = null,
 }) {
   const [localRequests, setLocalRequests] = useState(Array.isArray(requests) ? requests : []);
-  const [responseDrafts, setResponseDrafts] = useState({});
+  const [messageThreads, setMessageThreads] = useState({});
+  const [threadLoadingMap, setThreadLoadingMap] = useState({});
+  const [replyDrafts, setReplyDrafts] = useState({});
   const [noteDrafts, setNoteDrafts] = useState({});
   const [busyMap, setBusyMap] = useState({});
   const [refreshing, setRefreshing] = useState(false);
@@ -142,16 +258,18 @@ export default function StudentSupportDeskPanel({
       studentType ||
       "inquiry"
   );
+  const studentName = getStudentDisplayName(student);
+  const adminName = getAdminDisplayName(adminProfile);
 
   // Keep local UI synchronized when parent refreshes without wiping active drafts.
   useEffect(() => {
     const incoming = Array.isArray(requests) ? requests : [];
     setLocalRequests(incoming);
 
-    setResponseDrafts((previous) => {
+    setReplyDrafts((previous) => {
       const next = { ...previous };
       incoming.forEach((request) => {
-        if (!(request.id in next)) next[request.id] = request.counselor_response || "";
+        if (!(request.id in next)) next[request.id] = "";
       });
       return next;
     });
@@ -164,6 +282,7 @@ export default function StudentSupportDeskPanel({
       return next;
     });
   }, [requests]);
+
 
   const withTimeout = (promise, label = "Support action") => {
     let timeoutId;
@@ -227,23 +346,116 @@ export default function StudentSupportDeskPanel({
     }
   };
 
-  const hasUnsavedResponse = (request) =>
-    String(responseDrafts[request.id] ?? "").trim() !== String(request.counselor_response || "").trim();
+  const hasReplyDraft = (request) =>
+    Boolean(String(replyDrafts[request.id] ?? "").trim());
 
   const hasUnsavedNotes = (request) =>
     String(noteDrafts[request.id] ?? "").trim() !== String(request.admin_notes || "").trim();
+
+  const loadThread = async (requestId, { silent = false } = {}) => {
+    if (!requestId) return [];
+
+    if (!silent) {
+      setThreadLoadingMap((previous) => ({
+        ...previous,
+        [requestId]: true,
+      }));
+    }
+
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("student_support_messages")
+          .select("*")
+          .eq("support_request_id", requestId)
+          .eq("is_internal", false)
+          .order("created_at", { ascending: true }),
+        "Support conversation load"
+      );
+
+      if (error) throw error;
+
+      const messages = Array.isArray(data) ? data : [];
+      setMessageThreads((previous) => ({
+        ...previous,
+        [requestId]: messages,
+      }));
+
+      return messages;
+    } catch (error) {
+      console.warn("Support conversation load failed:", error);
+      if (!silent) {
+        setMessageTone("warning");
+        setMessage(
+          error?.message ||
+            "The support conversation could not be loaded."
+        );
+      }
+      return [];
+    } finally {
+      if (!silent) {
+        setThreadLoadingMap((previous) => ({
+          ...previous,
+          [requestId]: false,
+        }));
+      }
+    }
+  };
+
+  useEffect(() => {
+    const requestIds = (Array.isArray(requests) ? requests : [])
+      .map((request) => request?.id)
+      .filter(Boolean);
+
+    requestIds.forEach((requestId) => {
+      void loadThread(requestId, { silent: true });
+    });
+  }, [requests]);
 
   const refresh = async () => {
     if (typeof onRefresh !== "function" || refreshing) return;
     setRefreshing(true);
     try {
       await withTimeout(Promise.resolve(onRefresh()), "Support desk refresh");
+
+      await Promise.all(
+        localRequests
+          .map((request) => request?.id)
+          .filter(Boolean)
+          .map((requestId) => loadThread(requestId, { silent: true }))
+      );
     } catch (error) {
       console.warn("Support refresh delayed:", error);
       setMessageTone("warning");
       setMessage(error?.message || "Support refresh did not confirm. Existing queue data is preserved.");
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const writeGlobalAuditLog = async ({
+    request,
+    action,
+    details,
+  }) => {
+    try {
+      const { error } = await withTimeout(
+        supabase.from("activity_logs").insert({
+          admin_id: adminProfile?.id || null,
+          admin_name: adminName,
+          action,
+          target_type: "support_request",
+          target_id: request?.id ? String(request.id) : "",
+          details,
+        }),
+        "Global support audit log"
+      );
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.warn("Global support audit log failed:", error?.message || error);
+      return false;
     }
   };
 
@@ -325,8 +537,30 @@ export default function StudentSupportDeskPanel({
       patchLocal(request.id, data);
 
       let timelineOk = true;
-      if (timelineData) timelineOk = await timeline({ request: data, ...timelineData });
-      if (!timelineOk) setAuditWarning("Support data saved, but the Student OS timeline event did not confirm.");
+      let globalAuditOk = true;
+
+      if (timelineData) {
+        timelineOk = await timeline({ request: data, ...timelineData });
+        globalAuditOk = await writeGlobalAuditLog({
+          request: data,
+          action: timelineData.auditAction || timelineData.title,
+          details: timelineData.auditDetails || timelineData.description,
+        });
+      }
+
+      if (!timelineOk && !globalAuditOk) {
+        setAuditWarning(
+          "Support data saved, but neither the Student OS timeline nor the global Activity & Audit entry could be confirmed."
+        );
+      } else if (!timelineOk) {
+        setAuditWarning(
+          "Support data saved and global audit recorded, but the Student OS timeline event did not confirm."
+        );
+      } else if (!globalAuditOk) {
+        setAuditWarning(
+          "Support data saved and Student OS timeline recorded, but the global Activity & Audit entry did not confirm."
+        );
+      }
 
       setMessageTone("success");
       setMessage(successText);
@@ -360,17 +594,30 @@ export default function StudentSupportDeskPanel({
       patch.resolved_at = null;
     }
 
+    const language = buildStatusLanguage({
+      nextStatus: next,
+      request,
+      studentName,
+      adminName,
+    });
+
     await savePatch(
       request,
       patch,
-      `Support request marked ${pretty(next)}.`,
+      language.success,
       {
-        actionType: "support_status_changed",
-        title: "Support Request Updated",
-        description: `Support request status changed from ${pretty(current)} to ${pretty(next)}.`,
+        actionType: `support_${next}`,
+        title: language.title,
+        description: language.description,
         oldValue: current,
         newValue: next,
-        metadata: { status: next },
+        metadata: {
+          status: next,
+          actor_name: adminName,
+          student_name: studentName,
+        },
+        auditAction: language.action,
+        auditDetails: language.description,
       }
     );
   };
@@ -380,16 +627,28 @@ export default function StudentSupportDeskPanel({
     const next = normalize(nextPriority || "normal");
     if (current === next) return;
 
+    const requestLabel = getRequestLabel(request);
+    const description = `${adminName} changed the priority of ${studentName}'s ${requestLabel} from ${pretty(
+      current
+    )} to ${pretty(next)}.`;
+
     await savePatch(
       request,
       { priority: next, updated_at: new Date().toISOString() },
-      `Priority changed to ${pretty(next)}.`,
+      `Support priority updated to ${pretty(next)}.`,
       {
         actionType: "support_priority_changed",
-        title: "Support Priority Changed",
-        description: `Support priority changed from ${pretty(current)} to ${pretty(next)}.`,
+        title: "Support Priority Updated",
+        description,
         oldValue: current,
         newValue: next,
+        metadata: {
+          actor_name: adminName,
+          student_name: studentName,
+          priority: next,
+        },
+        auditAction: "Updated Support Priority",
+        auditDetails: description,
       }
     );
   };
@@ -410,12 +669,35 @@ export default function StudentSupportDeskPanel({
         admin_notes: notes || null,
         updated_at: new Date().toISOString(),
       },
-      "Internal support notes saved.",
+      "Internal support notes saved securely.",
       {
         actionType: "support_admin_notes_updated",
-        title: "Support Internal Notes Updated",
-        description: `Internal notes updated for: ${request.subject || "Support Request"}.`,
+        title: notes
+          ? "Internal Support Notes Updated"
+          : "Internal Support Notes Cleared",
+        description: notes
+          ? `${adminName} updated internal notes for ${studentName}'s ${getRequestLabel(
+              request
+            )}. These notes remain private to the Zaifan operations team.`
+          : `${adminName} cleared the internal notes for ${studentName}'s ${getRequestLabel(
+              request
+            )}.`,
         newValue: notes ? "notes_saved" : "notes_cleared",
+        metadata: {
+          actor_name: adminName,
+          student_name: studentName,
+          notes_present: Boolean(notes),
+        },
+        auditAction: notes
+          ? "Updated Support Internal Notes"
+          : "Cleared Support Internal Notes",
+        auditDetails: notes
+          ? `${adminName} updated private operational notes for ${studentName}'s ${getRequestLabel(
+              request
+            )}.`
+          : `${adminName} cleared private operational notes for ${studentName}'s ${getRequestLabel(
+              request
+            )}.`,
       }
     );
   };
@@ -423,58 +705,150 @@ export default function StudentSupportDeskPanel({
   const sendResponse = async (request, { resolve = false } = {}) => {
     if (!request?.id || isBusy(request.id)) return;
 
-    const response = String(
-      responseDrafts[request.id] ?? request.counselor_response ?? ""
-    ).trim();
+    const response = String(replyDrafts[request.id] ?? "").trim();
 
     if (!response) {
       setMessageTone("warning");
-      setMessage("Write the counselor response before sending.");
+      setMessage("Write a new counselor reply before sending.");
       return;
     }
 
     const now = new Date().toISOString();
-    const patch = {
-      counselor_response: response,
-      responded_at: now,
-      updated_at: now,
-    };
+    setBusy(request.id, resolve ? "reply_resolve" : "reply");
+    setMessage("");
+    setAuditWarning("");
 
-    if (resolve) {
-      patch.status = "resolved";
-      patch.resolved_at = request.resolved_at || now;
-    } else if (["resolved", "closed"].includes(normalize(request.status))) {
-      // Editing a historic response should not silently reopen/alter a resolved ticket.
-      patch.status = request.status;
-    } else if (normalize(request.status || "open") === "open") {
-      patch.status = "in_progress";
-      patch.resolved_at = null;
-    }
+    try {
+      const { data: insertedMessage, error: messageError } = await withTimeout(
+        supabase
+          .from("student_support_messages")
+          .insert({
+            support_request_id: request.id,
+            student_id: studentId,
+            student_type: safeStudentType,
+            sender_type: "admin",
+            sender_id: adminProfile?.id || null,
+            sender_name: adminName,
+            message: response,
+            is_internal: false,
+          })
+          .select("*")
+          .single(),
+        "Support reply"
+      );
 
-    const saved = await savePatch(
-      request,
-      patch,
-      resolve
-        ? "Response sent and request resolved."
-        : "Response sent. Student can now see it in Support Center.",
-      {
-        actionType: "support_response",
-        title: resolve ? "Counselor Responded & Resolved" : "Counselor Responded",
-        description: `Counselor responded to support request: ${
-          request.request_type || "Support Request"
-        }.`,
-        newValue: resolve ? "resolved" : normalize(request.status || "open"),
-        metadata: {
-          resolved_with_response: resolve,
-        },
+      if (messageError) throw messageError;
+
+      const patch = {
+        counselor_response: response,
+        responded_at: now,
+        updated_at: now,
+      };
+
+      if (resolve) {
+        patch.status = "resolved";
+        patch.resolved_at = request.resolved_at || now;
+      } else if (["resolved", "closed"].includes(normalize(request.status))) {
+        patch.status = request.status;
+      } else if (normalize(request.status || "open") === "open") {
+        patch.status = "in_progress";
+        patch.resolved_at = null;
       }
-    );
 
-    if (saved?.id) {
-      setResponseDrafts((previous) => ({
+      const { data: updatedRequest, error: requestError } = await withTimeout(
+        supabase
+          .from("student_support_requests")
+          .update(patch)
+          .eq("id", request.id)
+          .eq("student_id", studentId)
+          .select("*")
+          .single(),
+        "Support request sync"
+      );
+
+      if (requestError) throw requestError;
+
+      patchLocal(request.id, updatedRequest);
+      setMessageThreads((previous) => ({
         ...previous,
-        [saved.id]: saved.counselor_response || response,
+        [request.id]: [
+          ...(previous[request.id] || []),
+          insertedMessage,
+        ],
       }));
+      setReplyDrafts((previous) => ({
+        ...previous,
+        [request.id]: "",
+      }));
+
+      const timelineData = {
+        request: updatedRequest,
+        actionType: resolve
+          ? "support_response_resolved"
+          : "support_response_sent",
+        title: resolve
+          ? "Counselor Guidance Sent and Request Resolved"
+          : "Counselor Guidance Sent to Student",
+        description: resolve
+          ? `${adminName} sent a final reply to ${studentName} and resolved the ${getRequestLabel(
+              request
+            )}. The full conversation remains available in the Student Portal Support Center.`
+          : `${adminName} sent a new reply to ${studentName}'s ${getRequestLabel(
+              request
+            )}. The message is now visible in the Student Portal Support Center.`,
+        newValue: resolve ? "resolved" : "reply_sent",
+        metadata: {
+          support_message_id: insertedMessage?.id || null,
+          resolved_with_response: resolve,
+          actor_name: adminName,
+          student_name: studentName,
+          response_visible_to_student: true,
+        },
+      };
+
+      const timelineOk = await timeline(timelineData);
+      const globalAuditOk = await writeGlobalAuditLog({
+        request: updatedRequest,
+        action: resolve
+          ? "Sent Support Reply and Resolved"
+          : "Sent Support Reply",
+        details: resolve
+          ? `${adminName} sent a final reply to ${studentName} and resolved ${getRequestLabel(
+              request
+            )}.`
+          : `${adminName} sent a new support reply to ${studentName} for ${getRequestLabel(
+              request
+            )}.`,
+      });
+
+      if (!timelineOk && !globalAuditOk) {
+        setAuditWarning(
+          "Reply sent, but neither the Student OS timeline nor the global Activity & Audit entry could be confirmed."
+        );
+      } else if (!timelineOk) {
+        setAuditWarning(
+          "Reply sent and global audit recorded, but the Student OS timeline event did not confirm."
+        );
+      } else if (!globalAuditOk) {
+        setAuditWarning(
+          "Reply sent and Student OS timeline recorded, but the global Activity & Audit entry did not confirm."
+        );
+      }
+
+      setMessageTone("success");
+      setMessage(
+        resolve
+          ? "Reply sent successfully and the support request was resolved."
+          : "Reply sent successfully. The student can now read it in the conversation."
+      );
+
+      void refresh();
+    } catch (error) {
+      setMessageTone("error");
+      setMessage(error?.message || "Support reply failed.");
+      void loadThread(request.id, { silent: true });
+    } finally {
+      clearBusy(request.id);
     }
   };
 
@@ -534,6 +908,7 @@ export default function StudentSupportDeskPanel({
           request.message,
           request.admin_notes,
           request.counselor_response,
+          ...(messageThreads[request.id] || []).map((item) => item.message),
           request.status,
           request.priority,
         ]
@@ -560,7 +935,7 @@ export default function StudentSupportDeskPanel({
 
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       });
-  }, [localRequests, search, statusFilter, priorityFilter]);
+  }, [localRequests, messageThreads, search, statusFilter, priorityFilter]);
 
   const hasFilters = Boolean(String(search || "").trim()) || statusFilter !== "all" || priorityFilter !== "all";
   const resetFilters = () => {
@@ -697,18 +1072,19 @@ export default function StudentSupportDeskPanel({
               request={request}
               busy={isBusy(request.id)}
               busyAction={busyMap[request.id] || ""}
-              unsavedResponse={hasUnsavedResponse(request)}
+              replyDrafted={hasReplyDraft(request)}
               unsavedNotes={hasUnsavedNotes(request)}
-              responseDraft={
-                responseDrafts[request.id] ?? request.counselor_response ?? ""
-              }
+              messages={messageThreads[request.id] || []}
+              threadLoading={Boolean(threadLoadingMap[request.id])}
+              replyDraft={replyDrafts[request.id] ?? ""}
               noteDraft={noteDrafts[request.id] ?? request.admin_notes ?? ""}
-              onResponseDraft={(value) =>
-                setResponseDrafts((previous) => ({
+              onReplyDraft={(value) =>
+                setReplyDrafts((previous) => ({
                   ...previous,
                   [request.id]: value,
                 }))
               }
+              onReloadThread={() => loadThread(request.id)}
               onNoteDraft={(value) =>
                 setNoteDrafts((previous) => ({
                   ...previous,
@@ -747,11 +1123,14 @@ function SupportRequestCard({
   request,
   busy,
   busyAction,
-  unsavedResponse,
+  replyDrafted,
   unsavedNotes,
-  responseDraft,
+  messages,
+  threadLoading,
+  replyDraft,
   noteDraft,
-  onResponseDraft,
+  onReplyDraft,
+  onReloadThread,
   onNoteDraft,
   onPriority,
   onStatus,
@@ -774,7 +1153,7 @@ function SupportRequestCard({
               <StatusBadge value={request.status || "open"} />
               <AgeBadge meta={age} />
               {unsavedNotes ? <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[9px] font-black uppercase text-amber-800">Notes Unsaved</span> : null}
-              {unsavedResponse ? <span className="rounded-full border border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-[9px] font-black uppercase text-orange-800">Response Draft</span> : null}
+              {replyDrafted ? <span className="rounded-full border border-[#FF5A0A] bg-[#FFF4E8] px-2.5 py-1 text-[9px] font-black uppercase text-orange-800">Reply Draft</span> : null}
             </div>
 
             <h3 className="mt-3 text-lg font-black text-[#10233F]">
@@ -836,86 +1215,147 @@ function SupportRequestCard({
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 sm:p-5 xl:grid-cols-2">
-        <section className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
-            Internal Workspace
-          </p>
-          <h4 className="mt-1 font-black text-[#10233F]">Admin Notes</h4>
-          <p className="mt-1 text-xs font-semibold text-slate-500">
-            Internal only. Students do not see this text.
-          </p>
+      <div className="space-y-4 p-4 sm:p-5">
+        <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 text-white shadow-[0_10px_28px_rgba(18,56,101,0.10)] sm:p-5">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-300">
+                Student Conversation
+              </p>
+              <h4 className="mt-1 text-xl font-black text-white">
+                Full Support Conversation
+              </h4>
+              <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-slate-100">
+                Read the complete conversation in order. Every new reply is added below and never replaces an earlier message.
+              </p>
+            </div>
 
-          <textarea
-            value={noteDraft}
-            onChange={(event) => onNoteDraft(event.target.value)}
-            rows={6}
-            disabled={busy}
-            placeholder="Add internal context, follow-up instructions, escalation notes..."
-            className="mt-3 min-w-0 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
-          />
-
-          <button
-            type="button"
-            onClick={onSaveNotes}
-            disabled={busy || !unsavedNotes}
-            className="mt-3 min-h-10 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-4 py-2.5 text-xs font-black text-orange-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:opacity-50"
-          >
-            {busy ? "Saving..." : unsavedNotes ? "Save Internal Notes" : "Notes Saved"}
-          </button>
-        </section>
-
-        <section className="min-w-0 rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 text-white shadow-[0_8px_22px_rgba(18,56,101,0.08)]">
-          <p
-            className="text-[10px] font-black uppercase tracking-[0.16em]"
-            style={{ color: "#ffb35c" }}
-          >
-            Student Response
-          </p>
-          <h4 className="mt-1 font-black" style={{ color: "#ffffff" }}>
-            Counselor Response
-          </h4>
-          <p
-            className="mt-1 text-xs font-semibold"
-            style={{ color: "#ffffff" }}
-          >
-            This response is visible inside the Student Portal Support Center.
-          </p>
-
-          <textarea
-            value={responseDraft}
-            onChange={(event) => onResponseDraft(event.target.value)}
-            rows={6}
-            disabled={busy}
-            placeholder="Write the response the student will see..."
-            className="mt-3 min-w-0 w-full resize-y rounded-xl border-2 border-white/40 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-200/30 disabled:opacity-60"
-          />
-
-          <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={onSend}
-              disabled={busy || !String(responseDraft || "").trim() || (!unsavedResponse && Boolean(request.counselor_response))}
-              className="min-h-10 rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 active:translate-y-0 disabled:opacity-40"
+              onClick={onReloadThread}
+              disabled={busy || threadLoading}
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-white/40 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 disabled:opacity-50"
             >
-              {busy ? (busyAction === "saving" ? "Saving..." : "Working...") : request.counselor_response ? (unsavedResponse ? "Update Response" : "Response Saved") : "Send Response"}
+              <RefreshCw size={14} className={threadLoading ? "animate-spin" : ""} />
+              {threadLoading ? "Refreshing..." : "Refresh Conversation"}
             </button>
+          </div>
 
-            {!closed ? (
-              <button
-                type="button"
-                onClick={onSendResolve}
-                disabled={busy || !String(responseDraft || "").trim()}
-                className="min-h-10 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 active:translate-y-0 disabled:opacity-40"
-                style={{ color: "#ffffff" }}
-              >
-                <span style={{ color: "#ffffff" }}>
-                  Send + Resolve
-                </span>
-              </button>
-            ) : null}
+          <div className="mt-4 max-h-[430px] space-y-3 overflow-y-auto rounded-[1.1rem] border-2 border-white/25 bg-[#0f315a] p-3 sm:p-4">
+            {threadLoading && !messages.length ? (
+              <div className="flex min-h-32 items-center justify-center gap-2 text-sm font-bold text-white">
+                <LoaderCircle size={17} className="animate-spin" />
+                Loading conversation...
+              </div>
+            ) : messages.length ? (
+              messages.map((item) => (
+                <SupportMessageBubble key={item.id} message={item} />
+              ))
+            ) : (
+              <div className="rounded-xl border-2 border-dashed border-white/25 bg-white/5 p-5 text-center">
+                <MessageSquareText size={24} className="mx-auto text-orange-300" />
+                <p className="mt-2 text-sm font-black text-white">
+                  No conversation messages found
+                </p>
+                <p className="mt-1 text-xs font-semibold text-slate-200">
+                  Refresh the conversation or send the first counselor reply below.
+                </p>
+              </div>
+            )}
           </div>
         </section>
+
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
+          <section className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.04)]">
+            <div className="rounded-xl border-2 border-amber-300 bg-amber-50 px-3 py-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-amber-800">
+                Internal Only
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-amber-900">
+                These notes are for Zaifan staff and counselors. The student cannot see them.
+              </p>
+            </div>
+
+            <h4 className="mt-4 font-black text-[#10233F]">Admin Notes</h4>
+
+            <textarea
+              value={noteDraft}
+              onChange={(event) => onNoteDraft(event.target.value)}
+              rows={7}
+              disabled={busy}
+              placeholder="Add internal context, follow-up instructions, escalation notes..."
+              className="mt-3 min-w-0 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
+            />
+
+            <button
+              type="button"
+              onClick={onSaveNotes}
+              disabled={busy || !unsavedNotes}
+              className="mt-3 min-h-10 w-full rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-4 py-2.5 text-xs font-black text-orange-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 disabled:opacity-50"
+            >
+              {busy ? "Saving Notes..." : unsavedNotes ? "Save Internal Notes" : "Internal Notes Saved"}
+            </button>
+          </section>
+
+          <section className="min-w-0 rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.06)]">
+            <div className="rounded-xl border-2 border-blue-300 bg-blue-50 px-3 py-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-blue-800">
+                Visible to Student
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-blue-900">
+                Anything written below will be sent as a new message and added permanently to the conversation.
+              </p>
+            </div>
+
+            <h4 className="mt-4 text-lg font-black text-[#10233F]">
+              Write New Counselor Reply
+            </h4>
+
+            <textarea
+              value={replyDraft}
+              onChange={(event) => onReplyDraft(event.target.value)}
+              rows={7}
+              disabled={busy}
+              placeholder="Write a new reply for the student..."
+              className="mt-3 min-w-0 w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF9] px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
+            />
+
+            <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">
+              Use <strong>Send New Reply</strong> to keep the ticket open. Use <strong>Send Reply & Resolve</strong> only when the student's issue is fully answered.
+            </p>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={onSend}
+                disabled={busy || !String(replyDraft || "").trim()}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0d2b50] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 disabled:opacity-40"
+              >
+                <Send size={14} />
+                {busy && busyAction === "reply"
+                  ? "Sending Reply..."
+                  : "Send New Reply"}
+              </button>
+
+              {!closed ? (
+                <button
+                  type="button"
+                  onClick={onSendResolve}
+                  disabled={busy || !String(replyDraft || "").trim()}
+                  className="min-h-11 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 active:translate-y-0 disabled:opacity-40"
+                >
+                  {busy && busyAction === "reply_resolve"
+                    ? "Sending & Resolving..."
+                    : "Send Reply & Resolve"}
+                </button>
+              ) : (
+                <div className="flex min-h-11 items-center justify-center rounded-xl border-2 border-emerald-300 bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-800">
+                  Ticket Already Resolved
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
 
       <div className="flex min-w-0 flex-wrap gap-2 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-4 sm:px-5">
@@ -963,37 +1403,51 @@ function SupportRequestCard({
           className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2 text-xs font-black text-[#10233F] shadow-sm transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF4E8] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0"
         >
           <History size={14} />
-          Open Timeline
+          Open Student Timeline
         </button>
       </div>
     </article>
   );
 }
 
-function Metric({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-slate-300 bg-white text-[#10233F]",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-    red: "border-red-300 bg-red-50 text-red-800",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
-  };
+function SupportMessageBubble({ message = {} }) {
+  const senderType = normalize(message.sender_type || "system");
+  const fromStudent = senderType === "student";
+  const internal = Boolean(message.is_internal);
+
+  const wrapper = fromStudent ? "justify-start" : "justify-end";
+  const bubble = internal
+    ? "border-amber-300 bg-amber-50 text-amber-950"
+    : fromStudent
+    ? "border-blue-200 bg-blue-50 text-[#10233F]"
+    : "border-orange-300 bg-[#FFF4E8] text-[#10233F]";
 
   return (
-    <div
-      className={`flex min-w-0 items-center gap-3 rounded-[1.1rem] border-[3px] p-3 shadow-[0_5px_14px_rgba(18,56,101,0.04)] ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <Icon size={15} />
-      <div>
-        <p className="text-sm font-black">{value}</p>
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-          {label}
+    <div className={`flex ${wrapper}`}>
+      <div className={`max-w-[92%] rounded-2xl border-2 px-3.5 py-3 ${bubble}`}>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p className="text-xs font-black">
+            {message.sender_name ||
+              (fromStudent ? "Student" : "Zaifan Support")}
+          </p>
+          <span className="text-[9px] font-black uppercase tracking-[0.1em] opacity-65">
+            {fromStudent ? "Student" : pretty(senderType)}
+          </span>
+          <span className="ml-auto text-[9px] font-bold opacity-60">
+            {formatDateTime(message.created_at)}
+          </span>
+        </div>
+
+        <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6">
+          {message.message || "No message content."}
         </p>
       </div>
     </div>
   );
+}
+
+function Metric({ label, value, icon: Icon, tone = "slate" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function Info({ label, value }) {

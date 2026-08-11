@@ -22,6 +22,7 @@ import {
   motion,
   useReducedMotion,
 } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   CalendarClock,
@@ -800,41 +801,12 @@ function Badge({
   );
 }
 
-function DarkStat({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-[1.15rem] border-2 border-white/25 bg-white/10 p-3.5 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkStat({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeStat({
-  label,
-  value,
-  icon: Icon,
-}) {
-  return (
-    <div className="rounded-[1.15rem] border-2 border-white/30 bg-white/10 p-3.5 text-white shadow-inner">
-      <Icon
-        size={14}
-        className="text-white"
-      />
-      <p className="mt-2 text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeStat({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function EmptyState() {

@@ -13,6 +13,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   ArrowRight,
@@ -1232,17 +1233,7 @@ function CommandBadge({ icon: Icon, children }) {
 }
 
 function OrangeMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3">
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-xl font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function QuickAction({
@@ -1277,33 +1268,8 @@ function QuickAction({
   );
 }
 
-function EvidenceMetric({
-  label,
-  value,
-  helper,
-  success = false,
-}) {
-  return (
-    <div
-      className={`min-w-0 rounded-xl border-2 p-3 ${
-        success
-          ? "border-emerald-300 bg-emerald-50"
-          : "border-[#C9D7E6] bg-[#FFF8EF]"
-      }`}
-    >
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-lg font-black text-[#10233F]">
-        {value}
-      </p>
-
-      <p className="mt-1 break-words text-[10px] font-semibold leading-4 text-slate-600">
-        {helper}
-      </p>
-    </div>
-  );
+function EvidenceMetric({ label, value, helper, success = false }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value} detail={helper} tone={success ? "green" : "slate"} />;
 }
 
 function SectionTitle({

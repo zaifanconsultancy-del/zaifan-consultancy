@@ -31,6 +31,7 @@ import {
   Users,
 } from "lucide-react";
 import { useMemo } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -658,21 +659,8 @@ function Metric({
   );
 }
 
-function SmallMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-3 text-center">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+function SmallMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value ?? "—"} tone="navy" />;
 }
 
 function SignalBadge({
@@ -751,38 +739,12 @@ function ReasonBlock({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function EmptyState() {
@@ -867,6 +829,44 @@ function getTier(score) {
     scoreBox:
       "border-red-300 bg-red-50 text-red-800",
   };
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default CounselorPerformanceAI;

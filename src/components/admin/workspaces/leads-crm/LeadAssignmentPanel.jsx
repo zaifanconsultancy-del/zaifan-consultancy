@@ -20,6 +20,7 @@
 // - requires the generic ownership migration that adds assigned_user_* fields
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -1308,58 +1309,11 @@ function LeadAssignmentPanel({
 }
 
 function OperationalStat({ label, value, helper, tone = "orange" }) {
-  const tones = {
-    orange: "border-[#FF5A0A] bg-[#FFF4E8]",
-    navy: "border-[#123865] bg-[#123865] text-white",
-    amber: "border-amber-300 bg-amber-50",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-  };
-
-  const dark = tone === "navy";
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
-        tones[tone] || tones.orange
-      }`}
-    >
-      <p
-        className={`text-[9px] font-black uppercase tracking-[0.16em] ${
-          dark ? "text-orange-300" : "text-slate-500"
-        }`}
-      >
-        {label}
-      </p>
-      <p
-        className={`mt-2 break-words text-lg font-black ${
-          dark ? "text-white" : "text-[#10233f]"
-        }`}
-      >
-        {value}
-      </p>
-      <p
-        className={`mt-2 text-xs font-semibold leading-5 ${
-          dark ? "text-slate-200" : "text-slate-600"
-        }`}
-      >
-        {helper}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} tone={toZaifanMetricTone(tone)} />;
 }
 
 function HeroStat({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.14em] text-slate-300">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-sm font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function DarkInfo({ label, value }) {
@@ -1481,6 +1435,63 @@ function Feedback({ type, message, onClose }) {
       </button>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default LeadAssignmentPanel;

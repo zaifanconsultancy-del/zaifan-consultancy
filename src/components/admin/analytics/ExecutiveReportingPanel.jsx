@@ -71,6 +71,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const VIEW_OPTIONS = [
   { id: "reports", label: "Reports", icon: FileText },
@@ -193,6 +194,51 @@ function getStatusTone(value = "") {
 
 function searchable(...parts) {
   return normalize(parts.filter(Boolean).join(" "));
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function ExecutiveReportingPanel({
@@ -1009,23 +1055,8 @@ function DistributionCard({ item }) {
 }
 
 function SnapshotCard({ item }) {
-  return (
-    <article className={`rounded-[1.25rem] border-[3px] p-4 ${toneClass(item.tone)}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-        {item.label}
-      </p>
-
-      <p className="mt-2 break-words text-2xl font-black text-[#10233F]">
-        {safeText(item.value)}
-      </p>
-
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {item.detail}
-      </p>
-
-      {item.source ? <SourceBadge source={item.source} /> : null}
-    </article>
-  );
+  const helper = [item.detail, item.source ? `Source: ${item.source}` : ""].filter(Boolean).join(" · ");
+  return <ZaifanMetricCard level="coBoss" label={item.label} value={safeText(item.value)} detail={helper} tone={toZaifanMetricTone(item.tone)} />;
 }
 
 function CompactReport({ report }) {
@@ -1095,16 +1126,7 @@ function DarkMetric({ label, value }) {
 }
 
 function MiniStat({ label, value }) {
-  return (
-    <div className="rounded-lg border-2 border-[#E1E8F0] bg-white/80 p-2.5">
-      <p className="text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-xs font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function SourceBadge({ source }) {

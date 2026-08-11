@@ -28,6 +28,7 @@ import {
   linkStudentRecords,
   separateStudentRecord,
 } from "../workspaces/students/studentIdentityReconciliation";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const StudentDetailModal = lazy(() => import("../workspaces/students/StudentDetailModal"));
 
@@ -65,6 +66,7 @@ function StudentDirectoryPage({
   permissions = {},
 
   updateInquiryPriority = null,
+  updateInquiryStage = null,
   updateAppointmentPriority = null,
   updateAppointmentStatus = null,
   updateAppointmentStage = null,
@@ -297,7 +299,7 @@ function StudentDirectoryPage({
             </aside>
           </div>
 
-          <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 xl:grid-cols-4">
             <Stat label="People" value={stats.total} />
             <Stat label="Verified / linked" value={stats.verified} tone="green" />
             <Stat label="Needs review" value={stats.review} tone="amber" />
@@ -411,6 +413,7 @@ function StudentDirectoryPage({
             adminProfile={adminProfile}
             permissions={permissions}
             updateInquiryPriority={updateInquiryPriority}
+            updateInquiryStage={updateInquiryStage}
             updateAppointmentPriority={updateAppointmentPriority}
             updateAppointmentStatus={updateAppointmentStatus}
             updateAppointmentStage={updateAppointmentStage}
@@ -740,32 +743,11 @@ function IdentityConfirmationModal({
 }
 
 function CommandMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 px-4 py-3.5 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.14em] text-white/80">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function Stat({ label, value, tone = "slate" }) {
-  const tones = {
-    slate: "border-[#123865] bg-[#EDF4FA] text-[#123865]",
-    green: "border-emerald-500 bg-emerald-50 text-emerald-800",
-    amber: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-    blue: "border-blue-500 bg-blue-50 text-blue-800",
-  };
-
-  return (
-    <div className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${tones[tone] || tones.slate}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.12em] opacity-70">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function ModalLoader() {
@@ -779,6 +761,51 @@ function ModalLoader() {
       </div>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default StudentDirectoryPage;

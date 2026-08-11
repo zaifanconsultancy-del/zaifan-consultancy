@@ -78,6 +78,26 @@ export async function updateInquiryStatusRow(id, status) {
     .eq("id", id);
 }
 
+export async function updateInquiryStageRow(id, stage) {
+  if (id === null || id === undefined || String(id).trim() === "") {
+    return missingIdError("pipeline-stage update");
+  }
+
+  const nextStage = String(stage ?? "").trim();
+
+  if (!nextStage) {
+    return {
+      data: null,
+      error: new Error("Missing inquiry pipeline stage."),
+    };
+  }
+
+  return supabase
+    .from("inquiries")
+    .update({ pipeline_stage: nextStage })
+    .eq("id", id);
+}
+
 export async function updateInquiryPriorityRow(id, priority) {
   if (id === null || id === undefined || String(id).trim() === "") {
     return missingIdError("priority update");

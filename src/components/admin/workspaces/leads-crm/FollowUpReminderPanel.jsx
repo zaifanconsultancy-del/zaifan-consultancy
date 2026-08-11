@@ -34,6 +34,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   useCallback,
   useEffect,
@@ -1529,38 +1530,12 @@ function HeaderChip({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-lg font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function ReadinessChip({

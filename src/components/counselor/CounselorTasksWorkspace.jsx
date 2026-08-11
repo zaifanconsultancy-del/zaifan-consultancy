@@ -49,7 +49,7 @@ const QUICK_TASK_TEMPLATES = [
   {
     key: "visa",
     label: "Visa Readiness",
-    title: "Check CAS and visa readiness",
+    title: "Check pre-enrolment and visa readiness",
     category: "Visa Readiness",
     priority: "Urgent",
   },
@@ -58,7 +58,7 @@ const QUICK_TASK_TEMPLATES = [
 const FILTER_STORAGE_KEY = "zaifan_counselor_tasks_filter";
 const SORT_STORAGE_KEY = "zaifan_counselor_tasks_sort";
 const INPUT_CLASS =
-  "w-full rounded-2xl border-2 border-[#d8b892] bg-[#fffdf8] px-4 py-3 text-sm font-semibold text-[#102b4c] outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100";
+  "w-full min-w-0 rounded-xl border-2 border-[#AFC0D0] bg-white px-4 py-3 text-sm font-bold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 const VALID_FILTERS = new Set(FILTERS.map((item) => item.key));
 const VALID_SORTS = new Set(SORTS.map((item) => item.key));
@@ -214,14 +214,14 @@ function priorityTone(priority = "") {
   if (rank === 3) return "border-amber-300 bg-amber-50 text-amber-700";
   if (rank === 2) return "border-orange-300 bg-orange-50 text-orange-700";
 
-  return "border-[#b7c5d1] bg-[#f3f7fb] text-[#173f69]";
+  return "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]";
 }
 
 function statusTone(status = "") {
   const value = lower(status);
 
   if (value.includes("progress")) {
-    return "border-[#173f69] bg-[#173f69] text-white";
+    return "border-[#123865] bg-[#123865] text-white";
   }
 
   if (value.includes("complete") || value.includes("done")) {
@@ -271,7 +271,7 @@ function TaskStat({
   onClick,
 }) {
   const tones = {
-    navy: "border-[#173f69] bg-[#f3f7fb]",
+    navy: "border-[#123865] bg-[#F1F6FA]",
     orange: "border-orange-300 bg-orange-50",
     amber: "border-amber-300 bg-amber-50",
     emerald: "border-emerald-300 bg-emerald-50",
@@ -279,7 +279,7 @@ function TaskStat({
     rose: "border-rose-300 bg-rose-50",
   };
 
-  const className = `rounded-2xl border-2 p-4 text-left shadow-sm transition ${
+  const className = `relative overflow-hidden rounded-[1.3rem] border-2 p-4 text-left shadow-[0_9px_22px_rgba(16,35,63,0.08)] transition ${
     tones[tone] || tones.navy
   } ${
     onClick
@@ -289,14 +289,14 @@ function TaskStat({
 
   const content = (
     <>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#607487]">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5B6D80]">
         {label}
       </p>
 
-      <p className="mt-2 text-2xl font-black text-[#102b4c]">{value}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
 
       {helper ? (
-        <p className="mt-1 text-xs font-medium text-[#607487]">{helper}</p>
+        <p className="mt-1 text-xs font-medium text-[#5B6D80]">{helper}</p>
       ) : null}
     </>
   );
@@ -316,18 +316,18 @@ function TaskPressureMeter({ task }) {
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
-        <span className="font-bold text-[#607487]">Task pressure</span>
-        <span className="font-black text-[#102b4c]">{score}</span>
+        <span className="font-bold text-[#5B6D80]">Task pressure</span>
+        <span className="font-black text-[#10233F]">{score}</span>
       </div>
 
-      <div className="h-2.5 overflow-hidden rounded-full bg-[#e5edf3]">
+      <div className="h-2.5 overflow-hidden rounded-full bg-[#E4EBF2]">
         <div
           className={`h-full rounded-full transition-[width] duration-500 ${
             score >= 75
               ? "bg-rose-500"
               : score >= 50
                 ? "bg-orange-500"
-                : "bg-[#173f69]"
+                : "bg-[#123865]"
           }`}
           style={{ width: `${score}%` }}
         />
@@ -457,27 +457,27 @@ function QuickTaskCreator({
 
   if (!students.length) {
     return (
-      <div className="mb-5 rounded-2xl border-2 border-dashed border-[#c9d5de] bg-[#fffdf8] p-5 text-sm text-[#607487]">
+      <div className="mb-5 rounded-2xl border-2 border-dashed border-[#B9C8D8] bg-[#FFFCF7] p-5 text-sm text-[#5B6D80]">
         Quick Task Creator becomes available when this counselor has assigned students.
       </div>
     );
   }
 
   return (
-    <div className="mb-5 rounded-[1.5rem] border-2 border-orange-200 bg-[#fff8ef] p-4 sm:p-5">
+    <div className="mb-5 rounded-[1.5rem] border-2 border-orange-200 bg-[#FFF8EF] p-4 sm:p-5">
       <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
             Quick Task Creator
           </p>
 
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-[#607487]">
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-[#5B6D80]">
             Create counselor execution work directly from the assigned student scope.
             Templates keep task category and priority consistent.
           </p>
         </div>
 
-        <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2 text-xs font-black text-white">
+        <span className="rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2 text-xs font-black text-white">
           {students.length} assigned
         </span>
       </div>
@@ -528,7 +528,7 @@ function QuickTaskCreator({
       </div>
 
       {selectedStudent ? (
-        <div className="mt-3 rounded-2xl border-2 border-[#173f69] bg-[#173f69] p-3 text-white">
+        <div className="mt-3 rounded-2xl border-2 border-[#123865] bg-[#123865] p-3 text-white">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/65">
@@ -578,7 +578,7 @@ function QuickTaskCreator({
         </button>
       </div>
 
-      <p className="mt-2 text-xs font-medium text-[#718292]">
+      <p className="mt-2 text-xs font-medium text-[#6B7D8F]">
         {resolvedTitle.length}/180 characters · Template: {selectedTemplate.label}
       </p>
     </div>
@@ -600,17 +600,17 @@ function TaskCard({
     : task.isOverdue
       ? "border-rose-300 bg-rose-50/70"
       : pressure >= 70
-        ? "border-orange-300 bg-[#fffaf2]"
-        : "border-[#c9d5de] bg-[#fffdf8]";
+        ? "border-orange-300 bg-[#FFF8EF]"
+        : "border-[#B9C8D8] bg-[#FFFCF7]";
 
   return (
     <article
-      className={`rounded-[1.6rem] border-2 p-4 shadow-[0_10px_30px_rgba(16,43,76,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300 sm:p-5 ${cardTone}`}
+      className={`overflow-hidden rounded-[1.65rem] border-[3px] p-4 shadow-[0_14px_34px_rgba(16,35,63,0.10)] transition duration-300 hover:-translate-y-0.5 hover:border-[#123865] hover:shadow-[0_20px_44px_rgba(16,35,63,0.14)] sm:p-5 ${cardTone}`}
     >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_0.6fr_0.85fr_0.5fr] xl:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words text-lg font-black text-[#102b4c]">
+            <h3 className="break-words text-lg font-black text-[#10233F]">
               {task.title || "Counselor task"}
             </h3>
 
@@ -627,7 +627,7 @@ function TaskCard({
             ) : null}
           </div>
 
-          <p className="mt-1.5 text-sm font-semibold text-[#607487]">
+          <p className="mt-1.5 text-sm font-semibold text-[#5B6D80]">
             {task.studentName || "Student"} · {task.category || "General Task"}
           </p>
 
@@ -656,16 +656,16 @@ function TaskCard({
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#d6e0e7] bg-[#f8fbfd] p-3.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#718292]">
+        <div className="rounded-[1.25rem] border-2 border-[#AFC0D0] bg-[#F7FAFC] p-3.5">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#6B7D8F]">
             Due
           </p>
 
-          <p className="mt-2 text-sm font-black text-[#102b4c]">
+          <p className="mt-2 text-sm font-black text-[#10233F]">
             {formatRelativeTime(task.dueAt || task.updatedAt)}
           </p>
 
-          <p className="mt-1 text-xs leading-5 text-[#718292]">
+          <p className="mt-1 text-xs leading-5 text-[#6B7D8F]">
             {task.dueAt
               ? new Date(task.dueAt).toLocaleString()
               : "No due date"}
@@ -676,19 +676,19 @@ function TaskCard({
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-orange-200 bg-[#fff8ef] p-3.5">
+        <div className="rounded-[1.25rem] border-2 border-orange-300 bg-[#FFF4E8] p-3.5 shadow-inner">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
             Next Action
           </p>
 
-          <p className="mt-2 text-sm font-bold leading-6 text-[#102b4c]">
+          <p className="mt-2 text-sm font-bold leading-6 text-[#10233F]">
             {task.nextAction ||
               (completed
                 ? "Task is complete."
                 : "Review task context and move the student workflow forward.")}
           </p>
 
-          <p className="mt-2 text-xs leading-5 text-[#718292]">
+          <p className="mt-2 text-xs leading-5 text-[#6B7D8F]">
             Keep task status synchronized so workload analytics and the executive brief
             stay accurate.
           </p>
@@ -704,7 +704,7 @@ function TaskCard({
                   Boolean(savingId) ||
                   inProgress
                 }
-                className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2.5 text-xs font-black text-white transition hover:bg-[#102f52] disabled:cursor-not-allowed disabled:opacity-45"
+                className="rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2.5 text-xs font-black text-white transition hover:bg-[#0B2A4B] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {savingId === `${task.id}-progress`
                   ? "Saving..."
@@ -1001,34 +1001,37 @@ export default function CounselorTasksWorkspace({
     sort !== "priority";
 
   return (
-    <section className="rounded-[1.8rem] border-2 border-[#173f69] bg-[#fffaf2] p-4 shadow-[0_18px_55px_rgba(16,43,76,0.08)] sm:p-5">
-      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">
+    <section className="overflow-hidden rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_28px_80px_rgba(16,35,63,0.16)] sm:p-4">
+      <div className="relative mb-5 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_36px_rgba(16,35,63,0.20)] xl:flex xl:items-start xl:justify-between xl:gap-5 sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full border-[26px] border-white/5" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-20 h-44 w-44 rounded-full border-[22px] border-orange-400/10" />
+
+        <div className="relative z-[1]">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
             Task OS
           </p>
 
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-[#102b4c] sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
             Counselor Execution Queue
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#607487]">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-blue-100">
             Create, prioritize and close counselor work while keeping task pressure,
             student movement and workload intelligence synchronized.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-xl border-2 border-orange-300 bg-orange-50 px-4 py-2 text-sm font-black text-orange-700">
+        <div className="relative z-[1] flex flex-wrap gap-2">
+          <span className="rounded-xl border-2 border-orange-300/70 bg-orange-400/15 px-3 py-2 text-xs font-black text-orange-300">
             {filtered.length}/{queue.length} visible
           </span>
 
-          <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2 text-sm font-black text-white">
+          <span className="rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2 text-xs font-black text-white">
             {stats.students} students
           </span>
 
           <span
-            className={`rounded-xl border-2 px-4 py-2 text-sm font-black ${
+            className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${
               stats.averagePressure >= 70
                 ? "border-rose-300 bg-rose-50 text-rose-700"
                 : stats.averagePressure >= 45
@@ -1041,7 +1044,7 @@ export default function CounselorTasksWorkspace({
         </div>
       </div>
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+      <div className="mb-5 grid gap-3 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFFCF7] p-3 shadow-[0_12px_28px_rgba(16,35,63,0.08)] sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <TaskStat
           label="Open"
           value={stats.total}
@@ -1090,7 +1093,7 @@ export default function CounselorTasksWorkspace({
         <TaskStat
           label="Convert"
           value={stats.conversion}
-          helper="CAS / visa / app"
+          helper="Pre-enrolment / visa / app"
           active={filter === "conversion"}
           onClick={() => setFilter("conversion")}
         />
@@ -1108,7 +1111,7 @@ export default function CounselorTasksWorkspace({
         setStatus={setStatus}
       />
 
-      <div className="mb-5 rounded-[1.4rem] border-2 border-[#d8b892] bg-[#fff8ef] p-3.5">
+      <div className="mb-5 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3.5 shadow-[inset_0_0_0_1px_rgba(255,90,10,0.12)]">
         <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_190px_210px_auto]">
           <input
             type="search"
@@ -1148,35 +1151,35 @@ export default function CounselorTasksWorkspace({
             type="button"
             onClick={reset}
             disabled={!hasActiveControls}
-            className="rounded-2xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-sm font-black text-white transition hover:bg-[#102f52] disabled:cursor-default disabled:opacity-45"
+            className="rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0B2A4B] hover:shadow-md disabled:cursor-default disabled:opacity-45"
           >
             Reset
           </button>
         </div>
       </div>
 
-      <div className="mb-3 flex flex-col gap-2 rounded-2xl border border-[#d8b892] bg-[#fff8ef] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-[#7d684f]">
+      <div className="mb-3 flex flex-col gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-white">
           Execution queue · {filtered.length} visible tasks
         </p>
 
-        <p className="text-xs font-semibold text-[#607487]">
+        <p className="text-xs font-semibold text-blue-100">
           Sort: {SORTS.find((item) => item.key === sort)?.label || "Priority"}
         </p>
       </div>
 
       <div className="grid gap-3">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-[#c9d5de] bg-[#fffdf8] p-7 text-center">
+          <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#AFC0D0] bg-[#FFFCF7] p-8 text-center shadow-inner">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-orange-200 bg-orange-50 text-lg font-black text-orange-700">
               T
             </div>
 
-            <p className="mt-3 text-sm font-black text-[#102b4c]">
+            <p className="mt-3 text-sm font-black text-[#10233F]">
               No counselor tasks found.
             </p>
 
-            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#607487]">
+            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#5B6D80]">
               Tasks created from Assigned Students, Appointments, Support or the
               Quick Task Creator will appear here. Clear the current filters if tasks
               already exist.

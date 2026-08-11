@@ -1,3 +1,8 @@
+// zaifan-gpt-copilot CASE BRAIN V5.2 — OUTPUT-FIRST STRUCTURED CASE BRIEF
+// - Case Brief gets enough token budget for reasoning + strict structured visible output
+// - empty/incomplete HTTP-200 responses trigger one output-first retry instead of fake success
+// - no visible output now returns a diagnostic error with status/token details
+// zaifan-gpt-copilot STUDENT CASE BRAIN V4 — full Student 360 + evidence-only document drafting
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -15,6 +20,10 @@ type GptMode =
   | "scholarship"
   | "objection_analysis"
   | "counselor_strategy"
+  | "case_brief"
+  | "gap_audit"
+  | "sop_draft"
+  | "cv_draft"
   | "lead_reanalysis"
   | string;
 
@@ -99,6 +108,36 @@ const MODE_CONFIG: Record<
     maxOutputTokens: 1400,
     reasoningEffort: "medium",
   },
+  case_brief: {
+    label: "Student 360 Case Brief",
+    category: "strategy",
+    // Responses API max_output_tokens includes reasoning + visible output.
+    // Leave enough room for the strict Student 360 JSON schema to actually render.
+    maxOutputTokens: 6500,
+    reasoningEffort: "medium",
+  },
+
+  gap_audit: {
+    label: "Student 360 Gap Audit",
+    category: "risk",
+    maxOutputTokens: 1800,
+    reasoningEffort: "medium",
+  },
+
+  sop_draft: {
+    label: "Evidence-Only SOP Draft",
+    category: "analysis",
+    maxOutputTokens: 2800,
+    reasoningEffort: "high",
+  },
+
+  cv_draft: {
+    label: "Evidence-Only CV Draft",
+    category: "analysis",
+    maxOutputTokens: 2400,
+    reasoningEffort: "medium",
+  },
+
   lead_reanalysis: {
     label: "Fast Lead Reanalysis",
     category: "analysis",
@@ -106,6 +145,199 @@ const MODE_CONFIG: Record<
     reasoningEffort: "none",
   },
 };
+
+const CASE_BRIEF_TEXT_FORMAT = {
+  type: "json_schema",
+  name: "zaifan_student_360_case_brief",
+  description:
+    "Evidence-grounded Student 360 operational case brief for a Zaifan counselor.",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      headline: { type: "string" },
+      caseHealth: {
+        type: "string",
+        enum: [
+          "Clear",
+          "Stable",
+          "Attention",
+          "High Risk",
+          "Critical",
+          "Insufficient Data"
+        ]
+      },
+      healthReason: { type: "string" },
+      studentSnapshot: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+          route: { type: "string" },
+          currentStage: { type: "string" },
+          priority: { type: "string" },
+          portalState: { type: "string" }
+        },
+        required: ["name", "route", "currentStage", "priority", "portalState"]
+      },
+      dataCoverage: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          documents: { type: "number" },
+          applications: { type: "number" },
+          universities: { type: "number" },
+          communications: { type: "number" },
+          tasks: { type: "number" },
+          followUps: { type: "number" },
+          visaCases: { type: "number" },
+          financeRecords: { type: "number" },
+          supportRequests: { type: "number" },
+          timelineEvents: { type: "number" }
+        },
+        required: [
+          "documents",
+          "applications",
+          "universities",
+          "communications",
+          "tasks",
+          "followUps",
+          "visaCases",
+          "financeRecords",
+          "supportRequests",
+          "timelineEvents"
+        ]
+      },
+      systemStatus: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            system: { type: "string" },
+            state: {
+              type: "string",
+              enum: [
+                "Complete",
+                "In Progress",
+                "Attention",
+                "Blocked",
+                "Not Started",
+                "Unknown"
+              ]
+            },
+            headline: { type: "string" },
+            detail: { type: "string" },
+            source: { type: "string" }
+          },
+          required: ["system", "state", "headline", "detail", "source"]
+        }
+      },
+      criticalBlockers: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            priority: { type: "number" },
+            blocker: { type: "string" },
+            evidence: { type: "string" },
+            whyItMatters: { type: "string" },
+            action: { type: "string" },
+            source: { type: "string" }
+          },
+          required: ["priority", "blocker", "evidence", "whyItMatters", "action", "source"]
+        }
+      },
+      completedWork: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            item: { type: "string" },
+            evidence: { type: "string" },
+            source: { type: "string" }
+          },
+          required: ["item", "evidence", "source"]
+        }
+      },
+      recentChanges: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            change: { type: "string" },
+            when: { type: "string" },
+            source: { type: "string" }
+          },
+          required: ["change", "when", "source"]
+        }
+      },
+      contradictions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            issue: { type: "string" },
+            evidenceA: { type: "string" },
+            evidenceB: { type: "string" },
+            resolution: { type: "string" }
+          },
+          required: ["issue", "evidenceA", "evidenceB", "resolution"]
+        }
+      },
+      nextActions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            priority: { type: "number" },
+            action: { type: "string" },
+            owner: { type: "string" },
+            timing: { type: "string" },
+            reason: { type: "string" },
+            source: { type: "string" }
+          },
+          required: ["priority", "action", "owner", "timing", "reason", "source"]
+        }
+      },
+      missingFacts: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            fact: { type: "string" },
+            whyNeeded: { type: "string" },
+            howToCollect: { type: "string" }
+          },
+          required: ["fact", "whyNeeded", "howToCollect"]
+        }
+      },
+      handoverNote: { type: "string" }
+    },
+    required: [
+      "headline",
+      "caseHealth",
+      "healthReason",
+      "studentSnapshot",
+      "dataCoverage",
+      "systemStatus",
+      "criticalBlockers",
+      "completedWork",
+      "recentChanges",
+      "contradictions",
+      "nextActions",
+      "missingFacts",
+      "handoverNote"
+    ]
+  }
+} as const;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -160,30 +392,154 @@ Deno.serve(async (req) => {
 
     const prompt = buildPrompt(promptInput);
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
+    const openAIRequest: Record<string, unknown> = {
+      model: selectedModel,
+      input: prompt,
+      store: false,
+      reasoning: {
+        effort: selectedMode.reasoningEffort,
       },
-      body: JSON.stringify({
-        model: selectedModel,
-        input: prompt,
-        reasoning: {
-          effort: selectedMode.reasoningEffort,
-        },
-        max_output_tokens: selectedMode.maxOutputTokens,
-      }),
-    });
+      max_output_tokens: selectedMode.maxOutputTokens,
+    };
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("OpenAI error:", result);
-      throw new Error(result?.error?.message || "OpenAI request failed.");
+    if (mode === "case_brief") {
+      openAIRequest.text = {
+        format: CASE_BRIEF_TEXT_FORMAT,
+        verbosity: "medium",
+      };
     }
 
-    const text = extractResponseText(result);
+    let result: Record<string, unknown>;
+    let modelUsed = selectedModel;
+    let transportFallback = false;
+
+    try {
+      result = await callOpenAIResponses({
+        apiKey: OPENAI_API_KEY,
+        requestBody: openAIRequest,
+        attemptLabel: `${selectedModel} primary`,
+      });
+    } catch (firstError) {
+      const retryable = isRetryableOpenAIError(firstError);
+
+      if (!retryable) {
+        throw firstError;
+      }
+
+      console.warn(
+        "OpenAI primary request had a transient transport/upstream failure. Retrying once.",
+        getErrorText(firstError)
+      );
+
+      await sleep(650);
+
+      try {
+        result = await callOpenAIResponses({
+          apiKey: OPENAI_API_KEY,
+          requestBody: openAIRequest,
+          attemptLabel: `${selectedModel} retry`,
+        });
+      } catch (secondError) {
+        const secondRetryable = isRetryableOpenAIError(secondError);
+
+        // Case Brief is high-value, so if Sol has a transient transport/gateway
+        // failure twice, preserve Structured Outputs and retry once on Terra.
+        // Do NOT fall back for genuine 4xx/configuration/schema errors.
+        if (
+          mode === "case_brief" &&
+          secondRetryable &&
+          selectedModel !== OPENAI_MODEL_TERRA
+        ) {
+          console.warn(
+            "Case Brief Sol transport failed twice. Falling back to Terra with the same structured-output contract.",
+            getErrorText(secondError)
+          );
+
+          const terraRequest = {
+            ...openAIRequest,
+            model: OPENAI_MODEL_TERRA,
+            reasoning: {
+              effort: "medium",
+            },
+          };
+
+          result = await callOpenAIResponses({
+            apiKey: OPENAI_API_KEY,
+            requestBody: terraRequest,
+            attemptLabel: `${OPENAI_MODEL_TERRA} fallback`,
+          });
+
+          modelUsed = OPENAI_MODEL_TERRA;
+          transportFallback = true;
+        } else {
+          throw secondError;
+        }
+      }
+    }
+
+    let generatedText = extractResponseText(result);
+    let contentRetry = false;
+
+    // A Responses request can be HTTP 200 yet still be incomplete, especially
+    // when max_output_tokens is exhausted by reasoning before visible output is
+    // produced. Never report that as a successful empty generation.
+    if (!generatedText && mode === "case_brief") {
+      const responseStatus = safeString(result?.status);
+      const incompleteDetails = sanitizeObject(result?.incomplete_details);
+      const incompleteReason = safeString(incompleteDetails?.reason);
+
+      const shouldRetryContent =
+        responseStatus === "incomplete" ||
+        incompleteReason === "max_output_tokens" ||
+        Array.isArray(result?.output);
+
+      if (shouldRetryContent) {
+        console.warn("Case Brief returned no visible output. Retrying with output-first settings.", {
+          responseStatus,
+          incompleteReason,
+          usage: result?.usage || null,
+        });
+
+        const outputFirstRequest = {
+          ...openAIRequest,
+          model: modelUsed,
+          reasoning: {
+            effort: "low",
+          },
+          max_output_tokens: 8000,
+          text: {
+            format: CASE_BRIEF_TEXT_FORMAT,
+            verbosity: "low",
+          },
+        };
+
+        result = await callOpenAIResponses({
+          apiKey: OPENAI_API_KEY,
+          requestBody: outputFirstRequest,
+          attemptLabel: `${modelUsed} case-brief output retry`,
+        });
+
+        generatedText = extractResponseText(result);
+        contentRetry = true;
+      }
+    }
+
+    if (!generatedText) {
+      const responseStatus = safeString(result?.status, "unknown");
+      const incompleteDetails = sanitizeObject(result?.incomplete_details);
+      const incompleteReason = safeString(incompleteDetails?.reason, "none");
+      const usage = sanitizeObject(result?.usage);
+      const outputDetails = sanitizeObject(usage?.output_tokens_details);
+      const reasoningTokens = safeString(outputDetails?.reasoning_tokens, "unknown");
+      const outputTokens = safeString(usage?.output_tokens, "unknown");
+
+      throw new Error(
+        `OpenAI returned no visible Case Brief output. Response status: ${responseStatus}. ` +
+          `Incomplete reason: ${incompleteReason}. Output tokens: ${outputTokens}. ` +
+          `Reasoning tokens: ${reasoningTokens}.`
+      );
+    }
+
     const durationMs = Date.now() - startedAt;
 
     return jsonResponse({
@@ -191,10 +547,18 @@ Deno.serve(async (req) => {
       mode,
       modeLabel: selectedMode.label,
       category: selectedMode.category,
-      model: selectedModel,
-      reasoningEffort: selectedMode.reasoningEffort,
+      model: modelUsed,
+      requestedModel: selectedModel,
+      transportFallback,
+      contentRetry,
+      reasoningEffort:
+        contentRetry
+          ? "low"
+          : transportFallback && mode === "case_brief"
+            ? "medium"
+            : selectedMode.reasoningEffort,
       durationMs,
-      text: text || "No AI response generated.",
+      text: generatedText,
       usage: result?.usage || null,
     });
   } catch (error) {
@@ -232,6 +596,7 @@ function selectModelForMode(
     "call_script",
     "followup_plan",
     "scholarship",
+    "cv_draft",
   ]);
 
   // Frontier tier: reserve the expensive model for higher-stakes reasoning.
@@ -239,6 +604,9 @@ function selectModelForMode(
     "visa_risk",
     "objection_analysis",
     "counselor_strategy",
+    "case_brief",
+    "gap_audit",
+    "sop_draft",
   ]);
 
   if (solModes.has(mode)) return models.sol;
@@ -259,6 +627,180 @@ function jsonResponse(payload: Record<string, unknown>, status = 200) {
       "Content-Type": "application/json",
     },
   });
+}
+
+
+type OpenAITransportError = Error & {
+  status?: number;
+  retryable?: boolean;
+  responsePreview?: string;
+  attemptLabel?: string;
+};
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getErrorText(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error || "Unknown OpenAI error");
+}
+
+function isRetryableOpenAIError(error: unknown) {
+  const candidate = error as OpenAITransportError | null;
+
+  if (!candidate) return false;
+
+  return candidate.retryable === true;
+}
+
+function cleanResponsePreview(value: string, maxLength = 320) {
+  const compact = String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!compact) return "";
+
+  return compact.length > maxLength
+    ? `${compact.slice(0, maxLength)}…`
+    : compact;
+}
+
+async function callOpenAIResponses({
+  apiKey,
+  requestBody,
+  attemptLabel,
+}: {
+  apiKey: string;
+  requestBody: Record<string, unknown>;
+  attemptLabel: string;
+}) {
+  let response: Response;
+
+  try {
+    response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } catch (networkError) {
+    const error = new Error(
+      `${attemptLabel}: OpenAI network request failed: ${getErrorText(networkError)}`
+    ) as OpenAITransportError;
+
+    error.retryable = true;
+    error.attemptLabel = attemptLabel;
+    throw error;
+  }
+
+  let rawBody = "";
+
+  try {
+    rawBody = await response.text();
+  } catch (bodyError) {
+    const error = new Error(
+      `${attemptLabel}: OpenAI response body could not be read (HTTP ${response.status}): ${getErrorText(bodyError)}`
+    ) as OpenAITransportError;
+
+    error.status = response.status;
+    error.retryable =
+      response.status >= 500 ||
+      response.status === 408 ||
+      response.status === 409 ||
+      response.status === 429;
+    error.attemptLabel = attemptLabel;
+    throw error;
+  }
+
+  let parsed: Record<string, unknown> | null = null;
+
+  if (rawBody.trim()) {
+    try {
+      const value = JSON.parse(rawBody);
+
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        parsed = value as Record<string, unknown>;
+      }
+    } catch {
+      parsed = null;
+    }
+  }
+
+  if (!response.ok) {
+    const apiError = parsed?.error;
+    const apiErrorRecord =
+      apiError && typeof apiError === "object" && !Array.isArray(apiError)
+        ? (apiError as Record<string, unknown>)
+        : null;
+
+    const apiMessage =
+      typeof apiErrorRecord?.message === "string"
+        ? apiErrorRecord.message
+        : typeof parsed?.message === "string"
+          ? parsed.message
+          : "";
+
+    const preview = cleanResponsePreview(rawBody);
+
+    const looksHtml =
+      /^\s*<!doctype html/i.test(rawBody) ||
+      /^\s*<html/i.test(rawBody);
+
+    const error = new Error(
+      apiMessage ||
+        (
+          looksHtml
+            ? `${attemptLabel}: OpenAI upstream returned an HTML gateway response (HTTP ${response.status}).`
+            : `${attemptLabel}: OpenAI request failed with HTTP ${response.status}${preview ? `: ${preview}` : ""}`
+        )
+    ) as OpenAITransportError;
+
+    error.status = response.status;
+    error.retryable =
+      response.status >= 500 ||
+      response.status === 408 ||
+      response.status === 409 ||
+      response.status === 429 ||
+      (looksHtml && response.status >= 500);
+    error.responsePreview = preview;
+    error.attemptLabel = attemptLabel;
+
+    console.error("OpenAI request failed:", {
+      attemptLabel,
+      status: response.status,
+      contentType: response.headers.get("content-type"),
+      parsed: Boolean(parsed),
+      looksHtml,
+      preview,
+    });
+
+    throw error;
+  }
+
+  if (!parsed) {
+    const preview = cleanResponsePreview(rawBody);
+    const looksHtml =
+      /^\s*<!doctype html/i.test(rawBody) ||
+      /^\s*<html/i.test(rawBody);
+
+    const error = new Error(
+      looksHtml
+        ? `${attemptLabel}: OpenAI returned HTML instead of JSON despite HTTP ${response.status}.`
+        : `${attemptLabel}: OpenAI returned a non-JSON response despite HTTP ${response.status}${preview ? `: ${preview}` : ""}`
+    ) as OpenAITransportError;
+
+    error.status = response.status;
+    error.retryable = true;
+    error.responsePreview = preview;
+    error.attemptLabel = attemptLabel;
+
+    throw error;
+  }
+
+  return parsed;
 }
 
 function safeString(value: unknown, fallback = "Not provided") {
@@ -383,6 +925,36 @@ Rules:
 `;
   }
 
+  if (mode === "case_brief") {
+    return `
+You are Zaifan Student Case Operating Intelligence.
+
+Your job is to reconstruct the CURRENT operational state of one student from the supplied Student 360 Case Brain.
+This is not a lead-analysis exercise and not a marketing summary.
+
+Hard rules:
+- Treat CRM records as evidence. Do not replace exact records with generic counseling language.
+- Prefer exact names, statuses, counts, amounts, dates and workflow stages whenever present.
+- Never say vague phrases such as "payment activity exists", "documents are present", "there are some requirements", or "the student appears engaged" when the actual records let you say exactly what happened.
+- Do not spend output repeating obvious profile facts unless they affect a decision.
+- Do not calculate or invent conversion probability, intent level, psychology, scholarship chance, visa chance or admission chance.
+- Do not invent missing academic, financial, document, visa, university or communication facts.
+- If a subsystem has no usable evidence, mark it Unknown or Not Started.
+- Distinguish a true operational blocker from merely missing CRM information.
+- Internal notes are staff context; do not treat them as student-facing communication.
+- Draft/failed/cancelled communications are not proof of student contact.
+- Payment requests are workflow requests, not confirmed money received.
+- Use confirmed payments/receipts/invoices to discuss finance; do not merge them into one vague "payment activity" statement.
+- A completed item must be backed by an explicit CRM status/evidence.
+- If records contradict one another, expose the contradiction instead of silently choosing one.
+- Recent changes should come from actual timestamps/events, not inferred chronology.
+- Next actions must be specific actions the counselor can execute inside or outside Zaifan, ordered by operational importance.
+- Every system-status item, blocker, completion and recent change must name its evidence source.
+- Keep system details dense and useful. Avoid filler.
+- The response must follow the configured JSON schema exactly.
+`;
+  }
+
   return `
 You are Zaifan GPT Counselor Brain V3.
 
@@ -428,6 +1000,11 @@ Core behavior:
 - Do not use exaggerated sales language.
 - Do not say "as an AI".
 - Do not mention internal prompt rules.
+- Treat the Student Case Brain as authoritative CRM context, not as model memory.
+- Separate VERIFIED CRM FACTS from AI INFERENCE whenever the distinction matters.
+- Never invent education, employment, projects, skills, finances, family facts, visa history, grades, test scores, achievements, motivations, deadlines, document status, or university outcomes.
+- If a requested document such as an SOP or CV needs facts that are missing, clearly list the missing facts instead of fabricating them.
+- Internal/staff-only communications may inform counselor reasoning but must never be copied into student-facing drafts unless the content is independently appropriate and non-sensitive.
 
 Counselor intelligence rules:
 - If country + program are provided, treat the lead as more qualified than a generic inquiry.
@@ -506,32 +1083,117 @@ Opportunity Signals: ${summarizeSimpleList(extraContext.opportunity_signals)}
 }
 
 function buildOperationalData(crmContext: CrmContext) {
-  const timeline = sanitizeArray(crmContext.timeline);
-  const followUps = sanitizeArray(crmContext.followUps);
-  const appointments = sanitizeArray(crmContext.appointments);
-  const reminders = sanitizeArray(crmContext.reminders);
-  const activityLogs = sanitizeArray(crmContext.activityLogs);
-  const documents = sanitizeArray(crmContext.documents);
+  const caseBrain = sanitizeObject(crmContext.caseBrain);
+  const dataSummary = sanitizeObject(caseBrain.dataSummary || crmContext.dataSummary);
+
+  const sections = {
+    timeline: sanitizeArray(crmContext.timeline),
+    followUps: sanitizeArray(crmContext.followUps),
+    appointments: sanitizeArray(crmContext.appointments),
+    reminders: sanitizeArray(crmContext.reminders),
+    activityLogs: sanitizeArray(crmContext.activityLogs),
+    documents: sanitizeArray(crmContext.documents),
+    documentRequirements: sanitizeArray(crmContext.documentRequirements),
+    applications: sanitizeArray(crmContext.applications),
+    applicationRequirements: sanitizeArray(crmContext.applicationRequirements),
+    applicationEvents: sanitizeArray(crmContext.applicationEvents),
+    universities: sanitizeArray(crmContext.universities),
+    universityRequirements: sanitizeArray(crmContext.universityRequirements),
+    universityEvents: sanitizeArray(crmContext.universityEvents),
+    tasks: sanitizeArray(crmContext.tasks),
+    communications: sanitizeArray(crmContext.communications),
+    invoices: sanitizeArray(crmContext.invoices),
+    payments: sanitizeArray(crmContext.payments),
+    receipts: sanitizeArray(crmContext.receipts),
+    paymentRequests: sanitizeArray(crmContext.paymentRequests),
+    supportRequests: sanitizeArray(crmContext.supportRequests),
+    supportMessages: sanitizeArray(crmContext.supportMessages),
+    visaCases: sanitizeArray(crmContext.visaCases),
+    visaRequirements: sanitizeArray(crmContext.visaRequirements),
+    visaEvents: sanitizeArray(crmContext.visaEvents),
+  };
 
   return `
-Timeline Count: ${timeline.length}
-Follow-Up Count: ${followUps.length}
-Appointment Context Count: ${appointments.length}
-Reminder Count: ${reminders.length}
-Activity Log Count: ${activityLogs.length}
-Document Count: ${documents.length}
-`;
+Student 360 Brain Version: ${safeString(caseBrain.version)}
+Student 360 Generated At: ${safeString(caseBrain.generatedAt)}
+Data Summary: ${safeJson(dataSummary)}
+Data Gaps: ${safeJson(caseBrain.dataGaps || crmContext.dataGaps || [])}
+Source Health: ${safeJson(caseBrain.sourceHealth || crmContext.sourceHealth || {})}
+
+Live Section Counts:
+- Timeline: ${sections.timeline.length}
+- Follow-Ups: ${sections.followUps.length}
+- Appointments: ${sections.appointments.length}
+- Reminders: ${sections.reminders.length}
+- Activity Logs: ${sections.activityLogs.length}
+- Documents: ${sections.documents.length}
+- Document Requirements: ${sections.documentRequirements.length}
+- Applications: ${sections.applications.length}
+- Application Requirements: ${sections.applicationRequirements.length}
+- Application Events: ${sections.applicationEvents.length}
+- Universities: ${sections.universities.length}
+- University Requirements: ${sections.universityRequirements.length}
+- University Events: ${sections.universityEvents.length}
+- Tasks: ${sections.tasks.length}
+- Communications: ${sections.communications.length}
+- Invoices: ${sections.invoices.length}
+- Payments: ${sections.payments.length}
+- Receipts: ${sections.receipts.length}
+- Payment Requests: ${sections.paymentRequests.length}
+- Support Requests: ${sections.supportRequests.length}
+- Support Messages: ${sections.supportMessages.length}
+- Visa Cases: ${sections.visaCases.length}
+- Visa Requirements: ${sections.visaRequirements.length}
+- Visa Events: ${sections.visaEvents.length}
+  `;
 }
 
 function buildContextData(crmContext: CrmContext) {
+  const caseBrain = sanitizeObject(crmContext.caseBrain);
+
   return `
-${summarizeArray(crmContext.timeline, "Timeline")}
+CASE BRAIN SNAPSHOT:
+${safeJson({
+    identity: caseBrain.identity,
+    caseSnapshot: caseBrain.caseSnapshot,
+    summaries: caseBrain.summaries,
+    dataGaps: caseBrain.dataGaps,
+  })}
+
+${summarizeArray(crmContext.applications, "Applications")}
+${summarizeArray(crmContext.applicationRequirements, "Application Requirements")}
+${summarizeArray(crmContext.applicationEvents, "Application Events")}
+${summarizeArray(crmContext.universities, "Universities")}
+${summarizeArray(crmContext.universityRequirements, "University Requirements")}
+${summarizeArray(crmContext.universityEvents, "University Events")}
+${summarizeArray(crmContext.documents, "Documents")}
+${summarizeArray(crmContext.documentRequirements, "Document Requirements")}
+${summarizeArray(crmContext.visaCases, "Visa Cases")}
+${summarizeArray(crmContext.visaRequirements, "Visa Requirements")}
+${summarizeArray(crmContext.visaEvents, "Visa Events")}
+${summarizeArray(crmContext.invoices, "Invoices")}
+${summarizeArray(crmContext.payments, "Payments")}
+${summarizeArray(crmContext.receipts, "Receipts")}
+${summarizeArray(crmContext.paymentRequests, "Payment Requests")}
+${summarizeArray(crmContext.supportRequests, "Support Requests")}
+${summarizeArray(crmContext.supportMessages, "Support Conversation")}
+${summarizeArray(crmContext.tasks, "Tasks")}
 ${summarizeArray(crmContext.followUps, "Follow-Ups")}
+${summarizeArray(crmContext.communications, "Communications")}
+${summarizeArray(crmContext.timeline, "Timeline")}
 ${summarizeArray(crmContext.appointments, "Appointments")}
 ${summarizeArray(crmContext.reminders, "Reminders")}
 ${summarizeArray(crmContext.activityLogs, "Activity Logs")}
-${summarizeArray(crmContext.documents, "Documents")}
-`;
+  `;
+}
+
+function safeJson(value: unknown) {
+  try {
+    const text = JSON.stringify(value ?? null, null, 2);
+    return text.length > 18000 ? `${text.slice(0, 18000)}\n[context truncated]` : text;
+  } catch {
+    return "Unavailable";
+  }
 }
 
 function getModeInstruction({
@@ -805,6 +1467,99 @@ How should urgency be created without pressure?
 
 6. Final Recommendation
 One decisive recommendation.
+`,
+
+    case_brief: `
+Build a high-density Student 360 OPERATIONS BRIEF, not a generic counselor essay.
+
+Required analysis behavior:
+- Reconstruct the exact current state of Applications, Universities/Requirements, Documents, Visa, Finance, Support, Communications, Tasks/Follow-ups and Portal.
+- systemStatus should normally contain one row for each of those major systems.
+- Use exact record names/statuses/counts/amounts when available.
+- dataCoverage must be calculated from the supplied Student 360 context, not guessed. Finance records = invoices + payments + receipts + payment requests.
+- criticalBlockers must contain only issues that actually block or materially threaten progress. Missing profile facts belong in missingFacts unless they are currently blocking a workflow.
+- completedWork must list concrete completed/verified actions so another counselor does not repeat them.
+- recentChanges should prioritize the most recent meaningful operational changes; use the record timestamp when available, otherwise say "Timestamp unavailable".
+- contradictions must expose conflicting CRM facts or suspicious data labels. Return [] when there is no supported contradiction.
+- nextActions must be ordered, concrete and case-specific. Prefer 3-5 actions. Do not default to "contact the student" unless the evidence actually makes contact the best next move.
+- missingFacts should contain only facts not present in Zaifan that are genuinely needed for the next decision.
+- handoverNote should be a compact operational paragraph another counselor could use to continue the case immediately.
+
+Source labels should be human-readable, for example: Applications, University Requirements, Documents, Visa OS, Finance, Support, Communications, Tasks, Follow-ups, Timeline, Portal Access, Student Profile.
+
+Do NOT produce numbered prose sections. Return only the schema-configured JSON.
+`,
+
+    gap_audit: `
+Audit the entire Student 360 case for missing data, unresolved requirements, stale work and contradictions.
+
+Output exactly these sections:
+
+1. Critical Gaps
+2. Application Gaps
+3. University / Requirement Gaps
+4. Document Gaps
+5. Visa Gaps
+6. Finance Gaps
+7. Support / Communication Gaps
+8. Task / Follow-Up Gaps
+9. Data Quality Conflicts
+10. Recommended Fix Order
+
+Rules:
+- Distinguish a true blocker from merely missing CRM information.
+- Do not invent deadlines or requirements.
+- If two CRM records conflict, quote the two conflicting facts briefly and mark them for human review.
+`,
+
+    sop_draft: `
+Draft an evidence-only Statement of Purpose using the student's verified CRM facts.
+
+Output exactly these sections:
+
+1. SOP Readiness
+Choose Ready / Partial / Not Ready and explain why.
+
+2. Verified Facts Used
+List the facts actually found in the Student 360 data.
+
+3. Missing Facts Needed
+List anything required for a strong SOP that is not present, such as motivation, projects, work experience, achievements, career goals, university-specific reasons or personal background.
+
+4. SOP Draft
+Write the strongest possible draft using only known facts. Where a necessary personal fact is missing, use a visible marker such as [MISSING: specific fact needed] rather than inventing content.
+
+5. Counselor Review Checklist
+List claims that should be verified with the student before submission.
+
+Important:
+- Never fabricate work experience, projects, achievements, family background, motivations, grades, skills or career history.
+- Do not claim the draft is submission-ready when important facts are missing.
+`,
+
+    cv_draft: `
+Draft an evidence-only student CV from the Student 360 Case Brain.
+
+Output exactly these sections:
+
+1. CV Readiness
+Choose Ready / Partial / Not Ready.
+
+2. Verified Facts Used
+List the education, scores, skills, experience, projects, awards, languages and contact details actually present.
+
+3. Missing CV Facts
+List missing facts that should be collected.
+
+4. CV Draft
+Use clean professional sections: Header, Profile, Education, Experience, Projects, Skills, Certifications/Awards, Languages, Additional Information. Omit empty sections or use [MISSING: ...] where clarification is essential.
+
+5. Verification Checklist
+List all claims the counselor/student should confirm before use.
+
+Important:
+- Never fabricate institutions, dates, grades, jobs, projects, responsibilities, skills, awards or languages.
+- Do not infer a skill from a desired study program.
 `,
   };
 

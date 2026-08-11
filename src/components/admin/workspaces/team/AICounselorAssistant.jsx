@@ -1,3 +1,4 @@
+// AICounselorAssistant STUDENT CASE BRAIN V2 — local quick actions now read Student 360 summaries
 // AICounselorAssistant PARTNER OS EXTREME — Executive Counselor Copilot
 // Preserves the full mature AI counselor architecture: enrichment engine,
 // scoring, risk, opportunity, urgency, best-channel logic, drafts, copying,
@@ -64,6 +65,7 @@ function AICounselorAssistant({
   studentType = "inquiry",
   adminProfile = null,
   onReminderCreated = null,
+  caseContext = {},
 }) {
   const [activeDraft, setActiveDraft] = useState("summary");
   const [copied, setCopied] = useState("");
@@ -81,8 +83,9 @@ function AICounselorAssistant({
         student,
         studentType: normalizedStudentType,
         adminProfile,
+        caseContext,
       }),
-    [student, normalizedStudentType, adminProfile]
+    [student, normalizedStudentType, adminProfile, caseContext]
   );
 
   if (!student) return null;
@@ -235,7 +238,7 @@ function AICounselorAssistant({
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28 }}
-      className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5"
+      className="min-w-0 space-y-4 text-[#10233F]"
     >
       <div className="relative min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-5 shadow-[0_18px_50px_rgba(18,56,101,0.11)] sm:p-6 lg:p-7" style={{ color: "#ffffff" }}>
         <div className="relative grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.36fr)] lg:items-start">
@@ -364,8 +367,12 @@ function AICounselorAssistant({
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <QuickModeCard
           label="Student Record"
-          value={student?.id ? "Connected" : "Missing ID"}
-          detail={student?.id ? "Quick actions are linked to the current CRM student." : "Reminder writes are blocked until a valid CRM record is loaded."}
+          value={caseContext?.version ? "Student 360" : student?.id ? "Connected" : "Missing ID"}
+          detail={caseContext?.version
+            ? "Quick actions are linked to the current Student Case Brain, including case, finance, support and visa summaries."
+            : student?.id
+              ? "Quick actions are linked to the current CRM student."
+              : "Reminder writes are blocked until a valid CRM record is loaded."}
           tone={student?.id ? "navy" : "cream"}
         />
         <QuickModeCard
@@ -571,7 +578,7 @@ function InsightCard({ icon: Icon, label, value, text, tone = "gold" }) {
   );
 }
 
-function buildCounselorCopilot({ student, studentType, adminProfile }) {
+function buildCounselorCopilot({ student, studentType, adminProfile, caseContext = {} }) {
   const normalized = normalizeStudent(student, studentType, adminProfile);
   const enriched = enrichLeadWithAi(student, studentType);
   const stageAdvice = getStageAdvice(normalized.status, normalized.isAppointment);
@@ -590,9 +597,10 @@ function buildCounselorCopilot({ student, studentType, adminProfile }) {
 
   const whatsapp = buildWhatsAppDraft(normalized, stageAdvice);
   const email = buildEmailDraft(normalized, stageAdvice);
-  const nextAction = buildNextAction(normalized, stageAdvice, risk, opportunity, enriched, bestChannel);
+  const caseAddon = buildStudent360LocalAddon(caseContext);
+  const nextAction = `${buildNextAction(normalized, stageAdvice, risk, opportunity, enriched, bestChannel)}${caseAddon.nextAction}`;
   const reminder = buildReminder(normalized, stageAdvice, enriched);
-  const summary = buildSummary(normalized, risk, opportunity, bestMove, enriched, bestChannel, confidence);
+  const summary = `${buildSummary(normalized, risk, opportunity, bestMove, enriched, bestChannel, confidence)}${caseAddon.summary}`;
 
   return {
     studentName: normalized.fullName,
@@ -612,6 +620,48 @@ function buildCounselorCopilot({ student, studentType, adminProfile }) {
     bestChannel,
     confidence,
     reminderDays: getReminderDays(normalized.priority, enriched.ai_urgency.level),
+  };
+}
+
+function buildStudent360LocalAddon(caseContext = {}) {
+  if (!caseContext?.version) {
+    return { summary: "", nextAction: "" };
+  }
+
+  const summary = caseContext?.summaries || {};
+  const data = caseContext?.dataSummary || {};
+  const gaps = Array.isArray(caseContext?.dataGaps) ? caseContext.dataGaps : [];
+  const visa = summary?.visa || {};
+  const finance = summary?.finance || {};
+  const support = summary?.support || {};
+  const tasks = summary?.tasks || {};
+  const documents = summary?.documents || {};
+
+  const summaryText = `
+
+STUDENT 360 CASE CONTEXT
+- Applications: ${data.applications || 0}
+- Universities: ${data.universities || 0}
+- Documents: ${documents.totalDocuments || data.documents || 0} (${documents.verified || 0} verified, ${documents.rejected || 0} rejected)
+- Open tasks: ${tasks.open || 0}${tasks.overdue ? ` (${tasks.overdue} overdue)` : ""}
+- Visa: ${visa.visaStatus || "not recorded"}${visa.openRequirements ? ` · ${visa.openRequirements} open requirement(s)` : ""}
+- Finance: ${finance.invoices || 0} invoice(s), ${finance.payments || 0} confirmed payment record(s), ${finance.paymentRequests || 0} counselor request(s)
+- Support: ${support.openRequests || 0} open request(s)
+- Communications: ${data.communications || 0}
+- CRM data gaps: ${gaps.length ? gaps.slice(0, 5).join("; ") : "No core profile gaps detected by the Case Brain"}`;
+
+  const operationalSignals = [];
+  if (tasks.overdue) operationalSignals.push(`${tasks.overdue} overdue task(s)`);
+  if (documents.rejected) operationalSignals.push(`${documents.rejected} rejected document(s)`);
+  if (visa.openRequirements) operationalSignals.push(`${visa.openRequirements} open visa requirement(s)`);
+  if (support.openRequests) operationalSignals.push(`${support.openRequests} open support request(s)`);
+  if (gaps.length) operationalSignals.push(`${gaps.length} profile/data gap(s)`);
+
+  return {
+    summary: summaryText,
+    nextAction: operationalSignals.length
+      ? `\n\nStudent 360 operational checks: ${operationalSignals.join("; ")}. Review these before creating new work.`
+      : "\n\nStudent 360 operational checks: no obvious open blocker was detected from the loaded case summaries; verify the live workspace before committing to a final action.",
   };
 }
 

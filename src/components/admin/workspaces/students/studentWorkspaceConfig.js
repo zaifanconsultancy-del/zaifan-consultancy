@@ -65,7 +65,7 @@ export const STUDENT_WORKSPACE_GROUPS = Object.freeze([
       ["ai-workspace", "GPT Workspace", "Deep counselor copilot", Bot],
       ["gpt-intelligence", "GPT Intelligence", "Stored analysis & strategy", BrainCircuit],
       ["ai", "Quick AI Actions", "Fast counselor generation", WandSparkles],
-      ["executive-ai", "Executive AI", "Student intelligence dashboard", Sparkles],
+      ["executive-ai", "Executive AI", "Single-student risk & opportunity", Sparkles],
     ],
   },
 ]);

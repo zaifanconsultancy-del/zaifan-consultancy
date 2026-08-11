@@ -1,4 +1,10 @@
-// StudentApplicationPanel PARTNER OS EXTREME V4 — White Refresh Action
+// StudentApplicationPanel PARTNER OS EXTREME V5 — Italy Application Journey
+// Full operational upgrade:
+// - Italy-first plan → preparation → submission → university review → decision → Universitaly pre-enrolment → enrollment workflow
+// - complete quick-action command rail with safe status/stage milestone updates
+// - explicit Student View preview so internal notes, risk and portal credentials stay private
+// - richer empty state, live journey progress and student-safe application requirements
+// - preserves existing Supabase CRUD, notifications, audit history, timeline, archive, restore and portfolio logic
 // Zaifan Admin OS functional overhaul:
 // - true multi-application architecture per student
 // - application portfolio + active workspace
@@ -16,8 +22,12 @@
 // - readiness distinguishes 'no requirements configured' from 'requirements complete'
 // - operational portfolio signals for deadlines, money pressure, missing next actions and contradictions
 // - audit sync reporting after core application saves
+// - document-type application requirements bridge into student_document_requirements
+// - existing document requirements backfill automatically when the application workspace opens
+// - verified/rejected document decisions can now drive application-requirement completion safely
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   Archive,
@@ -123,30 +133,51 @@ const EMPTY_FORM = {
 
 const APPLICATION_STATUS_OPTIONS = [
   "not_started",
+  "preparing",
   "documents_pending",
   "documents_received",
+  "ready_to_submit",
+  "submitted",
   "applied",
   "under_review",
+  "interview_scheduled",
+  "admission_test",
+  "waitlisted",
+  "conditional_admission",
   "offer_received",
+  "admitted",
   "offer_accepted",
-  "rejected",
+  "pre_enrollment_started",
+  "pre_enrollment_submitted",
+  "pre_enrollment_validated",
+  "enrollment_pending",
   "enrolled",
+  "deferred",
+  "withdrawn",
+  "rejected",
 ];
 
 const APPLICATION_STAGE_OPTIONS = [
   "planning",
   "preparation",
+  "submission",
   "submitted",
-  "offer",
-  "accepted",
+  "university_review",
+  "decision",
+  "pre_enrollment",
+  "enrollment",
   "closed",
 ];
 
 const OFFER_STATUS_OPTIONS = [
   "pending",
   "under_review",
+  "waitlisted",
+  "conditional_offer",
   "offer_received",
+  "admitted",
   "offer_accepted",
+  "declined",
   "rejected",
 ];
 
@@ -163,12 +194,502 @@ const VISA_STATUS_OPTIONS = [
 const PRIORITY_OPTIONS = ["low", "normal", "high", "urgent"];
 const RISK_OPTIONS = ["low", "medium", "high", "critical"];
 
+const ITALY_APPLICATION_JOURNEY = [
+  {
+    id: "planning",
+    label: "Plan",
+    description: "University, programme and intake confirmed.",
+    statuses: ["not_started"],
+    stages: ["planning"],
+  },
+  {
+    id: "preparation",
+    label: "Prepare",
+    description: "Documents, fees and submission details being prepared.",
+    statuses: [
+      "preparing",
+      "documents_pending",
+      "documents_received",
+      "ready_to_submit",
+    ],
+    stages: ["preparation"],
+  },
+  {
+    id: "submission",
+    label: "Submit",
+    description: "Application submitted through the university channel.",
+    statuses: ["submitted", "applied"],
+    stages: ["submission", "submitted"],
+  },
+  {
+    id: "review",
+    label: "University Review",
+    description: "University assessment, interview or admission test.",
+    statuses: ["under_review", "interview_scheduled", "admission_test"],
+    stages: ["university_review"],
+  },
+  {
+    id: "decision",
+    label: "Decision",
+    description: "Admission, conditional offer, waitlist or rejection.",
+    statuses: [
+      "waitlisted",
+      "conditional_admission",
+      "offer_received",
+      "admitted",
+      "offer_accepted",
+      "rejected",
+      "withdrawn",
+      "deferred",
+    ],
+    stages: ["decision"],
+  },
+  {
+    id: "pre_enrollment",
+    label: "Pre-enrolment",
+    description: "Universitaly pre-enrolment submitted and validated.",
+    statuses: [
+      "pre_enrollment_started",
+      "pre_enrollment_submitted",
+      "pre_enrollment_validated",
+    ],
+    stages: ["pre_enrollment"],
+  },
+  {
+    id: "enrollment",
+    label: "Enrollment",
+    description: "Final university enrollment or matriculation.",
+    statuses: ["enrollment_pending", "enrolled"],
+    stages: ["enrollment"],
+  },
+];
+
+const APPLICATION_QUICK_ACTIONS = [
+  {
+    id: "ready_to_submit",
+    label: "Ready to Submit",
+    tone: "orange",
+    helper: "Preparation complete",
+  },
+  {
+    id: "submitted",
+    label: "Mark Submitted",
+    tone: "blue",
+    helper: "University application sent",
+  },
+  {
+    id: "under_review",
+    label: "Under Review",
+    tone: "blue",
+    helper: "University assessment started",
+  },
+  {
+    id: "conditional_offer",
+    label: "Conditional Admission",
+    tone: "green",
+    helper: "Decision with conditions",
+  },
+  {
+    id: "offer_received",
+    label: "Offer Received",
+    tone: "green",
+    helper: "Admission letter received",
+  },
+  {
+    id: "admitted",
+    label: "Admitted",
+    tone: "green",
+    helper: "Admission confirmed",
+  },
+  {
+    id: "offer_accepted",
+    label: "Accept Admission",
+    tone: "orange",
+    helper: "Student accepted the place",
+  },
+  {
+    id: "pre_enrollment_started",
+    label: "Start Pre-enrolment",
+    tone: "violet",
+    helper: "Universitaly preparation started",
+  },
+  {
+    id: "pre_enrollment_submitted",
+    label: "Universitaly Submitted",
+    tone: "violet",
+    helper: "Pre-enrolment sent",
+  },
+  {
+    id: "pre_enrollment_validated",
+    label: "Pre-enrolment Validated",
+    tone: "violet",
+    helper: "University validation received",
+  },
+  {
+    id: "enrolled",
+    label: "Mark Enrolled",
+    tone: "green",
+    helper: "Final enrollment complete",
+  },
+  {
+    id: "waitlisted",
+    label: "Waitlisted",
+    tone: "slate",
+    helper: "Decision pending a place",
+  },
+  {
+    id: "rejected",
+    label: "Rejected",
+    tone: "red",
+    helper: "University declined",
+  },
+  {
+    id: "withdrawn",
+    label: "Withdrawn",
+    tone: "red",
+    helper: "Application closed by choice",
+  },
+];
+
+const workflowPatchForAction = (action, nowIso = new Date().toISOString()) => {
+  switch (action) {
+    case "ready_to_submit":
+      return {
+        application_stage: "preparation",
+        application_status: "ready_to_submit",
+      };
+    case "submitted":
+      return {
+        application_stage: "submitted",
+        application_status: "submitted",
+        submitted_at: nowIso,
+      };
+    case "under_review":
+      return {
+        application_stage: "university_review",
+        application_status: "under_review",
+      };
+    case "conditional_offer":
+      return {
+        application_stage: "decision",
+        application_status: "conditional_admission",
+        offer_status: "conditional_offer",
+        conditional_offer: true,
+        offer_received_at: nowIso,
+        decision_at: nowIso,
+      };
+    case "offer_received":
+      return {
+        application_stage: "decision",
+        application_status: "offer_received",
+        offer_status: "offer_received",
+        offer_received_at: nowIso,
+        decision_at: nowIso,
+      };
+    case "admitted":
+      return {
+        application_stage: "decision",
+        application_status: "admitted",
+        offer_status: "admitted",
+        offer_received_at: nowIso,
+        decision_at: nowIso,
+      };
+    case "offer_accepted":
+      return {
+        application_stage: "pre_enrollment",
+        application_status: "offer_accepted",
+        offer_status: "offer_accepted",
+        offer_accepted_at: nowIso,
+      };
+    case "pre_enrollment_started":
+      return {
+        application_stage: "pre_enrollment",
+        application_status: "pre_enrollment_started",
+      };
+    case "pre_enrollment_submitted":
+      return {
+        application_stage: "pre_enrollment",
+        application_status: "pre_enrollment_submitted",
+      };
+    case "pre_enrollment_validated":
+      return {
+        application_stage: "pre_enrollment",
+        application_status: "pre_enrollment_validated",
+      };
+    case "enrolled":
+      return {
+        application_stage: "enrollment",
+        application_status: "enrolled",
+      };
+    case "waitlisted":
+      return {
+        application_stage: "decision",
+        application_status: "waitlisted",
+        offer_status: "waitlisted",
+        decision_at: nowIso,
+      };
+    case "rejected":
+      return {
+        application_stage: "closed",
+        application_status: "rejected",
+        offer_status: "rejected",
+        decision_at: nowIso,
+      };
+    case "withdrawn":
+      return {
+        application_stage: "closed",
+        application_status: "withdrawn",
+        offer_status: "declined",
+        decision_at: nowIso,
+      };
+    default:
+      return null;
+  }
+};
+
+const APPLICATION_WORKFLOW_NOTIFICATION_COPY = {
+  ready_to_submit: {
+    eventType: "application_ready_to_submit",
+    eventLabel: "Application ready to submit",
+    subject: "Your university application is ready for final submission",
+    message: ({ university, program }) =>
+      `Your ${program} application at ${university} is marked ready to submit. Please check your Student Portal and respond quickly if Zaifan requests a final confirmation.`,
+    trigger: "Application moved to Ready to Submit",
+  },
+  submitted: {
+    eventType: "application_submitted",
+    eventLabel: "Application submitted",
+    subject: "Your university application has been submitted",
+    message: ({ university, program }) =>
+      `Your ${program} application at ${university} has been marked as submitted. You can follow the next milestone from your Student Portal.`,
+    trigger: "Application moved to Submitted",
+  },
+  under_review: {
+    eventType: "application_under_review",
+    eventLabel: "Application under review",
+    subject: "Your application is under university review",
+    message: ({ university, program }) =>
+      `Your ${program} application at ${university} is now under review. No action is required unless Zaifan publishes a new requirement or contacts you.`,
+    trigger: "Application moved to Under Review",
+  },
+  conditional_offer: {
+    eventType: "conditional_admission",
+    eventLabel: "Conditional admission recorded",
+    subject: "Conditional admission update",
+    message: ({ university, program }) =>
+      `A conditional admission has been recorded for your ${program} application at ${university}. Please open your Student Portal and complete every published condition before the deadline.`,
+    trigger: "Application moved to Conditional Admission",
+  },
+  offer_received: {
+    eventType: "offer_received",
+    eventLabel: "Offer received",
+    subject: "A university offer has been received",
+    message: ({ university, program }) =>
+      `Good news — an offer has been recorded for your ${program} application at ${university}. Please review the Student Portal for the offer details and next action.`,
+    trigger: "Application moved to Offer Received",
+  },
+  admitted: {
+    eventType: "application_admitted",
+    eventLabel: "Admission confirmed",
+    subject: "Your university admission is confirmed",
+    message: ({ university, program }) =>
+      `Admission has been confirmed for your ${program} application at ${university}. Please review the admission letter, acceptance deadline and any required payment in your Student Portal.`,
+    trigger: "Application moved to Admitted",
+  },
+  offer_accepted: {
+    eventType: "offer_accepted",
+    eventLabel: "Admission accepted",
+    subject: "Your university place has been accepted",
+    message: ({ university, program }) =>
+      `Your place for ${program} at ${university} has been marked as accepted. The next major step is Universitaly pre-enrolment.`,
+    trigger: "Application moved to Offer Accepted",
+  },
+  pre_enrollment_started: {
+    eventType: "pre_enrollment_started",
+    eventLabel: "Pre-enrolment started",
+    subject: "Universitaly pre-enrolment has started",
+    message: ({ university, program }) =>
+      `Universitaly pre-enrolment preparation has started for your ${program} application at ${university}. Please check your Student Portal for any document or confirmation required from you.`,
+    trigger: "Application moved to Pre-enrolment Started",
+  },
+  pre_enrollment_submitted: {
+    eventType: "pre_enrollment_submitted",
+    eventLabel: "Universitaly submitted",
+    subject: "Universitaly pre-enrolment has been submitted",
+    message: ({ university, program }) =>
+      `Universitaly pre-enrolment has been submitted for your ${program} application at ${university}. The case is now waiting for university validation.`,
+    trigger: "Application moved to Universitaly Submitted",
+  },
+  pre_enrollment_validated: {
+    eventType: "pre_enrollment_validated",
+    eventLabel: "Pre-enrolment validated",
+    subject: "Universitaly pre-enrolment is validated",
+    message: ({ university, program }) =>
+      `The university has validated Universitaly pre-enrolment for your ${program} application at ${university}. Please continue with the visa preparation shown in your Student Portal.`,
+    trigger: "Application moved to Pre-enrolment Validated",
+  },
+  enrolled: {
+    eventType: "application_enrolled",
+    eventLabel: "Enrollment complete",
+    subject: "Your university enrollment milestone is complete",
+    message: ({ university, program }) =>
+      `Your ${program} application at ${university} has reached the enrolled milestone in Zaifan OS. Please review the remaining arrival, fee, housing and student-registration steps in your Student Portal.`,
+    trigger: "Application moved to Enrolled",
+  },
+  waitlisted: {
+    eventType: "application_waitlisted",
+    eventLabel: "Application waitlisted",
+    subject: "Your university application is waitlisted",
+    message: ({ university, program }) =>
+      `Your ${program} application at ${university} has been marked as waitlisted. Please review your Student Portal and keep your alternative options active.`,
+    trigger: "Application moved to Waitlisted",
+  },
+  rejected: {
+    eventType: "application_rejected",
+    eventLabel: "Application rejected",
+    risk: "high",
+    subject: "Important university application update",
+    message: ({ university, program }) =>
+      `Your ${program} application at ${university} has been marked as rejected. Please review your Student Portal and contact your Zaifan counselor before choosing the next step.`,
+    trigger: "Application moved to Rejected",
+    confirmationPhrase: "SEND REJECTION",
+  },
+  withdrawn: {
+    eventType: "application_withdrawn",
+    eventLabel: "Application withdrawn",
+    risk: "high",
+    subject: "Your university application has been withdrawn",
+    message: ({ university, program }) =>
+      `Your ${program} application at ${university} has been marked as withdrawn in Zaifan OS. Please contact your counselor if this was unexpected.`,
+    trigger: "Application moved to Withdrawn",
+    confirmationPhrase: "SEND WITHDRAWAL",
+  },
+};
+
+const buildExactApplicationWorkflowNotification = ({
+  action,
+  student,
+  previous,
+  next,
+}) => {
+  const copy = APPLICATION_WORKFLOW_NOTIFICATION_COPY[action];
+
+  const fallback = buildStudentNotification({
+    domain: "application",
+    action,
+    student,
+    entity: previous,
+    previous,
+    next,
+    relatedType: "application",
+    relatedId: previous?.id || next?.id || null,
+  });
+
+  if (!copy) return fallback;
+
+  const recipientName =
+    fallback?.recipientName ||
+    student?.full_name ||
+    student?.student_name ||
+    student?.name ||
+    "Student";
+  const recipientEmail = String(
+    fallback?.recipientEmail || student?.email || student?.student_email || ""
+  )
+    .trim()
+    .toLowerCase();
+  const university = next?.university || "your university";
+  const program = next?.program || "your selected programme";
+  const message = copy.message({ university, program });
+
+  return {
+    ...(fallback || {}),
+    eventType: copy.eventType,
+    eventLabel: copy.eventLabel,
+    risk: copy.risk || "normal",
+    subject: copy.subject,
+    message,
+    trigger: copy.trigger,
+    confirmationPhrase: copy.confirmationPhrase,
+    domain: "application",
+    recipientName,
+    recipientEmail,
+    studentId: student?.id ?? student?.student_id ?? null,
+    studentType:
+      student?.student_type || student?.__leadType || student?.type || "inquiry",
+    relatedType: "application",
+    relatedId: previous?.id || next?.id || null,
+    sendable: Boolean(recipientEmail && copy.subject && message),
+  };
+};
+
+const getApplicationJourneyIndex = (record = {}) => {
+  const status = String(record.application_status || "")
+    .trim()
+    .toLowerCase();
+  const stage = String(record.application_stage || "")
+    .trim()
+    .toLowerCase();
+
+  if (["rejected", "withdrawn", "deferred"].includes(status)) {
+    return Math.max(
+      0,
+      ITALY_APPLICATION_JOURNEY.findIndex((item) => item.id === "decision")
+    );
+  }
+
+  const index = ITALY_APPLICATION_JOURNEY.findIndex(
+    (item) => item.statuses.includes(status) || item.stages.includes(stage)
+  );
+
+  return index >= 0 ? index : 0;
+};
+
+const getApplicationJourneyProgress = (record = {}) => {
+  const index = getApplicationJourneyIndex(record);
+  const denominator = Math.max(1, ITALY_APPLICATION_JOURNEY.length - 1);
+  return Math.round((index / denominator) * 100);
+};
+
 const normalize = (value) =>
   String(value || "")
     .trim()
     .toLowerCase()
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ");
+
+const DOCUMENT_REQUIREMENT_META_PREFIX = "ZAIFAN_REQUEST_META::";
+
+const isApplicationDocumentRequirement = (requirement = {}) =>
+  normalize(requirement?.requirement_type) === "document";
+
+const isRequirementSchemaMismatch = (error) => {
+  const message = String(error?.message || error || "").toLowerCase();
+
+  return (
+    message.includes("column") ||
+    message.includes("schema cache") ||
+    message.includes("does not exist") ||
+    message.includes("could not find")
+  );
+};
+
+const buildApplicationDocumentRequestNotes = ({
+  instructions = "",
+  dueDate = "",
+  requestedAt = "",
+  requestCount = 1,
+}) =>
+  `${DOCUMENT_REQUIREMENT_META_PREFIX}${JSON.stringify({
+    instructions,
+    priority: "normal",
+    dueDate,
+    requestedAt,
+    requestedBy: null,
+    requestCount: Math.max(1, Number(requestCount || 1)),
+    notifyStudent: false,
+    source: "application_requirement",
+  })}`;
 
 const pretty = (value) =>
   String(value || "")
@@ -456,6 +977,216 @@ function StudentApplicationPanel({
     }
   };
 
+  const syncDocumentRequestForApplicationRequirement = async (
+    requirement,
+    { forceStatus = null, silent = true } = {}
+  ) => {
+    if (
+      !requirement?.id ||
+      !isApplicationDocumentRequirement(requirement) ||
+      !hasStudentId
+    ) {
+      return { ok: true, skipped: true, requirement: null };
+    }
+
+    const documentName = String(requirement.title || "").trim();
+    if (!documentName) {
+      return { ok: false, skipped: true, requirement: null };
+    }
+
+    const desiredStatus =
+      forceStatus ||
+      (normalize(requirement.status) === "completed" ? "inactive" : "active");
+
+    try {
+      const strictLookup = await supabase
+        .from("student_document_requirements")
+        .select("*")
+        .eq("student_id", dbStudentId)
+        .eq("student_type", studentType)
+        .eq("document_name", documentName)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      let existingRequirement =
+        !strictLookup.error && strictLookup.data?.[0]
+          ? strictLookup.data[0]
+          : null;
+
+      if (!existingRequirement) {
+        const fallbackLookup = await supabase
+          .from("student_document_requirements")
+          .select("*")
+          .eq("student_id", dbStudentId)
+          .eq("document_name", documentName)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (!fallbackLookup.error && fallbackLookup.data?.[0]) {
+          existingRequirement = fallbackLookup.data[0];
+        }
+      }
+
+      if (!existingRequirement && desiredStatus === "inactive") {
+        return { ok: true, skipped: true, requirement: null };
+      }
+
+      const nowIso = new Date().toISOString();
+      const instructions =
+        String(requirement.description || "").trim() ||
+        `Upload a clear, complete and readable copy of ${documentName}.`;
+      const previousRequestCount = Math.max(
+        1,
+        Number(existingRequirement?.request_count || 1)
+      );
+      const notes = buildApplicationDocumentRequestNotes({
+        instructions,
+        dueDate: requirement.due_date || "",
+        requestedAt: existingRequirement?.requested_at || nowIso,
+        requestCount: previousRequestCount,
+      });
+
+      const corePayload = {
+        student_id: dbStudentId,
+        student_type: studentType,
+        document_name: documentName,
+        group_name: "Application Requirements",
+        required: true,
+        verification_required: true,
+        expiry_tracking: false,
+        student_can_upload: true,
+        counselor_can_upload: true,
+        admin_only: false,
+        status: desiredStatus,
+      };
+
+      const safePayload = {
+        ...corePayload,
+        notes,
+      };
+
+      const richPayload = {
+        ...safePayload,
+        stage_name: "Application",
+        instructions,
+        priority: "normal",
+        due_date: requirement.due_date || null,
+        requested_at: existingRequirement?.requested_at || nowIso,
+        request_count: previousRequestCount,
+        updated_at: nowIso,
+      };
+
+      const runMutation = async (payload) => {
+        if (existingRequirement?.id) {
+          return supabase
+            .from("student_document_requirements")
+            .update(payload)
+            .eq("id", existingRequirement.id)
+            .select("*")
+            .single();
+        }
+
+        return supabase
+          .from("student_document_requirements")
+          .insert(payload)
+          .select("*")
+          .single();
+      };
+
+      let result = await withTimeout(
+        runMutation(richPayload),
+        "Application document request sync timed out."
+      );
+
+      if (result.error && isRequirementSchemaMismatch(result.error)) {
+        result = await withTimeout(
+          runMutation(safePayload),
+          "Application document request fallback timed out."
+        );
+      }
+
+      if (result.error && isRequirementSchemaMismatch(result.error)) {
+        result = await withTimeout(
+          runMutation(corePayload),
+          "Application document request compatibility save timed out."
+        );
+      }
+
+      if (result.error) throw result.error;
+
+      if (!silent) {
+        safeSet(() => {
+          setSuccessMessage(
+            desiredStatus === "active"
+              ? `${documentName} is now available in Student Portal Documents.`
+              : `${documentName} was removed from the active student document requests.`
+          );
+        });
+      }
+
+      return {
+        ok: true,
+        skipped: false,
+        requirement: result.data || existingRequirement || null,
+      };
+    } catch (bridgeError) {
+      console.warn(
+        "Application requirement → Documents bridge failed:",
+        bridgeError
+      );
+
+      if (!silent) {
+        safeSet(() => {
+          setAuditWarning(
+            `The application requirement was saved, but "${documentName}" could not be synchronized to Student Portal Documents. Reopen this application and retry.`
+          );
+        });
+      }
+
+      return {
+        ok: false,
+        skipped: false,
+        requirement: null,
+        error: bridgeError,
+      };
+    }
+  };
+
+  const syncLoadedDocumentRequirements = async (loadedRequirements = []) => {
+    const documentRequirements = loadedRequirements.filter(
+      (requirement) =>
+        isApplicationDocumentRequirement(requirement) &&
+        normalize(requirement.status || "pending") !== "completed"
+    );
+
+    if (!documentRequirements.length) return;
+
+    const results = await Promise.allSettled(
+      documentRequirements.map((requirement) =>
+        syncDocumentRequestForApplicationRequirement(requirement, {
+          forceStatus: "active",
+          silent: true,
+        })
+      )
+    );
+
+    const failures = results.filter(
+      (result) =>
+        result.status === "rejected" ||
+        (result.status === "fulfilled" && result.value?.ok === false)
+    ).length;
+
+    if (failures > 0) {
+      safeSet(() => {
+        setAuditWarning(
+          `${failures} document-type application requirement${
+            failures === 1 ? "" : "s"
+          } could not be mirrored into Student Portal Documents. Core application data is unchanged.`
+        );
+      });
+    }
+  };
+
   const notifyParent = async (savedApplication = null) => {
     if (typeof onSharedDataChange !== "function") return;
 
@@ -608,10 +1339,14 @@ function StudentApplicationPanel({
       if (requirementsResult.error) throw requirementsResult.error;
       if (eventsResult.error) throw eventsResult.error;
 
+      const loadedRequirements = requirementsResult.data || [];
+
       safeSet(() => {
-        setRequirements(requirementsResult.data || []);
+        setRequirements(loadedRequirements);
         setEvents(eventsResult.data || []);
       });
+
+      void syncLoadedDocumentRequirements(loadedRequirements);
     } catch (supportError) {
       if (supportRequestRef.current !== requestId) return;
 
@@ -1135,35 +1870,7 @@ function StudentApplicationPanel({
     if (!activeApplication?.id || savingKeys.size > 0) return;
 
     const nowIso = new Date().toISOString();
-    const patch =
-      action === "submitted"
-        ? {
-            application_stage: "submitted",
-            application_status: "applied",
-            submitted_at: nowIso,
-          }
-        : action === "offer_received"
-        ? {
-            application_stage: "offer",
-            application_status: "offer_received",
-            offer_status: "offer_received",
-            offer_received_at: nowIso,
-          }
-        : action === "offer_accepted"
-        ? {
-            application_stage: "accepted",
-            application_status: "offer_accepted",
-            offer_status: "offer_accepted",
-            offer_accepted_at: nowIso,
-          }
-        : action === "rejected"
-        ? {
-            application_stage: "closed",
-            application_status: "rejected",
-            offer_status: "rejected",
-            decision_at: nowIso,
-          }
-        : null;
+    const patch = workflowPatchForAction(action, nowIso);
 
     if (!patch) return;
 
@@ -1195,13 +1902,7 @@ function StudentApplicationPanel({
         setForm(nextForm);
         setSavedSnapshot(nextForm);
         setSuccessMessage(
-          action === "submitted"
-            ? "Application marked submitted."
-            : action === "offer_received"
-            ? "Offer marked received."
-            : action === "offer_accepted"
-            ? "Offer marked accepted."
-            : "Application marked rejected."
+          `Application moved to ${pretty(action)}.`
         );
       });
 
@@ -1240,29 +1941,16 @@ function StudentApplicationPanel({
     if (!activeApplication?.id || savingKeys.size > 0) return;
 
     const nowIso = new Date().toISOString();
-    const patch =
-      action === "submitted"
-        ? { application_stage: "submitted", application_status: "applied", submitted_at: nowIso }
-        : action === "offer_received"
-        ? { application_stage: "offer", application_status: "offer_received", offer_status: "offer_received", offer_received_at: nowIso }
-        : action === "offer_accepted"
-        ? { application_stage: "accepted", application_status: "offer_accepted", offer_status: "offer_accepted", offer_accepted_at: nowIso }
-        : action === "rejected"
-        ? { application_stage: "closed", application_status: "rejected", offer_status: "rejected", decision_at: nowIso }
-        : null;
+    const patch = workflowPatchForAction(action, nowIso);
 
     if (!patch) return;
 
     const next = { ...activeApplication, ...patch };
-    const preview = buildStudentNotification({
-      domain: "application",
+    const preview = buildExactApplicationWorkflowNotification({
       action,
       student,
-      entity: activeApplication,
       previous: activeApplication,
       next,
-      relatedType: "application",
-      relatedId: activeApplication.id,
     });
 
     if (!preview) return performQuickWorkflow(action);
@@ -1574,6 +2262,13 @@ function StudentApplicationPanel({
 
       if (requirementError) throw requirementError;
 
+      const bridgeResult = isApplicationDocumentRequirement(data)
+        ? await syncDocumentRequestForApplicationRequirement(data, {
+            forceStatus: "active",
+            silent: true,
+          })
+        : { ok: true, skipped: true };
+
       safeSet(() => {
         setRequirements((previous) => [...previous, data]);
         setRequirementDraft({
@@ -1584,8 +2279,22 @@ function StudentApplicationPanel({
           notes: "",
         });
         setShowAddRequirement(false);
-        setSuccessMessage("Application requirement added.");
+        setSuccessMessage(
+          isApplicationDocumentRequirement(data)
+            ? bridgeResult.ok
+              ? "Application requirement added and sent to Student Portal Documents."
+              : "Application requirement added. Documents sync needs attention."
+            : "Application requirement added."
+        );
       });
+
+      if (isApplicationDocumentRequirement(data) && !bridgeResult.ok) {
+        safeSet(() => {
+          setAuditWarning(
+            `"${data.title}" was saved as an application requirement, but its Student Portal document request could not be confirmed.`
+          );
+        });
+      }
 
       void createApplicationEvent({
         applicationId: activeApplication.id,
@@ -1636,7 +2345,19 @@ function StudentApplicationPanel({
         setRequirements((previous) =>
           previous.map((item) => (item.id === requirement.id ? data : item))
         );
+        setSuccessMessage(
+          completed
+            ? "Requirement completed."
+            : "Requirement reopened."
+        );
       });
+
+      if (isApplicationDocumentRequirement(data)) {
+        void syncDocumentRequestForApplicationRequirement(data, {
+          forceStatus: completed ? "inactive" : "active",
+          silent: true,
+        });
+      }
 
       void createApplicationEvent({
         applicationId: activeApplication?.id,
@@ -1675,10 +2396,18 @@ function StudentApplicationPanel({
 
       if (deleteError) throw deleteError;
 
+      if (isApplicationDocumentRequirement(requirement)) {
+        void syncDocumentRequestForApplicationRequirement(requirement, {
+          forceStatus: "inactive",
+          silent: true,
+        });
+      }
+
       safeSet(() => {
         setRequirements((previous) =>
           previous.filter((item) => item.id !== requirement.id)
         );
+        setSuccessMessage("Application requirement deleted.");
       });
 
       void createApplicationEvent({
@@ -1724,13 +2453,32 @@ function StudentApplicationPanel({
     const archived = applications.length - active.length;
 
     const submitted = active.filter((item) =>
-      ["applied", "under_review", "offer_received", "offer_accepted", "enrolled"].includes(
-        item.application_status
-      )
+      [
+        "submitted",
+        "applied",
+        "under_review",
+        "interview_scheduled",
+        "admission_test",
+        "waitlisted",
+        "conditional_admission",
+        "offer_received",
+        "admitted",
+        "offer_accepted",
+        "pre_enrollment_started",
+        "pre_enrollment_submitted",
+        "pre_enrollment_validated",
+        "enrollment_pending",
+        "enrolled",
+      ].includes(item.application_status)
     ).length;
 
     const offers = active.filter((item) =>
-      ["offer_received", "offer_accepted"].includes(item.offer_status)
+      [
+        "conditional_offer",
+        "offer_received",
+        "admitted",
+        "offer_accepted",
+      ].includes(item.offer_status)
     ).length;
 
     const critical = active.filter((item) =>
@@ -1829,7 +2577,7 @@ function StudentApplicationPanel({
     const missingNextAction = active.filter(
       (item) =>
         !String(item.next_action || "").trim() &&
-        !["rejected", "enrolled"].includes(item.application_status)
+        !["rejected", "withdrawn", "enrolled"].includes(item.application_status)
     );
 
     const moneyPressure = active.filter(
@@ -1845,15 +2593,18 @@ function StudentApplicationPanel({
     });
 
     const contradictions = active.filter((item) => {
-      const status = item.application_status;
-      const stage = item.application_stage;
-      const offer = item.offer_status;
+      const status = String(item.application_status || "").toLowerCase();
+      const stage = String(item.application_stage || "").toLowerCase();
+      const offer = String(item.offer_status || "").toLowerCase();
 
       return (
-        (["offer_received", "offer_accepted"].includes(status) &&
-          ["planning", "preparation"].includes(stage)) ||
-        (offer === "offer_accepted" && stage !== "accepted") ||
-        (status === "rejected" && stage !== "closed")
+        (["conditional_admission", "offer_received", "admitted", "offer_accepted"].includes(status) &&
+          ["planning", "preparation", "submission", "submitted"].includes(stage)) ||
+        (offer === "offer_accepted" && !["pre_enrollment", "enrollment"].includes(stage)) ||
+        (["pre_enrollment_submitted", "pre_enrollment_validated"].includes(status) &&
+          stage !== "pre_enrollment") ||
+        (status === "enrolled" && stage !== "enrollment") ||
+        (["rejected", "withdrawn"].includes(status) && stage !== "closed")
       );
     });
 
@@ -1868,6 +2619,10 @@ function StudentApplicationPanel({
 
   const deadline = deadlineMeta(form.submission_deadline);
   const nextActionDeadline = deadlineMeta(form.next_action_due);
+  const journeyIndex = getApplicationJourneyIndex(form);
+  const journeyProgress = getApplicationJourneyProgress(form);
+  const activeJourneyStep =
+    ITALY_APPLICATION_JOURNEY[journeyIndex] || ITALY_APPLICATION_JOURNEY[0];
 
   return (
     <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
@@ -1933,7 +2688,7 @@ function StudentApplicationPanel({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 sm:p-5">
+        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-5">
           <Metric label="Active" value={portfolioStats.total} icon={University} />
           <Metric
             label="Submitted"
@@ -2224,6 +2979,93 @@ function StudentApplicationPanel({
                 </div>
               </section>
 
+              <ApplicationJourneyRail
+                record={form}
+                activeIndex={journeyIndex}
+                progress={journeyProgress}
+                activeStep={activeJourneyStep}
+              />
+
+              <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]">
+                <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
+                    Student-Safe Application Summary
+                  </p>
+                  <h3 className="mt-1 text-lg font-black text-[#10233F]">
+                    What the student should understand right now
+                  </h3>
+                  <p className="mt-1 text-sm font-medium leading-6 text-slate-600">
+                    This preview intentionally excludes internal notes, risk reasons, portal credentials and staff-only context.
+                  </p>
+
+                  <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <OperationalTile
+                      label="Application"
+                      value={pretty(form.application_status || "not_started")}
+                      tone="blue"
+                    />
+                    <OperationalTile
+                      label="Admission"
+                      value={pretty(form.offer_status || "pending")}
+                      tone="green"
+                    />
+                    <OperationalTile
+                      label="Current Stage"
+                      value={activeJourneyStep?.label || "Plan"}
+                      tone="orange"
+                    />
+                    <OperationalTile
+                      label="Next Deadline"
+                      value={
+                        nextActionDeadline?.label ||
+                        deadline?.label ||
+                        "No student deadline"
+                      }
+                      tone={nextActionDeadline?.tone || deadline?.tone || "slate"}
+                    />
+                  </div>
+
+                  <div className="mt-4 rounded-[1.25rem] border-2 border-[#FF5A0A] bg-[#FFF8EF] p-4">
+                    <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
+                      Next student-facing move
+                    </p>
+                    <p className="mt-2 text-sm font-black leading-6 text-[#10233F]">
+                      {form.next_action ||
+                        "No next action is published yet. Add a clear next action before saving."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
+                    Visibility Guard
+                  </p>
+                  <h3 className="mt-1 text-lg font-black text-[#10233F]">
+                    Private fields stay in Admin OS
+                  </h3>
+
+                  <div className="mt-4 space-y-2">
+                    {[
+                      ["Student can see", "University, programme, intake, statuses, deadlines, next action, conditions and requirements."],
+                      ["Admin only", "Internal notes, counselor notes, risk reason, portal username and operational credentials."],
+                      ["Safe notification", "Important saved changes still pass through the existing student notification preview."],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="rounded-xl border-2 border-orange-200 bg-white p-3"
+                      >
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                          {label}
+                        </p>
+                        <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
               <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -2244,7 +3086,7 @@ function StudentApplicationPanel({
                   </span>
                 </div>
 
-                <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   <OperationalTile
                     label="Nearest Deadline"
                     value={
@@ -2296,60 +3138,63 @@ function StudentApplicationPanel({
               </section>
 
               {activeApplication?.id && !activeApplication.is_archived ? (
-                <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]">
-                  <div className="flex min-w-0 flex-col gap-3">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-700">
-                        Quick Workflow
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        One-click actions update status, stage and milestone dates together.
-                      </p>
+                <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] sm:p-5">
+                  <div className="flex min-w-0 flex-col gap-4">
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-700">
+                          Italy Application Workflow
+                        </p>
+                        <h3 className="mt-1 text-lg font-black text-[#10233F]">
+                          Move the application without mismatched stages
+                        </h3>
+                        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                          Each action updates the application status, workflow stage and the relevant milestone date together.
+                        </p>
+                      </div>
+
+                      <span className="w-fit rounded-full border-2 border-[#123865] bg-[#123865] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.09em] text-white">
+                        {journeyProgress}% journey progress
+                      </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => applyQuickWorkflow("submitted")}
-                        className="rounded-xl border-2 border-blue-400 bg-blue-50 px-3 py-2 text-xs font-black text-blue-800"
-                      >
-                        Mark Submitted
-                      </button>
+                    <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {APPLICATION_QUICK_ACTIONS.map((item) => (
+                        <ApplicationWorkflowAction
+                          key={item.id}
+                          item={item}
+                          active={
+                            normalize(form.application_status) ===
+                            normalize(
+                              workflowPatchForAction(item.id)?.application_status
+                            )
+                          }
+                          disabled={savingKeys.size > 0}
+                          onClick={() => applyQuickWorkflow(item.id)}
+                        />
+                      ))}
+                    </div>
 
-                      <button
-                        type="button"
-                        onClick={() => applyQuickWorkflow("offer_received")}
-                        className="rounded-xl border-2 border-emerald-400 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-800"
-                      >
-                        Offer Received
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => applyQuickWorkflow("offer_accepted")}
-                        className="rounded-xl border-2 border-[#FF5A0A] bg-[#FFF4E8] px-3 py-2 text-xs font-black text-orange-800"
-                      >
-                        Accept Offer
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => applyQuickWorkflow("rejected")}
-                        className="rounded-xl border-2 border-red-400 bg-red-50 px-3 py-2 text-xs font-black text-red-800"
-                      >
-                        Mark Rejected
-                      </button>
+                    <div className="rounded-xl border-2 border-orange-200 bg-white p-3">
+                      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                        Current operational meaning
+                      </p>
+                      <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                        {activeJourneyStep?.description ||
+                          "Select a workflow action or update the detailed fields below."}
+                      </p>
                     </div>
                   </div>
                 </section>
               ) : null}
 
               {/* TABS */}
-              <div className="grid min-w-0 grid-cols-2 gap-2 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-2 shadow-[0_8px_22px_rgba(18,56,101,0.04)] sm:grid-cols-4">
+              <div className="grid min-w-0 grid-cols-2 gap-2 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-2 shadow-[0_8px_22px_rgba(18,56,101,0.04)] sm:grid-cols-3 lg:grid-cols-5">
                 {[
                   ["overview", "Overview"],
                   ["requirements", `Requirements (${requirementStats.pending})`],
-                  ["notes", "Notes"],
+                  ["student_view", "Student View"],
+                  ["notes", "Admin Notes"],
                   ["history", `History (${events.length})`],
                 ].map(([value, label]) => (
                   <button
@@ -2388,6 +3233,18 @@ function StudentApplicationPanel({
                   onAdd={() => setShowAddRequirement(true)}
                   onStatusChange={updateRequirementStatus}
                   onDelete={deleteRequirement}
+                />
+              ) : null}
+
+              {activeTab === "student_view" ? (
+                <StudentApplicationPreview
+                  form={form}
+                  requirements={requirements}
+                  events={events}
+                  deadline={deadline}
+                  nextActionDeadline={nextActionDeadline}
+                  journeyIndex={journeyIndex}
+                  journeyProgress={journeyProgress}
                 />
               ) : null}
 
@@ -2440,6 +3297,10 @@ function StudentApplicationPanel({
               </button>
             </div>
 
+            <div className="mt-4 rounded-xl border-2 border-emerald-300 bg-emerald-50 p-3 text-xs font-semibold leading-5 text-emerald-800">
+              This requirement is student-visible. When Type is Document, the same title is automatically created as an upload request in Student Portal → Documents. Use the exact document name you want the student to see. Private staff notes belong in Admin Notes, not here.
+            </div>
+
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Field label="Title" className="sm:col-span-2">
                 <input
@@ -2473,6 +3334,15 @@ function StudentApplicationPanel({
                   <option value="university">University</option>
                 </select>
               </Field>
+
+              {requirementDraft.requirement_type === "document" ? (
+                <div className="sm:col-span-2 rounded-xl border-2 border-blue-300 bg-blue-50 p-3 text-xs font-semibold leading-5 text-blue-800">
+                  <span className="font-black">Documents bridge active:</span>{" "}
+                  adding this requirement will immediately create the same
+                  student upload request. When Admin verifies the matching file,
+                  this application requirement will complete automatically.
+                </div>
+              ) : null}
 
               <Field label="Due date">
                 <input
@@ -2547,6 +3417,430 @@ const inputClass =
 
 const textareaClass =
   "w-full resize-y rounded-xl border-2 border-slate-300 bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 disabled:opacity-60";
+
+
+function ApplicationJourneyRail({
+  record,
+  activeIndex = 0,
+  progress = 0,
+  activeStep = null,
+}) {
+  const terminalStatus = normalize(record?.application_status);
+  const isClosed = ["rejected", "withdrawn", "deferred"].includes(
+    terminalStatus
+  );
+
+  return (
+    <section className="min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#123865] bg-white shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+      <div className="flex flex-col gap-3 border-b-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-700">
+            Italy Application Journey
+          </p>
+          <h3 className="mt-1 text-lg font-black text-[#10233F]">
+            {isClosed
+              ? `Application ${pretty(terminalStatus)}`
+              : `${activeStep?.label || "Plan"} is the current stage`}
+          </h3>
+          <p className="mt-1 text-sm font-medium leading-6 text-slate-600">
+            {activeStep?.description ||
+              "Follow the application from planning to final enrollment."}
+          </p>
+        </div>
+
+        <div className="min-w-[170px] rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
+              Journey progress
+            </span>
+            <span className="text-sm font-black text-[#123865]">
+              {progress}%
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+            <div
+              className={`h-full rounded-full ${
+                isClosed ? "bg-red-500" : "bg-[#FF5A0A]"
+              }`}
+              style={{ width: `${Math.max(4, progress)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid min-w-0 gap-2 p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 sm:p-5">
+        {ITALY_APPLICATION_JOURNEY.map((step, index) => {
+          const complete = !isClosed && index < activeIndex;
+          const current = index === activeIndex;
+          const blocked = isClosed && index > activeIndex;
+
+          return (
+            <div
+              key={step.id}
+              className={`min-w-0 rounded-xl border-2 p-3 ${
+                current
+                  ? isClosed
+                    ? "border-red-400 bg-red-50"
+                    : "border-[#FF5A0A] bg-[#FFF4E8]"
+                  : complete
+                  ? "border-emerald-300 bg-emerald-50"
+                  : "border-[#C9D7E6] bg-white"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-black ${
+                    current
+                      ? isClosed
+                        ? "bg-red-500 text-white"
+                        : "bg-[#FF5A0A] text-white"
+                      : complete
+                      ? "bg-emerald-600 text-white"
+                      : "bg-[#123865] text-white"
+                  }`}
+                >
+                  {complete ? <Check size={14} /> : index + 1}
+                </span>
+                {current ? (
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[8px] font-black uppercase ${
+                      isClosed
+                        ? "border-red-300 bg-white text-red-700"
+                        : "border-orange-300 bg-white text-orange-700"
+                    }`}
+                  >
+                    Current
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-3 break-words text-xs font-black text-[#10233F]">
+                {step.label}
+              </p>
+              <p className="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+                {blocked ? "Not reached" : step.description}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ApplicationWorkflowAction({
+  item,
+  active = false,
+  disabled = false,
+  onClick,
+}) {
+  const tones = {
+    blue: active
+      ? "border-blue-700 bg-blue-700 text-white"
+      : "border-blue-400 bg-blue-50 text-blue-800 hover:bg-blue-100",
+    green: active
+      ? "border-emerald-700 bg-emerald-700 text-white"
+      : "border-emerald-400 bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
+    orange: active
+      ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
+      : "border-[#FF5A0A] bg-white text-orange-800 hover:bg-orange-50",
+    violet: active
+      ? "border-violet-700 bg-violet-700 text-white"
+      : "border-violet-400 bg-violet-50 text-violet-800 hover:bg-violet-100",
+    red: active
+      ? "border-red-700 bg-red-700 text-white"
+      : "border-red-400 bg-red-50 text-red-800 hover:bg-red-100",
+    slate: active
+      ? "border-slate-700 bg-slate-700 text-white"
+      : "border-slate-400 bg-slate-50 text-slate-700 hover:bg-slate-100",
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`min-w-0 rounded-xl border-2 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-45 ${
+        tones[item.tone] || tones.slate
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-black">{item.label}</span>
+        {active ? <CheckCircle2 size={15} className="shrink-0" /> : null}
+      </div>
+      <p className={`mt-1 text-[9px] font-bold leading-4 ${active ? "text-white/80" : "opacity-70"}`}>
+        {item.helper}
+      </p>
+    </button>
+  );
+}
+
+function StudentApplicationPreview({
+  form,
+  requirements = [],
+  events = [],
+  deadline,
+  nextActionDeadline,
+  journeyIndex = 0,
+  journeyProgress = 0,
+}) {
+  const safeEvents = events
+    .filter((event) => {
+      const key = normalize(
+        `${event?.event_type || ""} ${event?.event_label || ""}`
+      );
+      return ![
+        "internal notes",
+        "internal_notes",
+        "counselor notes",
+        "counselor_notes",
+        "risk reason",
+        "risk_reason",
+        "portal username",
+        "portal_username",
+        "portal url",
+        "portal_url",
+      ].some((privateKey) => key.includes(normalize(privateKey)));
+    })
+    .slice(0, 5);
+
+  const pendingRequirements = requirements.filter(
+    (item) => normalize(item.status) !== "completed"
+  );
+  const completedRequirements = requirements.length - pendingRequirements.length;
+
+  return (
+    <div className="space-y-4">
+      <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+          <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-300">
+              Student Portal Preview
+            </p>
+            <h3 className="mt-2 break-words text-2xl font-black text-white">
+              {form.university || "University Application"}
+            </h3>
+            <p className="mt-2 text-sm font-semibold leading-6 text-white/75">
+              {[form.program, form.country, form.intake]
+                .filter(Boolean)
+                .join(" · ") || "Programme and intake not published yet."}
+            </p>
+          </div>
+
+          <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white lg:border-l-[3px] lg:border-t-0 sm:p-6">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              Student-safe status
+            </p>
+            <p className="mt-2 text-xl font-black text-white">
+              {pretty(form.application_status || "not_started")}
+            </p>
+            <p className="mt-2 text-xs font-semibold leading-5 text-orange-50">
+              Journey progress: {journeyProgress}% · Stage{" "}
+              {ITALY_APPLICATION_JOURNEY[journeyIndex]?.label || "Plan"}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <CompactStat
+            label="Application"
+            value={pretty(form.application_status || "not_started")}
+            icon={FileCheck2}
+          />
+          <CompactStat
+            label="Admission"
+            value={pretty(form.offer_status || "pending")}
+            icon={BadgeCheck}
+          />
+          <CompactStat
+            label="Submission"
+            value={deadline?.label || "No deadline"}
+            icon={CalendarClock}
+            tone={deadline?.tone}
+          />
+          <CompactStat
+            label="Next Action"
+            value={nextActionDeadline?.label || "Not scheduled"}
+            icon={ArrowRight}
+            tone={nextActionDeadline?.tone}
+          />
+        </div>
+      </section>
+
+      <section className="grid min-w-0 gap-4 xl:grid-cols-2">
+        <Section
+          title="What the student sees"
+          subtitle="Only clear journey information is shown here."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <OperationalTile
+              label="Current next action"
+              value={form.next_action || "No next action published"}
+              tone={form.next_action ? "orange" : "red"}
+            />
+            <OperationalTile
+              label="Offer conditions"
+              value={
+                form.conditional_offer
+                  ? form.conditions_completed
+                    ? "Conditions completed"
+                    : "Conditions still open"
+                  : "No conditional offer"
+              }
+              tone={
+                form.conditional_offer && !form.conditions_completed
+                  ? "orange"
+                  : "green"
+              }
+            />
+            <OperationalTile
+              label="Requirements"
+              value={
+                requirements.length
+                  ? `${completedRequirements}/${requirements.length} completed`
+                  : "Not assessed"
+              }
+              tone={pendingRequirements.length ? "orange" : "green"}
+            />
+            <OperationalTile
+              label="Scholarship"
+              value={form.scholarship_status || "Not recorded"}
+              tone={form.scholarship_status ? "green" : "slate"}
+            />
+          </div>
+
+          {form.conditions_text ? (
+            <div className="mt-4 rounded-xl border-2 border-orange-200 bg-orange-50 p-4">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                Published conditions
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-xs font-semibold leading-5 text-slate-700">
+                {form.conditions_text}
+              </p>
+            </div>
+          ) : null}
+        </Section>
+
+        <Section
+          title="Privacy confirmation"
+          subtitle="These operational fields remain hidden from the student."
+        >
+          <div className="space-y-2">
+            {[
+              ["Internal Notes", Boolean(form.internal_notes)],
+              ["Counselor Notes", Boolean(form.counselor_notes)],
+              ["Risk Reason", Boolean(form.risk_reason)],
+              ["Portal Username", Boolean(form.portal_username)],
+              ["Portal URL", Boolean(form.portal_url)],
+            ].map(([label, hasValue]) => (
+              <div
+                key={label}
+                className="flex items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3"
+              >
+                <span className="text-xs font-black text-[#10233F]">
+                  {label}
+                </span>
+                <span className="rounded-full border border-slate-300 bg-white px-2 py-1 text-[9px] font-black uppercase text-slate-600">
+                  {hasValue ? "Stored · Admin only" : "Empty · Admin only"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </section>
+
+      <section className="grid min-w-0 gap-4 xl:grid-cols-2">
+        <Section
+          title="Student-visible Requirements"
+          subtitle="Application conditions and tasks that the student can act on."
+        >
+          {requirements.length ? (
+            <div className="space-y-2">
+              {requirements.slice(0, 8).map((requirement) => {
+                const complete = normalize(requirement.status) === "completed";
+                const due = deadlineMeta(requirement.due_date);
+                return (
+                  <div
+                    key={requirement.id}
+                    className={`rounded-xl border-2 p-3 ${
+                      complete
+                        ? "border-emerald-300 bg-emerald-50"
+                        : due?.tone === "red"
+                        ? "border-red-300 bg-red-50"
+                        : "border-orange-300 bg-orange-50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words text-xs font-black text-[#10233F]">
+                          {requirement.title || "Application requirement"}
+                        </p>
+                        {requirement.description ? (
+                          <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-600">
+                            {requirement.description}
+                          </p>
+                        ) : null}
+                      </div>
+                      <span className="shrink-0 rounded-full border border-current bg-white/70 px-2 py-0.5 text-[8px] font-black uppercase">
+                        {complete ? "Completed" : due?.label || "Pending"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-xl border-2 border-dashed border-orange-300 bg-[#FFF8EF] p-5 text-center">
+              <p className="text-sm font-black text-[#10233F]">
+                No application requirements configured
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                This will appear as not assessed, not falsely complete.
+              </p>
+            </div>
+          )}
+        </Section>
+
+        <Section
+          title="Student-safe Activity"
+          subtitle="Private operational field changes are excluded."
+        >
+          {safeEvents.length ? (
+            <div className="space-y-2">
+              {safeEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black text-[#10233F]">
+                        {event.event_label || pretty(event.event_type)}
+                      </p>
+                      {(event.old_value || event.new_value) ? (
+                        <p className="mt-1 text-[10px] font-semibold text-slate-600">
+                          {event.old_value || "—"} → {event.new_value || "—"}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className="shrink-0 text-[9px] font-semibold text-slate-500">
+                      {formatDateTime(event.created_at)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border-2 border-dashed border-orange-300 bg-[#FFF8EF] p-5 text-center">
+              <p className="text-sm font-black text-[#10233F]">
+                No student-safe activity yet
+              </p>
+            </div>
+          )}
+        </Section>
+      </section>
+    </div>
+  );
+}
 
 function OverviewTab({ form, setForm, disabled, deadline }) {
   return (
@@ -3167,6 +4461,9 @@ function RequirementsTab({
                     <span className="rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-600">
                       {requirement.requirement_type}
                     </span>
+                    <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-700">
+                      Student visible
+                    </span>
                   </div>
 
                   {requirement.description ? (
@@ -3632,71 +4929,15 @@ function Feedback({ tone, onClose, children }) {
 }
 
 function OperationalTile({ label, value, tone = "slate" }) {
-  const styles = {
-    red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    slate: "border-slate-300 bg-[#FFF8EF] text-slate-700",
-  };
-
-  return (
-    <div
-      className={`rounded-xl border-2 p-3 ${
-        styles[tone] || styles.slate
-      }`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] opacity-75">
-        {label}
-      </p>
-      <p className="mt-2 break-words text-sm font-black">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-slate-300 bg-white text-[#10233F]",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-    green: "border-emerald-400 bg-emerald-50 text-emerald-800",
-    blue: "border-blue-400 bg-blue-50 text-blue-800",
-    red: "border-red-400 bg-red-50 text-red-800",
-  };
-
-  return (
-    <div className={`flex items-center gap-3 rounded-xl border-2 p-3 ${tones[tone]}`}>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white/70">
-        <Icon size={16} />
-      </span>
-      <div>
-        <p className="text-lg font-black leading-none">{value}</p>
-        <p className="mt-1 text-[9px] font-black uppercase tracking-[0.1em] opacity-75">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CompactStat({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-slate-300 bg-[#FFF8EF] text-[#10233F]",
-    red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-  };
-
-  return (
-    <div className={`flex items-center gap-3 rounded-xl border-2 p-3 ${tones[tone] || tones.slate}`}>
-      <Icon size={15} />
-      <div className="min-w-0">
-        <p className="truncate text-xs font-black">{value}</p>
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function StatusBadge({ value, compact = false }) {
@@ -3819,6 +5060,63 @@ function getChangedFields(previous, next) {
     .filter(
       (item) => String(item.oldValue) !== String(item.newValue)
     );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default StudentApplicationPanel;

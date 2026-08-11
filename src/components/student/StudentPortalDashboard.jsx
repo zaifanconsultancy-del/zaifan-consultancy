@@ -1,13 +1,743 @@
+// StudentPortalDashboard COMMUNICATION MAX + STUDENT-SAFE VISIBILITY V1
+// Communication QA upgrade:
+// - student-facing communication is separated from internal staff notes and unsent operational drafts
+// - draft / queued / scheduled / failed / cancelled communication never renders as a student message
+// - internal direction, Note channel and staff-only metadata remain hidden from Student OS
+// - newest communication is derived deterministically instead of trusting raw array order
+// - adds search + channel filtering and a denser Student OS communication command center
+// - preserves Support, Notifications, Timeline and every previously completed portal workflow
+// StudentPortalDashboard FINANCE FINAL CLARITY V7 — current due + request history + reconciled invoice status
+// StudentPortalDashboard FINANCE NO-ERROR MINIMAL FINAL V7
+// StudentPortalDashboard FINANCE CANCELLED PAYMENT COLOR FIX V1
+// StudentPortalDashboard FINANCE ALLOCATION RECONCILIATION FIX V4
+// StudentPortalDashboard OXC RECEIPT JSX PARSE FIX V3
+// StudentPortalDashboard FINANCE FORMAT MONEY RUNTIME FIX V2
+// StudentPortalDashboard FINANCE IDENTITY-SAFE LIVE REFRESH FIX V1
+// StudentPortalDashboard FINANCE + VISA LIVE MAX — Finance visual upgrade + Admin/Student Visa OS synchronized
+// Finance upgrade:
+// - Student Finance Center standardized to the same navy/orange/cream command-shell language as Applications/Documents
+// - stronger invoice, receipt, payment-history and verified-destination hierarchy without changing finance logic
+// - payment account cards distinguish bank account vs wallet number and preserve copy support
+// Visa upgrade:
+// - live student_visas, student_visa_requirements and student_visa_events workspace
+// - direct Admin → Student Visa synchronization through Supabase Realtime
+// - dedicated Visa case selection, journey, requirements, appointment, finance and student-safe audit activity
+// - internal notes, embassy notes, risk reasons, staff metadata and destructive audit details remain hidden
+// - maximum Student OS navy/orange/cream presentation aligned with Applications, Documents and Universities
+// - preserves every existing Student Portal module and workflow
+// StudentPortalDashboard VISA STUDENT-THEME MATCH — Live Visa Sync Preserved
+// Visa visual correction: restores the established Profile / Applications / Documents Student OS language
+// while preserving dedicated student_visas + requirements + events + realtime synchronization.
+// StudentPortalDashboard UNIVERSITIES LIVE MAX — Applications & Documents Preserved
+// Universities upgrade:
+// - live student_universities, student_university_requirements and student_university_events workspace
+// - application-linked fallback prevents an existing university application from disappearing from University Planning
+// - student-safe shortlist cards with readiness, deadlines, costs, scholarships, requirements and audit activity
+// - direct Admin → Student synchronization through Supabase Realtime
+// - internal risk reasons, counselor recommendations, decision reasons and staff notes remain hidden
+// - preserves the complete Applications, Documents, Support, Portal Access and every other Student Portal module
+// StudentPortalDashboard APPLICATION FINAL STATE CLOSURE V6 — Documents Theme Preserved
+// Final Applications QA closure:
+// - enrolled and validated applications now show stage-correct guidance instead of stale preparation instructions
+// - readiness scores follow the real Italy application journey and close at 100% when enrolled
+// - application cards and Latest Application Pulse use the same stage-aware next move
+// - no Student Portal theme, Documents, Support, Portal Access or other module visuals changed
+// - direct application-document fallback keeps pending application requirements visible in Student Documents
+// Visual correction:
+// - restores Applications to the established Student Documents and Support visual language
+// - removes only the split orange hero treatment while preserving every Applications V4 workflow
+// - keeps Documents, Support, Portal Access and every other completed module visually unchanged
+// Applications + Documents integrated upgrade:
+// - live student_applications, student_application_requirements and student_application_events workspace
+// - Italy-first application journey from planning to Universitaly pre-enrolment and final enrollment
+// - real-time Admin → Student status, deadline, requirement and history synchronization
+// - complete student-safe application cards with requirements, conditions, finance, next actions and audit activity
+// - internal notes, risk reasons and portal credentials remain hidden from students
+// - preserves the complete Documents Request Center V3, Support, Portal Access, Payments and all existing portal modules
+// Documents upgrade:
+// - live student_document_requirements + student_documents workspace
+// - shared Admin/Student status synchronization through Supabase Realtime
+// - student PDF/image upload, rejection re-upload and archived version history
+// - requirement-aware readiness, notifications, action center and deadlines
+// - preserves all existing Student Portal modules and workflows
+// - request priority, due date, instructions, request count and requested-at visibility
+// - compatibility parser supports both rich requirement columns and metadata-in-notes fallback
+
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Circle,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  LoaderCircle,
+  RefreshCw,
+  Upload,
+  XCircle,
+} from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import {
   buildPortalSummary,
   getStudentDisplayName,
+  getStudentIdentitySources,
   uploadStudentReceipt,
 } from "../../lib/studentPortal";
+import {
+  getUniversityRequirementMeta,
+  groupUniversityRequirements,
+} from "../../data/universityRequirementLibrary";
 
 function normalize(value = "") {
   return String(value || "").toLowerCase().trim().replace(/\s+/g, "_").replace(/-/g, "_");
+}
+
+function formatMoney(amount, currency = "PKR") {
+  const numeric = Number(amount ?? 0);
+  const safeAmount = Number.isFinite(numeric) ? numeric : 0;
+  return `${currency || "PKR"} ${safeAmount.toLocaleString()}`;
+}
+
+function getStudentInvoiceTotal(invoice = {}) {
+  const values = [invoice?.total_amount, invoice?.amount, invoice?.invoice_amount];
+  for (const value of values) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) return numeric;
+  }
+  return 0;
+}
+
+function getStudentLinkedInvoicePaid(invoice = {}, payments = []) {
+  const invoiceId = String(invoice?.id || "").trim();
+  if (!invoiceId) return 0;
+
+  const invoiceCurrency = String(invoice?.currency || "PKR").toUpperCase();
+
+  return asPortalArray(payments).reduce((sum, payment) => {
+    if (normalize(payment?.status || "confirmed") !== "confirmed") return sum;
+    if (String(payment?.invoice_id || "").trim() !== invoiceId) return sum;
+
+    const paymentCurrency = String(
+      payment?.currency || invoiceCurrency
+    ).toUpperCase();
+    if (paymentCurrency !== invoiceCurrency) return sum;
+
+    return (
+      sum +
+      Math.max(
+        0,
+        Number(
+          payment?.amount ||
+            payment?.paid_amount ||
+            payment?.payment_amount ||
+            0
+        )
+      )
+    );
+  }, 0);
+}
+
+function getStudentInvoiceOutstanding(invoice = {}, payments = []) {
+  const total = Math.max(
+    0,
+    Number(
+      invoice?.total_amount ||
+        invoice?.amount ||
+        invoice?.invoice_amount ||
+        0
+    )
+  );
+  const linkedPaid = getStudentLinkedInvoicePaid(invoice, payments);
+
+  if (linkedPaid > 0) return Math.max(0, total - linkedPaid);
+
+  const storedPaid = Math.max(0, Number(invoice?.paid_amount || 0));
+  if (storedPaid > 0) return Math.max(0, total - storedPaid);
+
+  const storedOutstanding = Number(invoice?.outstanding_amount);
+  if (Number.isFinite(storedOutstanding) && storedOutstanding > 0) {
+    return Math.min(total || storedOutstanding, storedOutstanding);
+  }
+
+  return total;
+}
+
+function getStudentInvoiceStatus(invoice = {}, payments = []) {
+  const stored = normalize(
+    invoice?.status ||
+      invoice?.payment_status ||
+      invoice?.invoice_status ||
+      "unpaid"
+  );
+
+  if (["cancelled", "canceled", "void", "refunded"].includes(stored)) {
+    return stored;
+  }
+
+  const total = Math.max(
+    0,
+    Number(
+      invoice?.total_amount ||
+        invoice?.amount ||
+        invoice?.invoice_amount ||
+        0
+    )
+  );
+  const linkedPaid = getStudentLinkedInvoicePaid(invoice, payments);
+  const storedPaid = Math.max(0, Number(invoice?.paid_amount || 0));
+  const effectivePaid = linkedPaid > 0 ? linkedPaid : storedPaid;
+  const outstanding = getStudentInvoiceOutstanding(invoice, payments);
+
+  if (total > 0 && outstanding <= 0) return "paid";
+  if (effectivePaid > 0 && outstanding > 0) return "partial";
+
+  if (invoice?.due_date) {
+    const due = new Date(invoice.due_date);
+    due.setHours(23, 59, 59, 999);
+    if (!Number.isNaN(due.getTime()) && due < new Date()) {
+      return "overdue";
+    }
+  }
+
+  return "unpaid";
+}
+
+const ITALY_APPLICATION_JOURNEY = [
+  {
+    id: "planning",
+    label: "Plan",
+    statuses: ["not_started"],
+    stages: ["planning"],
+    description: "University, programme and intake are being confirmed.",
+  },
+  {
+    id: "preparation",
+    label: "Prepare",
+    statuses: [
+      "preparing",
+      "documents_pending",
+      "documents_received",
+      "ready_to_submit",
+    ],
+    stages: ["preparation"],
+    description: "Documents, fees and final submission details are being prepared.",
+  },
+  {
+    id: "submission",
+    label: "Submit",
+    statuses: ["submitted", "applied"],
+    stages: ["submission", "submitted"],
+    description: "The university application has been submitted.",
+  },
+  {
+    id: "review",
+    label: "University Review",
+    statuses: ["under_review", "interview_scheduled", "admission_test"],
+    stages: ["university_review"],
+    description: "The university is assessing the application.",
+  },
+  {
+    id: "decision",
+    label: "Decision",
+    statuses: [
+      "waitlisted",
+      "conditional_admission",
+      "offer_received",
+      "admitted",
+      "offer_accepted",
+      "rejected",
+      "withdrawn",
+      "deferred",
+    ],
+    stages: ["decision"],
+    description: "An admission decision, condition or waitlist outcome is recorded.",
+  },
+  {
+    id: "pre_enrollment",
+    label: "Pre-enrolment",
+    statuses: [
+      "pre_enrollment_started",
+      "pre_enrollment_submitted",
+      "pre_enrollment_validated",
+    ],
+    stages: ["pre_enrollment"],
+    description: "Universitaly pre-enrolment is being submitted or validated.",
+  },
+  {
+    id: "enrollment",
+    label: "Enrollment",
+    statuses: ["enrollment_pending", "enrolled"],
+    stages: ["enrollment"],
+    description: "Final enrollment or matriculation is being completed.",
+  },
+];
+
+const APPLICATION_CLOSED_STATUSES = [
+  "rejected",
+  "withdrawn",
+  "deferred",
+  "enrolled",
+];
+
+function getApplicationJourneyIndex(application = {}) {
+  const status = normalize(
+    application?.application_status || application?.status || "not_started"
+  );
+  const stage = normalize(application?.application_stage || "planning");
+
+  if (["rejected", "withdrawn", "deferred"].includes(status)) {
+    return Math.max(
+      0,
+      ITALY_APPLICATION_JOURNEY.findIndex((item) => item.id === "decision")
+    );
+  }
+
+  const index = ITALY_APPLICATION_JOURNEY.findIndex(
+    (item) => item.statuses.includes(status) || item.stages.includes(stage)
+  );
+
+  return index >= 0 ? index : 0;
+}
+
+function getApplicationJourneyProgress(application = {}) {
+  const index = getApplicationJourneyIndex(application);
+  const total = Math.max(1, ITALY_APPLICATION_JOURNEY.length - 1);
+  return Math.round((index / total) * 100);
+}
+
+function getApplicationPreEnrollmentStatus(application = {}) {
+  const status = normalize(
+    application?.application_status || application?.status || "not_started"
+  );
+  const stage = normalize(application?.application_stage || "");
+  const legacyStatus = normalize(
+    application?.cas_status || application?.cas || ""
+  );
+
+  if (["cas_issued", "issued", "received"].includes(legacyStatus)) {
+    return "validated";
+  }
+  if (["processing", "in_progress", "pending"].includes(legacyStatus)) {
+    return "in_progress";
+  }
+
+  if (status === "pre_enrollment_validated") return "validated";
+  if (status === "pre_enrollment_submitted") return "submitted";
+  if (status === "pre_enrollment_started" || stage === "pre_enrollment") {
+    return "in_progress";
+  }
+  if (
+    ["offer_accepted", "admitted", "offer_received", "conditional_admission"].includes(
+      status
+    )
+  ) {
+    return "not_started";
+  }
+  if (status === "enrolled" || stage === "enrollment") return "completed";
+  return "not_started";
+}
+
+function getStudentApplicationGuidance(application = {}) {
+  const status = normalize(
+    application?.application_status || application?.status || "not_started"
+  );
+  const stage = normalize(application?.application_stage || "planning");
+  const offer = normalize(application?.offer_status || "pending");
+  const preEnrollment = normalize(
+    getApplicationPreEnrollmentStatus(application)
+  );
+
+  if (status === "enrolled" || stage === "enrollment") {
+    return {
+      title:
+        "Enrollment is complete. Keep your arrival, fee, housing and student-registration steps updated with Zaifan.",
+      label: "View Journey Roadmap",
+      targetTab: "roadmap",
+      tone: "success",
+    };
+  }
+
+  if (status === "pre_enrollment_validated" || preEnrollment === "validated") {
+    return {
+      title:
+        "Universitaly pre-enrolment is validated. Continue with visa preparation and keep all embassy documents current.",
+      label: "Continue to Visa",
+      targetTab: "visa",
+      tone: "success",
+    };
+  }
+
+  if (status === "pre_enrollment_submitted" || preEnrollment === "submitted") {
+    return {
+      title:
+        "Universitaly pre-enrolment has been submitted. Wait for university validation and prepare the visa file in parallel.",
+      label: "Review Pre-enrolment",
+      targetTab: "applications",
+      tone: "info",
+    };
+  }
+
+  if (status === "pre_enrollment_started" || stage === "pre_enrollment") {
+    return {
+      title:
+        "Complete the Universitaly pre-enrolment submission and respond quickly to any university validation request.",
+      label: "Review Pre-enrolment",
+      targetTab: "applications",
+      tone: "info",
+    };
+  }
+
+  if (status === "offer_accepted" || offer === "offer_accepted") {
+    return {
+      title:
+        "The admission place is accepted. Begin Universitaly pre-enrolment and confirm any deposit or enrollment deadline.",
+      label: "Start Pre-enrolment",
+      targetTab: "applications",
+      tone: "info",
+    };
+  }
+
+  if (status === "admitted" || offer === "admitted") {
+    return {
+      title:
+        "Admission is confirmed. Review the admission letter, acceptance deadline and any payment before accepting the place.",
+      label: "Review Admission",
+      targetTab: "applications",
+      tone: "success",
+    };
+  }
+
+  if (status === "conditional_admission" || offer === "conditional_offer") {
+    return {
+      title:
+        "A conditional admission is recorded. Complete every published condition before the university deadline.",
+      label: "Review Conditions",
+      targetTab: "applications",
+      tone: "warning",
+    };
+  }
+
+  if (status === "offer_received" || offer === "offer_received") {
+    return {
+      title:
+        "An offer has been received. Review the letter, conditions, acceptance deadline and deposit before deciding.",
+      label: "Review Offer",
+      targetTab: "applications",
+      tone: "success",
+    };
+  }
+
+  if (status === "waitlisted" || offer === "waitlisted") {
+    return {
+      title:
+        "The application is waitlisted. Monitor university updates and keep alternative applications active.",
+      label: "Ask My Counselor",
+      targetTab: "counselor",
+      tone: "warning",
+    };
+  }
+
+  if (status === "rejected") {
+    return {
+      title:
+        "The application was not successful. Review the decision with your counselor before choosing the next route.",
+      label: "Ask My Counselor",
+      targetTab: "counselor",
+      tone: "danger",
+    };
+  }
+
+  if (status === "withdrawn") {
+    return {
+      title:
+        "This application is withdrawn and no further university action is expected unless the case is reopened.",
+      label: "View Applications",
+      targetTab: "applications",
+      tone: "neutral",
+    };
+  }
+
+  if (status === "under_review" || stage === "university_review") {
+    return {
+      title:
+        "The university is reviewing the application. Watch for interview, test or additional-document requests.",
+      label: "Track Application",
+      targetTab: "applications",
+      tone: "info",
+    };
+  }
+
+  if (["submitted", "applied"].includes(status) || ["submission", "submitted"].includes(stage)) {
+    return {
+      title:
+        "The application is submitted. Keep the reference safe and monitor the university portal for updates.",
+      label: "Track Submission",
+      targetTab: "applications",
+      tone: "info",
+    };
+  }
+
+  if (status === "ready_to_submit" || stage === "preparation") {
+    return {
+      title:
+        application?.next_action ||
+        "Confirm the final application details, required documents and fee before submission.",
+      label: "Check Supporting Documents",
+      targetTab: "documents",
+      tone: "warning",
+    };
+  }
+
+  return {
+    title:
+      application?.next_action ||
+      application?.nextAction ||
+      "Confirm the university, programme, intake and first preparation checklist with your counselor.",
+    label: "Check Supporting Documents",
+    targetTab: "documents",
+    tone: "neutral",
+  };
+}
+
+function isStudentSafeApplicationEvent(event = {}) {
+  const key = normalize(
+    `${event?.event_type || ""} ${event?.event_label || ""}`
+  );
+
+  return ![
+    "internal_notes",
+    "internal notes",
+    "counselor_notes",
+    "counselor notes",
+    "risk_reason",
+    "risk reason",
+    "risk_level",
+    "risk level",
+    "portal_username",
+    "portal username",
+    "portal_url",
+    "portal url",
+    "application_priority",
+    "application priority",
+  ].some((privateKey) => key.includes(normalize(privateKey)));
+}
+
+function applicationMatchesStudentFilter(application = {}, filter = "all") {
+  const status = normalize(
+    application?.application_status || application?.status || "not_started"
+  );
+  const stage = normalize(application?.application_stage || "planning");
+  const offer = normalize(application?.offer_status || "pending");
+
+  if (filter === "all") return !application?.is_archived;
+  if (filter === "attention") {
+    return (
+      !application?.is_archived &&
+      (["documents_pending", "conditional_admission", "waitlisted"].includes(
+        status
+      ) ||
+        ["rejected", "withdrawn"].includes(status) ||
+        Boolean(application?.next_action))
+    );
+  }
+  if (filter === "submitted") {
+    return (
+      !application?.is_archived &&
+      ["submission", "submitted", "university_review"].includes(stage)
+    );
+  }
+  if (filter === "decisions") {
+    return (
+      !application?.is_archived &&
+      (stage === "decision" ||
+        [
+          "conditional_offer",
+          "offer_received",
+          "admitted",
+          "offer_accepted",
+          "waitlisted",
+          "rejected",
+        ].includes(offer) ||
+        ["conditional_admission", "admitted", "waitlisted", "rejected"].includes(
+          status
+        ))
+    );
+  }
+  if (filter === "pre_enrollment") {
+    return (
+      !application?.is_archived &&
+      ["pre_enrollment", "enrollment"].includes(stage)
+    );
+  }
+  if (filter === "closed") {
+    return (
+      Boolean(application?.is_archived) ||
+      APPLICATION_CLOSED_STATUSES.includes(status)
+    );
+  }
+
+  return true;
+}
+
+function formatApplicationMoney(amount, currency = "EUR") {
+  const value = Number(amount || 0);
+  if (!Number.isFinite(value) || value <= 0) return "Not recorded";
+  return `${currency || "EUR"} ${value.toLocaleString()}`;
+}
+
+const DOCUMENT_STORAGE_BUCKET = "student-documents";
+const MAX_DOCUMENT_FILE_BYTES = 15 * 1024 * 1024;
+const ACCEPTED_DOCUMENT_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png", ".webp"];
+
+function normalizeDocumentName(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+const DOCUMENT_REQUIREMENT_META_PREFIX = "ZAIFAN_REQUEST_META::";
+
+function normalizeDocumentRequestPriority(value = "normal") {
+  const clean = String(value || "normal").trim().toLowerCase();
+  if (["urgent", "high", "normal", "low"].includes(clean)) return clean;
+  if (clean.includes("urgent")) return "urgent";
+  if (clean.includes("high") || clean.includes("important")) return "high";
+  if (clean.includes("low") || clean.includes("optional")) return "low";
+  return "normal";
+}
+
+function getDocumentRequirementMeta(requirement = {}) {
+  const rawNotes = String(requirement?.notes || "");
+  let stored = {};
+
+  if (rawNotes.startsWith(DOCUMENT_REQUIREMENT_META_PREFIX)) {
+    try {
+      stored =
+        JSON.parse(rawNotes.slice(DOCUMENT_REQUIREMENT_META_PREFIX.length)) || {};
+    } catch {
+      stored = {};
+    }
+  }
+
+  const legacyNotes = rawNotes.startsWith(DOCUMENT_REQUIREMENT_META_PREFIX)
+    ? ""
+    : rawNotes;
+
+  return {
+    instructions:
+      requirement?.instructions ||
+      requirement?.description ||
+      stored.instructions ||
+      legacyNotes ||
+      "",
+    priority: normalizeDocumentRequestPriority(
+      requirement?.priority || requirement?.request_priority || stored.priority
+    ),
+    dueDate:
+      requirement?.due_date ||
+      requirement?.deadline ||
+      requirement?.expires_at ||
+      stored.dueDate ||
+      "",
+    requestedAt:
+      requirement?.requested_at || stored.requestedAt || requirement?.created_at || "",
+    requestedBy:
+      requirement?.requested_by || stored.requestedBy || requirement?.created_by || null,
+    requestCount: Math.max(
+      1,
+      Number(requirement?.request_count || stored.requestCount || 1)
+    ),
+  };
+}
+
+function getDocumentRequestPriorityStyle(priority = "normal") {
+  switch (normalizeDocumentRequestPriority(priority)) {
+    case "urgent":
+      return "border-rose-300 bg-rose-50 text-rose-700";
+    case "high":
+      return "border-orange-300 bg-orange-50 text-orange-700";
+    case "low":
+      return "border-slate-300 bg-slate-50 text-slate-600";
+    default:
+      return "border-sky-300 bg-sky-50 text-sky-700";
+  }
+}
+
+function getDocumentBaseName(value = "") {
+  const clean = String(value || "").trim();
+  if (!clean) return "Document";
+  return clean.split(" • ")[0].trim() || clean;
+}
+
+function getDocumentFileName(document = {}) {
+  if (document?.original_file_name) return document.original_file_name;
+  if (document?.file_name) return document.file_name;
+  if (document?.file_path) {
+    return document.file_path.split("/").pop() || document.document_name || "Document";
+  }
+  return document?.document_name || document?.title || "Document";
+}
+
+function safeDocumentStorageName(value = "") {
+  return String(value || "document")
+    .replace(/[^\w.\-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function isDocumentVerifiedStatus(value = "") {
+  const clean = normalize(value);
+  return [
+    "verified",
+    "approved",
+    "accepted",
+    "complete",
+    "completed",
+    "done",
+    "issued",
+  ].includes(clean);
+}
+
+function isDocumentRejectedStatus(value = "") {
+  const clean = normalize(value);
+  return [
+    "rejected",
+    "refused",
+    "correction_required",
+    "request_again",
+    "requested_again",
+    "reupload_required",
+    "failed",
+  ].includes(clean);
+}
+
+function isDocumentReviewStatus(value = "") {
+  const clean = normalize(value);
+  return [
+    "received",
+    "pending",
+    "under_review",
+    "review",
+    "submitted",
+    "uploaded",
+    "processing",
+    "in_progress",
+  ].includes(clean);
+}
+
+function documentMatchesRequirement(document = {}, requirement = {}) {
+  const requirementName = normalizeDocumentName(requirement?.document_name || requirement?.name);
+  const documentName = normalizeDocumentName(getDocumentBaseName(document?.document_name));
+  return Boolean(requirementName && documentName && requirementName === documentName);
+}
+
+function isAcceptedDocumentFile(file) {
+  if (!file) return false;
+  const lowerName = String(file.name || "").toLowerCase();
+  return ACCEPTED_DOCUMENT_EXTENSIONS.some((extension) => lowerName.endsWith(extension));
 }
 
 function formatStatus(value = "") {
@@ -86,20 +816,48 @@ function formatDate(value) {
 function getStatusStyle(value = "") {
   const clean = normalize(value);
 
-  if (["approved", "visa_approved", "completed", "complete", "done", "issued"].includes(clean)) {
+  if (
+    isDocumentVerifiedStatus(clean) ||
+    [
+      "visa_approved",
+      "offer_received",
+      "offer_accepted",
+      "admitted",
+      "pre_enrollment_validated",
+      "enrolled",
+    ].includes(clean)
+  ) {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
-  if (["rejected", "refused", "cancelled", "failed", "missing"].includes(clean)) {
+  if (
+    isDocumentRejectedStatus(clean) ||
+    ["cancelled", "missing", "expired", "withdrawn"].includes(clean)
+  ) {
     return "border-red-200 bg-red-50 text-red-700";
   }
 
-  if (["pending", "under_review", "submitted", "processing", "in_progress"].includes(clean)) {
+  if (
+    isDocumentReviewStatus(clean) ||
+    [
+      "ready_to_submit",
+      "under_review",
+      "interview_scheduled",
+      "admission_test",
+      "pre_enrollment_started",
+      "pre_enrollment_submitted",
+      "enrollment_pending",
+    ].includes(clean)
+  ) {
     return "border-blue-200 bg-blue-50 text-blue-700";
   }
 
-  if (["offer_received", "cas_issued", "accepted"].includes(clean)) {
-    return "border-orange-200 bg-orange-50 text-orange-700";
+  if (["conditional_admission", "conditional_offer", "waitlisted"].includes(clean)) {
+    return "border-amber-300 bg-amber-50 text-amber-800";
+  }
+
+  if (["archived", "deleted"].includes(clean)) {
+    return "border-slate-300 bg-slate-100 text-slate-700";
   }
 
   return "border-slate-200 bg-white text-slate-950/55";
@@ -196,7 +954,9 @@ function buildDashboardCounts(portalData = {}, summary = {}) {
   const documentsCount = countFromPortalData(portalData, "documents");
   const tasksCount = countFromPortalData(portalData, "tasks");
   const universitiesCount = countFromPortalData(portalData, "universities");
-  const communicationsCount = countFromPortalData(portalData, "communications");
+  const communicationsCount = asPortalArray(portalData?.communications).filter(
+    isStudentVisibleCommunication
+  ).length;
   const timelineCount = countFromPortalData(portalData, "timeline");
   const supportRequestsCount = Math.max(
     countFromPortalData(portalData, "supportRequests"),
@@ -242,6 +1002,7 @@ function calculateAnalytics({
   summary = {},
   applications = [],
   documents = [],
+  documentRequirements = [],
   tasks = [],
   universities = [],
   communications = [],
@@ -249,12 +1010,31 @@ function calculateAnalytics({
   notifications = [],
 }) {
   const completeStatuses = ["done", "completed", "complete", "closed", "approved", "issued"];
-  const approvedDocuments = documents.filter((doc) => {
-    const status = normalize(doc.status || doc.document_status);
-    return status.includes("approved") || status.includes("complete");
-  }).length;
+  const approvedDocuments = documents.filter((doc) =>
+    isDocumentVerifiedStatus(doc.status || doc.document_status)
+  ).length;
 
-  const completedTasks = tasks.filter((task) => completeStatuses.includes(normalize(task.status))).length;
+  const visibleRequirements = documentRequirements.filter(
+    (requirement) =>
+      normalize(requirement?.status || "active") === "active" &&
+      !requirement?.admin_only
+  );
+  const requiredRequirements = visibleRequirements.filter(
+    (requirement) => requirement?.required !== false
+  );
+  const verifiedRequiredDocuments = requiredRequirements.filter((requirement) =>
+    documents.some(
+      (document) =>
+        !document?.is_deleted &&
+        normalize(document?.status) !== "archived" &&
+        documentMatchesRequirement(document, requirement) &&
+        isDocumentVerifiedStatus(document?.status || document?.document_status)
+    )
+  ).length;
+
+  const completedTasks = tasks.filter((task) =>
+    completeStatuses.includes(normalize(task.status))
+  ).length;
   const overdueTasks = tasks.filter((task) => {
     if (!task.due_date) return false;
     const status = normalize(task.status);
@@ -263,31 +1043,86 @@ function calculateAnalytics({
   }).length;
 
   const latestApplication = applications[0] || {};
-  const applicationStatus = normalize(summary.applicationStatus || latestApplication.application_status || latestApplication.status);
-  const offerStatus = normalize(summary.offerStatus || latestApplication.offer_status);
-  const casStatus = normalize(summary.casStatus || latestApplication.cas_status || latestApplication.cas);
-  const visaStatus = normalize(summary.visaStatus || latestApplication.visa_status);
+  const applicationStatus = normalize(
+    summary.applicationStatus ||
+      latestApplication.application_status ||
+      latestApplication.status
+  );
+  const offerStatus = normalize(
+    summary.offerStatus || latestApplication.offer_status
+  );
+  const preEnrollmentStatus = getApplicationPreEnrollmentStatus(
+    latestApplication
+  );
+  const visaStatus = normalize(
+    summary.visaStatus || latestApplication.visa_status
+  );
 
   let journeyScore = 0;
-  if (applications.length || !["not_started", "", "none"].includes(applicationStatus)) journeyScore += 20;
-  if (["submitted", "under_review", "applied", "processing"].some((item) => applicationStatus.includes(item))) journeyScore += 15;
-  if (["received", "accepted", "conditional", "unconditional"].some((item) => offerStatus.includes(item))) journeyScore += 20;
-  if (["issued", "received"].some((item) => casStatus.includes(item))) journeyScore += 20;
-  if (["approved", "granted"].some((item) => visaStatus.includes(item))) journeyScore += 25;
+  if (
+    applications.length ||
+    !["not_started", "", "none"].includes(applicationStatus)
+  ) {
+    journeyScore += 20;
+  }
+  if (
+    [
+      "submitted",
+      "applied",
+      "under_review",
+      "interview_scheduled",
+      "admission_test",
+    ].some((item) => applicationStatus.includes(item))
+  ) {
+    journeyScore += 15;
+  }
+  if (
+    [
+      "conditional_offer",
+      "offer_received",
+      "admitted",
+      "offer_accepted",
+      "accepted",
+    ].some((item) => offerStatus.includes(item))
+  ) {
+    journeyScore += 20;
+  }
+  if (["submitted", "validated", "completed"].includes(preEnrollmentStatus)) {
+    journeyScore += 20;
+  }
+  if (["approved", "granted"].some((item) => visaStatus.includes(item))) {
+    journeyScore += 25;
+  }
 
-  const documentReadiness = documents.length ? (approvedDocuments / documents.length) * 100 : 0;
-  const taskCompletion = tasks.length ? (completedTasks / tasks.length) * 100 : 0;
-  const universityPlanning = universities.length ? Math.min(100, universities.length * 34) : 0;
-  const communicationActivity = Math.min(100, communications.length * 25 + timeline.length * 2);
-  const notificationPressure = notifications.filter((item) => ["urgent", "warning"].includes(item.type)).length;
-  const pressurePenalty = Math.min(25, notificationPressure * 3 + overdueTasks * 4);
+  const documentReadiness = requiredRequirements.length
+    ? (verifiedRequiredDocuments / requiredRequirements.length) * 100
+    : documents.length
+      ? (approvedDocuments / documents.length) * 100
+      : 0;
+  const taskCompletion = tasks.length
+    ? (completedTasks / tasks.length) * 100
+    : 0;
+  const universityPlanning = universities.length
+    ? Math.min(100, universities.length * 34)
+    : 0;
+  const communicationActivity = Math.min(
+    100,
+    communications.length * 25 + timeline.length * 2
+  );
+  const notificationPressure = notifications.filter((item) =>
+    ["urgent", "warning"].includes(item.type)
+  ).length;
+  const pressurePenalty = Math.min(
+    25,
+    notificationPressure * 3 + overdueTasks * 4
+  );
 
   const overallHealth = clampPercent(
     journeyScore * 0.32 +
       documentReadiness * 0.22 +
       taskCompletion * 0.22 +
       universityPlanning * 0.14 +
-      communicationActivity * 0.10 -
+      communicationActivity * 0.1 -
       pressurePenalty
   );
 
@@ -297,17 +1132,22 @@ function calculateAnalytics({
     recommendations.push({
       type: "warning",
       title: "Start Application Plan",
-      message: "No application is visible yet. Start with university selection and first application setup.",
+      message:
+        "No application is visible yet. Start with university selection and first application setup.",
       targetTab: "applications",
       action: "Open Applications",
     });
   }
 
-  if (documents.length && documentReadiness < 70) {
+  if (
+    (documents.length || requiredRequirements.length) &&
+    documentReadiness < 70
+  ) {
     recommendations.push({
       type: "warning",
       title: "Improve Document Readiness",
-      message: "Some documents still need approval or review before the journey can move smoothly.",
+      message:
+        "Some requested documents are missing, rejected or still waiting for verification.",
       targetTab: "documents",
       action: "View Documents",
     });
@@ -327,7 +1167,8 @@ function calculateAnalytics({
     recommendations.push({
       type: "warning",
       title: "Build University Shortlist",
-      message: "No university plan is visible yet. Add dream, target, and safe options.",
+      message:
+        "No university plan is visible yet. Add dream, target, and safe options.",
       targetTab: "universities",
       action: "View Universities",
     });
@@ -337,7 +1178,8 @@ function calculateAnalytics({
     recommendations.push({
       type: "info",
       title: "No Messages Yet",
-      message: "No student communication is visible yet. Messages will appear once your counselor sends updates.",
+      message:
+        "No student communication is visible yet. Messages will appear once your counselor sends updates.",
       targetTab: "messages",
       action: "View Messages",
     });
@@ -347,7 +1189,8 @@ function calculateAnalytics({
     recommendations.push({
       type: "success",
       title: "Journey Looks Healthy",
-      message: "Your visible Student OS data looks balanced. Keep documents, tasks, and messages updated.",
+      message:
+        "Your visible Student OS data looks balanced. Keep documents, tasks, and messages updated.",
       targetTab: "overview",
       action: "Back to Overview",
     });
@@ -373,50 +1216,164 @@ function calculateReadinessScores({
   summary = {},
   applications = [],
   documents = [],
+  documentRequirements = [],
   tasks = [],
   universities = [],
 }) {
   const latestApplication = applications[0] || {};
-  const applicationStatus = normalize(summary.applicationStatus || latestApplication.application_status || latestApplication.status);
-  const offerStatus = normalize(summary.offerStatus || latestApplication.offer_status);
-  const casStatus = normalize(summary.casStatus || latestApplication.cas_status || latestApplication.cas);
-  const visaStatus = normalize(summary.visaStatus || latestApplication.visa_status);
+  const applicationStatus = normalize(
+    summary.applicationStatus ||
+      latestApplication.application_status ||
+      latestApplication.status
+  );
+  const offerStatus = normalize(
+    summary.offerStatus || latestApplication.offer_status
+  );
+  const preEnrollmentStatus = getApplicationPreEnrollmentStatus(
+    latestApplication
+  );
+  const visaStatus = normalize(
+    summary.visaStatus || latestApplication.visa_status
+  );
 
-  const approvedDocuments = documents.filter((doc) => {
-    const status = normalize(doc.status || doc.document_status);
-    return status.includes("approved") || status.includes("complete");
-  }).length;
+  const approvedDocuments = documents.filter((doc) =>
+    isDocumentVerifiedStatus(doc.status || doc.document_status)
+  ).length;
+
+  const visibleRequirements = documentRequirements.filter(
+    (requirement) =>
+      normalize(requirement?.status || "active") === "active" &&
+      !requirement?.admin_only
+  );
+  const requiredRequirements = visibleRequirements.filter(
+    (requirement) => requirement?.required !== false
+  );
+  const verifiedRequiredDocuments = requiredRequirements.filter((requirement) =>
+    documents.some(
+      (document) =>
+        !document?.is_deleted &&
+        normalize(document?.status) !== "archived" &&
+        documentMatchesRequirement(document, requirement) &&
+        isDocumentVerifiedStatus(document?.status || document?.document_status)
+    )
+  ).length;
 
   const completedTasks = tasks.filter((task) => {
     const status = normalize(task.status);
     return ["done", "completed", "complete", "closed"].includes(status);
   }).length;
 
-  const documentScore = documents.length ? (approvedDocuments / documents.length) * 100 : 0;
-  const taskScore = tasks.length ? (completedTasks / tasks.length) * 100 : 0;
-  const universityScore = universities.length ? Math.min(100, universities.length * 34) : 0;
+  const documentScore = requiredRequirements.length
+    ? (verifiedRequiredDocuments / requiredRequirements.length) * 100
+    : documents.length
+      ? (approvedDocuments / documents.length) * 100
+      : 0;
+  const taskScore = tasks.length
+    ? (completedTasks / tasks.length) * 100
+    : 0;
+  const universityScore = universities.length
+    ? Math.min(100, universities.length * 34)
+    : 0;
 
   let applicationReadiness = 0;
-  if (applications.length) applicationReadiness += 30;
-  if (["applied", "submitted", "under_review", "processing"].some((item) => applicationStatus.includes(item))) applicationReadiness += 30;
-  if (["received", "accepted", "conditional", "unconditional"].some((item) => offerStatus.includes(item))) applicationReadiness += 25;
+  if (applications.length) applicationReadiness += 25;
+  if (
+    [
+      "ready_to_submit",
+      "submitted",
+      "applied",
+      "under_review",
+      "interview_scheduled",
+      "admission_test",
+    ].some((item) => applicationStatus.includes(item))
+  ) {
+    applicationReadiness += 35;
+  }
+  if (
+    [
+      "conditional_offer",
+      "offer_received",
+      "admitted",
+      "offer_accepted",
+      "accepted",
+    ].some((item) => offerStatus.includes(item))
+  ) {
+    applicationReadiness += 25;
+  }
   applicationReadiness += Math.min(15, universityScore * 0.15);
 
-  let casReadiness = 0;
-  if (["received", "accepted", "conditional", "unconditional"].some((item) => offerStatus.includes(item))) casReadiness += 35;
-  casReadiness += documentScore * 0.35;
-  casReadiness += taskScore * 0.15;
-  if (["issued", "received"].some((item) => casStatus.includes(item))) casReadiness += 15;
+  // Readiness must never move backwards after a real workflow milestone.
+  // The previous formula depended on the separate university-shortlist table, so
+  // an enrolled application could incorrectly remain at 50%.
+  const journeyProgress = getApplicationJourneyProgress(latestApplication);
+  applicationReadiness = Math.max(applicationReadiness, journeyProgress);
+
+  if (applicationStatus === "enrolled") {
+    applicationReadiness = 100;
+  } else if (applicationStatus === "pre_enrollment_validated") {
+    applicationReadiness = Math.max(applicationReadiness, 95);
+  } else if (applicationStatus === "pre_enrollment_submitted") {
+    applicationReadiness = Math.max(applicationReadiness, 88);
+  } else if (applicationStatus === "pre_enrollment_started") {
+    applicationReadiness = Math.max(applicationReadiness, 82);
+  } else if (applicationStatus === "offer_accepted") {
+    applicationReadiness = Math.max(applicationReadiness, 76);
+  } else if (["admitted", "offer_received", "conditional_admission"].includes(applicationStatus)) {
+    applicationReadiness = Math.max(applicationReadiness, 68);
+  } else if (applicationStatus === "under_review") {
+    applicationReadiness = Math.max(applicationReadiness, 58);
+  } else if (["submitted", "applied"].includes(applicationStatus)) {
+    applicationReadiness = Math.max(applicationReadiness, 50);
+  } else if (applicationStatus === "ready_to_submit") {
+    applicationReadiness = Math.max(applicationReadiness, 40);
+  }
+
+  let preEnrollmentReadiness = 0;
+  if (
+    [
+      "conditional_offer",
+      "offer_received",
+      "admitted",
+      "offer_accepted",
+      "accepted",
+    ].some((item) => offerStatus.includes(item))
+  ) {
+    preEnrollmentReadiness += 35;
+  }
+  preEnrollmentReadiness += documentScore * 0.35;
+  preEnrollmentReadiness += taskScore * 0.15;
+  if (["submitted", "validated", "completed"].includes(preEnrollmentStatus)) {
+    preEnrollmentReadiness += 15;
+  }
+
+  if (applicationStatus === "enrolled" || ["validated", "completed"].includes(preEnrollmentStatus)) {
+    preEnrollmentReadiness = 100;
+  } else if (preEnrollmentStatus === "submitted") {
+    preEnrollmentReadiness = Math.max(preEnrollmentReadiness, 85);
+  } else if (preEnrollmentStatus === "in_progress") {
+    preEnrollmentReadiness = Math.max(preEnrollmentReadiness, 65);
+  } else if (applicationStatus === "offer_accepted") {
+    preEnrollmentReadiness = Math.max(preEnrollmentReadiness, 50);
+  }
 
   let visaReadiness = 0;
-  if (["issued", "received"].some((item) => casStatus.includes(item))) visaReadiness += 35;
-  visaReadiness += documentScore * 0.30;
-  visaReadiness += taskScore * 0.20;
-  if (["submitted", "processing", "approved", "granted"].some((item) => visaStatus.includes(item))) visaReadiness += 15;
+  if (["submitted", "validated", "completed"].includes(preEnrollmentStatus)) {
+    visaReadiness += 35;
+  }
+  visaReadiness += documentScore * 0.3;
+  visaReadiness += taskScore * 0.2;
+  if (
+    ["submitted", "processing", "approved", "granted"].some((item) =>
+      visaStatus.includes(item)
+    )
+  ) {
+    visaReadiness += 15;
+  }
 
   return {
     applicationReadiness: clampPercent(applicationReadiness),
-    casReadiness: clampPercent(casReadiness),
+    preEnrollmentReadiness: clampPercent(preEnrollmentReadiness),
+    casReadiness: clampPercent(preEnrollmentReadiness),
     visaReadiness: clampPercent(visaReadiness),
     documentScore: clampPercent(documentScore),
     taskScore: clampPercent(taskScore),
@@ -426,64 +1383,117 @@ function calculateReadinessScores({
 
 function buildJourneyRoadmap({ summary = {}, applications = [] }) {
   const latestApplication = applications[0] || {};
-  const applicationStatus = normalize(summary.applicationStatus || latestApplication.application_status || latestApplication.status);
-  const offerStatus = normalize(summary.offerStatus || latestApplication.offer_status);
-  const casStatus = normalize(summary.casStatus || latestApplication.cas_status || latestApplication.cas);
-  const visaStatus = normalize(summary.visaStatus || latestApplication.visa_status);
+  const applicationStatus = normalize(
+    latestApplication.application_status ||
+      latestApplication.status ||
+      summary.applicationStatus ||
+      "not_started"
+  );
+  const offerStatus = normalize(
+    latestApplication.offer_status || summary.offerStatus || "pending"
+  );
+  const preEnrollmentStatus = getApplicationPreEnrollmentStatus(
+    latestApplication
+  );
+  const visaStatus = normalize(
+    latestApplication.visa_status || summary.visaStatus || "not_started"
+  );
 
   const steps = [
     {
       id: "profile",
       title: "Profile Created",
-      description: "Student record exists in Zaifan Student OS.",
+      description: "Your student record exists in Zaifan Student OS.",
       complete: Boolean(summary.studentId),
       targetTab: "profile",
     },
     {
       id: "university",
       title: "University Planning",
-      description: "Dream, target, and safe university options are visible.",
-      complete: applications.length > 0 || !["not_started", "", "none"].includes(applicationStatus),
+      description: "Your university and programme plan is being prepared.",
+      complete:
+        applications.length > 0 ||
+        !["not_started", "", "none"].includes(applicationStatus),
       targetTab: "universities",
     },
     {
       id: "application",
       title: "Application Started",
-      description: "Application record is connected to the student journey.",
+      description: "A live university application is connected to your portal.",
       complete: applications.length > 0,
       targetTab: "applications",
     },
     {
       id: "submitted",
       title: "Application Submitted",
-      description: "Application is submitted or under review.",
-      complete: ["applied", "submitted", "under_review", "processing"].some((item) => applicationStatus.includes(item)),
+      description: "The university application has been submitted or is under review.",
+      complete: [
+        "submitted",
+        "applied",
+        "under_review",
+        "interview_scheduled",
+        "admission_test",
+        "conditional_admission",
+        "admitted",
+        "offer_accepted",
+        "pre_enrollment_submitted",
+        "pre_enrollment_validated",
+        "enrolled",
+      ].includes(applicationStatus),
       targetTab: "applications",
     },
     {
-      id: "offer",
-      title: "Offer Received",
-      description: "Offer has been received or accepted.",
-      complete: ["received", "accepted", "conditional", "unconditional"].some((item) => offerStatus.includes(item)),
+      id: "decision",
+      title: "Admission Decision",
+      description: "The university has issued an offer, admission or decision.",
+      complete:
+        [
+          "conditional_offer",
+          "offer_received",
+          "admitted",
+          "offer_accepted",
+          "accepted",
+        ].includes(offerStatus) ||
+        [
+          "conditional_admission",
+          "admitted",
+          "offer_accepted",
+          "pre_enrollment_submitted",
+          "pre_enrollment_validated",
+          "enrolled",
+        ].includes(applicationStatus),
       targetTab: "applications",
     },
     {
-      id: "cas",
-      title: "CAS Issued",
-      description: "CAS is issued or ready for visa stage.",
-      complete: ["issued", "received"].some((item) => casStatus.includes(item)),
-      targetTab: "visa",
+      id: "pre_enrollment",
+      title: "Universitaly Pre-enrolment",
+      description: "Pre-enrolment is submitted, validated or completed.",
+      complete: ["submitted", "validated", "completed"].includes(
+        preEnrollmentStatus
+      ),
+      targetTab: "applications",
     },
     {
       id: "visa",
       title: "Visa Approved",
-      description: "Visa is approved or granted.",
-      complete: ["approved", "granted"].some((item) => visaStatus.includes(item)),
+      description: "The study visa is approved or granted.",
+      complete: ["approved", "granted"].some((item) =>
+        visaStatus.includes(item)
+      ),
       targetTab: "visa",
+    },
+    {
+      id: "enrollment",
+      title: "Enrollment Complete",
+      description: "Final university enrollment or matriculation is complete.",
+      complete: applicationStatus === "enrolled",
+      targetTab: "applications",
     },
   ];
 
-  const currentIndex = Math.max(0, steps.findIndex((step) => !step.complete));
+  const firstIncompleteIndex = steps.findIndex((step) => !step.complete);
+  const currentIndex =
+    firstIncompleteIndex === -1 ? steps.length - 1 : firstIncompleteIndex;
 
   return steps.map((step, index) => ({
     ...step,
@@ -496,7 +1506,9 @@ function buildJourneyRoadmap({ summary = {}, applications = [] }) {
 function buildActionCenter({
   summary = {},
   applications = [],
+  applicationRequirements = [],
   documents = [],
+  documentRequirements = [],
   tasks = [],
   universities = [],
   communications = [],
@@ -556,18 +1568,20 @@ function buildActionCenter({
 
   documents.forEach((doc) => {
     const status = normalize(doc.status || doc.document_status);
-    if (status.includes("rejected") || status.includes("missing")) {
+    if (isDocumentRejectedStatus(status) || status.includes("missing")) {
       actions.push({
         id: `document-risk-${doc.id}`,
         priority: "urgent",
         title: doc.document_name || doc.file_name || doc.title || "Document Needs Attention",
-        message: status.includes("rejected") ? "This document appears rejected and may need re-upload." : "This document appears missing.",
+        message: isDocumentRejectedStatus(status)
+          ? "This document was rejected and needs a corrected upload."
+          : "This document appears missing.",
         date: doc.updated_at || doc.created_at,
         source: "Documents",
         targetTab: "documents",
         action: "View Documents",
       });
-    } else if (status.includes("pending") || status.includes("under_review")) {
+    } else if (isDocumentReviewStatus(status)) {
       actions.push({
         id: `document-review-${doc.id}`,
         priority: "important",
@@ -580,6 +1594,68 @@ function buildActionCenter({
       });
     }
   });
+
+  applicationRequirements
+    .filter((requirement) => normalize(requirement?.status || "pending") !== "completed")
+    .forEach((requirement) => {
+      const application = applications.find(
+        (item) => String(item.id) === String(requirement.application_id)
+      );
+      const dueDate = requirement.due_date || requirement.deadline || null;
+      const overdue =
+        dueDate &&
+        new Date(`${dueDate}T23:59:59`).getTime() <
+          new Date().setHours(0, 0, 0, 0);
+
+      actions.push({
+        id: `application-requirement-${requirement.id || requirement.title}`,
+        priority: overdue ? "urgent" : "important",
+        title: requirement.title || "Application Requirement",
+        message:
+          requirement.description ||
+          `${application?.university || "Your university application"} has an outstanding requirement.`,
+        date: dueDate || requirement.created_at || null,
+        source: "Applications",
+        targetTab: "applications",
+        action: "View Application",
+      });
+    });
+
+  documentRequirements
+    .filter(
+      (requirement) =>
+        normalize(requirement?.status || "active") === "active" &&
+        !requirement?.admin_only &&
+        requirement?.required !== false
+    )
+    .forEach((requirement) => {
+      const matchingDocuments = documents.filter(
+        (document) =>
+          !document?.is_deleted &&
+          normalize(document?.status) !== "archived" &&
+          documentMatchesRequirement(document, requirement)
+      );
+
+      if (!matchingDocuments.length) {
+        actions.push({
+          id: `document-requirement-${requirement.id || requirement.document_name}`,
+          priority: "urgent",
+          title: requirement.document_name || "Required Document",
+          message:
+            requirement.instructions ||
+            requirement.description ||
+            "Zaifan has requested this document. Upload a clear PDF or image from Documents.",
+          date:
+            requirement.deadline ||
+            requirement.due_date ||
+            requirement.created_at ||
+            null,
+          source: "Documents",
+          targetTab: "documents",
+          action: "Upload Document",
+        });
+      }
+    });
 
   if (!applications.length) {
     actions.push({
@@ -607,12 +1683,12 @@ function buildActionCenter({
     });
   }
 
-  if (!documents.length) {
+  if (!documents.length && !documentRequirements.length) {
     actions.push({
       id: "no-documents-action",
       priority: "normal",
       title: "Upload Required Documents",
-      message: "No uploaded documents are visible yet. Documents are required for application, CAS, and visa stages.",
+      message: "No uploaded documents are visible yet. Documents are required for application, Pre-enrolment, and visa stages.",
       date: null,
       source: "Documents",
       targetTab: "documents",
@@ -624,8 +1700,8 @@ function buildActionCenter({
     actions.push({
       id: "cas-readiness-action",
       priority: "important",
-      title: "Improve CAS Readiness",
-      message: `CAS readiness is ${readiness.casReadiness || 0}%. Focus on offer acceptance, documents, and pending tasks.`,
+      title: "Improve Pre-enrolment Readiness",
+      message: `Pre-enrolment readiness is ${readiness.casReadiness || 0}%. Focus on offer acceptance, documents, and pending tasks.`,
       date: null,
       source: "Visa",
       targetTab: "visa",
@@ -638,7 +1714,7 @@ function buildActionCenter({
       id: "visa-readiness-action",
       priority: "normal",
       title: "Prepare Visa Stage",
-      message: `Visa readiness is ${readiness.visaReadiness || 0}%. Keep documents and CAS progress updated.`,
+      message: `Visa readiness is ${readiness.visaReadiness || 0}%. Keep documents and Pre-enrolment progress updated.`,
       date: null,
       source: "Visa",
       targetTab: "visa",
@@ -691,13 +1767,25 @@ function buildSuccessCenter({
   actionCenterItems = [],
   applications = [],
   documents = [],
+  documentRequirements = [],
   tasks = [],
   universities = [],
 }) {
-  const applicationStatus = normalize(summary.applicationStatus);
-  const offerStatus = normalize(summary.offerStatus);
-  const casStatus = normalize(summary.casStatus);
-  const visaStatus = normalize(summary.visaStatus);
+  const latestApplication = applications[0] || {};
+  const applicationStatus = normalize(
+    latestApplication.application_status ||
+      latestApplication.status ||
+      summary.applicationStatus
+  );
+  const offerStatus = normalize(
+    latestApplication.offer_status || summary.offerStatus
+  );
+  const preEnrollmentStatus = getApplicationPreEnrollmentStatus(
+    latestApplication
+  );
+  const visaStatus = normalize(
+    latestApplication.visa_status || summary.visaStatus
+  );
 
   const activeAction = actionCenterItems?.[0];
 
@@ -714,7 +1802,7 @@ function buildSuccessCenter({
       id: "documents-guide",
       category: "Documents",
       title: "Why documents matter",
-      message: "Documents support applications, offers, CAS, and visa preparation. Keep uploaded documents clear, complete, and approved.",
+      message: "Documents support applications, offers, Pre-enrolment, and visa preparation. Keep uploaded documents clear, complete, and approved.",
       targetTab: "documents",
       action: "View Documents",
     },
@@ -722,7 +1810,7 @@ function buildSuccessCenter({
       id: "tasks-guide",
       category: "Tasks",
       title: "How tasks work",
-      message: "Tasks are your visible checklist from Zaifan. Complete pending items early to avoid delays in application, CAS, and visa stages.",
+      message: "Tasks are your visible checklist from Zaifan. Complete pending items early to avoid delays in application, Pre-enrolment, and visa stages.",
       targetTab: "tasks",
       action: "Open Tasks",
     },
@@ -730,15 +1818,15 @@ function buildSuccessCenter({
       id: "applications-guide",
       category: "Applications",
       title: "What happens after application?",
-      message: "After an application is submitted, it may move to under review, offer received, accepted, CAS preparation, and visa preparation.",
+      message: "After an application is submitted, it may move to under review, offer received, accepted, Pre-enrolment preparation, and visa preparation.",
       targetTab: "applications",
       action: "View Applications",
     },
     {
       id: "cas-guide",
-      category: "CAS",
-      title: "What is CAS?",
-      message: "CAS is the Confirmation of Acceptance for Studies. It is usually needed before moving into the student visa stage.",
+      category: "Pre-enrolment",
+      title: "What is Pre-enrolment?",
+      message: "Universitaly pre-enrolment is the official online procedure used to connect an international student, the chosen Italian institution and the study-visa process.",
       targetTab: "visa",
       action: "View Visa",
     },
@@ -746,7 +1834,7 @@ function buildSuccessCenter({
       id: "visa-guide",
       category: "Visa",
       title: "How to prepare for visa",
-      message: "Visa readiness depends on CAS progress, approved documents, completed tasks, and updated application information.",
+      message: "Visa readiness depends on Pre-enrolment progress, approved documents, completed tasks, and updated application information.",
       targetTab: "visa",
       action: "View Visa",
     },
@@ -780,19 +1868,22 @@ function buildSuccessCenter({
     smartTips.push({
       id: "cas-readiness",
       type: "warning",
-      title: "Prepare for CAS",
-      message: "CAS readiness improves when offer status, documents, and tasks are updated.",
+      title: "Prepare for Pre-enrolment",
+      message: "Pre-enrolment readiness improves when offer status, documents, and tasks are updated.",
       targetTab: "visa",
       action: "View Visa",
     });
   }
 
-  if (readiness.visaReadiness < 60 && (casStatus !== "not_started" || visaStatus !== "not_started")) {
+  if (
+    readiness.visaReadiness < 60 &&
+    (preEnrollmentStatus !== "not_started" || visaStatus !== "not_started")
+  ) {
     smartTips.push({
       id: "visa-readiness",
       type: "info",
       title: "Prepare visa documents early",
-      message: "Visa readiness depends on CAS, approved documents, and completed checklist tasks.",
+      message: "Visa readiness depends on Pre-enrolment, approved documents, and completed checklist tasks.",
       targetTab: "documents",
       action: "View Documents",
     });
@@ -809,7 +1900,7 @@ function buildSuccessCenter({
     });
   }
 
-  if (!documents.length) {
+  if (!documents.length && !documentRequirements.length) {
     smartTips.push({
       id: "documents-empty",
       type: "info",
@@ -834,7 +1925,7 @@ function buildSuccessCenter({
   const faqs = [
     {
       question: "When should I contact my counselor?",
-      answer: "Contact your counselor if a task is overdue, a document is rejected, your offer/CAS/visa status looks wrong, or you do not understand the next step.",
+      answer: "Contact your counselor if a task is overdue, a document is rejected, your offer/Pre-enrolment/visa status looks wrong, or you do not understand the next step.",
     },
     {
       question: "Why do some sections show empty?",
@@ -858,8 +1949,8 @@ function buildSuccessCenter({
     stageLabel: formatStatus(
       visaStatus !== "not_started"
         ? visaStatus
-        : casStatus !== "not_started"
-          ? casStatus
+        : preEnrollmentStatus !== "not_started"
+          ? preEnrollmentStatus
           : offerStatus !== "not_started"
             ? offerStatus
             : applicationStatus || "not_started"
@@ -947,7 +2038,9 @@ function getDeadlineMeta(dateValue) {
 
 function buildDeadlineCenter({
   applications = [],
+  applicationRequirements = [],
   documents = [],
+  documentRequirements = [],
   tasks = [],
   readiness = {},
   studentForDeadlineSafety = null,
@@ -989,7 +2082,7 @@ function buildDeadlineCenter({
     [
       ["Application Deadline", applicationDeadline, "applications", "Open Applications"],
       ["Offer / Deposit Deadline", offerDeadline, "applications", "Open Applications"],
-      ["CAS Deadline", casDeadline, "visa", "View Visa"],
+      ["Pre-enrolment Deadline", casDeadline, "visa", "View Visa"],
       ["Visa Deadline", visaDeadline, "visa", "View Visa"],
     ].forEach(([label, dateValue, targetTab, action]) => {
       if (!dateValue) return;
@@ -1006,16 +2099,50 @@ function buildDeadlineCenter({
     });
   });
 
+  applicationRequirements
+    .filter(
+      (requirement) =>
+        normalize(requirement?.status || "pending") !== "completed"
+    )
+    .forEach((requirement) => {
+      const application = applications.find(
+        (item) => String(item.id) === String(requirement.application_id)
+      );
+      const dateValue =
+        requirement.due_date || requirement.deadline || requirement.expires_at;
+      const meta = getDeadlineMeta(dateValue);
+
+      items.push({
+        id: `application-requirement-deadline-${requirement.id}`,
+        title:
+          requirement.title ||
+          `${application?.university || "Application"} requirement`,
+        message:
+          requirement.description ||
+          "An application requirement needs attention.",
+        source: "Applications",
+        targetTab: "applications",
+        action: "View Applications",
+        ...meta,
+        priority:
+          meta.priority === "urgent" ? "urgent" : "important",
+      });
+    });
+
   documents.forEach((doc) => {
     const status = normalize(doc.status || doc.document_status);
     const dateValue = getDateValue(doc, ["deadline", "due_date", "expiry_date", "expires_at"]);
-    if (!dateValue && !status.includes("missing") && !status.includes("rejected")) return;
+    if (
+      !dateValue &&
+      !status.includes("missing") &&
+      !isDocumentRejectedStatus(status)
+    ) return;
 
     const meta = getDeadlineMeta(dateValue);
     items.push({
       id: `document-deadline-${doc.id || doc.document_name}`,
       title: doc.document_name || doc.file_name || doc.title || "Document Deadline",
-      message: status.includes("rejected")
+      message: isDocumentRejectedStatus(status)
         ? "This document may need re-upload before the next stage."
         : status.includes("missing")
           ? "This required document appears missing."
@@ -1024,15 +2151,55 @@ function buildDeadlineCenter({
       targetTab: "documents",
       action: "View Documents",
       ...meta,
-      priority: status.includes("rejected") || status.includes("missing") ? "urgent" : meta.priority,
+      priority:
+        isDocumentRejectedStatus(status) || status.includes("missing")
+          ? "urgent"
+          : meta.priority,
     });
   });
+
+  documentRequirements
+    .filter(
+      (requirement) =>
+        normalize(requirement?.status || "active") === "active" &&
+        !requirement?.admin_only &&
+        requirement?.required !== false
+    )
+    .forEach((requirement) => {
+      const hasCurrentFile = documents.some(
+        (document) =>
+          !document?.is_deleted &&
+          normalize(document?.status) !== "archived" &&
+          documentMatchesRequirement(document, requirement)
+      );
+      if (hasCurrentFile) return;
+
+      const dateValue =
+        requirement.deadline ||
+        requirement.due_date ||
+        requirement.expires_at ||
+        null;
+      const meta = getDeadlineMeta(dateValue);
+
+      items.push({
+        id: `document-requirement-deadline-${requirement.id || requirement.document_name}`,
+        title: requirement.document_name || "Required Document",
+        message:
+          requirement.instructions ||
+          "This required document has not been uploaded yet.",
+        source: "Documents",
+        targetTab: "documents",
+        action: "Upload Document",
+        ...meta,
+        priority: dateValue ? meta.priority : "important",
+      });
+    });
 
   if (readiness.casReadiness < 50 && applications.length) {
     items.push({
       id: "cas-readiness-deadline",
-      title: "CAS Readiness Window",
-      message: `CAS readiness is ${readiness.casReadiness || 0}%. Keep documents, offer acceptance, and tasks moving before CAS becomes urgent.`,
+      title: "Pre-enrolment Readiness Window",
+      message: `Pre-enrolment readiness is ${readiness.casReadiness || 0}%. Keep documents, offer acceptance, and tasks moving before Pre-enrolment becomes urgent.`,
       source: "Visa",
       targetTab: "visa",
       action: "View Visa",
@@ -1047,7 +2214,7 @@ function buildDeadlineCenter({
     items.push({
       id: "visa-readiness-deadline",
       title: "Visa Preparation Window",
-      message: `Visa readiness is ${readiness.visaReadiness || 0}%. Prepare documents and CAS before visa timing becomes risky.`,
+      message: `Visa readiness is ${readiness.visaReadiness || 0}%. Prepare documents and Pre-enrolment before visa timing becomes risky.`,
       source: "Visa",
       targetTab: "visa",
       action: "View Visa",
@@ -1062,7 +2229,7 @@ function buildDeadlineCenter({
     items.push({
       id: "no-deadlines",
       title: "No Upcoming Deadline Found",
-      message: "No task, application, document, CAS, or visa deadline is visible right now.",
+      message: "No task, application, document, Pre-enrolment, or visa deadline is visible right now.",
       source: "Overview",
       targetTab: "overview",
       action: "Back to Overview",
@@ -1122,7 +2289,7 @@ function buildCounselorCenter({ student = {}, account = null }) {
     guidance: [
       {
         title: "When to contact your counselor",
-        message: "Contact your counselor when a document is rejected, a deadline is close, an offer needs acceptance, or visa/CAS status is unclear.",
+        message: "Contact your counselor when a document is rejected, a deadline is close, an offer needs acceptance, or visa/Pre-enrolment status is unclear.",
       },
       {
         title: "What to include in your message",
@@ -1241,7 +2408,7 @@ const SUPPORT_REQUEST_TYPES = [
     icon: "🌍",
     title: "Visa Help",
     subject: "Visa Help Request",
-    description: "Ask for help with CAS, visa documents, or visa status questions.",
+    description: "Ask for help with Pre-enrolment, visa documents, or visa status questions.",
     priority: "high",
   },
   {
@@ -1353,7 +2520,9 @@ function buildSupportAnalytics(supportRequests = []) {
 function buildStudentNotifications({
   summary = {},
   applications = [],
+  applicationRequirements = [],
   documents = [],
+  documentRequirements = [],
   tasks = [],
   universities = [],
   communications = [],
@@ -1406,7 +2575,7 @@ function buildStudentNotifications({
   documents.forEach((doc) => {
     const status = normalize(doc.status || doc.document_status);
 
-    if (status.includes("approved")) {
+    if (isDocumentVerifiedStatus(status)) {
       notifications.push({
         id: `doc-approved-${doc.id}`,
         type: "success",
@@ -1420,10 +2589,14 @@ function buildStudentNotifications({
       return;
     }
 
-    if (["pending", "under_review", "missing", "rejected"].some((item) => status.includes(item))) {
+    if (
+      isDocumentReviewStatus(status) ||
+      isDocumentRejectedStatus(status) ||
+      status.includes("missing")
+    ) {
       notifications.push({
         id: `doc-status-${doc.id}`,
-        type: status.includes("rejected") || status.includes("missing") ? "urgent" : "info",
+        type: isDocumentRejectedStatus(status) || status.includes("missing") ? "urgent" : "info",
         title: `Document ${formatStatus(status)}`,
         message: doc.document_name || doc.file_name || doc.title || "A document needs review.",
         date: doc.updated_at || doc.created_at,
@@ -1434,18 +2607,70 @@ function buildStudentNotifications({
     }
   });
 
+  documentRequirements
+    .filter(
+      (requirement) =>
+        normalize(requirement?.status || "active") === "active" &&
+        !requirement?.admin_only &&
+        requirement?.required !== false
+    )
+    .forEach((requirement) => {
+      const hasCurrentFile = documents.some(
+        (document) =>
+          !document?.is_deleted &&
+          normalize(document?.status) !== "archived" &&
+          documentMatchesRequirement(document, requirement)
+      );
+
+      if (!hasCurrentFile) {
+        const requestMeta = getDocumentRequirementMeta(requirement);
+        notifications.push({
+          id: `document-request-${requirement.id || requirement.document_name}`,
+          type:
+            requestMeta.priority === "urgent" || requestMeta.priority === "high"
+              ? "urgent"
+              : "warning",
+          title: "Document Requested",
+          message:
+            requestMeta.instructions ||
+            requirement.document_name ||
+            "Zaifan has requested a document from you.",
+          date:
+            requestMeta.dueDate ||
+            requestMeta.requestedAt ||
+            requirement.created_at ||
+            null,
+          source: "Documents",
+          action: "Upload Document",
+          targetTab: "documents",
+        });
+      }
+    });
+
   applications.forEach((app) => {
     const applicationStatus = normalize(app.application_status || app.status);
     const offerStatus = normalize(app.offer_status);
-    const casStatus = normalize(app.cas_status || app.cas);
+    const preEnrollmentStatus = getApplicationPreEnrollmentStatus(app);
     const visaStatus = normalize(app.visa_status);
+    const university =
+      app.university_name || app.university || "University application";
 
-    if (offerStatus.includes("received") || offerStatus.includes("accepted")) {
+    if (
+      [
+        "conditional_offer",
+        "offer_received",
+        "admitted",
+        "offer_accepted",
+        "accepted",
+      ].some((item) => offerStatus.includes(item))
+    ) {
       notifications.push({
         id: `offer-${app.id}`,
         type: "success",
-        title: "Offer Update",
-        message: `${app.university_name || app.university || "University"} offer status is ${formatStatus(offerStatus)}.`,
+        title: "Admission Update",
+        message: `${university} admission status is ${formatStatus(
+          offerStatus
+        )}.`,
         date: app.updated_at || app.created_at,
         source: "Applications",
         action: "View Applications",
@@ -1453,16 +2678,18 @@ function buildStudentNotifications({
       });
     }
 
-    if (casStatus.includes("issued")) {
+    if (["submitted", "validated", "completed"].includes(preEnrollmentStatus)) {
       notifications.push({
-        id: `cas-${app.id}`,
+        id: `pre-enrollment-${app.id}`,
         type: "success",
-        title: "CAS Issued",
-        message: `${app.university_name || app.university || "University"} CAS has been issued.`,
+        title: "Pre-enrolment Update",
+        message: `${university} pre-enrolment is ${formatStatus(
+          preEnrollmentStatus
+        )}.`,
         date: app.updated_at || app.created_at,
-        source: "Visa",
-        action: "View Visa",
-        targetTab: "visa",
+        source: "Applications",
+        action: "View Applications",
+        targetTab: "applications",
       });
     }
 
@@ -1492,12 +2719,29 @@ function buildStudentNotifications({
       });
     }
 
-    if (applicationStatus.includes("submitted") || applicationStatus.includes("under_review")) {
+    if (
+      [
+        "ready_to_submit",
+        "submitted",
+        "applied",
+        "under_review",
+        "interview_scheduled",
+        "admission_test",
+        "waitlisted",
+        "conditional_admission",
+        "rejected",
+        "withdrawn",
+      ].includes(applicationStatus)
+    ) {
       notifications.push({
         id: `application-${app.id}`,
-        type: "info",
+        type: ["rejected", "withdrawn"].includes(applicationStatus)
+          ? "urgent"
+          : ["waitlisted", "conditional_admission"].includes(applicationStatus)
+          ? "warning"
+          : "info",
         title: "Application Progress",
-        message: `${app.university_name || app.university || "Application"} is ${formatStatus(applicationStatus)}.`,
+        message: `${university} is ${formatStatus(applicationStatus)}.`,
         date: app.updated_at || app.created_at,
         source: "Applications",
         action: "View Applications",
@@ -1505,6 +2749,36 @@ function buildStudentNotifications({
       });
     }
   });
+
+  applicationRequirements
+    .filter(
+      (requirement) =>
+        normalize(requirement?.status || "pending") !== "completed"
+    )
+    .slice(0, 8)
+    .forEach((requirement) => {
+      const dueDate = requirement.due_date || requirement.deadline || null;
+      const overdue =
+        dueDate &&
+        new Date(`${dueDate}T23:59:59`).getTime() <
+          new Date().setHours(0, 0, 0, 0);
+
+      notifications.push({
+        id: `application-requirement-${requirement.id}`,
+        type: overdue ? "urgent" : "warning",
+        title: overdue
+          ? "Application Requirement Overdue"
+          : "Application Requirement Pending",
+        message:
+          requirement.title ||
+          requirement.description ||
+          "An application requirement needs your attention.",
+        date: dueDate || requirement.created_at || null,
+        source: "Applications",
+        action: "View Applications",
+        targetTab: "applications",
+      });
+    });
 
   communications.slice(0, 5).forEach((message) => {
     notifications.push({
@@ -1545,7 +2819,7 @@ function buildStudentNotifications({
     });
   }
 
-  if (!documents.length) {
+  if (!documents.length && !documentRequirements.length) {
     notifications.push({
       id: "documents-empty",
       type: "info",
@@ -1636,6 +2910,498 @@ function buildStudentNotifications({
     .slice(0, 20);
 }
 
+
+function getStudentUniversityName(record = {}) {
+  return (
+    record?.university ||
+    record?.university_name ||
+    record?.name ||
+    record?.institution_name ||
+    "University"
+  );
+}
+
+function getStudentUniversityProgram(record = {}) {
+  return (
+    record?.program ||
+    record?.course_name ||
+    record?.course ||
+    record?.program_name ||
+    "Programme not recorded"
+  );
+}
+
+function getStudentUniversityIdentityKey(record = {}) {
+  return [
+    normalize(getStudentUniversityName(record)),
+    normalize(getStudentUniversityProgram(record)),
+    normalize(record?.intake || record?.intake_name || record?.target_intake || ""),
+  ].join("|");
+}
+
+function isStudentSafeUniversityEvent(event = {}) {
+  const key = normalize(
+    `${event?.event_type || ""} ${event?.event_label || ""}`
+  );
+
+  return ![
+    "internal",
+    "staff note",
+    "staff_note",
+    "risk reason",
+    "risk_reason",
+    "risk level",
+    "risk_level",
+    "counselor recommendation",
+    "counselor_recommendation",
+    "decision reason",
+    "decision_reason",
+    "portal credential",
+    "portal_credential",
+    "permanently deleted",
+    "permanently_deleted",
+  ].some((privateKey) => key.includes(normalize(privateKey)));
+}
+
+
+const STUDENT_VISA_STAGE_ORDER = [
+  "preparation",
+  "appointment_booked",
+  "biometrics",
+  "medical",
+  "submitted",
+  "embassy_review",
+  "decision",
+  "passport_collection",
+  "closed",
+  "completed",
+];
+
+function normalizeStudentVisaStage(value = "") {
+  const stage = normalize(value);
+  const aliases = {
+    preparing: "preparation",
+    not_started: "preparation",
+    appointment: "appointment_booked",
+    booked: "appointment_booked",
+    biometric: "biometrics",
+    submission: "submitted",
+    visa_submitted: "submitted",
+    review: "embassy_review",
+    under_review: "embassy_review",
+    processing: "embassy_review",
+    approved: "decision",
+    rejected: "decision",
+    refused: "decision",
+    visa_approved: "decision",
+    passport_returned: "passport_collection",
+    complete: "completed",
+  };
+
+  return aliases[stage] || stage || "preparation";
+}
+
+function getStudentVisaStageIndex(value = "") {
+  const stage = normalizeStudentVisaStage(value);
+  const index = STUDENT_VISA_STAGE_ORDER.indexOf(stage);
+  return index >= 0 ? index : 0;
+}
+
+function getStudentVisaRequirementStatus(value = "") {
+  const status = normalize(value);
+
+  if (["approved", "verified", "accepted", "complete", "completed", "cleared", "ready"].some((key) => status.includes(key))) {
+    return "ready";
+  }
+
+  if (["rejected", "declined", "invalid", "failed"].some((key) => status.includes(key))) {
+    return "rejected";
+  }
+
+  if (["review", "pending", "uploaded", "received", "processing"].some((key) => status.includes(key))) {
+    return "review";
+  }
+
+  return "missing";
+}
+
+function isStudentSafeVisaEvent(event = {}) {
+  const key = normalize(`${event?.event_type || ""} ${event?.event_label || ""}`);
+
+  return ![
+    "internal",
+    "staff_note",
+    "staff note",
+    "risk_reason",
+    "risk reason",
+    "embassy_note",
+    "embassy note",
+    "counselor note",
+    "portal credential",
+    "permanently_deleted",
+    "permanently deleted",
+  ].some((privateKey) => key.includes(normalize(privateKey)));
+}
+
+function buildApplicationUniversityFallbacks(applications = [], universities = []) {
+  const realKeys = new Set(
+    asPortalArray(universities).map((university) =>
+      getStudentUniversityIdentityKey(university)
+    )
+  );
+
+  return asPortalArray(applications)
+    .filter((application) => {
+      const universityName =
+        application?.university ||
+        application?.university_name ||
+        application?.institution_name ||
+        application?.source_university_name;
+
+      if (!universityName) return false;
+
+      const fallbackKey = getStudentUniversityIdentityKey({
+        university: universityName,
+        program:
+          application?.program ||
+          application?.course_name ||
+          application?.course ||
+          application?.program_name,
+        intake:
+          application?.intake ||
+          application?.intake_name ||
+          application?.target_intake,
+      });
+
+      return !realKeys.has(fallbackKey);
+    })
+    .map((application) => ({
+      id: `application-university-${application.id}`,
+      _applicationUniversityFallback: true,
+      source_application_id: application.id,
+      application_id: application.id,
+      university:
+        application?.university ||
+        application?.university_name ||
+        application?.institution_name ||
+        application?.source_university_name ||
+        "University",
+      university_name:
+        application?.university ||
+        application?.university_name ||
+        application?.institution_name ||
+        application?.source_university_name ||
+        "University",
+      program:
+        application?.program ||
+        application?.course_name ||
+        application?.course ||
+        application?.program_name ||
+        "Programme not recorded",
+      country:
+        application?.country ||
+        application?.destination_country ||
+        "Italy",
+      intake:
+        application?.intake ||
+        application?.intake_name ||
+        application?.target_intake ||
+        "",
+      category: "target",
+      status:
+        application?.application_status ||
+        application?.status ||
+        application?.offer_status ||
+        "application_linked",
+      application_status:
+        application?.application_status || application?.status || "not_started",
+      offer_status: application?.offer_status || "pending",
+      deadline_date:
+        application?.application_deadline ||
+        application?.deadline ||
+        application?.submission_deadline ||
+        null,
+      next_action: getStudentApplicationGuidance(application).title,
+      created_at: application?.created_at,
+      updated_at: application?.updated_at,
+    }));
+}
+
+function calculateStudentUniversityReadiness({
+  university = {},
+  linkedApplication = null,
+  requirements = [],
+}) {
+  const explicit = Number(university?.readiness_score);
+  if (Number.isFinite(explicit) && explicit > 0) {
+    return clampPercent(explicit);
+  }
+
+  let score = 0;
+  if (getStudentUniversityName(university) !== "University") score += 15;
+  if (getStudentUniversityProgram(university) !== "Programme not recorded") score += 15;
+  if (university?.country || university?.destination_country) score += 10;
+  if (university?.intake || university?.intake_name || university?.target_intake) score += 10;
+  if (university?.deadline_date || university?.next_action_due) score += 10;
+  if (university?.fit_score || university?.fit_level) score += 10;
+  if (linkedApplication) score += 20;
+
+  const visibleRequirements = asPortalArray(requirements).filter(
+    (requirement) => requirement?.required !== false
+  );
+  if (visibleRequirements.length) {
+    const complete = visibleRequirements.filter((requirement) =>
+      ["verified", "completed", "complete", "approved", "met", "not_required"].includes(
+        normalize(requirement?.status)
+      )
+    ).length;
+    score += Math.round((complete / visibleRequirements.length) * 10);
+  }
+
+  const applicationStatus = normalize(
+    linkedApplication?.application_status || linkedApplication?.status
+  );
+  if (["enrolled", "pre_enrollment_validated"].includes(applicationStatus)) {
+    score = 100;
+  } else if (["offer_accepted", "admitted", "offer_received"].includes(applicationStatus)) {
+    score = Math.max(score, 80);
+  } else if (["submitted", "applied", "under_review"].includes(applicationStatus)) {
+    score = Math.max(score, 65);
+  }
+
+  return clampPercent(score);
+}
+
+function buildStudentUniversityWorkspaceRows({
+  universities = [],
+  applications = [],
+  requirements = [],
+  events = [],
+}) {
+  return asPortalArray(universities)
+    .filter((university) => !university?.is_archived)
+    .map((university) => {
+      const universityName = getStudentUniversityName(university);
+      const universityProgram = getStudentUniversityProgram(university);
+      const linkedApplication =
+        asPortalArray(applications).find(
+          (application) =>
+            university?.id &&
+            String(application?.source_university_id || "") === String(university.id)
+        ) ||
+        asPortalArray(applications).find((application) => {
+          const applicationUniversity = normalize(
+            application?.university ||
+              application?.university_name ||
+              application?.source_university_name
+          );
+          const applicationProgram = normalize(
+            application?.program ||
+              application?.course_name ||
+              application?.course ||
+              application?.program_name
+          );
+
+          return (
+            applicationUniversity === normalize(universityName) &&
+            (!applicationProgram ||
+              applicationProgram === normalize(universityProgram) ||
+              universityProgram === "Programme not recorded")
+          );
+        }) ||
+        (university?._applicationUniversityFallback
+          ? asPortalArray(applications).find(
+              (application) =>
+                String(application?.id || "") ===
+                String(university?.source_application_id || university?.application_id || "")
+            )
+          : null);
+
+      const universityRequirements = asPortalArray(requirements).filter(
+        (requirement) =>
+          university?.id &&
+          String(requirement?.student_university_id || "") === String(university.id)
+      );
+      const universityEvents = asPortalArray(events).filter(
+        (event) =>
+          university?.id &&
+          String(event?.student_university_id || "") === String(university.id)
+      );
+
+      const requirementStats = universityRequirements.reduce(
+        (stats, requirement) => {
+          const status = normalize(requirement?.status || "missing");
+          stats.total += 1;
+          if (["verified", "completed", "complete", "approved", "met", "not_required"].includes(status)) {
+            stats.verified += 1;
+          } else if (["rejected", "missing", "blocked", "expired"].includes(status)) {
+            stats.attention += 1;
+          } else {
+            stats.open += 1;
+          }
+          return stats;
+        },
+        { total: 0, verified: 0, attention: 0, open: 0 }
+      );
+
+      const deadlineValue =
+        university?.next_action_due ||
+        university?.deadline_date ||
+        linkedApplication?.application_deadline ||
+        linkedApplication?.deadline ||
+        linkedApplication?.submission_deadline ||
+        null;
+      const deadline = getDeadlineMeta(deadlineValue);
+      const readinessScore = calculateStudentUniversityReadiness({
+        university,
+        linkedApplication,
+        requirements: universityRequirements,
+      });
+      const fitScore = clampPercent(university?.fit_score || 0);
+      const nextAction =
+        university?.next_action ||
+        (linkedApplication
+          ? getStudentApplicationGuidance(linkedApplication).title
+          : "Review this university with your counselor before moving it into application.");
+
+      return {
+        ...university,
+        universityName,
+        universityProgram,
+        linkedApplication,
+        requirements: universityRequirements,
+        events: universityEvents,
+        requirementStats,
+        deadline,
+        readinessScore,
+        fitScore,
+        nextAction,
+        applicationLinked: Boolean(linkedApplication),
+        needsAttention:
+          requirementStats.attention > 0 ||
+          readinessScore < 65 ||
+          deadline?.priority === "urgent",
+      };
+    })
+    .sort((a, b) => {
+      if (a.needsAttention !== b.needsAttention) return a.needsAttention ? -1 : 1;
+      if (a.applicationLinked !== b.applicationLinked) return a.applicationLinked ? -1 : 1;
+      return (
+        new Date(b.updated_at || b.created_at || 0).getTime() -
+        new Date(a.updated_at || a.created_at || 0).getTime()
+      );
+    });
+}
+
+function studentUniversityMatchesFilter(university = {}, filter = "all") {
+  const category = normalize(university?.category || "target");
+  if (filter === "all") return true;
+  if (["dream", "target", "safe"].includes(filter)) return category === filter;
+  if (filter === "attention") return Boolean(university?.needsAttention);
+  if (filter === "application") return Boolean(university?.applicationLinked);
+  return true;
+}
+
+function getCommunicationMetadata(message = {}) {
+  const metadata = message?.metadata;
+
+  if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+    return metadata;
+  }
+
+  if (typeof metadata === "string" && metadata.trim()) {
+    try {
+      const parsed = JSON.parse(metadata);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
+}
+
+function communicationDateMs(message = {}) {
+  const candidates = [
+    message?.sent_at,
+    message?.delivered_at,
+    message?.read_at,
+    message?.created_at,
+    message?.updated_at,
+  ];
+
+  for (const value of candidates) {
+    if (!value) continue;
+    const time = new Date(value).getTime();
+    if (Number.isFinite(time)) return time;
+  }
+
+  return 0;
+}
+
+function isStudentVisibleCommunication(message = {}) {
+  const metadata = getCommunicationMetadata(message);
+  const channel = normalize(message?.channel || message?.type || "");
+  const direction = normalize(
+    message?.direction || metadata?.direction || metadata?.message_direction || ""
+  );
+  const status = normalize(message?.status || "");
+  const visibility = normalize(
+    message?.visibility || metadata?.visibility || metadata?.audience || metadata?.scope || ""
+  );
+
+  const explicitStudentVisible =
+    message?.student_visible ?? metadata?.student_visible ?? metadata?.studentVisible;
+
+  const isExplicitlyPrivate =
+    explicitStudentVisible === false ||
+    String(explicitStudentVisible || "").toLowerCase() === "false" ||
+    metadata?.is_internal === true ||
+    metadata?.internal === true ||
+    ["internal", "private", "staff", "staff_only", "admin_only", "counselor_only"].includes(
+      visibility
+    );
+
+  const isInternalDirection = ["internal", "staff", "private"].includes(direction);
+  const isInternalChannel =
+    channel === "note" ||
+    channel === "notes" ||
+    channel === "internal_note" ||
+    channel === "staff_note" ||
+    channel === "admin_note" ||
+    channel === "counselor_note";
+
+  const isUnsentOrFailed = [
+    "draft",
+    "queued",
+    "scheduled",
+    "pending",
+    "failed",
+    "cancelled",
+    "canceled",
+  ].some((blockedStatus) => status === blockedStatus || status.startsWith(`${blockedStatus}_`));
+
+  return !(
+    isExplicitlyPrivate ||
+    isInternalDirection ||
+    isInternalChannel ||
+    isUnsentOrFailed
+  );
+}
+
+function communicationChannelKey(message = {}) {
+  const channel = normalize(message?.channel || message?.type || "message");
+  if (channel.includes("whatsapp")) return "whatsapp";
+  if (channel.includes("email")) return "email";
+  if (channel.includes("call") || channel.includes("phone")) return "call";
+  if (channel.includes("meeting") || channel.includes("appointment")) return "meeting";
+  if (channel.includes("support")) return "support";
+  if (channel.includes("portal")) return "portal";
+  return channel || "other";
+}
+
 function StudentPortalDashboard({
   account = null,
   student,
@@ -1650,6 +3416,9 @@ function StudentPortalDashboard({
   const [activeTab, setActiveTab] = useState("overview");
   const [notificationFilter, setNotificationFilter] = useState("all");
   const deferredNotificationFilter = useDeferredValue(notificationFilter);
+  const [messageSearch, setMessageSearch] = useState("");
+  const [messageChannelFilter, setMessageChannelFilter] = useState("all");
+  const deferredMessageSearch = useDeferredValue(messageSearch);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -1660,6 +3429,29 @@ function StudentPortalDashboard({
     message: "",
     loading: false,
   });
+  const [forcedPasswordChangeCompleted, setForcedPasswordChangeCompleted] =
+    useState(false);
+
+  const passwordHasMinimumLength = passwordForm.newPassword.length >= 8;
+  const passwordConfirmationMatches =
+    Boolean(passwordForm.confirmPassword) &&
+    passwordForm.newPassword === passwordForm.confirmPassword;
+  const passwordDiffersFromCurrent =
+    Boolean(passwordForm.currentPassword) &&
+    Boolean(passwordForm.newPassword) &&
+    passwordForm.currentPassword !== passwordForm.newPassword;
+  const passwordFormReady =
+    sessionMode === "account" &&
+    Boolean(passwordForm.currentPassword) &&
+    passwordHasMinimumLength &&
+    passwordConfirmationMatches &&
+    passwordDiffersFromCurrent &&
+    !passwordStatus.loading;
+
+  const mustCompletePasswordChange =
+    sessionMode === "account" &&
+    Boolean(account?.must_change_password) &&
+    !forcedPasswordChangeCompleted;
   const [receiptForm, setReceiptForm] = useState({
     invoiceId: "",
     amount: "",
@@ -1696,13 +3488,216 @@ function StudentPortalDashboard({
     loadedFor: "",
   });
 
+  const [liveApplicationData, setLiveApplicationData] = useState({
+    applications: [],
+    requirements: [],
+    events: [],
+    loading: false,
+    error: "",
+    loadedFor: "",
+  });
+  const [applicationFilter, setApplicationFilter] = useState("all");
+  const [expandedApplicationIds, setExpandedApplicationIds] = useState(
+    () => new Set()
+  );
+
+  const [liveDocumentData, setLiveDocumentData] = useState({
+    documents: [],
+    requirements: [],
+    loading: false,
+    error: "",
+    loadedFor: "",
+  });
+  const [documentFilter, setDocumentFilter] = useState("attention");
+  const [documentSearch, setDocumentSearch] = useState("");
+  const [documentUploadState, setDocumentUploadState] = useState({
+    key: "",
+    type: "",
+    message: "",
+  });
+
+  const [liveUniversityData, setLiveUniversityData] = useState({
+    universities: [],
+    requirements: [],
+    events: [],
+    loading: false,
+    error: "",
+    loadedFor: "",
+  });
+  const [universityFilter, setUniversityFilter] = useState("all");
+  const [universitySearch, setUniversitySearch] = useState("");
+
+  const [liveVisaData, setLiveVisaData] = useState({
+    visas: [],
+    requirements: [],
+    events: [],
+    loading: false,
+    error: "",
+    loadedFor: "",
+  });
+  const [activeStudentVisaId, setActiveStudentVisaId] = useState("");
+
   const rawSummary = useMemo(
     () => buildPortalSummary(student || {}, portalData || {}),
     [student, portalData]
   );
 
-  const applications = asPortalArray(portalData?.applications);
-  const documents = asPortalArray(portalData?.documents);
+  const portalApplications = asPortalArray(portalData?.applications);
+  const applications = useMemo(
+    () =>
+      uniqueMergeRows(
+        liveApplicationData.applications,
+        portalApplications
+      ),
+    [liveApplicationData.applications, portalApplications]
+  );
+  const applicationRequirements = useMemo(
+    () =>
+      uniqueMergeRows(
+        liveApplicationData.requirements,
+        portalData?.applicationRequirements,
+        portalData?.application_requirements
+      ),
+    [
+      liveApplicationData.requirements,
+      portalData?.applicationRequirements,
+      portalData?.application_requirements,
+    ]
+  );
+  const applicationEvents = useMemo(
+    () =>
+      uniqueMergeRows(
+        liveApplicationData.events,
+        portalData?.applicationEvents,
+        portalData?.application_events
+      ).filter(isStudentSafeApplicationEvent),
+    [
+      liveApplicationData.events,
+      portalData?.applicationEvents,
+      portalData?.application_events,
+    ]
+  );
+  const portalDocuments = asPortalArray(portalData?.documents);
+  const portalDocumentRequirements = asPortalArray(
+    portalData?.documentRequirements ||
+      portalData?.document_requirements ||
+      portalData?.requirements
+  );
+  const documents = useMemo(
+    () => uniqueMergeRows(liveDocumentData.documents, portalDocuments),
+    [liveDocumentData.documents, portalDocuments]
+  );
+  const documentRequirements = useMemo(() => {
+    // A document-type application requirement must remain uploadable even when
+    // an older database schema or uniqueness rule prevents a mirrored
+    // student_document_requirements row from being created. These virtual rows
+    // are sourced directly from student_application_requirements, so the
+    // student always sees the exact requirement title inside Documents.
+    const applicationDocumentRequirements = applicationRequirements
+      .filter((requirement) => {
+        const type = normalize(requirement?.requirement_type || "general");
+        const status = normalize(requirement?.status || "pending");
+
+        return (
+          type === "document" &&
+          !["completed", "closed", "cancelled", "deleted"].includes(status)
+        );
+      })
+      .map((requirement) => ({
+        id: `application-requirement-${requirement.id}`,
+        _virtualApplicationRequirement: true,
+        source_application_requirement_id: requirement.id,
+        application_id: requirement.application_id || null,
+        student_id: getPortalStudentId(student),
+        student_type: getPortalStudentType(
+          student,
+          rawSummary?.studentType || "inquiry"
+        ),
+        document_name:
+          requirement.title || requirement.document_name || "Application Document",
+        group_name: "Application Requirements",
+        stage_name: "Application",
+        required: true,
+        verification_required: true,
+        expiry_tracking: false,
+        student_can_upload: true,
+        counselor_can_upload: true,
+        admin_only: false,
+        status: "active",
+        instructions:
+          requirement.description ||
+          requirement.notes ||
+          "Upload a clear, complete and readable copy for this application requirement.",
+        description: requirement.description || "",
+        priority: "normal",
+        due_date: requirement.due_date || null,
+        requested_at:
+          requirement.created_at || requirement.updated_at || null,
+        request_count: 1,
+        created_at:
+          requirement.created_at || requirement.updated_at || null,
+        updated_at:
+          requirement.updated_at || requirement.created_at || null,
+      }));
+
+    const merged = [
+      ...asPortalArray(liveDocumentData.requirements),
+      ...portalDocumentRequirements,
+      ...applicationDocumentRequirements,
+    ].filter(
+      (requirement) =>
+        requirement &&
+        normalize(requirement.status || "active") === "active" &&
+        !requirement.admin_only &&
+        Boolean(
+          String(
+            requirement.document_name ||
+              requirement.title ||
+              ""
+          ).trim()
+        )
+    );
+
+    // De-duplicate by the visible document name rather than by row ID.
+    // A real student_document_requirements row wins over the virtual
+    // application fallback whenever both exist.
+    const byDocumentName = new Map();
+
+    merged.forEach((requirement) => {
+      const documentName =
+        requirement.document_name ||
+        requirement.title ||
+        "Application Document";
+      const key = normalizeDocumentName(documentName);
+      if (!key) return;
+
+      const normalizedRequirement = {
+        ...requirement,
+        document_name: documentName,
+      };
+      const current = byDocumentName.get(key);
+
+      if (
+        !current ||
+        (current._virtualApplicationRequirement &&
+          !normalizedRequirement._virtualApplicationRequirement)
+      ) {
+        byDocumentName.set(key, normalizedRequirement);
+      }
+    });
+
+    return Array.from(byDocumentName.values()).sort(
+      (a, b) =>
+        new Date(a.created_at || 0).getTime() -
+        new Date(b.created_at || 0).getTime()
+    );
+  }, [
+    applicationRequirements,
+    liveDocumentData.requirements,
+    portalDocumentRequirements,
+    rawSummary?.studentType,
+    student,
+  ]);
   const tasks = asPortalArray(portalData?.tasks).map((task) => {
     const safeTask = makeStudentSafeTaskCopy(
       task,
@@ -1717,8 +3712,187 @@ function StudentPortalDashboard({
       _studentPortalOriginalTitle: task?.title || "",
     };
   });
-  const universities = asPortalArray(portalData?.universities);
-  const communications = asPortalArray(portalData?.communications);
+  const portalUniversities = asPortalArray(portalData?.universities);
+  const portalUniversityRequirements = asPortalArray(
+    portalData?.universityRequirements || portalData?.university_requirements
+  );
+  const portalUniversityEvents = asPortalArray(
+    portalData?.universityEvents || portalData?.university_events
+  );
+  const realUniversities = useMemo(
+    () => uniqueMergeRows(liveUniversityData.universities, portalUniversities),
+    [liveUniversityData.universities, portalUniversities]
+  );
+  const applicationUniversityFallbacks = useMemo(
+    () => buildApplicationUniversityFallbacks(applications, realUniversities),
+    [applications, realUniversities]
+  );
+  const universities = useMemo(
+    () => uniqueMergeRows(realUniversities, applicationUniversityFallbacks),
+    [realUniversities, applicationUniversityFallbacks]
+  );
+  const universityRequirements = useMemo(
+    () =>
+      uniqueMergeRows(
+        liveUniversityData.requirements,
+        portalUniversityRequirements
+      ).filter((requirement) => requirement?.admin_only !== true),
+    [liveUniversityData.requirements, portalUniversityRequirements]
+  );
+  const universityEvents = useMemo(
+    () =>
+      uniqueMergeRows(
+        liveUniversityData.events,
+        portalUniversityEvents
+      ).filter(isStudentSafeUniversityEvent),
+    [liveUniversityData.events, portalUniversityEvents]
+  );
+  const universityWorkspaceRows = useMemo(
+    () =>
+      buildStudentUniversityWorkspaceRows({
+        universities,
+        applications,
+        requirements: universityRequirements,
+        events: universityEvents,
+      }),
+    [universities, applications, universityRequirements, universityEvents]
+  );
+
+  const portalVisaCases = asPortalArray(portalData?.visas || portalData?.visaCases || portalData?.visa_cases);
+  const portalVisaRequirements = asPortalArray(
+    portalData?.visaRequirements || portalData?.visa_requirements
+  );
+  const portalVisaEvents = asPortalArray(portalData?.visaEvents || portalData?.visa_events);
+  const studentVisaCases = useMemo(
+    () =>
+      uniqueMergeRows(liveVisaData.visas, portalVisaCases)
+        .filter((visa) => !visa?.is_archived)
+        .sort(
+          (a, b) =>
+            new Date(b?.updated_at || b?.created_at || 0).getTime() -
+            new Date(a?.updated_at || a?.created_at || 0).getTime()
+        ),
+    [liveVisaData.visas, portalVisaCases]
+  );
+  const studentVisaRequirements = useMemo(
+    () => uniqueMergeRows(liveVisaData.requirements, portalVisaRequirements),
+    [liveVisaData.requirements, portalVisaRequirements]
+  );
+  const studentVisaEvents = useMemo(
+    () =>
+      uniqueMergeRows(liveVisaData.events, portalVisaEvents)
+        .filter(isStudentSafeVisaEvent)
+        .sort(
+          (a, b) =>
+            new Date(b?.created_at || 0).getTime() -
+            new Date(a?.created_at || 0).getTime()
+        ),
+    [liveVisaData.events, portalVisaEvents]
+  );
+  const activeStudentVisa = useMemo(
+    () =>
+      studentVisaCases.find(
+        (visa) => String(visa?.id || "") === String(activeStudentVisaId || "")
+      ) || studentVisaCases[0] || null,
+    [studentVisaCases, activeStudentVisaId]
+  );
+  const activeStudentVisaRequirements = useMemo(() => {
+    if (!activeStudentVisa?.id) return [];
+    return studentVisaRequirements.filter(
+      (requirement) =>
+        String(requirement?.visa_id || "") === String(activeStudentVisa.id)
+    );
+  }, [studentVisaRequirements, activeStudentVisa?.id]);
+  const activeStudentVisaEvents = useMemo(() => {
+    if (!activeStudentVisa?.id) return [];
+    return studentVisaEvents
+      .filter((event) => String(event?.visa_id || "") === String(activeStudentVisa.id))
+      .slice(0, 18);
+  }, [studentVisaEvents, activeStudentVisa?.id]);
+  const studentVisaRequirementStats = useMemo(() => {
+    const required = activeStudentVisaRequirements.filter(
+      (requirement) => requirement?.required !== false
+    );
+    const statuses = required.map((requirement) =>
+      getStudentVisaRequirementStatus(requirement?.status)
+    );
+    const ready = statuses.filter((status) => status === "ready").length;
+    const rejected = statuses.filter((status) => status === "rejected").length;
+    const review = statuses.filter((status) => status === "review").length;
+    const missing = statuses.filter((status) => status === "missing").length;
+    const score = required.length ? Math.round((ready / required.length) * 100) : null;
+
+    return {
+      total: required.length,
+      ready,
+      rejected,
+      review,
+      missing,
+      attention: rejected + review + missing,
+      score,
+    };
+  }, [activeStudentVisaRequirements]);
+  const liveStudentVisaReadiness =
+    studentVisaRequirementStats.score === null
+      ? null
+      : clampPercent(studentVisaRequirementStats.score);
+  const activeStudentVisaStageIndex = getStudentVisaStageIndex(
+    activeStudentVisa?.visa_stage || activeStudentVisa?.visa_status
+  );
+  const activeStudentVisaStatus = normalize(
+    activeStudentVisa?.visa_status || "not_started"
+  );
+  const activeStudentVisaApproved = ["visa_approved", "approved", "granted"].some(
+    (status) => activeStudentVisaStatus.includes(status)
+  );
+  const activeStudentVisaRefused = ["rejected", "refused", "declined"].some(
+    (status) => activeStudentVisaStatus.includes(status)
+  );
+  const communications = useMemo(
+    () =>
+      asPortalArray(portalData?.communications)
+        .filter(isStudentVisibleCommunication)
+        .sort((a, b) => communicationDateMs(b) - communicationDateMs(a)),
+    [portalData?.communications]
+  );
+
+  const messageChannelOptions = useMemo(() => {
+    const keys = Array.from(
+      new Set(communications.map((message) => communicationChannelKey(message)).filter(Boolean))
+    );
+
+    return keys.sort((a, b) => a.localeCompare(b));
+  }, [communications]);
+
+  const filteredCommunications = useMemo(() => {
+    const query = normalize(deferredMessageSearch);
+
+    return communications.filter((message) => {
+      const channelKey = communicationChannelKey(message);
+
+      if (messageChannelFilter !== "all" && channelKey !== messageChannelFilter) {
+        return false;
+      }
+
+      if (!query) return true;
+
+      return normalize(
+        [
+          message?.subject,
+          message?.message,
+          message?.body,
+          message?.channel,
+          message?.type,
+          message?.status,
+          message?.source,
+        ]
+          .filter(Boolean)
+          .join(" ")
+      ).includes(query);
+    });
+  }, [communications, deferredMessageSearch, messageChannelFilter]);
+
+  const latestCommunication = communications[0] || null;
   const timeline = asPortalArray(portalData?.timeline);
   const portalInvoices = asPortalArray(portalData?.invoices);
   const portalPayments = asPortalArray(portalData?.payments);
@@ -1753,92 +3927,842 @@ function StudentPortalDashboard({
     [localPaymentData.paymentAccounts, portalPaymentAccounts]
   );
 
-  useEffect(() => {
+  async function loadStudentVisaWorkspace({ silent = false } = {}) {
     const studentId = getPortalStudentId(student);
-    const studentType = getPortalStudentType(student, rawSummary?.studentType || "inquiry");
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
     const loadKey = `${studentType}-${studentId}`;
 
-    if (activeTab !== "payments" || !studentId || localPaymentData.loadedFor === loadKey) {
+    if (!studentId) {
+      setLiveVisaData({
+        visas: [],
+        requirements: [],
+        events: [],
+        loading: false,
+        error: "",
+        loadedFor: "",
+      });
+      setActiveStudentVisaId("");
+      return;
+    }
+
+    setLiveVisaData((previous) => ({
+      ...previous,
+      loading: silent ? previous.loading : true,
+      error: silent ? previous.error : "",
+    }));
+
+    const fetchVisaCases = async () => {
+      const strict = await supabase
+        .from("student_visas")
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (!strict.error) return { rows: strict.data || [], warning: "" };
+
+      const fallback = await supabase
+        .from("student_visas")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (fallback.error) throw fallback.error;
+      return { rows: fallback.data || [], warning: strict.error?.message || "" };
+    };
+
+    try {
+      const visaResult = await fetchVisaCases();
+      const visaRows = visaResult.rows || [];
+      const visaIds = visaRows
+        .map((visa) => visa?.id)
+        .filter((value) => value !== null && value !== undefined);
+
+      let requirementRows = [];
+      let requirementWarning = "";
+      if (visaIds.length) {
+        const requirementResult = await supabase
+          .from("student_visa_requirements")
+          .select("*")
+          .in("visa_id", visaIds)
+          .order("created_at", { ascending: true })
+          .limit(600);
+
+        if (requirementResult.error) {
+          requirementWarning = requirementResult.error.message || "";
+          console.warn(
+            "Student portal visa requirements fetch skipped:",
+            requirementResult.error.message || requirementResult.error
+          );
+        } else {
+          requirementRows = requirementResult.data || [];
+        }
+      }
+
+      let eventsResult = await supabase
+        .from("student_visa_events")
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false })
+        .limit(300);
+
+      if (eventsResult.error) {
+        eventsResult = await supabase
+          .from("student_visa_events")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false })
+          .limit(300);
+      }
+
+      const warning = [
+        visaResult.warning,
+        requirementWarning,
+        eventsResult.error?.message || "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      setLiveVisaData({
+        visas: visaRows,
+        requirements: requirementRows,
+        events: eventsResult.error ? [] : eventsResult.data || [],
+        loading: false,
+        error: warning && !visaRows.length ? warning : "",
+        loadedFor: loadKey,
+      });
+
+      setActiveStudentVisaId((current) => {
+        const currentStillExists = visaRows.some(
+          (visa) => !visa?.is_archived && String(visa?.id || "") === String(current || "")
+        );
+        if (currentStillExists) return current;
+        return String(visaRows.find((visa) => !visa?.is_archived)?.id || "");
+      });
+    } catch (visaLoadError) {
+      setLiveVisaData((previous) => ({
+        ...previous,
+        loading: false,
+        error:
+          visaLoadError?.message ||
+          "The live Visa workspace could not be loaded.",
+        loadedFor: loadKey,
+      }));
+    }
+  }
+
+  useEffect(() => {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+
+    if (!studentId) return undefined;
+
+    void loadStudentVisaWorkspace();
+
+    const refreshVisa = () => {
+      void loadStudentVisaWorkspace({ silent: true });
+    };
+
+    const visaChannel = supabase
+      .channel(`student-portal-visa-${studentType}-${studentId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_visas",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshVisa
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_visa_events",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshVisa
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_visa_requirements",
+        },
+        refreshVisa
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(visaChannel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student?.id, student?.student_id, rawSummary?.studentType]);
+
+  async function loadStudentApplicationWorkspace({ silent = false } = {}) {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+    const loadKey = `${studentType}-${studentId}`;
+
+    if (!studentId) {
+      setLiveApplicationData({
+        applications: [],
+        requirements: [],
+        events: [],
+        loading: false,
+        error: "",
+        loadedFor: "",
+      });
+      return;
+    }
+
+    setLiveApplicationData((previous) => ({
+      ...previous,
+      loading: silent ? previous.loading : true,
+      error: silent ? previous.error : "",
+    }));
+
+    const fetchApplications = async () => {
+      const strict = await supabase
+        .from("student_applications")
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false })
+        .limit(150);
+
+      if (!strict.error) return strict.data || [];
+
+      const fallback = await supabase
+        .from("student_applications")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(150);
+
+      if (fallback.error) throw fallback.error;
+      return fallback.data || [];
+    };
+
+    try {
+      const applicationRows = await fetchApplications();
+      const applicationIds = applicationRows
+        .map((application) => application?.id)
+        .filter((value) => value !== null && value !== undefined);
+
+      let requirementRows = [];
+      if (applicationIds.length) {
+        const requirementResult = await supabase
+          .from("student_application_requirements")
+          .select("*")
+          .in("application_id", applicationIds)
+          .order("created_at", { ascending: true })
+          .limit(500);
+
+        if (requirementResult.error) {
+          console.warn(
+            "Student portal application requirements fetch skipped:",
+            requirementResult.error.message || requirementResult.error
+          );
+        } else {
+          requirementRows = requirementResult.data || [];
+        }
+      }
+
+      let eventsQuery = supabase
+        .from("student_application_events")
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      let eventsResult = await eventsQuery;
+
+      if (eventsResult.error) {
+        eventsResult = await supabase
+          .from("student_application_events")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false })
+          .limit(500);
+      }
+
+      setLiveApplicationData({
+        applications: applicationRows,
+        requirements: requirementRows,
+        events: eventsResult.error ? [] : eventsResult.data || [],
+        loading: false,
+        error: "",
+        loadedFor: loadKey,
+      });
+    } catch (applicationLoadError) {
+      setLiveApplicationData((previous) => ({
+        ...previous,
+        loading: false,
+        error:
+          applicationLoadError?.message ||
+          "The live application workspace could not be loaded.",
+        loadedFor: loadKey,
+      }));
+    }
+  }
+
+  useEffect(() => {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+
+    if (!studentId) return undefined;
+
+    void loadStudentApplicationWorkspace();
+
+    const refreshApplications = () => {
+      void loadStudentApplicationWorkspace({ silent: true });
+    };
+
+    const applicationsChannel = supabase
+      .channel(`student-portal-applications-${studentType}-${studentId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_applications",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshApplications
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_application_events",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshApplications
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_application_requirements",
+        },
+        refreshApplications
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(applicationsChannel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student?.id, student?.student_id, rawSummary?.studentType]);
+
+  async function loadStudentUniversityWorkspace({ silent = false } = {}) {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+    const loadKey = `${studentType}-${studentId}`;
+
+    if (!studentId) {
+      setLiveUniversityData({
+        universities: [],
+        requirements: [],
+        events: [],
+        loading: false,
+        error: "",
+        loadedFor: "",
+      });
+      return;
+    }
+
+    setLiveUniversityData((previous) => ({
+      ...previous,
+      loading: silent ? previous.loading : true,
+      error: silent ? previous.error : "",
+    }));
+
+    const fetchUniversityRows = async () => {
+      const strict = await supabase
+        .from("student_universities")
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false })
+        .limit(250);
+
+      if (!strict.error) return { rows: strict.data || [], warning: "" };
+
+      const fallback = await supabase
+        .from("student_universities")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(250);
+
+      if (fallback.error) throw fallback.error;
+      return {
+        rows: fallback.data || [],
+        warning: strict.error?.message || "",
+      };
+    };
+
+    try {
+      const universityResult = await fetchUniversityRows();
+      const universityRows = universityResult.rows || [];
+      const universityIds = universityRows
+        .map((university) => university?.id)
+        .filter((value) => value !== null && value !== undefined);
+
+      let requirementRows = [];
+      let requirementWarning = "";
+      if (universityIds.length) {
+        const requirementResult = await supabase
+          .from("student_university_requirements")
+          .select("*")
+          .in("student_university_id", universityIds)
+          .order("created_at", { ascending: true })
+          .limit(750);
+
+        if (requirementResult.error) {
+          requirementWarning = requirementResult.error.message || "";
+          console.warn(
+            "Student portal university requirements fetch skipped:",
+            requirementResult.error.message || requirementResult.error
+          );
+        } else {
+          requirementRows = requirementResult.data || [];
+        }
+      }
+
+      let eventsResult = await supabase
+        .from("student_university_events")
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("student_type", studentType)
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      if (eventsResult.error) {
+        eventsResult = await supabase
+          .from("student_university_events")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false })
+          .limit(500);
+      }
+
+      const warning = [
+        universityResult.warning,
+        requirementWarning,
+        eventsResult.error?.message || "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      setLiveUniversityData({
+        universities: universityRows,
+        requirements: requirementRows,
+        events: eventsResult.error ? [] : eventsResult.data || [],
+        loading: false,
+        error: warning && !universityRows.length ? warning : "",
+        loadedFor: loadKey,
+      });
+    } catch (universityLoadError) {
+      setLiveUniversityData((previous) => ({
+        ...previous,
+        loading: false,
+        error:
+          universityLoadError?.message ||
+          "The live university workspace could not be loaded.",
+        loadedFor: loadKey,
+      }));
+    }
+  }
+
+  useEffect(() => {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+
+    if (!studentId) return undefined;
+
+    void loadStudentUniversityWorkspace();
+
+    const refreshUniversities = () => {
+      void loadStudentUniversityWorkspace({ silent: true });
+    };
+
+    const universitiesChannel = supabase
+      .channel(`student-portal-universities-${studentType}-${studentId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_universities",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshUniversities
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_university_events",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshUniversities
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_university_requirements",
+        },
+        refreshUniversities
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(universitiesChannel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student?.id, student?.student_id, rawSummary?.studentType]);
+
+  async function loadStudentDocumentWorkspace({ silent = false } = {}) {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+    const loadKey = `${studentType}-${studentId}`;
+
+    if (!studentId) {
+      setLiveDocumentData({
+        documents: [],
+        requirements: [],
+        loading: false,
+        error: "",
+        loadedFor: "",
+      });
+      return;
+    }
+
+    setLiveDocumentData((previous) => ({
+      ...previous,
+      loading: silent ? previous.loading : true,
+      error: silent ? previous.error : "",
+    }));
+
+    const fetchStudentRows = async ({
+      table,
+      statusActive = false,
+      orderAscending = false,
+      limit = 500,
+    }) => {
+      let strictQuery = supabase
+        .from(table)
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("student_type", studentType);
+
+      if (statusActive) strictQuery = strictQuery.eq("status", "active");
+      strictQuery = strictQuery
+        .order("created_at", { ascending: orderAscending })
+        .limit(limit);
+
+      const strictResult = await strictQuery;
+
+      if (
+        !strictResult.error &&
+        Array.isArray(strictResult.data) &&
+        strictResult.data.length
+      ) {
+        return { rows: strictResult.data, warning: "" };
+      }
+
+      let fallbackQuery = supabase
+        .from(table)
+        .select("*")
+        .eq("student_id", studentId);
+
+      if (statusActive) fallbackQuery = fallbackQuery.eq("status", "active");
+      fallbackQuery = fallbackQuery
+        .order("created_at", { ascending: orderAscending })
+        .limit(limit);
+
+      const fallbackResult = await fallbackQuery;
+
+      if (!fallbackResult.error) {
+        return {
+          rows: fallbackResult.data || [],
+          warning: strictResult.error?.message || "",
+        };
+      }
+
+      return {
+        rows: strictResult.data || [],
+        warning:
+          fallbackResult.error?.message ||
+          strictResult.error?.message ||
+          `${table} could not be loaded.`,
+      };
+    };
+
+    try {
+      const [documentResult, requirementResult] = await Promise.all([
+        fetchStudentRows({
+          table: "student_documents",
+          orderAscending: false,
+          limit: 500,
+        }),
+        fetchStudentRows({
+          table: "student_document_requirements",
+          statusActive: true,
+          orderAscending: true,
+          limit: 500,
+        }),
+      ]);
+
+      const warning = [documentResult.warning, requirementResult.warning]
+        .filter(Boolean)
+        .join(" ");
+
+      setLiveDocumentData({
+        documents: documentResult.rows || [],
+        requirements: requirementResult.rows || [],
+        loading: false,
+        error:
+          warning && !(documentResult.rows || []).length && !(requirementResult.rows || []).length
+            ? warning
+            : "",
+        loadedFor: loadKey,
+      });
+    } catch (documentLoadError) {
+      setLiveDocumentData((previous) => ({
+        ...previous,
+        loading: false,
+        error:
+          documentLoadError?.message ||
+          "The live document workspace could not be loaded.",
+        loadedFor: loadKey,
+      }));
+    }
+  }
+
+  useEffect(() => {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+
+    if (!studentId) return undefined;
+
+    void loadStudentDocumentWorkspace();
+
+    const refreshLiveDocuments = () => {
+      void loadStudentDocumentWorkspace({ silent: true });
+    };
+
+    const documentsChannel = supabase
+      .channel(`student-portal-documents-${studentType}-${studentId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_documents",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshLiveDocuments
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "student_document_requirements",
+          filter: `student_id=eq.${studentId}`,
+        },
+        refreshLiveDocuments
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(documentsChannel);
+    };
+    // The loader intentionally follows the resolved student identity only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student?.id, student?.student_id, rawSummary?.studentType]);
+
+  useEffect(() => {
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+    const personId = String(student?.person_id || student?.personId || "").trim();
+    const loadKey = `${studentType}-${studentId}`;
+
+    if (
+      activeTab !== "payments" ||
+      !studentId ||
+      localPaymentData.loadedFor === loadKey
+    ) {
       return;
     }
 
     let cancelled = false;
 
     async function loadLivePaymentData() {
+      // Mark this identity as in-flight immediately. This prevents a parent
+      // re-render from starting the same Finance request bundle again.
       setLocalPaymentData((prev) => ({
         ...prev,
         loading: true,
         error: "",
+        loadedFor: loadKey,
       }));
 
-      const fetchRows = async (table, options = {}) => {
-        const {
-          orderBy = "created_at",
-          ascending = false,
-          limit = 50,
-          matchStudentType = false,
-        } = options;
-
-        let query = supabase.from(table).select("*").eq("student_id", studentId);
-
-        if (matchStudentType && studentType) {
-          query = query.eq("student_type", studentType);
-        }
-
-        if (orderBy) query = query.order(orderBy, { ascending });
-        if (limit) query = query.limit(limit);
-
-        const strict = await query;
-
-        if (!strict.error && Array.isArray(strict.data) && strict.data.length) {
-          return strict.data;
-        }
-
-        if (matchStudentType) {
-          let fallback = supabase.from(table).select("*").eq("student_id", studentId);
-          if (orderBy) fallback = fallback.order(orderBy, { ascending });
-          if (limit) fallback = fallback.limit(limit);
-          const fallbackResult = await fallback;
-          if (!fallbackResult.error) return fallbackResult.data || [];
-        }
-
-        if (strict.error) {
-          console.warn(`Student portal payment live fetch skipped: ${table}`, strict.error.message || strict.error);
-        }
-
-        return [];
-      };
-
       try {
-        const [liveInvoices, livePayments, liveReceipts, livePaymentRequests, livePaymentAccounts] =
-          await Promise.all([
-            fetchRows("student_invoices", { matchStudentType: true, limit: 50 }),
-            fetchRows("student_payments", { matchStudentType: true, limit: 50 }),
-            fetchRows("student_receipts", { matchStudentType: true, limit: 50 }),
-            fetchRows("counselor_payment_requests", { matchStudentType: true, limit: 50 }),
-            supabase
-              .from("payment_accounts")
-              .select("*")
-              .eq("is_active", true)
-              .order("id", { ascending: false })
-              .limit(10)
-              .then((result) => {
-                if (result.error) {
-                  console.warn("Student portal payment accounts live fetch skipped:", result.error.message || result.error);
-                  return [];
-                }
-                return result.data || [];
-              }),
-          ]);
+        const identitySources = await getStudentIdentitySources({
+          ...student,
+          student_type: studentType,
+          person_id: personId || student?.person_id || null,
+        });
+
+        const references = Array.from(
+          new Map(
+            [
+              ...(identitySources || []),
+              {
+                student_id: studentId,
+                student_type: studentType,
+              },
+            ]
+              .filter(Boolean)
+              .map((source) => {
+                const sourceId = String(
+                  source?.student_id ?? source?.id ?? ""
+                ).trim();
+                const sourceType = normalize(
+                  source?.student_type || source?.__leadType || studentType
+                );
+                return [
+                  `${sourceType}:${sourceId}`,
+                  { studentId: sourceId, studentType: sourceType },
+                ];
+              })
+              .filter(([, ref]) => ref.studentId)
+          ).values()
+        );
+
+        const fetchRows = async (table, options = {}) => {
+          const {
+            orderBy = "created_at",
+            ascending = false,
+            limit = 50,
+            matchStudentType = false,
+          } = options;
+
+          const attempts = references.map(({ studentId: refId, studentType: refType }) => {
+            let query = supabase.from(table).select("*").eq("student_id", refId);
+
+            if (matchStudentType && refType) {
+              query = query.eq("student_type", refType);
+            }
+
+            if (orderBy) query = query.order(orderBy, { ascending });
+            if (limit) query = query.limit(limit);
+
+            return query;
+          });
+
+          const results = await Promise.allSettled(attempts);
+          const rows = results.flatMap((result) => {
+            if (result.status !== "fulfilled") return [];
+            if (result.value?.error) {
+              console.warn(
+                `Student portal payment live fetch skipped: ${table}`,
+                result.value.error.message || result.value.error
+              );
+              return [];
+            }
+            return Array.isArray(result.value?.data) ? result.value.data : [];
+          });
+
+          return uniqueMergeRows(rows);
+        };
+
+        const [
+          liveInvoices,
+          livePayments,
+          liveReceipts,
+          livePaymentRequests,
+          livePaymentAccountsResult,
+        ] = await Promise.all([
+          fetchRows("student_invoices", { matchStudentType: true, limit: 50 }),
+          fetchRows("student_payments", { matchStudentType: true, limit: 50 }),
+          fetchRows("student_receipts", { matchStudentType: true, limit: 50 }),
+          fetchRows("counselor_payment_requests", {
+            matchStudentType: true,
+            limit: 50,
+          }),
+          supabase
+            .from("payment_accounts")
+            .select("*")
+            .eq("is_active", true)
+            .order("id", { ascending: false })
+            .limit(10),
+        ]);
 
         if (cancelled) return;
+
+        const livePaymentAccounts = livePaymentAccountsResult?.error
+          ? []
+          : livePaymentAccountsResult?.data || [];
+
+        if (livePaymentAccountsResult?.error) {
+          console.warn(
+            "Student portal payment accounts live fetch skipped:",
+            livePaymentAccountsResult.error.message ||
+              livePaymentAccountsResult.error
+          );
+        }
 
         setLocalPaymentData({
           invoices: liveInvoices || [],
           payments: livePayments || [],
           receipts: liveReceipts || [],
           paymentRequests: livePaymentRequests || [],
-          paymentAccounts: livePaymentAccounts || [],
+          paymentAccounts: livePaymentAccounts,
           loading: false,
           error: "",
           loadedFor: loadKey,
@@ -1849,18 +4773,27 @@ function StudentPortalDashboard({
         setLocalPaymentData((prev) => ({
           ...prev,
           loading: false,
-          error: paymentError?.message || "Payment data could not be loaded.",
+          error:
+            paymentError?.message || "Payment data could not be loaded.",
           loadedFor: loadKey,
         }));
       }
     }
 
-    loadLivePaymentData();
+    void loadLivePaymentData();
 
     return () => {
       cancelled = true;
     };
-  }, [activeTab, student, rawSummary?.studentType, localPaymentData.loadedFor]);
+  }, [
+    activeTab,
+    student?.id,
+    student?.student_id,
+    student?.person_id,
+    student?.personId,
+    rawSummary?.studentType,
+    localPaymentData.loadedFor,
+  ]);
 
   const supportRequests = useMemo(() => {
     const portalSupportRequests = asPortalArray(
@@ -1889,6 +4822,232 @@ function StudentPortalDashboard({
     [supportRequests]
   );
 
+  const studentDocumentWorkspace = useMemo(() => {
+    const blocks = new Map();
+
+    documentRequirements.forEach((requirement) => {
+      const name = requirement.document_name || "Document";
+      const key = normalizeDocumentName(name);
+      if (!key) return;
+      const requestMeta = getDocumentRequirementMeta(requirement);
+
+      blocks.set(key, {
+        key,
+        name,
+        group: requirement.group_name || "Student Documents",
+        stage:
+          requirement.stage_name ||
+          requirement.workflow_stage ||
+          "Student Journey",
+        instructions:
+          requestMeta.instructions ||
+          "Upload a clear and complete copy when this document is requested.",
+        required: requirement.required !== false,
+        verificationRequired: requirement.verification_required !== false,
+        expiryTracking: Boolean(requirement.expiry_tracking),
+        studentCanUpload: requirement.student_can_upload !== false,
+        requirementId: requirement._virtualApplicationRequirement
+          ? null
+          : requirement.id || null,
+        sourceApplicationRequirementId:
+          requirement.source_application_requirement_id || null,
+        sourceApplicationId: requirement.application_id || null,
+        isRequested: true,
+        requestPriority: requestMeta.priority,
+        requestedAt: requestMeta.requestedAt,
+        requestedBy: requestMeta.requestedBy,
+        requestCount: requestMeta.requestCount,
+        deadline: requestMeta.dueDate || null,
+        files: [],
+      });
+    });
+
+    documents.forEach((document) => {
+      if (!document || document.is_deleted) return;
+
+      const baseName = getDocumentBaseName(
+        document.document_name ||
+          document.file_name ||
+          document.title ||
+          "Document"
+      );
+      const key = normalizeDocumentName(baseName);
+      if (!key) return;
+
+      if (!blocks.has(key)) {
+        blocks.set(key, {
+          key,
+          name: baseName,
+          group: document.document_category || "Uploaded Documents",
+          stage: "Student Journey",
+          instructions:
+            document.description ||
+            "This file is connected to your Zaifan student record.",
+          required: false,
+          verificationRequired: true,
+          expiryTracking: Boolean(document.expiry_date),
+          studentCanUpload: isDocumentRejectedStatus(
+            document.status || document.document_status
+          ),
+          requirementId: null,
+          deadline:
+            document.deadline ||
+            document.due_date ||
+            document.expiry_date ||
+            document.expires_at ||
+            null,
+          files: [],
+        });
+      }
+
+      blocks.get(key).files.push(document);
+    });
+
+    return Array.from(blocks.values())
+      .map((block) => {
+        const files = [...block.files].sort(
+          (a, b) =>
+            new Date(b.updated_at || b.created_at || 0).getTime() -
+            new Date(a.updated_at || a.created_at || 0).getTime()
+        );
+        const activeFiles = files.filter(
+          (file) => normalize(file.status) !== "archived"
+        );
+        const latestFile = activeFiles[0] || files[0] || null;
+        const latestStatus = normalize(
+          latestFile?.status || latestFile?.document_status || ""
+        );
+
+        let operationalStatus = "optional";
+        if (latestFile && isDocumentRejectedStatus(latestStatus)) {
+          operationalStatus = "rejected";
+        } else if (latestFile && isDocumentVerifiedStatus(latestStatus)) {
+          operationalStatus = "verified";
+        } else if (latestFile && isDocumentReviewStatus(latestStatus)) {
+          operationalStatus = "received";
+        } else if (latestFile) {
+          operationalStatus = latestStatus || "received";
+        } else if (block.required) {
+          operationalStatus = "missing";
+        }
+
+        return {
+          ...block,
+          files,
+          activeFiles,
+          latestFile,
+          status: operationalStatus,
+          hasUpload: Boolean(activeFiles.length),
+          canUpload:
+            block.studentCanUpload &&
+            (!latestFile ||
+              operationalStatus === "rejected" ||
+              operationalStatus === "missing"),
+          requestAgain: operationalStatus === "rejected",
+        };
+      })
+      .sort((a, b) => {
+        const weight = {
+          rejected: 6,
+          missing: 5,
+          received: 4,
+          pending: 4,
+          under_review: 4,
+          optional: 2,
+          verified: 1,
+        };
+
+        const statusDifference =
+          (weight[b.status] || 3) - (weight[a.status] || 3);
+        if (statusDifference !== 0) return statusDifference;
+
+        if (a.required !== b.required) return a.required ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+  }, [documents, documentRequirements]);
+
+  const documentWorkspaceStats = useMemo(() => {
+    const required = studentDocumentWorkspace.filter((item) => item.required);
+    const verified = studentDocumentWorkspace.filter(
+      (item) => item.status === "verified"
+    );
+    const received = studentDocumentWorkspace.filter(
+      (item) => item.status === "received"
+    );
+    const rejected = studentDocumentWorkspace.filter(
+      (item) => item.status === "rejected"
+    );
+    const missing = studentDocumentWorkspace.filter(
+      (item) => item.status === "missing"
+    );
+    const uploaded = studentDocumentWorkspace.filter((item) => item.hasUpload);
+    const verifiedRequired = required.filter(
+      (item) => item.status === "verified"
+    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const overdue = studentDocumentWorkspace.filter((item) => {
+      if (!item.deadline || item.status === "verified") return false;
+      const due = new Date(item.deadline);
+      due.setHours(0, 0, 0, 0);
+      return !Number.isNaN(due.getTime()) && due.getTime() < today.getTime();
+    });
+    const urgent = studentDocumentWorkspace.filter(
+      (item) =>
+        normalizeDocumentRequestPriority(item.requestPriority) === "urgent" &&
+        item.status !== "verified"
+    );
+
+    return {
+      total: studentDocumentWorkspace.length,
+      required: required.length,
+      verified: verified.length,
+      received: received.length,
+      rejected: rejected.length,
+      missing: missing.length,
+      uploaded: uploaded.length,
+      attention: received.length + rejected.length + missing.length,
+      overdue: overdue.length,
+      urgent: urgent.length,
+      readiness: required.length
+        ? clampPercent((verifiedRequired.length / required.length) * 100)
+        : uploaded.length
+          ? clampPercent((verified.length / uploaded.length) * 100)
+          : 0,
+    };
+  }, [studentDocumentWorkspace]);
+
+  const filteredStudentDocumentWorkspace = useMemo(() => {
+    const query = normalizeDocumentName(documentSearch);
+
+    return studentDocumentWorkspace.filter((item) => {
+      const matchesFilter =
+        documentFilter === "all" ||
+        (documentFilter === "attention" &&
+          ["missing", "rejected", "received"].includes(item.status)) ||
+        (documentFilter === "requested" &&
+          Boolean(item.isRequested || item.requirementId)) ||
+        (documentFilter === "uploaded" && item.hasUpload) ||
+        (documentFilter === "verified" && item.status === "verified");
+
+      if (!matchesFilter) return false;
+      if (!query) return true;
+
+      return normalizeDocumentName(
+        [
+          item.name,
+          item.group,
+          item.stage,
+          item.instructions,
+          item.latestFile?.notes,
+          getDocumentFileName(item.latestFile || {}),
+        ]
+          .filter(Boolean)
+          .join(" ")
+      ).includes(query);
+    });
+  }, [studentDocumentWorkspace, documentFilter, documentSearch]);
+
   const dashboardCounts = useMemo(
     () => buildDashboardCounts(portalData || {}, rawSummary || {}),
     [portalData, rawSummary]
@@ -1898,15 +5057,127 @@ function StudentPortalDashboard({
     () => ({
       ...(rawSummary || {}),
       ...dashboardCounts,
+      applicationsCount: Math.max(
+        Number(dashboardCounts?.applicationsCount || 0),
+        applications.length
+      ),
+      documentsCount: Math.max(
+        Number(dashboardCounts?.documentsCount || 0),
+        documents.length
+      ),
       latestApplication:
-        rawSummary?.latestApplication ||
         applications?.[0] ||
+        rawSummary?.latestApplication ||
         {},
+      applicationStatus:
+        applications?.[0]?.application_status ||
+        applications?.[0]?.status ||
+        rawSummary?.applicationStatus ||
+        "not_started",
+      offerStatus:
+        applications?.[0]?.offer_status ||
+        rawSummary?.offerStatus ||
+        "pending",
+      casStatus: getApplicationPreEnrollmentStatus(
+        applications?.[0] || rawSummary?.latestApplication || {}
+      ),
+      visaStatus:
+        activeStudentVisa?.visa_status ||
+        applications?.[0]?.visa_status ||
+        rawSummary?.visaStatus ||
+        "not_started",
     }),
-    [rawSummary, dashboardCounts, applications]
+    [
+      rawSummary,
+      dashboardCounts,
+      applications,
+      applications.length,
+      documents.length,
+      activeStudentVisa?.visa_status,
+    ]
   );
 
   const latestApplication = summary.latestApplication || {};
+  const latestApplicationGuidance = getStudentApplicationGuidance(
+    latestApplication
+  );
+  const preEnrollmentPortalStatus =
+    getApplicationPreEnrollmentStatus(latestApplication);
+  const preEnrollmentComplete = ["validated", "completed"].includes(
+    normalize(preEnrollmentPortalStatus)
+  );
+
+  const applicationRequirementsById = useMemo(() => {
+    const map = new Map();
+    applicationRequirements.forEach((requirement) => {
+      const key = String(requirement?.application_id || "");
+      if (!key) return;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(requirement);
+    });
+    return map;
+  }, [applicationRequirements]);
+
+  const applicationEventsById = useMemo(() => {
+    const map = new Map();
+    applicationEvents.forEach((event) => {
+      const key = String(event?.application_id || "");
+      if (!key) return;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(event);
+    });
+    return map;
+  }, [applicationEvents]);
+
+  const filteredStudentApplications = useMemo(
+    () =>
+      applications.filter((application) =>
+        applicationMatchesStudentFilter(application, applicationFilter)
+      ),
+    [applications, applicationFilter]
+  );
+
+  const applicationPortfolioStats = useMemo(() => {
+    const active = applications.filter((application) => !application?.is_archived);
+    const pendingRequirements = applicationRequirements.filter(
+      (requirement) => normalize(requirement?.status || "pending") !== "completed"
+    );
+    const decisions = active.filter((application) => {
+      const status = normalize(
+        application?.application_status || application?.status
+      );
+      const offer = normalize(application?.offer_status);
+      return (
+        ["conditional_admission", "admitted", "waitlisted", "rejected"].includes(
+          status
+        ) ||
+        ["conditional_offer", "offer_received", "admitted", "offer_accepted"].includes(
+          offer
+        )
+      );
+    });
+    const preEnrollment = active.filter((application) =>
+      ["submitted", "validated", "completed"].includes(
+        getApplicationPreEnrollmentStatus(application)
+      )
+    );
+
+    return {
+      active: active.length,
+      decisions: decisions.length,
+      preEnrollment: preEnrollment.length,
+      pendingRequirements: pendingRequirements.length,
+    };
+  }, [applications, applicationRequirements]);
+
+  const toggleApplicationExpanded = (applicationId) => {
+    setExpandedApplicationIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(applicationId)) next.delete(applicationId);
+      else next.add(applicationId);
+      return next;
+    });
+  };
 
   const pendingTasks = summary.pendingTasks || [];
   const overdueTasks = tasks.filter((task) => {
@@ -1916,30 +5187,34 @@ function StudentPortalDashboard({
     return new Date(task.due_date).getTime() < new Date().setHours(0, 0, 0, 0);
   });
 
-  const documentReadiness =
-    summary.documentsCount > 0
-      ? Math.round(
-          (documents.filter((doc) =>
-            normalize(doc.status || doc.document_status).includes("approved")
-          ).length /
-            summary.documentsCount) *
-            100
-        )
-      : 0;
+  const documentReadiness = documentWorkspaceStats.readiness;
 
   const notifications = useMemo(
     () =>
       buildStudentNotifications({
         summary,
         applications,
+        applicationRequirements,
         documents,
+        documentRequirements,
         tasks,
         universities,
         communications,
         timeline,
         supportRequests,
       }),
-    [summary, applications, documents, tasks, universities, communications, timeline, supportRequests]
+    [
+      summary,
+      applications,
+      applicationRequirements,
+      documents,
+      documentRequirements,
+      tasks,
+      universities,
+      communications,
+      timeline,
+      supportRequests,
+    ]
   );
 
   const urgentNotifications = notifications.filter((item) => item.type === "urgent").length;
@@ -1968,13 +5243,24 @@ function StudentPortalDashboard({
         summary,
         applications,
         documents,
+        documentRequirements,
         tasks,
         universities,
         communications,
         timeline,
         notifications,
       }),
-    [summary, applications, documents, tasks, universities, communications, timeline, notifications]
+    [
+      summary,
+      applications,
+      documents,
+      documentRequirements,
+      tasks,
+      universities,
+      communications,
+      timeline,
+      notifications,
+    ]
   );
 
   const readiness = useMemo(
@@ -1983,10 +5269,11 @@ function StudentPortalDashboard({
         summary,
         applications,
         documents,
+        documentRequirements,
         tasks,
         universities,
       }),
-    [summary, applications, documents, tasks, universities]
+    [summary, applications, documents, documentRequirements, tasks, universities]
   );
 
   const roadmap = useMemo(
@@ -1999,7 +5286,9 @@ function StudentPortalDashboard({
       buildActionCenter({
         summary,
         applications,
+        applicationRequirements,
         documents,
+        documentRequirements,
         tasks,
         universities,
         communications,
@@ -2010,7 +5299,9 @@ function StudentPortalDashboard({
     [
       summary,
       applications,
+      applicationRequirements,
       documents,
+      documentRequirements,
       tasks,
       universities,
       communications,
@@ -2030,22 +5321,43 @@ function StudentPortalDashboard({
         actionCenterItems,
         applications,
         documents,
+        documentRequirements,
         tasks,
         universities,
       }),
-    [summary, analytics, readiness, actionCenterItems, applications, documents, tasks, universities]
+    [
+      summary,
+      analytics,
+      readiness,
+      actionCenterItems,
+      applications,
+      documents,
+      documentRequirements,
+      tasks,
+      universities,
+    ]
   );
 
   const deadlineCenter = useMemo(
     () =>
       buildDeadlineCenter({
         applications,
+        applicationRequirements,
         documents,
+        documentRequirements,
         tasks,
         readiness,
         studentForDeadlineSafety: student,
       }),
-    [applications, documents, tasks, readiness, student]
+    [
+      applications,
+      applicationRequirements,
+      documents,
+      documentRequirements,
+      tasks,
+      readiness,
+      student,
+    ]
   );
 
   const counselorCenter = useMemo(
@@ -2092,25 +5404,330 @@ function StudentPortalDashboard({
   const urgentActions = actionCenterItems.filter((item) => item.priority === "urgent").length;
   const importantActions = actionCenterItems.filter((item) => item.priority === "important").length;
 
-  const totalInvoiceAmount = invoices.reduce(
-    (sum, row) => sum + Number(row.total_amount || row.amount || row.invoice_amount || 0),
-    0
+  const activeFinanceInvoices = invoices.filter(
+    (invoice) =>
+      !["cancelled", "canceled", "void", "refunded"].includes(
+        normalize(invoice?.status)
+      )
   );
 
-  const paidAmount = payments.reduce(
-    (sum, row) => sum + Number(row.amount || row.paid_amount || row.payment_amount || 0),
-    0
+  const confirmedFinancePayments = payments.filter(
+    (payment) => normalize(payment?.status || "confirmed") === "confirmed"
   );
 
-  const pendingAmount = Math.max(0, totalInvoiceAmount - paidAmount);
-  const overdueInvoices = invoices.filter((invoice) => {
-    if (!invoice.due_date) return false;
-    const status = normalize(invoice.status);
-    if (["paid", "cancelled", "void"].includes(status)) return false;
-    return new Date(invoice.due_date).getTime() < new Date().setHours(0, 0, 0, 0);
+  const collectibleFinanceInvoices = activeFinanceInvoices.filter(
+    (invoice) =>
+      getStudentInvoiceOutstanding(invoice, confirmedFinancePayments) > 0
+  );
+
+  const openFinancePaymentRequests = paymentRequests.filter((request) =>
+    ["pending", "sent", "open", "requested", "active"].includes(
+      normalize(request?.status || "pending")
+    )
+  );
+
+  const closedFinancePaymentRequests = paymentRequests.filter((request) =>
+    ["completed", "closed", "resolved", "paid", "cancelled", "canceled"].includes(
+      normalize(request?.status || "pending")
+    )
+  );
+
+  const sortedFinanceInvoices = [...invoices].sort((left, right) => {
+    const leftOutstanding = getStudentInvoiceOutstanding(
+      left,
+      confirmedFinancePayments
+    );
+    const rightOutstanding = getStudentInvoiceOutstanding(
+      right,
+      confirmedFinancePayments
+    );
+
+    const leftStatus = getStudentInvoiceStatus(left, confirmedFinancePayments);
+    const rightStatus = getStudentInvoiceStatus(right, confirmedFinancePayments);
+
+    const leftOpen =
+      leftOutstanding > 0 &&
+      !["cancelled", "canceled", "void", "refunded"].includes(leftStatus);
+    const rightOpen =
+      rightOutstanding > 0 &&
+      !["cancelled", "canceled", "void", "refunded"].includes(rightStatus);
+
+    if (leftOpen !== rightOpen) return leftOpen ? -1 : 1;
+
+    return (
+      new Date(right?.updated_at || right?.created_at || 0).getTime() -
+      new Date(left?.updated_at || left?.created_at || 0).getTime()
+    );
   });
 
-  const formatMoney = (amount, currency = "PKR") => `${currency} ${Number(amount || 0).toLocaleString()}`;
+  const paidAmount = confirmedFinancePayments.reduce(
+    (sum, row) =>
+      sum + Number(row.amount || row.paid_amount || row.payment_amount || 0),
+    0
+  );
+
+  const pendingAmount = activeFinanceInvoices.reduce(
+    (sum, invoice) =>
+      sum + getStudentInvoiceOutstanding(invoice, confirmedFinancePayments),
+    0
+  );
+
+  const overdueInvoices = activeFinanceInvoices.filter(
+    (invoice) =>
+      getStudentInvoiceStatus(invoice, confirmedFinancePayments) === "overdue"
+  );
+
+  useEffect(() => {
+    setForcedPasswordChangeCompleted(false);
+  }, [account?.id, account?.must_change_password]);
+
+  async function handleStudentDocumentUpload(documentItem, fileList) {
+    const files = Array.from(fileList || []);
+    const studentId = getPortalStudentId(student);
+    const studentType = getPortalStudentType(
+      student,
+      rawSummary?.studentType || "inquiry"
+    );
+    const operationKey = documentItem?.key || normalizeDocumentName(documentItem?.name);
+
+    if (!studentId || !documentItem || !files.length || documentUploadState.key) {
+      return;
+    }
+
+    if (!documentItem.canUpload) {
+      setDocumentUploadState({
+        key: "",
+        type: "warning",
+        message:
+          "This document is not currently open for student upload. Ask your counselor if a replacement is needed.",
+      });
+      return;
+    }
+
+    const invalidFile = files.find((file) => !isAcceptedDocumentFile(file));
+    if (invalidFile) {
+      setDocumentUploadState({
+        key: "",
+        type: "warning",
+        message: `${invalidFile.name} is not supported. Upload PDF, JPG, PNG or WEBP files only.`,
+      });
+      return;
+    }
+
+    const oversizedFile = files.find(
+      (file) => Number(file.size || 0) > MAX_DOCUMENT_FILE_BYTES
+    );
+    if (oversizedFile) {
+      setDocumentUploadState({
+        key: "",
+        type: "warning",
+        message: `${oversizedFile.name} is larger than 15 MB. Compress it and try again.`,
+      });
+      return;
+    }
+
+    setDocumentUploadState({
+      key: operationKey,
+      type: "info",
+      message: `Uploading ${files.length} file${files.length === 1 ? "" : "s"}...`,
+    });
+
+    const createdRecords = [];
+    const uploadedPaths = [];
+    const currentFiles = documentItem.activeFiles || [];
+    const latestCurrentFile = documentItem.latestFile || currentFiles[0] || null;
+    const nextVersion =
+      Math.max(
+        0,
+        ...documentItem.files.map((file) => Number(file.version || 0))
+      ) + 1;
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const actorId =
+        sessionData?.session?.user?.id ||
+        account?.auth_user_id ||
+        account?.user_id ||
+        null;
+
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        const filePath = `${studentId}/${safeDocumentStorageName(
+          documentItem.name.toLowerCase()
+        )}/${Date.now()}-${index}-${safeDocumentStorageName(file.name)}`;
+
+        const uploadResult = await supabase.storage
+          .from(DOCUMENT_STORAGE_BUCKET)
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadResult.error) throw uploadResult.error;
+        uploadedPaths.push(filePath);
+
+        const { data: publicUrlData } = supabase.storage
+          .from(DOCUMENT_STORAGE_BUCKET)
+          .getPublicUrl(filePath);
+
+        const documentName =
+          files.length === 1 && !latestCurrentFile
+            ? documentItem.name
+            : `${documentItem.name} • ${file.name}`;
+
+        const { data: savedDocument, error: insertError } = await supabase
+          .from("student_documents")
+          .insert({
+            student_id: studentId,
+            student_type: studentType,
+            document_name: documentName,
+            document_category: documentItem.group || "Student Documents",
+            status: "received",
+            file_path: filePath,
+            file_url: publicUrlData?.publicUrl || "",
+            original_file_name: file.name,
+            mime_type: file.type || null,
+            file_size_bytes: file.size || null,
+            version: nextVersion + index,
+            replaced_document_id:
+              documentItem.requestAgain && latestCurrentFile
+                ? latestCurrentFile.id
+                : null,
+            uploaded_by: actorId,
+            notes:
+              documentItem.requestAgain && latestCurrentFile
+                ? `Student replacement uploaded for rejected ${documentItem.name}: ${file.name}`
+                : `Uploaded by student: ${file.name}`,
+            updated_at: new Date().toISOString(),
+          })
+          .select("*")
+          .single();
+
+        if (insertError) throw insertError;
+        createdRecords.push(savedDocument);
+      }
+
+      if (documentItem.requestAgain && latestCurrentFile?.id) {
+        const archivedAt = new Date().toISOString();
+        const { error: archiveError } = await supabase
+          .from("student_documents")
+          .update({
+            status: "archived",
+            archived_at: archivedAt,
+            notes: `${latestCurrentFile.notes || ""}${
+              latestCurrentFile.notes ? " " : ""
+            }Archived after student replacement upload.`,
+            updated_at: archivedAt,
+          })
+          .eq("id", latestCurrentFile.id);
+
+        if (archiveError) {
+          console.warn(
+            "Replacement uploaded, but previous rejected document was not archived:",
+            archiveError.message || archiveError
+          );
+        }
+      }
+
+      for (const savedDocument of createdRecords) {
+        const { error: eventError } = await supabase
+          .from("student_document_events")
+          .insert({
+            student_id: Number(studentId),
+            student_type: studentType,
+            document_id: savedDocument.id,
+            event_type: documentItem.requestAgain
+              ? "student_replacement_uploaded"
+              : "student_uploaded",
+            event_label: documentItem.requestAgain
+              ? "Student uploaded replacement"
+              : "Student uploaded document",
+            new_status: "received",
+            new_notes: savedDocument.notes || null,
+            metadata: {
+              requirement_id: documentItem.requirementId || null,
+              application_requirement_id:
+                documentItem.sourceApplicationRequirementId || null,
+              application_id: documentItem.sourceApplicationId || null,
+              document_name: documentItem.name,
+              file_name: savedDocument.original_file_name || null,
+              version: savedDocument.version || 1,
+              source: "student_portal",
+            },
+            performed_by: actorId,
+          });
+
+        if (eventError) {
+          console.warn(
+            "Student document history event was not written:",
+            eventError.message || eventError
+          );
+        }
+      }
+
+      const { error: timelineError } = await supabase
+        .from("student_application_timeline")
+        .insert({
+          student_id: Number(studentId),
+          student_type: studentType,
+          application_id: documentItem.sourceApplicationId
+            ? String(documentItem.sourceApplicationId)
+            : null,
+          event_type: documentItem.requestAgain
+            ? "student_document_reuploaded"
+            : "student_document_uploaded",
+          title: documentItem.requestAgain
+            ? "Student Re-uploaded Document"
+            : "Student Uploaded Document",
+          description: `${createdRecords.length} file(s) uploaded for ${documentItem.name} from Student Portal.`,
+          new_value: documentItem.name,
+        });
+
+      if (timelineError) {
+        console.warn(
+          "Student document timeline event was not written:",
+          timelineError.message || timelineError
+        );
+      }
+
+      setLiveDocumentData((previous) => ({
+        ...previous,
+        documents: uniqueMergeRows(createdRecords, previous.documents),
+      }));
+
+      setDocumentUploadState({
+        key: "",
+        type: "success",
+        message: documentItem.requestAgain
+          ? `${documentItem.name} replacement uploaded. It is waiting for review.`
+          : `${documentItem.name} uploaded successfully and sent for review.`,
+      });
+
+      await loadStudentDocumentWorkspace({ silent: true });
+      await onRefresh();
+    } catch (uploadError) {
+      const recordedPaths = new Set(
+        createdRecords.map((record) => record.file_path).filter(Boolean)
+      );
+      const orphanedPaths = uploadedPaths.filter(
+        (filePath) => !recordedPaths.has(filePath)
+      );
+
+      if (orphanedPaths.length) {
+        void supabase.storage
+          .from(DOCUMENT_STORAGE_BUCKET)
+          .remove(orphanedPaths);
+      }
+
+      setDocumentUploadState({
+        key: "",
+        type: "error",
+        message:
+          uploadError?.message ||
+          "Document upload failed. Refresh the portal and try again.",
+      });
+    }
+  }
 
   async function handleDashboardRefresh() {
     setLocalPaymentData((prev) => ({
@@ -2119,7 +5736,10 @@ function StudentPortalDashboard({
       error: "",
     }));
 
-    await onRefresh();
+    await Promise.all([
+      Promise.resolve(onRefresh()),
+      loadStudentDocumentWorkspace({ silent: true }),
+    ]);
   }
 
   function handleSupportTypeSelect(typeId) {
@@ -2187,6 +5807,34 @@ function StudentPortalDashboard({
         .single();
 
       if (supportError) throw supportError;
+
+      const { error: messageError } = await supabase
+  .from("student_support_messages")
+  .insert({
+    support_request_id: data.id,
+    student_id: student.id,
+    student_type:
+      summary.studentType ||
+      student.student_type ||
+      student.__leadType ||
+      student.type ||
+      "inquiry",
+
+    sender_type: "student",
+    sender_name:
+      getStudentDisplayName(student) ||
+      student.full_name ||
+      student.name ||
+      "Student",
+
+    message: supportForm.message.trim(),
+    is_internal: false,
+  });
+
+if (messageError) {
+  console.error(messageError);
+}
+
 
       const savedRequest = data || {
         ...payload,
@@ -2350,6 +5998,14 @@ function StudentPortalDashboard({
         throw result.error;
       }
 
+      if (result?.success === false) {
+        throw new Error(
+          result?.message || "Password could not be updated."
+        );
+      }
+
+      setForcedPasswordChangeCompleted(true);
+
       setPasswordForm({
         currentPassword: "",
         newPassword: "",
@@ -2358,9 +6014,18 @@ function StudentPortalDashboard({
 
       setPasswordStatus({
         type: "success",
-        message: "Password updated successfully.",
+        message: "Password updated successfully. Your portal is now unlocked.",
         loading: false,
       });
+
+      try {
+        await handleDashboardRefresh();
+      } catch (refreshError) {
+        console.warn(
+          "Portal refresh after password change failed:",
+          refreshError
+        );
+      }
     } catch (passwordError) {
       setPasswordStatus({
         type: "warning",
@@ -2388,6 +6053,83 @@ const journeyProgress = roadmap.length
       (completedJourneySteps / roadmap.length) * 100
     )
   : 0;
+  const universityWorkspaceStats = useMemo(() => {
+    const total = universityWorkspaceRows.length;
+    const linked = universityWorkspaceRows.filter(
+      (university) => university.applicationLinked
+    ).length;
+    const attention = universityWorkspaceRows.filter(
+      (university) => university.needsAttention
+    ).length;
+    const avgReadiness = total
+      ? Math.round(
+          universityWorkspaceRows.reduce(
+            (sum, university) => sum + Number(university.readinessScore || 0),
+            0
+          ) / total
+        )
+      : 0;
+    const requirements = universityWorkspaceRows.reduce(
+      (sum, university) => sum + Number(university.requirementStats?.total || 0),
+      0
+    );
+    const verifiedRequirements = universityWorkspaceRows.reduce(
+      (sum, university) => sum + Number(university.requirementStats?.verified || 0),
+      0
+    );
+
+    return {
+      total,
+      linked,
+      attention,
+      avgReadiness,
+      requirements,
+      verifiedRequirements,
+    };
+  }, [universityWorkspaceRows]);
+
+  const filteredStudentUniversities = useMemo(() => {
+    const query = normalize(universitySearch);
+
+    return universityWorkspaceRows.filter((university) => {
+      if (!studentUniversityMatchesFilter(university, universityFilter)) {
+        return false;
+      }
+
+      if (!query) return true;
+
+      return normalize(
+        [
+          university.universityName,
+          university.universityProgram,
+          university.country,
+          university.category,
+          university.status,
+          university.intake,
+          university.nextAction,
+        ].join(" ")
+      ).includes(query);
+    });
+  }, [universityWorkspaceRows, universityFilter, universitySearch]);
+
+  const recentStudentUniversityEvents = useMemo(
+    () =>
+      universityWorkspaceRows
+        .flatMap((university) =>
+          asPortalArray(university.events).map((event) => ({
+            ...event,
+            universityName: university.universityName,
+          }))
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.created_at || 0).getTime() -
+            new Date(a.created_at || 0).getTime()
+        )
+        .slice(0, 8),
+    [universityWorkspaceRows]
+  );
+
   const primaryNavItems = [
     ["overview", "Overview"],
     ["actions", `Action Center${urgentActions ? ` (${urgentActions})` : ""}`],
@@ -2409,7 +6151,7 @@ const journeyProgress = roadmap.length
       items: [
         ["roadmap", "Journey Roadmap", `${journeyProgress}% complete`],
         ["deadlines", "Deadlines", `${deadlineCenter.urgentCount} urgent`],
-        ["universities", "Universities", `${summary.universitiesCount || 0} options`],
+        ["universities", "Universities", `${universityWorkspaceStats.total} options`],
         ["success", "Success Center", successCenter.stageLabel],
       ],
     },
@@ -2476,8 +6218,8 @@ const journeyProgress = roadmap.length
     },
     {
       title: "University Plan",
-      value: `${summary.universitiesCount || 0} Options`,
-      note: universities.length
+      value: `${universityWorkspaceStats.total} Options`,
+      note: universityWorkspaceStats.total
         ? "University planning data is connected to the portal."
         : "No university plan is visible yet.",
     },
@@ -2485,6 +6227,149 @@ const journeyProgress = roadmap.length
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#fff5e9] px-3 py-4 text-slate-950 sm:px-5 sm:py-6 lg:px-6">
+      {mustCompletePasswordChange ? (
+        <div
+          className="fixed inset-0 z-[3000] flex items-center justify-center overflow-y-auto bg-[#07182b]/80 p-3 backdrop-blur-md sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="forced-password-title"
+        >
+          <div className="my-auto w-full max-w-2xl overflow-hidden rounded-[2rem] border-[4px] border-[#123865] bg-[#fffdf8] shadow-[0_35px_100px_rgba(0,0,0,0.38)]">
+            <div className="border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-6 text-white sm:px-7 sm:py-7">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
+                Required Security Step
+              </p>
+              <h2
+                id="forced-password-title"
+                className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl"
+              >
+                Secure your Student Portal account
+              </h2>
+              <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-slate-100">
+                You are using a temporary password. Create a new private password before continuing to your Student Portal.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handlePasswordChangeSubmit}
+              className="space-y-4 p-5 sm:p-7"
+            >
+              <div className="rounded-2xl border-2 border-orange-300 bg-orange-50 p-4">
+                <p className="text-sm font-black text-[#10233F]">
+                  Portal access is temporarily locked
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  This window cannot be skipped. Your applications, documents, tasks, finance and other portal areas will unlock after the password is changed successfully.
+                </p>
+              </div>
+
+              <SettingsPasswordField
+                label="Current Temporary Password"
+                value={passwordForm.currentPassword}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    currentPassword: event.target.value,
+                  }))
+                }
+                placeholder="Enter the temporary password"
+                autoComplete="current-password"
+                maxLength={128}
+              />
+
+              <SettingsPasswordField
+                label="New Private Password"
+                value={passwordForm.newPassword}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    newPassword: event.target.value,
+                  }))
+                }
+                placeholder="Create a new password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+              />
+
+              <SettingsPasswordField
+                label="Confirm New Password"
+                value={passwordForm.confirmPassword}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                placeholder="Repeat the new password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+              />
+
+              <div className="rounded-xl border-2 border-[#dbe5ec] bg-[#f7fafc] p-4">
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#607487]">
+                  Password Requirements
+                </p>
+
+                <div className="mt-3 grid gap-2">
+                  <PasswordRequirement
+                    passed={passwordHasMinimumLength}
+                    label="Use at least 8 characters"
+                  />
+                  <PasswordRequirement
+                    passed={passwordConfirmationMatches}
+                    label="New password and confirmation must match"
+                  />
+                  <PasswordRequirement
+                    passed={passwordDiffersFromCurrent}
+                    label="New password must differ from the temporary password"
+                  />
+                </div>
+              </div>
+
+              {passwordStatus.message ? (
+                <div
+                  role={passwordStatus.type === "warning" ? "alert" : "status"}
+                  className={
+                    "rounded-xl border-2 p-3 text-sm font-semibold " +
+                    (passwordStatus.type === "success"
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : passwordStatus.type === "info"
+                        ? "border-sky-300 bg-sky-50 text-sky-700"
+                        : "border-orange-300 bg-orange-50 text-orange-700")
+                  }
+                >
+                  {passwordStatus.message}
+                </div>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={!passwordFormReady}
+                className="flex min-h-13 w-full items-center justify-between rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-5 py-4 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e94f06] hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+              >
+                <span>
+                  {passwordStatus.loading
+                    ? "Updating Password..."
+                    : "Update Password & Continue"}
+                </span>
+                <span aria-hidden="true">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onLogout}
+                disabled={passwordStatus.loading}
+                className="w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-3 text-sm font-black text-[#123865] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Sign Out Instead
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
       <div className="pointer-events-none absolute right-[-16%] top-[-12%] h-[460px] w-[460px] rounded-full bg-orange-200/30 blur-3xl" />
       <div className="absolute bottom-[-20%] left-[-20%] h-[420px] w-[420px] rounded-full bg-blue-50 blur-3xl" />
 
@@ -2772,7 +6657,7 @@ const journeyProgress = roadmap.length
 
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   <div className="rounded-xl border border-white/15 bg-white/10 p-3">
-                    <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white/55">CAS Ready</p>
+                    <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white/55">Pre-enrolment Ready</p>
                     <p className="mt-1 text-lg font-black">{readiness.casReadiness}%</p>
                   </div>
                   <div className="rounded-xl border border-white/15 bg-white/10 p-3">
@@ -2804,7 +6689,7 @@ const journeyProgress = roadmap.length
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <MiniPulse label="Offer" value={formatStatus(summary.offerStatus)} tone="navy" />
-              <MiniPulse label="CAS" value={formatStatus(summary.casStatus)} tone="violet" />
+              <MiniPulse label="Pre-enrolment" value={formatStatus(preEnrollmentPortalStatus)} tone="violet" />
               <MiniPulse label="Visa" value={formatStatus(summary.visaStatus)} tone="navy" />
               <MiniPulse
                 label="Deadlines"
@@ -3314,7 +7199,7 @@ const journeyProgress = roadmap.length
                             }))
                           }
                           rows={6}
-                          placeholder="Explain what happened, what you have already tried, and which application, document, university, CAS or visa item this is about."
+                          placeholder="Explain what happened, what you have already tried, and which application, document, university, Pre-enrolment or visa item this is about."
                           className="mt-2 w-full resize-none rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm leading-6 text-[#17324d] outline-none transition placeholder:text-[#9aa8b3] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                         />
                       </label>
@@ -3418,8 +7303,8 @@ const journeyProgress = roadmap.length
                         onClick={() => setActiveTab("applications")}
                       />
                       <SupportRouteCard
-                        title="Visa / CAS"
-                        text="CAS preparation, visa documents or readiness questions."
+                        title="Visa / Pre-enrolment"
+                        text="Pre-enrolment preparation, visa documents or readiness questions."
                         tone="violet"
                         onClick={() => setActiveTab("visa")}
                       />
@@ -3473,8 +7358,8 @@ const journeyProgress = roadmap.length
           ) : null}
           {activeTab === "payments" ? (
             <div className="space-y-5">
-              <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
-                <div className="flex flex-col gap-4 border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+              <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
+                <div className="flex flex-col gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
                       Student Finance Center
@@ -3499,7 +7384,7 @@ const journeyProgress = roadmap.length
                     <button
                       type="button"
                       onClick={onRefresh}
-                      className="rounded-xl border border-orange-300/45 bg-orange-400/15 px-4 py-2.5 text-xs font-black text-orange-100 transition hover:bg-orange-400/25"
+                      className="rounded-xl border border-[#D8B07B] bg-white/10 px-4 py-2.5 text-xs font-black text-orange-100 transition hover:bg-orange-400/25"
                     >
                       Refresh Finance Data
                     </button>
@@ -3518,33 +7403,34 @@ const journeyProgress = roadmap.length
                   </div>
                 ) : null}
 
-                <div className="grid gap-3 bg-[#fff9f2] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
+                <div className="grid gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
                   <PaymentCommandStat
-                    label="Invoice Total"
+                    label="Current Amount Due"
                     value={formatMoney(
-                      totalInvoiceAmount,
-                      invoices[0]?.currency || payments[0]?.currency || "PKR"
+                      pendingAmount,
+                      collectibleFinanceInvoices[0]?.currency || invoices[0]?.currency || "PKR"
                     )}
-                    helper={`${invoices.length} invoice${invoices.length === 1 ? "" : "s"} visible`}
-                    tone="navy"
+                    helper={
+                      collectibleFinanceInvoices.length
+                        ? `${collectibleFinanceInvoices.length} open invoice${collectibleFinanceInvoices.length === 1 ? "" : "s"}`
+                        : "No collectible invoice balance"
+                    }
+                    tone={pendingAmount > 0 ? "orange" : "green"}
                   />
                   <PaymentCommandStat
-                    label="Paid"
+                    label="Confirmed Payment History"
                     value={formatMoney(
                       paidAmount,
-                      payments[0]?.currency || invoices[0]?.currency || "PKR"
+                      confirmedFinancePayments[0]?.currency || invoices[0]?.currency || "PKR"
                     )}
-                    helper={`${payments.length} payment${payments.length === 1 ? "" : "s"} recorded`}
+                    helper={`${confirmedFinancePayments.length} confirmed payment${confirmedFinancePayments.length === 1 ? "" : "s"} recorded across your finance history`}
                     tone="green"
                   />
                   <PaymentCommandStat
-                    label="Outstanding"
-                    value={formatMoney(
-                      pendingAmount,
-                      invoices[0]?.currency || payments[0]?.currency || "PKR"
-                    )}
-                    helper={pendingAmount > 0 ? "Still needs payment" : "Nothing outstanding"}
-                    tone={pendingAmount > 0 ? "orange" : "green"}
+                    label="Open Invoices"
+                    value={collectibleFinanceInvoices.length}
+                    helper={pendingAmount > 0 ? `${formatMoney(pendingAmount, collectibleFinanceInvoices[0]?.currency || "PKR")} still due` : "Nothing outstanding"}
+                    tone={collectibleFinanceInvoices.length ? "navy" : "green"}
                   />
                   <PaymentCommandStat
                     label="Overdue"
@@ -3556,38 +7442,39 @@ const journeyProgress = roadmap.length
               </section>
 
               <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                  <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
+                  <div className="flex flex-col gap-3 border-b-2 border-[#D8B07B] bg-[#FFF8EF] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
                         Invoices & Amounts Due
                       </p>
-                      <h3 className="mt-1 text-xl font-black text-[#17324d]">
+                      <h3 className="mt-1 text-xl font-black text-[#10233F]">
                         What needs payment?
                       </h3>
                     </div>
 
-                    <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#173f69]">
-                      {invoices.length} invoice{invoices.length === 1 ? "" : "s"}
+                    <span className="w-fit rounded-full border border-[#AFC0D0] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#123865]">
+                      {collectibleFinanceInvoices.length} open · {invoices.length} total
                     </span>
                   </div>
 
                   <div className="space-y-3 p-4 sm:p-5">
-                    {invoices.length ? (
-                      invoices.map((invoice, index) => (
+                    {sortedFinanceInvoices.length ? (
+                      sortedFinanceInvoices.map((invoice, index) => (
                         <PremiumInvoiceCard
                           key={invoice.id}
                           invoice={invoice}
+                          payments={confirmedFinancePayments}
                           index={index}
                           onUploadReceipt={() => {
                             setReceiptForm((prev) => ({
                               ...prev,
                               invoiceId: String(invoice.id),
                               amount: String(
-                                invoice.total_amount ||
-                                  invoice.amount ||
-                                  invoice.invoice_amount ||
-                                  ""
+                                getStudentInvoiceOutstanding(
+                                  invoice,
+                                  confirmedFinancePayments
+                                ) || ""
                               ),
                               currency: invoice.currency || "PKR",
                             }));
@@ -3604,8 +7491,8 @@ const journeyProgress = roadmap.length
                 </section>
 
                 <div className="space-y-5">
-                  <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-sm">
-                    <div className="bg-[#173f69] p-5 text-white">
+                  <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-sm">
+                    <div className="bg-[#123865] p-5 text-white">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
                         Finance Snapshot
                       </p>
@@ -3613,25 +7500,25 @@ const journeyProgress = roadmap.length
                         Your payment position
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-white/70">
-                        A simple view of billed, paid and outstanding amounts across the records currently visible.
+                        A clear view of what is due now, your confirmed payment history and any invoice that still needs action.
                       </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 p-5">
                       <PaymentMiniStat
-                        label="Total Billed"
-                        value={formatMoney(totalInvoiceAmount)}
-                        tone="navy"
+                        label="Current Amount Due"
+                        value={formatMoney(pendingAmount)}
+                        tone={pendingAmount > 0 ? "orange" : "green"}
                       />
                       <PaymentMiniStat
-                        label="Total Paid"
+                        label="Confirmed Payment History"
                         value={formatMoney(paidAmount)}
                         tone="green"
                       />
                       <PaymentMiniStat
-                        label="Outstanding"
-                        value={formatMoney(pendingAmount)}
-                        tone="orange"
+                        label="Open Invoices"
+                        value={collectibleFinanceInvoices.length}
+                        tone={collectibleFinanceInvoices.length ? "navy" : "green"}
                       />
                       <PaymentMiniStat
                         label="Overdue"
@@ -3641,19 +7528,19 @@ const journeyProgress = roadmap.length
                     </div>
                   </section>
 
-                  <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                    <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                  <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
+                    <div className="border-b-2 border-[#D8B07B] bg-[#FFF8EF] px-5 py-4">
                       <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
                         Counselor Payment Requests
                       </p>
-                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
-                        Finance actions requested by Zaifan
+                      <h3 className="mt-1 text-lg font-black text-[#10233F]">
+                        Finance actions requested by your Zaifan team
                       </h3>
                     </div>
 
                     <div className="space-y-3 p-5">
-                      {paymentRequests.length ? (
-                        paymentRequests.slice(0, 5).map((request, index) => (
+                      {openFinancePaymentRequests.length ? (
+                        openFinancePaymentRequests.slice(0, 5).map((request, index) => (
                           <PaymentRequestCard
                             key={request.id || `${request.created_at}-${index}`}
                             request={request}
@@ -3664,24 +7551,45 @@ const journeyProgress = roadmap.length
                         <PaymentEmptyState
                           compact
                           title="No payment request is waiting"
-                          text="Any counselor or operations payment request linked to your case will appear here."
+                          text="Completed or cancelled requests automatically leave this active queue."
                         />
                       )}
+
+                      {closedFinancePaymentRequests.length ? (
+                        <details className="overflow-hidden rounded-[1.25rem] border-2 border-[#C9D7E6] bg-[#F8FBFD]">
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-black text-[#10233F]">
+                            <span>Payment Request History</span>
+                            <span className="rounded-full border border-[#AFC0D0] bg-white px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#123865]">
+                              {closedFinancePaymentRequests.length} completed
+                            </span>
+                          </summary>
+                          <div className="space-y-2 border-t-2 border-[#D9E3EC] p-3">
+                            {closedFinancePaymentRequests.slice(0, 8).map((request, index) => (
+                              <PaymentRequestCard
+                                key={request.id || `history-${request.created_at}-${index}`}
+                                request={request}
+                                index={index}
+                                history
+                              />
+                            ))}
+                          </div>
+                        </details>
+                      ) : null}
                     </div>
                   </section>
                 </div>
               </div>
 
               <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-orange-300 bg-[#fffdf8] shadow-sm">
-                  <div className="border-b-2 border-orange-200 bg-orange-50 px-5 py-4">
+                <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
+                  <div className="border-b-2 border-[#D8B07B] bg-[#FFF8EF] px-5 py-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
                       Upload Payment Receipt
                     </p>
-                    <h3 className="mt-1 text-xl font-black text-[#17324d]">
+                    <h3 className="mt-1 text-xl font-black text-[#10233F]">
                       Send proof directly to Zaifan
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#607487]">
+                    <p className="mt-2 text-sm leading-6 text-[#5B6D80]">
                       Upload your payment proof here. The Admin Payment Center can then review it against your student record.
                     </p>
                   </div>
@@ -3703,22 +7611,30 @@ const journeyProgress = roadmap.length
                       <PaymentField label="Invoice">
                         <select
                           value={receiptForm.invoiceId}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const invoiceId = event.target.value;
+                            const selectedInvoice = collectibleFinanceInvoices.find(
+                              (invoice) => String(invoice.id) === String(invoiceId)
+                            );
                             setReceiptForm((prev) => ({
                               ...prev,
-                              invoiceId: event.target.value,
-                            }))
-                          }
-                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#17324d] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                              invoiceId,
+                              amount: selectedInvoice
+                                ? String(getStudentInvoiceOutstanding(selectedInvoice, confirmedFinancePayments))
+                                : prev.amount,
+                              currency: selectedInvoice?.currency || prev.currency || "PKR",
+                            }));
+                          }}
+                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                         >
                           <option value="">General receipt / no invoice</option>
-                          {invoices.map((invoice) => (
+                          {collectibleFinanceInvoices.map((invoice) => (
                             <option key={invoice.id} value={invoice.id}>
                               {invoice.title || invoice.invoice_number || "Invoice"} —{" "}
                               {formatMoney(
-                                invoice.total_amount || invoice.amount,
+                                getStudentInvoiceOutstanding(invoice, confirmedFinancePayments),
                                 invoice.currency || "PKR"
-                              )}
+                              )} due
                             </option>
                           ))}
                         </select>
@@ -3737,7 +7653,7 @@ const journeyProgress = roadmap.length
                             }))
                           }
                           placeholder="Enter paid amount"
-                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#17324d] outline-none transition placeholder:text-[#9aa8b3] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-[#9aa8b3] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                         />
                       </PaymentField>
 
@@ -3750,7 +7666,7 @@ const journeyProgress = roadmap.length
                               currency: event.target.value,
                             }))
                           }
-                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#17324d] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                         />
                       </PaymentField>
 
@@ -3764,21 +7680,21 @@ const journeyProgress = roadmap.length
                             }))
                           }
                           placeholder="Transaction ID / bank reference"
-                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#17324d] outline-none transition placeholder:text-[#9aa8b3] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                          className="w-full rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-[#9aa8b3] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                         />
                       </PaymentField>
 
                       <PaymentField label="Receipt File" className="md:col-span-2">
                         <label className="flex min-h-[88px] cursor-pointer items-center justify-between gap-4 rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 px-4 py-4 transition hover:border-orange-500 hover:bg-orange-100">
                           <span>
-                            <span className="block text-sm font-black text-[#17324d]">
+                            <span className="block text-sm font-black text-[#10233F]">
                               {receiptForm.file ? receiptForm.file.name : "Choose receipt image or PDF"}
                             </span>
-                            <span className="mt-1 block text-[11px] text-[#607487]">
+                            <span className="mt-1 block text-[11px] text-[#5B6D80]">
                               Upload the clearest payment proof available.
                             </span>
                           </span>
-                          <span className="rounded-xl bg-[#173f69] px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white">
+                          <span className="rounded-xl bg-[#123865] px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white">
                             Browse
                           </span>
                           <input
@@ -3806,7 +7722,7 @@ const journeyProgress = roadmap.length
                           }
                           rows={4}
                           placeholder="Anything Zaifan should know about this payment..."
-                          className="w-full resize-none rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm leading-6 text-[#17324d] outline-none transition placeholder:text-[#9aa8b3] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                          className="w-full resize-none rounded-xl border-2 border-[#cfdbe4] bg-white px-4 py-3 text-sm leading-6 text-[#10233F] outline-none transition placeholder:text-[#9aa8b3] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                         />
                       </PaymentField>
                     </div>
@@ -3826,15 +7742,15 @@ const journeyProgress = roadmap.length
                   </form>
                 </section>
 
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                  <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                <section className="overflow-hidden rounded-[1.8rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
+                  <div className="border-b-2 border-[#D8B07B] bg-[#FFF8EF] px-5 py-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
-                      Approved Payment Accounts
+                      Verified Payment Destinations
                     </p>
-                    <h3 className="mt-1 text-xl font-black text-[#17324d]">
+                    <h3 className="mt-1 text-xl font-black text-[#10233F]">
                       Where Zaifan has told you to pay
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#607487]">
+                    <p className="mt-2 text-sm leading-6 text-[#5B6D80]">
                       Only use account details visible in this portal or confirmed directly by the Zaifan team.
                     </p>
                   </div>
@@ -3858,13 +7774,13 @@ const journeyProgress = roadmap.length
               </div>
 
               <div className="grid gap-5 xl:grid-cols-2">
-                <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                  <div className="flex items-center justify-between gap-3 border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
+                  <div className="flex items-center justify-between gap-3 border-b-2 border-[#D8B07B] bg-[#FFF8EF] px-5 py-4">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
                         Payment History
                       </p>
-                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
+                      <h3 className="mt-1 text-lg font-black text-[#10233F]">
                         Confirmed payment records
                       </h3>
                     </div>
@@ -3892,31 +7808,32 @@ const journeyProgress = roadmap.length
                   </div>
                 </section>
 
-                <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                  <div className="flex items-center justify-between gap-3 border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFCF7] shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
+                  <div className="flex items-center justify-between gap-3 border-b-2 border-[#D8B07B] bg-[#FFF8EF] px-5 py-4">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
                         Receipt Review
                       </p>
-                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
+                      <h3 className="mt-1 text-lg font-black text-[#10233F]">
                         Proof you submitted
                       </h3>
                     </div>
-                    <span className="rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1 text-[10px] font-black text-[#173f69]">
+                    <span className="rounded-full border border-[#AFC0D0] bg-[#edf4f8] px-3 py-1 text-[10px] font-black text-[#123865]">
                       {receipts.length}
                     </span>
                   </div>
 
                   <div className="space-y-3 p-5">
-                    {receipts.length ? (
+                    {receipts.length > 0 &&
                       receipts.map((receipt, index) => (
                         <PremiumReceiptCard
                           key={receipt.id || `${receipt.created_at}-${index}`}
                           receipt={receipt}
                           index={index}
                         />
-                      ))
-                    ) : (
+                      ))}
+
+                    {receipts.length === 0 && (
                       <PaymentEmptyState
                         compact
                         title="No receipt submitted yet"
@@ -3927,17 +7844,17 @@ const journeyProgress = roadmap.length
                 </section>
               </div>
 
-              <section className="rounded-[1.6rem] border-2 border-sky-200 bg-sky-50 p-5 shadow-sm">
+              <section className="rounded-[1.6rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-5 shadow-[0_12px_30px_rgba(18,56,101,0.07)]">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-700">
-                      Payment Safety
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
+                      Payment Safety Check
                     </p>
-                    <h3 className="mt-1 text-lg font-black text-[#17324d]">
+                    <h3 className="mt-1 text-lg font-black text-[#10233F]">
                       Verify before you pay
                     </h3>
-                    <p className="mt-2 max-w-4xl text-sm leading-6 text-[#607487]">
-                      Match the account details, invoice or payment request inside Student OS.
+                    <p className="mt-2 max-w-4xl text-sm leading-6 text-[#5B6D80]">
+                      Pay only to a verified destination shown inside Student OS and match it with the invoice or payment request.
                       Keep your transaction reference and upload the receipt after payment.
                       When anything looks different, stop and ask Zaifan before sending money.
                     </p>
@@ -3946,7 +7863,7 @@ const journeyProgress = roadmap.length
                   <button
                     type="button"
                     onClick={() => setActiveTab("support")}
-                    className="w-fit shrink-0 rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-xs font-black text-white transition hover:bg-[#214e78]"
+                    className="w-fit shrink-0 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-xs font-black text-white transition hover:bg-[#0B2A4B]"
                   >
                     Ask About a Payment
                   </button>
@@ -4113,7 +8030,7 @@ const journeyProgress = roadmap.length
                           action={() => setActiveTab("documents")}
                         />
                         <PremiumReadinessRow
-                          label="CAS Readiness"
+                          label="Pre-enrolment Readiness"
                           value={readiness.casReadiness}
                           tone="navy"
                           action={() => setActiveTab("visa")}
@@ -4172,8 +8089,8 @@ const journeyProgress = roadmap.length
                         tone="green"
                       />
                       <PremiumStageCard
-                        label="CAS"
-                        value={formatStatus(summary.casStatus)}
+                        label="Pre-enrolment"
+                        value={formatStatus(preEnrollmentPortalStatus)}
                         tone="navy"
                       />
                       <PremiumStageCard
@@ -4323,7 +8240,7 @@ const journeyProgress = roadmap.length
                       Protect every important date before it becomes a blocker
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Task due dates, document dates, application deadlines, CAS timing and visa preparation
+                      Task due dates, document dates, application deadlines, Pre-enrolment timing and visa preparation
                       are combined here so you can see what needs attention first.
                     </p>
                   </div>
@@ -4385,13 +8302,13 @@ const journeyProgress = roadmap.length
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-[#607487]">
                       Low readiness can turn a future date into an urgent problem. Keep applications,
-                      documents, tasks, CAS and visa preparation moving early.
+                      documents, tasks, Pre-enrolment and visa preparation moving early.
                     </p>
                   </div>
 
                   <div className="space-y-4 p-5">
                     <ProgressRow label="Application Readiness" value={readiness.applicationReadiness} />
-                    <ProgressRow label="CAS Readiness" value={readiness.casReadiness} />
+                    <ProgressRow label="Pre-enrolment Readiness" value={readiness.casReadiness} />
                     <ProgressRow label="Visa Readiness" value={readiness.visaReadiness} />
                     <ProgressRow label="Document Score" value={readiness.documentScore} />
                     <ProgressRow label="Task Score" value={readiness.taskScore} />
@@ -4427,7 +8344,7 @@ const journeyProgress = roadmap.length
                       Know exactly what to do next
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Tasks, documents, application gaps, university planning, CAS, visa,
+                      Tasks, documents, application gaps, university planning, Pre-enrolment, visa,
                       deadlines and counselor activity are combined into one clear priority queue.
                     </p>
                   </div>
@@ -4586,7 +8503,7 @@ const journeyProgress = roadmap.length
                         onOpen={() => setActiveTab("tasks")}
                       />
                       <ActionReadinessRow
-                        label="CAS"
+                        label="Pre-enrolment"
                         value={readiness.casReadiness}
                         tone="navy"
                         onOpen={() => setActiveTab("visa")}
@@ -4635,7 +8552,7 @@ const journeyProgress = roadmap.length
                           Your action queue is clear.
                         </p>
                         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-emerald-700/75">
-                          No task, document, application, university, CAS, visa or
+                          No task, document, application, university, Pre-enrolment, visa or
                           communication action is currently required.
                         </p>
                       </div>
@@ -4707,7 +8624,7 @@ const journeyProgress = roadmap.length
                       See the whole journey without feeling lost
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Your roadmap turns applications, offers, documents, CAS, visa,
+                      Your roadmap turns applications, offers, documents, Pre-enrolment, visa,
                       counselor guidance and tasks into one simple study-abroad journey.
                     </p>
                   </div>
@@ -4744,9 +8661,9 @@ const journeyProgress = roadmap.length
                     tone="orange"
                   />
                   <RoadmapCommandStat
-                    label="CAS Readiness"
+                    label="Pre-enrolment Readiness"
                     value={`${readiness.casReadiness}%`}
-                    helper="Ready for CAS movement"
+                    helper="Ready for Pre-enrolment movement"
                     tone="green"
                   />
                   <RoadmapCommandStat
@@ -4845,7 +8762,7 @@ const journeyProgress = roadmap.length
                         step="05"
                         title="Offer & Decision"
                         status={formatStatus(summary.offerStatus)}
-                        description="Understand your offer stage and what needs to happen before CAS."
+                        description="Understand your offer stage and what needs to happen before Pre-enrolment."
                         tone="green"
                         active={[
                           "offer_received",
@@ -4860,19 +8777,17 @@ const journeyProgress = roadmap.length
 
                       <RoadmapStageCard
                         step="06"
-                        title="CAS"
-                        status={formatStatus(summary.casStatus)}
-                        description="Prepare the financial, document and university requirements needed for CAS."
+                        title="Pre-enrolment"
+                        status={formatStatus(preEnrollmentPortalStatus)}
+                        description="Prepare the university, document and Universitaly requirements needed for pre-enrolment."
                         tone="navy"
                         active={
                           String(summary.offerStatus || "").toLowerCase() ===
                             "offer_accepted" &&
-                          String(summary.casStatus || "").toLowerCase() !==
-                            "cas_issued"
+                          !preEnrollmentComplete
                         }
                         complete={
-                          String(summary.casStatus || "").toLowerCase() ===
-                          "cas_issued"
+                          preEnrollmentComplete
                         }
                         onClick={() => setActiveTab("visa")}
                       />
@@ -4884,8 +8799,7 @@ const journeyProgress = roadmap.length
                         description="Follow visa preparation, submission, review and final decision."
                         tone="violet"
                         active={
-                          String(summary.casStatus || "").toLowerCase() ===
-                            "cas_issued" &&
+                          preEnrollmentComplete &&
                           String(summary.visaStatus || "").toLowerCase() !==
                             "visa_approved"
                         }
@@ -4959,7 +8873,7 @@ const journeyProgress = roadmap.length
                           tone="amber"
                         />
                         <RoadmapMiniStat
-                          label="CAS"
+                          label="Pre-enrolment"
                           value={`${readiness.casReadiness}%`}
                           tone="navy"
                         />
@@ -5056,7 +8970,7 @@ const journeyProgress = roadmap.length
                 <RoadmapShortcutCard
                   eyebrow="Documents"
                   title={`${readiness.documentScore}% ready`}
-                  text="Document readiness protects application, CAS and visa progress."
+                  text="Document readiness protects application, Pre-enrolment and visa progress."
                   tone="amber"
                   onClick={() => setActiveTab("documents")}
                 />
@@ -5211,20 +9125,19 @@ const journeyProgress = roadmap.length
                       <SuccessMilestoneCard
                         title="Document Readiness"
                         value={`${readiness.documentScore}%`}
-                        description="Strong documents protect application, CAS and visa timelines."
+                        description="Strong documents protect application, Pre-enrolment and visa timelines."
                         tone="amber"
                         complete={readiness.documentScore >= 100}
                         onClick={() => setActiveTab("documents")}
                       />
 
                       <SuccessMilestoneCard
-                        title="CAS Progress"
-                        value={formatStatus(summary.casStatus)}
-                        description="CAS readiness depends on offer, documents and financial preparation."
+                        title="Pre-enrolment Progress"
+                        value={formatStatus(preEnrollmentPortalStatus)}
+                        description="Pre-enrolment readiness depends on offer, documents and financial preparation."
                         tone="navy"
                         complete={
-                          String(summary.casStatus || "").toLowerCase() ===
-                          "cas_issued"
+                          preEnrollmentComplete
                         }
                         onClick={() => setActiveTab("visa")}
                       />
@@ -5273,7 +9186,7 @@ const journeyProgress = roadmap.length
                           tone="amber"
                         />
                         <SuccessMiniStat
-                          label="CAS"
+                          label="Pre-enrolment"
                           value={`${readiness.casReadiness}%`}
                           tone="navy"
                         />
@@ -5338,12 +9251,12 @@ const journeyProgress = roadmap.length
                       />
 
                       <SuccessInsightRow
-                        label="CAS"
+                        label="Pre-enrolment"
                         value={readiness.casReadiness}
                         text={
                           readiness.casReadiness >= 75
-                            ? "CAS preparation is moving well."
-                            : "Offer, documents or finance may still block CAS."
+                            ? "Pre-enrolment preparation is moving well."
+                            : "Offer, documents or finance may still block Pre-enrolment."
                         }
                         tone="navy"
                         onClick={() => setActiveTab("visa")}
@@ -5406,7 +9319,7 @@ const journeyProgress = roadmap.length
                   <SuccessGuidanceCard
                     eyebrow="Documents"
                     title={`${readiness.documentScore}% ready`}
-                    text="Document readiness affects applications, CAS, visa timing and overall portal health."
+                    text="Document readiness affects applications, Pre-enrolment, visa timing and overall portal health."
                     tone="amber"
                     actionLabel="Open Documents"
                     onClick={() => setActiveTab("documents")}
@@ -5445,7 +9358,7 @@ const journeyProgress = roadmap.length
                       Your counselor should feel one click away
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Get guidance for applications, documents, offers, CAS, visa, deadlines,
+                      Get guidance for applications, documents, offers, Pre-enrolment, visa, deadlines,
                       tasks and anything else that feels unclear in your Student OS journey.
                     </p>
                   </div>
@@ -5561,7 +9474,7 @@ const journeyProgress = roadmap.length
                       </p>
                       <p className="mt-2 text-sm leading-6 text-[#607487]">
                         Mention the exact application, document, task, university, deadline,
-                        CAS or visa issue you need help with. Your Student ID and portal context
+                        Pre-enrolment or visa issue you need help with. Your Student ID and portal context
                         help the Zaifan team understand the case faster.
                       </p>
                     </div>
@@ -5620,9 +9533,9 @@ const journeyProgress = roadmap.length
                         onClick={() => setActiveTab("documents")}
                       />
                       <CounselorGuidanceCard
-                        eyebrow="CAS / Visa"
+                        eyebrow="Pre-enrolment / Visa"
                         title={`${Math.min(readiness.casReadiness, readiness.visaReadiness)}% minimum`}
-                        text="Ask what is still needed for CAS or visa and what should be prepared first."
+                        text="Ask what is still needed for Pre-enrolment or visa and what should be prepared first."
                         tone="violet"
                         onClick={() => setActiveTab("visa")}
                       />
@@ -5730,8 +9643,8 @@ const journeyProgress = roadmap.length
                   />
                   <CounselorReasonCard
                     number="03"
-                    title="An offer or CAS is unclear"
-                    text="Get help understanding conditions, acceptance or CAS preparation."
+                    title="An offer or Pre-enrolment is unclear"
+                    text="Get help understanding conditions, acceptance or Pre-enrolment preparation."
                     tone="navy"
                   />
                   <CounselorReasonCard
@@ -5939,8 +9852,8 @@ const journeyProgress = roadmap.length
                   />
                   <ProfileJourneyCard
                     step="03"
-                    label="CAS"
-                    value={formatStatus(summary.casStatus)}
+                    label="Pre-enrolment"
+                    value={formatStatus(preEnrollmentPortalStatus)}
                     helper={`${readiness.casReadiness}% ready`}
                     tone="navy"
                     onClick={() => setActiveTab("visa")}
@@ -6092,26 +10005,31 @@ const journeyProgress = roadmap.length
             <div className="space-y-5">
               <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
                 <div className="flex flex-col gap-4 border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
-                      Application Command Center
+                      Italy Application Command Center
                     </p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-                      Follow every application from plan to decision
+                    <h2 className="mt-1 max-w-4xl text-2xl font-black tracking-tight text-white sm:text-3xl">
+                      Follow every application from planning to enrollment
                     </h2>
-                    <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      University, course, application status, offer, CAS and visa progress stay connected
-                      so you always know what has moved and what needs to happen next.
+                    <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/70">
+                      University review, admission decisions, offer conditions, Universitaly
+                      pre-enrolment, deadlines and final enrollment stay connected in one student-safe workspace.
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex shrink-0 flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => setActiveTab("universities")}
-                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15"
+                      onClick={() => void loadStudentApplicationWorkspace()}
+                      disabled={liveApplicationData.loading}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-55"
                     >
-                      Universities
+                      <RefreshCw
+                        size={15}
+                        className={liveApplicationData.loading ? "animate-spin" : ""}
+                      />
+                      Refresh Applications
                     </button>
                     <button
                       type="button"
@@ -6125,38 +10043,90 @@ const journeyProgress = roadmap.length
 
                 <div className="grid gap-3 bg-[#fff9f2] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
                   <ApplicationCommandStat
-                    label="Applications"
-                    value={applications.length}
-                    helper={applications.length ? "Visible application records" : "No application started"}
+                    label="Active Applications"
+                    value={applicationPortfolioStats.active}
+                    helper={
+                      applicationPortfolioStats.active
+                        ? "Live university application records"
+                        : "No application launched yet"
+                    }
                     tone="navy"
                   />
                   <ApplicationCommandStat
                     label="Application Readiness"
                     value={`${readiness.applicationReadiness}%`}
                     helper={
-                      readiness.applicationReadiness >= 75
-                        ? "Ready for strong movement"
-                        : "Preparation still needed"
+                      normalize(latestApplication?.application_status) === "enrolled"
+                        ? "Application journey and enrollment are complete"
+                        : readiness.applicationReadiness >= 75
+                        ? "Application is progressing strongly"
+                        : readiness.applicationReadiness >= 40
+                        ? "Application is moving through the workflow"
+                        : "Preparation still needs attention"
                     }
                     tone="orange"
                   />
                   <ApplicationCommandStat
-                    label="Offer Stage"
-                    value={formatStatus(summary.offerStatus)}
-                    helper="Latest visible offer status"
+                    label="Admission Decisions"
+                    value={applicationPortfolioStats.decisions}
+                    helper="Offers, admissions, waitlists or outcomes"
                     tone="green"
                   />
                   <ApplicationCommandStat
-                    label="CAS / Visa"
-                    value={`${Math.min(readiness.casReadiness, readiness.visaReadiness)}%`}
-                    helper="Minimum downstream readiness"
+                    label="Pre-enrolment"
+                    value={`${readiness.preEnrollmentReadiness ?? readiness.casReadiness}%`}
+                    helper={`${applicationPortfolioStats.preEnrollment} application(s) reached this stage`}
                     tone="violet"
                   />
                 </div>
               </section>
 
-              <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+              {liveApplicationData.error ? (
+                <div className="flex items-start gap-3 rounded-[1.3rem] border-2 border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
+                  <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  <span>{liveApplicationData.error}</span>
+                </div>
+              ) : null}
+
+              <section className="rounded-[1.6rem] border-2 border-[#d8b892] bg-[#fffdf8] p-4 shadow-sm">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
+                      Application Portfolio
+                    </p>
+                    <h3 className="mt-1 text-xl font-black text-[#17324d]">
+                      Show the records that matter right now
+                    </h3>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      ["all", "All", applicationPortfolioStats.active],
+                      ["attention", "Needs Attention", applicationPortfolioStats.pendingRequirements],
+                      ["submitted", "Submitted", applications.filter((item) => ["submission", "submitted", "university_review"].includes(normalize(item.application_stage))).length],
+                      ["decisions", "Decisions", applicationPortfolioStats.decisions],
+                      ["pre_enrollment", "Pre-enrolment", applicationPortfolioStats.preEnrollment],
+                      ["closed", "Closed", applications.filter((item) => applicationMatchesStudentFilter(item, "closed")).length],
+                    ].map(([value, label, count]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setApplicationFilter(value)}
+                        className={`rounded-xl border-2 px-3 py-2 text-[10px] font-black transition ${
+                          applicationFilter === value
+                            ? "border-[#173f69] bg-[#173f69] text-white"
+                            : "border-[#cbd8e2] bg-white text-[#607487] hover:border-orange-400 hover:bg-orange-50"
+                        }`}
+                      >
+                        {label} · {count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(21rem,0.82fr)]">
+                <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
                   <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
@@ -6168,45 +10138,78 @@ const journeyProgress = roadmap.length
                     </div>
 
                     <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#173f69]">
-                      {applications.length} record{applications.length === 1 ? "" : "s"}
+                      {filteredStudentApplications.length} shown
                     </span>
                   </div>
 
                   <div className="space-y-4 p-4 sm:p-5">
-                    {applications.length ? (
-                      applications.map((application, index) => (
-                        <PremiumStudentApplicationCard
-                          key={application.id || `${application.university_name}-${index}`}
-                          application={application}
-                          index={index}
-                          onDocuments={() => setActiveTab("documents")}
-                          onVisa={() => setActiveTab("visa")}
-                          onCounselor={() => setActiveTab("counselor")}
-                        />
-                      ))
-                    ) : (
+                    {liveApplicationData.loading && !applications.length ? (
+                      <div className="rounded-[1.5rem] border-2 border-[#9eb6c9] bg-[#edf4f8] p-8 text-center">
+                        <LoaderCircle size={26} className="mx-auto animate-spin text-orange-500" />
+                        <p className="mt-3 text-sm font-black text-[#17324d]">
+                          Loading your applications
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {!liveApplicationData.loading && filteredStudentApplications.length ? (
+                      filteredStudentApplications.map((application, index) => {
+                        const applicationId = String(application.id || "");
+                        return (
+                          <PremiumStudentApplicationCard
+                            key={application.id || `${application.university_name}-${index}`}
+                            application={application}
+                            index={index}
+                            requirements={
+                              applicationRequirementsById.get(applicationId) || []
+                            }
+                            events={
+                              applicationEventsById.get(applicationId) || []
+                            }
+                            expanded={expandedApplicationIds.has(applicationId)}
+                            onToggle={() => toggleApplicationExpanded(applicationId)}
+                            onDocuments={() => setActiveTab("documents")}
+                            onVisa={() => setActiveTab("visa")}
+                            onCounselor={() => setActiveTab("counselor")}
+                          />
+                        );
+                      })
+                    ) : null}
+
+                    {!liveApplicationData.loading && !filteredStudentApplications.length ? (
                       <div className="rounded-[1.6rem] border-2 border-dashed border-orange-300 bg-orange-50 p-6 sm:p-7">
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                           <div className="max-w-2xl">
                             <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-700">
-                              Application Planning Stage
+                              {applications.length
+                                ? "No application matches this filter"
+                                : "Application Planning Stage"}
                             </p>
                             <h4 className="mt-2 text-2xl font-black text-[#17324d]">
-                              No application is visible yet — that&apos;s okay
+                              {applications.length
+                                ? "Choose another portfolio view"
+                                : "No live application yet — your plan starts here"}
                             </h4>
                             <p className="mt-3 text-sm leading-6 text-[#607487]">
-                              Start with the right university shortlist, confirm your course and intake,
-                              prepare documents, then let Zaifan move the first application into your Student OS.
+                              {applications.length
+                                ? "Your application records are safe. Switch to All or another stage to see them."
+                                : "Build a focused university shortlist, confirm the programme and intake, prepare requested documents, and ask Zaifan to launch the first live application."}
                             </p>
                           </div>
 
                           <div className="grid shrink-0 gap-2 sm:grid-cols-2 lg:w-[320px] lg:grid-cols-1">
                             <button
                               type="button"
-                              onClick={() => setActiveTab("universities")}
+                              onClick={() =>
+                                applications.length
+                                  ? setApplicationFilter("all")
+                                  : setActiveTab("universities")
+                              }
                               className="flex items-center justify-between rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-xs font-black text-white transition hover:bg-[#214e78]"
                             >
-                              <span>Build University Plan</span>
+                              <span>
+                                {applications.length ? "Show All Applications" : "Build University Plan"}
+                              </span>
                               <span>→</span>
                             </button>
                             <button
@@ -6220,57 +10223,59 @@ const journeyProgress = roadmap.length
                           </div>
                         </div>
 
-                        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                          <ApplicationStartStep
-                            step="01"
-                            title="Choose Universities"
-                            text="Build a focused shortlist."
-                            tone="teal"
-                          />
-                          <ApplicationStartStep
-                            step="02"
-                            title="Confirm Course"
-                            text="Lock the right program and intake."
-                            tone="orange"
-                          />
-                          <ApplicationStartStep
-                            step="03"
-                            title="Prepare Documents"
-                            text="Get required files ready."
-                            tone="amber"
-                          />
-                          <ApplicationStartStep
-                            step="04"
-                            title="Launch Application"
-                            text="Zaifan adds the live record."
-                            tone="navy"
-                          />
-                        </div>
+                        {!applications.length ? (
+                          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <ApplicationStartStep
+                              step="01"
+                              title="Choose Universities"
+                              text="Build a focused Italy shortlist."
+                              tone="teal"
+                            />
+                            <ApplicationStartStep
+                              step="02"
+                              title="Confirm Programme"
+                              text="Lock the right programme and intake."
+                              tone="orange"
+                            />
+                            <ApplicationStartStep
+                              step="03"
+                              title="Prepare Documents"
+                              text="Complete every requested file."
+                              tone="amber"
+                            />
+                            <ApplicationStartStep
+                              step="04"
+                              title="Launch Application"
+                              text="Zaifan creates the live record."
+                              tone="navy"
+                            />
+                          </div>
+                        ) : null}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </section>
 
-                <div className="space-y-5">
+                <div className="min-w-0 space-y-5">
                   <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-sm">
                     <div className="bg-[#173f69] p-5 text-white">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
                         Latest Application Pulse
                       </p>
-                      <h3 className="mt-1 text-2xl font-black">
+                      <h3 className="mt-1 break-words text-2xl font-black text-white">
                         {latestApplication?.id
                           ? latestApplication.university_name ||
                             latestApplication.university ||
                             "Latest Application"
                           : "No live application yet"}
                       </h3>
-                      <p className="mt-2 text-sm leading-6 text-white/70">
+                      <p className="mt-2 text-sm font-semibold leading-6 text-white/75">
                         {latestApplication?.id
                           ? latestApplication.course_name ||
                             latestApplication.course ||
                             latestApplication.program ||
-                            "Course information is not visible yet."
-                          : "Your latest application will appear here as soon as a record is connected to your Student OS."}
+                            "Programme information is not visible yet."
+                          : "The latest application will appear here as soon as Zaifan connects a record to your Student OS."}
                       </p>
                     </div>
 
@@ -6278,22 +10283,31 @@ const journeyProgress = roadmap.length
                       <div className="grid grid-cols-2 gap-3">
                         <ApplicationStageStat
                           label="Application"
-                          value={formatStatus(summary.applicationStatus)}
+                          value={formatStatus(
+                            latestApplication?.application_status ||
+                              summary.applicationStatus
+                          )}
                           tone="orange"
                         />
                         <ApplicationStageStat
-                          label="Offer"
-                          value={formatStatus(summary.offerStatus)}
+                          label="Admission"
+                          value={formatStatus(
+                            latestApplication?.offer_status || summary.offerStatus
+                          )}
                           tone="green"
                         />
                         <ApplicationStageStat
-                          label="CAS"
-                          value={formatStatus(summary.casStatus)}
+                          label="Pre-enrolment"
+                          value={formatStatus(
+                            getApplicationPreEnrollmentStatus(latestApplication)
+                          )}
                           tone="navy"
                         />
                         <ApplicationStageStat
                           label="Visa"
-                          value={formatStatus(summary.visaStatus)}
+                          value={formatStatus(
+                            latestApplication?.visa_status || summary.visaStatus
+                          )}
                           tone="violet"
                         />
                       </div>
@@ -6303,24 +10317,27 @@ const journeyProgress = roadmap.length
                           Best next application move
                         </p>
                         <p className="mt-2 text-sm font-black leading-6 text-[#17324d]">
-                          {latestApplication?.next_action ||
-                            latestApplication?.nextAction ||
-                            actionCenterItems.find((item) => item.targetTab === "applications")?.title ||
-                            (applications.length
-                              ? "Review your live application status and confirm the next required step."
-                              : "Build your university shortlist and prepare for the first application.")}
+                          {applications.length
+                            ? latestApplicationGuidance.title
+                            : "Build your university shortlist and prepare the first application."}
                         </p>
                       </div>
 
                       <button
                         type="button"
                         onClick={() =>
-                          setActiveTab(applications.length ? "documents" : "universities")
+                          setActiveTab(
+                            applications.length
+                              ? latestApplicationGuidance.targetTab
+                              : "universities"
+                          )
                         }
                         className="mt-4 flex w-full items-center justify-between rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-3.5 text-sm font-black text-white transition hover:bg-orange-600"
                       >
                         <span>
-                          {applications.length ? "Check Application Readiness" : "Start Application Planning"}
+                          {applications.length
+                            ? latestApplicationGuidance.label
+                            : "Start Application Planning"}
                         </span>
                         <span>→</span>
                       </button>
@@ -6357,10 +10374,10 @@ const journeyProgress = roadmap.length
                         onClick={() => setActiveTab("documents")}
                       />
                       <ApplicationReadinessRow
-                        label="Tasks"
-                        value={readiness.taskScore}
-                        tone="rose"
-                        onClick={() => setActiveTab("tasks")}
+                        label="Pre-enrolment Readiness"
+                        value={readiness.preEnrollmentReadiness ?? readiness.casReadiness}
+                        tone="navy"
+                        onClick={() => setActiveTab("applications")}
                       />
                     </div>
                   </section>
@@ -6371,10 +10388,10 @@ const journeyProgress = roadmap.length
                 <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
-                      Application Journey
+                      Italy Application Journey
                     </p>
                     <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                      Understand what happens after an application starts
+                      Understand every step after an application starts
                     </h3>
                   </div>
 
@@ -6387,37 +10404,38 @@ const journeyProgress = roadmap.length
                   </button>
                 </div>
 
-                <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-5">
-                  <ApplicationJourneyStep
-                    step="01"
-                    title="Planned"
-                    value={applications.length ? "Started" : "Current"}
-                    tone="teal"
-                  />
-                  <ApplicationJourneyStep
-                    step="02"
-                    title="Submitted"
-                    value={formatStatus(summary.applicationStatus)}
-                    tone="orange"
-                  />
-                  <ApplicationJourneyStep
-                    step="03"
-                    title="Offer"
-                    value={formatStatus(summary.offerStatus)}
-                    tone="green"
-                  />
-                  <ApplicationJourneyStep
-                    step="04"
-                    title="CAS"
-                    value={formatStatus(summary.casStatus)}
-                    tone="navy"
-                  />
-                  <ApplicationJourneyStep
-                    step="05"
-                    title="Visa"
-                    value={formatStatus(summary.visaStatus)}
-                    tone="violet"
-                  />
+                <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 sm:p-5">
+                  {ITALY_APPLICATION_JOURNEY.map((step, index) => {
+                    const latestIndex = latestApplication?.id
+                      ? getApplicationJourneyIndex(latestApplication)
+                      : 0;
+                    const current = index === latestIndex;
+                    const complete = latestApplication?.id && index < latestIndex;
+
+                    return (
+                      <ApplicationJourneyStep
+                        key={step.id}
+                        step={String(index + 1).padStart(2, "0")}
+                        title={step.label}
+                        value={
+                          current
+                            ? "Current"
+                            : complete
+                            ? "Complete"
+                            : "Not Started"
+                        }
+                        tone={
+                          current
+                            ? "orange"
+                            : complete
+                            ? "green"
+                            : index % 2
+                            ? "navy"
+                            : "teal"
+                        }
+                      />
+                    );
+                  })}
                 </div>
               </section>
 
@@ -6432,21 +10450,21 @@ const journeyProgress = roadmap.length
                 <ApplicationShortcutCard
                   eyebrow="Documents"
                   title={`${readiness.documentScore}% ready`}
-                  text="Keep required files ready so submissions do not stall."
+                  text="Keep requested files verified so submissions and pre-enrolment do not stall."
                   tone="amber"
                   onClick={() => setActiveTab("documents")}
                 />
                 <ApplicationShortcutCard
-                  eyebrow="Tasks"
-                  title={`${summary.pendingTasksCount || 0} pending`}
-                  text="Clear application-related work before it becomes a deadline problem."
+                  eyebrow="Application Requirements"
+                  title={`${applicationPortfolioStats.pendingRequirements} pending`}
+                  text="Complete conditions, university requests and application actions."
                   tone="orange"
-                  onClick={() => setActiveTab("tasks")}
+                  onClick={() => setApplicationFilter("attention")}
                 />
                 <ApplicationShortcutCard
                   eyebrow="Counselor"
                   title={counselorCenter.counselorName || "Zaifan Counselor"}
-                  text="Ask for guidance when a course, offer or next application move is unclear."
+                  text="Ask when a programme, decision, condition or next application move is unclear."
                   tone="violet"
                   onClick={() => setActiveTab("counselor")}
                 />
@@ -6454,29 +10472,29 @@ const journeyProgress = roadmap.length
             </div>
           ) : null}
           {activeTab === "visa" ? (
-            <div className="space-y-5">
-              <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
+            <div className="min-w-0 space-y-5 text-[#17324d]">
+              <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#173f69] bg-[#fffaf4] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
                 <div className="flex flex-col gap-4 border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
-                      Visa & CAS Command Center
+                      Student Visa Command Center
                     </p>
                     <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-                      See exactly how close you are to CAS and visa readiness
+                      Visa & Pre-enrolment Command Center
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Offer, CAS, documents, finance and visa preparation are connected here so the
-                      student can understand what is ready, what is missing and what must happen next.
+                      Track your live Visa status, requirements, readiness and decision in the same student-safe workspace.
                     </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => setActiveTab("applications")}
-                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15"
+                      onClick={() => void loadStudentVisaWorkspace()}
+                      disabled={liveVisaData.loading}
+                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-55"
                     >
-                      Applications
+                      {liveVisaData.loading ? "Refreshing" : "Refresh Visa"}
                     </button>
                     <button
                       type="button"
@@ -6489,348 +10507,272 @@ const journeyProgress = roadmap.length
                 </div>
 
                 <div className="grid gap-3 bg-[#fff9f2] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
-                  <VisaCommandStat
-                    label="Offer Stage"
-                    value={formatStatus(summary.offerStatus)}
-                    helper="Latest visible offer position"
-                    tone="green"
+                  <OverviewCommandStat
+                    label="Visa Status"
+                    value={activeStudentVisa ? formatStatus(activeStudentVisa.visa_status) : formatStatus(summary.visaStatus)}
+                    helper={activeStudentVisa ? "Live Visa OS status" : "No dedicated case yet"}
+                    tone={activeStudentVisaApproved ? "green" : activeStudentVisaRefused ? "orange" : "navy"}
+                    onClick={() => setActiveTab("visa")}
                   />
-                  <VisaCommandStat
-                    label="CAS Readiness"
-                    value={`${readiness.casReadiness}%`}
-                    helper={
-                      readiness.casReadiness >= 75
-                        ? "CAS preparation is strong"
-                        : "CAS still needs preparation"
-                    }
-                    tone="navy"
+                  <OverviewCommandStat
+                    label="Requirements"
+                    value={studentVisaRequirementStats.total ? `${studentVisaRequirementStats.ready}/${studentVisaRequirementStats.total}` : "—"}
+                    helper={studentVisaRequirementStats.total ? `${studentVisaRequirementStats.attention} need attention` : "Checklist not configured"}
+                    tone={studentVisaRequirementStats.attention ? "orange" : "green"}
+                    onClick={() => setActiveTab("documents")}
                   />
-                  <VisaCommandStat
+                  <OverviewCommandStat
                     label="Visa Readiness"
-                    value={`${readiness.visaReadiness}%`}
-                    helper={
-                      readiness.visaReadiness >= 75
-                        ? "Visa preparation is strong"
-                        : "Visa still needs preparation"
-                    }
-                    tone="violet"
+                    value={`${liveStudentVisaReadiness ?? readiness.visaReadiness}%`}
+                    helper={liveStudentVisaReadiness === null ? "Portal readiness estimate" : "Live requirement readiness"}
+                    tone={(liveStudentVisaReadiness ?? readiness.visaReadiness) >= 75 ? "green" : "violet"}
+                    onClick={() => setActiveTab("visa")}
                   />
-                  <VisaCommandStat
-                    label="Document Score"
-                    value={`${readiness.documentScore}%`}
-                    helper="Documents supporting CAS and visa"
-                    tone="amber"
+                  <OverviewCommandStat
+                    label="Decision"
+                    value={activeStudentVisaApproved ? "Approved" : activeStudentVisaRefused ? "Attention" : "Pending"}
+                    helper={activeStudentVisa?.decision_at ? formatDate(activeStudentVisa.decision_at) : "Latest recorded decision position"}
+                    tone={activeStudentVisaApproved ? "green" : activeStudentVisaRefused ? "orange" : "navy"}
+                    onClick={() => setActiveTab("visa")}
                   />
                 </div>
               </section>
 
-              <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                  <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
-                        Visa Journey
-                      </p>
-                      <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                        From offer acceptance to visa decision
-                      </h3>
-                    </div>
+              {liveVisaData.error ? (
+                <div className="flex items-start gap-3 rounded-[1.3rem] border-2 border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900">
+                  {liveVisaData.error} Existing portal Visa information remains visible where available.
+                </div>
+              ) : null}
 
-                    <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#173f69]">
-                      {Math.min(readiness.casReadiness, readiness.visaReadiness)}% minimum ready
+              {studentVisaCases.length > 1 ? (
+                <section className="rounded-[1.6rem] border-2 border-[#d8b892] bg-[#fffdf8] p-4 shadow-sm">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-600">Visa Cases</p>
+                      <h3 className="mt-1 text-lg font-black text-[#17324d]">Choose the Visa case you want to review</h3>
+                    </div>
+                    <span className="rounded-full border-2 border-[#9eb6c9] bg-[#edf4f8] px-3 py-1 text-[9px] font-black uppercase tracking-[0.11em] text-[#173f69]">
+                      {studentVisaCases.length} active cases
                     </span>
                   </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {studentVisaCases.map((visa) => {
+                      const selected = String(visa?.id || "") === String(activeStudentVisa?.id || "");
+                      return (
+                        <button
+                          key={visa?.id || visa?.case_name}
+                          type="button"
+                          onClick={() => setActiveStudentVisaId(String(visa?.id || ""))}
+                          className={`min-w-0 rounded-[1.25rem] border-2 p-4 text-left transition ${selected ? "border-orange-400 bg-orange-50 shadow-sm" : "border-[#c9d7e6] bg-white hover:border-orange-300 hover:bg-orange-50/50"}`}
+                        >
+                          <p className="truncate text-sm font-black text-[#17324d]">{visa?.case_name || `${visa?.country || "Study"} Visa Case`}</p>
+                          <p className="mt-1 text-[10px] font-semibold text-[#607487]">{formatStatus(visa?.visa_stage || "preparation")} · {formatStatus(visa?.visa_status || "not_started")}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
 
+              {!activeStudentVisa && !liveVisaData.loading ? (
+                <section className="rounded-[1.6rem] border-2 border-dashed border-orange-300 bg-orange-50 p-6 text-center shadow-sm sm:p-7">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">Visa case not opened yet</p>
+                  <h3 className="mt-2 text-xl font-black text-[#17324d]">Your application journey is visible, but no dedicated Visa OS case has been created.</h3>
+                  <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#607487]">
+                    Continue preparing documents and Pre-enrolment. When Zaifan Admin opens your Visa case, the live checklist, appointments, milestones and history will appear here automatically.
+                  </p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    <button type="button" onClick={() => setActiveTab("applications")} className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2.5 text-xs font-black text-white">Open Applications</button>
+                    <button type="button" onClick={() => setActiveTab("counselor")} className="rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-2.5 text-xs font-black text-white">Ask My Counselor</button>
+                  </div>
+                </section>
+              ) : null}
+
+              <div className="grid min-w-0 gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+                <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                  <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">Visa Journey</p>
+                      <h3 className="mt-1 text-xl font-black text-[#17324d]">From preparation to decision</h3>
+                    </div>
+                    <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.11em] text-[#173f69]">
+                      {activeStudentVisa ? formatStatus(activeStudentVisa.visa_stage) : "Preparation"}
+                    </span>
+                  </div>
                   <div className="space-y-3 p-4 sm:p-5">
-                    <VisaJourneyStage
-                      step="01"
-                      title="Offer Received"
-                      status={formatStatus(summary.offerStatus)}
-                      text="A valid offer is the foundation for CAS preparation."
-                      tone="green"
-                      active={[
-                        "offer_received",
-                        "offer_accepted",
-                      ].includes(String(summary.offerStatus || "").toLowerCase())}
-                      complete={
-                        String(summary.offerStatus || "").toLowerCase() ===
-                        "offer_accepted"
-                      }
-                      onClick={() => setActiveTab("applications")}
-                    />
-
-                    <VisaJourneyStage
-                      step="02"
-                      title="CAS Preparation"
-                      status={`${readiness.casReadiness}% ready`}
-                      text="Documents, financial evidence and offer conditions must be ready before CAS can progress."
-                      tone="navy"
-                      active={
-                        String(summary.offerStatus || "").toLowerCase() ===
-                          "offer_accepted" &&
-                        String(summary.casStatus || "").toLowerCase() !==
-                          "cas_issued"
-                      }
-                      complete={
-                        String(summary.casStatus || "").toLowerCase() ===
-                        "cas_issued"
-                      }
-                      onClick={() => setActiveTab("documents")}
-                    />
-
-                    <VisaJourneyStage
-                      step="03"
-                      title="CAS Issued"
-                      status={formatStatus(summary.casStatus)}
-                      text="Once CAS is issued, visa preparation becomes the main priority."
-                      tone="orange"
-                      active={
-                        String(summary.casStatus || "").toLowerCase() ===
-                        "cas_issued"
-                      }
-                      complete={
-                        String(summary.casStatus || "").toLowerCase() ===
-                        "cas_issued"
-                      }
-                      onClick={() => setActiveTab("visa")}
-                    />
-
-                    <VisaJourneyStage
-                      step="04"
-                      title="Visa Preparation"
-                      status={`${readiness.visaReadiness}% ready`}
-                      text="Prepare passport, financial evidence, documents and any required visa items."
-                      tone="violet"
-                      active={
-                        String(summary.casStatus || "").toLowerCase() ===
-                          "cas_issued" &&
-                        String(summary.visaStatus || "").toLowerCase() !==
-                          "visa_approved"
-                      }
-                      complete={
-                        String(summary.visaStatus || "").toLowerCase() ===
-                        "visa_approved"
-                      }
-                      onClick={() => setActiveTab("documents")}
-                    />
-
-                    <VisaJourneyStage
-                      step="05"
-                      title="Visa Decision"
-                      status={formatStatus(summary.visaStatus)}
-                      text="Track the final visa stage and prepare for travel after approval."
-                      tone="rose"
-                      active={
-                        String(summary.visaStatus || "").toLowerCase() ===
-                        "visa_approved"
-                      }
-                      complete={
-                        String(summary.visaStatus || "").toLowerCase() ===
-                        "visa_approved"
-                      }
-                      onClick={() => setActiveTab("success")}
-                    />
+                    <VisaJourneyStage step="01" title="Preparation" status={activeStudentVisaStageIndex >= 0 ? "Started" : "Open"} text="Passport, offer, financial evidence and supporting documents are prepared." tone="navy" active={activeStudentVisaStageIndex === 0} complete={activeStudentVisaStageIndex > 0} onClick={() => setActiveTab("documents")} />
+                    <VisaJourneyStage step="02" title="Appointment" status={activeStudentVisa?.appointment_date ? formatDate(activeStudentVisa.appointment_date) : "Not booked"} text="Visa center / embassy appointment and reference details are confirmed." tone="orange" active={activeStudentVisaStageIndex === 1} complete={activeStudentVisaStageIndex > 1 || Boolean(activeStudentVisa?.appointment_date)} onClick={() => setActiveTab("visa")} />
+                    <VisaJourneyStage step="03" title="Biometrics / Medical" status={activeStudentVisa?.biometrics_date ? "Biometrics recorded" : activeStudentVisa?.medical_date ? "Medical recorded" : "Pending"} text="Any required biometrics or medical milestones are completed and recorded." tone="violet" active={[2, 3].includes(activeStudentVisaStageIndex)} complete={activeStudentVisaStageIndex > 3 || Boolean(activeStudentVisa?.biometrics_date || activeStudentVisa?.medical_date)} onClick={() => setActiveTab("visa")} />
+                    <VisaJourneyStage step="04" title="Submitted" status={activeStudentVisa?.submitted_at ? formatDate(activeStudentVisa.submitted_at) : "Pending"} text="The Visa application has been formally submitted for processing." tone="navy" active={activeStudentVisaStageIndex === 4} complete={activeStudentVisaStageIndex > 4 || Boolean(activeStudentVisa?.submitted_at)} onClick={() => setActiveTab("visa")} />
+                    <VisaJourneyStage step="05" title="Embassy Review" status={activeStudentVisaStageIndex >= 5 ? "In journey" : "Pending"} text="The case is under embassy or consular review while the student monitors any requested action." tone="orange" active={activeStudentVisaStageIndex === 5} complete={activeStudentVisaStageIndex > 5} onClick={() => setActiveTab("visa")} />
+                    <VisaJourneyStage step="06" title="Decision" status={activeStudentVisaApproved ? "Approved" : activeStudentVisaRefused ? "Needs review" : activeStudentVisa?.decision_at ? formatDate(activeStudentVisa.decision_at) : "Pending"} text="The final Visa decision and passport-return stage are recorded here." tone={activeStudentVisaApproved ? "green" : activeStudentVisaRefused ? "rose" : "violet"} active={activeStudentVisaStageIndex >= 6 && !activeStudentVisaApproved && !activeStudentVisaRefused} complete={activeStudentVisaApproved} onClick={() => setActiveTab("counselor")} />
                   </div>
                 </section>
 
-                <div className="space-y-5">
-                  <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-sm">
-                    <div className="bg-[#173f69] p-5 text-white">
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
-                        Current Visa Position
-                      </p>
-                      <h3 className="mt-1 text-2xl font-black">
-                        {formatStatus(summary.visaStatus)}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-white/70">
-                        Your current visa position based on the latest Student OS records.
-                      </p>
+                <div className="min-w-0 space-y-5">
+                  <section className="overflow-hidden rounded-[1.65rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                    <div className="border-b-2 border-orange-200 bg-orange-50 px-5 py-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">Next Move</p>
+                      <h3 className="mt-1 text-lg font-black text-[#17324d]">What should I focus on now?</h3>
                     </div>
-
                     <div className="p-5">
-                      <div className="grid grid-cols-2 gap-3">
-                        <VisaMiniStat
-                          label="Offer"
-                          value={formatStatus(summary.offerStatus)}
-                          tone="green"
-                        />
-                        <VisaMiniStat
-                          label="CAS"
-                          value={formatStatus(summary.casStatus)}
-                          tone="navy"
-                        />
-                        <VisaMiniStat
-                          label="CAS Ready"
-                          value={`${readiness.casReadiness}%`}
-                          tone="orange"
-                        />
-                        <VisaMiniStat
-                          label="Visa Ready"
-                          value={`${readiness.visaReadiness}%`}
-                          tone="violet"
-                        />
-                      </div>
-
-                      <div className="mt-4 rounded-xl border-2 border-orange-200 bg-orange-50 p-4">
-                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
-                          Best next visa move
-                        </p>
-                        <p className="mt-2 text-sm font-black leading-6 text-[#17324d]">
-                          {actionCenterItems.find((item) => item.targetTab === "visa")?.title ||
-                            (readiness.documentScore < 100
-                              ? "Improve your document readiness before the next CAS or visa step."
-                              : String(summary.casStatus || "").toLowerCase() !== "cas_issued"
-                              ? "Confirm what is still required for CAS preparation."
-                              : String(summary.visaStatus || "").toLowerCase() !== "visa_approved"
-                              ? "Prepare and verify the remaining visa requirements."
-                              : "Visa approved — continue to travel and arrival preparation.")}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveTab(
-                            readiness.documentScore < 100
-                              ? "documents"
-                              : String(summary.casStatus || "").toLowerCase() !== "cas_issued"
-                              ? "counselor"
-                              : "actions"
-                          )
-                        }
-                        className="mt-4 flex w-full items-center justify-between rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-3.5 text-sm font-black text-white transition hover:bg-orange-600"
-                      >
-                        <span>Open Next Visa Step</span>
-                        <span>→</span>
+                      <p className="text-sm font-black leading-6 text-[#17324d]">
+                        {activeStudentVisa?.next_action ||
+                          (studentVisaRequirementStats.rejected
+                            ? "Review the rejected Visa requirement and prepare the correct replacement document."
+                            : studentVisaRequirementStats.missing
+                            ? "Complete the missing Visa requirements before the next milestone."
+                            : !preEnrollmentComplete
+                            ? "Keep Pre-enrolment, documents and financial preparation moving."
+                            : activeStudentVisaApproved
+                            ? "Visa approved — prepare passport collection, travel and arrival steps."
+                            : "Keep the Visa checklist complete and monitor the next embassy milestone.")}
+                      </p>
+                      {activeStudentVisa?.next_action_due ? (
+                        <p className="mt-2 text-[11px] font-bold text-orange-700">Target date: {formatDate(activeStudentVisa.next_action_due)}</p>
+                      ) : null}
+                      <button type="button" onClick={() => setActiveTab(studentVisaRequirementStats.attention ? "documents" : "counselor")} className="mt-4 flex w-full items-center justify-between rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-3.5 text-sm font-black text-white transition hover:bg-orange-600">
+                        <span>{studentVisaRequirementStats.attention ? "Open Documents" : "Ask My Counselor"}</span><span>→</span>
                       </button>
                     </div>
                   </section>
 
-                  <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                  <section className="overflow-hidden rounded-[1.65rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
                     <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
-                      <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
-                        Readiness Control
-                      </p>
-                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
-                        What can block CAS or visa progress?
-                      </h3>
+                      <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">Readiness Control</p>
+                      <h3 className="mt-1 text-lg font-black text-[#17324d]">Live blockers and readiness</h3>
                     </div>
-
-                    <div className="space-y-4 p-5">
-                      <VisaReadinessRow
-                        label="Application Readiness"
-                        value={readiness.applicationReadiness}
-                        tone="orange"
-                        onClick={() => setActiveTab("applications")}
-                      />
-                      <VisaReadinessRow
-                        label="Document Readiness"
-                        value={readiness.documentScore}
-                        tone="amber"
-                        onClick={() => setActiveTab("documents")}
-                      />
-                      <VisaReadinessRow
-                        label="CAS Readiness"
-                        value={readiness.casReadiness}
-                        tone="navy"
-                        onClick={() => setActiveTab("visa")}
-                      />
-                      <VisaReadinessRow
-                        label="Visa Readiness"
-                        value={readiness.visaReadiness}
-                        tone="violet"
-                        onClick={() => setActiveTab("visa")}
-                      />
+                    <div className="space-y-3 p-4">
+                      <VisaReadinessRow label="Application Readiness" value={readiness.applicationReadiness} tone="orange" onClick={() => setActiveTab("applications")} />
+                      <VisaReadinessRow label="Document Readiness" value={readiness.documentScore} tone="amber" onClick={() => setActiveTab("documents")} />
+                      <VisaReadinessRow label="Pre-enrolment Readiness" value={readiness.casReadiness} tone="navy" onClick={() => setActiveTab("applications")} />
+                      <VisaReadinessRow label="Visa Requirement Readiness" value={liveStudentVisaReadiness ?? readiness.visaReadiness} tone="violet" onClick={() => setActiveTab("visa")} />
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <VisaMiniStat label="Ready" value={studentVisaRequirementStats.ready || 0} tone="green" />
+                        <VisaMiniStat label="Attention" value={studentVisaRequirementStats.attention || 0} tone="orange" />
+                      </div>
                     </div>
                   </section>
                 </div>
               </div>
 
-              <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
-                      Visa Requirements
-                    </p>
-                    <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                      Key items students usually need to keep ready
-                    </h3>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">Live Visa Requirements</p>
+                    <h3 className="mt-1 text-xl font-black text-[#17324d]">Your real Visa checklist</h3>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("documents")}
-                    className="w-fit rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2.5 text-xs font-black text-white transition hover:bg-[#214e78]"
-                  >
-                    Open Documents
-                  </button>
+                  <button type="button" onClick={() => setActiveTab("documents")} className="w-fit rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2.5 text-xs font-black text-white transition hover:bg-[#214e78]">Open Documents</button>
                 </div>
 
-                <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-4">
-                  <VisaRequirementCard
-                    title="Passport"
-                    text="Keep passport details and validity ready for visa processing."
-                    tone="navy"
-                  />
-                  <VisaRequirementCard
-                    title="Offer / CAS"
-                    text="Your university offer and CAS status drive the next visa stage."
-                    tone="green"
-                  />
-                  <VisaRequirementCard
-                    title="Financial Evidence"
-                    text="Prepare the financial documents required for your visa route."
-                    tone="amber"
-                  />
-                  <VisaRequirementCard
-                    title="Supporting Documents"
-                    text="Keep requested academic, identity and visa-related files complete and current."
-                    tone="violet"
-                  />
+                <div className="p-4 sm:p-5">
+                  {activeStudentVisaRequirements.length ? (
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                      {activeStudentVisaRequirements.map((requirement) => {
+                        const status = getStudentVisaRequirementStatus(requirement?.status);
+                        const tone = status === "ready" ? "border-emerald-300 bg-emerald-50" : status === "rejected" ? "border-rose-300 bg-rose-50" : status === "review" ? "border-sky-300 bg-sky-50" : "border-orange-300 bg-orange-50";
+                        const badge = status === "ready" ? "border-emerald-300 bg-white text-emerald-700" : status === "rejected" ? "border-rose-300 bg-white text-rose-700" : status === "review" ? "border-sky-300 bg-white text-sky-700" : "border-orange-300 bg-white text-orange-700";
+                        return (
+                          <div key={requirement?.id || requirement?.requirement_name} className={`min-w-0 rounded-[1.35rem] border-2 p-4 shadow-sm ${tone}`}>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#607487]">{formatStatus(requirement?.requirement_category || "Visa requirement")}</p>
+                                <h4 className="mt-1 break-words text-base font-black text-[#17324d]">{requirement?.requirement_name || "Visa Requirement"}</h4>
+                              </div>
+                              <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${badge}`}>{status}</span>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-[#607487]">
+                              <span>{requirement?.required === false ? "Optional" : "Required"}</span>
+                              {requirement?.due_date ? <span>· Due {formatDate(requirement.due_date)}</span> : null}
+                              {requirement?.linked_document_id ? <span>· Document linked</span> : null}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-[1.35rem] border-2 border-dashed border-orange-300 bg-orange-50 p-6 text-center">
+                      <p className="text-sm font-black text-[#17324d]">No dedicated Visa requirements are visible yet.</p>
+                      <p className="mx-auto mt-2 max-w-2xl text-[12px] leading-5 text-[#607487]">When Zaifan Admin configures the Visa checklist, each live requirement and status will appear here automatically.</p>
+                    </div>
+                  )}
                 </div>
+              </section>
 
-                <div className="px-4 pb-5 sm:px-5">
-                  <div className="rounded-xl border-2 border-sky-200 bg-sky-50 p-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-700">
-                      Important
-                    </p>
-                    <p className="mt-2 text-[11px] leading-5 text-[#607487]">
-                      The exact visa requirements can depend on destination, university, intake and the student&apos;s case.
-                      Use the documents and counselor workspaces for the requirements connected to your actual record.
-                    </p>
+              <div className="grid min-w-0 gap-5 xl:grid-cols-2">
+                <section className="overflow-hidden rounded-[1.65rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                  <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">Embassy & Appointment</p>
+                    <h3 className="mt-1 text-lg font-black text-[#17324d]">Important Visa milestones</h3>
                   </div>
+                  <div className="grid gap-3 p-4 sm:grid-cols-2">
+                    <VisaMiniStat label="Visa Center" value={activeStudentVisa?.visa_center || "Not set"} tone="navy" />
+                    <VisaMiniStat label="Embassy / Consulate" value={activeStudentVisa?.embassy_or_consulate || "Not set"} tone="navy" />
+                    <VisaMiniStat label="Appointment" value={activeStudentVisa?.appointment_date ? formatDate(activeStudentVisa.appointment_date) : "Not set"} tone="orange" />
+                    <VisaMiniStat label="Appointment Time" value={activeStudentVisa?.appointment_time || "Not set"} tone="orange" />
+                    <VisaMiniStat label="Biometrics" value={activeStudentVisa?.biometrics_date ? formatDate(activeStudentVisa.biometrics_date) : "Not recorded"} tone="violet" />
+                    <VisaMiniStat label="Submitted" value={activeStudentVisa?.submitted_at ? formatDate(activeStudentVisa.submitted_at) : "Not submitted"} tone="violet" />
+                    <VisaMiniStat label="Passport Collection" value={activeStudentVisa?.passport_collection_date ? formatDate(activeStudentVisa.passport_collection_date) : "Not set"} tone="green" />
+                    <VisaMiniStat label="Visa Valid Until" value={activeStudentVisa?.visa_valid_until ? formatDate(activeStudentVisa.visa_valid_until) : "Not set"} tone="green" />
+                  </div>
+                  {activeStudentVisa?.appointment_location || activeStudentVisa?.appointment_reference ? (
+                    <div className="mx-4 mb-4 rounded-xl border-2 border-[#c9d7e6] bg-[#fffaf4] p-4 text-[11px] leading-5 text-[#607487]">
+                      {activeStudentVisa?.appointment_location ? <p><span className="font-black text-[#17324d]">Location:</span> {activeStudentVisa.appointment_location}</p> : null}
+                      {activeStudentVisa?.appointment_reference ? <p className="mt-1"><span className="font-black text-[#17324d]">Reference:</span> {activeStudentVisa.appointment_reference}</p> : null}
+                    </div>
+                  ) : null}
+                </section>
+
+                <section className="overflow-hidden rounded-[1.65rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                  <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">Finance & Stay Readiness</p>
+                    <h3 className="mt-1 text-lg font-black text-[#17324d]">Student-safe case details</h3>
+                  </div>
+                  <div className="grid gap-3 p-4 sm:grid-cols-2">
+                    <VisaMiniStat label="Visa Fee" value={activeStudentVisa?.visa_fee_required ? `${activeStudentVisa?.visa_fee_amount || "—"} ${activeStudentVisa?.visa_fee_currency || "EUR"}` : "Not recorded"} tone="orange" />
+                    <VisaMiniStat label="Fee Status" value={activeStudentVisa?.visa_fee_paid ? "Paid" : activeStudentVisa?.visa_fee_required ? "Pending" : "Not required"} tone={activeStudentVisa?.visa_fee_paid ? "green" : "orange"} />
+                    <VisaMiniStat label="Financial Evidence" value={formatStatus(activeStudentVisa?.financial_evidence_status || "not_recorded")} tone="navy" />
+                    <VisaMiniStat label="Sponsor" value={activeStudentVisa?.sponsor_name || "Not recorded"} tone="navy" />
+                    <VisaMiniStat label="Accommodation" value={formatStatus(activeStudentVisa?.accommodation_status || "not_recorded")} tone="violet" />
+                    <VisaMiniStat label="Insurance" value={formatStatus(activeStudentVisa?.insurance_status || "not_recorded")} tone="violet" />
+                  </div>
+                  <div className="mx-4 mb-4 rounded-xl border-2 border-sky-200 bg-sky-50 p-4">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-sky-700">Privacy protected</p>
+                    <p className="mt-2 text-[11px] leading-5 text-[#607487]">Internal staff notes, embassy notes, staff risk reasoning and private operational metadata are not shown in the Student Portal.</p>
+                  </div>
+                </section>
+              </div>
+
+              <section className="overflow-hidden rounded-[1.65rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                <div className="flex flex-col gap-2 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">Visa Activity</p>
+                    <h3 className="mt-1 text-lg font-black text-[#17324d]">Student-safe Visa history</h3>
+                  </div>
+                  <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#173f69]">{activeStudentVisaEvents.length} recent</span>
+                </div>
+                <div className="space-y-2 p-4">
+                  {activeStudentVisaEvents.length ? activeStudentVisaEvents.map((event) => (
+                    <div key={event?.id || `${event?.event_type}-${event?.created_at}`} className="rounded-[1.2rem] border-2 border-[#c9d7e6] bg-white p-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-[#17324d]">{formatStatus(event?.event_label || event?.event_type || "Visa update")}</p>
+                          {event?.new_value ? <p className="mt-1 text-[11px] font-semibold text-[#607487]">Updated to {formatStatus(event.new_value)}</p> : null}
+                        </div>
+                        <span className="shrink-0 text-[10px] font-bold text-[#81919d]">{formatDate(event?.created_at)}</span>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="rounded-[1.2rem] border-2 border-dashed border-[#c9d7e6] bg-white p-5 text-center text-[12px] font-semibold text-[#607487]">No student-safe Visa activity is visible yet.</div>
+                  )}
                 </div>
               </section>
 
               <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <VisaShortcutCard
-                  eyebrow="Applications"
-                  title={formatStatus(summary.applicationStatus)}
-                  text="Offer and application movement directly affect CAS preparation."
-                  tone="orange"
-                  onClick={() => setActiveTab("applications")}
-                />
-                <VisaShortcutCard
-                  eyebrow="Documents"
-                  title={`${readiness.documentScore}% ready`}
-                  text="Complete and accepted documents protect both CAS and visa timelines."
-                  tone="amber"
-                  onClick={() => setActiveTab("documents")}
-                />
-                <VisaShortcutCard
-                  eyebrow="Deadlines"
-                  title={`${deadlineCenter.urgentCount} urgent`}
-                  text="Check any time-sensitive CAS or visa actions before they become blockers."
-                  tone={deadlineCenter.urgentCount ? "rose" : "green"}
-                  onClick={() => setActiveTab("deadlines")}
-                />
-                <VisaShortcutCard
-                  eyebrow="Counselor"
-                  title={counselorCenter.counselorName || "Zaifan Counselor"}
-                  text="Ask for guidance whenever a visa or CAS requirement is unclear."
-                  tone="violet"
-                  onClick={() => setActiveTab("counselor")}
-                />
+                <VisaShortcutCard eyebrow="Applications" title={formatStatus(summary.applicationStatus)} text="Offer and application movement directly affect Pre-enrolment and Visa preparation." tone="orange" onClick={() => setActiveTab("applications")} />
+                <VisaShortcutCard eyebrow="Documents" title={`${readiness.documentScore}% ready`} text="Complete and accepted documents protect the real Visa checklist and embassy timeline." tone="amber" onClick={() => setActiveTab("documents")} />
+                <VisaShortcutCard eyebrow="Deadlines" title={`${deadlineCenter.urgentCount} urgent`} text="Check time-sensitive application, Pre-enrolment and Visa actions before they become blockers." tone={deadlineCenter.urgentCount ? "rose" : "green"} onClick={() => setActiveTab("deadlines")} />
+                <VisaShortcutCard eyebrow="Counselor" title={counselorCenter.counselorName || "Zaifan Counselor"} text="Ask for guidance when a live Visa requirement, appointment or next action is unclear." tone="violet" onClick={() => setActiveTab("counselor")} />
               </section>
             </div>
           ) : null}
@@ -6838,140 +10780,250 @@ const journeyProgress = roadmap.length
             <div className="space-y-5">
               <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
                 <div className="flex flex-col gap-4 border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
-                      Document Command Center
+                      Student Document Workspace
                     </p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-                      Know what is ready, what is missing and what needs attention
+                    <h2 className="mt-1 max-w-4xl text-2xl font-black tracking-tight sm:text-3xl">
+                      Upload requested documents and follow every review decision
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Your documents support applications, offers, CAS and visa preparation.
-                      Student OS keeps the visible document status, review notes and file access in one place.
+                      This checklist is connected to the same Student Master File used by Zaifan Admin.
+                      New requests, approvals, rejections and replacement uploads stay synchronized here.
                     </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => setActiveTab("counselor")}
-                      className="rounded-xl border border-orange-300/45 bg-orange-400/15 px-4 py-2.5 text-xs font-black text-orange-100 transition hover:bg-orange-400/25"
+                      onClick={() => void loadStudentDocumentWorkspace()}
+                      disabled={liveDocumentData.loading || Boolean(documentUploadState.key)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-55"
                     >
-                      Request Document Help
+                      <RefreshCw
+                        size={15}
+                        className={liveDocumentData.loading ? "animate-spin" : ""}
+                      />
+                      Refresh Status
                     </button>
                     <button
                       type="button"
-                      onClick={() => setActiveTab("applications")}
-                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15"
+                      onClick={() => handleSupportTypeSelect("document_review")}
+                      className="rounded-xl border border-orange-300/45 bg-orange-400/15 px-4 py-2.5 text-xs font-black text-orange-100 transition hover:bg-orange-400/25"
                     >
-                      Applications
+                      Request Document Help
                     </button>
                   </div>
                 </div>
 
                 <div className="grid gap-3 bg-[#fff9f2] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
                   <DocumentCommandStat
-                    label="Visible Documents"
-                    value={documents.length}
-                    helper={documents.length ? "Connected to your student record" : "No document records yet"}
+                    label="Requested Types"
+                    value={documentWorkspaceStats.required}
+                    helper={
+                      documentWorkspaceStats.required
+                        ? "Required for your current journey"
+                        : "No active required request"
+                    }
                     tone="navy"
                   />
                   <DocumentCommandStat
-                    label="Readiness"
-                    value={`${readiness.documentScore}%`}
+                    label="Document Readiness"
+                    value={`${documentWorkspaceStats.readiness}%`}
                     helper={
-                      readiness.documentScore >= 75
-                        ? "Document position is healthy"
-                        : "More document work is needed"
+                      documentWorkspaceStats.readiness >= 75
+                        ? "Your required-document position is healthy"
+                        : "Complete and verify more requested documents"
                     }
-                    tone={readiness.documentScore >= 75 ? "green" : "amber"}
+                    tone={documentWorkspaceStats.readiness >= 75 ? "green" : "amber"}
                   />
                   <DocumentCommandStat
-                    label="Approved"
-                    value={
-                      documents.filter((doc) => {
-                        const status = normalize(doc.status || doc.document_status);
-                        return status.includes("approved") || status.includes("complete");
-                      }).length
-                    }
-                    helper="Accepted / completed records"
+                    label="Verified"
+                    value={documentWorkspaceStats.verified}
+                    helper="Accepted by the Zaifan operations team"
                     tone="green"
                   />
                   <DocumentCommandStat
                     label="Needs Attention"
-                    value={
-                      documents.filter((doc) => {
-                        const status = normalize(doc.status || doc.document_status);
-                        return (
-                          status.includes("rejected") ||
-                          status.includes("missing") ||
-                          status.includes("pending") ||
-                          status.includes("review")
-                        );
-                      }).length
-                    }
-                    helper="Missing, rejected or under review"
-                    tone="rose"
+                    value={documentWorkspaceStats.attention}
+                    helper={`${documentWorkspaceStats.missing} missing · ${documentWorkspaceStats.rejected} rejected · ${documentWorkspaceStats.received} in review`}
+                    tone={documentWorkspaceStats.attention ? "rose" : "green"}
                   />
                 </div>
               </section>
 
-              <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                  <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
-                        My Documents
-                      </p>
-                      <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                        Every visible file and review state
-                      </h3>
+              {documentUploadState.message ? (
+                <div
+                  className={`flex items-start gap-3 rounded-[1.25rem] border-2 p-4 text-sm font-bold shadow-sm ${
+                    documentUploadState.type === "success"
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                      : documentUploadState.type === "error"
+                        ? "border-rose-300 bg-rose-50 text-rose-800"
+                        : documentUploadState.type === "warning"
+                          ? "border-amber-300 bg-amber-50 text-amber-800"
+                          : "border-sky-300 bg-sky-50 text-sky-800"
+                  }`}
+                >
+                  {documentUploadState.key ? (
+                    <LoaderCircle size={18} className="mt-0.5 shrink-0 animate-spin" />
+                  ) : documentUploadState.type === "success" ? (
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+                  ) : documentUploadState.type === "error" ? (
+                    <XCircle size={18} className="mt-0.5 shrink-0" />
+                  ) : (
+                    <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  )}
+                  <span className="min-w-0 flex-1">{documentUploadState.message}</span>
+                  {!documentUploadState.key ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDocumentUploadState({ key: "", type: "", message: "" })
+                      }
+                      className="shrink-0 text-xs font-black uppercase tracking-[0.12em]"
+                    >
+                      Dismiss
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {liveDocumentData.error ? (
+                <div className="flex items-start gap-3 rounded-[1.25rem] border-2 border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800 shadow-sm">
+                  <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black">Live document refresh needs attention</p>
+                    <p className="mt-1 text-xs leading-5">
+                      {liveDocumentData.error} Existing portal data remains visible.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(19rem,0.82fr)]">
+                <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                  <div className="border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-4 py-4 sm:px-5">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
+                          My Document Checklist
+                        </p>
+                        <h3 className="mt-1 text-xl font-black text-[#17324d]">
+                          Requested, uploaded and reviewed files
+                        </h3>
+                        <p className="mt-1 text-xs leading-5 text-[#607487]">
+                          Only student-visible requirements appear here. Admin-only evidence stays hidden.
+                        </p>
+                      </div>
+
+                      <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#173f69]">
+                        {filteredStudentDocumentWorkspace.length} visible
+                      </span>
                     </div>
 
-                    <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#173f69]">
-                      {documents.length} record{documents.length === 1 ? "" : "s"}
-                    </span>
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+                      <label className="relative block min-w-0">
+                        <FileText
+                          size={16}
+                          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#81919d]"
+                        />
+                        <input
+                          type="search"
+                          value={documentSearch}
+                          onChange={(event) => setDocumentSearch(event.target.value)}
+                          placeholder="Search requested documents..."
+                          className="h-11 w-full rounded-xl border-2 border-[#cbd8e2] bg-white pl-10 pr-3 text-sm font-semibold text-[#17324d] outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                        />
+                      </label>
+
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          ["attention", "Action", documentWorkspaceStats.attention],
+                          ["requested", "Requested", documentRequirements.length],
+                          ["uploaded", "Uploaded", documentWorkspaceStats.uploaded],
+                          ["verified", "Verified", documentWorkspaceStats.verified],
+                          ["all", "All", documentWorkspaceStats.total],
+                        ].map(([value, label, count]) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setDocumentFilter(value)}
+                            className={`rounded-xl border-2 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                              documentFilter === value
+                                ? "border-[#173f69] bg-[#173f69] text-white"
+                                : "border-[#cbd8e2] bg-white text-[#526b7f] hover:border-orange-400 hover:text-orange-700"
+                            }`}
+                          >
+                            {label} · {count}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-4 p-4 sm:p-5">
-                    {documents.length ? (
-                      documents.map((document, index) => (
-                        <PremiumStudentDocumentCard
-                          key={document.id || `${document.document_name}-${index}`}
-                          document={document}
+                    {liveDocumentData.loading &&
+                    !studentDocumentWorkspace.length &&
+                    !documents.length ? (
+                      <div className="flex min-h-[220px] items-center justify-center rounded-[1.5rem] border-2 border-dashed border-[#cbd8e2] bg-[#f8fbfd] p-6">
+                        <div className="text-center">
+                          <LoaderCircle
+                            size={28}
+                            className="mx-auto animate-spin text-orange-500"
+                          />
+                          <p className="mt-3 text-sm font-black text-[#17324d]">
+                            Loading your live document checklist
+                          </p>
+                        </div>
+                      </div>
+                    ) : filteredStudentDocumentWorkspace.length ? (
+                      filteredStudentDocumentWorkspace.map((item, index) => (
+                        <StudentDocumentRequirementCard
+                          key={item.requirementId || item.key || index}
+                          item={item}
                           index={index}
-                          onHelp={() => setActiveTab("counselor")}
+                          uploading={documentUploadState.key === item.key}
+                          onUpload={(fileList) =>
+                            handleStudentDocumentUpload(item, fileList)
+                          }
+                          onHelp={() => handleSupportTypeSelect("document_review")}
                         />
                       ))
                     ) : (
                       <div className="rounded-[1.6rem] border-2 border-dashed border-amber-300 bg-amber-50 p-6 sm:p-7">
                         <p className="text-[10px] font-black uppercase tracking-[0.17em] text-amber-700">
-                          Document Workspace Ready
+                          No Matching Document
                         </p>
                         <h4 className="mt-2 text-2xl font-black text-[#17324d]">
-                          No document record is visible yet
+                          {studentDocumentWorkspace.length
+                            ? "Nothing matches this filter"
+                            : "No document request is visible yet"}
                         </h4>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#607487]">
-                          When Zaifan requests or reviews documents for your case, the visible records will appear here.
-                          Use your counselor or support center when you need clarification about what should be prepared first.
+                          {studentDocumentWorkspace.length
+                            ? "Choose another filter or clear the search to see the rest of your document workspace."
+                            : "When Zaifan requests a document, it will appear here with upload instructions and a live review status."}
                         </p>
 
-                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <div className="mt-5 flex flex-wrap gap-3">
+                          {studentDocumentWorkspace.length ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDocumentFilter("all");
+                                setDocumentSearch("");
+                              }}
+                              className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-xs font-black text-white transition hover:bg-[#214e78]"
+                            >
+                              Show All Documents
+                            </button>
+                          ) : null}
                           <button
                             type="button"
-                            onClick={() => setActiveTab("counselor")}
-                            className="flex items-center justify-between rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-xs font-black text-white transition hover:bg-[#214e78]"
+                            onClick={() => handleSupportTypeSelect("document_review")}
+                            className="rounded-xl border-2 border-amber-400 bg-white px-4 py-3 text-xs font-black text-amber-800 transition hover:bg-amber-100"
                           >
-                            <span>Ask My Counselor</span>
-                            <span>→</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab("support")}
-                            className="flex items-center justify-between rounded-xl border-2 border-amber-400 bg-white px-4 py-3 text-xs font-black text-amber-800 transition hover:bg-amber-100"
-                          >
-                            <span>Request Document Review</span>
-                            <span>→</span>
+                            Ask About Required Documents
                           </button>
                         </div>
                       </div>
@@ -6979,63 +11031,75 @@ const journeyProgress = roadmap.length
                   </div>
                 </section>
 
-                <div className="space-y-5">
+                <div className="min-w-0 space-y-5">
                   <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-sm">
                     <div className="bg-[#173f69] p-5 text-white">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
-                        Document Readiness
+                        Required-Document Readiness
                       </p>
-                      <h3 className="mt-1 text-2xl font-black">
-                        {readiness.documentScore}% ready
+                      <h3 className="mt-1 text-3xl font-black">
+                        {documentWorkspaceStats.readiness}% ready
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-white/70">
-                        This score is based on the visible document records and their review status.
+                        Based on verified required documents—not only the number of uploaded files.
                       </p>
                     </div>
 
                     <div className="p-5">
                       <div className="h-3 overflow-hidden rounded-full bg-[#edf1f4]">
                         <div
-                          className="h-full rounded-full bg-orange-500"
-                          style={{ width: String(readiness.documentScore) + "%" }}
+                          className="h-full rounded-full bg-orange-500 transition-all"
+                          style={{
+                            width: String(documentWorkspaceStats.readiness) + "%",
+                          }}
                         />
                       </div>
 
-                      <div className="mt-5 grid grid-cols-2 gap-3">
+                      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
                         <DocumentMiniStat
-                          label="Applications"
-                          value={`${readiness.applicationReadiness}%`}
-                          tone="orange"
-                        />
-                        <DocumentMiniStat
-                          label="CAS"
-                          value={`${readiness.casReadiness}%`}
+                          label="Required"
+                          value={documentWorkspaceStats.required}
                           tone="navy"
                         />
                         <DocumentMiniStat
-                          label="Visa"
-                          value={`${readiness.visaReadiness}%`}
+                          label="Missing"
+                          value={documentWorkspaceStats.missing}
+                          tone="orange"
+                        />
+                        <DocumentMiniStat
+                          label="In Review"
+                          value={documentWorkspaceStats.received}
                           tone="violet"
                         />
                         <DocumentMiniStat
-                          label="Portal Health"
-                          value={`${analytics.overallHealth}%`}
+                          label="Verified"
+                          value={documentWorkspaceStats.verified}
                           tone="green"
+                        />
+                        <DocumentMiniStat
+                          label="Urgent"
+                          value={documentWorkspaceStats.urgent}
+                          tone="orange"
+                        />
+                        <DocumentMiniStat
+                          label="Overdue"
+                          value={documentWorkspaceStats.overdue}
+                          tone="orange"
                         />
                       </div>
 
                       <button
                         type="button"
                         onClick={() =>
-                          setActiveTab(
-                            readiness.documentScore < 100 ? "counselor" : "applications"
-                          )
+                          documentWorkspaceStats.attention
+                            ? setDocumentFilter("attention")
+                            : setActiveTab("applications")
                         }
                         className="mt-4 flex w-full items-center justify-between rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-3.5 text-sm font-black text-white transition hover:bg-orange-600"
                       >
                         <span>
-                          {readiness.documentScore < 100
-                            ? "Ask What Document Comes Next"
+                          {documentWorkspaceStats.attention
+                            ? "Open Documents Needing Action"
                             : "Continue Application Journey"}
                         </span>
                         <span>→</span>
@@ -7046,56 +11110,49 @@ const journeyProgress = roadmap.length
                   <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
                     <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
                       <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
-                        Review Intelligence
+                        Status Guide
                       </p>
                       <h3 className="mt-1 text-lg font-black text-[#17324d]">
-                        What needs your attention?
+                        What each document state means
                       </h3>
                     </div>
 
                     <div className="space-y-3 p-5">
-                      <DocumentHealthRow
-                        label="Approved"
-                        value={
-                          documents.filter((doc) => {
-                            const status = normalize(doc.status || doc.document_status);
-                            return status.includes("approved") || status.includes("complete");
-                          }).length
-                        }
-                        total={documents.length}
-                        tone="green"
+                      <DocumentPortalStatusGuide
+                        status="missing"
+                        title="Requested · Upload Needed"
+                        text="Zaifan has requested this document and no current file is available."
                       />
-                      <DocumentHealthRow
-                        label="Pending / Review"
-                        value={
-                          documents.filter((doc) => {
-                            const status = normalize(doc.status || doc.document_status);
-                            return status.includes("pending") || status.includes("review");
-                          }).length
-                        }
-                        total={documents.length}
-                        tone="orange"
+                      <DocumentPortalStatusGuide
+                        status="received"
+                        title="Received · Under Review"
+                        text="Your file reached the Student Master File and is waiting for Admin review."
                       />
-                      <DocumentHealthRow
-                        label="Rejected"
-                        value={
-                          documents.filter((doc) =>
-                            normalize(doc.status || doc.document_status).includes("rejected")
-                          ).length
-                        }
-                        total={documents.length}
-                        tone="rose"
+                      <DocumentPortalStatusGuide
+                        status="verified"
+                        title="Verified"
+                        text="The Zaifan operations team accepted the current file."
                       />
-                      <DocumentHealthRow
-                        label="Missing"
-                        value={
-                          documents.filter((doc) =>
-                            normalize(doc.status || doc.document_status).includes("missing")
-                          ).length
-                        }
-                        total={documents.length}
-                        tone="amber"
+                      <DocumentPortalStatusGuide
+                        status="rejected"
+                        title="Rejected · Upload Again"
+                        text="Read the review reason and upload a corrected replacement file."
                       />
+                    </div>
+                  </section>
+
+                  <section className="rounded-[1.6rem] border-2 border-sky-300 bg-sky-50 p-5 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <FileText size={20} className="mt-0.5 shrink-0 text-sky-700" />
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-[0.14em] text-sky-800">
+                          Upload Safety
+                        </p>
+                        <p className="mt-2 text-[12px] leading-5 text-sky-800/80">
+                          Accepted formats: PDF, JPG, PNG and WEBP. Maximum size: 15 MB per file.
+                          Use clear scans, correct orientation and complete pages. Never upload the whole QA ZIP.
+                        </p>
+                      </div>
                     </div>
                   </section>
                 </div>
@@ -7108,7 +11165,7 @@ const journeyProgress = roadmap.length
                       Document Journey
                     </p>
                     <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                      Why documents matter at every stage
+                      One document record, visible throughout the journey
                     </h3>
                   </div>
 
@@ -7124,31 +11181,31 @@ const journeyProgress = roadmap.length
                 <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-4">
                   <DocumentJourneyCard
                     step="01"
-                    title="Application"
-                    text="Academic and identity documents help Zaifan prepare strong university applications."
+                    title="Admin Request"
+                    text="Zaifan activates the exact document requirement connected to your case."
                     tone="orange"
-                    onClick={() => setActiveTab("applications")}
+                    onClick={() => setDocumentFilter("requested")}
                   />
                   <DocumentJourneyCard
                     step="02"
-                    title="Offer Conditions"
-                    text="Some offers require additional evidence before conditions can be cleared."
-                    tone="green"
-                    onClick={() => setActiveTab("applications")}
+                    title="Student Upload"
+                    text="You upload a clear file directly into the shared Student Master File."
+                    tone="navy"
+                    onClick={() => setDocumentFilter("attention")}
                   />
                   <DocumentJourneyCard
                     step="03"
-                    title="CAS"
-                    text="CAS preparation depends on the university receiving the required supporting evidence."
-                    tone="navy"
-                    onClick={() => setActiveTab("visa")}
+                    title="Review Decision"
+                    text="Admin verifies or rejects the file with a permanent status and review trail."
+                    tone="green"
+                    onClick={() => setDocumentFilter("uploaded")}
                   />
                   <DocumentJourneyCard
                     step="04"
-                    title="Visa"
-                    text="Visa preparation relies on complete, current and case-specific supporting documents."
+                    title="Replacement History"
+                    text="Rejected files stay in history while the corrected version returns for review."
                     tone="violet"
-                    onClick={() => setActiveTab("visa")}
+                    onClick={() => setDocumentFilter("all")}
                   />
                 </div>
               </section>
@@ -7162,25 +11219,28 @@ const journeyProgress = roadmap.length
                   onClick={() => setActiveTab("applications")}
                 />
                 <DocumentShortcutCard
-                  eyebrow="CAS / Visa"
+                  eyebrow="Pre-enrolment / Visa"
                   title={`${Math.min(readiness.casReadiness, readiness.visaReadiness)}% minimum`}
-                  text="Document readiness is one of the strongest protections for CAS and visa progress."
+                  text="Verified documents protect both Pre-enrolment and visa progress."
                   tone="violet"
                   onClick={() => setActiveTab("visa")}
                 />
                 <DocumentShortcutCard
-                  eyebrow="Deadlines"
-                  title={`${deadlineCenter.urgentCount} urgent`}
-                  text="Check time-sensitive document or application work before it becomes a blocker."
-                  tone={deadlineCenter.urgentCount ? "rose" : "green"}
-                  onClick={() => setActiveTab("deadlines")}
+                  eyebrow="Notifications"
+                  title={`${notifications.filter((item) => item.targetTab === "documents").length} updates`}
+                  text="Document requests, approvals and rejections also appear in Notifications."
+                  tone="green"
+                  onClick={() => {
+                    setNotificationFilter("documents");
+                    setActiveTab("notifications");
+                  }}
                 />
                 <DocumentShortcutCard
                   eyebrow="Counselor"
                   title={counselorCenter.counselorName || "Zaifan Counselor"}
                   text="Ask exactly what is missing, rejected or still required."
                   tone="navy"
-                  onClick={() => setActiveTab("counselor")}
+                  onClick={() => handleSupportTypeSelect("document_review")}
                 />
               </section>
             </div>
@@ -7509,18 +11569,29 @@ const journeyProgress = roadmap.length
                 <div className="flex flex-col gap-4 border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
-                      University Planning Center
+                      Live University Planning Center
                     </p>
                     <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-                      Build the right shortlist before applications begin
+                      Compare every option before the next application move
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Keep every university option, course, category and planning status visible in one place
-                      so your application journey starts with clear choices instead of random submissions.
+                      Your shortlist, application links, requirements, deadlines, affordability and university activity are connected to the same Student Master File used by Zaifan Admin.
                     </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void loadStudentUniversityWorkspace()}
+                      disabled={liveUniversityData.loading}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      <RefreshCw
+                        size={15}
+                        className={liveUniversityData.loading ? "animate-spin" : ""}
+                      />
+                      Refresh Status
+                    </button>
                     <button
                       type="button"
                       onClick={() => setActiveTab("applications")}
@@ -7541,68 +11612,141 @@ const journeyProgress = roadmap.length
                 <div className="grid gap-3 bg-[#fff9f2] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
                   <UniversityCommandStat
                     label="University Options"
-                    value={universities.length}
-                    helper={universities.length ? "Visible shortlist records" : "No shortlist started"}
+                    value={universityWorkspaceStats.total}
+                    helper={universityWorkspaceStats.total ? "Live shortlist records" : "No shortlist started"}
                     tone="navy"
                   />
                   <UniversityCommandStat
-                    label="Application Readiness"
-                    value={`${readiness.applicationReadiness}%`}
-                    helper={
-                      readiness.applicationReadiness >= 75
-                        ? "Planning supports application movement"
-                        : "More preparation is needed"
-                    }
-                    tone="orange"
-                  />
-                  <UniversityCommandStat
-                    label="Applications"
-                    value={applications.length}
-                    helper={applications.length ? "Applications already connected" : "No application launched"}
+                    label="Application Linked"
+                    value={universityWorkspaceStats.linked}
+                    helper="Options connected to Application OS"
                     tone="green"
                   />
                   <UniversityCommandStat
-                    label="Current Country"
-                    value={
-                      student?.country ||
-                      student?.country_interest ||
-                      student?.preferred_country ||
-                      "Not set"
-                    }
-                    helper="Destination on your current record"
-                    tone="violet"
+                    label="Planning Readiness"
+                    value={`${universityWorkspaceStats.avgReadiness}%`}
+                    helper={universityWorkspaceStats.avgReadiness >= 75 ? "Shortlist position is healthy" : "More planning details are needed"}
+                    tone="orange"
+                  />
+                  <UniversityCommandStat
+                    label="Needs Attention"
+                    value={universityWorkspaceStats.attention}
+                    helper={`${universityWorkspaceStats.verifiedRequirements}/${universityWorkspaceStats.requirements || 0} requirements verified`}
+                    tone={universityWorkspaceStats.attention ? "rose" : "green"}
                   />
                 </div>
               </section>
 
-              <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+              {liveUniversityData.error ? (
+                <div className="flex items-start gap-3 rounded-[1.25rem] border-2 border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800 shadow-sm">
+                  <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black">Live university refresh needs attention</p>
+                    <p className="mt-1 text-xs leading-5">
+                      {liveUniversityData.error} Existing portal and application-linked data remains visible.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              <section className="overflow-hidden rounded-[1.7rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                <div className="grid gap-3 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                  <label className="relative block min-w-0">
+                    <input
+                      type="search"
+                      value={universitySearch}
+                      onChange={(event) => setUniversitySearch(event.target.value)}
+                      placeholder="Search university, programme, country, intake or status..."
+                      className="h-11 w-full rounded-xl border-2 border-[#cbd8e2] bg-white px-4 text-sm font-semibold text-[#17324d] outline-none transition placeholder:text-[#8a9aa7] focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    />
+                  </label>
+
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      ["attention", "Action", universityWorkspaceStats.attention],
+                      ["application", "Application", universityWorkspaceStats.linked],
+                      ["dream", "Dream", universityWorkspaceRows.filter((item) => normalize(item.category) === "dream").length],
+                      ["target", "Target", universityWorkspaceRows.filter((item) => normalize(item.category) === "target").length],
+                      ["safe", "Safe", universityWorkspaceRows.filter((item) => normalize(item.category) === "safe").length],
+                      ["all", "All", universityWorkspaceStats.total],
+                    ].map(([value, label, count]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setUniversityFilter(value)}
+                        className={`rounded-xl border-2 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                          universityFilter === value
+                            ? "border-[#173f69] bg-[#173f69] text-white"
+                            : "border-[#cbd8e2] bg-white text-[#526b7f] hover:border-orange-400 hover:text-orange-700"
+                        }`}
+                      >
+                        {label} · {count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(20rem,0.82fr)]">
+                <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
                   <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
-                        My University Shortlist
+                        My Live University Shortlist
                       </p>
                       <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                        Compare every option before you commit
+                        Fit, affordability, readiness and next movement
                       </h3>
                     </div>
-
                     <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#173f69]">
-                      {universities.length} option{universities.length === 1 ? "" : "s"}
+                      {filteredStudentUniversities.length} visible
                     </span>
                   </div>
 
                   <div className="space-y-4 p-4 sm:p-5">
-                    {universities.length ? (
-                      universities.map((university, index) => (
+                    {liveUniversityData.loading && !universityWorkspaceRows.length ? (
+                      <div className="flex min-h-[220px] items-center justify-center rounded-[1.5rem] border-2 border-dashed border-[#cbd8e2] bg-[#f8fbfd] p-6">
+                        <div className="text-center">
+                          <RefreshCw size={28} className="mx-auto animate-spin text-orange-500" />
+                          <p className="mt-3 text-sm font-black text-[#17324d]">
+                            Loading your live university plan
+                          </p>
+                        </div>
+                      </div>
+                    ) : filteredStudentUniversities.length ? (
+                      filteredStudentUniversities.map((university, index) => (
                         <PremiumUniversityCard
-                          key={university.id || `${university.university_name}-${index}`}
+                          key={university.id || `${university.universityName}-${index}`}
                           university={university}
                           index={index}
                           onApplications={() => setActiveTab("applications")}
                           onCounselor={() => setActiveTab("counselor")}
+                          onDocuments={() => setActiveTab("documents")}
+                          onDeadlines={() => setActiveTab("deadlines")}
                         />
                       ))
+                    ) : universityWorkspaceRows.length ? (
+                      <div className="rounded-[1.6rem] border-2 border-dashed border-amber-300 bg-amber-50 p-6 sm:p-7">
+                        <p className="text-[10px] font-black uppercase tracking-[0.17em] text-amber-700">
+                          No Matching University
+                        </p>
+                        <h4 className="mt-2 text-2xl font-black text-[#17324d]">
+                          Nothing matches this search or filter
+                        </h4>
+                        <p className="mt-3 text-sm leading-6 text-[#607487]">
+                          Clear the search or choose All to see the complete university plan.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUniversityFilter("all");
+                            setUniversitySearch("");
+                          }}
+                          className="mt-5 rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-xs font-black text-white transition hover:bg-[#214e78]"
+                        >
+                          Show All Universities
+                        </button>
+                      </div>
                     ) : (
                       <div className="rounded-[1.6rem] border-2 border-dashed border-teal-300 bg-teal-50 p-6 sm:p-7">
                         <p className="text-[10px] font-black uppercase tracking-[0.17em] text-teal-700">
@@ -7612,10 +11756,8 @@ const journeyProgress = roadmap.length
                           Your university plan is still waiting to be built
                         </h4>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#607487]">
-                          Start by confirming the destination, course direction, budget and intake with your counselor.
-                          Once options are added to your student record, they will appear here for comparison.
+                          Start with destination, programme, budget and intake. Once Zaifan adds or links an option, it will appear here automatically.
                         </p>
-
                         <div className="mt-5 grid gap-3 sm:grid-cols-2">
                           <button
                             type="button"
@@ -7634,33 +11776,6 @@ const journeyProgress = roadmap.length
                             <span>→</span>
                           </button>
                         </div>
-
-                        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                          <UniversityPlanningStep
-                            step="01"
-                            title="Destination"
-                            text="Confirm the country that fits your goals."
-                            tone="navy"
-                          />
-                          <UniversityPlanningStep
-                            step="02"
-                            title="Course"
-                            text="Choose the right academic direction."
-                            tone="teal"
-                          />
-                          <UniversityPlanningStep
-                            step="03"
-                            title="Budget & Intake"
-                            text="Match affordability and timeline."
-                            tone="amber"
-                          />
-                          <UniversityPlanningStep
-                            step="04"
-                            title="Shortlist"
-                            text="Compare options before applying."
-                            tone="orange"
-                          />
-                        </div>
                       </div>
                     )}
                   </div>
@@ -7670,92 +11785,20 @@ const journeyProgress = roadmap.length
                   <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-sm">
                     <div className="bg-[#173f69] p-5 text-white">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
-                        Shortlist Pulse
+                        Shortlist Command
                       </p>
                       <h3 className="mt-1 text-2xl font-black">
-                        {universities.length
-                          ? universities[0]?.university_name ||
-                            universities[0]?.name ||
-                            "Top University Option"
-                          : "No university selected yet"}
+                        {universityWorkspaceRows[0]?.universityName || "No university selected yet"}
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-white/70">
-                        {universities.length
-                          ? universities[0]?.course_name ||
-                            universities[0]?.course ||
-                            universities[0]?.program ||
-                            universities[0]?.country ||
-                            "Your first visible shortlist option."
-                          : "Your first shortlisted university will appear here once Zaifan connects it to your student record."}
+                        {universityWorkspaceRows[0]?.universityProgram || "Your top visible option will appear here."}
                       </p>
-                    </div>
-
-                    <div className="p-5">
-                      <div className="grid grid-cols-2 gap-3">
-                        <UniversityMiniStat
-                          label="Options"
-                          value={universities.length}
-                          tone="teal"
-                        />
-                        <UniversityMiniStat
-                          label="Applications"
-                          value={applications.length}
-                          tone="orange"
-                        />
-                        <UniversityMiniStat
-                          label="Documents"
-                          value={`${readiness.documentScore}%`}
-                          tone="amber"
-                        />
-                        <UniversityMiniStat
-                          label="Journey"
-                          value={`${journeyProgress}%`}
-                          tone="navy"
-                        />
-                      </div>
-
-                      <div className="mt-4 rounded-xl border-2 border-orange-200 bg-orange-50 p-4">
-                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
-                          Best next university move
-                        </p>
-                        <p className="mt-2 text-sm font-black leading-6 text-[#17324d]">
-                          {universities.length
-                            ? applications.length
-                              ? "Review the current shortlist against your live applications and confirm whether another option is needed."
-                              : "Compare the shortlisted options and confirm which university should move into the first application."
-                            : "Start with destination, course, budget and intake before choosing universities."}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveTab(universities.length ? "applications" : "counselor")
-                        }
-                        className="mt-4 flex w-full items-center justify-between rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-3.5 text-sm font-black text-white transition hover:bg-orange-600"
-                      >
-                        <span>
-                          {universities.length ? "Move Toward Application" : "Start University Planning"}
-                        </span>
-                        <span>→</span>
-                      </button>
-                    </div>
-                  </section>
-
-                  <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                    <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
-                      <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
-                        Planning Readiness
-                      </p>
-                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
-                        Is your shortlist ready to become an application?
-                      </h3>
                     </div>
 
                     <div className="space-y-4 p-5">
                       <UniversityReadinessRow
-                        label="University Options"
-                        value={universities.length ? Math.min(100, universities.length * 34) : 0}
+                        label="Portfolio Readiness"
+                        value={universityWorkspaceStats.avgReadiness}
                         tone="teal"
                       />
                       <UniversityReadinessRow
@@ -7773,6 +11816,64 @@ const journeyProgress = roadmap.length
                         value={readiness.taskScore}
                         tone="navy"
                       />
+
+                      <div className="rounded-xl border-2 border-orange-200 bg-orange-50 p-4">
+                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+                          Best next university move
+                        </p>
+                        <p className="mt-2 text-sm font-black leading-6 text-[#17324d]">
+                          {universityWorkspaceRows[0]?.nextAction || "Confirm destination, programme, budget and intake with your counselor."}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                    <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                      <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
+                        Requirement Center
+                      </p>
+                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
+                        What still needs to be confirmed?
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 p-5">
+                      <UniversityMiniStat label="Total" value={universityWorkspaceStats.requirements} tone="navy" />
+                      <UniversityMiniStat label="Verified" value={universityWorkspaceStats.verifiedRequirements} tone="teal" />
+                      <UniversityMiniStat label="Attention" value={universityWorkspaceRows.reduce((sum, item) => sum + Number(item.requirementStats?.attention || 0), 0)} tone="amber" />
+                      <UniversityMiniStat label="Open" value={universityWorkspaceRows.reduce((sum, item) => sum + Number(item.requirementStats?.open || 0), 0)} tone="orange" />
+                    </div>
+                  </section>
+
+                  <section className="overflow-hidden rounded-[1.75rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
+                    <div className="border-b border-[#ead9c5] bg-[#fff7ed] px-5 py-4">
+                      <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
+                        Recent University Activity
+                      </p>
+                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
+                        Student-safe University OS history
+                      </h3>
+                    </div>
+                    <div className="space-y-3 p-5">
+                      {recentStudentUniversityEvents.length ? (
+                        recentStudentUniversityEvents.map((event, index) => (
+                          <div
+                            key={event.id || `${event.created_at}-${index}`}
+                            className="rounded-xl border-2 border-[#e1e8ed] bg-[#fbfdfe] p-3"
+                          >
+                            <p className="text-xs font-black text-[#17324d]">
+                              {event.event_label || formatStatus(event.event_type) || "University update"}
+                            </p>
+                            <p className="mt-1 text-[10px] leading-4 text-[#607487]">
+                              {event.universityName} · {formatDate(event.created_at)}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="rounded-xl border-2 border-dashed border-[#cbd8e2] bg-[#f8fbfd] p-4 text-xs leading-5 text-[#607487]">
+                          University activity will appear after Zaifan creates, links or updates an option.
+                        </p>
+                      )}
                     </div>
                   </section>
                 </div>
@@ -7788,7 +11889,6 @@ const journeyProgress = roadmap.length
                       Compare the things that actually matter
                     </h3>
                   </div>
-
                   <button
                     type="button"
                     onClick={() => setActiveTab("counselor")}
@@ -7799,186 +11899,195 @@ const journeyProgress = roadmap.length
                 </div>
 
                 <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-4">
-                  <UniversityDecisionCard
-                    step="01"
-                    title="Course Fit"
-                    text="Does the program actually match your academic background and career direction?"
-                    tone="teal"
-                  />
-                  <UniversityDecisionCard
-                    step="02"
-                    title="Affordability"
-                    text="Review tuition, living costs, scholarship possibilities and realistic family budget."
-                    tone="amber"
-                  />
-                  <UniversityDecisionCard
-                    step="03"
-                    title="Admission Fit"
-                    text="Check whether your grades, English profile and documents fit the university route."
-                    tone="orange"
-                  />
-                  <UniversityDecisionCard
-                    step="04"
-                    title="Journey Fit"
-                    text="Look at intake timing, city, visa route and whether the option supports your overall plan."
-                    tone="navy"
-                  />
+                  <UniversityDecisionCard step="01" title="Course Fit" text="Does the programme match your academic background and career direction?" tone="teal" />
+                  <UniversityDecisionCard step="02" title="Affordability" text="Review tuition, living costs, scholarship possibilities and realistic family budget." tone="amber" />
+                  <UniversityDecisionCard step="03" title="Admission Fit" text="Check whether grades, English profile and documents fit the university route." tone="orange" />
+                  <UniversityDecisionCard step="04" title="Journey Fit" text="Look at intake timing, city, visa route and whether the option supports your full plan." tone="navy" />
                 </div>
               </section>
 
               <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <UniversityShortcutCard
-                  eyebrow="Applications"
-                  title={`${applications.length} record${applications.length === 1 ? "" : "s"}`}
-                  text="See which shortlisted options have already moved into application."
-                  tone="orange"
-                  onClick={() => setActiveTab("applications")}
-                />
-                <UniversityShortcutCard
-                  eyebrow="Documents"
-                  title={`${readiness.documentScore}% ready`}
-                  text="Strong documents make it easier to move the right university option forward."
-                  tone="amber"
-                  onClick={() => setActiveTab("documents")}
-                />
-                <UniversityShortcutCard
-                  eyebrow="Roadmap"
-                  title={`${journeyProgress}% complete`}
-                  text="See where university planning sits inside the full study-abroad journey."
-                  tone="navy"
-                  onClick={() => setActiveTab("roadmap")}
-                />
-                <UniversityShortcutCard
-                  eyebrow="Counselor"
-                  title={counselorCenter.counselorName || "Zaifan Counselor"}
-                  text="Use counselor guidance to compare options before committing to an application."
-                  tone="violet"
-                  onClick={() => setActiveTab("counselor")}
-                />
+                <UniversityShortcutCard eyebrow="Applications" title={`${applications.length} record${applications.length === 1 ? "" : "s"}`} text="See which shortlisted options have moved into application." tone="orange" onClick={() => setActiveTab("applications")} />
+                <UniversityShortcutCard eyebrow="Documents" title={`${readiness.documentScore}% ready`} text="Strong documents make it easier to move the right option forward." tone="amber" onClick={() => setActiveTab("documents")} />
+                <UniversityShortcutCard eyebrow="Deadlines" title={`${deadlineCenter.urgentCount} urgent`} text="Review university, application, Pre-enrolment and visa dates before they become blockers." tone="navy" onClick={() => setActiveTab("deadlines")} />
+                <UniversityShortcutCard eyebrow="Counselor" title={counselorCenter.counselorName || "Zaifan Counselor"} text="Use counselor guidance before committing to an application." tone="violet" onClick={() => setActiveTab("counselor")} />
               </section>
             </div>
           ) : null}
           {activeTab === "messages" ? (
             <div className="space-y-5">
               <section className="overflow-hidden rounded-[2rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-[0_18px_48px_rgba(23,63,105,0.10)]">
-                <div className="flex flex-col gap-4 border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
-                      Student Communication Center
-                    </p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-                      Keep every important conversation tied to your journey
-                    </h2>
-                    <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                      Counselor updates, WhatsApp drafts, support communication and journey messages
-                      stay visible here so you do not have to remember what was said or where it came from.
-                    </p>
-                  </div>
+                <div className="relative overflow-hidden border-b-[3px] border-orange-500 bg-[#173f69] px-5 py-5 text-white sm:px-6">
+                  <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-20 h-52 w-52 rounded-full border-[24px] border-white/5" />
+                  <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-24 h-44 w-44 rounded-full border-[20px] border-orange-400/10" />
 
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("counselor")}
-                      className="rounded-xl border border-orange-300/45 bg-orange-400/15 px-4 py-2.5 text-xs font-black text-orange-100 transition hover:bg-orange-400/25"
-                    >
-                      My Counselor
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("support")}
-                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/15"
-                    >
-                      Support Center
-                    </button>
+                  <div className="relative z-[1] flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="max-w-3xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">
+                          Student Communication Center
+                        </p>
+                        <span className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.11em] text-emerald-200">
+                          Student-safe feed
+                        </span>
+                      </div>
+                      <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                        Every student-facing update, in the right order
+                      </h2>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-white/75">
+                        Sent and logged communication tied to your case stays here. Internal staff notes,
+                        unsent drafts, queued items, failed attempts and cancelled records stay outside your Student OS feed.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[310px]">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("counselor")}
+                        className="rounded-xl border-2 border-orange-300/55 bg-orange-400/15 px-4 py-3 text-left transition hover:bg-orange-400/25"
+                      >
+                        <span className="block text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+                          Guidance
+                        </span>
+                        <span className="mt-1 block text-xs font-black text-white">My Counselor →</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("support")}
+                        className="rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-left transition hover:bg-white/15"
+                      >
+                        <span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/60">
+                          Formal Help
+                        </span>
+                        <span className="mt-1 block text-xs font-black text-white">Support Center →</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid gap-3 bg-[#fff9f2] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
                   <MessageCommandStat
-                    label="Messages"
+                    label="Visible Messages"
                     value={communications.length}
-                    helper={communications.length ? "Visible communication records" : "No messages yet"}
+                    helper={communications.length ? "Student-facing communication" : "No student-facing messages yet"}
                     tone="navy"
                   />
                   <MessageCommandStat
                     label="WhatsApp"
-                    value={
-                      communications.filter((item) =>
-                        normalize(item.channel || item.type).includes("whatsapp")
-                      ).length
-                    }
-                    helper="WhatsApp-linked communication"
+                    value={communications.filter((item) => communicationChannelKey(item) === "whatsapp").length}
+                    helper="Logged / sent WhatsApp contact"
                     tone="green"
                   />
                   <MessageCommandStat
-                    label="Pending / Queued"
-                    value={
-                      communications.filter((item) => {
-                        const status = normalize(item.status);
-                        return (
-                          status.includes("queued") ||
-                          status.includes("pending") ||
-                          status.includes("draft")
-                        );
-                      }).length
-                    }
-                    helper="Waiting to be sent or completed"
+                    label="Email"
+                    value={communications.filter((item) => communicationChannelKey(item) === "email").length}
+                    helper="Student-facing email updates"
                     tone="orange"
                   />
                   <MessageCommandStat
-                    label="Counselor"
-                    value={counselorCenter.counselorName || "Zaifan Counselor"}
-                    helper="Your guidance contact"
+                    label="Latest Update"
+                    value={latestCommunication ? formatDate(latestCommunication?.created_at || latestCommunication?.sent_at) : "—"}
+                    helper={latestCommunication ? formatStatus(latestCommunication?.channel || "message") : "Waiting for first update"}
                     tone="violet"
                   />
                 </div>
               </section>
 
-              <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-                <section className="overflow-hidden rounded-[1.8rem] border-2 border-[#d8b892] bg-[#fffdf8] shadow-sm">
-                  <div className="flex flex-col gap-3 border-b border-[#ead9c5] bg-gradient-to-r from-[#fff1df] via-[#fff7ed] to-[#fffdf8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
-                        Communication History
-                      </p>
-                      <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                        Every visible message in one clear feed
-                      </h3>
+              <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
+                <section className="overflow-hidden rounded-[1.85rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-[0_14px_38px_rgba(23,63,105,0.08)]">
+                  <div className="border-b-[3px] border-orange-400 bg-[#fff7ed] px-4 py-4 sm:px-5">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600">
+                          Communication History
+                        </p>
+                        <h3 className="mt-1 text-xl font-black text-[#17324d]">
+                          Find the exact update you need
+                        </h3>
+                        <p className="mt-1 text-[11px] font-semibold leading-5 text-[#607487]">
+                          Search student-visible communication or narrow the feed by channel.
+                        </p>
+                      </div>
+
+                      <span className="w-fit rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2 text-[10px] font-black text-white">
+                        {filteredCommunications.length}/{communications.length} visible
+                      </span>
                     </div>
 
-                    <span className="w-fit rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-3 py-1.5 text-[10px] font-black text-[#173f69]">
-                      {communications.length} record{communications.length === 1 ? "" : "s"}
-                    </span>
+                    <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_190px_auto]">
+                      <input
+                        type="search"
+                        value={messageSearch}
+                        onChange={(event) => setMessageSearch(event.target.value)}
+                        placeholder="Search subject, message, channel or status..."
+                        className="w-full min-w-0 rounded-xl border-2 border-[#9eb6c9] bg-white px-4 py-3 text-sm font-bold text-[#17324d] outline-none transition placeholder:text-[#81919d] focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                      />
+                      <select
+                        value={messageChannelFilter}
+                        onChange={(event) => setMessageChannelFilter(event.target.value)}
+                        className="w-full rounded-xl border-2 border-[#9eb6c9] bg-white px-4 py-3 text-sm font-black text-[#17324d] outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                        aria-label="Filter communication by channel"
+                      >
+                        <option value="all">All channels</option>
+                        {messageChannelOptions.map((channel) => (
+                          <option key={channel} value={channel}>
+                            {formatStatus(channel)}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMessageSearch("");
+                          setMessageChannelFilter("all");
+                        }}
+                        disabled={!messageSearch && messageChannelFilter === "all"}
+                        className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-xs font-black text-white transition hover:bg-[#214e78] disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-4 p-4 sm:p-5">
-                    {communications.length ? (
-                      [...communications]
-                        .sort((a, b) => {
-                          const aTime = new Date(a?.created_at || a?.updated_at || 0).getTime();
-                          const bTime = new Date(b?.created_at || b?.updated_at || 0).getTime();
-                          return bTime - aTime;
-                        })
-                        .map((message, index) => (
-                          <PremiumStudentMessageCard
-                            key={message.id || `${message.created_at}-${index}`}
-                            message={message}
-                            index={index}
-                            onCounselor={() => setActiveTab("counselor")}
-                            onTimeline={() => setActiveTab("timeline")}
-                          />
-                        ))
+                    {filteredCommunications.length ? (
+                      filteredCommunications.map((message, index) => (
+                        <PremiumStudentMessageCard
+                          key={message.id || `${message.created_at}-${index}`}
+                          message={message}
+                          index={index}
+                          onCounselor={() => setActiveTab("counselor")}
+                          onTimeline={() => setActiveTab("timeline")}
+                        />
+                      ))
+                    ) : communications.length ? (
+                      <div className="rounded-[1.55rem] border-2 border-dashed border-orange-300 bg-orange-50 p-6 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
+                          No matching messages
+                        </p>
+                        <h4 className="mt-2 text-xl font-black text-[#17324d]">Try a wider search or channel</h4>
+                        <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#607487]">
+                          Your student-safe communication history is still here; the current filters simply do not match it.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMessageSearch("");
+                            setMessageChannelFilter("all");
+                          }}
+                          className="mt-4 rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-2.5 text-xs font-black text-white transition hover:bg-orange-600"
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
                     ) : (
                       <div className="rounded-[1.6rem] border-2 border-dashed border-sky-300 bg-sky-50 p-6 sm:p-7">
                         <p className="text-[10px] font-black uppercase tracking-[0.17em] text-sky-700">
                           Communication Feed Ready
                         </p>
-                        <h4 className="mt-2 text-2xl font-black text-[#17324d]">
-                          No message is visible yet
-                        </h4>
+                        <h4 className="mt-2 text-2xl font-black text-[#17324d]">No student-facing message yet</h4>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#607487]">
-                          Counselor-safe messages and communication records linked to your student case will appear here.
-                          Use Counselor or Support when you need to start a conversation.
+                          Sent or logged communication linked to your case will appear here. Internal operations remain private.
                         </p>
 
                         <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -8008,22 +12117,19 @@ const journeyProgress = roadmap.length
                   <section className="overflow-hidden rounded-[1.75rem] border-[3px] border-[#173f69] bg-[#fffdf8] shadow-sm">
                     <div className="bg-[#173f69] p-5 text-white">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
-                        Latest Communication
+                        Latest Student-Facing Update
                       </p>
-                      <h3 className="mt-1 text-2xl font-black">
-                        {communications.length
-                          ? communications[0]?.subject ||
-                            formatStatus(communications[0]?.channel) ||
-                            "Latest Message"
-                          : "No communication yet"}
+                      <h3 className="mt-1 break-words text-2xl font-black">
+                        {latestCommunication?.subject ||
+                          (latestCommunication ? formatStatus(latestCommunication?.channel) : "No communication yet") ||
+                          "Latest Message"}
                       </h3>
-                      <p className="mt-2 text-sm leading-6 text-white/70">
-                        {communications.length
-                          ? communications[0]?.message ||
-                            communications[0]?.body ||
-                            communications[0]?.notes ||
+                      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-white/75">
+                        {latestCommunication
+                          ? latestCommunication?.message ||
+                            latestCommunication?.body ||
                             "Communication record"
-                          : "Your latest counselor-safe communication will appear here once one is connected."}
+                          : "Your latest student-facing communication will appear here once one is connected."}
                       </p>
                     </div>
 
@@ -8031,36 +12137,29 @@ const journeyProgress = roadmap.length
                       <div className="grid grid-cols-2 gap-3">
                         <MessageMiniStat
                           label="Channel"
-                          value={
-                            communications.length
-                              ? formatStatus(communications[0]?.channel || "message")
-                              : "—"
-                          }
+                          value={latestCommunication ? formatStatus(latestCommunication?.channel || "message") : "—"}
                           tone="sky"
                         />
                         <MessageMiniStat
                           label="Status"
-                          value={
-                            communications.length
-                              ? formatStatus(communications[0]?.status || "visible")
-                              : "—"
-                          }
+                          value={latestCommunication ? formatStatus(latestCommunication?.status || "visible") : "—"}
                           tone="orange"
                         />
                         <MessageMiniStat
                           label="Created"
-                          value={
-                            communications.length
-                              ? formatDate(communications[0]?.created_at)
-                              : "—"
-                          }
+                          value={latestCommunication ? formatDate(latestCommunication?.created_at || latestCommunication?.sent_at) : "—"}
                           tone="navy"
                         />
-                        <MessageMiniStat
-                          label="Total"
-                          value={communications.length}
-                          tone="green"
-                        />
+                        <MessageMiniStat label="Visible Total" value={communications.length} tone="green" />
+                      </div>
+
+                      <div className="mt-4 rounded-xl border-2 border-emerald-300 bg-emerald-50 p-3">
+                        <p className="text-[9px] font-black uppercase tracking-[0.13em] text-emerald-700">
+                          Privacy Guard Active
+                        </p>
+                        <p className="mt-1 text-[11px] font-semibold leading-5 text-emerald-800">
+                          This feed excludes internal notes and communication that has not been sent or completed.
+                        </p>
                       </div>
 
                       <button
@@ -8079,9 +12178,7 @@ const journeyProgress = roadmap.length
                       <p className="text-[10px] font-black uppercase tracking-[0.17em] text-orange-600">
                         Communication Health
                       </p>
-                      <h3 className="mt-1 text-lg font-black text-[#17324d]">
-                        Are you staying connected?
-                      </h3>
+                      <h3 className="mt-1 text-lg font-black text-[#17324d]">Stay connected without losing context</h3>
                     </div>
 
                     <div className="grid gap-3 p-5 sm:grid-cols-2">
@@ -8094,13 +12191,13 @@ const journeyProgress = roadmap.length
                       <MessageHealthCard
                         label="Support Open"
                         value={supportAnalytics.open || 0}
-                        helper="Requests still waiting"
+                        helper="Formal requests still active"
                         tone={supportAnalytics.open ? "orange" : "green"}
                       />
                       <MessageHealthCard
                         label="Timeline Events"
                         value={summary.timelineCount || 0}
-                        helper="Journey communication history"
+                        helper="Journey history connected"
                         tone="navy"
                       />
                       <MessageHealthCard
@@ -8121,7 +12218,7 @@ const journeyProgress = roadmap.length
                       When To Message Zaifan
                     </p>
                     <h3 className="mt-1 text-xl font-black text-[#17324d]">
-                      Use communication when a clear answer can prevent a mistake
+                      Ask before uncertainty becomes a blocker
                     </h3>
                   </div>
 
@@ -8149,8 +12246,8 @@ const journeyProgress = roadmap.length
                   />
                   <MessageReasonCard
                     step="03"
-                    title="CAS / Visa question"
-                    text="Ask before acting when CAS or visa requirements do not make sense."
+                    title="Pre-enrolment / Visa question"
+                    text="Ask before acting when Pre-enrolment or visa requirements do not make sense."
                     tone="violet"
                   />
                   <MessageReasonCard
@@ -8180,7 +12277,7 @@ const journeyProgress = roadmap.length
                 <MessageShortcutCard
                   eyebrow="Timeline"
                   title={`${summary.timelineCount || 0} events`}
-                  text="See communication alongside the rest of your student journey history."
+                  text="See communication beside the rest of your student journey history."
                   tone="navy"
                   onClick={() => setActiveTab("timeline")}
                 />
@@ -8586,16 +12683,16 @@ const journeyProgress = roadmap.length
                       onClick={() => setActiveTab("applications")}
                     />
                     <AnalyticsMetricCard
-                      label="CAS Readiness"
+                      label="Pre-enrolment Readiness"
                       value={readiness.casReadiness}
-                      text="Offer position, documents and operational preparation supporting CAS."
+                      text="Offer position, documents and operational preparation supporting Pre-enrolment."
                       tone="navy"
                       onClick={() => setActiveTab("visa")}
                     />
                     <AnalyticsMetricCard
                       label="Visa Readiness"
                       value={readiness.visaReadiness}
-                      text="CAS, supporting documents and current visa preparation signals."
+                      text="Pre-enrolment, supporting documents and current visa preparation signals."
                       tone="violet"
                       onClick={() => setActiveTab("visa")}
                     />
@@ -8616,7 +12713,7 @@ const journeyProgress = roadmap.length
                     <AnalyticsMetricCard
                       label="Journey Completion"
                       value={analytics.journeyScore}
-                      text="Application, offer, CAS and visa progress combined into one journey signal."
+                      text="Application, offer, Pre-enrolment and visa progress combined into one journey signal."
                       tone="green"
                       onClick={() => setActiveTab("roadmap")}
                     />
@@ -9627,6 +13724,8 @@ const journeyProgress = roadmap.length
                         }))
                       }
                       placeholder="Enter current password"
+                      autoComplete="current-password"
+                      maxLength={128}
                       disabled={sessionMode !== "account"}
                     />
 
@@ -9639,7 +13738,10 @@ const journeyProgress = roadmap.length
                           newPassword: event.target.value,
                         }))
                       }
-                      placeholder="Create new password"
+                      placeholder="Create a new password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      maxLength={128}
                       disabled={sessionMode !== "account"}
                     />
 
@@ -9652,9 +13754,33 @@ const journeyProgress = roadmap.length
                           confirmPassword: event.target.value,
                         }))
                       }
-                      placeholder="Repeat new password"
+                      placeholder="Repeat the new password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      maxLength={128}
                       disabled={sessionMode !== "account"}
                     />
+
+                    <div className="rounded-xl border-2 border-[#dbe5ec] bg-[#f7fafc] p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#607487]">
+                        Password Requirements
+                      </p>
+
+                      <div className="mt-3 grid gap-2">
+                        <PasswordRequirement
+                          passed={passwordHasMinimumLength}
+                          label="Use at least 8 characters"
+                        />
+                        <PasswordRequirement
+                          passed={passwordConfirmationMatches}
+                          label="New password and confirmation must match"
+                        />
+                        <PasswordRequirement
+                          passed={passwordDiffersFromCurrent}
+                          label="New password must differ from the current password"
+                        />
+                      </div>
+                    </div>
 
                     {passwordStatus.message ? (
                       <div
@@ -9673,7 +13799,7 @@ const journeyProgress = roadmap.length
 
                     <button
                       type="submit"
-                      disabled={passwordStatus.loading || sessionMode !== "account"}
+                      disabled={!passwordFormReady}
                       className="flex w-full items-center justify-between rounded-xl border-2 border-orange-500 bg-orange-500 px-4 py-3.5 text-sm font-black text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
                     >
                       <span>{passwordStatus.loading ? "Updating Password..." : "Update Password"}</span>
@@ -10730,7 +14856,7 @@ function getPrimaryNavCaption(id = "") {
     applications: "Offers & progress",
     documents: "Files & approvals",
     tasks: "Your checklist",
-    visa: "CAS & visa stage",
+    visa: "Pre-enrolment & visa stage",
     support: "Ask Zaifan",
     payments: "Invoices & receipts",
   };
@@ -11189,21 +15315,67 @@ function SettingsVisibilityCard({ label, value, helper, tone = "navy", onClick =
   );
 }
 
-function SettingsPasswordField({ label, value, onChange, placeholder, disabled = false }) {
+function SettingsPasswordField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  disabled = false,
+  minLength,
+  maxLength = 128,
+  autoComplete = "new-password",
+}) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <label className="block">
       <span className="mb-1.5 block text-[9px] font-black uppercase tracking-[0.14em] text-[#607487]">
         {label}
       </span>
-      <input
-        type="password"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        disabled={disabled}
-        className="w-full rounded-xl border-2 border-[#cbd8e2] bg-[#fbfdfe] px-4 py-3 text-sm text-[#17324d] outline-none transition placeholder:text-[#93a3af] focus:border-orange-400 focus:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-      />
+
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          minLength={minLength}
+          maxLength={maxLength}
+          autoComplete={autoComplete}
+          className="w-full rounded-xl border-2 border-[#cbd8e2] bg-[#fbfdfe] py-3 pl-4 pr-14 text-sm text-[#17324d] outline-none transition placeholder:text-[#93a3af] focus:border-orange-400 focus:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowPassword((current) => !current)}
+          disabled={disabled}
+          className="absolute inset-y-0 right-2 my-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#cbd8e2] bg-white text-[#173f69] transition hover:border-orange-400 hover:bg-orange-50 hover:text-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-45"
+          aria-label={showPassword ? `Hide ${label}` : `Show ${label}`}
+          title={showPassword ? `Hide ${label}` : `Show ${label}`}
+        >
+          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
+      </div>
     </label>
+  );
+}
+
+function PasswordRequirement({ passed, label }) {
+  return (
+    <div
+      className={
+        "flex items-center gap-2 text-[11px] font-semibold " +
+        (passed ? "text-emerald-700" : "text-[#607487]")
+      }
+    >
+      {passed ? (
+        <CheckCircle2 size={15} className="shrink-0" />
+      ) : (
+        <Circle size={15} className="shrink-0" />
+      )}
+      <span>{label}</span>
+    </div>
   );
 }
 
@@ -11927,21 +16099,32 @@ function PremiumStudentMessageCard({
 }) {
   const channel = normalize(message?.channel || message?.type || "message");
   const status = normalize(message?.status || "visible");
-  const whatsapp = channel.includes("whatsapp");
-  const queued = status.includes("queued") || status.includes("pending") || status.includes("draft");
-  const sent = status.includes("sent") || status.includes("delivered") || status.includes("completed");
+  const channelKey = communicationChannelKey(message);
+  const isConfirmed = ["sent", "delivered", "read", "received", "logged", "completed"].some(
+    (value) => status === value || status.startsWith(`${value}_`)
+  );
 
-  const shell = whatsapp
-    ? "border-emerald-300 bg-emerald-50"
-    : queued
-    ? "border-orange-300 bg-orange-50"
-    : "border-sky-300 bg-sky-50";
+  const shell =
+    channelKey === "whatsapp"
+      ? "border-emerald-300 bg-emerald-50"
+      : channelKey === "email"
+        ? "border-orange-300 bg-orange-50"
+        : channelKey === "support"
+          ? "border-violet-300 bg-violet-50"
+          : channelKey === "meeting"
+            ? "border-[#9eb6c9] bg-[#edf4f8]"
+            : "border-sky-300 bg-sky-50";
 
-  const badge = whatsapp
-    ? "bg-emerald-600"
-    : queued
-    ? "bg-orange-500"
-    : "bg-sky-600";
+  const badge =
+    channelKey === "whatsapp"
+      ? "bg-emerald-600"
+      : channelKey === "email"
+        ? "bg-orange-500"
+        : channelKey === "support"
+          ? "bg-violet-600"
+          : channelKey === "meeting"
+            ? "bg-[#173f69]"
+            : "bg-sky-600";
 
   return (
     <article className={`rounded-[1.45rem] border-2 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${shell}`}>
@@ -11991,7 +16174,7 @@ function PremiumStudentMessageCard({
             />
             <MessageMetaBox
               label="State"
-              value={sent ? "Delivered / Sent" : queued ? "Waiting" : "Visible"}
+              value={isConfirmed ? "Student-visible" : "Visible"}
             />
           </div>
 
@@ -12135,29 +16318,64 @@ function PremiumUniversityCard({
   index = 0,
   onApplications = () => {},
   onCounselor = () => {},
+  onDocuments = () => {},
+  onDeadlines = () => {},
 }) {
-  const status = university?.status || university?.application_status || "planned";
-  const category = university?.category || university?.university_type || university?.type || "option";
+  const [expanded, setExpanded] = useState(false);
+  const status =
+    university?.status ||
+    university?.application_status ||
+    university?.linkedApplication?.application_status ||
+    "planned";
+  const category = university?.category || "target";
+  const deadline = university?.deadline;
+  const linkedApplication = university?.linkedApplication;
+  const requirements = asPortalArray(university?.requirements);
+  const events = asPortalArray(university?.events).slice(0, 4);
+  const tuition = formatApplicationMoney(
+    university?.tuition_amount,
+    university?.tuition_currency || "EUR"
+  );
+  const livingCost = formatApplicationMoney(
+    university?.living_cost_amount,
+    university?.living_cost_currency || "EUR"
+  );
+  const scholarship = formatStatus(
+    university?.scholarship_status || "not_checked"
+  );
 
   return (
-    <article className="overflow-hidden rounded-[1.45rem] border-2 border-teal-300 bg-teal-50 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md">
-      <div className="flex flex-col gap-4 border-b border-teal-200 bg-white/55 p-4 sm:flex-row sm:items-start sm:justify-between">
+    <article className={`overflow-hidden rounded-[1.55rem] border-[3px] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+      university?.needsAttention
+        ? "border-amber-300 bg-amber-50/55"
+        : "border-teal-300 bg-teal-50/45"
+    }`}>
+      <div className="flex flex-col gap-4 border-b border-teal-200 bg-white/70 p-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-sm font-black text-white">
             {index + 1}
           </div>
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-teal-700">
-              University Option
-            </p>
-            <h4 className="mt-1 break-words text-lg font-black text-[#17324d]">
-              {university?.university_name || university?.name || "University"}
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-teal-700">
+                University Option
+              </p>
+              {university?._applicationUniversityFallback ? (
+                <span className="rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[8px] font-black uppercase text-blue-800">
+                  Application Linked View
+                </span>
+              ) : null}
+              {university?.applicationLinked ? (
+                <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[8px] font-black uppercase text-emerald-800">
+                  Application Linked
+                </span>
+              ) : null}
+            </div>
+            <h4 className="mt-1 break-words text-xl font-black text-[#17324d]">
+              {university?.universityName || getStudentUniversityName(university)}
             </h4>
             <p className="mt-1 text-[12px] leading-5 text-[#607487]">
-              {university?.course_name ||
-                university?.course ||
-                university?.program ||
-                "Course information not visible yet"}
+              {university?.universityProgram || getStudentUniversityProgram(university)}
             </p>
           </div>
         </div>
@@ -12172,42 +16390,131 @@ function PremiumUniversityCard({
           <UniversityDetailStat label="Country" value={university?.country || "Not set"} tone="navy" />
           <UniversityDetailStat label="Category" value={formatStatus(category)} tone="violet" />
           <UniversityDetailStat label="Intake" value={university?.intake || university?.intake_name || "Not set"} tone="orange" />
-          <UniversityDetailStat
-            label="Application"
-            value={formatStatus(university?.application_status || "not_started")}
-            tone="green"
-          />
+          <UniversityDetailStat label="Application" value={formatStatus(linkedApplication?.application_status || university?.application_status || "not_started")} tone="green" />
         </div>
 
-        {(university?.notes || university?.reason || university?.fit_notes) ? (
-          <div className="mt-4 rounded-xl border-2 border-orange-200 bg-orange-50 p-3.5">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <UniversityReadinessRow label="University Readiness" value={university?.readinessScore || 0} tone="teal" />
+          <UniversityReadinessRow label="Recorded Fit" value={university?.fitScore || 0} tone="orange" />
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <UniversityDetailStat label="Tuition" value={tuition} tone="orange" />
+          <UniversityDetailStat label="Living Cost" value={livingCost} tone="navy" />
+          <UniversityDetailStat label="Scholarship" value={scholarship} tone="green" />
+          <UniversityDetailStat label="DSU / Regional Aid" value={university?.dsu_eligible ? "Potential Recorded" : "Not recorded"} tone="violet" />
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border-2 border-orange-200 bg-orange-50 p-3.5">
             <p className="text-[8px] font-black uppercase tracking-[0.12em] text-orange-700">
-              Planning Notes
+              Best Next Move
             </p>
-            <p className="mt-1 text-[11px] leading-5 text-[#607487]">
-              {university?.notes || university?.reason || university?.fit_notes}
+            <p className="mt-1 text-[11px] font-bold leading-5 text-[#17324d]">
+              {university?.nextAction}
             </p>
           </div>
-        ) : null}
+          <div className={`rounded-xl border-2 p-3.5 ${
+            deadline?.priority === "urgent"
+              ? "border-rose-300 bg-rose-50"
+              : deadline?.priority === "important"
+                ? "border-amber-300 bg-amber-50"
+                : "border-[#cbd8e2] bg-[#f8fbfd]"
+          }`}>
+            <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#607487]">
+              Next Deadline
+            </p>
+            <p className="mt-1 text-[11px] font-black leading-5 text-[#17324d]">
+              {deadline?.label || "No university deadline recorded"}
+            </p>
+          </div>
+        </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={onApplications}
-            className="flex items-center justify-between rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:border-orange-500 hover:bg-orange-500"
-          >
-            <span>Applications</span>
-            <span>→</span>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <UniversityMiniStat label="Requirements" value={university?.requirementStats?.total || 0} tone="navy" />
+          <UniversityMiniStat label="Verified" value={university?.requirementStats?.verified || 0} tone="teal" />
+          <UniversityMiniStat label="Attention" value={university?.requirementStats?.attention || 0} tone="amber" />
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <button type="button" onClick={onApplications} className="flex items-center justify-between rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:border-orange-500 hover:bg-orange-500">
+            <span>Applications</span><span>→</span>
           </button>
-          <button
-            type="button"
-            onClick={onCounselor}
-            className="flex items-center justify-between rounded-xl border-2 border-teal-300 bg-white/75 px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-teal-800 transition hover:bg-teal-100"
-          >
-            <span>Discuss Option</span>
-            <span>→</span>
+          <button type="button" onClick={onDocuments} className="flex items-center justify-between rounded-xl border-2 border-amber-300 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-amber-800 transition hover:bg-amber-50">
+            <span>Documents</span><span>→</span>
+          </button>
+          <button type="button" onClick={onDeadlines} className="flex items-center justify-between rounded-xl border-2 border-orange-300 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-orange-800 transition hover:bg-orange-50">
+            <span>Deadlines</span><span>→</span>
+          </button>
+          <button type="button" onClick={onCounselor} className="flex items-center justify-between rounded-xl border-2 border-teal-300 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-teal-800 transition hover:bg-teal-100">
+            <span>Counselor</span><span>→</span>
           </button>
         </div>
+
+        {(requirements.length || events.length) ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+            className="mt-3 flex w-full items-center justify-between rounded-xl border-2 border-[#cbd8e2] bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-[#173f69] transition hover:border-orange-400"
+          >
+            <span>{expanded ? "Hide Requirements & Activity" : "View Requirements & Activity"}</span>
+            <span>{expanded ? "↑" : "↓"}</span>
+          </button>
+        ) : null}
+
+        {expanded ? (
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-[1.25rem] border-2 border-[#d8b892] bg-white p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">University Requirements</p>
+                  <p className="mt-1 text-[10px] leading-5 text-[#607487]">Only the requirements applied to your exact university and programme are shown here.</p>
+                </div>
+                <span className="self-start rounded-full border border-[#9eb6c9] bg-[#edf4f8] px-2.5 py-1 text-[9px] font-black text-[#173f69]">{requirements.length} applied</span>
+              </div>
+              <div className="mt-3 max-h-[560px] space-y-3 overflow-y-auto pr-1">
+                {requirements.length ? (
+                  groupUniversityRequirements(requirements).map((group) => (
+                    <section key={group.id} className="overflow-hidden rounded-xl border border-[#dce5eb] bg-[#fbfdfe]">
+                      <div className="flex items-start justify-between gap-3 border-b border-[#e6edf2] bg-[#f7fafc] px-3 py-2.5">
+                        <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#173f69]">{group.label}</p><p className="mt-1 text-[9px] leading-4 text-[#607487]">{group.description}</p></div>
+                        <span className="shrink-0 rounded-full border border-[#cbd8e2] bg-white px-2 py-0.5 text-[8px] font-black text-[#607487]">{group.requirements.length}</span>
+                      </div>
+                      <div className="space-y-2 p-2.5">
+                        {group.requirements.map((requirement, requirementIndex) => {
+                          const meta = getUniversityRequirementMeta(requirement);
+                          return (
+                            <div key={requirement.id || `${requirement.requirement_name}-${requirementIndex}`} className="flex items-start justify-between gap-3 rounded-xl border border-[#e1e8ed] bg-white p-3">
+                              <div className="min-w-0"><p className="text-xs font-black text-[#17324d]">{requirement.requirement_name || "University requirement"}</p>{meta.description ? <p className="mt-1 text-[10px] leading-4 text-[#607487]">{meta.description}</p> : null}<p className="mt-1 text-[9px] font-semibold text-[#607487]">{requirement.due_date ? `Due ${formatDate(requirement.due_date)}` : meta.categoryLabel}</p></div>
+                              <span className={`shrink-0 rounded-full border px-2 py-1 text-[8px] font-black uppercase ${getStatusStyle(requirement.status || "missing")}`}>{formatStatus(requirement.status || "missing")}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))
+                ) : <p className="text-xs leading-5 text-[#607487]">No student-visible university requirement is recorded yet.</p>}
+              </div>
+            </div>
+
+            <div className="rounded-[1.25rem] border-2 border-[#d8b892] bg-white p-4">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+                Recent Activity
+              </p>
+              <div className="mt-3 space-y-2">
+                {events.length ? events.map((event, eventIndex) => (
+                  <div key={event.id || `${event.created_at}-${eventIndex}`} className="rounded-xl border border-[#e1e8ed] bg-[#fbfdfe] p-3">
+                    <p className="text-xs font-black text-[#17324d]">{event.event_label || formatStatus(event.event_type) || "University update"}</p>
+                    <p className="mt-1 text-[10px] text-[#607487]">{formatDate(event.created_at)}</p>
+                  </div>
+                )) : (
+                  <p className="text-xs leading-5 text-[#607487]">No student-safe university activity is visible yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </article>
   );
@@ -12551,6 +16858,374 @@ function DocumentCommandStat({ label, value, helper, tone = "navy" }) {
   );
 }
 
+function StudentDocumentRequirementCard({
+  item,
+  index = 0,
+  uploading = false,
+  onUpload = () => {},
+  onHelp = () => {},
+}) {
+  const latestFile = item?.latestFile || null;
+  const status = normalize(item?.status || "optional");
+  const verified = status === "verified";
+  const rejected = status === "rejected";
+  const missing = status === "missing";
+  const received = status === "received";
+  const inputId = `student-document-upload-${safeDocumentStorageName(
+    item?.key || item?.name || index
+  )}`;
+
+  const shellClass = rejected
+    ? "border-rose-400 bg-rose-50"
+    : missing
+      ? "border-amber-400 bg-amber-50"
+      : verified
+        ? "border-emerald-400 bg-emerald-50"
+        : received
+          ? "border-sky-400 bg-sky-50"
+          : "border-[#cbd8e2] bg-[#f8fbfd]";
+
+  const iconClass = rejected
+    ? "bg-rose-500"
+    : missing
+      ? "bg-amber-500"
+      : verified
+        ? "bg-emerald-600"
+        : received
+          ? "bg-sky-600"
+          : "bg-[#173f69]";
+
+  const statusLabel = rejected
+    ? "Rejected · Upload Again"
+    : missing
+      ? "Requested · Missing"
+      : verified
+        ? "Verified"
+        : received
+          ? "Received · Under Review"
+          : item?.hasUpload
+            ? formatStatus(item?.status)
+            : item?.required
+              ? "Required"
+              : "Optional";
+
+  const reviewMessage =
+    latestFile?.rejection_reason ||
+    latestFile?.review_notes ||
+    latestFile?.admin_notes ||
+    latestFile?.notes ||
+    item?.instructions ||
+    "No review note is available.";
+
+  return (
+    <article
+      className={`min-w-0 rounded-[1.55rem] border-2 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${shellClass}`}
+    >
+      <div className="flex min-w-0 gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-black text-white ${iconClass}`}
+        >
+          {verified ? (
+            <CheckCircle2 size={20} />
+          ) : rejected ? (
+            <XCircle size={20} />
+          ) : missing ? (
+            <AlertTriangle size={19} />
+          ) : received ? (
+            <LoaderCircle size={19} />
+          ) : (
+            <FileText size={19} />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full border border-[#9eb6c9] bg-white/80 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-[#526b7f]">
+                  {item?.group || "Student Documents"}
+                </span>
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] ${
+                    item?.required
+                      ? "border-orange-300 bg-orange-50 text-orange-700"
+                      : "border-slate-300 bg-slate-50 text-slate-600"
+                  }`}
+                >
+                  {item?.required ? "Required" : "Optional"}
+                </span>
+                {item?.stage ? (
+                  <span className="rounded-full border border-violet-300 bg-violet-50 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-violet-700">
+                    {item.stage}
+                  </span>
+                ) : null}
+                {item?.isRequested || item?.requirementId ? (
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] ${getDocumentRequestPriorityStyle(
+                      item?.requestPriority
+                    )}`}
+                  >
+                    {normalizeDocumentRequestPriority(item?.requestPriority)} priority
+                  </span>
+                ) : null}
+                {Number(item?.requestCount || 1) > 1 ? (
+                  <span className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-slate-600">
+                    Requested ×{item.requestCount}
+                  </span>
+                ) : null}
+              </div>
+
+              <h4 className="mt-2 break-words text-lg font-black text-[#17324d]">
+                {item?.name || "Document"}
+              </h4>
+              <p className="mt-2 text-[12px] leading-5 text-[#607487]">
+                {rejected
+                  ? reviewMessage
+                  : missing
+                    ? item?.instructions ||
+                      "Upload a clear and complete copy of this requested document."
+                    : latestFile?.notes ||
+                      item?.instructions ||
+                      "This document is connected to your Zaifan student record."}
+              </p>
+            </div>
+
+            <span
+              className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.11em] ${getStatusStyle(
+                status
+              )}`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="rounded-xl border border-white/90 bg-white/75 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">
+                Current File
+              </p>
+              <p className="mt-1 break-words text-[11px] font-black text-[#17324d]">
+                {latestFile ? getDocumentFileName(latestFile) : "Not uploaded"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/90 bg-white/75 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">
+                Version
+              </p>
+              <p className="mt-1 text-[11px] font-black text-[#17324d]">
+                {latestFile ? `V${latestFile.version || item?.files?.length || 1}` : "—"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/90 bg-white/75 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">
+                Last Updated
+              </p>
+              <p className="mt-1 text-[11px] font-black text-[#17324d]">
+                {latestFile
+                  ? formatDate(latestFile.updated_at || latestFile.created_at)
+                  : "Not uploaded"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/90 bg-white/75 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">
+                Request Priority
+              </p>
+              <p className="mt-1 text-[11px] font-black capitalize text-[#17324d]">
+                {item?.isRequested || item?.requirementId
+                  ? normalizeDocumentRequestPriority(item?.requestPriority)
+                  : "Not requested"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/90 bg-white/75 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">
+                Requested On
+              </p>
+              <p className="mt-1 text-[11px] font-black text-[#17324d]">
+                {item?.isRequested || item?.requirementId
+                  ? formatDate(item?.requestedAt)
+                  : "Not requested"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/90 bg-white/75 p-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">
+                Deadline / Expiry
+              </p>
+              <p className="mt-1 text-[11px] font-black text-[#17324d]">
+                {formatDate(
+                  item?.deadline ||
+                    latestFile?.deadline ||
+                    latestFile?.due_date ||
+                    latestFile?.expiry_date
+                )}
+              </p>
+            </div>
+          </div>
+
+          {rejected ? (
+            <div className="mt-4 rounded-xl border-2 border-rose-300 bg-white/75 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.13em] text-rose-700">
+                Review Reason
+              </p>
+              <p className="mt-1 text-[12px] font-semibold leading-5 text-rose-800">
+                {reviewMessage}
+              </p>
+            </div>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {latestFile?.file_url ? (
+              <>
+                <a
+                  href={latestFile.file_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:border-orange-500 hover:bg-orange-500"
+                >
+                  <Eye size={15} />
+                  Open Current File
+                </a>
+                <a
+                  href={latestFile.file_url}
+                  download={getDocumentFileName(latestFile)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-[#9eb6c9] bg-white/80 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-[#173f69] transition hover:border-orange-400 hover:text-orange-700"
+                >
+                  <Download size={15} />
+                  Download
+                </a>
+              </>
+            ) : null}
+
+            {item?.canUpload ? (
+              <>
+                <input
+                  id={inputId}
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  disabled={uploading}
+                  onChange={(event) => {
+                    const selectedFiles = event.target.files;
+                    onUpload(selectedFiles);
+                    event.target.value = "";
+                  }}
+                />
+                <label
+                  htmlFor={inputId}
+                  className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-4 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                    rejected
+                      ? "border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
+                      : "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
+                  } ${uploading ? "pointer-events-none opacity-60" : ""}`}
+                >
+                  {uploading ? (
+                    <LoaderCircle size={15} className="animate-spin" />
+                  ) : (
+                    <Upload size={15} />
+                  )}
+                  {uploading
+                    ? "Uploading..."
+                    : rejected
+                      ? "Upload Corrected File"
+                      : item?.hasUpload
+                        ? "Upload Another File"
+                        : "Upload Document"}
+                </label>
+              </>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={onHelp}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-orange-300 bg-white/80 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-orange-700 transition hover:bg-orange-100"
+            >
+              Document Help
+              <span>→</span>
+            </button>
+          </div>
+
+          {item?.files?.length > 1 ? (
+            <details className="mt-4 rounded-xl border-2 border-[#dbe5ec] bg-white/70 p-3">
+              <summary className="cursor-pointer text-[10px] font-black uppercase tracking-[0.12em] text-[#526b7f]">
+                File history · {item.files.length} records
+              </summary>
+              <div className="mt-3 space-y-2">
+                {item.files.slice(0, 6).map((file) => (
+                  <div
+                    key={file.id || `${file.file_path}-${file.created_at}`}
+                    className="flex flex-col gap-2 rounded-xl border border-[#e1e8ed] bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="break-words text-[11px] font-black text-[#17324d]">
+                        {getDocumentFileName(file)}
+                      </p>
+                      <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#81919d]">
+                        V{file.version || 1} · {formatDate(file.updated_at || file.created_at)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${getStatusStyle(
+                          file.status
+                        )}`}
+                      >
+                        {formatStatus(file.status || "received")}
+                      </span>
+                      {file.file_url ? (
+                        <a
+                          href={file.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg border border-[#9eb6c9] bg-[#edf4f8] px-2.5 py-1 text-[9px] font-black text-[#173f69]"
+                        >
+                          Open
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function DocumentPortalStatusGuide({ status, title, text }) {
+  const iconClass =
+    status === "verified"
+      ? "bg-emerald-600"
+      : status === "rejected"
+        ? "bg-rose-500"
+        : status === "missing"
+          ? "bg-amber-500"
+          : "bg-sky-600";
+
+  return (
+    <div className="flex items-start gap-3 rounded-xl border-2 border-[#e1e8ed] bg-[#fbfdfe] p-3">
+      <span
+        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black text-white ${iconClass}`}
+      >
+        {status === "verified"
+          ? "✓"
+          : status === "rejected"
+            ? "!"
+            : status === "missing"
+              ? "↑"
+              : "…"}
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-black text-[#17324d]">{title}</p>
+        <p className="mt-1 text-[11px] leading-5 text-[#607487]">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 function PremiumStudentDocumentCard({
   document,
   index = 0,
@@ -12558,10 +17233,10 @@ function PremiumStudentDocumentCard({
 }) {
   const rawStatus = document?.status || document?.document_status || "pending";
   const status = normalize(rawStatus);
-  const approved = status.includes("approved") || status.includes("complete");
-  const rejected = status.includes("rejected");
+  const approved = isDocumentVerifiedStatus(status);
+  const rejected = isDocumentRejectedStatus(status);
   const missing = status.includes("missing");
-  const pending = status.includes("pending") || status.includes("review");
+  const pending = isDocumentReviewStatus(status);
 
   const shell = approved
     ? "border-emerald-300 bg-emerald-50"
@@ -12918,7 +17593,7 @@ function VisaRequirementCard({ title, text, tone = "navy" }) {
   };
 
   return (
-    <div className={`rounded-[1.35rem] border-2 p-4 ${tones[tone] || tones.navy}`}>
+    <div className={`rounded-[1.35rem] border-2 p-4 shadow-sm ${tones[tone] || tones.navy}`}>
       <h4 className="text-base font-black text-[#17324d]">{title}</h4>
       <p className="mt-2 text-[12px] leading-5 text-[#607487]">{text}</p>
     </div>
@@ -12973,78 +17648,441 @@ function ApplicationCommandStat({ label, value, helper, tone = "navy" }) {
 function PremiumStudentApplicationCard({
   application,
   index = 0,
+  requirements = [],
+  events = [],
+  expanded = false,
+  onToggle = () => {},
   onDocuments = () => {},
   onVisa = () => {},
   onCounselor = () => {},
 }) {
   const applicationStatus =
     application?.application_status || application?.status || "not_started";
-  const offerStatus = application?.offer_status || "not_started";
-  const casStatus = application?.cas_status || application?.cas || "not_started";
+  const offerStatus = application?.offer_status || "pending";
+  const preEnrollmentStatus = getApplicationPreEnrollmentStatus(application);
   const visaStatus = application?.visa_status || "not_started";
+  const journeyIndex = getApplicationJourneyIndex(application);
+  const journeyProgress = getApplicationJourneyProgress(application);
+  const currentJourney =
+    ITALY_APPLICATION_JOURNEY[journeyIndex] || ITALY_APPLICATION_JOURNEY[0];
+  const applicationGuidance = getStudentApplicationGuidance(application);
+
+  const pendingRequirements = requirements.filter(
+    (requirement) => normalize(requirement?.status || "pending") !== "completed"
+  );
+  const overdueRequirements = pendingRequirements.filter((requirement) => {
+    const dueDate = requirement?.due_date || requirement?.deadline;
+    if (!dueDate) return false;
+    return (
+      new Date(`${dueDate}T23:59:59`).getTime() <
+      new Date().setHours(0, 0, 0, 0)
+    );
+  });
+  const safeEvents = events.filter(isStudentSafeApplicationEvent).slice(0, 5);
+  const deadline =
+    application?.submission_deadline ||
+    application?.application_deadline ||
+    application?.deadline ||
+    null;
+  const nextActionDue = application?.next_action_due || null;
+  const closed = APPLICATION_CLOSED_STATUSES.includes(
+    normalize(applicationStatus)
+  );
 
   return (
-    <article className="overflow-hidden rounded-[1.5rem] border-2 border-[#cbd8e2] bg-[#fbfdff] shadow-sm transition hover:border-orange-300 hover:shadow-md">
-      <div className="flex flex-col gap-4 border-b border-[#dfe7ed] bg-[#f3f8fb] p-4 sm:flex-row sm:items-start sm:justify-between">
+    <article
+      className={`overflow-hidden rounded-[1.55rem] border-[3px] bg-[#fbfdff] shadow-sm transition hover:shadow-md ${
+        closed
+          ? "border-slate-400"
+          : overdueRequirements.length
+          ? "border-rose-400"
+          : pendingRequirements.length
+          ? "border-orange-300"
+          : "border-[#9eb6c9]"
+      }`}
+    >
+      <div className="flex flex-col gap-4 border-b-[3px] border-[#dfe7ed] bg-[#f3f8fb] p-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#173f69] text-sm font-black text-white">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-orange-400 bg-[#173f69] text-sm font-black text-white">
             {index + 1}
           </div>
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
-              Application
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
+                Italy Application
+              </p>
+              <span className="rounded-full border border-[#9eb6c9] bg-white px-2 py-0.5 text-[8px] font-black uppercase text-[#173f69]">
+                {currentJourney.label}
+              </span>
+              {overdueRequirements.length ? (
+                <span className="rounded-full border border-rose-300 bg-rose-50 px-2 py-0.5 text-[8px] font-black uppercase text-rose-700">
+                  {overdueRequirements.length} overdue
+                </span>
+              ) : null}
+            </div>
+
             <h4 className="mt-1 break-words text-lg font-black text-[#17324d]">
               {application?.university_name ||
                 application?.university ||
                 application?.institution_name ||
                 "University Application"}
             </h4>
-            <p className="mt-1 text-[12px] leading-5 text-[#607487]">
+            <p className="mt-1 text-[12px] font-semibold leading-5 text-[#607487]">
               {application?.course_name ||
                 application?.course ||
                 application?.program ||
-                "Course information not visible yet"}
+                "Programme information not visible yet"}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[#81919d]">
+              {[application?.country, application?.intake || application?.intake_name]
+                .filter(Boolean)
+                .join(" · ") || "Country and intake not visible"}
             </p>
           </div>
         </div>
 
-        <span className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.11em] ${getStatusStyle(applicationStatus)}`}>
-          {formatStatus(applicationStatus)}
-        </span>
+        <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+          <span
+            className={`w-fit rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.11em] ${getStatusStyle(
+              applicationStatus
+            )}`}
+          >
+            {formatStatus(applicationStatus)}
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-[0.11em] text-[#607487]">
+            Updated {formatDate(application?.updated_at || application?.created_at)}
+          </span>
+        </div>
       </div>
 
       <div className="p-4">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <ApplicationStageStat label="Application" value={formatStatus(applicationStatus)} tone="orange" />
-          <ApplicationStageStat label="Offer" value={formatStatus(offerStatus)} tone="green" />
-          <ApplicationStageStat label="CAS" value={formatStatus(casStatus)} tone="navy" />
-          <ApplicationStageStat label="Visa" value={formatStatus(visaStatus)} tone="violet" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#607487]">
+                Application journey
+              </span>
+              <span className="text-xs font-black text-[#173f69]">
+                {journeyProgress}%
+              </span>
+            </div>
+            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#dfe7ed]">
+              <div
+                className={`h-full rounded-full ${
+                  closed ? "bg-slate-500" : "bg-orange-500"
+                }`}
+                style={{ width: `${Math.max(4, journeyProgress)}%` }}
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onToggle}
+            className="shrink-0 rounded-xl border-2 border-[#173f69] bg-white px-3 py-2 text-[10px] font-black text-[#173f69] transition hover:bg-[#edf4f8]"
+          >
+            {expanded ? "Hide Details" : "Full Details"}
+          </button>
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <div className="rounded-xl border border-[#dbe5ec] bg-white p-3">
-            <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">Intake</p>
-            <p className="mt-1 text-[11px] font-black text-[#17324d]">
-              {application?.intake || application?.intake_name || "Not visible"}
-            </p>
-          </div>
-          <div className="rounded-xl border border-[#dbe5ec] bg-white p-3">
-            <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">Last Updated</p>
-            <p className="mt-1 text-[11px] font-black text-[#17324d]">
-              {formatDate(application?.updated_at || application?.created_at)}
-            </p>
-          </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ApplicationStageStat
+            label="Application"
+            value={formatStatus(applicationStatus)}
+            tone="orange"
+          />
+          <ApplicationStageStat
+            label="Admission"
+            value={formatStatus(offerStatus)}
+            tone="green"
+          />
+          <ApplicationStageStat
+            label="Pre-enrolment"
+            value={formatStatus(preEnrollmentStatus)}
+            tone="navy"
+          />
+          <ApplicationStageStat
+            label="Visa"
+            value={formatStatus(visaStatus)}
+            tone="violet"
+          />
         </div>
 
-        {(application?.next_action || application?.notes) ? (
-          <div className="mt-3 rounded-xl border-2 border-orange-200 bg-orange-50 p-3.5">
-            <p className="text-[8px] font-black uppercase tracking-[0.12em] text-orange-700">
-              Next / Notes
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <ApplicationInfoTile
+            label="Submission Deadline"
+            value={deadline ? formatDate(deadline) : "Not set"}
+            tone={deadline ? "orange" : "slate"}
+          />
+          <ApplicationInfoTile
+            label="Next Action Due"
+            value={nextActionDue ? formatDate(nextActionDue) : "Not set"}
+            tone={nextActionDue ? "orange" : "slate"}
+          />
+          <ApplicationInfoTile
+            label="Requirements"
+            value={
+              requirements.length
+                ? `${requirements.length - pendingRequirements.length}/${requirements.length} complete`
+                : "Not assessed"
+            }
+            tone={
+              overdueRequirements.length
+                ? "rose"
+                : pendingRequirements.length
+                ? "orange"
+                : requirements.length
+                ? "green"
+                : "slate"
+            }
+          />
+          <ApplicationInfoTile
+            label="Application Reference"
+            value={application?.application_reference || "Not visible"}
+            tone="navy"
+          />
+        </div>
+
+        <div
+          className={`mt-3 rounded-xl border-2 p-3.5 ${
+            normalize(applicationStatus) === "enrolled"
+              ? "border-emerald-300 bg-emerald-50"
+              : "border-orange-300 bg-orange-50"
+          }`}
+        >
+          <p
+            className={`text-[8px] font-black uppercase tracking-[0.12em] ${
+              normalize(applicationStatus) === "enrolled"
+                ? "text-emerald-700"
+                : "text-orange-700"
+            }`}
+          >
+            {normalize(applicationStatus) === "enrolled"
+              ? "Application journey complete"
+              : "Your next action"}
+          </p>
+          <p className="mt-1 whitespace-pre-wrap text-[11px] font-semibold leading-5 text-[#17324d]">
+            {applicationGuidance.title}
+          </p>
+        </div>
+
+        {(application?.conditional_offer || application?.conditions_text) ? (
+          <div className="mt-3 rounded-xl border-2 border-amber-300 bg-amber-50 p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-amber-800">
+                Admission conditions
+              </p>
+              <span className="rounded-full border border-amber-300 bg-white px-2 py-0.5 text-[8px] font-black uppercase text-amber-800">
+                {application?.conditions_completed ? "Completed" : "Pending"}
+              </span>
+            </div>
+            <p className="mt-2 whitespace-pre-wrap text-[11px] font-semibold leading-5 text-[#607487]">
+              {application?.conditions_text ||
+                "This admission has conditions. Ask your counselor for the exact checklist."}
             </p>
-            <p className="mt-1 text-[11px] leading-5 text-[#607487]">
-              {application?.next_action || application?.notes}
-            </p>
+          </div>
+        ) : null}
+
+        {expanded ? (
+          <div className="mt-4 space-y-4 border-t-2 border-[#dfe7ed] pt-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <ApplicationDetailSection
+                title="Outstanding Requirements"
+                helper="University requests and application conditions you can act on."
+              >
+                {requirements.length ? (
+                  <div className="space-y-2">
+                    {requirements.map((requirement) => {
+                      const complete =
+                        normalize(requirement?.status || "pending") === "completed";
+                      const dueDate =
+                        requirement?.due_date || requirement?.deadline || null;
+                      const overdue =
+                        dueDate &&
+                        !complete &&
+                        new Date(`${dueDate}T23:59:59`).getTime() <
+                          new Date().setHours(0, 0, 0, 0);
+
+                      return (
+                        <div
+                          key={requirement.id}
+                          className={`rounded-xl border-2 p-3 ${
+                            complete
+                              ? "border-emerald-300 bg-emerald-50"
+                              : overdue
+                              ? "border-rose-300 bg-rose-50"
+                              : "border-orange-300 bg-orange-50"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="break-words text-xs font-black text-[#17324d]">
+                                {requirement.title || "Application Requirement"}
+                              </p>
+                              {requirement.description ? (
+                                <p className="mt-1 text-[10px] font-semibold leading-4 text-[#607487]">
+                                  {requirement.description}
+                                </p>
+                              ) : null}
+                            </div>
+                            <span className="shrink-0 rounded-full border border-current bg-white/75 px-2 py-0.5 text-[8px] font-black uppercase">
+                              {complete
+                                ? "Complete"
+                                : overdue
+                                ? "Overdue"
+                                : dueDate
+                                ? formatDate(dueDate)
+                                : "Pending"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <ApplicationEmptyDetail
+                    title="No requirements configured"
+                    text="This means requirements have not been assessed yet; it does not falsely mark the application complete."
+                  />
+                )}
+              </ApplicationDetailSection>
+
+              <ApplicationDetailSection
+                title="Fees, Deposit & Scholarship"
+                helper="Only student-relevant financial information is shown."
+              >
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <ApplicationInfoTile
+                    label="Application Fee"
+                    value={
+                      application?.application_fee_required
+                        ? `${formatApplicationMoney(
+                            application?.application_fee_amount,
+                            application?.application_fee_currency
+                          )} · ${
+                            application?.application_fee_paid ? "Paid" : "Pending"
+                          }`
+                        : "Not required"
+                    }
+                    tone={
+                      application?.application_fee_required &&
+                      !application?.application_fee_paid
+                        ? "orange"
+                        : "green"
+                    }
+                  />
+                  <ApplicationInfoTile
+                    label="Deposit"
+                    value={
+                      application?.deposit_required
+                        ? `${formatApplicationMoney(
+                            application?.deposit_amount,
+                            application?.deposit_currency
+                          )} · ${application?.deposit_paid ? "Paid" : "Pending"}`
+                        : "Not required"
+                    }
+                    tone={
+                      application?.deposit_required && !application?.deposit_paid
+                        ? "orange"
+                        : "green"
+                    }
+                  />
+                  <ApplicationInfoTile
+                    label="Deposit Deadline"
+                    value={
+                      application?.deposit_deadline
+                        ? formatDate(application.deposit_deadline)
+                        : "Not set"
+                    }
+                    tone={application?.deposit_deadline ? "orange" : "slate"}
+                  />
+                  <ApplicationInfoTile
+                    label="Scholarship"
+                    value={
+                      application?.scholarship_status
+                        ? `${formatStatus(application.scholarship_status)}${
+                            Number(application?.scholarship_amount || 0) > 0
+                              ? ` · ${formatApplicationMoney(
+                                  application.scholarship_amount,
+                                  application.scholarship_currency
+                                )}`
+                              : ""
+                          }`
+                        : "Not recorded"
+                    }
+                    tone={application?.scholarship_status ? "green" : "slate"}
+                  />
+                </div>
+              </ApplicationDetailSection>
+            </div>
+
+            {(application?.university_notes || application?.offer_notes) ? (
+              <ApplicationDetailSection
+                title="Published Application Notes"
+                helper="Internal Admin and counselor notes are intentionally excluded."
+              >
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {application?.university_notes ? (
+                    <div className="rounded-xl border-2 border-[#9eb6c9] bg-[#edf4f8] p-3">
+                      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#173f69]">
+                        University update
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-[11px] font-semibold leading-5 text-[#607487]">
+                        {application.university_notes}
+                      </p>
+                    </div>
+                  ) : null}
+                  {application?.offer_notes ? (
+                    <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-3">
+                      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-emerald-700">
+                        Admission update
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-[11px] font-semibold leading-5 text-[#607487]">
+                        {application.offer_notes}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              </ApplicationDetailSection>
+            ) : null}
+
+            <ApplicationDetailSection
+              title="Application Activity"
+              helper="Only student-safe changes are shown."
+            >
+              {safeEvents.length ? (
+                <div className="space-y-2">
+                  {safeEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="rounded-xl border-2 border-[#dbe5ec] bg-white p-3"
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-xs font-black text-[#17324d]">
+                            {event.event_label ||
+                              formatStatus(event.event_type || "Application update")}
+                          </p>
+                          {(event.old_value || event.new_value) ? (
+                            <p className="mt-1 text-[10px] font-semibold text-[#607487]">
+                              {event.old_value || "—"} → {event.new_value || "—"}
+                            </p>
+                          ) : null}
+                        </div>
+                        <span className="shrink-0 text-[9px] font-semibold text-[#81919d]">
+                          {formatDate(event.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ApplicationEmptyDetail
+                  title="No student-safe activity yet"
+                  text="Status history will appear as Zaifan moves this application."
+                />
+              )}
+            </ApplicationDetailSection>
           </div>
         ) : null}
 
@@ -13054,25 +18092,69 @@ function PremiumStudentApplicationCard({
             onClick={onDocuments}
             className="rounded-xl border-2 border-amber-300 bg-amber-50 px-3 py-2.5 text-[10px] font-black text-amber-800 transition hover:bg-amber-100"
           >
-            Documents
+            Supporting Documents
           </button>
           <button
             type="button"
             onClick={onVisa}
             className="rounded-xl border-2 border-violet-300 bg-violet-50 px-3 py-2.5 text-[10px] font-black text-violet-800 transition hover:bg-violet-100"
           >
-            CAS / Visa
+            Pre-enrolment / Visa
           </button>
           <button
             type="button"
             onClick={onCounselor}
-            className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2.5 text-[10px] font-black text-white transition hover:bg-orange-500 hover:border-orange-500"
+            className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2.5 text-[10px] font-black text-white transition hover:border-orange-500 hover:bg-orange-500"
           >
             Ask Counselor
           </button>
         </div>
       </div>
     </article>
+  );
+}
+
+function ApplicationInfoTile({ label, value, tone = "slate" }) {
+  const tones = {
+    navy: "border-[#9eb6c9] bg-[#edf4f8] text-[#173f69]",
+    orange: "border-orange-300 bg-orange-50 text-orange-800",
+    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    rose: "border-rose-300 bg-rose-50 text-rose-800",
+    slate: "border-[#dbe5ec] bg-white text-[#607487]",
+  };
+
+  return (
+    <div className={`min-w-0 rounded-xl border-2 p-3 ${tones[tone] || tones.slate}`}>
+      <p className="text-[8px] font-black uppercase tracking-[0.12em] opacity-65">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-[11px] font-black leading-5">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ApplicationDetailSection({ title, helper, children }) {
+  return (
+    <section className="min-w-0 rounded-[1.3rem] border-2 border-[#d8b892] bg-[#fffdf8] p-4">
+      <h5 className="text-sm font-black text-[#17324d]">{title}</h5>
+      <p className="mt-1 text-[10px] font-semibold leading-4 text-[#81919d]">
+        {helper}
+      </p>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
+
+function ApplicationEmptyDetail({ title, text }) {
+  return (
+    <div className="rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-4 text-center">
+      <p className="text-xs font-black text-[#17324d]">{title}</p>
+      <p className="mt-1 text-[10px] font-semibold leading-4 text-[#607487]">
+        {text}
+      </p>
+    </div>
   );
 }
 
@@ -13349,7 +18431,7 @@ function ProfileAccessCard({ label, value, tone = "navy" }) {
 
 function PaymentCommandStat({ label, value, helper, tone = "navy" }) {
   const tones = {
-    navy: "border-[#9eb6c9] bg-[#edf4f8] text-[#173f69]",
+    navy: "border-[#AFC0D0] bg-[#edf4f8] text-[#123865]",
     orange: "border-orange-300 bg-orange-50 text-orange-800",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
     rose: "border-rose-300 bg-rose-50 text-rose-800",
@@ -13366,18 +18448,17 @@ function PaymentCommandStat({ label, value, helper, tone = "navy" }) {
   );
 }
 
-function PremiumInvoiceCard({ invoice, index = 0, onUploadReceipt = () => {} }) {
-  const status = String(
-    invoice?.status || invoice?.payment_status || invoice?.invoice_status || "pending"
-  ).toLowerCase();
-
-  const overdue =
-    status.includes("overdue") ||
-    (invoice?.due_date &&
-      new Date(invoice.due_date).getTime() < Date.now() &&
-      !["paid", "completed", "settled"].some((item) => status.includes(item)));
-
-  const paid = ["paid", "completed", "settled"].some((item) => status.includes(item));
+function PremiumInvoiceCard({
+  invoice,
+  payments = [],
+  index = 0,
+  onUploadReceipt = () => {},
+}) {
+  const status = getStudentInvoiceStatus(invoice, payments);
+  const overdue = status === "overdue";
+  const paid = status === "paid";
+  const closed = ["cancelled", "canceled", "void", "refunded"].includes(status);
+  const outstanding = getStudentInvoiceOutstanding(invoice, payments);
 
   return (
     <article
@@ -13386,6 +18467,8 @@ function PremiumInvoiceCard({ invoice, index = 0, onUploadReceipt = () => {} }) 
           ? "border-rose-300 bg-rose-50"
           : paid
           ? "border-emerald-300 bg-emerald-50"
+          : closed
+          ? "border-slate-300 bg-slate-50"
           : "border-orange-300 bg-orange-50"
       }`}
     >
@@ -13401,36 +18484,29 @@ function PremiumInvoiceCard({ invoice, index = 0, onUploadReceipt = () => {} }) 
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#607487]">
+              <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#5B6D80]">
                 Invoice
               </p>
-              <h4 className="mt-1 text-base font-black text-[#17324d]">
+              <h4 className="mt-1 text-base font-black text-[#10233F]">
                 {invoice?.title ||
                   invoice?.invoice_title ||
                   invoice?.invoice_number ||
                   `Invoice #${invoice?.id}`}
               </h4>
-              <p className="mt-2 text-[11px] leading-5 text-[#607487]">
+              <p className="mt-2 text-[11px] leading-5 text-[#5B6D80]">
                 {invoice?.description || invoice?.notes || "Student invoice record"}
               </p>
             </div>
 
             <div className="shrink-0 sm:text-right">
-              <p className="text-xl font-black text-[#17324d]">
+              <p className="text-xl font-black text-[#10233F]">
                 {formatMoney(
-                  invoice?.total_amount || invoice?.amount || invoice?.invoice_amount,
+                  getStudentInvoiceTotal(invoice),
                   invoice?.currency || "PKR"
                 )}
               </p>
-              <span className={`mt-2 inline-flex rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.11em] ${getStatusStyle(
-                invoice?.status || invoice?.payment_status || invoice?.invoice_status
-              )}`}>
-                {formatStatus(
-                  invoice?.status ||
-                    invoice?.payment_status ||
-                    invoice?.invoice_status ||
-                    "pending"
-                )}
+              <span className={`mt-2 inline-flex rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.11em] ${getStatusStyle(status)}`}>
+                {formatStatus(status)}
               </span>
             </div>
           </div>
@@ -13438,23 +18514,23 @@ function PremiumInvoiceCard({ invoice, index = 0, onUploadReceipt = () => {} }) 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <div className="rounded-xl border border-white/80 bg-white/70 px-3 py-2.5">
               <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">Due</p>
-              <p className="mt-1 text-[11px] font-black text-[#17324d]">
+              <p className="mt-1 text-[11px] font-black text-[#10233F]">
                 {formatDate(invoice?.due_date)}
               </p>
             </div>
             <div className="rounded-xl border border-white/80 bg-white/70 px-3 py-2.5">
               <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#81919d]">Created</p>
-              <p className="mt-1 text-[11px] font-black text-[#17324d]">
+              <p className="mt-1 text-[11px] font-black text-[#10233F]">
                 {formatDate(invoice?.created_at)}
               </p>
             </div>
           </div>
 
-          {!paid ? (
+          {!paid && !closed && outstanding > 0 ? (
             <button
               type="button"
               onClick={onUploadReceipt}
-              className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#173f69] px-4 py-3 text-[10px] font-black uppercase tracking-[0.11em] text-white transition hover:bg-orange-500"
+              className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#123865] px-4 py-3 text-[10px] font-black uppercase tracking-[0.11em] text-white transition hover:bg-orange-500"
             >
               <span>Use this invoice for receipt</span>
               <span>→</span>
@@ -13468,7 +18544,7 @@ function PremiumInvoiceCard({ invoice, index = 0, onUploadReceipt = () => {} }) 
 
 function PaymentMiniStat({ label, value, tone = "navy" }) {
   const tones = {
-    navy: "border-[#9eb6c9] bg-[#edf4f8] text-[#173f69]",
+    navy: "border-[#AFC0D0] bg-[#edf4f8] text-[#123865]",
     green: "border-emerald-300 bg-emerald-50 text-emerald-800",
     orange: "border-orange-300 bg-orange-50 text-orange-800",
     rose: "border-rose-300 bg-rose-50 text-rose-800",
@@ -13482,29 +18558,55 @@ function PaymentMiniStat({ label, value, tone = "navy" }) {
   );
 }
 
-function PaymentRequestCard({ request, index = 0 }) {
+function PaymentRequestCard({ request, index = 0, history = false }) {
+  const status = normalize(request?.status || "pending");
+  const completed = ["completed", "closed", "resolved", "paid"].includes(status);
+  const cancelled = ["cancelled", "canceled"].includes(status);
+
+  const shellClass = history
+    ? completed
+      ? "border-emerald-300 bg-emerald-50"
+      : cancelled
+      ? "border-slate-300 bg-slate-50"
+      : "border-[#C9D7E6] bg-[#F8FBFD]"
+    : "border-orange-300 bg-orange-50";
+
+  const numberClass = history
+    ? completed
+      ? "bg-emerald-600"
+      : "bg-slate-500"
+    : "bg-orange-500";
+
   return (
-    <div className="rounded-[1.25rem] border-2 border-orange-300 bg-orange-50 p-4">
+    <div className={`rounded-[1.25rem] border-2 p-4 ${shellClass}`}>
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-xs font-black text-white">
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black text-white ${numberClass}`}>
           {index + 1}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h4 className="text-sm font-black text-[#17324d]">
+              <h4 className="text-sm font-black text-[#10233F]">
                 {request?.title || "Payment Request"}
               </h4>
-              <p className="mt-1 text-[11px] leading-5 text-[#607487]">
+              <p className="mt-1 text-[11px] leading-5 text-[#5B6D80]">
                 {request?.message || request?.notes || "Zaifan requested a payment action."}
               </p>
             </div>
-            <span className="shrink-0 rounded-full border border-white/80 bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-orange-700">
-              {formatStatus(request?.status || "pending")}
+            <span
+              className={`shrink-0 rounded-full border bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${
+                completed
+                  ? "border-emerald-300 text-emerald-700"
+                  : cancelled
+                  ? "border-slate-300 text-slate-700"
+                  : "border-orange-300 text-orange-700"
+              }`}
+            >
+              {formatStatus(status)}
             </span>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-[#607487]">
+          <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-[#5B6D80]">
             <span className="rounded-lg bg-white/75 px-2.5 py-1.5">
               {formatMoney(request?.amount, request?.currency || "PKR")}
             </span>
@@ -13521,7 +18623,7 @@ function PaymentRequestCard({ request, index = 0 }) {
 function PaymentField({ label, className = "", children }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#607487]">
+      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#5B6D80]">
         {label}
       </span>
       <div className="mt-2">{children}</div>
@@ -13543,16 +18645,16 @@ function PaymentAccountCard({ account }) {
   };
 
   return (
-    <article className="rounded-[1.35rem] border-2 border-emerald-300 bg-emerald-50 p-4 shadow-sm">
+    <article className="rounded-[1.35rem] border-[3px] border-emerald-300 bg-emerald-50 p-4 shadow-[0_10px_24px_rgba(18,56,101,0.06)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.14em] text-emerald-700">
             Approved Payment Account
           </p>
-          <h4 className="mt-1 text-lg font-black text-[#17324d]">
+          <h4 className="mt-1 text-lg font-black text-[#10233F]">
             {account?.account_title || account?.bank_name || "Zaifan Payment Account"}
           </h4>
-          <p className="mt-1 text-[11px] text-[#607487]">
+          <p className="mt-1 text-[11px] text-[#5B6D80]">
             {account?.instructions || "Use only for the payment instructed by Zaifan."}
           </p>
         </div>
@@ -13564,7 +18666,11 @@ function PaymentAccountCard({ account }) {
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         <PaymentAccountValue label="Type" value={formatStatus(account?.account_type || "account")} />
         <PaymentAccountValue label="Bank / Wallet" value={account?.bank_name || account?.provider || "—"} />
-        <PaymentAccountValue label="Account Number" value={accountNumber || "—"} onCopy={accountNumber ? () => copyText(accountNumber) : null} />
+        <PaymentAccountValue
+          label={account?.mobile_wallet_number && !account?.account_number ? "Wallet Number" : "Account Number"}
+          value={accountNumber || "—"}
+          onCopy={accountNumber ? () => copyText(accountNumber) : null}
+        />
         <PaymentAccountValue label="IBAN" value={iban || "—"} onCopy={iban ? () => copyText(iban) : null} />
       </div>
     </article>
@@ -13576,12 +18682,12 @@ function PaymentAccountValue({ label, value, onCopy = null }) {
     <div className="rounded-xl border border-white/80 bg-white/75 p-3">
       <p className="text-[8px] font-black uppercase tracking-[0.13em] text-[#81919d]">{label}</p>
       <div className="mt-1 flex items-center justify-between gap-2">
-        <p className="min-w-0 break-all text-[11px] font-black text-[#17324d]">{value}</p>
+        <p className="min-w-0 break-all text-[11px] font-black text-[#10233F]">{value}</p>
         {onCopy ? (
           <button
             type="button"
             onClick={onCopy}
-            className="shrink-0 rounded-lg border border-[#cddae3] bg-[#f6fafc] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-[#173f69] transition hover:border-orange-300 hover:bg-orange-50"
+            className="shrink-0 rounded-lg border border-[#cddae3] bg-[#f6fafc] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-[#123865] transition hover:border-orange-300 hover:bg-orange-50"
           >
             Copy
           </button>
@@ -13592,28 +18698,79 @@ function PaymentAccountValue({ label, value, onCopy = null }) {
 }
 
 function PremiumPaymentHistoryCard({ payment, index = 0 }) {
+  const status = normalize(payment?.status || "confirmed");
+
+  let shellClass = "border-emerald-300 bg-emerald-50";
+  let numberClass = "bg-emerald-600";
+  let amountClass = "text-emerald-700";
+  let badgeClass = "border-emerald-300 bg-white text-emerald-700";
+
+  if (
+    status === "cancelled" ||
+    status === "canceled" ||
+    status === "failed"
+  ) {
+    shellClass = "border-rose-300 bg-rose-50";
+    numberClass = "bg-rose-600";
+    amountClass = "text-rose-700";
+    badgeClass = "border-rose-300 bg-white text-rose-700";
+  }
+
+  if (status === "refunded") {
+    shellClass = "border-sky-300 bg-sky-50";
+    numberClass = "bg-sky-600";
+    amountClass = "text-sky-700";
+    badgeClass = "border-sky-300 bg-white text-sky-700";
+  }
+
   return (
-    <article className="rounded-[1.3rem] border-2 border-emerald-300 bg-emerald-50 p-4">
+    <article className={`rounded-[1.3rem] border-2 p-4 ${shellClass}`}>
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-xs font-black text-white">
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black text-white ${numberClass}`}
+        >
           {index + 1}
         </div>
+
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-black text-[#17324d]">
-                {payment?.reference || payment?.payment_method || payment?.method || "Payment"}
-              </p>
-              <p className="mt-1 text-[10px] text-[#607487]">
-                {formatDate(payment?.paid_at || payment?.payment_date || payment?.created_at)}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="break-words text-sm font-black text-[#10233F]">
+                  {payment?.reference ||
+                    payment?.payment_method ||
+                    payment?.method ||
+                    "Payment"}
+                </p>
+
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${badgeClass}`}
+                >
+                  {formatStatus(status)}
+                </span>
+              </div>
+
+              <p className="mt-1 text-[10px] text-[#5B6D80]">
+                {formatDate(
+                  payment?.paid_at ||
+                    payment?.payment_date ||
+                    payment?.created_at
+                )}
               </p>
             </div>
-            <p className="text-base font-black text-emerald-700">
-              {formatMoney(payment?.amount || payment?.paid_amount, payment?.currency || "PKR")}
+
+            <p className={`text-base font-black ${amountClass}`}>
+              {formatMoney(
+                payment?.amount || payment?.paid_amount,
+                payment?.currency || "PKR"
+              )}
             </p>
           </div>
+
           {payment?.notes ? (
-            <p className="mt-2 text-[11px] leading-5 text-[#607487]">{payment.notes}</p>
+            <p className="mt-2 text-[11px] leading-5 text-[#5B6D80]">
+              {payment.notes}
+            </p>
           ) : null}
         </div>
       </div>
@@ -13631,8 +18788,8 @@ function PremiumReceiptCard({ receipt, index = 0 }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-sm font-black text-[#17324d]">Payment Receipt</p>
-              <p className="mt-1 text-[10px] text-[#607487]">
+              <p className="text-sm font-black text-[#10233F]">Payment Receipt</p>
+              <p className="mt-1 text-[10px] text-[#5B6D80]">
                 {formatDate(receipt?.submitted_at || receipt?.created_at)}
               </p>
             </div>
@@ -13659,7 +18816,7 @@ function PremiumReceiptCard({ receipt, index = 0 }) {
               href={receipt.receipt_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex rounded-xl bg-[#173f69] px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.11em] text-white transition hover:bg-orange-500"
+              className="mt-3 inline-flex rounded-xl bg-[#123865] px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.11em] text-white transition hover:bg-orange-500"
             >
               View Receipt
             </a>
@@ -13673,8 +18830,8 @@ function PremiumReceiptCard({ receipt, index = 0 }) {
 function PaymentEmptyState({ title, text, compact = false }) {
   return (
     <div className={`rounded-[1.35rem] border-2 border-dashed border-[#cbd9e3] bg-[#f8fbfd] text-center ${compact ? "p-4" : "p-6"}`}>
-      <p className="text-base font-black text-[#17324d]">{title}</p>
-      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#607487]">{text}</p>
+      <p className="text-base font-black text-[#10233F]">{title}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#5B6D80]">{text}</p>
     </div>
   );
 }

@@ -29,6 +29,7 @@ import ExpenseManagementPanel from "./ExpenseManagementPanel";
 import CommissionAccountingPanel from "./CommissionAccountingPanel";
 import ProfitLossPanel from "./ProfitLossPanel";
 import FinancialHealthPanel from "./FinancialHealthPanel";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -766,74 +767,65 @@ function getMetricTone(type) {
 function MetricCard({
   label,
   value,
-  helper,
-  tone = "orange",
-  icon: Icon,
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
   badge = "",
+  source = "",
+  className = "",
 }) {
-  const dark = tone === "navy";
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`min-w-0 rounded-[1.45rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${getMetricTone(
-        tone
-      )}`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
-
-        {Icon ? (
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
-              dark
-                ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-current/20 bg-white/70"
-            }`}
-          >
-            <Icon size={16} />
-          </div>
-        ) : null}
-      </div>
-
-      {helper ? (
-        <p
-          className={`mt-2 break-words text-xs font-semibold leading-5 ${
-            dark ? "text-slate-200" : "text-slate-600"
-          }`}
-        >
-          {helper}
-        </p>
-      ) : null}
-
-      {badge ? (
-        <span
-          className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-            dark
-              ? "border-white/20 bg-white/10 text-white"
-              : "border-[#C9D7E6] bg-white text-slate-600"
-          }`}
-        >
-          {badge}
-        </span>
-      ) : null}
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function DataQualityStrip({ finance }) {

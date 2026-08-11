@@ -86,8 +86,8 @@ function gradeMeta(grade = "") {
 
   if (value.includes("strong")) {
     return {
-      badge: "border-[#173f69] bg-[#173f69] text-white",
-      bar: "bg-[#173f69]",
+      badge: "border-[#123865] bg-[#123865] text-white",
+      bar: "bg-[#123865]",
     };
   }
 
@@ -106,8 +106,8 @@ function gradeMeta(grade = "") {
   }
 
   return {
-    badge: "border-[#b7c5d1] bg-[#f3f7fb] text-[#173f69]",
-    bar: "bg-[#173f69]",
+    badge: "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]",
+    bar: "bg-[#123865]",
   };
 }
 
@@ -196,7 +196,7 @@ function MiniStat({
   emphasis = false,
 }) {
   const tones = {
-    navy: "border-[#173f69] bg-[#f3f7fb]",
+    navy: "border-[#123865] bg-[#F1F6FA]",
     orange: "border-orange-300 bg-orange-50",
     amber: "border-amber-300 bg-amber-50",
     emerald: "border-emerald-300 bg-emerald-50",
@@ -206,18 +206,18 @@ function MiniStat({
 
   return (
     <div
-      className={`rounded-2xl border-2 p-4 shadow-sm ${
+      className={`relative overflow-hidden rounded-[1.3rem] border-2 p-4 shadow-[0_9px_22px_rgba(16,35,63,0.08)] ${
         tones[tone] || tones.navy
       } ${emphasis ? "ring-2 ring-orange-100" : ""}`}
     >
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#607487]">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5B6D80]">
         {label}
       </p>
-      <p className="mt-2 break-words text-2xl font-black text-[#102b4c]">
+      <p className="mt-2 break-words text-2xl font-black text-[#10233F]">
         {formatMetric(value)}
       </p>
       {helper ? (
-        <p className="mt-1 text-xs font-medium leading-5 text-[#607487]">
+        <p className="mt-1 text-xs font-medium leading-5 text-[#5B6D80]">
           {helper}
         </p>
       ) : null}
@@ -229,7 +229,7 @@ function ProgressBar({ label, value, helper, tone = "navy" }) {
   const score = clampPercent(value);
 
   const barTone = {
-    navy: "bg-[#173f69]",
+    navy: "bg-[#123865]",
     orange: "bg-orange-500",
     amber: "bg-amber-500",
     emerald: "bg-emerald-500",
@@ -238,15 +238,15 @@ function ProgressBar({ label, value, helper, tone = "navy" }) {
   };
 
   return (
-    <div className="rounded-2xl border-2 border-[#d6e0e7] bg-[#f8fbfd] p-4">
+    <div className="rounded-2xl border-2 border-[#C9D6E2] bg-[#F7FAFC] p-4">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#607487]">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5B6D80]">
           {label}
         </p>
-        <p className="text-sm font-black text-[#102b4c]">{score}%</p>
+        <p className="text-sm font-black text-[#10233F]">{score}%</p>
       </div>
 
-      <div className="h-2.5 overflow-hidden rounded-full bg-[#e5edf3]">
+      <div className="h-2.5 overflow-hidden rounded-full bg-[#E4EBF2]">
         <div
           className={`h-full rounded-full transition-[width] duration-500 ${
             barTone[tone] || barTone.navy
@@ -256,7 +256,7 @@ function ProgressBar({ label, value, helper, tone = "navy" }) {
       </div>
 
       {helper ? (
-        <p className="mt-2 text-xs font-medium leading-5 text-[#607487]">
+        <p className="mt-2 text-xs font-medium leading-5 text-[#5B6D80]">
           {helper}
         </p>
       ) : null}
@@ -300,20 +300,20 @@ function StudentMiniList({
   };
 
   return (
-    <div className="rounded-[1.5rem] border-2 border-[#173f69] bg-[#f7fbff] p-4">
+    <div className="rounded-[1.5rem] border-2 border-[#123865] bg-[#f7fbff] p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#607487]">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5B6D80]">
           {title}
         </p>
 
-        <span className="rounded-lg border border-[#c9d5de] bg-white px-2.5 py-1 text-[10px] font-black text-[#173f69]">
+        <span className="rounded-lg border border-[#B9C8D8] bg-white px-2.5 py-1 text-[10px] font-black text-[#123865]">
           {source.length}
         </span>
       </div>
 
       {visible.length === 0 ? (
-        <div className="mt-3 rounded-2xl border border-dashed border-[#c9d5de] bg-white p-4">
-          <p className="text-sm font-semibold text-[#607487]">
+        <div className="mt-3 rounded-2xl border border-dashed border-[#B9C8D8] bg-white p-4">
+          <p className="text-sm font-semibold text-[#5B6D80]">
             {empty || "No students in this queue."}
           </p>
         </div>
@@ -325,14 +325,14 @@ function StudentMiniList({
             return (
               <div
                 key={studentKey(student, index)}
-                className="rounded-2xl border-2 border-[#d6e0e7] bg-white p-3 transition hover:border-orange-300"
+                className="rounded-2xl border-2 border-[#C9D6E2] bg-white p-3 transition hover:border-orange-300"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="break-words text-sm font-black text-[#102b4c]">
+                    <p className="break-words text-sm font-black text-[#10233F]">
                       {studentName(student)}
                     </p>
-                    <p className="mt-0.5 break-words text-xs font-medium text-[#718292]">
+                    <p className="mt-0.5 break-words text-xs font-medium text-[#6B7D8F]">
                       {studentStage(student)}
                     </p>
                   </div>
@@ -350,7 +350,7 @@ function StudentMiniList({
                     <p className="text-[9px] font-black uppercase tracking-[0.13em] text-orange-700">
                       Next action
                     </p>
-                    <p className="mt-1 text-xs font-semibold leading-5 text-[#102b4c]">
+                    <p className="mt-1 text-xs font-semibold leading-5 text-[#10233F]">
                       {student.nextBestAction || student.next_best_action}
                     </p>
                   </div>
@@ -365,7 +365,7 @@ function StudentMiniList({
         <button
           type="button"
           onClick={onToggle}
-          className={`mt-3 w-full border-[#173f69] bg-[#173f69] text-white hover:bg-[#102f52] ${INPUT_BUTTON}`}
+          className={`mt-3 w-full border-[#123865] bg-[#123865] text-white hover:bg-[#0B2A4B] ${INPUT_BUTTON}`}
         >
           {expanded ? "Show Top 5" : `Show All ${source.length}`}
         </button>
@@ -395,7 +395,7 @@ function RecommendedActions({ actions = [], title = "Recommended Actions" }) {
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-[10px] font-black text-white">
               {index + 1}
             </span>
-            <p className="text-sm font-semibold leading-6 text-[#102b4c]">
+            <p className="text-sm font-semibold leading-6 text-[#10233F]">
               {actionText(action)}
             </p>
           </div>
@@ -418,7 +418,7 @@ function WorkloadComposition({ derived }) {
   const maximum = Math.max(1, ...metrics.map(([, value]) => value));
 
   const bars = {
-    navy: "bg-[#173f69]",
+    navy: "bg-[#123865]",
     orange: "bg-orange-500",
     rose: "bg-rose-500",
     emerald: "bg-emerald-500",
@@ -427,13 +427,13 @@ function WorkloadComposition({ derived }) {
   };
 
   return (
-    <div className="rounded-[1.5rem] border-2 border-[#d8b892] bg-[#fff8ef] p-4">
+    <div className="rounded-[1.5rem] border-2 border-[#D8B07B] bg-[#FFF8EF] p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7d684f]">
             Workload Composition
           </p>
-          <p className="mt-1 text-sm font-black text-[#102b4c]">
+          <p className="mt-1 text-sm font-black text-[#10233F]">
             {derived.rawTotal} raw records in current snapshot
           </p>
         </div>
@@ -450,10 +450,10 @@ function WorkloadComposition({ derived }) {
             className="rounded-2xl border border-[#dfd0bd] bg-white p-3"
           >
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-bold text-[#607487]">{label}</p>
-              <p className="text-sm font-black text-[#102b4c]">{value}</p>
+              <p className="text-xs font-bold text-[#5B6D80]">{label}</p>
+              <p className="text-sm font-black text-[#10233F]">{value}</p>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e5edf3]">
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#E4EBF2]">
               <div
                 className={`h-full rounded-full ${bars[tone]}`}
                 style={{ width: `${Math.round((value / maximum) * 100)}%` }}
@@ -469,7 +469,7 @@ function WorkloadComposition({ derived }) {
 function FocusTabs({ focus, onChange, counts }) {
   return (
     <div
-      className="flex flex-wrap gap-2 rounded-[1.4rem] border-2 border-[#d8b892] bg-[#fff8ef] p-2"
+      className="flex flex-wrap gap-2 rounded-[1.4rem] border-2 border-[#D8B07B] bg-[#FFF8EF] p-2"
       role="tablist"
       aria-label="Counselor workload focus"
     >
@@ -483,10 +483,10 @@ function FocusTabs({ focus, onChange, counts }) {
             role="tab"
             aria-selected={focus === item.key}
             onClick={() => onChange(item.key)}
-            className={`rounded-xl border-2 px-4 py-2 text-sm font-black transition ${
+            className={`rounded-xl border-2 px-3 py-2 text-xs font-black transition ${
               focus === item.key
                 ? "border-orange-500 bg-orange-500 text-white"
-                : "border-transparent bg-white text-[#173f69] hover:border-orange-200 hover:bg-orange-50"
+                : "border-transparent bg-white text-[#123865] hover:border-orange-200 hover:bg-orange-50"
             }`}
           >
             {item.label}
@@ -495,7 +495,7 @@ function FocusTabs({ focus, onChange, counts }) {
                 className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
                   focus === item.key
                     ? "bg-white/20 text-white"
-                    : "bg-[#edf3f7] text-[#607487]"
+                    : "bg-[#edf3f7] text-[#5B6D80]"
                 }`}
               >
                 {count}
@@ -612,36 +612,39 @@ export default function CounselorWorkloadPanel({
   const executiveActions = safeArray(executiveBrief?.recommendedActions);
 
   return (
-    <section className="rounded-[1.8rem] border-2 border-[#173f69] bg-[#fffaf2] p-4 shadow-[0_18px_55px_rgba(16,43,76,0.08)] sm:p-5">
-      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">
+    <section className="overflow-hidden rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_28px_80px_rgba(16,35,63,0.16)] sm:p-4">
+      <div className="relative mb-5 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_36px_rgba(16,35,63,0.20)] xl:flex xl:items-start xl:justify-between xl:gap-5 sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full border-[26px] border-white/5" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-20 h-44 w-44 rounded-full border-[22px] border-orange-400/10" />
+
+        <div className="relative z-[1]">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
             Workload Engine
           </p>
 
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-[#102b4c] sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
             Counselor Pressure Monitor
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#607487]">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-blue-100">
             Operational load, risk concentration, support pressure, stalled cases,
             conversion movement and counselor performance in one execution view.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="relative z-[1] flex flex-wrap gap-2">
           <span
-            className={`rounded-xl border-2 px-4 py-2 text-sm font-black ${pressure.badge}`}
+            className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${pressure.badge}`}
           >
             {pressure.label}
           </span>
 
-          <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2 text-sm font-black text-white">
+          <span className="rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2 text-xs font-black text-white">
             {intelligence.assigned} students
           </span>
 
           <span
-            className={`rounded-xl border-2 px-4 py-2 text-sm font-black ${grade.badge}`}
+            className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${grade.badge}`}
           >
             Grade {performance?.performanceGrade || "—"}
           </span>
@@ -649,27 +652,27 @@ export default function CounselorWorkloadPanel({
       </div>
 
       <div
-        className={`rounded-[1.6rem] border-2 p-4 sm:p-5 ${pressure.card}`}
+        className={`rounded-[1.45rem] border-2 p-4 sm:p-5 ${pressure.card}`}
       >
         <div className="grid gap-5 xl:grid-cols-[0.7fr_1fr] xl:items-center">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between xl:block">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#607487]">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5B6D80]">
                 Pressure Score
               </p>
               <div className="mt-1 flex items-end gap-2">
-                <p className="text-5xl font-black tracking-tight text-[#102b4c] sm:text-6xl">
+                <p className="text-5xl font-black tracking-tight text-[#10233F] sm:text-6xl">
                   {score}
                 </p>
-                <p className="pb-2 text-sm font-black text-[#607487]">/ 100</p>
+                <p className="pb-2 text-sm font-black text-[#5B6D80]">/ 100</p>
               </div>
             </div>
 
             <div className="xl:mt-3">
-              <p className="text-sm font-black text-[#102b4c]">
+              <p className="text-sm font-black text-[#10233F]">
                 {pressure.short} operating load
               </p>
-              <p className="mt-1 max-w-md text-xs font-medium leading-5 text-[#607487]">
+              <p className="mt-1 max-w-md text-xs font-medium leading-5 text-[#5B6D80]">
                 {pressure.helper}
               </p>
             </div>
@@ -678,10 +681,10 @@ export default function CounselorWorkloadPanel({
           <div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#607487]">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5B6D80]">
                   Recommended Focus
                 </p>
-                <p className="mt-1 text-lg font-black text-[#102b4c]">
+                <p className="mt-1 text-lg font-black text-[#10233F]">
                   {workload?.recommendedFocus || "Pipeline nurturing"}
                 </p>
               </div>
@@ -700,28 +703,28 @@ export default function CounselorWorkloadPanel({
 
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               <div className="rounded-xl border border-white bg-white/70 p-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#8292a0]">
+                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#73869A]">
                   Primary concern
                 </p>
-                <p className="mt-1 text-xs font-black text-[#102b4c]">
+                <p className="mt-1 text-xs font-black text-[#10233F]">
                   {intelligence.primaryConcern}
                 </p>
               </div>
 
               <div className="rounded-xl border border-white bg-white/70 p-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#8292a0]">
+                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#73869A]">
                   Risk concentration
                 </p>
-                <p className="mt-1 text-xs font-black text-[#102b4c]">
+                <p className="mt-1 text-xs font-black text-[#10233F]">
                   {intelligence.riskRatio}%
                 </p>
               </div>
 
               <div className="rounded-xl border border-white bg-white/70 p-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#8292a0]">
+                <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#73869A]">
                   Conversion ready
                 </p>
-                <p className="mt-1 text-xs font-black text-[#102b4c]">
+                <p className="mt-1 text-xs font-black text-[#10233F]">
                   {intelligence.conversionRatio}%
                 </p>
               </div>
@@ -820,11 +823,11 @@ export default function CounselorWorkloadPanel({
               </div>
 
               <div className="grid gap-4 xl:grid-cols-2">
-                <div className="rounded-[1.5rem] border-2 border-[#173f69] bg-[#f7fbff] p-4 sm:p-5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#607487]">
+                <div className="rounded-[1.5rem] border-2 border-[#123865] bg-[#f7fbff] p-4 sm:p-5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5B6D80]">
                     Executive Summary
                   </p>
-                  <p className="mt-3 text-sm font-semibold leading-7 text-[#102b4c]">
+                  <p className="mt-3 text-sm font-semibold leading-7 text-[#10233F]">
                     {workload?.executiveSummary ||
                       "No executive workload summary is available yet."}
                   </p>
@@ -856,7 +859,7 @@ export default function CounselorWorkloadPanel({
                     Executive Brief
                   </p>
 
-                  <p className="mt-3 text-base font-black leading-7 text-[#102b4c]">
+                  <p className="mt-3 text-base font-black leading-7 text-[#10233F]">
                     {executiveBrief?.headline ||
                       "Counselor executive brief is waiting for assigned student data."}
                   </p>
@@ -865,7 +868,7 @@ export default function CounselorWorkloadPanel({
                     <p className="text-[9px] font-black uppercase tracking-[0.14em] text-orange-700">
                       Focus
                     </p>
-                    <p className="mt-1 text-sm font-black text-[#102b4c]">
+                    <p className="mt-1 text-sm font-black text-[#10233F]">
                       {executiveBrief?.focus ||
                         workload?.recommendedFocus ||
                         "Pipeline nurturing"}
@@ -877,7 +880,7 @@ export default function CounselorWorkloadPanel({
                       {executiveActions.slice(0, 3).map((action, index) => (
                         <div
                           key={actionKey(action, index)}
-                          className="rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-semibold leading-5 text-[#607487]"
+                          className="rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-semibold leading-5 text-[#5B6D80]"
                         >
                           {actionText(action)}
                         </div>
@@ -1061,20 +1064,20 @@ export default function CounselorWorkloadPanel({
                   tone="violet"
                 />
                 <MiniStat
-                  label="CAS"
+                  label="Pre-enrolment"
                   value={performance?.casIssued || 0}
-                  helper="CAS issued"
+                  helper="validated / completed"
                   tone="amber"
                 />
               </div>
 
-              <div className="rounded-[1.5rem] border-2 border-[#173f69] bg-[#f7fbff] p-4">
+              <div className="rounded-[1.5rem] border-2 border-[#123865] bg-[#f7fbff] p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#607487]">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5B6D80]">
                       Performance Interpretation
                     </p>
-                    <p className="mt-2 text-sm font-black text-[#102b4c]">
+                    <p className="mt-2 text-sm font-black text-[#10233F]">
                       Keep the grade connected to real student movement, not activity volume alone.
                     </p>
                   </div>

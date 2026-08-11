@@ -33,6 +33,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function normalize(value = "") {
   return String(value || "")
@@ -432,6 +433,7 @@ function getRiskBand(score) {
 
 function OpportunityFeedPanel({ students = [] }) {
   const reduceMotion = useReducedMotion();
+  const hasEvidence = students.length > 0;
 
   const [query, setQuery] = useState("");
   const [signalFilter, setSignalFilter] = useState("all");
@@ -701,62 +703,65 @@ function OpportunityFeedPanel({ students = [] }) {
               </p>
             </div>
 
-            <div className="shrink-0 rounded-[1.15rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-3 text-center sm:min-w-[140px]">
-              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
-                Opportunity Portfolio
-              </p>
-
-              <p className="mt-1 text-3xl font-black text-[#C2410C]">
-                {opportunities.length}
-              </p>
-
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#53657D]">
-                Qualified cases
-              </p>
+            <div className="shrink-0 sm:min-w-[170px]">
+              <ZaifanMetricCard
+                level="baby"
+                label="Opportunity Portfolio"
+                value={hasEvidence ? opportunities.length : "N/A"}
+                detail={hasEvidence ? "Qualified cases" : "No scored evidence yet"}
+                icon={Crown}
+                tone={hasEvidence ? (opportunities.length ? "orange" : "green") : "slate"}
+              />
             </div>
           </div>
 
           <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <OpportunityReadinessMetric
               label="Hot Opportunities"
-              value={command.hot.length}
+              value={hasEvidence ? command.hot.length : "N/A"}
               helper="Highest strength or opportunity scores."
               icon={Crown}
+              tone="orange"
             />
 
             <OpportunityReadinessMetric
               label="Clean Wins"
-              value={command.cleanWins.length}
+              value={hasEvidence ? command.cleanWins.length : "N/A"}
               helper="High opportunity with manageable risk."
               icon={CheckCircle2}
+              tone="green"
             />
 
             <OpportunityReadinessMetric
               label="Visa / CAS Ready"
-              value={command.visaReady.length}
+              value={hasEvidence ? command.visaReady.length : "N/A"}
               helper="Late-stage cases ready for visa progression."
               icon={Plane}
+              tone="blue"
             />
 
             <OpportunityReadinessMetric
               label="Conversion Pipeline"
-              value={metrics.conversionCount}
+              value={hasEvidence ? metrics.conversionCount : "N/A"}
               helper="Offer, CAS, visa and conversion-ready cases."
               icon={TrendingUp}
+              tone="blue"
             />
 
             <OpportunityReadinessMetric
               label="Planning Opportunities"
-              value={metrics.planningCount}
+              value={hasEvidence ? metrics.planningCount : "N/A"}
               helper="Students with useful university-plan signals."
               icon={GraduationCap}
+              tone="violet"
             />
 
             <OpportunityReadinessMetric
               label="Risky Wins"
-              value={command.riskyWins.length}
+              value={hasEvidence ? command.riskyWins.length : "N/A"}
               helper="Valuable cases that still need supervision."
               icon={AlertTriangle}
+              tone="red"
             />
           </div>
 
@@ -810,7 +815,7 @@ function OpportunityFeedPanel({ students = [] }) {
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <OpportunityCommandCard
             label="Hot Opportunities"
-            value={command.hot.length}
+            value={hasEvidence ? command.hot.length : "N/A"}
             detail="Highest strength or opportunity scores."
             tone="orange"
             icon={Crown}
@@ -818,7 +823,7 @@ function OpportunityFeedPanel({ students = [] }) {
 
           <OpportunityCommandCard
             label="Clean Wins"
-            value={command.cleanWins.length}
+            value={hasEvidence ? command.cleanWins.length : "N/A"}
             detail="High opportunity with manageable risk."
             tone="green"
             icon={CheckCircle2}
@@ -826,7 +831,7 @@ function OpportunityFeedPanel({ students = [] }) {
 
           <OpportunityCommandCard
             label="Risky Wins"
-            value={command.riskyWins.length}
+            value={hasEvidence ? command.riskyWins.length : "N/A"}
             detail="Valuable cases requiring supervision."
             tone="red"
             icon={AlertTriangle}
@@ -834,7 +839,7 @@ function OpportunityFeedPanel({ students = [] }) {
 
           <OpportunityCommandCard
             label="Visa Ready"
-            value={command.visaReady.length}
+            value={hasEvidence ? command.visaReady.length : "N/A"}
             detail="Accepted offer / CAS stage ready for visa push."
             tone="blue"
             icon={Plane}
@@ -844,7 +849,7 @@ function OpportunityFeedPanel({ students = [] }) {
         <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
           <PortfolioMetric
             label="Conversion Pipeline"
-            value={metrics.conversionCount}
+            value={hasEvidence ? metrics.conversionCount : "N/A"}
             helper="Offer / CAS / visa / conversion-ready cases."
             icon={TrendingUp}
             tone="orange"
@@ -852,7 +857,7 @@ function OpportunityFeedPanel({ students = [] }) {
 
           <PortfolioMetric
             label="Planning Opportunities"
-            value={metrics.planningCount}
+            value={hasEvidence ? metrics.planningCount : "N/A"}
             helper="Students with useful university-plan signals."
             icon={GraduationCap}
             tone="navy"
@@ -860,7 +865,7 @@ function OpportunityFeedPanel({ students = [] }) {
 
           <PortfolioMetric
             label="Visa Approved"
-            value={metrics.approvedOutcomes}
+            value={hasEvidence ? metrics.approvedOutcomes : "N/A"}
             helper="Confirmed visa outcomes — not fake success stories."
             icon={ShieldCheck}
             tone="good"
@@ -868,7 +873,7 @@ function OpportunityFeedPanel({ students = [] }) {
 
           <PortfolioMetric
             label="Visa Recovery"
-            value={command.visaRecovery.length}
+            value={hasEvidence ? command.visaRecovery.length : "N/A"}
             helper="Refused cases still worth supervised review."
             icon={AlertTriangle}
             tone={
@@ -1158,29 +1163,17 @@ function OpportunityReadinessMetric({
   value,
   helper,
   icon: Icon,
+  tone = "blue",
 }) {
   return (
-    <article className="min-w-0 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.035)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
-            {label}
-          </p>
-
-          <p className="mt-2 text-2xl font-black text-[#10233F]">
-            {value ?? 0}
-          </p>
-        </div>
-
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]">
-          <Icon size={14} />
-        </span>
-      </div>
-
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {helper}
-      </p>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail={helper}
+      icon={Icon}
+      tone={tone}
+    />
   );
 }
 
@@ -1192,56 +1185,15 @@ function OpportunityCommandCard({
   tone = "green",
   icon: Icon,
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "orange"
-      ? "border-orange-300 bg-orange-50"
-      : tone === "red"
-      ? "border-red-300 bg-red-50"
-      : tone === "blue"
-      ? "border-blue-300 bg-blue-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-emerald-300 bg-emerald-50";
-
   return (
-    <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${style}`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{ color: dark ? "#FDBA74" : "#64748B" }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-3xl font-black"
-            style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-          >
-            {value || 0}
-          </p>
-        </div>
-
-        {Icon ? (
-          <Icon
-            size={18}
-            style={{ color: dark ? "#FDBA74" : "#C2410C" }}
-          />
-        ) : null}
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{ color: dark ? "#F8FAFC" : "#64748B" }}
-      >
-        {detail}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1252,52 +1204,16 @@ function PortfolioMetric({
   icon: Icon,
   tone = "orange",
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-orange-300 bg-orange-50";
-
   return (
-    <div
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${style}`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{ color: dark ? "#FDBA74" : "#64748B" }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-2xl font-black"
-            style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={18}
-          style={{ color: dark ? "#FDBA74" : "#C2410C" }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{ color: dark ? "#F8FAFC" : "#64748B" }}
-      >
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      surface="light"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1379,17 +1295,15 @@ function OpportunityMiniBoard({
   );
 }
 
-function MiniMetric({ label, value }) {
+function MiniMetric({ label, value, tone = "slate", icon: Icon = null }) {
   return (
-    <div className="rounded-xl border-2 border-slate-300 bg-[#fffaf2] px-3 py-2">
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-black text-[#10233f]">
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? "—"}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1398,31 +1312,13 @@ function ScoreCard({
   value,
   tone = "orange",
 }) {
-  const dark = tone === "navy";
-
   return (
-    <div
-      className={`rounded-xl border-2 p-3 text-center ${
-        dark
-          ? "border-[#123865] bg-[#123865]"
-          : "border-orange-400 bg-[#fff3e5]"
-      }`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <p
-        className="text-[8px] font-black uppercase tracking-[0.08em]"
-        style={{ color: dark ? "#FDBA74" : "#64748B" }}
-      >
-        {label}
-      </p>
-
-      <p
-        className="mt-1 text-xl font-black"
-        style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-      >
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1443,6 +1339,44 @@ function RiskBadge({ score }) {
       Risk {value}
     </span>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default OpportunityFeedPanel;

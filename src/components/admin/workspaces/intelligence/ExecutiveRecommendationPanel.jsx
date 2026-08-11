@@ -4,6 +4,7 @@ import { Crown, ShieldCheck, Target, Workflow } from "lucide-react";
 import { buildExecutiveRecommendations } from "../../../../lib/executiveRecommendations";
 import { buildExecutiveActionTemplate } from "../../../../lib/executiveActionTemplates";
 import { executeExecutiveActionTemplate } from "../../../../lib/executiveActionExecutor";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const EXECUTION_TIMEOUT_MS = 20000;
 
@@ -18,6 +19,10 @@ function normalize(value = "") {
 function number(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function getScoreValue(score = {}, key, fallback = 0) {
+  return score?.[key] ?? score?.diagnostics?.[key] ?? fallback;
 }
 
 function formatLabel(value = "") {
@@ -247,6 +252,22 @@ function ExecutiveRecommendationPanel({
   const riskScore = number(score?.risk_score);
   const opportunityScore = number(score?.opportunity_score);
 
+  const documentReadiness = number(
+    getScoreValue(score, "document_readiness_percent")
+  );
+  const pendingTasks = number(
+    getScoreValue(score, "pending_tasks_count")
+  );
+  const overdueTasks = number(
+    getScoreValue(score, "overdue_tasks_count")
+  );
+  const universityPlanCount = number(
+    getScoreValue(score, "university_plan_count")
+  );
+  const safeUniversityCount = number(
+    getScoreValue(score, "safe_university_count")
+  );
+
   const executeRecommendation = async (item) => {
     if (!item?.template || executingKey || executedKeys[item.key]) return;
 
@@ -392,40 +413,31 @@ function ExecutiveRecommendationPanel({
       </div>
 
       <div className="p-5 sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          <SummaryPill label="Total" value={summary.total} />
-          <SummaryPill label="Critical" value={summary.critical} tone="critical" />
-          <SummaryPill label="Executive" value={summary.executive} tone="executive" />
-          <SummaryPill label="High" value={summary.high} tone="high" />
-          <SummaryPill label="Executable" value={summary.executable} tone="ready" />
-          <SummaryPill label="Done" value={summary.executed} tone="done" />
-        </div>
+      <div className="rounded-[1.1rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#61738D]">
+          Current recommendation context
+        </p>
+        <p className="mt-1 text-xs font-bold leading-5 text-[#10233F]">
+          {score?.priority_level || "Standard"} priority · {formatLabel(
+            score?.executive_category || "standard"
+          )} · {formatLabel(journeyStage)} · Risk {riskScore}/100 · Opportunity {opportunityScore}/100
+        </p>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <ContextPill label="Priority" value={score?.priority_level || "Standard"} />
-        <ContextPill label="Category" value={score?.executive_category || "Standard"} />
-        <ContextPill label="Journey" value={formatLabel(journeyStage)} />
-        <ContextPill label="Risk" value={riskScore} />
-        <ContextPill label="Opportunity" value={opportunityScore} />
-        <ContextPill label="Student Type" value={score?.student_type || score?.__leadType || "student"} />
-      </div>
-
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid auto-rows-fr gap-3 md:grid-cols-2 xl:grid-cols-4">
         <SignalCard
           label="Document Health"
           value={formatLabel(
             diagnostics.document_health || score.document_health || "unknown"
           )}
-          helper={`${number(score.document_readiness_percent)}% readiness`}
-          tone={number(score.document_readiness_percent) >= 75 ? "good" : "warning"}
+          helper={`${documentReadiness}% readiness`}
+          tone={documentReadiness >= 75 ? "good" : "warning"}
         />
         <SignalCard
           label="Task Health"
           value={formatLabel(diagnostics.task_health || score.task_health || "unknown")}
-          helper={`${number(score.overdue_tasks_count)} overdue • ${number(score.pending_tasks_count)} pending`}
-          tone={number(score.overdue_tasks_count) > 0 ? "risk" : "good"}
+          helper={`${overdueTasks} overdue • ${pendingTasks} pending`}
+          tone={overdueTasks > 0 ? "risk" : "good"}
         />
         <SignalCard
           label="University Plan"
@@ -436,7 +448,7 @@ function ExecutiveRecommendationPanel({
               ? "Partial"
               : "Missing"
           }
-          helper={`${number(score.university_plan_count)} total • ${number(score.safe_university_count || score.safe_universities_count)} safe`}
+          helper={`${universityPlanCount} total • ${safeUniversityCount} safe`}
           tone={score.has_balanced_university_plan ? "good" : "warning"}
         />
         <SignalCard
@@ -490,12 +502,7 @@ function ExecutiveRecommendationPanel({
 }
 
 function CommandMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">{label}</p>
-      <p className="mt-1 text-xl font-black text-white">{value ?? 0}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function RecommendationCard({
@@ -509,125 +516,119 @@ function RecommendationCard({
   onCancelConfirmation = () => {},
   onExecute = () => {},
 }) {
-  const { recommendation, template, studentStage, requiresApproval, impactScore } = item;
+  const {
+    recommendation,
+    template,
+    studentStage,
+    requiresApproval,
+    impactScore,
+  } = item;
+
   const style = getPriorityStyle(recommendation.priority);
-  const actionLabel = getActionLabel(recommendation.action || template?.actionType);
-  const priorityLabel = recommendation.priority || "standard";
+  const actionLabel = getActionLabel(
+    recommendation.action || template?.actionType || "review"
+  );
+  const priorityLabel = formatLabel(recommendation.priority || "standard");
+  const executionState = executed
+    ? "Executed"
+    : requiresApproval
+    ? "Approval required"
+    : template
+    ? "Prepared"
+    : "Monitor";
 
   return (
-    <div className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${style.wrapper}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <article
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(23,36,61,0.045)] sm:p-5 ${style.wrapper}`}
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <span
+          className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`}
+          aria-hidden="true"
+        />
+
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`h-2.5 w-2.5 rounded-full ${style.dot}`} />
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7A8392]">
+            {priorityLabel} · {formatLabel(studentStage)} · {executionState}
+          </p>
 
-            <p className="font-bold text-[#17243D]">{recommendation.title}</p>
+          <h4 className="mt-1 text-base font-black leading-6 text-[#17243D]">
+            {recommendation.title}
+          </h4>
 
-            <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${style.badge}`}>
-              {priorityLabel}
-            </span>
-
-            <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#7A8392]">
-              {formatLabel(studentStage)}
-            </span>
-
-            {requiresApproval ? (
-              <span className="rounded-full border border-[#E9802D]/40 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
-                Approval Required
-              </span>
-            ) : template ? (
-              <span className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
-                Ready
-              </span>
-            ) : (
-              <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#7A8392]">
-                Monitor
-              </span>
-            )}
-
-            {executed ? (
-              <span className="rounded-full border border-[#E9802D]/35 bg-[#FFF3E7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#B84F0E]">
-                Executed
-              </span>
-            ) : null}
-          </div>
-
-          <p className="mt-2 text-sm leading-6 text-[#667085]">
+          <p className="mt-1.5 text-sm font-semibold leading-6 text-[#667085]">
             {recommendation.description}
           </p>
 
           {recommendation.type ? (
-            <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#98A0AE]">
+            <p className="mt-2 text-[9px] font-black uppercase tracking-[0.12em] text-[#98A0AE]">
               Signal: {formatLabel(recommendation.type)}
             </p>
           ) : null}
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            <MiniStat label="Action" value={actionLabel} />
-            <MiniStat label="Impact" value={impactScore} />
-            <MiniStat label="Priority Rank" value={item.priorityRank} />
-            <MiniStat label="Execution" value={template ? formatLabel(template.actionType) : "Review"} />
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#61738D]">
+            <span>Impact {impactScore}</span>
+            <span>Priority {item.priorityRank}</span>
+            <span>{actionLabel}</span>
           </div>
 
           {template ? (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => setPreviewOpen(!previewOpen)}
-                className="rounded-full border border-[#243A60]/20 bg-white px-4 py-2 text-xs font-bold text-[#596579] transition hover:border-[#E9802D]/45 hover:text-[#B84F0E]"
+                className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#52677F] transition hover:border-[#FFB38A] hover:bg-[#FFF8EF]"
               >
-                {previewOpen ? "Hide Payload" : "Preview Payload"}
+                {previewOpen ? "Hide details" : "Preview details"}
               </button>
 
               <button
                 type="button"
                 onClick={onExecute}
                 disabled={disabled || executed}
-                className="rounded-full border border-[#E9802D] bg-[#E9802D] px-4 py-2 text-xs font-black text-white shadow-[0_8px_18px_rgba(233,128,45,0.16)] transition hover:-translate-y-0.5 hover:bg-[#D96C1F] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2 text-xs font-black text-white shadow-[0_6px_14px_rgba(255,90,10,0.14)] transition hover:-translate-y-0.5 hover:bg-[#E94F00] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {executed ? "Executed" : executing ? "Executing..." : actionLabel}
+                {executed
+                  ? "Executed"
+                  : executing
+                  ? "Executing..."
+                  : requiresApproval
+                  ? "Review & approve"
+                  : actionLabel}
               </button>
             </div>
           ) : null}
-        </div>
-
-        <div className="shrink-0 rounded-2xl border border-[#243A60]/20 bg-white px-4 py-3 text-right">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
-            Action
-          </p>
-          <p className="mt-1 text-xs font-black text-[#243A60]">
-            {actionLabel}
-          </p>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-[#98A0AE]">
-            {requiresApproval ? "Human approval" : template ? "Prepared" : "Monitor"}
-          </p>
         </div>
       </div>
 
       {confirmationOpen && template ? (
         <div className="mt-4 rounded-xl border-[3px] border-[#FFB38A] bg-[#FFF4EA] p-4">
           <div className="flex min-w-0 items-start gap-3">
-            <ShieldCheck className="mt-0.5 shrink-0 text-[#B84F0E]" size={19} />
+            <ShieldCheck
+              className="mt-0.5 shrink-0 text-[#B84F0E]"
+              size={19}
+            />
             <div className="min-w-0 flex-1">
-              <p className="font-black text-[#17243D]">Human approval required</p>
+              <p className="font-black text-[#17243D]">
+                Human approval required
+              </p>
               <p className="mt-1 text-xs font-semibold leading-5 text-[#667085]">
-                Review the prepared payload before executing this critical or executive action.
-                Execution can create real CRM records through the existing action executor.
+                Review the prepared payload before creating the real CRM action.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={onExecute}
                   disabled={disabled || executed}
-                  className="rounded-full border border-orange-600 bg-orange-600 px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2 text-xs font-black text-white disabled:opacity-50"
                 >
-                  {executing ? "Executing..." : "Approve & Execute"}
+                  {executing ? "Executing..." : `Approve & ${actionLabel}`}
                 </button>
                 <button
                   type="button"
                   onClick={onCancelConfirmation}
                   disabled={executing}
-                  className="rounded-full border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#344054] disabled:opacity-50"
+                  className="rounded-xl border-2 border-[#C9D7E6] bg-white px-4 py-2 text-xs font-black text-[#344054] disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -643,7 +644,7 @@ function RecommendationCard({
           <PayloadPreview title="Ready Payload" payload={template.payload || {}} />
         </div>
       ) : null}
-    </div>
+    </article>
   );
 }
 
@@ -678,61 +679,24 @@ function PayloadPreview({ title, payload = {} }) {
   );
 }
 
-function SummaryPill({ label, value, tone = "default" }) {
-  const className =
-    tone === "critical"
-      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-      : tone === "executive"
-      ? "border-[#E9802D]/40 bg-[#FFF3E7] text-[#B84F0E]"
-      : tone === "high"
-      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
-      : tone === "ready"
-      ? "border-[#243A60]/25 bg-[#F3F5F8] text-[#243A60]"
-      : tone === "done"
-      ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
-      : "border-[#243A60]/20 bg-white text-[#667085]";
 
-  return (
-    <span className={`rounded-full border px-4 py-2 text-xs font-bold ${className}`}>
-      {value} {label}
-    </span>
-  );
-}
 
-function ContextPill({ label, value }) {
-  return (
-    <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[11px] font-bold text-[#7A8392]">
-      {label}: <span className="text-[#344054]">{value}</span>
-    </span>
-  );
-}
+
 
 function MiniStat({ label, value }) {
-  return (
-    <span className="rounded-full border border-[#243A60]/20 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#7A8392]">
-      {label}: <span className="text-[#344054]">{value}</span>
-    </span>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function SignalCard({ label, value, helper, tone = "neutral" }) {
-  const className =
-    tone === "risk"
-      ? "border-[#C2413B]/30 bg-[#FFF0EE] text-[#A8342F]"
-      : tone === "warning"
-      ? "border-[#A36A18]/30 bg-[#FFF7E8] text-[#8A5611]"
-      : tone === "good"
-      ? "border-[#E9802D]/35 bg-[#FFF3E7] text-[#B84F0E]"
-      : "border-[#243A60]/20 bg-white text-[#344054]";
-
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_8px_20px_rgba(23,36,61,0.04)] ${className}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8992A1]">
-        {label}
-      </p>
-      <p className="mt-2 text-lg font-black">{value}</p>
-      {helper ? <p className="mt-1 text-xs leading-5 text-[#7A8392]">{helper}</p> : null}
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -750,6 +714,63 @@ function StatusBox({ tone = "gold", title, description }) {
       {description ? <p className="mt-2 text-sm text-[#667085]">{description}</p> : null}
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveRecommendationPanel;

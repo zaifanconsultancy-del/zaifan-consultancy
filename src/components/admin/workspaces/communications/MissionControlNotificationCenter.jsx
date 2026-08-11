@@ -19,6 +19,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const toLower = (value) => String(value || "").toLowerCase().trim();
 
@@ -389,7 +390,7 @@ function buildAlertSystem({
     {
       key: "executive",
       title: "Executive Alerts",
-      icon: "🚨",
+      icon: AlertTriangle,
       tone: classifyPriority(highRiskStudents.length + criticalRiskStudents.length, 1, 5),
       count: notificationMetrics?.executiveAlerts ?? highRiskStudents.length + criticalRiskStudents.length,
       summary: `${criticalRiskStudents.length} critical / ${highRiskStudents.length} high risk`,
@@ -412,7 +413,7 @@ function buildAlertSystem({
     {
       key: "payment",
       title: "Payment Alerts",
-      icon: "💷",
+      icon: CircleGauge,
       tone: classifyPriority(unpaidInvoices.length + pendingReceipts.length + counselorPaymentRequests.length, 1, 6),
       count: notificationMetrics?.paymentAlerts ?? unpaidInvoices.length + pendingReceipts.length + counselorPaymentRequests.length,
       summary: `${formatMoney(outstandingValue)} outstanding • ${collectionRate}% collected`,
@@ -435,7 +436,7 @@ function buildAlertSystem({
     {
       key: "visa",
       title: "Visa Alerts",
-      icon: "🛂",
+      icon: Sparkles,
       tone: classifyPriority(casDelays.length + visaDelays.length, 1, 4),
       count: notificationMetrics?.visaAlerts ?? casDelays.length + visaDelays.length,
       summary: `${casDelays.length} CAS delays • ${visaDelays.length} visa delays`,
@@ -458,7 +459,7 @@ function buildAlertSystem({
     {
       key: "portal",
       title: "Portal Alerts",
-      icon: "🔐",
+      icon: ShieldCheck,
       tone: classifyPriority(passwordResetAccounts.length + stalePortalAccounts.length, 1, 8),
       count: notificationMetrics?.portalAlerts ?? passwordResetAccounts.length + stalePortalAccounts.length,
       summary: `${portalActivationRate}% activation • ${portalRecentActivityRate}% 7-day activity`,
@@ -481,7 +482,7 @@ function buildAlertSystem({
     {
       key: "support",
       title: "Support Alerts",
-      icon: "📬",
+      icon: BellRing,
       tone: classifyPriority(openSupportRequests.length + escalatedSupportRequests.length, 1, 8),
       count: notificationMetrics?.supportAlerts ?? openSupportRequests.length + escalatedSupportRequests.length,
       summary: `${openSupportRequests.length} open • ${escalatedSupportRequests.length} escalated`,
@@ -504,7 +505,7 @@ function buildAlertSystem({
     {
       key: "automation",
       title: "Automation Alerts",
-      icon: "⚙️",
+      icon: Activity,
       tone: classifyPriority(failedExecutions.length * 2 + pendingApprovals.length + queuedAutomation.length, 1, 8),
       count: notificationMetrics?.automationAlerts ?? failedExecutions.length + pendingApprovals.length + duplicateBlocked.length + queuedAutomation.length,
       summary: `${automationSuccessRate}% success • ${pendingApprovals.length + queuedAutomation.length} approvals`,
@@ -553,13 +554,13 @@ function buildAlertSystem({
 
   const executiveFeed = [
     ...failedExecutions.slice(0, 4).map((item) => ({
-      icon: "⚙️",
+      icon: Activity,
       title: item.action_type || item.template_key || "Automation failure",
       meta: `${getStudentName(item)} • ${item.status || "failed"}`,
       tone: "critical",
     })),
     ...criticalRiskStudents.slice(0, 4).map((item) => ({
-      icon: "🚨",
+      icon: AlertTriangle,
       title: getStudentName(item),
       meta: `Critical risk • ${number(item.risk_score || item.score)} score`,
       tone: "critical",
@@ -571,7 +572,7 @@ function buildAlertSystem({
       tone: "warning",
     })),
     ...visaDelays.slice(0, 4).map((item) => ({
-      icon: "🛂",
+      icon: Sparkles,
       title: getStudentName(item),
       meta: "CAS issued, visa not approved",
       tone: "warning",
@@ -775,7 +776,7 @@ function MissionControlNotificationCenter(props) {
           </span>
         </div>
 
-        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+        <div className="grid min-w-0 auto-rows-fr gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
           <BoardMetric
             label="Outstanding Revenue"
             value={formatMoney(metrics.outstandingValue)}
@@ -919,7 +920,7 @@ function MissionControlNotificationCenter(props) {
           </span>
         </div>
 
-        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 auto-rows-fr gap-3 bg-[#FFF8EF] p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleGroups.map((group, index) => (
             <AlertCommandCard
               key={group.key}
@@ -1091,34 +1092,29 @@ function BoardMetric({
   tone = "navy",
   icon: Icon,
 }) {
-  const classes =
-    tone === "green"
-      ? "border-emerald-400 bg-emerald-50"
-      : tone === "red"
-        ? "border-red-400 bg-red-50"
-        : tone === "orange"
-          ? "border-[#FF5A0A] bg-[#FFF4E8]"
-          : "border-[#123865] bg-[#F2F7FF]";
+  const rawValue = String(value ?? 0);
+  const needsCompactValue = rawValue.length >= 7;
 
   return (
-    <article className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${classes}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
-            {label}
-          </p>
-          <p className="mt-2 break-words text-3xl font-black text-[#10233F]">
-            {value ?? 0}
-          </p>
-        </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865]">
-          <Icon size={16} />
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={
+        <span
+          className={
+            needsCompactValue
+              ? "whitespace-nowrap text-[2rem] leading-none sm:text-[2.15rem]"
+              : "whitespace-nowrap"
+          }
+        >
+          {value ?? 0}
         </span>
-      </div>
-      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-    </article>
+      }
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -1141,29 +1137,11 @@ function HeroKpi({ label, value, tone = "stable" }) {
 }
 
 function DarkAlertMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function OrangeAlertMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function AlertCommandCard({
@@ -1171,48 +1149,29 @@ function AlertCommandCard({
   index,
   reduceMotion,
 }) {
-  const style = toneClasses[group.tone] || toneClasses.stable;
+  const Icon = group.icon;
+  const tone = toZaifanMetricTone(group.tone);
 
   return (
-    <motion.article
+    <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : Math.min(index * 0.03, 0.15),
       }}
-      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] ${style.border} ${style.bg} p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style.glow}`}
+      className="h-full min-w-0"
     >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-65" />
-
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-2xl" aria-hidden="true">
-          {group.icon}
-        </span>
-
-        <span
-          className={`rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${style.pill}`}
-        >
-          {group.tone}
-        </span>
-      </div>
-
-      <p className="mt-4 break-words text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
-        {group.title}
-      </p>
-
-      <p className={`mt-2 text-3xl font-black ${style.text}`}>
-        {group.count}
-      </p>
-
-      <p className="mt-2 break-words text-[10px] font-semibold leading-4 text-slate-600">
-        {group.summary}
-      </p>
-
-      <p className="mt-3 break-words text-[10px] leading-4 text-slate-500">
-        {group.description}
-      </p>
-    </motion.article>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={group.title}
+        value={group.count}
+        detail={`${group.summary} · ${group.description}`}
+        icon={Icon}
+        tone={tone}
+        className="h-full"
+      />
+    </motion.div>
   );
 }
 
@@ -1235,8 +1194,9 @@ function ResolutionRow({
     >
       <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="break-words font-black text-[#10233F]">
-            {item.groupIcon} {item.title}
+          <p className="flex min-w-0 items-center gap-2 break-words font-black text-[#10233F]">
+            <MissionControlInlineIcon icon={item.groupIcon} />
+            <span className="min-w-0 break-words">{item.title}</span>
           </p>
 
           <p className="mt-1 break-words text-xs font-semibold text-slate-500">
@@ -1276,9 +1236,10 @@ function FeedRow({
       className="flex min-w-0 items-center justify-between gap-3 rounded-[1.1rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:border-[#FF5A0A]"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <span className="text-xl" aria-hidden="true">
-          {item.icon}
-        </span>
+        <MissionControlInlineIcon
+          icon={item.icon}
+          className="h-9 w-9 shrink-0 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]"
+        />
 
         <div className="min-w-0">
           <p className="truncate text-sm font-black text-[#10233F]">
@@ -1404,6 +1365,74 @@ function EmptyState({ text }) {
     <div className="rounded-[1.2rem] border-[3px] border-dashed border-[#FF5A0A] bg-white p-5 text-sm font-semibold text-slate-500">
       {text}
     </div>
+  );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
+}
+
+
+function MissionControlInlineIcon({
+  icon,
+  className = "h-7 w-7 shrink-0 rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]",
+}) {
+  if (icon === null || icon === undefined) return null;
+
+  if (typeof icon === "string" || typeof icon === "number") {
+    return (
+      <span
+        className={`inline-flex items-center justify-center ${className}`}
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+    );
+  }
+
+  const Icon = icon;
+
+  return (
+    <span
+      className={`inline-flex items-center justify-center ${className}`}
+      aria-hidden="true"
+    >
+      <Icon size={15} strokeWidth={2.3} />
+    </span>
   );
 }
 

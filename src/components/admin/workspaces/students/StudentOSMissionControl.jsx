@@ -3,12 +3,45 @@
 // journey, revenue, portal, support, notification, automation, risk, system health,
 // execution logs and connected MissionControlNotificationCenter.
 // Mature file retained; visual hierarchy aligned with Zaifan Admin OS.
+// V7 CARD STANDARD additionally locks Mission Control KPI cards to the shared Zaifan card family,
+// replaces KPI emoji glyphs with consistent Lucide icons, while preserving all analytics logic.
 // V6 MAXIMUM additionally hardens record identity, duplicate merging, date handling,
 // money truthfulness, funnel status normalization, monthly trend ordering, system-health
 // semantics, operating-score coverage, and white-surface contrast. No fake forecasts.
 
 import { motion, useReducedMotion } from "framer-motion";
+import {
+  AlertTriangle,
+  Building2,
+  CheckCircle2,
+  Clock3,
+  CreditCard,
+  FileCheck2,
+  FilePenLine,
+  FolderOpen,
+  Gavel,
+  GraduationCap,
+  Hourglass,
+  Inbox,
+  Landmark,
+  Paperclip,
+  PartyPopper,
+  PhoneCall,
+  PlaneTakeoff,
+  PoundSterling,
+  Radio,
+  ReceiptText,
+  RotateCcw,
+  ScrollText,
+  Settings2,
+  ShieldCheck,
+  Target,
+  TrendingUp,
+  UserRound,
+  WalletCards,
+} from "lucide-react";
 import MissionControlNotificationCenter from "../communications/MissionControlNotificationCenter";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const safeArray = (value) => (Array.isArray(value) ? value.filter(Boolean) : []);
 
@@ -631,7 +664,7 @@ function StudentOSMissionControl({
       title: "Executive Risk",
       value: highRiskStudents,
       note: `${criticalRiskStudents} critical students`,
-      icon: "🚨",
+      icon: AlertTriangle,
       color: getUrgencyTone(highRiskStudents, 1, 5),
       type: "executive",
     },
@@ -639,7 +672,7 @@ function StudentOSMissionControl({
       title: "Payment Alerts",
       value: revenueRiskScore,
       note: `${formatMoney(outstandingValue)} outstanding`,
-      icon: "💷",
+      icon: PoundSterling,
       color: getUrgencyTone(revenueRiskScore, 1, 6),
       type: "payment",
     },
@@ -647,7 +680,7 @@ function StudentOSMissionControl({
       title: "Visa Alerts",
       value: visaDelays,
       note: "CAS issued but visa not approved",
-      icon: "🛂",
+      icon: Landmark,
       color: getUrgencyTone(visaDelays, 1, 4),
       type: "visa",
     },
@@ -655,7 +688,7 @@ function StudentOSMissionControl({
       title: "Portal Alerts",
       value: portalRiskScore,
       note: `${stalePortalAccounts} stale / ${portalPasswordResets} reset`,
-      icon: "🔐",
+      icon: ShieldCheck,
       color: getUrgencyTone(portalRiskScore, 1, 8),
       type: "portal",
     },
@@ -663,7 +696,7 @@ function StudentOSMissionControl({
       title: "Support Alerts",
       value: supportPressureScore,
       note: `${escalatedSupportRequests} escalated`,
-      icon: "📬",
+      icon: Inbox,
       color: getUrgencyTone(supportPressureScore, 1, 8),
       type: "support",
     },
@@ -671,7 +704,7 @@ function StudentOSMissionControl({
       title: "Automation Alerts",
       value: automationRiskScore,
       note: `${failedExecutions} failed / ${approvalBacklog} approval`,
-      icon: "⚙️",
+      icon: Settings2,
       color: getUrgencyTone(automationRiskScore, 1, 8),
       type: "automation",
     },
@@ -682,7 +715,7 @@ function StudentOSMissionControl({
       title: "Lead",
       value: totalStudents,
       subtitle: "Inquiry + appointment base",
-      icon: "🎓",
+      icon: GraduationCap,
       color: "bg-[#FFF4E8]",
       border: "border-[#F59E0B]",
       text: "text-orange-700",
@@ -691,7 +724,7 @@ function StudentOSMissionControl({
       title: "Application",
       value: applicationsCount,
       subtitle: `${submittedApplications} submitted / active`,
-      icon: "📝",
+      icon: FilePenLine,
       color: "bg-[#F1F7FD]",
       border: "border-[#60A5FA]",
       text: "text-sky-700",
@@ -700,7 +733,7 @@ function StudentOSMissionControl({
       title: "Offer",
       value: offerCount,
       subtitle: `${offerAcceptedCount} accepted`,
-      icon: "🎉",
+      icon: PartyPopper,
       color: "bg-[#F0FBF6]",
       border: "border-[#34D399]",
       text: "text-emerald-700",
@@ -709,7 +742,7 @@ function StudentOSMissionControl({
       title: "CAS",
       value: casCount,
       subtitle: `${casDelays} delayed`,
-      icon: "📄",
+      icon: FileCheck2,
       color: "bg-[#F1F6FC]",
       border: "border-[#60A5FA]",
       text: "text-blue-700",
@@ -718,7 +751,7 @@ function StudentOSMissionControl({
       title: "Visa",
       value: visaCount,
       subtitle: `${visaSubmittedCount} submitted / pending`,
-      icon: "✈️",
+      icon: PlaneTakeoff,
       color: "bg-[#F0FBF6]",
       border: "border-[#34D399]",
       text: "text-emerald-700",
@@ -729,57 +762,57 @@ function StudentOSMissionControl({
     {
       title: "Students",
       value: totalStudents,
-      icon: "🎓",
-      color: "text-orange-700",
+      icon: GraduationCap,
+      tone: "orange",
       note: "Unified records",
     },
     {
       title: "Applications",
       value: applicationsCount,
-      icon: "📝",
-      color: "text-sky-700",
+      icon: FilePenLine,
+      tone: "blue",
       note: `${submittedApplications} active`,
     },
     {
       title: "Offers",
       value: offerCount,
-      icon: "🎉",
-      color: "text-emerald-700",
+      icon: PartyPopper,
+      tone: "green",
       note: `${offerAcceptedCount} accepted`,
     },
     {
       title: "CAS Issued",
       value: casCount,
-      icon: "📄",
-      color: "text-blue-700",
+      icon: FileCheck2,
+      tone: "blue",
       note: `${casDelays} CAS delays`,
     },
     {
       title: "Visa Approved",
       value: visaCount,
-      icon: "✈️",
-      color: "text-emerald-700",
+      icon: PlaneTakeoff,
+      tone: "green",
       note: `${visaDelays} visa delays`,
     },
     {
       title: "Documents",
       value: documentsCount,
-      icon: "📂",
-      color: "text-violet-700",
+      icon: FolderOpen,
+      tone: "violet",
       note: `${pendingDocuments} pending`,
     },
     {
       title: "Pending Tasks",
       value: pendingTasks,
-      icon: "⏳",
-      color: "text-orange-700",
+      icon: Hourglass,
+      tone: "orange",
       note: `${overdueTasks} overdue`,
     },
     {
       title: "Automation",
       value: safeExecutionLogs.length,
-      icon: "⚙️",
-      color: "text-sky-700",
+      icon: Settings2,
+      tone: "blue",
       note: `${automationSuccessRate}% success`,
     },
   ];
@@ -789,35 +822,35 @@ function StudentOSMissionControl({
       title: "High Risk Students",
       value: highRiskStudents,
       note: `${criticalRiskStudents} critical`,
-      icon: "🚨",
+      icon: AlertTriangle,
       color: "text-red-700",
     },
     {
       title: "CAS Delays",
       value: casDelays,
       note: "Offer accepted, CAS not issued",
-      icon: "📄",
+      icon: FileCheck2,
       color: "text-blue-700",
     },
     {
       title: "Visa Delays",
       value: visaDelays,
       note: "CAS issued, visa not approved",
-      icon: "🛂",
+      icon: Landmark,
       color: "text-emerald-700",
     },
     {
       title: "Payment Risks",
       value: paymentRisks,
       note: `${unpaidInvoices} unpaid invoices`,
-      icon: "💷",
+      icon: PoundSterling,
       color: "text-amber-700",
     },
     {
       title: "Automation Pressure",
       value: automationPressure,
       note: `${failedExecutions} failed / ${pendingApprovals} pending`,
-      icon: "⚙️",
+      icon: Settings2,
       color: "text-orange-700",
     },
   ];
@@ -827,28 +860,28 @@ function StudentOSMissionControl({
       title: "Invoices",
       value: invoicesCount,
       note: formatMoney(invoiceValue),
-      icon: "🧾",
+      icon: ReceiptText,
       color: "text-sky-700",
     },
     {
       title: "Payments",
       value: paymentsCount,
       note: formatMoney(paidValue),
-      icon: "💳",
+      icon: CreditCard,
       color: "text-emerald-700",
     },
     {
       title: "Outstanding",
       value: formatMoney(outstandingValue),
       note: `${unpaidInvoices} unpaid`,
-      icon: "⚠️",
+      icon: AlertTriangle,
       color: "text-orange-700",
     },
     {
       title: "Receipts",
       value: allReceipts.length,
       note: `${pendingReceipts} pending / ${approvedReceipts} approved`,
-      icon: "📎",
+      icon: Paperclip,
       color: "text-violet-700",
     },
   ];
@@ -858,42 +891,42 @@ function StudentOSMissionControl({
       title: "This Month Invoiced",
       value: formatMoney(currentMonthInvoiceValue),
       note: `${formatMoney(recentInvoiceValue)} in last 30 days`,
-      icon: "📈",
+      icon: TrendingUp,
       color: "text-sky-700",
     },
     {
       title: "This Month Collected",
       value: formatMoney(currentMonthPaidValue),
       note: `${formatMoney(recentPaymentValue)} in last 30 days`,
-      icon: "💰",
+      icon: WalletCards,
       color: "text-emerald-700",
     },
     {
       title: "Collection Rate",
       value: `${invoiceCollectionRate}%`,
       note: `${invoicePaymentCoverage}% invoice/payment record coverage`,
-      icon: "🎯",
+      icon: Target,
       color: "text-orange-700",
     },
     {
       title: "Receipt Approval",
       value: `${receiptApprovalRate}%`,
       note: `${pendingReceipts} receipts awaiting review`,
-      icon: "✅",
+      icon: CheckCircle2,
       color: "text-violet-700",
     },
     {
       title: "Outstanding Exposure",
       value: formatMoney(outstandingRevenueExposure),
       note: "Verified outstanding invoice exposure",
-      icon: "⚠️",
+      icon: AlertTriangle,
       color: "text-orange-700",
     },
     {
       title: "Payment Requests",
       value: safePaymentRequests.length,
       note: "Counselor payment pressure",
-      icon: "🙋",
+      icon: UserRound,
       color: "text-blue-700",
     },
   ];
@@ -903,28 +936,28 @@ function StudentOSMissionControl({
       title: "Activation Rate",
       value: `${portalActivationRate}%`,
       note: `${activePortalUsers}/${allPortalAccounts.length} active accounts`,
-      icon: "🟢",
+      icon: Radio,
       color: "text-emerald-700",
     },
     {
       title: "7-Day Activity",
       value: `${portalRecentActivityRate}%`,
       note: `${recentlyActivePortalUsers} recently active users`,
-      icon: "📡",
+      icon: Radio,
       color: "text-sky-700",
     },
     {
       title: "30-Day Stale",
       value: stalePortalAccounts,
       note: "Accounts needing engagement",
-      icon: "🕒",
+      icon: Clock3,
       color: "text-orange-700",
     },
     {
       title: "Password Pressure",
       value: portalPasswordResets,
       note: "Must change password accounts",
-      icon: "🔁",
+      icon: RotateCcw,
       color: "text-violet-700",
     },
   ];
@@ -934,28 +967,28 @@ function StudentOSMissionControl({
       title: "Resolution Rate",
       value: `${supportResolutionRate}%`,
       note: `${resolvedSupportRequests} resolved requests`,
-      icon: "✅",
+      icon: CheckCircle2,
       color: "text-emerald-700",
     },
     {
       title: "Support Pressure",
       value: supportPressureScore,
       note: "Open + pending + escalated weight",
-      icon: "🔥",
+      icon: AlertTriangle,
       color: "text-orange-700",
     },
     {
       title: "Response Queue",
       value: pendingSupportResponses,
       note: "Waiting for team response",
-      icon: "⏳",
+      icon: Hourglass,
       color: "text-sky-700",
     },
     {
       title: "Escalations",
       value: escalatedSupportRequests,
       note: "Leadership support watch",
-      icon: "🚨",
+      icon: AlertTriangle,
       color: "text-red-700",
     },
   ];
@@ -965,28 +998,28 @@ function StudentOSMissionControl({
       title: "Portal Accounts",
       value: allPortalAccounts.length,
       note: "Student login access",
-      icon: "🔐",
+      icon: ShieldCheck,
       color: "text-sky-700",
     },
     {
       title: "Active Users",
       value: activePortalUsers,
       note: `${recentlyActivePortalUsers} active in 7 days`,
-      icon: "🟢",
+      icon: Radio,
       color: "text-emerald-700",
     },
     {
       title: "Last Login",
       value: `${percent(portalLastLoginCoverage, allPortalAccounts.length)}%`,
       note: `${portalLastLoginCoverage} accounts tracked`,
-      icon: "🕒",
+      icon: Clock3,
       color: "text-blue-700",
     },
     {
       title: "Password Resets",
       value: portalPasswordResets,
       note: "Must change password",
-      icon: "🔁",
+      icon: RotateCcw,
       color: "text-orange-700",
     },
   ];
@@ -996,28 +1029,28 @@ function StudentOSMissionControl({
       title: "Open Requests",
       value: openSupportRequests,
       note: "Student support queue",
-      icon: "📬",
+      icon: Inbox,
       color: "text-sky-700",
     },
     {
       title: "Pending Responses",
       value: pendingSupportResponses,
       note: "Waiting for counselor/admin",
-      icon: "⏳",
+      icon: Hourglass,
       color: "text-orange-700",
     },
     {
       title: "Escalated Requests",
       value: escalatedSupportRequests,
       note: "High priority support",
-      icon: "🚨",
+      icon: AlertTriangle,
       color: "text-red-700",
     },
     {
       title: "Resolved Requests",
       value: resolvedSupportRequests,
       note: "Closed support history",
-      icon: "✅",
+      icon: CheckCircle2,
       color: "text-emerald-700",
     },
   ];
@@ -1027,42 +1060,42 @@ function StudentOSMissionControl({
       title: "Execution Logs",
       value: safeExecutionLogs.length,
       note: "Executive automation history",
-      icon: "📜",
+      icon: ScrollText,
       color: "text-sky-700",
     },
     {
       title: "Success Rate",
       value: `${automationSuccessRate}%`,
       note: `${successfulExecutions} successful`,
-      icon: "✅",
+      icon: CheckCircle2,
       color: "text-emerald-700",
     },
     {
       title: "Failed Actions",
       value: failedExecutions,
       note: "Needs review",
-      icon: "🚨",
+      icon: AlertTriangle,
       color: "text-red-700",
     },
     {
       title: "Pending Approval",
       value: pendingApprovals + queuedAutomation,
       note: "Human approval queue",
-      icon: "⏳",
+      icon: Hourglass,
       color: "text-orange-700",
     },
     {
       title: "Human Approved",
       value: humanApprovedExecutions,
       note: "Approved execution flow",
-      icon: "🧑‍⚖️",
+      icon: Gavel,
       color: "text-violet-700",
     },
     {
       title: "Duplicates Blocked",
       value: duplicateBlockedExecutions,
       note: "Protection monitor",
-      icon: "🛡️",
+      icon: ShieldCheck,
       color: "text-blue-700",
     },
   ];
@@ -1072,28 +1105,28 @@ function StudentOSMissionControl({
       title: "University Plans",
       value: universityPlans,
       note: `${dreamUniversities}/${targetUniversities}/${safeUniversityCount} D/T/S`,
-      icon: "🏛️",
+      icon: Building2,
       color: "text-pink-700",
     },
     {
       title: "Document Readiness",
       value: `${percent(documentsCount - pendingDocuments, documentsCount)}%`,
       note: `${pendingDocuments} pending documents`,
-      icon: "📂",
+      icon: FolderOpen,
       color: "text-violet-700",
     },
     {
       title: "Task Health",
       value: `${percent(safeTasks.length - pendingTasks, safeTasks.length)}%`,
       note: `${overdueTasks} overdue tasks`,
-      icon: "✅",
+      icon: CheckCircle2,
       color: "text-emerald-700",
     },
     {
       title: "Follow-Up Pressure",
       value: overdueReminders,
       note: "Overdue reminders",
-      icon: "📞",
+      icon: PhoneCall,
       color: "text-orange-700",
     },
   ];
@@ -1251,41 +1284,51 @@ function StudentOSMissionControl({
         title="Mission Control Data Contract"
         subtitle="Checks merged sources before executive totals are calculated so duplicate connector rows do not inflate operations."
       >
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-6">
           <IntegrityMetric
+            className="xl:col-span-2"
             label="Duplicates Prevented"
             value={duplicateRecordsPrevented}
             note="Across merged receipt, portal, support and automation sources"
+            icon={ShieldCheck}
             tone={duplicateRecordsPrevented ? "warning" : "good"}
           />
           <IntegrityMetric
+            className="xl:col-span-2"
             label="Student Identity"
             value={totalStudents}
             note="Inquiry and appointment IDs remain type-scoped"
+            icon={UserRound}
             tone="navy"
           />
           <IntegrityMetric
+            className="xl:col-span-2"
             label="Revenue Basis"
             value={formatMoney(invoiceValue)}
             note="Actual loaded invoice values only"
+            icon={PoundSterling}
             tone="orange"
           />
           <IntegrityMetric
+            className="xl:col-span-3"
             label="Outstanding Basis"
             value={formatMoney(outstandingValue)}
             note="Explicit balance/outstanding fields preferred"
+            icon={WalletCards}
             tone={outstandingValue > 0 ? "warning" : "good"}
           />
           <IntegrityMetric
+            className="xl:col-span-3"
             label="Operating Score"
             value={`${operatingScore}%`}
             note="Average of available systems only"
+            icon={Target}
             tone="navy"
           />
         </div>
       </SectionShell>
 
-      <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 auto-rows-fr gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         {stats.map((stat, index) => (
           <MissionMetricCard
             key={stat.title}
@@ -1302,7 +1345,7 @@ function StudentOSMissionControl({
         title="Journey Pipeline"
         subtitle="Lead → Application → Offer → CAS → Visa progression"
       >
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {pipelineStages.map((stage, index) => (
             <motion.div
               key={stage.title}
@@ -1312,8 +1355,8 @@ function StudentOSMissionControl({
               className={`relative min-h-[180px] min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] ${stage.border || "border-[#94A3B8]"} ${stage.color} p-5 shadow-[0_8px_22px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(18,56,101,0.10)]`}
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white text-2xl shadow-[0_4px_12px_rgba(18,56,101,0.08)]">
-                  {stage.icon}
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white text-[#123865] shadow-[0_4px_12px_rgba(18,56,101,0.08)]">
+                  <MissionStageIcon icon={stage.icon} />
                 </div>
 
                 {index < pipelineStages.length - 1 && (
@@ -1347,7 +1390,7 @@ function StudentOSMissionControl({
             title="Executive Watchlist"
             subtitle="The pressure points leadership should act on first"
           >
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid auto-rows-fr gap-3 sm:grid-cols-2">
               {watchlist.map((item, index) => (
                 <CompactMetric key={item.title} item={item} index={index} />
               ))}
@@ -1426,7 +1469,7 @@ function StudentOSMissionControl({
             title="Revenue Collection & Exposure Analytics"
             subtitle="Month-to-date revenue, collection rate, receipt approval, and verified outstanding exposure"
           >
-            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid min-w-0 auto-rows-fr gap-4 sm:grid-cols-2">
               {revenueIntelligenceMetrics.map((item, index) => (
                 <CompactMetric key={item.title} item={item} index={index} />
               ))}
@@ -1556,12 +1599,12 @@ function StudentOSMissionControl({
         title="Mission Control Operating Pressure"
         subtitle="Read-only leadership pressure indicators. These cards do not execute actions by themselves."
       >
-        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <OperatingActionCard title="Alert Pressure" value={notificationAlerts.reduce((sum, item) => sum + Number(item.value || 0), 0)} note="Cross-system alert pressure" icon="🔔" />
-          <OperatingActionCard title="Revenue Exposure" value={formatMoney(outstandingValue)} note={`${unpaidInvoices} unpaid invoices`} icon="💷" />
-          <OperatingActionCard title="Portal Pressure" value={portalRiskScore} note={`${stalePortalAccounts} stale portal accounts`} icon="🔐" />
-          <OperatingActionCard title="Support Pressure" value={supportPressureScore} note={`${escalatedSupportRequests} escalated support cases`} icon="📬" />
-          <OperatingActionCard title="Automation Pressure" value={automationRiskScore} note={`${failedExecutions} failed executions`} icon="⚙️" />
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <OperatingActionCard title="Alert Pressure" value={notificationAlerts.reduce((sum, item) => sum + Number(item.value || 0), 0)} note="Cross-system alert pressure" icon={AlertTriangle} tone="orange" />
+          <OperatingActionCard title="Revenue Exposure" value={formatMoney(outstandingValue)} note={`${unpaidInvoices} unpaid invoices`} icon={PoundSterling} tone="green" />
+          <OperatingActionCard title="Portal Pressure" value={portalRiskScore} note={`${stalePortalAccounts} stale portal accounts`} icon={ShieldCheck} tone="blue" />
+          <OperatingActionCard title="Support Pressure" value={supportPressureScore} note={`${escalatedSupportRequests} escalated support cases`} icon={Inbox} tone="amber" />
+          <OperatingActionCard title="Automation Pressure" value={automationRiskScore} note={`${failedExecutions} failed executions`} icon={Settings2} tone="violet" />
         </div>
       </SectionShell>
 
@@ -1571,7 +1614,7 @@ function StudentOSMissionControl({
         title="Student OS Operating Map"
         subtitle="CRM-compatible health layer showing connected operating systems"
       >
-        <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {systemHealth.map((system, index) => (
             <motion.div
               key={system.title}
@@ -1618,101 +1661,57 @@ function StudentOSMissionControl({
 }
 
 
-function IntegrityMetric({ label, value, note, tone = "navy" }) {
-  const styles = {
-    good: "border-emerald-400 bg-emerald-50",
-    warning: "border-orange-400 bg-orange-50",
-    orange: "border-[#FF5A0A] bg-[#FF5A0A]",
-    navy: "border-[#123865] bg-[#123865]",
-  };
-
-  const dark = tone === "navy" || tone === "orange";
+function IntegrityMetric({
+  label,
+  value,
+  note,
+  tone = "navy",
+  icon: Icon,
+  className = "",
+}) {
+  const rawValue = String(value ?? 0);
+  const needsCompactValue = rawValue.length >= 7;
 
   return (
-    <div
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${styles[tone] || styles.navy}`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <p
-        className="text-[9px] font-black uppercase tracking-[0.1em]"
-        style={{ color: tone === "orange" ? "#FFFFFF" : dark ? "#FDBA74" : "#64748B" }}
-      >
-        {label}
-      </p>
-      <p
-        className="mt-2 break-words text-2xl font-black"
-        style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-      >
-        {value}
-      </p>
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{ color: dark ? "#F8FAFC" : "#64748B" }}
-      >
-        {note}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      surface="light"
+      label={label}
+      value={
+        <span
+          className={
+            needsCompactValue
+              ? "whitespace-nowrap text-[2rem] leading-none sm:text-[2.15rem]"
+              : "whitespace-nowrap"
+          }
+        >
+          {value}
+        </span>
+      }
+      detail={note}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+      className={`h-full ${className}`}
+    />
   );
 }
 
-function OperatingActionCard({ title, value, note, icon }) {
-  const styles = {
-    "Alert Pressure": {
-      card: "border-orange-400 bg-[#FFF7ED]",
-      value: "text-orange-700",
-      icon: "border-orange-200 bg-white text-orange-700",
-    },
-    "Revenue Exposure": {
-      card: "border-emerald-400 bg-[#F0FFF8]",
-      value: "text-emerald-700",
-      icon: "border-emerald-200 bg-white text-emerald-700",
-    },
-    "Portal Pressure": {
-      card: "border-blue-400 bg-[#F2F7FF]",
-      value: "text-blue-700",
-      icon: "border-blue-200 bg-white text-blue-700",
-    },
-    "Support Pressure": {
-      card: "border-amber-400 bg-[#FFF8EE]",
-      value: "text-amber-800",
-      icon: "border-amber-200 bg-white text-amber-700",
-    },
-    "Automation Pressure": {
-      card: "border-violet-400 bg-[#F8F5FF]",
-      value: "text-violet-700",
-      icon: "border-violet-200 bg-white text-violet-700",
-    },
-  };
-
-  const visual = styles[title] || styles["Portal Pressure"];
-
+function OperatingActionCard({
+  title,
+  value,
+  note,
+  icon: Icon,
+  tone = "blue",
+}) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24 }}
-      className={`group min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(18,56,101,0.09)] ${visual.card}`}
-    >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.14em] text-slate-500">
-            {title}
-          </p>
-
-          <p className={`mt-2 break-words text-3xl font-black leading-none ${visual.value}`}>
-            {value}
-          </p>
-        </div>
-
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 text-lg shadow-[0_4px_10px_rgba(18,56,101,0.06)] transition group-hover:-translate-y-0.5 ${visual.icon}`}>
-          {icon}
-        </div>
-      </div>
-
-      <p className="mt-3 break-words text-xs font-semibold leading-5 text-slate-600">
-        {note}
-      </p>
-    </motion.div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={title}
+      value={value}
+      detail={note}
+      icon={Icon}
+      tone={tone}
+    />
   );
 }
 
@@ -1754,32 +1753,6 @@ function SectionShell({ cardClass, eyebrow, title, subtitle, children }) {
 }
 
 function MissionMetricCard({ stat, index, cardClass }) {
-  const visual =
-    stat.color.includes("red")
-      ? {
-          borderColor: "#FB7185",
-          backgroundColor: "#FFF4F4",
-        }
-      : stat.color.includes("emerald")
-      ? {
-          borderColor: "#34D399",
-          backgroundColor: "#F0FFF8",
-        }
-      : stat.color.includes("violet")
-      ? {
-          borderColor: "#9B6CFF",
-          backgroundColor: "#F8F5FF",
-        }
-      : stat.color.includes("blue") || stat.color.includes("sky")
-      ? {
-          borderColor: "#60A5FA",
-          backgroundColor: "#F2F7FF",
-        }
-      : {
-          borderColor: "#F59E0B",
-          backgroundColor: "#FFF7ED",
-        };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1788,76 +1761,49 @@ function MissionMetricCard({ stat, index, cardClass }) {
         duration: 0.3,
         delay: index * 0.05,
       }}
-      className={`${cardClass} min-w-0 rounded-[1.4rem] border-[3px] p-5 shadow-[0_8px_22px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md`}
-      style={{
-        borderColor: visual.borderColor,
-        backgroundColor: visual.backgroundColor,
-      }}
+      className="min-w-0"
     >
-      <div className="flex min-w-0 items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="break-words text-[10px] font-black uppercase leading-4 tracking-[0.18em] text-[#5f7088]">
-            {stat.title}
-          </p>
-
-          <h3 className={`mt-2 break-words text-4xl font-black ${stat.color}`}>
-            {stat.value}
-          </h3>
-
-          <p className="mt-2 break-words text-xs font-semibold leading-5 text-[#52667f]">
-            {stat.note}
-          </p>
-        </div>
-
-        <div
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 bg-white text-2xl shadow-sm"
-          style={{ borderColor: `${visual.borderColor}55` }}
-        >
-          {stat.icon}
-        </div>
-      </div>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={stat.title}
+        value={stat.value}
+        detail={stat.note}
+        icon={stat.icon}
+        tone={stat.tone}
+      />
     </motion.div>
   );
 }
 
 function CompactMetric({ item, index }) {
+  const Icon = item.icon;
   const tone =
     item.color.includes("red")
-      ? "border-[#FB7185] bg-[#FFF4F4]"
+      ? "red"
       : item.color.includes("emerald") || item.color.includes("green")
-      ? "border-[#34D399] bg-[#F0FFF8]"
+      ? "green"
       : item.color.includes("violet") || item.color.includes("pink")
-      ? "border-[#9B6CFF] bg-[#F8F5FF]"
+      ? "violet"
       : item.color.includes("blue") || item.color.includes("sky")
-      ? "border-[#60A5FA] bg-[#F2F7FF]"
-      : "border-[#F59E0B] bg-[#FFF7ED]";
+      ? "blue"
+      : "orange";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${tone}`}
+      className="h-full min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="break-words text-[10px] font-black uppercase leading-4 tracking-[0.13em] text-[#65758b]">
-            {item.title}
-          </p>
-
-          <p className={`mt-2 text-3xl font-black ${item.color}`}>
-            {item.value}
-          </p>
-        </div>
-
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#D6E0EA] bg-white text-lg shadow-[0_3px_8px_rgba(15,35,63,0.06)]">
-          {item.icon}
-        </div>
-      </div>
-
-      <p className="mt-2 break-words text-xs font-semibold leading-5 text-[#566980]">
-        {item.note}
-      </p>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={item.title}
+        value={item.value}
+        detail={item.note}
+        icon={Icon}
+        tone={tone}
+        className="h-full"
+      />
     </motion.div>
   );
 }
@@ -1998,6 +1944,7 @@ function TrendGroup({ title, items = [], maxValue = 1, tone = "bg-[#FF5A0A]" }) 
 }
 
 function AlertMetric({ item, index }) {
+  const Icon = item.icon;
   const active = Number(item.value || 0) > 0;
 
   return (
@@ -2005,41 +1952,16 @@ function AlertMetric({ item, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
-      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-5 shadow-[0_7px_18px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${
-        active
-          ? "border-[#F59E0B] bg-[#FFF7ED]"
-          : "border-emerald-400 bg-[#F0FFF8]"
-      }`}
+      className="min-w-0"
     >
-      <div
-        className={`absolute inset-x-0 top-0 h-1 ${
-          active ? "bg-[#FF5A0A]" : "bg-emerald-500"
-        }`}
+      <ZaifanMetricCard
+        level="coBoss"
+        label={item.title}
+        value={item.value}
+        detail={`${item.note} · ${item.type} alert`}
+        icon={Icon}
+        tone={active ? "amber" : "green"}
       />
-
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#64748b]">
-            {item.title}
-          </p>
-
-          <p className={`mt-2 text-4xl font-black ${item.color}`}>
-            {item.value}
-          </p>
-        </div>
-
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white bg-white/80 text-2xl shadow-sm">
-          {item.icon}
-        </div>
-      </div>
-
-      <p className="mt-2 text-xs font-semibold text-[#586b82]">
-        {item.note}
-      </p>
-
-      <p className="mt-4 rounded-full border border-[#c9d5e2] bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#52667f]">
-        {item.type} alert
-      </p>
     </motion.div>
   );
 }
@@ -2050,6 +1972,79 @@ function EmptyState({ text }) {
       {text}
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good") ||
+    value.includes("complete")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("overdue") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple") || value.includes("pink")) return "violet";
+  if (value.includes("orange") || value.includes("gold") || value.includes("action")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default") ||
+    value.includes("cream")
+  ) return "slate";
+
+  return "navy";
+}
+
+
+function MissionStageIcon({ icon }) {
+  if (icon === null || icon === undefined) return null;
+
+  if (typeof icon === "string" || typeof icon === "number") {
+    return icon;
+  }
+
+  const Icon = icon;
+
+  return <Icon size={22} strokeWidth={2.3} />;
 }
 
 export default StudentOSMissionControl;

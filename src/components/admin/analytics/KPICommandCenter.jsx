@@ -46,6 +46,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const KPI_DEFINITIONS = [
   {
@@ -209,6 +210,51 @@ function targetStatus(progress) {
   };
 }
 
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
+}
+
 export default function KPICommandCenter({
   analytics = {},
   compact = false,
@@ -352,21 +398,7 @@ export default function KPICommandCenter({
 }
 
 function KpiSummary({ label, value, helper, tone = "blue", icon: Icon }) {
-  const tones = {
-    navy: "border-[#123865] bg-[#123865] text-white",
-    blue: "border-[#60A5FA] bg-[#F2F7FF] text-[#10233F]",
-    green: "border-[#34D399] bg-[#F0FFF8] text-[#10233F]",
-    amber: "border-[#F59E0B] bg-[#FFF8E8] text-[#10233F]",
-  };
-  return (
-    <article className={`min-h-[170px] rounded-[1.4rem] border-[3px] p-4 ${tones[tone]}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div><p className="text-[9px] font-black uppercase tracking-[0.11em] opacity-70">{label}</p><p className="mt-2 text-2xl font-black">{value}</p></div>
-        <Icon size={17} />
-      </div>
-      <p className="mt-4 text-xs font-semibold leading-5 opacity-80">{helper}</p>
-    </article>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function KpiPortfolioRow({ item }) {
@@ -400,113 +432,68 @@ function KPICard({ item }) {
   const Icon = item.icon;
   const StatusIcon = item.status.icon;
 
-  return (
-    <article
-      className={`overflow-hidden rounded-[1.45rem] border-[3px] shadow-[0_9px_24px_rgba(23,36,61,0.05)] ${toneClass(
-        item.tone
-      )}`}
-    >
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-              {item.group}
-            </p>
-            <h3 className="mt-1 text-sm font-black text-[#10233F]">
-              {item.label}
-            </h3>
-          </div>
-
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70 text-[#123865]">
-            <Icon size={17} />
+  const footer = (
+    <div className="space-y-3">
+      <div className="rounded-xl border-2 border-[#C9D7E6] bg-white/75 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
+            Target
+          </span>
+          <span className="text-xs font-black text-[#10233F]">
+            {hasValue(item.target) ? formatValue(item.target, item.format) : "Not configured"}
           </span>
         </div>
 
-        <p className="mt-4 break-words text-3xl font-black tracking-[-0.025em] text-[#10233F]">
-          {formatValue(item.value, item.format)}
-        </p>
-
-        <p className="mt-2 min-h-[40px] text-[10px] font-semibold leading-4 text-slate-600">
-          {item.meta?.description || item.description}
-        </p>
-
-        <div className="mt-4 rounded-xl border-2 border-[#C9D7E6] bg-white/75 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
-              Target
-            </span>
-            <span className="text-xs font-black text-[#10233F]">
-              {hasValue(item.target)
-                ? formatValue(item.target, item.format)
-                : "Not configured"}
-            </span>
-          </div>
-
-          {item.progress !== null ? (
-            <>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full rounded-full bg-[#FF5A0A]"
-                  style={{
-                    width: `${Math.min(100, item.progress)}%`,
-                  }}
-                />
-              </div>
-
-              <p className="mt-2 text-right text-[9px] font-black text-slate-600">
-                {item.progress}% of target
-              </p>
-            </>
-          ) : null}
-        </div>
+        {item.progress !== null ? (
+          <>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+              <div
+                className="h-full rounded-full bg-[#FF5A0A]"
+                style={{ width: `${Math.min(100, item.progress)}%` }}
+              />
+            </div>
+            <p className="mt-2 text-right text-[9px] font-black text-slate-600">
+              {item.progress}% of target
+            </p>
+          </>
+        ) : null}
       </div>
 
-      <div className="border-t-2 border-[#E1E8F0] bg-white/55 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <StatusIcon
-            size={14}
-            className={statusIconClass(item.status.tone)}
-          />
+      <div className="flex items-start gap-2 border-t-2 border-[#E1E8F0] pt-3">
+        <StatusIcon size={14} className={statusIconClass(item.status.tone)} />
+        <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-[0.07em] text-[#10233F]">
             {item.status.label}
           </p>
+          {(item.meta?.owner || item.meta?.period || item.meta?.source) ? (
+            <p className="mt-1 break-words text-[9px] font-semibold leading-4 text-slate-500">
+              {[
+                item.meta?.owner ? `Owner: ${item.meta.owner}` : "",
+                item.meta?.period ? `Period: ${item.meta.period}` : "",
+                item.meta?.source ? `Source: ${item.meta.source}` : "",
+              ].filter(Boolean).join(" · ")}
+            </p>
+          ) : null}
         </div>
-
-        {(item.meta?.owner || item.meta?.period || item.meta?.source) ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {item.meta?.owner ? (
-              <MetaChip label={`Owner: ${item.meta.owner}`} />
-            ) : null}
-            {item.meta?.period ? (
-              <MetaChip label={`Period: ${item.meta.period}`} />
-            ) : null}
-            {item.meta?.source ? (
-              <MetaChip label={`Source: ${item.meta.source}`} />
-            ) : null}
-          </div>
-        ) : null}
       </div>
-    </article>
+    </div>
+  );
+
+  return (
+    <ZaifanMetricCard
+      level="coBoss"
+      label={item.label}
+      value={formatValue(item.value, item.format)}
+      detail={[item.group, item.meta?.description || item.description].filter(Boolean).join(" · ")}
+      icon={Icon}
+      tone={toZaifanMetricTone(item.tone)}
+      footer={footer}
+    />
   );
 }
 
 function CompactKPI({ item }) {
-  return (
-    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
-      <p className="text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
-        {item.label}
-      </p>
-      <p className="mt-1 text-xl font-black text-[#10233F]">
-        {formatValue(item.value, item.format)}
-      </p>
-      <p className="mt-1 text-[9px] font-semibold text-slate-500">
-        Target:{" "}
-        {hasValue(item.target)
-          ? formatValue(item.target, item.format)
-          : "Not configured"}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={item.label} value={formatValue(item.value, item.format)} detail={`Target: ${hasValue(item.target) ? formatValue(item.target, item.format) : "Not configured"}`} tone={toZaifanMetricTone(item.tone || "navy")} />;
 }
 
 function ProgressRow({ item }) {
@@ -629,16 +616,7 @@ function HeaderChip({ icon: Icon, label }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function MetaChip({ label }) {

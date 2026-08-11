@@ -26,6 +26,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -931,53 +932,23 @@ function EscalationCard({
 }
 
 function EscalationStat({ label, value, tone }) {
-  const styles = {
-    red: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-    critical: "border-red-500 bg-red-100 text-red-900",
-    orange: "border-[#F97316] bg-[#FFF4E8] text-orange-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    navy: "border-[#123865] bg-[#123865] text-white",
-  };
-
   return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-5 shadow-[0_5px_16px_rgba(15,35,63,0.035)] ${
-        styles[tone] || styles.red
-      }`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] opacity-75">
-        {label}
-      </p>
-
-      <h3 className="mt-3 text-3xl font-black">{value}</h3>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      surface={tone === "navy" ? "navy" : "light"}
+      label={label}
+      value={value}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
 function DarkStat({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.14em] text-orange-100">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function InfoTile({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-slate-200 bg-white p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-xs font-black text-[#10233f]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function Feedback({ tone, message, onClose }) {
@@ -1032,6 +1003,66 @@ function EmptyState({ title, text, loading = false }) {
       </p>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good") ||
+    value.includes("complete")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("overdue") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple") || value.includes("pink")) return "violet";
+  if (value.includes("orange") || value.includes("gold") || value.includes("action")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default") ||
+    value.includes("cream")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default OverdueEscalationPanel;

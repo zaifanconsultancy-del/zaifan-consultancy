@@ -20,6 +20,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const LOG_LIMIT = 250;
 
@@ -734,34 +735,16 @@ function OrangeMetric({ label, value }) {
   );
 }
 
-function BoardMetric({
-  label,
-  value,
-  detail,
-  tone = "navy",
-  icon: Icon,
-}) {
+function BoardMetric({ label, value, detail, tone = "navy", icon: Icon }) {
   return (
-    <article className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${getToneStyle(tone)}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
-            {label}
-          </p>
-          <p className="mt-2 text-3xl font-black text-[#10233F]">
-            {value ?? 0}
-          </p>
-        </div>
-
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865]">
-          <Icon size={16} />
-        </span>
-      </div>
-
-      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1050,6 +1033,44 @@ function EmptyState({ title = "No data yet.", text = "" }) {
       {text ? <p className="mt-2 text-sm leading-6 text-[#7A8392]">{text}</p> : null}
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveAutomationAnalytics;

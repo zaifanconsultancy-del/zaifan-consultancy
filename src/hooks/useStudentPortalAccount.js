@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as studentPortalApi from "../lib/studentPortal";
 
 export default function useStudentPortalAccount({
@@ -28,6 +28,45 @@ export default function useStudentPortalAccount({
     resetPassword: "",
     forcePasswordChange: true,
   });
+
+  const normalizedWorkingStudent = useMemo(
+    () => ({
+      ...(student || {}),
+      ...(workingStudent || {}),
+      id: studentId || workingStudent?.id || student?.id,
+      student_id:
+        studentId ||
+        workingStudent?.student_id ||
+        student?.student_id,
+      student_type:
+        studentType ||
+        workingStudent?.student_type ||
+        workingStudent?.__leadType ||
+        student?.student_type ||
+        student?.__leadType ||
+        "inquiry",
+      person_id:
+        personId ||
+        workingStudent?.person_id ||
+        student?.person_id ||
+        null,
+      email:
+        portalAccountForm.email ||
+        studentEmail ||
+        workingStudent?.email ||
+        student?.email ||
+        "",
+    }),
+    [
+      personId,
+      portalAccountForm.email,
+      student,
+      studentEmail,
+      studentId,
+      studentType,
+      workingStudent,
+    ]
+  );
 
   const normalizePortalAccount = useCallback(
     (account = null) => {
@@ -98,10 +137,11 @@ export default function useStudentPortalAccount({
     try {
       const result =
         await studentPortalApi.fetchStudentPortalAccountForStudent({
-          ...workingStudent,
+          ...normalizedWorkingStudent,
           id: studentId,
-          student_type: studentType,
-          person_id: personId || workingStudent?.person_id || null,
+          student_id: studentId,
+          student_type: normalizedWorkingStudent.student_type,
+          person_id: normalizedWorkingStudent.person_id,
         });
 
       if (portalRequestRef.current !== requestId) return null;
@@ -110,10 +150,16 @@ export default function useStudentPortalAccount({
       const account = normalizePortalAccount(result?.account || null);
 
       setPortalAccount(account);
-      setPortalAccountForm((prev) => ({
-        ...prev,
-        email: account?.email || studentEmail || prev.email,
-      }));
+      setPortalAccountForm((prev) => {
+        const nextEmail = account?.email || studentEmail || prev.email;
+
+        if (prev.email === nextEmail) return prev;
+
+        return {
+          ...prev,
+          email: nextEmail,
+        };
+      });
 
       return account;
     } catch (error) {
@@ -139,11 +185,9 @@ export default function useStudentPortalAccount({
     }
   }, [
     normalizePortalAccount,
-    personId,
+    normalizedWorkingStudent,
     studentEmail,
     studentId,
-    studentType,
-    workingStudent,
   ]);
 
   const callPortalApi = useCallback(
@@ -154,61 +198,66 @@ export default function useStudentPortalAccount({
         throw new Error(`${functionName} is not exported from studentPortal.js.`);
       }
 
+      const password =
+        payload.password ||
+        payload.newPassword ||
+        portalAccountForm.resetPassword ||
+        portalAccountForm.temporaryPassword;
+
       const objectPayload = {
+        student: normalizedWorkingStudent,
         studentId,
         student_id: studentId,
-        studentType,
-        student_type: studentType,
-        personId,
-        person_id: personId || workingStudent?.person_id || null,
+        studentType: normalizedWorkingStudent.student_type,
+        student_type: normalizedWorkingStudent.student_type,
+        personId: normalizedWorkingStudent.person_id,
+        person_id: normalizedWorkingStudent.person_id,
         email: portalAccountForm.email || studentEmail,
-        password:
-          payload.password ||
-          portalAccountForm.resetPassword ||
+        password,
+        newPassword: password,
+        temporaryPassword:
+          payload.temporaryPassword ||
           portalAccountForm.temporaryPassword,
-        temporaryPassword: portalAccountForm.temporaryPassword,
-        resetPassword: portalAccountForm.resetPassword,
-        mustChangePassword: portalAccountForm.forcePasswordChange,
-        must_change_password: portalAccountForm.forcePasswordChange,
+        resetPassword:
+          payload.resetPassword ||
+          portalAccountForm.resetPassword,
+        mustChangePassword:
+          payload.mustChangePassword ??
+          portalAccountForm.forcePasswordChange,
+        must_change_password:
+          payload.must_change_password ??
+          portalAccountForm.forcePasswordChange,
+        isActive: payload.isActive ?? true,
+        is_active: payload.is_active ?? true,
+        accountId: payload.accountId || portalAccount?.id || null,
+        account_id: payload.account_id || portalAccount?.id || null,
         adminProfile,
         ...payload,
       };
 
-      const attempts = [
-        () => handler(objectPayload),
-        () => handler(studentId, studentType, objectPayload),
-        () =>
-          handler(
-            studentId,
-            studentType,
-            objectPayload.email,
-            objectPayload.password,
-            objectPayload.mustChangePassword
-          ),
-        () => handler(portalAccount?.id, objectPayload),
-      ];
+      const result = await handler(objectPayload);
 
-      let lastError = null;
-
-      for (const attempt of attempts) {
-        try {
-          return await attempt();
-        } catch (error) {
-          lastError = error;
-        }
+      if (!result) {
+        throw new Error(`${functionName} returned no result.`);
       }
 
-      throw lastError || new Error(`${functionName} failed.`);
+      if (result?.success === false || result?.error) {
+        throw new Error(
+          result?.error?.message ||
+          result?.message ||
+          `${functionName} failed.`
+        );
+      }
+
+      return result;
     },
     [
       adminProfile,
-      personId,
+      normalizedWorkingStudent,
       portalAccount?.id,
       portalAccountForm,
       studentEmail,
       studentId,
-      studentType,
-      workingStudent?.person_id,
     ]
   );
 
@@ -272,6 +321,7 @@ export default function useStudentPortalAccount({
           callPortalApi(apiMap[action], {
             email: emailToUse,
             password: passwordToUse,
+            newPassword: passwordToUse,
             temporaryPassword: passwordToUse,
             resetPassword: passwordToUse,
             isActive: action !== "deactivate",
@@ -292,15 +342,65 @@ export default function useStudentPortalAccount({
           20000
         );
 
-        const accountFromResult =
-          result?.account || result?.data || result;
+        if (!result || result?.success === false || result?.error) {
+          throw new Error(
+            result?.error?.message ||
+            result?.message ||
+            "Portal account action failed."
+          );
+        }
 
-        if (
-          accountFromResult &&
-          typeof accountFromResult === "object" &&
-          !Array.isArray(accountFromResult)
-        ) {
+        const accountFromResult =
+          result?.account ||
+          (result?.data &&
+          typeof result.data === "object" &&
+          !Array.isArray(result.data)
+            ? result.data
+            : null);
+
+        if (accountFromResult) {
           setPortalAccount(normalizePortalAccount(accountFromResult));
+        }
+
+        const confirmedAccount = await loadPortalAccount();
+
+        if (!confirmedAccount) {
+          throw new Error(
+            "The backend responded, but no portal account could be confirmed in the database."
+          );
+        }
+
+        let credentialEmailWarning = "";
+
+        if (action === "create" || action === "reset") {
+          try {
+            await studentPortalApi.sendPortalCredentials({
+              studentName:
+                normalizedWorkingStudent.full_name ||
+                normalizedWorkingStudent.student_name ||
+                normalizedWorkingStudent.name ||
+                normalizedWorkingStudent.first_name ||
+                "Student",
+              recipientEmail: emailToUse,
+              temporaryPassword: passwordToUse,
+              mustChangePassword: Boolean(
+                portalAccountForm.forcePasswordChange
+              ),
+              studentId,
+              studentType: normalizedWorkingStudent.student_type,
+              accountId:
+                confirmedAccount?.id ||
+                portalAccount?.id ||
+                accountFromResult?.id ||
+                null,
+              action,
+            });
+          } catch (emailError) {
+            console.error("Credential email failed:", emailError);
+            credentialEmailWarning =
+              emailError?.message ||
+              "The credential email could not be sent.";
+          }
         }
 
         if (typeof fireTimelineEvent === "function") {
@@ -314,22 +414,27 @@ export default function useStudentPortalAccount({
             request: null,
             metadata: {
               portal_account_id:
-                portalAccount?.id || accountFromResult?.id || null,
+                confirmedAccount?.id ||
+                portalAccount?.id ||
+                accountFromResult?.id ||
+                null,
               email: emailToUse,
-              person_id: personId || null,
+              person_id: normalizedWorkingStudent.person_id || null,
             },
           });
         }
 
-        await loadPortalAccount();
-
         setPortalAccountStatus({
-          type: "success",
+          type: credentialEmailWarning ? "warning" : "success",
           message:
             action === "create"
-              ? "Portal account created. Share the temporary password with the student."
+              ? credentialEmailWarning
+                ? `Portal account created and confirmed, but the credentials email failed: ${credentialEmailWarning}`
+                : "Portal account created, confirmed, and credentials emailed to the student."
               : action === "reset"
-              ? "Password reset completed. Student should use the new temporary password."
+              ? credentialEmailWarning
+                ? `Password reset completed, but the updated credentials email failed: ${credentialEmailWarning}`
+                : "Password reset completed and the new temporary password was emailed to the student."
               : action === "activate"
               ? "Portal account activated."
               : action === "deactivate"
@@ -359,7 +464,7 @@ export default function useStudentPortalAccount({
       fireTimelineEvent,
       loadPortalAccount,
       normalizePortalAccount,
-      personId,
+      normalizedWorkingStudent.person_id,
       portalAccount?.id,
       portalAccountForm,
       portalAccountSaving,

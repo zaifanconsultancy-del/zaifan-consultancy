@@ -15,6 +15,7 @@
 // - responsive, denser, clearer operational hierarchy
 
 import { motion, useReducedMotion } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   Brain,
@@ -188,29 +189,32 @@ function AiLeadIntelligenceFeed({
       )
     );
 
-    const assignedRate = allLeads.length
+    const hasLeadEvidence = allLeads.length > 0;
+
+    const assignedRate = hasLeadEvidence
       ? Math.round(
           ((allLeads.length - unassigned.length) /
             allLeads.length) *
             100
         )
-      : 0;
+      : null;
 
-    const progressionRate = allLeads.length
+    const progressionRate = hasLeadEvidence
       ? Math.round(
           (contactedOrProgressed.length /
             allLeads.length) *
             100
         )
-      : 0;
+      : null;
 
-    const attentionScore =
-      unassigned.length +
-      vipLeads.length +
-      highPriorityLeads.length +
-      staleLeads.length +
-      pendingAppointments.length +
-      unreachable.length;
+    const attentionScore = hasLeadEvidence
+      ? unassigned.length +
+        vipLeads.length +
+        highPriorityLeads.length +
+        staleLeads.length +
+        pendingAppointments.length +
+        unreachable.length
+      : null;
 
     const insights = [];
 
@@ -339,22 +343,24 @@ function AiLeadIntelligenceFeed({
       });
     }
 
-    insights.push({
-      id: "recommendation",
-      icon: Brain,
-      title: "Counselor Recommendation",
-      description: buildRecommendation({
-        vip: vipLeads.length,
-        high: highPriorityLeads.length,
-        unassigned: unassigned.length,
-        stale: staleLeads.length,
-        appointments: pendingAppointments.length,
-        unreachable: unreachable.length,
-      }),
-      tone: "navy",
-      severity: "recommendation",
-      value: null,
-    });
+    if (hasLeadEvidence) {
+      insights.push({
+        id: "recommendation",
+        icon: Brain,
+        title: "Counselor Recommendation",
+        description: buildRecommendation({
+          vip: vipLeads.length,
+          high: highPriorityLeads.length,
+          unassigned: unassigned.length,
+          stale: staleLeads.length,
+          appointments: pendingAppointments.length,
+          unreachable: unreachable.length,
+        }),
+        tone: "navy",
+        severity: "recommendation",
+        value: null,
+      });
+    }
 
     return {
       allLeads,
@@ -373,6 +379,7 @@ function AiLeadIntelligenceFeed({
       assignedRate,
       progressionRate,
       attentionScore,
+      hasLeadEvidence,
       insights,
     };
   }, [inquiries, appointments]);
@@ -382,12 +389,12 @@ function AiLeadIntelligenceFeed({
       initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
-      className="min-w-0 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-5 shadow-[0_20px_55px_rgba(18,56,101,.12)]"
+      className="min-w-0"
     >
       <div className="min-w-0 overflow-hidden rounded-[2rem] border-[3px] border-[#FF5A0A] bg-[#FFF8EF] shadow-[0_16px_42px_rgba(16,35,63,0.09)]">
-        <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.55fr)]">
+        <div className="grid min-w-0 xl:grid-cols-[minmax(0,1.7fr)_minmax(250px,0.3fr)]">
           <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
-            <div className="flex min-w-0 flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex min-w-0 flex-col gap-5">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <CommandPill icon={Radar}>CRM Intelligence</CommandPill>
@@ -405,10 +412,24 @@ function AiLeadIntelligenceFeed({
                 </p>
               </div>
 
-              <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[430px]">
+              <div className="grid w-full max-w-4xl grid-cols-2 gap-2 sm:grid-cols-4">
                 <HeroMetric label="Total Leads" value={intelligence.allLeads.length} />
-                <HeroMetric label="Assigned" value={`${intelligence.assignedRate}%`} />
-                <HeroMetric label="Progressed" value={`${intelligence.progressionRate}%`} />
+                <HeroMetric
+                  label="Assigned"
+                  value={
+                    intelligence.assignedRate === null
+                      ? "N/A"
+                      : `${intelligence.assignedRate}%`
+                  }
+                />
+                <HeroMetric
+                  label="Progressed"
+                  value={
+                    intelligence.progressionRate === null
+                      ? "N/A"
+                      : `${intelligence.progressionRate}%`
+                  }
+                />
                 <HeroMetric label="Signals" value={intelligence.insights.length} />
               </div>
             </div>
@@ -425,7 +446,7 @@ function AiLeadIntelligenceFeed({
                 </div>
                 <div className="mt-3 flex items-end gap-3">
                   <p className="text-5xl font-black leading-none text-white sm:text-6xl">
-                    {intelligence.attentionScore}
+                    {intelligence.attentionScore === null ? "N/A" : intelligence.attentionScore}
                   </p>
                   <p className="max-w-[150px] pb-1 text-xs font-black leading-5 text-white/90">
                     combined operating exceptions
@@ -445,7 +466,7 @@ function AiLeadIntelligenceFeed({
         </div>
 
         <div className="min-w-0 space-y-5 p-4 sm:p-5 lg:p-6">
-          <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid min-w-0 auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <SignalSummary
               icon={UserCheck}
               label="Open Pool"
@@ -490,23 +511,37 @@ function AiLeadIntelligenceFeed({
                 </h4>
               </div>
 
-              <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white">
+              <div className="inline-flex w-fit shrink-0 items-center gap-2 text-[9px] font-black uppercase tracking-[0.12em] text-white">
                 <CircleSignal />
-                {intelligence.insights.length} active signals
-              </span>
+                <span>{intelligence.insights.length} active signals</span>
+              </div>
             </div>
 
             <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
-              <div className="grid min-w-0 gap-3 xl:grid-cols-2">
-                {intelligence.insights.map((item, index) => (
-                  <InsightRow
-                    key={item.id}
-                    item={item}
-                    index={index}
-                    shouldReduceMotion={shouldReduceMotion}
-                  />
-                ))}
-              </div>
+              {intelligence.insights.length ? (
+                <div className="grid min-w-0 auto-rows-fr gap-3 xl:grid-cols-2">
+                  {intelligence.insights.map((item, index) => (
+                    <InsightRow
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      shouldReduceMotion={shouldReduceMotion}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-[1.35rem] border-[3px] border-dashed border-[#C9D7E6] bg-white p-6 text-center">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]">
+                    <UsersRound size={18} />
+                  </div>
+                  <p className="mt-3 font-black text-[#10233F]">
+                    No lead intelligence to assess yet
+                  </p>
+                  <p className="mx-auto mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#60728A]">
+                    Lead counts can remain zero, but assignment, progression and attention pressure are not assessed until inquiry or appointment records exist.
+                  </p>
+                </div>
+              )}
             </div>
           </section>
         </div>
@@ -525,99 +560,107 @@ function CommandPill({ icon: Icon, children }) {
 }
 
 function HeroMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-white/25 bg-white/10 px-3 py-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.11em] text-white/75">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function PressureMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-white/30 bg-white/10 px-4 py-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.11em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function CircleSignal() {
   return <span className="h-2 w-2 rounded-full bg-orange-300 shadow-[0_0_0_4px_rgba(255,255,255,0.08)]" />;
 }
 
-function InsightRow({ item, index, shouldReduceMotion }) {
+function InsightRow({
+  item,
+  index,
+  shouldReduceMotion,
+}) {
   const Icon = item.icon;
   const tone = getTone(item.tone);
   const isNavy = item.tone === "navy";
+  const hasValue =
+    item.value !== null &&
+    item.value !== undefined;
 
   return (
     <motion.article
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+      initial={
+        shouldReduceMotion
+          ? false
+          : { opacity: 0, y: 8 }
+      }
       animate={{ opacity: 1, y: 0 }}
       transition={{
         duration: shouldReduceMotion ? 0 : 0.22,
-        delay: shouldReduceMotion ? 0 : Math.min(index * 0.025, 0.12),
+        delay: shouldReduceMotion
+          ? 0
+          : Math.min(index * 0.025, 0.12),
       }}
-      className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] shadow-[0_7px_20px_rgba(16,35,63,0.045)] ${tone.card}`}
+      className={`h-full min-w-0 rounded-[1.45rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(16,35,63,0.05)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_11px_26px_rgba(16,35,63,0.09)] sm:p-5 ${tone.card}`}
     >
-      <div className={`h-1.5 ${tone.bar}`} />
-      <div className="min-w-0 p-4 sm:p-5">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 ${tone.icon}`}>
+      <div className="flex h-full min-w-0 items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-[0_3px_8px_rgba(18,56,101,0.05)] ${tone.icon}`}
+          >
             <Icon size={18} />
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
-              <h4 className={`min-w-0 font-black ${isNavy ? "text-white" : "text-[#10233F]"}`}>
-                {item.title}
-              </h4>
+            <h4
+              className={`break-words text-base font-black leading-6 ${
+                isNavy
+                  ? "text-white"
+                  : "text-[#10233F]"
+              }`}
+            >
+              {item.title}
+            </h4>
 
-              {item.value !== null && item.value !== undefined ? (
-                <span className={`shrink-0 rounded-full border-2 px-2.5 py-1 text-[9px] font-black ${tone.badge}`}>
-                  {item.value}
-                </span>
-              ) : null}
-            </div>
-
-            <p className={`mt-1.5 text-sm font-semibold leading-6 ${isNavy ? "text-white/85" : "text-slate-700"}`}>
+            <p
+              className={`mt-1.5 text-sm font-semibold leading-6 ${
+                isNavy
+                  ? "text-white/85"
+                  : "text-[#52677F]"
+              }`}
+            >
               {item.description}
             </p>
           </div>
         </div>
+
+        {hasValue ? (
+          <div className="shrink-0 text-right">
+            <p
+              className={`text-3xl font-black leading-none ${tone.value}`}
+            >
+              {item.value}
+            </p>
+          </div>
+        ) : null}
       </div>
     </motion.article>
   );
 }
 
-function SignalSummary({ icon: Icon, label, value, detail, tone = "blue" }) {
-  const config = getLightTone(tone);
-
+function SignalSummary({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone = "blue",
+}) {
   return (
-    <div className={`min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] shadow-[0_7px_20px_rgba(16,35,63,0.04)] ${config.card}`}>
-      <div className={`h-1.5 ${config.bar}`} />
-      <div className="p-4">
-        <div className="flex min-w-0 items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
-              {label}
-            </p>
-            <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
-          </div>
-
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 ${config.icon}`}>
-            <Icon size={18} />
-          </div>
-        </div>
-
-        <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">{detail}</p>
-      </div>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      icon={Icon}
+      tone={tone}
+      className="h-full"
+    />
   );
 }
 
@@ -625,39 +668,33 @@ function getTone(tone) {
   const tones = {
     orange: {
       card: "border-orange-400 bg-[#FFF7ED]",
-      bar: "bg-[#FF5A0A]",
       icon: "border-orange-300 bg-white text-orange-700",
-      badge: "border-orange-300 bg-white text-orange-800",
+      value: "text-[#C2410C]",
     },
     red: {
       card: "border-red-400 bg-[#FFF5F5]",
-      bar: "bg-red-500",
       icon: "border-red-300 bg-white text-red-700",
-      badge: "border-red-300 bg-white text-red-800",
+      value: "text-[#C8102E]",
     },
     blue: {
       card: "border-blue-400 bg-[#F3F8FF]",
-      bar: "bg-blue-500",
       icon: "border-blue-300 bg-white text-blue-700",
-      badge: "border-blue-300 bg-white text-blue-800",
+      value: "text-[#0B5EAA]",
     },
     amber: {
       card: "border-amber-400 bg-[#FFFBEB]",
-      bar: "bg-amber-500",
       icon: "border-amber-300 bg-white text-amber-800",
-      badge: "border-amber-300 bg-white text-amber-900",
+      value: "text-[#B45309]",
     },
     green: {
       card: "border-emerald-400 bg-[#F1FCF7]",
-      bar: "bg-emerald-500",
       icon: "border-emerald-300 bg-white text-emerald-700",
-      badge: "border-emerald-300 bg-white text-emerald-800",
+      value: "text-[#0F8A64]",
     },
     navy: {
       card: "border-[#123865] bg-[#123865]",
-      bar: "bg-[#FF5A0A]",
-      icon: "border-white/25 bg-white/10 text-white",
-      badge: "border-white/25 bg-white/10 text-white",
+      icon: "border-white/30 bg-white/10 text-white",
+      value: "text-white",
     },
   };
 

@@ -67,6 +67,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const TREND_DEFINITIONS = [
   {
@@ -236,6 +237,51 @@ function resolveTitle(item, fallback) {
 function resolveDetail(item, fallback) {
   if (typeof item === "string") return fallback;
   return item?.detail || item?.description || item?.message || fallback;
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function TrendAnalysisPanel({
@@ -869,24 +915,7 @@ function SignalWorkspace({
 }
 
 function GovernanceCard({ icon: Icon, label, value, detail }) {
-  return (
-    <article className="rounded-xl border-[3px] border-[#C9D7E6] bg-[#FFFDF8] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-1 text-lg font-black text-[#10233F]">{value}</p>
-        </div>
-
-        <Icon size={17} className="text-[#123865]" />
-      </div>
-
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-    </article>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={detail} icon={Icon} tone="navy" />;
 }
 
 function CompactTrend({ item }) {
@@ -951,14 +980,13 @@ function HeaderChip({ icon: Icon, label }) {
 
 function DarkMetric({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {number(value).toLocaleString("en-GB")}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      surface="navy"
+      label={label}
+      value={number(value).toLocaleString("en-GB")}
+      tone="navy"
+    />
   );
 }
 

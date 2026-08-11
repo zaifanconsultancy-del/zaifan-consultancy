@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const GBP = new Intl.NumberFormat("en-GB", {
   style: "currency",
@@ -135,39 +136,7 @@ function getCampaignState(campaign) {
 }
 
 function Stat({ label, value, helper, compact = false }) {
-  return (
-    <div
-      className={`min-w-0 rounded-xl border-2 border-[#E1E8F0] bg-[#FFF8EF] ${
-        compact ? "px-2.5 py-2.5" : "px-3 py-3"
-      }`}
-    >
-      <p
-        className={`font-black uppercase text-slate-500 ${
-          compact
-            ? "text-[8px] tracking-[0.12em]"
-            : "text-[10px] tracking-[0.18em]"
-        }`}
-      >
-        {label}
-      </p>
-      <p
-        className={`mt-1 font-black text-[#10233F] ${
-          compact ? "text-base" : "text-lg"
-        }`}
-      >
-        {value}
-      </p>
-      {helper ? (
-        <p
-          className={`mt-1 leading-4 text-slate-500 ${
-            compact ? "text-[10px]" : "text-[11px]"
-          }`}
-        >
-          {helper}
-        </p>
-      ) : null}
-    </div>
-  );
+  return <ZaifanMetricCard level={compact ? "baby" : "coBoss"} label={label} value={value} detail={helper} tone="navy" />;
 }
 
 function CompactCampaignRow({ campaign }) {
@@ -366,6 +335,51 @@ function CampaignRow({ campaign, compact }) {
       </div>
     </article>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function CampaignPerformancePanel({ marketing = {}, compact = false }) {

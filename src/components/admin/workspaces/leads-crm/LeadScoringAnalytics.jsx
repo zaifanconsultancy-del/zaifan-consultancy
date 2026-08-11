@@ -15,6 +15,7 @@
 // - no fake AI claims, no backend writes, no schema assumptions
 
 import { motion, useReducedMotion } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   Activity,
   BarChart3,
@@ -496,82 +497,8 @@ function LeadScoringAnalytics({
 }
 
 
-function PartnerScoreMetric({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  tone = "blue",
-  badge = "",
-}) {
-  const tones = {
-    navy: "border-[#123865] bg-[#123865]",
-    blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-    amber: "border-[#F59E0B] bg-[#FFF8E8]",
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-  };
-
-  const dark = tone === "navy";
-
-  return (
-    <article
-      className={`flex min-w-0 h-full flex-col justify-between rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(18,56,101,0.05)] ${
-        tones[tone] || tones.blue
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
-
-        <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
-            dark
-              ? "border-white/20 bg-white/10 text-orange-200"
-              : "border-[#123865]/15 bg-white text-[#123865]"
-          }`}
-        >
-          <Icon size={16} />
-        </div>
-      </div>
-
-      <div>
-        <p
-          className={`mt-4 text-xs font-semibold leading-5 ${
-            dark ? "text-slate-200" : "text-slate-600"
-          }`}
-        >
-          {helper}
-        </p>
-
-        {badge ? (
-          <span
-            className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-              dark
-                ? "border-white/20 bg-white/10 text-white"
-                : "border-[#C9D7E6] bg-white text-slate-600"
-            }`}
-          >
-            {badge}
-          </span>
-        ) : null}
-      </div>
-    </article>
-  );
+function PartnerScoreMetric({ label, value, helper, icon: Icon, tone = "blue", badge = "" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={[helper, badge].filter(Boolean).join(" · ")} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function LeadPortfolioRow({ lead, index, reduceMotion }) {
@@ -691,166 +618,23 @@ function LeadIntegrityCard({
 }
 
 function HeroMetric({ label, value }) {
-  return (
-    <div
-      className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3"
-      style={{ color: "#FFFFFF" }}
-    >
-      <p
-        className="text-[8px] font-black uppercase tracking-[0.09em]"
-        style={{ color: "#F8FAFC" }}
-      >
-        {label}
-      </p>
-      <p
-        className="mt-1 text-xl font-black"
-        style={{ color: "#FFFFFF" }}
-      >
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function ScoreStat({ label, value, tone, helper, icon: Icon }) {
-  const styles = {
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-    orange: "border-[#F97316] bg-[#FFF4E8]",
-    gold: "border-[#F59E0B] bg-[#FFF7ED]",
-    blue: "border-[#60A5FA] bg-[#F2F7FF]",
-  };
-
-  const iconTone = {
-    red: "text-red-700",
-    orange: "text-orange-700",
-    gold: "text-orange-700",
-    blue: "text-blue-700",
-  };
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.05)] ${
-        styles[tone] || styles.orange
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
-            {label}
-          </p>
-          <h3 className="mt-2 text-3xl font-black text-[#10233f]">{value}</h3>
-          <p className="mt-1 text-xs font-semibold text-slate-500">{helper}</p>
-        </div>
-
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white bg-white">
-          <Icon size={17} className={iconTone[tone] || "text-orange-700"} />
-        </div>
-      </div>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
-function OperationalCard({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  tone = "default",
-}) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "good"
-      ? "border-[#34D399] bg-[#F0FFF8]"
-      : tone === "warning"
-      ? "border-[#F59E0B] bg-[#FFF7ED]"
-      : tone === "orange"
-      ? "border-[#F97316] bg-[#FFF4E8]"
-      : tone === "navy"
-      ? "border-[#173F6B] bg-[#173F6B]"
-      : "border-[#C9D7E6] bg-[#FFFDF8]";
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.05)] ${style}`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{ color: dark ? "#FDBA74" : "#64748B" }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-2xl font-black"
-            style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={18}
-          style={{ color: dark ? "#FDBA74" : "#C2410C" }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{ color: dark ? "#F8FAFC" : "#64748B" }}
-      >
-        {helper}
-      </p>
-    </div>
-  );
+function OperationalCard({ label, value, helper, icon: Icon, tone = "default" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
-function LeadDetailMetric({
-  label,
-  value,
-  tone = "navy",
-}) {
-  const styles = {
-    navy: "border-[#173F6B] bg-[#173F6B] text-white",
-    orange: "border-[#F97316] bg-[#FFF4E8] text-orange-800",
-    warning: "border-[#F59E0B] bg-[#FFF7ED] text-amber-800",
-    danger: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
-    good: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-  };
-
-  const dark = tone === "navy";
-
-  return (
-    <div className={`min-w-0 rounded-xl border-2 p-3 ${styles[tone] || styles.navy}`}>
-      <p className={`text-[8px] font-black uppercase tracking-[0.06em] ${
-        dark ? "text-orange-300" : "opacity-70"
-      }`}>
-        {label}
-      </p>
-      <p className={`mt-1 break-words text-sm font-black leading-5 ${
-        dark ? "text-white" : ""
-      }`}>
-        {value ?? "-"}
-      </p>
-    </div>
-  );
+function LeadDetailMetric({ label, value, tone = "navy" }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function MiniMetric({ label, value, tone }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 xl:hidden">
-        {label}
-      </p>
-      <p className={`mt-1 truncate text-sm font-black xl:mt-0 ${tone}`}>
-        {value ?? "-"}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function normalizeTone(tone = "") {
@@ -878,6 +662,63 @@ function normalizeTone(tone = "") {
   }
 
   return "text-[#10233f]";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default LeadScoringAnalytics;

@@ -39,6 +39,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   motion,
   useReducedMotion,
@@ -976,38 +977,12 @@ function HeaderBadge({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-base font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 export default EmailWorkspace;

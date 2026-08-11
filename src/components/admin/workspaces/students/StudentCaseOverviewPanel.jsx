@@ -15,6 +15,7 @@ import {
   UsersRound,
   WalletCards,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 // StudentCaseOverviewPanel PARTNER OS EXTREME V2 — Refined Counselor Control
 function StudentCaseOverviewPanel({
@@ -517,7 +518,7 @@ const cleanTaskStatus = (value = "") =>
                       </div>
                     </section>
 
-                    <section className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                    <section className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {commandCards.map((card) => {
                         const Icon = card.icon;
 
@@ -1111,27 +1112,56 @@ const cleanTaskStatus = (value = "") =>
 
 
 function CommandHeroStat({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-sm font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function CommandOrangeStat({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-sm font-black capitalize text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default StudentCaseOverviewPanel;

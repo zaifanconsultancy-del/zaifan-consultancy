@@ -35,6 +35,7 @@ import {
   motion,
   useReducedMotion,
 } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   Bell,
@@ -701,21 +702,8 @@ function NotificationRow({
   );
 }
 
-function HeaderMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-2.5 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function HeaderMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function AllClearState() {

@@ -52,6 +52,7 @@ import {
   useState,
 } from "react";
 import { generateExecutiveScoresFromDatabase } from "../../../../lib/executivePortfolioGenerator";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const GENERATOR_TIMEOUT_MS = 30000;
 const REFRESH_TIMEOUT_MS = 12000;
@@ -881,7 +882,7 @@ function ExecutiveScoreGeneratorPanel({
               icon={CircleGauge}
             />
 
-            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <ResultCard
                 label="Students Scanned"
                 value={total}
@@ -950,7 +951,7 @@ function ExecutiveScoreGeneratorPanel({
               />
             </div>
 
-            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <ResultCard
                 label="Critical Risk"
                 value={number(
@@ -1009,7 +1010,7 @@ function ExecutiveScoreGeneratorPanel({
               />
             </div>
 
-            <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <ResultCard
                 label="Verified Outcomes"
                 value={
@@ -1089,7 +1090,7 @@ function ExecutiveScoreGeneratorPanel({
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                 <MiniJourney
                   label="Not Started"
                   value={
@@ -1342,21 +1343,8 @@ function HeaderChip({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-base font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function SectionHeader({
@@ -1433,28 +1421,14 @@ function ResultCard({
   tone = "default",
   icon: Icon = ActivityFallback,
 }) {
-  const style =
-    getToneStyle(tone);
-
   return (
-    <div
-      className={`rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(23,36,61,0.04)] ${style}`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
-          {label}
-        </p>
-
-        <Icon
-          size={15}
-          className="text-[#B84F0E]"
-        />
-      </div>
-
-      <p className="mt-3 break-words text-3xl font-black text-[#10233F]">
-        {value ?? 0}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1473,21 +1447,13 @@ function MiniJourney({
   value,
   tone = "default",
 }) {
-  const style =
-    getToneStyle(tone);
-
   return (
-    <div
-      className={`rounded-xl border-[3px] p-4 shadow-[0_7px_18px_rgba(23,36,61,0.04)] ${style}`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.09em] text-slate-600">
-        {label}
-      </p>
-
-      <p className="mt-2 text-2xl font-black text-[#10233F]">
-        {value ?? 0}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? 0}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1668,26 +1634,14 @@ function SavedScoreCard({
   );
 }
 
-function SmallMetric({
-  label,
-  value,
-  tone = "default",
-}) {
-  const style =
-    getToneStyle(tone);
-
+function SmallMetric({ label, value, tone = "navy" }) {
   return (
-    <div
-      className={`rounded-xl border-2 px-3 py-2 ${style}`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 font-black text-[#10233F]">
-        {value ?? 0}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? "—"}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1730,6 +1684,44 @@ function getToneStyle(
   }
 
   return "border-[#C9D7E6] bg-white text-slate-700";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveScoreGeneratorPanel;

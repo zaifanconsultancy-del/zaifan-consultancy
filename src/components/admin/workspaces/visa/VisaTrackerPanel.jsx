@@ -48,6 +48,7 @@ import {
   prepareStudentNotification,
   sendPreparedStudentNotification,
 } from "../../../../services/studentNotificationService";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 20000;
 
@@ -1718,7 +1719,7 @@ function VisaTrackerPanel({
               of truth for readiness, appointments, finance, risk and decisions.
             </p>
 
-            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               <HeroMetric label="Readiness" value={`${readiness}%`} />
               <HeroMetric label="Missing" value={requirementStats.missing} />
               <HeroMetric label="Review" value={requirementStats.review} />
@@ -3154,71 +3155,16 @@ function Feedback({ tone, onClose, children }) {
 }
 
 function HeroMetric({ label, value }) {
-  return (
-    <div className="flex min-w-0 flex-col rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="min-w-0 break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 flex min-h-[2.5rem] min-w-0 items-center whitespace-normal break-words text-[clamp(0.95rem,1.15vw,1.25rem)] font-black leading-[1.08] text-white [overflow-wrap:anywhere]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-[#C9D7E6] bg-white text-[#10233F]",
-    orange: "border-orange-400 bg-[#FFF4E8] text-orange-800",
-    green: "border-emerald-400 bg-emerald-50 text-emerald-800",
-    blue: "border-blue-400 bg-blue-50 text-blue-800",
-    red: "border-red-400 bg-red-50 text-red-800",
-  };
-
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-white/70">
-        <Icon size={16} />
-      </span>
-
-      <div className="min-w-0">
-        <p className="truncate text-sm font-black">{value}</p>
-        <p className="mt-1 text-[9px] font-black uppercase tracking-[0.1em] opacity-75">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CompactStat({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F]",
-    red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-  };
-
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <Icon size={15} />
-      <div className="min-w-0">
-        <p className="truncate text-xs font-black">{value}</p>
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function StatusBadge({ value, compact = false }) {
@@ -3267,6 +3213,51 @@ function RequirementStatus({ value }) {
       {pretty(value || "missing")}
     </span>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default VisaTrackerPanel;

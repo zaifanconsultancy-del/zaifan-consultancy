@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function normalize(value = "") {
   return String(value || "").toLowerCase().trim();
@@ -565,49 +566,26 @@ function SummaryPill({ label, value, tone = "navy" }) {
   );
 }
 
-function StatCard({
-  item,
-  index,
-  reduceMotion,
-}) {
-  const Icon = item.icon;
-  const style = getToneStyle(item.tone);
-  const dark = item.tone === "navy";
-
+function StatCard({ item, index, reduceMotion }) {
   return (
-    <motion.article
-      initial={
-        reduceMotion
-          ? false
-          : { opacity: 0, y: 10 }
-      }
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
         duration: reduceMotion ? 0 : 0.25,
         delay: reduceMotion ? 0 : index * 0.035,
       }}
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
+      className="min-w-0"
     >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className={`break-words text-[9px] font-black uppercase leading-4 tracking-[0.08em] ${dark ? "text-orange-200" : "text-slate-600"}`}>
-            {item.label}
-          </p>
-
-          <p className={`mt-2 text-3xl font-black ${dark ? "text-white" : "text-[#10233F]"}`}>
-            {item.value}
-          </p>
-        </div>
-
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${dark ? "border-white/20 bg-white/10 text-white" : "border-current/25 bg-white"}`}>
-          <Icon size={17} />
-        </div>
-      </div>
-
-      <p className={`mt-3 break-words text-xs font-semibold leading-5 ${dark ? "text-slate-200" : "text-slate-600"}`}>
-        {item.helper}
-      </p>
-    </motion.article>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={item.label}
+        value={item.value}
+        detail={item.helper}
+        icon={item.icon}
+        tone={toZaifanMetricTone(item.tone)}
+      />
+    </motion.div>
   );
 }
 
@@ -681,31 +659,7 @@ function HealthSummary({
   icon: Icon,
   tone = "orange",
 }) {
-  const style = getToneStyle(tone);
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] ${style}`}
-    >
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.08em] text-slate-600">
-          {label}
-        </p>
-
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-white text-[#123865]">
-          <Icon size={16} />
-        </div>
-      </div>
-
-      <p className="mt-2 text-3xl font-black text-[#10233F]">
-        {value}
-      </p>
-
-      <p className="mt-2 break-words text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={detail} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function EmptyState({ trackedRecords }) {
@@ -755,6 +709,44 @@ function getToneStyle(tone = "") {
   }
 
   return "border-[#C9D7E6] bg-[#FFFDF8]";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default FollowUpPerformancePanel;

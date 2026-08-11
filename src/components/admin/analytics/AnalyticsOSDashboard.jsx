@@ -48,6 +48,7 @@ import BusinessIntelligencePanel from "./BusinessIntelligencePanel";
 import ForecastEnginePanel from "./ForecastEnginePanel";
 import TrendAnalysisPanel from "./TrendAnalysisPanel";
 import ExecutiveReportingPanel from "./ExecutiveReportingPanel";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const safeArray = (value) =>
   Array.isArray(value)
@@ -193,56 +194,65 @@ export function buildAnalyticsOSData(
 function MetricCard({
   label,
   value,
-  detail,
-  icon: Icon,
-  tone = "navy",
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
+  badge = "",
+  source = "",
+  className = "",
 }) {
-  const toneClass =
-    tone === "orange"
-      ? "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]"
-      : tone === "green"
-      ? "border-[#34D399] bg-[#F0FFF8] text-emerald-700"
-      : tone === "blue"
-      ? "border-[#60A5FA] bg-[#F2F7FF] text-blue-700"
-      : tone === "red"
-      ? "border-red-400 bg-red-50 text-red-800"
-      : "border-[#C9D7E6] bg-[#FFFDF8] text-[#123865]";
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.5rem] border-[3px] p-4 shadow-[0_10px_28px_rgba(23,36,61,0.06)] ${toneClass}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233F]">
-            {label}
-          </p>
-
-          <p className="mt-3 break-words text-3xl font-black leading-none tracking-[-0.025em] text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/75">
-          {Icon ? (
-            <Icon size={17} />
-          ) : null}
-        </span>
-      </div>
-
-      {detail ? (
-        <p className="mt-3 min-h-[40px] text-xs font-semibold leading-5 text-slate-600">
-          {detail}
-        </p>
-      ) : null}
-
-      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-        Read-only analytics signal
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function AnalyticsGuideCard({
@@ -808,38 +818,12 @@ function HeaderChip({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function SnapshotRow({

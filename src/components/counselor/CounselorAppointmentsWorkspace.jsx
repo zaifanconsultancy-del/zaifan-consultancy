@@ -48,12 +48,12 @@ const OUTCOME_TEMPLATES = [
   {
     key: "visa",
     label: "Visa Next",
-    text: "Appointment completed. Student was guided on CAS/visa readiness, financial documents, and visa timeline requirements.",
+    text: "Appointment completed. Student was guided on pre-enrolment/visa readiness, financial documents, and visa timeline requirements.",
   },
 ];
 
 const INPUT_CLASS =
-  "w-full rounded-2xl border-2 border-[#d8b892] bg-[#fffdf8] px-4 py-3 text-sm font-semibold text-[#102b4c] outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100";
+  "w-full min-w-0 rounded-xl border-2 border-[#AFC0D0] bg-white px-4 py-3 text-sm font-bold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 function safeString(value, fallback = "") {
   if (value === null || value === undefined) return fallback;
@@ -215,7 +215,7 @@ function statusTone(status = "") {
     return "border-orange-300 bg-orange-50 text-orange-700";
   }
 
-  return "border-[#b7c5d1] bg-[#f3f7fb] text-[#173f69]";
+  return "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]";
 }
 
 function channelTone(channel = "") {
@@ -224,7 +224,7 @@ function channelTone(channel = "") {
   if (value.includes("call"))
     return "border-emerald-300 bg-emerald-50 text-emerald-700";
   if (value.includes("zoom") || value.includes("meet") || value.includes("meeting")) {
-    return "border-[#173f69] bg-[#173f69] text-white";
+    return "border-[#123865] bg-[#123865] text-white";
   }
   if (value.includes("office") || value.includes("in person")) {
     return "border-amber-300 bg-amber-50 text-amber-700";
@@ -265,7 +265,7 @@ function StatusToast({ status, onClear }) {
 
 function AppointmentStat({ label, value, helper, tone = "navy" }) {
   const tones = {
-    navy: "border-[#173f69] bg-[#f3f7fb]",
+    navy: "border-[#123865] bg-[#F1F6FA]",
     orange: "border-orange-300 bg-orange-50",
     amber: "border-amber-300 bg-amber-50",
     emerald: "border-emerald-300 bg-emerald-50",
@@ -274,12 +274,12 @@ function AppointmentStat({ label, value, helper, tone = "navy" }) {
   };
 
   return (
-    <div className={`rounded-2xl border-2 p-4 shadow-sm ${tones[tone] || tones.navy}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#607487]">
+    <div className={`relative overflow-hidden rounded-[1.3rem] border-2 p-4 shadow-[0_9px_22px_rgba(16,35,63,0.08)] ${tones[tone] || tones.navy}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5B6D80]">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-[#102b4c]">{value}</p>
-      {helper ? <p className="mt-1 text-xs font-medium text-[#607487]">{helper}</p> : null}
+      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
+      {helper ? <p className="mt-1 text-xs font-medium text-[#5B6D80]">{helper}</p> : null}
     </div>
   );
 }
@@ -350,12 +350,12 @@ function OutcomeBox({ item, counselor, onRefresh, setStatus }) {
   }
 
   return (
-    <div className="mt-4 rounded-2xl border-2 border-orange-200 bg-[#fff8ef] p-4">
+    <div className="mt-4 rounded-2xl border-2 border-orange-200 bg-[#FFF8EF] p-4">
       <div className="mb-3">
         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
           Record Outcome
         </p>
-        <p className="mt-1 text-xs leading-5 text-[#607487]">
+        <p className="mt-1 text-xs leading-5 text-[#5B6D80]">
           Save the result once. The service also logs communication/timeline history
           and can create the follow-up task.
         </p>
@@ -372,7 +372,7 @@ function OutcomeBox({ item, counselor, onRefresh, setStatus }) {
             className={`rounded-xl border-2 px-3 py-2 text-xs font-black transition disabled:opacity-50 ${
               activeTemplate === template.key
                 ? "border-orange-500 bg-orange-500 text-white"
-                : "border-[#c9d5de] bg-[#fffdf8] text-[#173f69] hover:border-orange-300 hover:bg-orange-50"
+                : "border-[#B9C8D8] bg-[#FFFCF7] text-[#123865] hover:border-orange-300 hover:bg-orange-50"
             }`}
           >
             {template.label}
@@ -393,7 +393,7 @@ function OutcomeBox({ item, counselor, onRefresh, setStatus }) {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <div>
-          <label className="flex items-center gap-2 text-xs font-black text-[#173f69]">
+          <label className="flex items-center gap-2 text-xs font-black text-[#123865]">
             <input
               type="checkbox"
               checked={followUpRequired}
@@ -403,7 +403,7 @@ function OutcomeBox({ item, counselor, onRefresh, setStatus }) {
             />
             Create follow-up task
           </label>
-          <p className="mt-1 text-xs text-[#718292]">
+          <p className="mt-1 text-xs text-[#6B7D8F]">
             {outcome.trim().length}/2500 characters · draft saved in this tab
           </p>
           </div>
@@ -413,7 +413,7 @@ function OutcomeBox({ item, counselor, onRefresh, setStatus }) {
               type="button"
               onClick={clearDraft}
               disabled={saving}
-              className="rounded-lg border border-[#c9d5de] bg-white px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#607487] transition hover:border-rose-300 hover:text-rose-700 disabled:opacity-50"
+              className="rounded-lg border border-[#B9C8D8] bg-white px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#5B6D80] transition hover:border-rose-300 hover:text-rose-700 disabled:opacity-50"
             >
               Clear Draft
             </button>
@@ -440,28 +440,28 @@ function AppointmentAttention({ item }) {
   return (
     <div className="mt-3">
       <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
-        <span className="font-bold text-[#607487]">Session attention</span>
+        <span className="font-bold text-[#5B6D80]">Session attention</span>
         <span
           className={`rounded-full border px-2 py-1 font-black ${
             urgency >= 90
               ? "border-rose-300 bg-rose-50 text-rose-700"
               : urgency >= 60
                 ? "border-amber-300 bg-amber-50 text-amber-700"
-                : "border-[#b7c5d1] bg-white text-[#173f69]"
+                : "border-[#AFC0D0] bg-white text-[#123865]"
           }`}
         >
           {label}
         </span>
       </div>
 
-      <div className="h-2.5 overflow-hidden rounded-full bg-[#e5edf3]">
+      <div className="h-2.5 overflow-hidden rounded-full bg-[#E4EBF2]">
         <div
           className={`h-full rounded-full transition-[width] duration-500 ${
             urgency >= 90
               ? "bg-rose-500"
               : urgency >= 60
                 ? "bg-orange-500"
-                : "bg-[#173f69]"
+                : "bg-[#123865]"
           }`}
           style={{ width: `${urgency}%` }}
         />
@@ -477,16 +477,16 @@ function AppointmentCard({ item, counselor, onRefresh, setStatus, compact }) {
   if (compact) {
     return (
       <article
-        className={`rounded-[1.4rem] border-2 p-4 shadow-[0_8px_24px_rgba(16,43,76,0.05)] ${
+        className={`rounded-[1.45rem] border-[3px] p-4 shadow-[0_12px_30px_rgba(16,35,63,0.09)] ${
           needsOutcome
             ? "border-amber-300 bg-amber-50/75"
-            : "border-[#c9d5de] bg-[#fffdf8]"
+            : "border-[#B9C8D8] bg-[#FFFCF7]"
         }`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-black leading-5 text-[#102b4c]">
+              <h3 className="text-base font-black leading-5 text-[#10233F]">
                 {item.title}
               </h3>
 
@@ -497,7 +497,7 @@ function AppointmentCard({ item, counselor, onRefresh, setStatus, compact }) {
               ) : null}
             </div>
 
-            <p className="mt-1 text-xs font-semibold text-[#607487]">
+            <p className="mt-1 text-xs font-semibold text-[#5B6D80]">
               {item.studentName} · {item.channel}
             </p>
           </div>
@@ -525,11 +525,11 @@ function AppointmentCard({ item, counselor, onRefresh, setStatus, compact }) {
           ) : null}
         </div>
 
-        <div className="mt-3 rounded-xl border border-orange-200 bg-[#fff8ef] px-3 py-2.5">
+        <div className="mt-3 rounded-xl border border-orange-200 bg-[#FFF8EF] px-3 py-2.5">
           <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-700">
             Next Action
           </p>
-          <p className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-[#102b4c]">
+          <p className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-[#10233F]">
             {item.nextAction || "Prepare the student session and confirm the next milestone."}
           </p>
         </div>
@@ -539,16 +539,16 @@ function AppointmentCard({ item, counselor, onRefresh, setStatus, compact }) {
 
   return (
     <article
-      className={`rounded-[1.6rem] border-2 p-4 shadow-[0_10px_30px_rgba(16,43,76,0.06)] transition duration-300 hover:-translate-y-0.5 sm:p-5 ${
+      className={`overflow-hidden rounded-[1.6rem] border-[3px] p-4 shadow-[0_14px_34px_rgba(16,35,63,0.10)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(16,35,63,0.14)] sm:p-5 ${
         needsOutcome
           ? "border-amber-300 bg-amber-50/80"
-          : "border-[#c9d5de] bg-[#fffdf8] hover:border-orange-300"
+          : "border-[#B9C8D8] bg-[#FFFCF7] hover:border-orange-300"
       }`}
     >
       <div className="grid gap-4 xl:grid-cols-[1fr_0.52fr_0.8fr] xl:items-center">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-black text-[#102b4c]">{item.title}</h3>
+            <h3 className="text-lg font-black text-[#10233F]">{item.title}</h3>
             {needsOutcome ? (
               <span className="rounded-full border border-amber-300 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-amber-700">
                 Needs Outcome
@@ -562,7 +562,7 @@ function AppointmentCard({ item, counselor, onRefresh, setStatus, compact }) {
             ) : null}
           </div>
 
-          <p className="mt-1.5 text-sm font-semibold text-[#607487]">
+          <p className="mt-1.5 text-sm font-semibold text-[#5B6D80]">
             {item.studentName} · {item.channel}
           </p>
 
@@ -576,28 +576,28 @@ function AppointmentCard({ item, counselor, onRefresh, setStatus, compact }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#d6e0e7] bg-[#f8fbfd] p-3.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#718292]">
+        <div className="rounded-[1.25rem] border-2 border-[#AFC0D0] bg-[#F7FAFC] p-3.5">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#6B7D8F]">
             Timing
           </p>
-          <p className="mt-2 text-sm font-black text-[#102b4c]">
+          <p className="mt-2 text-sm font-black text-[#10233F]">
             {formatRelativeTime(item.startAt)}
           </p>
-          <p className="mt-1 text-xs leading-5 text-[#718292]">
+          <p className="mt-1 text-xs leading-5 text-[#6B7D8F]">
             {item.startAt ? new Date(item.startAt).toLocaleString() : "No date"}
           </p>
 
           {!compact ? <AppointmentAttention item={item} /> : null}
         </div>
 
-        <div className="rounded-2xl border-2 border-orange-200 bg-[#fff8ef] p-3.5">
+        <div className="rounded-[1.25rem] border-2 border-orange-300 bg-[#FFF4E8] p-3.5 shadow-inner">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">
             Next Action
           </p>
-          <p className="mt-2 text-sm font-bold leading-6 text-[#102b4c]">
+          <p className="mt-2 text-sm font-bold leading-6 text-[#10233F]">
             {item.nextAction || "Prepare the student session and confirm the next milestone."}
           </p>
-          <p className="mt-1 text-xs leading-5 text-[#718292]">
+          <p className="mt-1 text-xs leading-5 text-[#6B7D8F]">
             {needsOutcome
               ? "Record the result so timeline, communication and follow-up work stay in sync."
               : completed
@@ -748,36 +748,39 @@ export default function CounselorAppointmentsWorkspace({
   };
 
   return (
-    <section className="rounded-[1.8rem] border-2 border-[#173f69] bg-[#fffaf2] p-4 shadow-[0_18px_55px_rgba(16,43,76,0.08)] sm:p-5">
-      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">
+    <section className="overflow-hidden rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_28px_80px_rgba(16,35,63,0.16)] sm:p-4">
+      <div className="relative mb-5 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_36px_rgba(16,35,63,0.20)] xl:flex xl:items-start xl:justify-between xl:gap-5 sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full border-[26px] border-white/5" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-20 h-44 w-44 rounded-full border-[22px] border-orange-400/10" />
+
+        <div className="relative z-[1]">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
             Appointments
           </p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-[#102b4c] sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
             Counselor Appointment Queue
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#607487]">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-blue-100">
             Upcoming sessions, overdue outcomes, follow-up creation and student
             appointment execution in one counselor-scoped workspace.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-xl border-2 border-orange-300 bg-orange-50 px-4 py-2 text-sm font-black text-orange-700">
+        <div className="relative z-[1] flex flex-wrap gap-2">
+          <span className="rounded-xl border-2 border-orange-300/70 bg-orange-400/15 px-3 py-2 text-xs font-black text-orange-300">
             {filtered.length}/{queue.length} visible
           </span>
-          <span className="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-2 text-sm font-black text-amber-700">
+          <span className="rounded-xl border-2 border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700">
             Today {stats.today}
           </span>
-          <span className="rounded-xl border-2 border-rose-300 bg-rose-50 px-4 py-2 text-sm font-black text-rose-700">
+          <span className="rounded-xl border-2 border-rose-300 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700">
             Attention {stats.urgent}
           </span>
         </div>
       </div>
 
       {!compact ? (
-        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        <div className="mb-5 grid gap-3 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFFCF7] p-3 shadow-[0_12px_28px_rgba(16,35,63,0.08)] sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
           <AppointmentStat label="Total" value={stats.total} helper="appointments" tone="orange" />
           <AppointmentStat label="Outcome" value={stats.needsOutcome} helper="needs update" tone="amber" />
           <AppointmentStat label="Upcoming" value={stats.upcoming} helper="future sessions" tone="violet" />
@@ -795,7 +798,7 @@ export default function CounselorAppointmentsWorkspace({
         <>
           <StatusToast status={status} onClear={() => setStatus(null)} />
 
-          <div className="mb-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_190px_210px_auto]">
+          <div className="mb-5 grid gap-3 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[inset_0_0_0_1px_rgba(255,90,10,0.12)] xl:grid-cols-[minmax(0,1fr)_190px_210px_auto]">
             <input
               type="search"
               value={query}
@@ -832,7 +835,7 @@ export default function CounselorAppointmentsWorkspace({
             <button
               type="button"
               onClick={reset}
-              className="rounded-2xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-sm font-black text-white transition hover:bg-[#102f52] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+              className="rounded-2xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0B2A4B] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
             >
               Reset
             </button>
@@ -848,7 +851,7 @@ export default function CounselorAppointmentsWorkspace({
               className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${
                 filter === item.key
                   ? "border-orange-500 bg-orange-500 text-white"
-                  : "border-[#c9d5de] bg-[#fffdf8] text-[#173f69]"
+                  : "border-[#B9C8D8] bg-[#FFFCF7] text-[#123865]"
               }`}
             >
               {item.label}
@@ -858,11 +861,11 @@ export default function CounselorAppointmentsWorkspace({
       )}
 
       {!compact ? (
-        <div className="mb-3 flex flex-col gap-2 rounded-2xl border border-[#d8b892] bg-[#fff8ef] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#7d684f]">
+        <div className="mb-3 flex flex-col gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-white">
             Showing {visible.length} of {queue.length} appointment records
           </p>
-          <p className="text-xs font-semibold text-[#607487]">
+          <p className="text-xs font-semibold text-blue-100">
             Sort: {SORTS.find((item) => item.key === sort)?.label || "Needs Attention"}
           </p>
         </div>
@@ -870,11 +873,11 @@ export default function CounselorAppointmentsWorkspace({
 
       <div className="grid gap-3">
         {visible.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-[#c9d5de] bg-[#fffdf8] p-7 text-center">
-            <p className="text-sm font-black text-[#102b4c]">
+          <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#AFC0D0] bg-[#FFFCF7] p-8 text-center shadow-inner">
+            <p className="text-sm font-black text-[#10233F]">
               No appointment records found.
             </p>
-            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#607487]">
+            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#5B6D80]">
               Counselor-scoped appointment records will appear after an assigned student
               has a linked appointment.
             </p>
@@ -903,7 +906,7 @@ export default function CounselorAppointmentsWorkspace({
       </div>
 
       {compact && filtered.length > visible.length ? (
-        <div className="mt-3 rounded-xl border border-[#d8b892] bg-[#fff8ef] px-3 py-2 text-center">
+        <div className="mt-3 rounded-xl border border-[#D8B07B] bg-[#FFF8EF] px-3 py-2 text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[#7d684f]">
             Showing highest-priority appointment · {filtered.length - visible.length} more in Appointments
           </p>

@@ -1,3 +1,13 @@
+// WhatsAppWorkspace V6.2 PERSISTENT HANDOFF GUARD
+// - persists the exact WhatsApp handoff in sessionStorage so tab switching/remounts do not disable Confirm Sent & Log
+// - handoff is scoped to student phone + exact message and expires after 30 minutes
+// WhatsAppWorkspace V6.1 CHROME HANDOFF CONFIRMATION FIX
+// - fixes Chrome returning null for window.open(..., 'noopener,noreferrer') even when WhatsApp opens
+// - Confirm Sent & Log now arms after a verified Zaifan-created handoff tab
+// WhatsAppWorkspace V6 MANUAL SEND CONFIRMATION — real WhatsApp handoff lifecycle
+// - Open WhatsApp never claims delivery
+// - Confirm Sent & Log becomes available only after this exact message was opened
+// - supports draft promotion in parent instead of creating duplicate history rows
 // WhatsAppWorkspace V5 PARTNER OS ALIGNMENT — Student Communication Command Center
 // src/components/admin/workspaces/communications/WhatsAppWorkspace.jsx
 //
@@ -16,6 +26,7 @@
 // - no GPT calls and no fake sent/delivered state
 
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -90,15 +101,99 @@ function normalizeWhatsAppNumber(value = "") {
   return "";
 }
 
+const WHATSAPP_HANDOFF_STORAGE_KEY =
+  "zaifan_admin_whatsapp_manual_send_handoff_v1";
+
+const WHATSAPP_HANDOFF_TTL_MS = 30 * 60 * 1000;
+
+function readWhatsAppHandoff() {
+  try {
+    if (typeof window === "undefined" || !window.sessionStorage) {
+      return null;
+    }
+
+    const raw = window.sessionStorage.getItem(
+      WHATSAPP_HANDOFF_STORAGE_KEY
+    );
+
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      !parsed.message ||
+      !parsed.phone ||
+      !parsed.openedAt
+    ) {
+      window.sessionStorage.removeItem(
+        WHATSAPP_HANDOFF_STORAGE_KEY
+      );
+      return null;
+    }
+
+    const openedMs = new Date(parsed.openedAt).getTime();
+
+    if (
+      !Number.isFinite(openedMs) ||
+      Date.now() - openedMs > WHATSAPP_HANDOFF_TTL_MS
+    ) {
+      window.sessionStorage.removeItem(
+        WHATSAPP_HANDOFF_STORAGE_KEY
+      );
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeWhatsAppHandoff(payload) {
+  try {
+    if (typeof window === "undefined" || !window.sessionStorage) {
+      return;
+    }
+
+    window.sessionStorage.setItem(
+      WHATSAPP_HANDOFF_STORAGE_KEY,
+      JSON.stringify(payload)
+    );
+  } catch {
+    // Manual confirmation still works from local state when storage is unavailable.
+  }
+}
+
+function clearWhatsAppHandoff() {
+  try {
+    if (typeof window === "undefined" || !window.sessionStorage) {
+      return;
+    }
+
+    window.sessionStorage.removeItem(
+      WHATSAPP_HANDOFF_STORAGE_KEY
+    );
+  } catch {
+    // Ignore storage cleanup failures.
+  }
+}
+
 function WhatsAppWorkspace({
   student = {},
   saving = false,
   onSaveDraft = null,
+  onConfirmSent = null,
 }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [selectedMessage, setSelectedMessage] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [localSaving, setLocalSaving] = useState(false);
+  const [localConfirming, setLocalConfirming] = useState(false);
+  const [openedHandoff, setOpenedHandoff] = useState(() =>
+    readWhatsAppHandoff()
+  );
 
   const fullName =
     student?.full_name ||
@@ -271,19 +366,50 @@ function WhatsAppWorkspace({
     Boolean(normalizedPhone) && Boolean(trimmedMessage);
 
   const isSaving = saving || localSaving;
+  const isConfirming = saving || localConfirming;
+
+  const activeHandoff = (() => {
+    const memoryHandoff = openedHandoff;
+    const storedHandoff = readWhatsAppHandoff();
+
+    if (
+      storedHandoff &&
+      (!memoryHandoff ||
+        new Date(storedHandoff.openedAt).getTime() >
+          new Date(memoryHandoff.openedAt || 0).getTime())
+    ) {
+      return storedHandoff;
+    }
+
+    return memoryHandoff;
+  })();
+
+  const confirmationReady =
+    Boolean(trimmedMessage) &&
+    Boolean(normalizedPhone) &&
+    activeHandoff?.message === trimmedMessage &&
+    activeHandoff?.phone === normalizedPhone &&
+    typeof onConfirmSent === "function";
 
   const activeTemplate =
     templates.find((item) => item.id === selectedTemplateId) || null;
 
+  const clearCurrentHandoff = () => {
+    setOpenedHandoff(null);
+    clearWhatsAppHandoff();
+  };
+
   const selectTemplate = (template) => {
     setSelectedTemplateId(template.id);
     setSelectedMessage(template.message);
+    clearCurrentHandoff();
     setFeedback(null);
   };
 
   const resetMessage = () => {
     setSelectedTemplateId("");
     setSelectedMessage("");
+    clearCurrentHandoff();
     setFeedback(null);
   };
 
@@ -311,11 +437,11 @@ function WhatsAppWorkspace({
       trimmedMessage
     )}`;
 
-    const opened = window.open(
-      url,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    // Open a blank tab first so Chrome returns a real WindowProxy.
+    // Using "noopener,noreferrer" directly in window.open can return null even
+    // when the WhatsApp tab actually opens, which previously left
+    // Confirm Sent & Log disabled.
+    const opened = window.open("", "_blank");
 
     if (!opened) {
       setFeedback({
@@ -326,10 +452,34 @@ function WhatsAppWorkspace({
       return;
     }
 
+    try {
+      opened.opener = null;
+    } catch {
+      // Browser security may already isolate the new tab.
+    }
+
+    opened.location.href = url;
+
+    // Persist the exact handoff BEFORE leaving this tab. This survives
+    // tab switching and component remounts while remaining scoped to
+    // this phone + exact message and expiring automatically.
+    const handoff = {
+      message: trimmedMessage,
+      phone: normalizedPhone,
+      studentId:
+        student?.id ||
+        student?.student_id ||
+        null,
+      openedAt: new Date().toISOString(),
+    };
+
+    setOpenedHandoff(handoff);
+    writeWhatsAppHandoff(handoff);
+
     setFeedback({
       tone: "green",
       text:
-        "WhatsApp opened with the message pre-filled. The message is not marked as sent until you send it in WhatsApp.",
+        "WhatsApp opened with this exact message pre-filled. Send it inside WhatsApp, then return here and use Confirm Sent & Log.",
     });
   };
 
@@ -442,6 +592,88 @@ function WhatsAppWorkspace({
       });
     } finally {
       setLocalSaving(false);
+    }
+  };
+
+  const confirmSent = async () => {
+    if (isConfirming) return;
+
+    if (!trimmedMessage) {
+      setFeedback({
+        tone: "red",
+        text: "There is no WhatsApp message to confirm.",
+      });
+      return;
+    }
+
+    if (!confirmationReady) {
+      setFeedback({
+        tone: "orange",
+        text:
+          "Open WhatsApp with this exact message first. Zaifan only enables manual send confirmation after the handoff has been launched.",
+      });
+      return;
+    }
+
+    if (typeof onConfirmSent !== "function") {
+      setFeedback({
+        tone: "orange",
+        text:
+          "Manual WhatsApp send confirmation is not connected to communication history yet.",
+      });
+      return;
+    }
+
+    setLocalConfirming(true);
+    setFeedback(null);
+
+    try {
+      const confirmedAt = new Date().toISOString();
+
+      const confirmed = await Promise.resolve(
+        onConfirmSent(trimmedMessage, {
+          channel: "whatsapp",
+          studentId: student?.id || null,
+          studentType:
+            student?.student_type ||
+            student?.__leadType ||
+            student?.type ||
+            "inquiry",
+          phone: normalizedPhone || phone || null,
+          templateId: activeTemplate?.id || null,
+          templateLabel: activeTemplate?.label || null,
+          status: "sent",
+          manualSendConfirmed: true,
+          confirmedAt,
+          openedFromZaifan: true,
+        })
+      );
+
+      if (confirmed === false) {
+        throw new Error(
+          "Communication history did not confirm the WhatsApp sent record."
+        );
+      }
+
+      // Prevent accidental double confirmation in this tab/session.
+      clearCurrentHandoff();
+
+      setFeedback({
+        tone: "green",
+        text:
+          "WhatsApp send manually confirmed and logged as Sent. Student and Counselor communication history can now show this record.",
+      });
+    } catch (error) {
+      console.error("WhatsApp sent confirmation failed:", error);
+
+      setFeedback({
+        tone: "red",
+        text:
+          error?.message ||
+          "WhatsApp sent confirmation could not be logged.",
+      });
+    } finally {
+      setLocalConfirming(false);
     }
   };
 
@@ -643,6 +875,7 @@ function WhatsAppWorkspace({
             onChange={(event) => {
               setSelectedTemplateId("");
               setSelectedMessage(event.target.value);
+              clearCurrentHandoff();
               setFeedback(null);
             }}
             placeholder="Choose a template or write a custom WhatsApp message..."
@@ -678,16 +911,16 @@ function WhatsAppWorkspace({
             </div>
 
             <p className="text-[10px] font-semibold text-slate-500">
-              Opening WhatsApp does not automatically mark the message as sent.
+              Opening WhatsApp never marks delivery. Confirm only after you manually press Send in WhatsApp.
             </p>
           </div>
         </section>
 
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <button
             type="button"
             onClick={openWhatsApp}
-            disabled={!whatsappReady}
+            disabled={!whatsappReady || isConfirming}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-5 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(15,35,63,0.14)] transition duration-200 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#102F56] disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
           >
             <Send size={16} />
@@ -696,8 +929,18 @@ function WhatsAppWorkspace({
 
           <button
             type="button"
+            onClick={confirmSent}
+            disabled={!confirmationReady || isConfirming}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-emerald-600 bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-[0_8px_18px_rgba(5,150,105,0.14)] transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:border-[#C9D7E6] disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+          >
+            <CheckCircle2 size={16} />
+            {isConfirming ? "Logging Sent..." : "Confirm Sent & Log"}
+          </button>
+
+          <button
+            type="button"
             onClick={saveDraft}
-            disabled={isSaving || !trimmedMessage}
+            disabled={isSaving || isConfirming || !trimmedMessage}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FFF3E8] px-5 py-3 text-sm font-black text-[#A94308] transition hover:-translate-y-0.5 hover:bg-[#FFE2CE] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save size={16} />
@@ -707,12 +950,51 @@ function WhatsAppWorkspace({
           <button
             type="button"
             onClick={copyMessage}
-            disabled={!trimmedMessage}
+            disabled={!trimmedMessage || isConfirming}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#C9D7E6] bg-white px-5 py-3 text-sm font-black text-[#10233F] transition duration-200 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-[#FFF3E8] hover:text-[#A94308] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Clipboard size={16} />
             Copy Message
           </button>
+        </div>
+
+        <div
+          className={`rounded-2xl border-2 p-4 ${
+            confirmationReady
+              ? "border-emerald-300 bg-emerald-50"
+              : "border-[#C9D7E6] bg-white"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <ShieldCheck
+              size={18}
+              className={`mt-0.5 shrink-0 ${
+                confirmationReady ? "text-emerald-700" : "text-[#123865]"
+              }`}
+            />
+
+            <div>
+              <p
+                className={`text-sm font-black ${
+                  confirmationReady ? "text-emerald-900" : "text-[#10233F]"
+                }`}
+              >
+                {confirmationReady
+                  ? "Ready for manual send confirmation"
+                  : "Manual confirmation guard"}
+              </p>
+
+              <p
+                className={`mt-1 text-xs font-semibold leading-5 ${
+                  confirmationReady ? "text-emerald-800" : "text-slate-600"
+                }`}
+              >
+                {confirmationReady
+                  ? "You opened WhatsApp with this exact message. Confirm Sent & Log only after you actually pressed Send inside WhatsApp."
+                  : "Open WhatsApp first. Zaifan remembers this exact handoff for this browser session, but still will not create a Sent record until you explicitly confirm after sending."}
+              </p>
+            </div>
+          </div>
         </div>
 
         {!normalizedPhone ? (
@@ -764,39 +1046,8 @@ function WhatsAppWorkspace({
   );
 }
 
-function HeaderMetric({
-  icon: Icon,
-  label,
-  value,
-  alert = false,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <div className="flex items-center gap-2">
-        <Icon
-          size={14}
-          style={{
-            color: alert ? "#FCA5A5" : "#FDBA74",
-          }}
-        />
-
-        <p
-          className="text-[9px] font-black uppercase tracking-[0.1em]"
-          style={{ color: "#ffffff" }}
-        >
-          {label}
-        </p>
-      </div>
-
-      <p
-        className="mt-1 truncate text-xs font-black"
-        style={{ color: "#ffffff" }}
-        title={String(value || "")}
-      >
-        {value}
-      </p>
-    </div>
-  );
+function HeaderMetric({ icon: Icon, label, value, alert = false }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} icon={Icon} tone={alert ? "red" : "navy"} />;
 }
 
 function ContextCard({

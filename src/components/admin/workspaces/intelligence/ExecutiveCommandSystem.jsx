@@ -17,6 +17,7 @@
 import { lazy, Suspense, startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
+  AlertTriangle,
   ArrowUpRight,
   BarChart3,
   BellRing,
@@ -41,6 +42,7 @@ import {
   UsersRound,
   Zap,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 const ExecutiveScoreGeneratorPanel = lazy(() => import("./ExecutiveScoreGeneratorPanel"));
 const ExecutiveAlertsPanel = lazy(() => import("./ExecutiveAlertsPanel"));
 const ExecutiveActionQueue = lazy(() => import("./ExecutiveActionQueue"));
@@ -496,9 +498,13 @@ function buildOperationsCenter(scores = []) {
     if (automationActions > 0 || risk >= 35 || opportunity >= 55) health.automation += 1;
   });
 
-  const total = Math.max(scores.length, 1);
+  const hasEvidence = scores.length > 0;
+  const total = hasEvidence ? scores.length : 1;
   const healthPercent = Object.fromEntries(
-    Object.entries(health).map(([key, value]) => [key, Math.round((value / total) * 100)])
+    Object.entries(health).map(([key, value]) => [
+      key,
+      hasEvidence ? Math.round((value / total) * 100) : null,
+    ])
   );
 
   return {
@@ -523,6 +529,7 @@ function buildOperationsCenter(scores = []) {
 
 function buildExecutiveSnapshotV2(scores = [], operations = {}, commandMetrics = {}, alertSnapshot = {}) {
   const total = scores.length;
+  const hasEvidence = total > 0;
   const applications = scores.filter((score) =>
     ["application_started", "application_submitted", "application_under_review"].includes(getJourneyStage(score))
   ).length;
@@ -540,43 +547,67 @@ function buildExecutiveSnapshotV2(scores = [], operations = {}, commandMetrics =
   const pendingTasks = scores.reduce((sum, score) => sum + number(getScoreValue(score, "pending_tasks_count"), 0), 0);
   const weakDocs = scores.filter((score) => number(getScoreValue(score, "document_readiness_percent"), 100) < 70).length;
   const staleStudents = scores.filter((score) => number(getScoreValue(score, "days_since_updated"), 0) >= 10).length;
-  const automationCoverage = operations?.health?.automation || 0;
-  const verificationHealth = Math.max(0, Math.min(99, Math.round(((operations?.health?.applications || 0) + (operations?.health?.documents || 0) + (operations?.health?.tasks || 0)) / 3)));
+  const automationCoverage = operations?.health?.automation;
+  const verificationHealth = hasEvidence
+    ? Math.max(
+        0,
+        Math.min(
+          99,
+          Math.round(
+            ((operations?.health?.applications || 0) +
+              (operations?.health?.documents || 0) +
+              (operations?.health?.tasks || 0)) /
+              3
+          )
+        )
+      )
+    : null;
   const revenuePressure = operations?.revenue?.conversionReady || 0;
   const collectionRisk = operations?.revenue?.paymentRiskStudents || 0;
 
   return {
     headline: {
-      platformHealth: Math.round(((operations?.health?.applications || 0) + (operations?.health?.universities || 0) + (operations?.health?.visa || 0) + (operations?.health?.documents || 0) + (operations?.health?.tasks || 0) + automationCoverage) / 6),
+      hasEvidence,
+      platformHealth: hasEvidence
+        ? Math.round(
+            ((operations?.health?.applications || 0) +
+              (operations?.health?.universities || 0) +
+              (operations?.health?.visa || 0) +
+              (operations?.health?.documents || 0) +
+              (operations?.health?.tasks || 0) +
+              (automationCoverage || 0)) /
+              6
+          )
+        : null,
       executiveRisk: alertSnapshot?.critical || commandMetrics?.critical || 0,
       opportunities: commandMetrics?.executivePriority || 0,
       conversionReady: commandMetrics?.conversionReady || revenuePressure || 0,
     },
     journey: [
       { label: "Students", value: total, detail: "Scored records", tone: "gold" },
-      { label: "Applications", value: applications, detail: "Started/submitted/review", tone: "blue" },
-      { label: "Offers", value: offers, detail: "Received or accepted", tone: "green" },
-      { label: "CAS", value: cas, detail: "Pending or issued", tone: "orange" },
-      { label: "Visa", value: visas, detail: `${approved} approved/enrolled`, tone: "blue" },
-      { label: "Revenue", value: revenuePressure, detail: `${collectionRisk} collection risk`, tone: "green" },
+      { label: "Applications", value: hasEvidence ? applications : "N/A", detail: hasEvidence ? "Started/submitted/review" : "No scored evidence yet", tone: hasEvidence ? "blue" : "slate" },
+      { label: "Offers", value: hasEvidence ? offers : "N/A", detail: hasEvidence ? "Received or accepted" : "No scored evidence yet", tone: hasEvidence ? "green" : "slate" },
+      { label: "CAS", value: hasEvidence ? cas : "N/A", detail: hasEvidence ? "Pending or issued" : "No scored evidence yet", tone: hasEvidence ? "orange" : "slate" },
+      { label: "Visa", value: hasEvidence ? visas : "N/A", detail: hasEvidence ? `${approved} approved/enrolled` : "No scored evidence yet", tone: hasEvidence ? "blue" : "slate" },
+      { label: "Revenue", value: hasEvidence ? revenuePressure : "N/A", detail: hasEvidence ? `${collectionRisk} collection risk` : "No scored evidence yet", tone: hasEvidence ? "green" : "slate" },
     ],
     systems: [
-      { label: "Student OS", value: `${operations?.health?.applications || 0}%`, detail: "Journey coverage", tone: "gold" },
-      { label: "Counselor OS", value: pendingTasks, detail: `${overdueTasks} overdue tasks`, tone: overdueTasks > 0 ? "orange" : "green" },
-      { label: "University OS", value: `${operations?.health?.universities || 0}%`, detail: "Planning coverage", tone: "blue" },
-      { label: "Application OS", value: applications, detail: "Active application movement", tone: "blue" },
-      { label: "Visa OS", value: visas, detail: `${alertSnapshot?.visa || 0} visa watch`, tone: "orange" },
-      { label: "Payment OS", value: collectionRisk, detail: "Payment risk watch", tone: collectionRisk > 0 ? "orange" : "green" },
+      { label: "Student OS", value: hasEvidence ? `${operations?.health?.applications || 0}%` : "N/A", detail: hasEvidence ? "Journey coverage" : "No scored evidence yet", tone: hasEvidence ? "gold" : "slate" },
+      { label: "Counselor OS", value: hasEvidence ? pendingTasks : "N/A", detail: hasEvidence ? `${overdueTasks} overdue tasks` : "No scored evidence yet", tone: hasEvidence ? (overdueTasks > 0 ? "orange" : "green") : "slate" },
+      { label: "University OS", value: hasEvidence ? `${operations?.health?.universities || 0}%` : "N/A", detail: hasEvidence ? "Planning coverage" : "No scored evidence yet", tone: hasEvidence ? "blue" : "slate" },
+      { label: "Application OS", value: hasEvidence ? applications : "N/A", detail: hasEvidence ? "Active application movement" : "No scored evidence yet", tone: hasEvidence ? "blue" : "slate" },
+      { label: "Visa OS", value: hasEvidence ? visas : "N/A", detail: hasEvidence ? `${alertSnapshot?.visa || 0} visa watch` : "No scored evidence yet", tone: hasEvidence ? "orange" : "slate" },
+      { label: "Payment OS", value: hasEvidence ? collectionRisk : "N/A", detail: hasEvidence ? "Payment risk watch" : "No scored evidence yet", tone: hasEvidence ? (collectionRisk > 0 ? "orange" : "green") : "slate" },
       { label: "Analytics OS", value: "Available", detail: "Executive reporting module available", tone: "gold" },
       { label: "Knowledge OS", value: "Available", detail: "SOP, training, policy module available", tone: "gold" },
-      { label: "Communication OS", value: staleStudents, detail: "Students needing follow-up", tone: staleStudents > 0 ? "orange" : "green" },
+      { label: "Communication OS", value: hasEvidence ? staleStudents : "N/A", detail: hasEvidence ? "Students needing follow-up" : "No scored evidence yet", tone: hasEvidence ? (staleStudents > 0 ? "orange" : "green") : "slate" },
       { label: "Compliance OS", value: "Available", detail: "Audit, policy, risk, privacy and reporting module available", tone: "blue" },
       { label: "Partner OS", value: "Available", detail: "Agent attribution, partner students, commissions and conversion evidence", tone: "gold" },
       { label: "Finance OS", value: "Available", detail: "Collections, receivables, expenses, commissions, P&L and finance health", tone: "green" },
       { label: "HR OS", value: "Available", detail: "People identity, leave, operational performance, recruitment, training and organization structure", tone: "blue" },
       { label: "Mobile OS", value: "Available", detail: "Evidence-first student/counselor sessions, device activation, push delivery and mobile operations", tone: "gold" },
       { label: "AI Command", value: "Available", detail: "Prediction and intelligence module available", tone: "gold" },
-      { label: "Verification", value: `${verificationHealth}%`, detail: "Readiness estimate", tone: verificationHealth >= 85 ? "green" : "orange" },
+      { label: "Verification", value: hasEvidence ? `${verificationHealth}%` : "N/A", detail: hasEvidence ? "Readiness estimate" : "No scored evidence yet", tone: hasEvidence ? (verificationHealth >= 85 ? "green" : "orange") : "slate" },
     ],
     riskFeed: [
       { label: "Critical Students", value: alertSnapshot?.critical || 0, detail: "Immediate executive attention", tone: "red" },
@@ -1590,7 +1621,7 @@ function ExecutiveCommandSystem({
   }, [activeView]);
 
   return (
-    <div className="min-w-0 space-y-5 rounded-[2.2rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+    <div className="min-w-0 space-y-5 text-[#10233F]">
       <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
         <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]">
           <div className="flex min-w-0 flex-col justify-between gap-6 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
@@ -1649,8 +1680,8 @@ function ExecutiveCommandSystem({
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <ExecutiveHeroMetric label="Critical" value={commandMetrics.critical} />
-              <ExecutiveHeroMetric label="Ready" value={commandMetrics.conversionReady} />
+              <ExecutiveHeroMetric label="Critical" value={scores.length ? commandMetrics.critical : "N/A"} />
+              <ExecutiveHeroMetric label="Ready" value={scores.length ? commandMetrics.conversionReady : "N/A"} />
             </div>
 
             <div className="mt-3 rounded-xl border-2 border-white/25 bg-white/10 p-3">
@@ -1682,8 +1713,9 @@ function ExecutiveCommandSystem({
             <div className="rounded-[1.35rem] border-[3px] border-dashed border-slate-300 bg-white p-6 text-center">
               <p className="font-black text-[#10233F]">No executive score records yet</p>
               <p className="mx-auto mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-                Generate or load Student OS executive scores before using portfolio,
-                verification, automation and recovery intelligence.
+                This view reads persisted rows from ai_student_risk_scores. Open
+                Developer Tools below and run Generate Executive Scores before judging
+                portfolio health, verification, automation or recovery readiness.
               </p>
             </div>
           ) : null}
@@ -1715,21 +1747,25 @@ function ExecutiveCommandSystem({
               />
               <SummaryCard
                 label="Critical Risk"
-                value={summary?.criticalRisk ?? summary?.critical ?? commandMetrics.critical}
-                tone="red"
+                value={scores.length ? summary?.criticalRisk ?? summary?.critical ?? commandMetrics.critical : "N/A"}
+                tone={scores.length ? "red" : "slate"}
               />
               <SummaryCard
                 label="Conversion Ready"
-                value={summary?.conversionReady ?? commandMetrics.conversionReady}
-                tone="green"
+                value={scores.length ? summary?.conversionReady ?? commandMetrics.conversionReady : "N/A"}
+                tone={scores.length ? "green" : "slate"}
               />
               <SummaryCard
                 label="Production Ready"
-                value={`${productionReadiness.readinessScore || 0}%`}
-                tone={getGoLiveTone(
-                  productionReadiness.goLiveStatus,
-                  productionReadiness.readinessScore
-                )}
+                value={scores.length ? `${productionReadiness.readinessScore || 0}%` : "N/A"}
+                tone={
+                  scores.length
+                    ? getGoLiveTone(
+                        productionReadiness.goLiveStatus,
+                        productionReadiness.readinessScore
+                      )
+                    : "slate"
+                }
               />
             </div>
           </section>
@@ -1768,6 +1804,7 @@ function ExecutiveCommandSystem({
           workflowScanner={brokenWorkflowScanner}
           verificationSnapshot={platformVerificationSnapshot}
           executiveRecoveryActions={executiveRecoveryActions}
+          hasEvidence={scores.length > 0}
         />
       ) : null}
 
@@ -2163,8 +2200,9 @@ function ExecutiveSnapshotV2({
   const journey = snapshot.journey || [];
   const systems = snapshot.systems || [];
   const riskFeed = snapshot.riskFeed || [];
-  const readinessScore = productionReadiness.readinessScore || 0;
-  const integrityScore = workflowIntegrity.overallIntegrity || 0;
+  const hasEvidence = Boolean(headline.hasEvidence);
+  const readinessScore = hasEvidence ? productionReadiness.readinessScore || 0 : null;
+  const integrityScore = hasEvidence ? workflowIntegrity.overallIntegrity || 0 : null;
   const brokenWorkflows = workflowScanner.totalBrokenWorkflows || 0;
   const criticalFailures = workflowScanner.criticalFailures?.length || 0;
   const recoveryTotal =
@@ -2173,10 +2211,12 @@ function ExecutiveSnapshotV2({
     verificationSnapshot?.recoveryQueue?.length ||
     0;
 
-  const highestRisk = riskFeed.reduce(
-    (total, item) => total + number(item?.value, 0),
-    0
-  );
+  const highestRisk = hasEvidence
+    ? riskFeed.reduce(
+        (total, item) => total + number(item?.value, 0),
+        0
+      )
+    : null;
 
   return (
     <div className="space-y-5">
@@ -2217,11 +2257,11 @@ function ExecutiveSnapshotV2({
             <div className="mt-5 grid gap-2 sm:grid-cols-4">
               <ExecutiveHeroMetric
                 label="Platform Health"
-                value={`${headline.platformHealth || 0}%`}
+                value={hasEvidence && headline.platformHealth !== null ? `${headline.platformHealth}%` : "N/A"}
               />
               <ExecutiveHeroMetric
                 label="Workflow Integrity"
-                value={`${integrityScore}%`}
+                value={hasEvidence ? `${integrityScore}%` : "N/A"}
               />
               <ExecutiveHeroMetric
                 label="Broken Workflows"
@@ -2240,19 +2280,23 @@ function ExecutiveSnapshotV2({
             </p>
 
             <p className="mt-3 text-4xl font-black text-white">
-              {readinessScore}%
+              {hasEvidence ? `${readinessScore}%` : "N/A"}
             </p>
 
             <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
-              {formatLabel(productionReadiness.goLiveStatus || "not_ready")}
+              {hasEvidence
+                ? formatLabel(productionReadiness.goLiveStatus || "not_ready")
+                : "No Executive Evidence"}
             </p>
 
             <p className="mt-3 text-sm font-semibold leading-6 text-white/95">
-              {criticalFailures > 0
+              {!hasEvidence
+                ? "Generate Executive scores before interpreting readiness or workflow integrity."
+                : criticalFailures > 0
                 ? `${criticalFailures} critical workflow failure${criticalFailures === 1 ? "" : "s"} require executive review.`
                 : brokenWorkflows > 0
                   ? `${brokenWorkflows} workflow issue${brokenWorkflows === 1 ? "" : "s"} remain before clean launch readiness.`
-                  : "No critical workflow failures are currently reported."}
+                  : "No critical workflow failures are currently reported in the scored portfolio."}
             </p>
 
             <div className="mt-5 rounded-2xl border border-white/30 bg-white/10 p-4">
@@ -2260,10 +2304,10 @@ function ExecutiveSnapshotV2({
                 Risk Signals
               </p>
               <p className="mt-1 text-2xl font-black text-white">
-                {highestRisk}
+                {hasEvidence ? highestRisk : "N/A"}
               </p>
               <p className="mt-1 text-xs font-semibold text-white/90">
-                active executive attention signals
+                {hasEvidence ? "active executive attention signals" : "no scored Executive evidence yet"}
               </p>
             </div>
           </div>
@@ -2272,27 +2316,27 @@ function ExecutiveSnapshotV2({
         <div className="grid gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
           <ExecutiveSummaryMetric
             label="Production Readiness"
-            value={`${readinessScore}%`}
-            detail={formatLabel(productionReadiness.goLiveStatus || "not_ready")}
-            tone={readinessScore >= 75 ? "success" : "risk"}
+            value={hasEvidence ? `${readinessScore}%` : "N/A"}
+            detail={hasEvidence ? formatLabel(productionReadiness.goLiveStatus || "not_ready") : "No scored evidence yet"}
+            tone={hasEvidence ? (readinessScore >= 75 ? "success" : "risk") : "neutral"}
           />
           <ExecutiveSummaryMetric
             label="Workflow Integrity"
-            value={`${integrityScore}%`}
-            detail="Cross-system workflow health"
-            tone={integrityScore >= 75 ? "success" : "action"}
+            value={hasEvidence ? `${integrityScore}%` : "N/A"}
+            detail={hasEvidence ? "Cross-system workflow health" : "No scored evidence yet"}
+            tone={hasEvidence ? (integrityScore >= 75 ? "success" : "action") : "neutral"}
           />
           <ExecutiveSummaryMetric
             label="Executive Risk"
-            value={headline.executiveRisk || 0}
-            detail="Leadership attention pressure"
-            tone={(headline.executiveRisk || 0) > 0 ? "risk" : "neutral"}
+            value={hasEvidence ? headline.executiveRisk || 0 : "N/A"}
+            detail={hasEvidence ? "Leadership attention pressure" : "No scored evidence yet"}
+            tone={hasEvidence ? ((headline.executiveRisk || 0) > 0 ? "risk" : "neutral") : "neutral"}
           />
           <ExecutiveSummaryMetric
             label="Conversion Ready"
-            value={headline.conversionReady || 0}
-            detail="Students ready for forward movement"
-            tone="info"
+            value={hasEvidence ? headline.conversionReady || 0 : "N/A"}
+            detail={hasEvidence ? "Students ready for forward movement" : "No scored evidence yet"}
+            tone={hasEvidence ? "info" : "neutral"}
           />
         </div>
       </section>
@@ -2307,12 +2351,12 @@ function ExecutiveSnapshotV2({
               Movement across the admissions journey
             </h4>
           </div>
-          <span className="rounded-full border-2 border-[#123865] bg-[#123865] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#53657D]">
             {journey.length} journey signals
-          </span>
+          </p>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {journey.map((item) => (
             <ExecutiveJourneyCard key={item.label} {...item} />
           ))}
@@ -2342,7 +2386,7 @@ function ExecutiveSnapshotV2({
           </button>
         </div>
 
-        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 sm:p-5">
+        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-5">
           {systems.map((item) => (
             <ExecutiveSystemCard key={item.label} {...item} />
           ))}
@@ -2360,9 +2404,9 @@ function ExecutiveSnapshotV2({
             </h4>
           </div>
 
-          <span className="rounded-full border-2 border-red-300 bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-red-700">
+          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-red-700">
             {riskFeed.length} risk categories
-          </span>
+          </p>
         </div>
 
         {riskFeed.length ? (
@@ -2386,109 +2430,66 @@ function ExecutiveSnapshotV2({
 
 
 function ExecutiveSummaryMetric({ label, value, detail, tone = "neutral" }) {
-  const toneClass =
-    tone === "risk"
-      ? "border-red-400 bg-red-50"
-      : tone === "action"
-        ? "border-[#FF5A0A] bg-[#FFF4E8]"
-        : tone === "success"
-          ? "border-emerald-400 bg-emerald-50"
-          : tone === "info"
-            ? "border-blue-400 bg-blue-50"
-            : "border-[#123865] bg-slate-50";
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={detail} tone={toZaifanMetricTone(tone)} />;
+}
 
+function ExecutiveJourneyCard({
+  label,
+  value,
+  detail,
+  tone = "default",
+}) {
   return (
-    <div className={`rounded-[1.35rem] border-[3px] p-4 ${toneClass}`}>
-      <p className="text-[8px] font-black uppercase tracking-[0.13em] text-slate-600">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-black text-[#10233F]">{value}</p>
-      <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
-        {detail}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      detail={detail}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
-function ExecutiveJourneyCard({ label, value, detail, tone = "default" }) {
-  const risk = tone === "red";
-  const action = tone === "orange" || tone === "gold" || tone === "yellow";
-  const info = tone === "blue";
-  const success = tone === "green";
-
-  const toneClass = risk
-    ? "border-red-300 bg-red-50"
-    : action
-      ? "border-[#FFB38A] bg-[#FFF4E8]"
-      : info
-        ? "border-blue-300 bg-blue-50"
-        : success
-          ? "border-emerald-300 bg-emerald-50"
-          : "border-[#C9D7E6] bg-[#FFF8EF]";
-
+function ExecutiveSystemCard({
+  label,
+  value,
+  detail,
+  tone = "default",
+}) {
   return (
-    <div className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 ${toneClass}`}>
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.12em] text-slate-600">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-      <p className="mt-1 line-clamp-2 text-[10px] font-semibold leading-4 text-slate-500">
-        {detail}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      detail={detail}
+      icon={Boxes}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
-function ExecutiveSystemCard({ label, value, detail, tone = "default" }) {
-  const needsAttention = tone === "red" || tone === "orange" || tone === "gold" || tone === "yellow";
-  const toneClass = needsAttention
-    ? "border-[#FFB38A] bg-[#FFF4E8]"
-    : tone === "blue"
-      ? "border-blue-300 bg-blue-50"
-      : "border-[#C9D7E6] bg-white";
+function ExecutiveRiskCard({
+  label,
+  value,
+  detail,
+  tone = "default",
+}) {
+  const semanticTone =
+    tone === "red"
+      ? "red"
+      : tone === "orange" || tone === "gold" || tone === "yellow"
+      ? "amber"
+      : "blue";
 
   return (
-    <div className={`min-w-0 rounded-[1.25rem] border-2 p-4 ${toneClass}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="break-words text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-2 break-words text-xl font-black leading-tight text-[#10233F]">
-            {value}
-          </p>
-        </div>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]">
-          <Boxes size={13} />
-        </span>
-      </div>
-      <p className="mt-2 line-clamp-3 text-[10px] font-semibold leading-4 text-slate-500">
-        {detail}
-      </p>
-    </div>
-  );
-}
-
-function ExecutiveRiskCard({ label, value, detail, tone = "default" }) {
-  const critical = tone === "red";
-  const toneClass = critical
-    ? "border-red-300 bg-red-50"
-    : "border-[#FFB38A] bg-[#FFF4E8]";
-
-  return (
-    <div className={`rounded-[1.25rem] border-[3px] p-4 ${toneClass}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-black text-[#10233F]">{label}</p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-            {detail}
-          </p>
-        </div>
-        <span className="shrink-0 rounded-xl border-2 border-white bg-white px-3 py-1.5 text-lg font-black text-[#10233F] shadow-sm">
-          {value}
-        </span>
-      </div>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      icon={AlertTriangle}
+      tone={semanticTone}
+    />
   );
 }
 
@@ -2684,7 +2685,7 @@ function ExecutiveOperationsCenter({ operations, totalStudents = 0 }) {
         </div>
       </div>
 
-      <OperationsHealthPanel health={operations.health} />
+      <OperationsHealthPanel health={operations.health} hasEvidence={totalStudents > 0} />
     </section>
   );
 }
@@ -2696,6 +2697,7 @@ function ExecutiveVerificationReadinessPanel({
   workflowScanner = {},
   verificationSnapshot = {},
   executiveRecoveryActions = {},
+  hasEvidence = false,
 }) {
   const blockers = productionReadiness.launchBlockers || [];
   const criticalIssues = productionReadiness.criticalIssues || [];
@@ -2708,8 +2710,8 @@ function ExecutiveVerificationReadinessPanel({
     ...(executiveRecoveryActions.counselorActions || []),
   ].slice(0, 10);
 
-  const readinessScore = productionReadiness.readinessScore || 0;
-  const integrityScore = workflowIntegrity.overallIntegrity || 0;
+  const readinessScore = hasEvidence ? productionReadiness.readinessScore || 0 : null;
+  const integrityScore = hasEvidence ? workflowIntegrity.overallIntegrity || 0 : null;
   const brokenCount = workflowScanner.totalBrokenWorkflows || 0;
   const recoveryCount = verificationSnapshot.recoveryQueue?.length || 0;
 
@@ -2741,7 +2743,7 @@ function ExecutiveVerificationReadinessPanel({
             <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
               <DarkCommandMetric
                 label="Integrity"
-                value={`${integrityScore}%`}
+                value={hasEvidence ? `${integrityScore}%` : "N/A"}
               />
               <DarkCommandMetric
                 label="Broken Workflows"
@@ -2760,13 +2762,13 @@ function ExecutiveVerificationReadinessPanel({
             </p>
 
             <p className="mt-3 text-5xl font-black text-white">
-              {readinessScore}%
+              {hasEvidence ? `${readinessScore}%` : "N/A"}
             </p>
 
             <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
-              {formatLabel(
-                productionReadiness.goLiveStatus || "not_ready"
-              )}
+              {hasEvidence
+                ? formatLabel(productionReadiness.goLiveStatus || "not_ready")
+                : "No Executive Evidence"}
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
@@ -2789,7 +2791,7 @@ function ExecutiveVerificationReadinessPanel({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 md:grid-cols-2 sm:p-5 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 md:grid-cols-2 sm:p-5 xl:grid-cols-3">
           <SummaryCard
             label="Readiness Score"
             value={`${readinessScore}%`}
@@ -2901,7 +2903,7 @@ function ExecutiveVerificationReadinessPanel({
             </div>
 
             <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
-              <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-6">
+              <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <WatchMetric
                   label="Critical"
                   value={workflowScanner.severityBreakdown?.critical || 0}
@@ -3136,7 +3138,7 @@ function RevenueCenterPanel({ revenue }) {
   );
 }
 
-function OperationsHealthPanel({ health }) {
+function OperationsHealthPanel({ health, hasEvidence = false }) {
   const rows = [
     ["Applications", health.applications],
     ["Universities", health.universities],
@@ -3159,7 +3161,12 @@ function OperationsHealthPanel({ health }) {
 
       <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 md:grid-cols-2 sm:p-5 xl:grid-cols-3">
         {rows.map(([label, value]) => (
-          <HealthProgress key={label} label={label} value={value} />
+          <HealthProgress
+            key={label}
+            label={label}
+            value={value}
+            hasEvidence={hasEvidence}
+          />
         ))}
       </div>
     </section>
@@ -3216,42 +3223,15 @@ function CommandDisclosure({
 }
 
 function ExecutiveHeroMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function DarkCommandMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function OrangeCommandMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function CommandTabs({ activeView, setActiveView }) {
@@ -3474,26 +3454,14 @@ function CommandLaunchCard({ title, value, detail, tone = "navy", onClick }) {
 
 
 function SummaryCard({ label, value, tone = "navy" }) {
-  const style = getToneStyle(tone);
-
   return (
-    <article
-      className={`relative min-w-0 overflow-hidden rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
-
-      <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.1em] text-[#53657D]">
-        {label}
-      </p>
-
-      <p className="mt-3 break-words text-3xl font-black leading-none text-[#10233F]">
-        {value ?? 0}
-      </p>
-
-      <p className="mt-3 text-[8px] font-black uppercase tracking-[0.1em] opacity-65">
-        Read-only command signal
-      </p>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail="Read-only command signal"
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -3590,23 +3558,7 @@ function SectionHeader({
 }
 
 function WatchMetric({ label, value, tone = "navy" }) {
-  return (
-    <article
-      className={`relative min-w-0 overflow-hidden rounded-[1.15rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(
-        tone
-      )}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-70" />
-
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
-        {label}
-      </p>
-
-      <p className="mt-2 text-3xl font-black text-[#10233F]">
-        {value}
-      </p>
-    </article>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function WatchStudentRow({ score = {} }) {
@@ -3661,21 +3613,21 @@ function ActionRow({ label, value, detail }) {
   );
 }
 
-function SmallMetric({ label, value }) {
+function SmallMetric({ label, value, tone = "navy" }) {
   return (
-    <article className="min-w-0 rounded-[1.15rem] border-[3px] border-emerald-300 bg-emerald-50 p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-emerald-800">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black text-[#10233F]">
-        {value}
-      </p>
-    </article>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? "—"}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
-function HealthProgress({ label, value }) {
-  const clean = Math.max(0, Math.min(100, Number(value || 0)));
+function HealthProgress({ label, value, hasEvidence = true }) {
+  const clean = hasEvidence
+    ? Math.max(0, Math.min(100, Number(value || 0)))
+    : 0;
 
   return (
     <article className="min-w-0 rounded-[1.15rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
@@ -3684,14 +3636,14 @@ function HealthProgress({ label, value }) {
           {label}
         </span>
         <span className="shrink-0 font-black text-orange-700">
-          {clean}%
+          {hasEvidence ? `${clean}%` : "N/A"}
         </span>
       </div>
 
       <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
         <div
           className="h-full rounded-full bg-[#FF5A0A]"
-          style={{ width: `${clean}%` }}
+          style={{ width: hasEvidence ? `${clean}%` : "0%" }}
         />
       </div>
     </article>
@@ -3754,6 +3706,44 @@ function getToneStyle(tone = "") {
   }
 
   return "border-[#C9D7E6] bg-white text-[#123865]";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveCommandSystem;

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { buildExecutiveRecommendations } from "../../../../lib/executiveRecommendations";
 import { buildExecutiveActionTemplate } from "../../../../lib/executiveActionTemplates";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const MAX_TEMPLATE_ITEMS = 30;
 
@@ -377,7 +378,7 @@ function ExecutiveAutomationEngine({ scores = [] }) {
         </p>
       </div>
 
-      <div className="mx-4 mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5 sm:mx-5">
+      <div className="mx-4 mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4 sm:mx-5">
         <MetricCard label="Students Scanned" value={analytics.totalStudents} />
         <MetricCard label="Templates Generated" value={analytics.totalTemplates} />
         <MetricCard label="Automation Coverage" value={`${analytics.coverage}%`} />
@@ -385,7 +386,7 @@ function ExecutiveAutomationEngine({ scores = [] }) {
         <MetricCard label="High Impact" value={analytics.highImpact} />
       </div>
 
-      <div className="mx-4 mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 sm:mx-5">
+      <div className="mx-4 mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 sm:mx-5">
         <MetricCard label="Tasks" value={analytics.taskActions} compact />
         <MetricCard label="Reminders" value={analytics.reminderActions} compact />
         <MetricCard label="Calls" value={analytics.callActions} compact />
@@ -632,15 +633,12 @@ function safeStringify(value) {
 
 function MetricCard({ label, value, compact = false }) {
   return (
-    <div className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.045)]">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65748B]">
-        {label}
-      </p>
-
-      <p className={`${compact ? "text-2xl" : "text-3xl"} mt-2 font-black tracking-[-0.025em] text-[#10233F]`}>
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level={compact ? "baby" : "coBoss"}
+      label={label}
+      value={value}
+      tone="navy"
+    />
   );
 }
 
@@ -725,6 +723,44 @@ export function buildAutomationEngineV2Summary(scores = []) {
 
 export function buildAutomationDuplicateKey(score = {}, recommendation = {}, template = {}) {
   return buildDuplicateKey(score, recommendation, template);
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveAutomationEngine;

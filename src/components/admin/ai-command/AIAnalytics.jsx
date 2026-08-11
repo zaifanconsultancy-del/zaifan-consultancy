@@ -61,6 +61,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -920,14 +921,7 @@ function HeaderChip({ icon: Icon, label }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function SectionIntro({ eyebrow, title, description, badge }) {
@@ -981,28 +975,68 @@ function SectionHeader({
   );
 }
 
-function MetricCard({ label, value, detail, source, tone = "navy", icon: Icon }) {
+function MetricCard({
+  label,
+  value,
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
+  badge = "",
+  source = "",
+  className = "",
+}) {
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
+
   return (
-    <article className={`rounded-[1.25rem] border-[3px] p-4 ${toneClass(tone)}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.09em] text-[#10233F]">
-            {label}
-          </p>
-          <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-        </div>
-        <Icon size={18} className="shrink-0 text-[#123865]" />
-      </div>
-
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-
-      <span className="mt-3 inline-flex rounded-md border border-[#C9D7E6] bg-white/70 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-slate-600">
-        {source}
-      </span>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function ContextCard({ label, value, detail, tone = "navy" }) {

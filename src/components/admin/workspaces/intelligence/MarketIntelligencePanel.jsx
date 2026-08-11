@@ -3,6 +3,7 @@
 
 import React, { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   BarChart3,
   Building2,
@@ -141,6 +142,63 @@ function MarketList({
   );
 }
 
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
+}
+
 export default function MarketIntelligencePanel({ growth = {}, compact = false }) {
   const reduceMotion = useReducedMotion();
   const [view, setView] = useState("countries");
@@ -178,8 +236,14 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
     const categoriesWithData = allLists.filter((list) => list.length > 0).length;
     const activeTotal = activeItems.reduce((sum, item) => sum + safeNumber(item.count), 0);
     const topItem = activeItems[0] || null;
-    const topShare = topItem ? percentage(topItem.count, activeTotal) : 0;
-    const diversification = activeItems.length <= 1 ? 0 : Math.max(0, 100 - topShare);
+    const hasActiveEvidence = Boolean(topItem) && activeTotal > 0;
+    const topShare = hasActiveEvidence
+      ? percentage(topItem.count, activeTotal)
+      : null;
+    const diversification =
+      hasActiveEvidence && activeItems.length > 1
+        ? Math.max(0, 100 - topShare)
+        : null;
 
     return {
       totalSignals,
@@ -188,11 +252,12 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
       topItem,
       topShare,
       diversification,
+      hasActiveEvidence,
     };
   }, [normalizedMarket, activeItems]);
 
   const interpretation = useMemo(() => {
-    if (!metrics.topItem) {
+    if (!metrics.topItem || metrics.topShare === null) {
       return {
         title: "Waiting for real market signals",
         detail:
@@ -284,7 +349,7 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
       </div>
 
       <div className="min-w-0 bg-[#FFF8EF] p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <IntelligenceMetric
             label="Total Market Signals"
             value={metrics.totalSignals}
@@ -301,21 +366,25 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
           />
           <IntelligenceMetric
             label="Top Signal Share"
-            value={`${metrics.topShare}%`}
+            value={metrics.topShare === null ? "N/A" : `${metrics.topShare}%`}
             helper={
-              metrics.topItem
-                ? `${metrics.topItem.name} leads the current ${activeView.label.toLowerCase()} view.`
-                : "No leading signal yet."
+              metrics.topShare === null
+                ? "Not assessed · No active market baseline exists yet."
+                : `${metrics.topItem.name} leads the current ${activeView.label.toLowerCase()} view.`
             }
             icon={TrendingUp}
-            tone="orange"
+            tone={metrics.topShare === null ? "slate" : "orange"}
           />
           <IntelligenceMetric
             label="Diversification"
-            value={`${metrics.diversification}%`}
-            helper="Higher means demand is spread across more than one leading option."
+            value={metrics.diversification === null ? "N/A" : `${metrics.diversification}%`}
+            helper={
+              metrics.diversification === null
+                ? "Not assessed · More than one real demand signal is required."
+                : "Higher means demand is spread across more than one leading option."
+            }
             icon={BarChart3}
-            tone="cream"
+            tone={metrics.diversification === null ? "slate" : "blue"}
           />
         </div>
 
@@ -392,39 +461,16 @@ export default function MarketIntelligencePanel({ growth = {}, compact = false }
 }
 
 function IntelligenceMetric({ label, value, helper, icon: Icon, tone = "orange" }) {
-  const dark = tone === "navy";
-
-  const surface =
-    tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : tone === "cream"
-      ? "border-[#C9D7E6] bg-white"
-      : "border-[#FFB38A] bg-[#FFF4EA]";
-
   return (
-    <div
-      className={`rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)] ${surface}`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.1em]" style={{ color: dark ? "#FDBA74" : "#64748B" }}>
-            {label}
-          </p>
-          <p className="mt-2 text-2xl font-black" style={{ color: dark ? "#FFFFFF" : "#10233F" }}>
-            {value}
-          </p>
-        </div>
-        <Icon size={18} style={{ color: dark ? "#FDBA74" : "#C2410C" }} />
-      </div>
-      <p className="mt-2 text-xs font-semibold leading-5" style={{ color: dark ? "#F8FAFC" : "#64748B" }}>
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 

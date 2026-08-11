@@ -36,6 +36,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   BarChart3,
   CalendarCheck2,
@@ -1034,54 +1035,16 @@ function DashboardAnalytics({
   );
 }
 
-function AnalyticsCard({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  tone,
-  index,
-  reduceMotion,
-  cardClass,
-}) {
-  const style = getToneStyle(tone);
-
+function AnalyticsCard({ label, value, helper, icon: Icon, tone, index, reduceMotion, cardClass }) {
   return (
-    <motion.article
-      initial={
-        reduceMotion
-          ? false
-          : { opacity: 0, y: 10 }
-      }
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.22,
-        delay: reduceMotion ? 0 : index * 0.035,
-      }}
-      className={`${cardClass} rounded-[1.5rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.04)] ${style.card}`}
+      transition={{ duration: reduceMotion ? 0 : 0.22, delay: reduceMotion ? 0 : Math.min((index || 0) * 0.025, 0.1) }}
+      className="h-full min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.12em]">
-            {label}
-          </p>
-
-          <p className="mt-2 text-3xl font-black text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 bg-white ${style.icon}`}
-        >
-          <Icon size={18} />
-        </div>
-      </div>
-
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-        {helper}
-      </p>
-    </motion.article>
+      <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} className="h-full" />
+    </motion.div>
   );
 }
 
@@ -1243,33 +1206,8 @@ function ItalyFocusPanel({
   );
 }
 
-function ItalyMiniMetric({
-  label,
-  value,
-  tone = "orange",
-}) {
-  const tones = {
-    orange:
-      "border-[#F97316] bg-[#FFF4E8] text-[#B84F0E]",
-    blue:
-      "border-[#60A5FA] bg-[#F2F7FF] text-blue-700",
-    green:
-      "border-[#34D399] bg-[#F0FFF8] text-emerald-700",
-    amber:
-      "border-[#F59E0B] bg-[#FFF7ED] text-amber-800",
-  };
-
-  return (
-    <div className={`min-w-0 rounded-xl border-[3px] p-3 ${tones[tone] || tones.orange}`}>
-      <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.07em] opacity-80">
-        {label}
-      </p>
-
-      <p className="mt-1 text-2xl font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+function ItalyMiniMetric({ label, value, tone = "orange" }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function InsightPanel({
@@ -1388,21 +1326,8 @@ function LegendList({ data }) {
   );
 }
 
-function MiniStat({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] px-3 py-3 text-center">
-      <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+function MiniStat({ label, value }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function CustomTooltip({
@@ -1467,21 +1392,8 @@ function HeaderBadge({ children }) {
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function MethodologyNote() {
@@ -1825,6 +1737,63 @@ function getHealthConfig(
     message:
       "The CRM snapshot shows weak ownership, progression, outcomes or activity and needs operational cleanup.",
   };
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default DashboardAnalytics;

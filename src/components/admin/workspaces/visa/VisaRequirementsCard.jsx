@@ -35,6 +35,7 @@ import {
   TimerReset,
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 12000;
 
@@ -1403,60 +1404,12 @@ function VisaRequirementsCard({
 }
 
 function HeroMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 
-function Metric({
-  label,
-  value,
-  icon: Icon,
-  tone = "slate",
-}) {
-  const tones = {
-    slate:
-      "border-slate-300 bg-white text-[#10233F]",
-    green:
-      "border-emerald-300 bg-emerald-50 text-emerald-800",
-    blue:
-      "border-blue-300 bg-blue-50 text-blue-800",
-    orange:
-      "border-orange-300 bg-orange-50 text-orange-800",
-    red:
-      "border-red-300 bg-red-50 text-red-800",
-  };
-
-  return (
-    <div
-      className={`flex min-w-0 items-center gap-3 rounded-[1.2rem] border-[3px] p-3 shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <Icon
-        size={15}
-        className="shrink-0"
-      />
-
-      <div className="min-w-0">
-        <p className="truncate text-sm font-black">
-          {value}
-        </p>
-
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
+function Metric({ label, value, icon: Icon, tone = "slate" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function RequirementStatus({ value }) {
@@ -1616,6 +1569,51 @@ function pretty(value) {
     .replace(/\b\w/g, (letter) =>
       letter.toUpperCase()
     );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default VisaRequirementsCard;

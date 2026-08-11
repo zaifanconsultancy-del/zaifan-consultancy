@@ -31,6 +31,7 @@ import {
   Zap,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 const RiskMonitoringPanel = lazy(() => import("./RiskMonitoringPanel"));
 const OpportunityFeedPanel = lazy(() => import("../leads-crm/OpportunityFeedPanel"));
 import {
@@ -490,7 +491,9 @@ function buildExecutiveIntelligence(students = []) {
   ).length;
 
   const leadershipPriority =
-    rescueCases > 0
+    students.length === 0
+      ? "No Executive score evidence yet."
+      : rescueCases > 0
       ? "Rescue high-value risky students first."
       : readyForVisa > 0
       ? "Move CAS/offer students into visa workflow."
@@ -498,7 +501,7 @@ function buildExecutiveIntelligence(students = []) {
       ? "Fast-track likely wins."
       : stalled.length > 0
       ? "Revive stalled students."
-      : "Portfolio looks stable.";
+      : "Scored portfolio looks stable.";
 
   return {
     rankedRisk,
@@ -514,6 +517,7 @@ function buildExecutiveIntelligence(students = []) {
 
 function buildAutomationPressure(students = []) {
   const summary = {
+    hasEvidence: students.length > 0,
     totalStudents: students.length,
     automationCandidates: 0,
     approvalLikely: 0,
@@ -525,9 +529,11 @@ function buildAutomationPressure(students = []) {
     universityActions: 0,
     stalledActions: 0,
     communicationActions: 0,
-    estimatedWorkload: "Light",
-    pressureScore: 0,
+    estimatedWorkload: students.length ? "Light" : "N/A",
+    pressureScore: students.length ? 0 : null,
   };
+
+  if (!students.length) return summary;
 
   students.forEach((student) => {
     const risk = asNumber(student?.risk_score);
@@ -597,7 +603,19 @@ function buildAutomationPressure(students = []) {
 }
 
 function buildCommandHealth(metrics = {}, workflowScanner = {}, automationPressure = {}, platformHealth = {}) {
-  const total = Math.max(1, asNumber(metrics.total));
+  const evidenceTotal = asNumber(metrics.total);
+
+  if (evidenceTotal <= 0) {
+    return {
+      readiness: null,
+      riskPressure: null,
+      operationalPressure: null,
+      workflowPenalty: null,
+      status: "No Evidence",
+    };
+  }
+
+  const total = evidenceTotal;
   const riskPressure = percent(
     asNumber(metrics.criticalRisk) + asNumber(metrics.highRisk),
     total
@@ -717,12 +735,14 @@ function ExecutiveAIDashboard({ students = [] }) {
     ]
   );
 
+  const hasEvidence = metrics.total > 0;
+
   return (
     <motion.section
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28 }}
-      className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5"
+      className="min-w-0 space-y-5 text-[#10233F]"
     >
       <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
         <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
@@ -745,9 +765,9 @@ function ExecutiveAIDashboard({ students = [] }) {
 
             <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <NavyMetric label="Students" value={metrics.total} />
-              <NavyMetric label="AI Coverage" value={`${metrics.coverage}%`} />
-              <NavyMetric label="Critical Risk" value={metrics.criticalRisk} />
-              <NavyMetric label="Conversion Ready" value={metrics.conversionReady} />
+              <NavyMetric label="AI Coverage" value={hasEvidence ? `${metrics.coverage}%` : "N/A"} />
+              <NavyMetric label="Critical Risk" value={hasEvidence ? metrics.criticalRisk : "N/A"} />
+              <NavyMetric label="Conversion Ready" value={hasEvidence ? metrics.conversionReady : "N/A"} />
             </div>
           </div>
 
@@ -760,7 +780,7 @@ function ExecutiveAIDashboard({ students = [] }) {
             </div>
 
             <p className="mt-3 text-5xl font-black text-white">
-              {commandHealth.readiness}
+              {commandHealth.readiness === null ? "N/A" : commandHealth.readiness}
             </p>
 
             <p className="mt-1 text-sm font-black uppercase tracking-[0.08em] text-white">
@@ -768,10 +788,22 @@ function ExecutiveAIDashboard({ students = [] }) {
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <OrangeCommandMetric label="Avg Risk" value={`${metrics.averageRisk}/100`} />
-              <OrangeCommandMetric label="Opportunity" value={`${metrics.averageOpportunity}/100`} />
-              <OrangeCommandMetric label="Workflow Breaks" value={workflowScanner.totalIssues || 0} />
-              <OrangeCommandMetric label="Pressure" value={`${automationPressure.pressureScore}/100`} />
+              <OrangeCommandMetric
+                label="Avg Risk"
+                value={metrics.total ? `${metrics.averageRisk}/100` : "N/A"}
+              />
+              <OrangeCommandMetric
+                label="Opportunity"
+                value={metrics.total ? `${metrics.averageOpportunity}/100` : "N/A"}
+              />
+              <OrangeCommandMetric
+                label="Workflow Breaks"
+                value={metrics.total ? workflowScanner.totalIssues || 0 : "N/A"}
+              />
+              <OrangeCommandMetric
+                label="Pressure"
+                value={metrics.total ? `${automationPressure.pressureScore}/100` : "N/A"}
+              />
             </div>
 
             <div className="mt-4 rounded-xl border-2 border-white/25 bg-white/10 p-3">
@@ -810,58 +842,58 @@ function ExecutiveAIDashboard({ students = [] }) {
         <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
           <ExecutiveBoardMetric
             label="Portfolio Risk"
-            value={`${metrics.averageRisk}/100`}
-            detail={`${metrics.criticalRisk} critical · ${metrics.highRisk} high risk`}
-            tone={metrics.averageRisk >= 65 ? "red" : metrics.averageRisk >= 35 ? "orange" : "green"}
+            value={metrics.total ? `${metrics.averageRisk}/100` : "N/A"}
+            detail={metrics.total ? `${metrics.criticalRisk} critical · ${metrics.highRisk} high risk` : "No scored evidence yet"}
+            tone={metrics.total ? (metrics.averageRisk >= 65 ? "red" : metrics.averageRisk >= 35 ? "orange" : "green") : "slate"}
             icon={AlertTriangle}
           />
           <ExecutiveBoardMetric
             label="Opportunity Index"
-            value={`${metrics.averageOpportunity}/100`}
-            detail={`${metrics.highOpportunity} high-opportunity students`}
-            tone={metrics.averageOpportunity >= 65 ? "green" : "navy"}
+            value={metrics.total ? `${metrics.averageOpportunity}/100` : "N/A"}
+            detail={metrics.total ? `${metrics.highOpportunity} high-opportunity students` : "No scored evidence yet"}
+            tone={metrics.total ? (metrics.averageOpportunity >= 65 ? "green" : "navy") : "slate"}
             icon={TrendingUp}
           />
           <ExecutiveBoardMetric
             label="Workflow Integrity"
-            value={workflowScanner.totalIssues || 0}
-            detail={`${brokenWorkflows.length} student journeys with failures`}
-            tone={workflowScanner.totalIssues ? "red" : "green"}
+            value={metrics.total ? workflowScanner.totalIssues || 0 : "N/A"}
+            detail={metrics.total ? `${brokenWorkflows.length} student journeys with failures` : "No scored workflow evidence yet"}
+            tone={metrics.total ? (workflowScanner.totalIssues ? "red" : "green") : "slate"}
             icon={Workflow}
           />
           <ExecutiveBoardMetric
             label="Automation Pressure"
-            value={`${automationPressure.pressureScore}/100`}
-            detail={`${automationPressure.automationCandidates} prepared-action candidates`}
-            tone={automationPressure.pressureScore >= 70 ? "red" : "orange"}
+            value={metrics.total ? `${automationPressure.pressureScore}/100` : "N/A"}
+            detail={metrics.total ? `${automationPressure.automationCandidates} prepared-action candidates` : "No scored automation evidence yet"}
+            tone={metrics.total ? (automationPressure.pressureScore >= 70 ? "red" : "orange") : "slate"}
             icon={Zap}
           />
           <ExecutiveBoardMetric
             label="AI Coverage"
-            value={`${metrics.coverage}%`}
-            detail={`${metrics.analyzed}/${metrics.total} students analyzed`}
-            tone={metrics.coverage >= 80 ? "green" : "orange"}
+            value={metrics.total ? `${metrics.coverage}%` : "N/A"}
+            detail={metrics.total ? `${metrics.analyzed}/${metrics.total} students analyzed` : "Generate Executive scores to establish coverage"}
+            tone={metrics.total ? (metrics.coverage >= 80 ? "green" : "orange") : "slate"}
             icon={Bot}
           />
           <ExecutiveBoardMetric
             label="Conversion Ready"
-            value={metrics.conversionReady}
-            detail={`${executiveIntelligence.likelyWins} likely wins`}
-            tone="green"
+            value={hasEvidence ? metrics.conversionReady : "N/A"}
+            detail={hasEvidence ? `${executiveIntelligence.likelyWins} likely wins` : "No scored evidence yet"}
+            tone={hasEvidence ? "green" : "slate"}
             icon={UserRoundCheck}
           />
           <ExecutiveBoardMetric
             label="Rescue Cases"
-            value={executiveIntelligence.rescueCases}
-            detail="High-value students needing intervention"
-            tone={executiveIntelligence.rescueCases ? "red" : "green"}
+            value={hasEvidence ? executiveIntelligence.rescueCases : "N/A"}
+            detail={hasEvidence ? "High-value students needing intervention" : "No scored evidence yet"}
+            tone={hasEvidence ? (executiveIntelligence.rescueCases ? "red" : "green") : "slate"}
             icon={HeartPulse}
           />
           <ExecutiveBoardMetric
             label="Leadership Load"
-            value={automationPressure.estimatedWorkload}
-            detail={`${automationPressure.approvalLikely} likely approval-controlled actions`}
-            tone="navy"
+            value={hasEvidence ? automationPressure.estimatedWorkload : "N/A"}
+            detail={hasEvidence ? `${automationPressure.approvalLikely} likely approval-controlled actions` : "No scored automation evidence yet"}
+            tone={hasEvidence ? "navy" : "slate"}
             icon={Crown}
           />
         </div>
@@ -885,10 +917,9 @@ function ExecutiveAIDashboard({ students = [] }) {
                 </p>
 
                 <p className="mt-2 break-words text-xs font-semibold leading-5 text-slate-200">
-                  {automationPressure.automationCandidates} automation
-                  candidate(s), {automationPressure.approvalLikely} likely
-                  approval-controlled and {workflowScanner.totalIssues || 0}
-                  workflow break(s) currently detected.
+                  {hasEvidence
+                    ? `${automationPressure.automationCandidates} automation candidate(s), ${automationPressure.approvalLikely} likely approval-controlled and ${workflowScanner.totalIssues || 0} workflow break(s) currently detected.`
+                    : "Generate Executive scores before prioritization, workflow pressure or automation load can be assessed."}
                 </p>
               </div>
             </div>
@@ -900,7 +931,7 @@ function ExecutiveAIDashboard({ students = [] }) {
             </p>
 
             <p className="mt-2 text-3xl font-black text-[#10233F]">
-              {automationPressure.estimatedWorkload}
+              {hasEvidence ? automationPressure.estimatedWorkload : "N/A"}
             </p>
 
             <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
@@ -911,11 +942,11 @@ function ExecutiveAIDashboard({ students = [] }) {
             <div className="mt-4 grid grid-cols-2 gap-2">
               <LeadershipMiniMetric
                 label="Candidates"
-                value={automationPressure.automationCandidates}
+                value={hasEvidence ? automationPressure.automationCandidates : "N/A"}
               />
               <LeadershipMiniMetric
                 label="Approvals"
-                value={automationPressure.approvalLikely}
+                value={hasEvidence ? automationPressure.approvalLikely : "N/A"}
               />
             </div>
           </div>
@@ -929,21 +960,21 @@ function ExecutiveAIDashboard({ students = [] }) {
           />
           <ExecutiveSignal
             label="Immediate rescue"
-            value={executiveIntelligence.rescueCases}
-            detail="High-value cases under pressure"
-            tone="risk"
+            value={hasEvidence ? executiveIntelligence.rescueCases : "N/A"}
+            detail={hasEvidence ? "High-value cases under pressure" : "No scored evidence yet"}
+            tone={hasEvidence ? "risk" : "slate"}
           />
           <ExecutiveSignal
             label="Likely wins"
-            value={executiveIntelligence.likelyWins}
-            detail="Strong conversion potential"
-            tone="good"
+            value={hasEvidence ? executiveIntelligence.likelyWins : "N/A"}
+            detail={hasEvidence ? "Strong conversion potential" : "No scored evidence yet"}
+            tone={hasEvidence ? "good" : "slate"}
           />
           <ExecutiveSignal
             label="Workflow breaks"
-            value={workflowScanner.totalIssues || 0}
-            detail="Cross-system failures detected"
-            tone={workflowScanner.totalIssues ? "warning" : "good"}
+            value={hasEvidence ? workflowScanner.totalIssues || 0 : "N/A"}
+            detail={hasEvidence ? "Cross-system failures detected" : "No scored workflow evidence yet"}
+            tone={hasEvidence ? (workflowScanner.totalIssues ? "warning" : "good") : "slate"}
           />
         </div>
       </section>
@@ -962,41 +993,41 @@ function ExecutiveAIDashboard({ students = [] }) {
           />
           <MetricCard
             label="AI Coverage"
-            value={`${metrics.coverage}%`}
+            value={hasEvidence ? `${metrics.coverage}%` : "N/A"}
             icon={Bot}
           />
           <MetricCard
             label="Executive Priority"
-            value={metrics.executivePriority}
+            value={hasEvidence ? metrics.executivePriority : "N/A"}
             tone="gold"
             icon={Crown}
           />
           <MetricCard
             label="Critical Risk"
-            value={metrics.criticalRisk}
+            value={hasEvidence ? metrics.criticalRisk : "N/A"}
             tone="risk"
             icon={AlertTriangle}
           />
           <MetricCard
             label="High Risk"
-            value={metrics.highRisk}
+            value={hasEvidence ? metrics.highRisk : "N/A"}
             tone="warning"
             icon={HeartPulse}
           />
           <MetricCard
             label="Medium Risk"
-            value={metrics.mediumRisk}
+            value={hasEvidence ? metrics.mediumRisk : "N/A"}
             icon={Radar}
           />
           <MetricCard
             label="High Opportunity"
-            value={metrics.highOpportunity}
+            value={hasEvidence ? metrics.highOpportunity : "N/A"}
             tone="good"
             icon={TrendingUp}
           />
           <MetricCard
             label="Conversion Ready"
-            value={metrics.conversionReady}
+            value={hasEvidence ? metrics.conversionReady : "N/A"}
             tone="good"
             icon={UserRoundCheck}
           />
@@ -1009,59 +1040,59 @@ function ExecutiveAIDashboard({ students = [] }) {
         description="Real Student OS movement rather than generic CRM lead scoring."
         icon={Workflow}
       >
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="No Application"
-            value={metrics.journey.notStarted}
+            value={hasEvidence ? metrics.journey.notStarted : "N/A"}
             tone="warning"
           />
           <MetricCard
             label="Application Started"
-            value={metrics.journey.started}
+            value={hasEvidence ? metrics.journey.started : "N/A"}
           />
           <MetricCard
             label="Application Submitted"
-            value={metrics.journey.submitted}
+            value={hasEvidence ? metrics.journey.submitted : "N/A"}
           />
           <MetricCard
             label="Offer Holders"
-            value={metrics.journey.offerHolders}
+            value={hasEvidence ? metrics.journey.offerHolders : "N/A"}
             tone="good"
           />
           <MetricCard
             label="Conversion Ready"
-            value={metrics.journey.conversionReady}
+            value={hasEvidence ? metrics.journey.conversionReady : "N/A"}
             tone="gold"
           />
           <MetricCard
             label="CAS Pending"
-            value={metrics.journey.casPending}
+            value={hasEvidence ? metrics.journey.casPending : "N/A"}
             tone="warning"
           />
           <MetricCard
             label="CAS Issued"
-            value={metrics.journey.casIssued}
+            value={hasEvidence ? metrics.journey.casIssued : "N/A"}
             tone="good"
           />
           <MetricCard
             label="Visa Pending"
-            value={metrics.journey.visaPending}
+            value={hasEvidence ? metrics.journey.visaPending : "N/A"}
             tone="warning"
           />
           <MetricCard
             label="Visa Approved"
-            value={metrics.journey.visaApproved}
+            value={hasEvidence ? metrics.journey.visaApproved : "N/A"}
             tone="good"
           />
           <MetricCard
             label="Visa Rejected"
-            value={metrics.journey.visaRejected}
+            value={hasEvidence ? metrics.journey.visaRejected : "N/A"}
             tone="risk"
           />
         </div>
 
         <div className="mt-4">
-          <JourneyProgressPanel metrics={metrics} />
+          <JourneyProgressPanel metrics={metrics} hasEvidence={hasEvidence} />
         </div>
       </ExecutiveSection>
 
@@ -1074,25 +1105,25 @@ function ExecutiveAIDashboard({ students = [] }) {
         <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <HealthCard
             label="No University Plan"
-            value={metrics.noUniversityPlan}
+            value={hasEvidence ? metrics.noUniversityPlan : "N/A"}
             detail="Students without dream, target or safe planning."
             tone="warning"
           />
           <HealthCard
             label="Missing Safe University"
-            value={metrics.missingSafeUniversity}
+            value={hasEvidence ? metrics.missingSafeUniversity : "N/A"}
             detail="Students with plans but no safe option."
             tone="risk"
           />
           <HealthCard
             label="Weak Documents"
-            value={metrics.documentWeak}
+            value={hasEvidence ? metrics.documentWeak : "N/A"}
             detail="Low readiness or missing document signals."
             tone="warning"
           />
           <HealthCard
             label="Task Problems"
-            value={metrics.taskProblems}
+            value={hasEvidence ? metrics.taskProblems : "N/A"}
             detail="Overdue or overloaded student task queues."
             tone="risk"
           />
@@ -1107,6 +1138,7 @@ function ExecutiveAIDashboard({ students = [] }) {
       >
         <AutomationPressurePanel
           automationPressure={automationPressure}
+          hasEvidence={hasEvidence}
         />
       </ExecutiveSection>
 
@@ -1116,64 +1148,67 @@ function ExecutiveAIDashboard({ students = [] }) {
         description="Expected wins, risky value, stalled students and next-stage movement."
         icon={TrendingUp}
       >
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           <ForecastCard
             label="Likely Wins"
-            value={executiveIntelligence.likelyWins}
+            value={hasEvidence ? executiveIntelligence.likelyWins : "N/A"}
             detail="High opportunity with controlled risk."
             tone="good"
           />
           <ForecastCard
             label="Rescue Cases"
-            value={executiveIntelligence.rescueCases}
+            value={hasEvidence ? executiveIntelligence.rescueCases : "N/A"}
             detail="High value but needs intervention."
             tone="warning"
           />
           <ForecastCard
             label="Visa Ready Soon"
-            value={executiveIntelligence.readyForVisa}
+            value={hasEvidence ? executiveIntelligence.readyForVisa : "N/A"}
             detail="Offer/CAS students close to visa."
             tone="gold"
           />
           <ForecastCard
             label="Stalled Watch"
-            value={executiveIntelligence.stalled.length}
+            value={hasEvidence ? executiveIntelligence.stalled.length : "N/A"}
             detail="Needs fresh movement or follow-up."
             tone="risk"
           />
           <ForecastCard
             label="Rejected / Lost"
-            value={executiveIntelligence.lostOrRejected}
+            value={hasEvidence ? executiveIntelligence.lostOrRejected : "N/A"}
             detail="Cases needing recovery or closure."
             tone="risk"
           />
           <ForecastCard
             label="Opportunity Power"
-            value={`${metrics.averageOpportunity}/100`}
+            value={hasEvidence ? `${metrics.averageOpportunity}/100` : "N/A"}
             detail="Portfolio-wide opportunity average."
             tone="good"
           />
         </div>
 
         <div className="mt-4">
-          <ExecutiveRadar metrics={metrics} />
+          <ExecutiveRadar metrics={metrics} hasEvidence={hasEvidence} />
         </div>
 
         <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-3">
           <ExecutiveStudentList
             title="Highest Risk Students"
+            hasEvidence={hasEvidence}
             items={executiveIntelligence.rankedRisk}
             scoreKey="risk_score"
             tone="risk"
           />
           <ExecutiveStudentList
             title="Highest Opportunity Students"
+            hasEvidence={hasEvidence}
             items={executiveIntelligence.rankedOpportunity}
             scoreKey="opportunity_score"
             tone="gold"
           />
           <ExecutiveStudentList
             title="Stalled / Low Movement"
+            hasEvidence={hasEvidence}
             items={executiveIntelligence.stalled}
             scoreKey="days_since_updated"
             tone="warning"
@@ -1203,6 +1238,7 @@ function ExecutiveAIDashboard({ students = [] }) {
           <PlatformVerificationCenter
             platformHealth={platformHealth}
             brokenWorkflows={brokenWorkflows}
+            hasEvidence={hasEvidence}
           />
           <ProductionHardeningMonitor
             metrics={metrics}
@@ -1223,13 +1259,16 @@ function ExecutiveAIDashboard({ students = [] }) {
           <RecoveryIntelligenceCenter
             workflowScanner={workflowScanner}
             recoveryEngine={recoveryEngine}
+            hasEvidence={hasEvidence}
           />
           <WorkflowFailureHeatmap
             workflowScanner={workflowScanner}
+            hasEvidence={hasEvidence}
           />
           <ExecutiveRecoveryQueue
             issues={workflowScanner.issues || []}
             recoveryEngine={recoveryEngine}
+            hasEvidence={hasEvidence}
           />
         </div>
       </ExecutiveDisclosure>
@@ -1273,38 +1312,15 @@ function ExecutiveBoardMetric({
   tone = "navy",
   icon: Icon,
 }) {
-  const classes =
-    tone === "green"
-      ? "border-emerald-400 bg-emerald-50"
-      : tone === "red"
-        ? "border-red-400 bg-red-50"
-        : tone === "orange"
-          ? "border-[#FF5A0A] bg-[#FFF4E8]"
-          : "border-[#123865] bg-[#F2F7FF]";
-
   return (
-    <article
-      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${classes}`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
-            {label}
-          </p>
-          <p className="mt-2 break-words text-3xl font-black leading-tight text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865]">
-          <Icon size={16} />
-        </span>
-      </div>
-
-      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1347,16 +1363,17 @@ function ExecutiveSection({
   );
 }
 
-function LeadershipMiniMetric({ label, value }) {
+function LeadershipMiniMetric({
+  label,
+  value,
+}) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-[#FF5A0A] bg-white p-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-orange-700">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      tone="orange"
+    />
   );
 }
 
@@ -1438,19 +1455,25 @@ function CommandChip({ icon: Icon, children }) {
 
 function NavyMetric({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.09em] text-white">{label}</p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      surface="navy"
+      label={label}
+      value={value ?? 0}
+      tone="navy"
+    />
   );
 }
 
 function OrangeCommandMetric({ label, value }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">{label}</p>
-      <p className="mt-1 text-lg font-black text-white">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      surface="navy"
+      label={label}
+      value={value}
+      tone="orange"
+    />
   );
 }
 
@@ -1489,80 +1512,79 @@ function CommandPill({ label, value, tone = "neutral" }) {
 }
 
 function MetricCard({ label, value, tone = "default", icon: Icon = Activity }) {
-  const boxClass =
+  return (
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
+  );
+}
+
+function HealthCard({
+  label,
+  value,
+  detail,
+  tone = "default",
+}) {
+  const semanticTone =
     tone === "risk"
-      ? "border-red-300 bg-red-50"
+      ? "red"
       : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
+      ? "amber"
       : tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "gold"
-      ? "border-[#FFB38A] bg-[#FFF4E8]"
-      : "border-[#C9D7E6] bg-white";
+      ? "green"
+      : "blue";
 
   return (
-    <div className={`min-w-0 cursor-default select-none rounded-[1.2rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${boxClass}`}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">{label}</p>
-        <Icon size={15} className="text-[#C2410C]" />
-      </div>
-      <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      icon={FileWarning}
+      tone={semanticTone}
+      className="h-full"
+    />
   );
 }
 
-function HealthCard({ label, value, detail, tone = "default" }) {
-  const badgeClass =
+function ForecastCard({
+  label,
+  value,
+  detail,
+  tone = "default",
+}) {
+  const semanticTone =
     tone === "risk"
-      ? "border-red-200 bg-red-50 text-red-700"
+      ? "red"
       : tone === "warning"
-      ? "border-amber-200 bg-amber-50 text-amber-700"
-      : "border-[#cbd6e2] bg-[#FFF8EF] text-[#36506f]";
-
-  return (
-    <div className="min-w-0 cursor-default rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#4d6380]">{label}</p>
-          <p className="mt-3 text-3xl font-black text-[#10233F]">{value}</p>
-        </div>
-
-        <span
-          className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${badgeClass}`}
-        >
-          Watch
-        </span>
-      </div>
-
-      <p className="mt-3 text-sm leading-relaxed text-[#4d6380]">{detail}</p>
-    </div>
-  );
-}
-
-function ForecastCard({ label, value, detail, tone = "default" }) {
-  const style =
-    tone === "risk"
-      ? "border-red-200 bg-red-50 text-red-700"
-      : tone === "warning"
-      ? "border-[#FDBA74] bg-[#FFF4E8] text-[#C2410C]"
+      ? "amber"
       : tone === "good"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      ? "green"
       : tone === "gold"
-      ? "border-[#FDBA74] bg-[#FFF4E8] text-[#C2410C]"
-      : "border-[#cbd6e2] bg-white shadow-sm text-[#36506f]";
+      ? "orange"
+      : "blue";
 
   return (
-    <div className={`min-w-0 cursor-default rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
-        {label}
-      </p>
-      <p className="mt-3 text-3xl font-black text-[#10233F]">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-[#4d6380]">{detail}</p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      icon={TrendingUp}
+      tone={semanticTone}
+      className="h-full"
+    />
   );
 }
 
-function JourneyProgressPanel({ metrics }) {
+function JourneyProgressPanel({
+  metrics,
+  hasEvidence = false,
+}) {
   const rows = [
     ["Application Started", metrics.journeyPercent.started],
     ["Application Submitted", metrics.journeyPercent.submitted],
@@ -1583,14 +1605,33 @@ function JourneyProgressPanel({ metrics }) {
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {rows.map(([label, value]) => (
-          <ProgressBar key={label} label={label} value={value} />
+          <ProgressBar
+            key={label}
+            label={label}
+            value={value}
+            hasEvidence={hasEvidence}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function AutomationPressurePanel({ automationPressure }) {
+function AutomationPressurePanel({
+  automationPressure,
+  hasEvidence = false,
+}) {
+  const rows = [
+    ["Conversion Actions", automationPressure.conversionActions, "green"],
+    ["Rescue Actions", automationPressure.rescueActions, "red"],
+    ["Document Actions", automationPressure.documentActions, "amber"],
+    ["Task Actions", automationPressure.taskActions, "red"],
+    ["Visa Actions", automationPressure.visaActions, "blue"],
+    ["University Actions", automationPressure.universityActions, "violet"],
+    ["Stalled Actions", automationPressure.stalledActions, "amber"],
+    ["Communication Actions", automationPressure.communicationActions, "blue"],
+  ];
+
   return (
     <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -1599,40 +1640,43 @@ function AutomationPressurePanel({ automationPressure }) {
             Automation Pressure
           </p>
           <h3 className="mt-1 text-xl font-black text-[#10233F]">
-            {automationPressure.estimatedWorkload} Workload
+            {hasEvidence ? `${automationPressure.estimatedWorkload} Workload` : "Not Assessed"}
           </h3>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
-            Executive AI sees {automationPressure.automationCandidates} student(s) that can
-            generate prepared counselor actions. {automationPressure.approvalLikely} likely need
-            approval before execution.
+            {hasEvidence
+              ? `Executive AI sees ${automationPressure.automationCandidates} student(s) that can generate prepared counselor actions. ${automationPressure.approvalLikely} likely need approval before execution.`
+              : "Generate Executive scores before automation pressure, workload or prepared-action demand can be assessed."}
           </p>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-4 text-center">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
-            Pressure Score
-          </p>
-          <p className="mt-2 text-3xl font-black text-[#C2410C]">
-            {automationPressure.pressureScore}/100
-          </p>
-        </div>
+        <ZaifanMetricCard
+          level="baby"
+          label="Pressure Score"
+          value={hasEvidence ? `${automationPressure.pressureScore}/100` : "N/A"}
+          detail={hasEvidence ? "Prepared-action pressure" : "No scored evidence yet"}
+          icon={Zap}
+          tone={hasEvidence ? "orange" : "slate"}
+        />
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <SmallInfo label="Conversion Actions" value={automationPressure.conversionActions} />
-        <SmallInfo label="Rescue Actions" value={automationPressure.rescueActions} />
-        <SmallInfo label="Document Actions" value={automationPressure.documentActions} />
-        <SmallInfo label="Task Actions" value={automationPressure.taskActions} />
-        <SmallInfo label="Visa Actions" value={automationPressure.visaActions} />
-        <SmallInfo label="University Actions" value={automationPressure.universityActions} />
-        <SmallInfo label="Stalled Actions" value={automationPressure.stalledActions} />
-        <SmallInfo label="Communication Actions" value={automationPressure.communicationActions} />
+      <div className="mt-5 grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {rows.map(([label, value, tone]) => (
+          <SmallInfo
+            key={label}
+            label={label}
+            value={hasEvidence ? value : "N/A"}
+            tone={hasEvidence ? tone : "slate"}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function ExecutiveRadar({ metrics }) {
+function ExecutiveRadar({
+  metrics,
+  hasEvidence = false,
+}) {
   const rows = [
     ["Applications", metrics.applicationSubmitted, metrics.total],
     ["Offers", metrics.offerHolders, metrics.total],
@@ -1654,20 +1698,33 @@ function ExecutiveRadar({ metrics }) {
           </h3>
         </div>
         <p className="text-sm text-[#61738d]">
-          Positive bars show progress; weak bars reveal operational pressure.
+          {hasEvidence
+            ? "Positive bars show progress; weak bars reveal operational pressure."
+            : "No scored evidence yet — coverage is not assessed."}
         </p>
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {rows.map(([label, value, total]) => (
-          <ProgressBar key={label} label={`${label} ${value}/${total}`} value={percent(value, total)} />
+          <ProgressBar
+            key={label}
+            label={hasEvidence ? `${label} ${value}/${total}` : label}
+            value={hasEvidence ? percent(value, total) : 0}
+            hasEvidence={hasEvidence}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
+function ExecutiveStudentList({
+  title,
+  items = [],
+  scoreKey,
+  tone = "gold",
+  hasEvidence = true,
+}) {
   const scoreClass =
     tone === "risk"
       ? "border-red-200 bg-red-50 text-red-600"
@@ -1697,9 +1754,7 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
                     </p>
                   </div>
 
-                  <span
-                    className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${scoreClass}`}
-                  >
+                  <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${scoreClass}`}>
                     {asNumber(getScoreValue(student, scoreKey, student?.[scoreKey]))}
                   </span>
                 </div>
@@ -1711,8 +1766,8 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
             );
           })
         ) : (
-          <p className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4 text-sm text-[#61738d]">
-            No records yet.
+          <p className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-4 text-sm font-semibold text-[#61738d]">
+            {hasEvidence ? "No records match this view." : "No scored Executive evidence yet."}
           </p>
         )}
       </div>
@@ -1720,49 +1775,70 @@ function ExecutiveStudentList({ title, items = [], scoreKey, tone = "gold" }) {
   );
 }
 
-function ProgressBar({ label, value }) {
+function ProgressBar({
+  label,
+  value,
+  hasEvidence = true,
+}) {
+  const clean = hasEvidence
+    ? Math.max(0, Math.min(100, Number(value || 0)))
+    : 0;
+
   return (
     <div className="min-w-0 rounded-xl border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
-      <div className="flex items-center justify-between text-xs font-bold text-[#4d6380]">
+      <div className="flex items-center justify-between gap-3 text-xs font-bold text-[#4d6380]">
         <span>{label}</span>
-        <span>{value}%</span>
+        <span>{hasEvidence ? `${clean}%` : "N/A"}</span>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dce4ed]">
-        <div className="h-full rounded-full bg-[#FF5A0A] transition-[width] duration-500" style={{ width: `${value}%` }} />
+        <div
+          className="h-full rounded-full bg-[#FF5A0A] transition-[width] duration-500"
+          style={{ width: hasEvidence ? `${clean}%` : "0%" }}
+        />
       </div>
     </div>
   );
 }
 
-function SmallInfo({ label, value }) {
+function SmallInfo({
+  label,
+  value,
+  tone = "blue",
+}) {
   return (
-    <div className="min-w-0 rounded-xl border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">{label}</p>
-      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      tone={tone}
+      className="h-full"
+    />
   );
 }
 
 
 function ExecutiveOperationsExpansion({ metrics, executiveIntelligence, automationPressure }) {
-  const operatingScore = Math.round(
-    (metrics.coverage +
-      metrics.journeyPercent.started +
-      metrics.journeyPercent.submitted +
-      metrics.journeyPercent.offers +
-      metrics.journeyPercent.cas +
-      metrics.journeyPercent.visa +
-      Math.max(0, 100 - automationPressure.pressureScore)) /
-      7
-  );
+  const operatingScore = metrics.total
+    ? Math.round(
+        (metrics.coverage +
+          metrics.journeyPercent.started +
+          metrics.journeyPercent.submitted +
+          metrics.journeyPercent.offers +
+          metrics.journeyPercent.cas +
+          metrics.journeyPercent.visa +
+          Math.max(0, 100 - automationPressure.pressureScore)) /
+          7
+      )
+    : null;
 
+  const hasEvidence = metrics.total > 0;
   const commandRows = [
-    ["Executive Priority", metrics.executivePriority, "Students needing owner/counselor attention."],
-    ["Critical Risk", metrics.criticalRisk, "Cases that should not wait."],
-    ["Visa/CAS Watch", metrics.casPending + metrics.casIssued + metrics.visaPending + metrics.visaRejected, "Students in late-stage movement."],
-    ["Stalled Watch", executiveIntelligence.stalled.length, "Students with low movement or stale activity."],
-    ["Automation Candidates", automationPressure.automationCandidates, "Actions Executive AI can prepare."],
-    ["Approval Likely", automationPressure.approvalLikely, "Actions that should stay human-approved."],
+    ["Executive Priority", hasEvidence ? metrics.executivePriority : "N/A", "Students needing owner/counselor attention."],
+    ["Critical Risk", hasEvidence ? metrics.criticalRisk : "N/A", "Cases that should not wait."],
+    ["Visa/CAS Watch", hasEvidence ? metrics.casPending + metrics.casIssued + metrics.visaPending + metrics.visaRejected : "N/A", "Students in late-stage movement."],
+    ["Stalled Watch", hasEvidence ? executiveIntelligence.stalled.length : "N/A", "Students with low movement or stale activity."],
+    ["Automation Candidates", hasEvidence ? automationPressure.automationCandidates : "N/A", "Actions Executive AI can prepare."],
+    ["Approval Likely", hasEvidence ? automationPressure.approvalLikely : "N/A", "Actions that should stay human-approved."],
   ];
 
   return (
@@ -1786,21 +1862,38 @@ function ExecutiveOperationsExpansion({ metrics, executiveIntelligence, automati
             Operating Score
           </p>
           <p className="mt-2 text-3xl font-black text-[#C2410C]">
-            {operatingScore}/100
+            {operatingScore === null ? "N/A" : `${operatingScore}/100`}
           </p>
         </div>
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {commandRows.map(([label, value, detail]) => (
-          <div key={label} className="min-w-0 rounded-xl border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#61738d]">
-              {label}
-            </p>
-            <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
-            <p className="mt-2 text-xs leading-5 text-[#61738d]">{detail}</p>
-          </div>
-        ))}
+        {commandRows.map(([label, value, detail]) => {
+          const tone =
+            !hasEvidence
+              ? "slate"
+              : label === "Critical Risk"
+              ? "red"
+              : label.includes("Visa") || label.includes("Stalled")
+              ? "amber"
+              : label.includes("Automation")
+              ? "violet"
+              : label.includes("Approval")
+              ? "orange"
+              : "blue";
+
+          return (
+            <ZaifanMetricCard
+              key={label}
+              level="coBoss"
+              label={label}
+              value={value}
+              detail={hasEvidence ? detail : "No scored evidence yet"}
+              tone={tone}
+              className="h-full"
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -1818,8 +1911,10 @@ function buildExecutiveLeadershipSnapshot(students = []) {
   return {
     ...automation,
     leadershipMessage:
-      automation.automationCandidates === 0
-        ? "Portfolio is stable. No urgent automation pressure detected."
+      rows.length === 0
+        ? "No Executive score evidence yet. Generate scores before judging portfolio stability or automation pressure."
+        : automation.automationCandidates === 0
+        ? "Scored portfolio is stable. No urgent automation pressure detected."
         : `${automation.automationCandidates} student action(s) are ready for counselor review. ${automation.approvalLikely} may need human approval first.`,
   };
 }
@@ -1827,76 +1922,48 @@ function buildExecutiveLeadershipSnapshot(students = []) {
 function PlatformVerificationCenter({
   platformHealth,
   brokenWorkflows,
+  hasEvidence = false,
 }) {
   return (
     <div className="min-w-0 rounded-[1.6rem] border-[3px] border-[#C9D7E6] bg-white p-5">
       <p className="text-xs uppercase tracking-[0.22em] text-[#10233F]">
         Platform Verification
       </p>
-
       <h3 className="mt-1 text-xl font-black text-[#10233F]">
         End-to-End Workflow Validation
       </h3>
-
       <p className="mt-2 text-sm text-[#4d6380]">
-        Verifies Inquiry → University →
-        Application → Offer → CAS →
-        Visa → Payment → Portal →
-        Counselor → Executive →
-        Automation.
+        Verifies Inquiry → University → Application → Offer → CAS → Visa →
+        Payment → Portal → Counselor → Executive → Automation.
       </p>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-4">
-        <MetricCard
-          label="Students"
-          value={
-            platformHealth.totalStudents
-          }
-        />
-
-        <MetricCard
-          label="Healthy"
-          value={
-            platformHealth.healthyStudents
-          }
-          tone="good"
-        />
-
-        <MetricCard
-          label="At Risk"
-          value={
-            platformHealth.atRiskStudents
-          }
-          tone="risk"
-        />
-
-        <MetricCard
-          label="Platform Score"
-          value={`${platformHealth.averageScore}%`}
-          tone="gold"
-        />
+      <div className="mt-5 grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <ZaifanMetricCard level="coBoss" label="Students" value={platformHealth.totalStudents ?? 0} detail="Scored records available for verification" icon={GraduationCap} tone="blue" className="h-full" />
+        <ZaifanMetricCard level="coBoss" label="Healthy" value={hasEvidence ? platformHealth.healthyStudents : "N/A"} detail={hasEvidence ? "Verified healthy journeys" : "No scored evidence yet"} icon={ShieldCheck} tone={hasEvidence ? "green" : "slate"} className="h-full" />
+        <ZaifanMetricCard level="coBoss" label="At Risk" value={hasEvidence ? platformHealth.atRiskStudents : "N/A"} detail={hasEvidence ? "Journeys with verification risk" : "No scored evidence yet"} icon={AlertTriangle} tone={hasEvidence ? "red" : "slate"} className="h-full" />
+        <ZaifanMetricCard level="coBoss" label="Platform Score" value={hasEvidence ? `${platformHealth.averageScore}%` : "N/A"} detail={hasEvidence ? "End-to-end verification score" : "Not assessed"} icon={CircleGauge} tone={hasEvidence ? "orange" : "slate"} className="h-full" />
       </div>
 
-      <div className="mt-5 rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4">
-        <p className="text-sm font-black text-[#10233F]">
-          Broken Workflow Records
-        </p>
-
-        <p className="mt-2 text-3xl font-black text-[#10233F]">
-          {brokenWorkflows.length}
-        </p>
-
-        <p className="mt-2 text-xs text-[#4d6380]">
-          Students with one or more
-          workflow failures detected.
-        </p>
+      <div className="mt-4">
+        <ZaifanMetricCard
+          level="coBoss"
+          label="Broken Workflow Records"
+          value={hasEvidence ? brokenWorkflows.length : "N/A"}
+          detail={hasEvidence ? "Students with one or more workflow failures detected." : "No scored workflow evidence yet"}
+          icon={Workflow}
+          tone={hasEvidence ? (brokenWorkflows.length ? "red" : "green") : "slate"}
+        />
       </div>
     </div>
   );
 }
 
 
-function RecoveryIntelligenceCenter({ workflowScanner = {}, recoveryEngine = {} }) {
+function RecoveryIntelligenceCenter({
+  workflowScanner = {},
+  recoveryEngine = {},
+  hasEvidence = false,
+}) {
   const totalActions = asNumber(recoveryEngine.totalActions);
   const totalIssues = asNumber(workflowScanner.totalIssues);
   const critical = asNumber(workflowScanner.critical);
@@ -1906,14 +1973,15 @@ function RecoveryIntelligenceCenter({ workflowScanner = {}, recoveryEngine = {} 
   const paymentQueue = recoveryEngine.paymentQueue || [];
   const portalQueue = recoveryEngine.portalQueue || [];
 
-  const healthLabel =
-    workflowScanner.health_status === "critical"
-      ? "Critical Recovery"
-      : workflowScanner.health_status === "needs_recovery"
-      ? "Recovery Required"
-      : workflowScanner.health_status === "monitor"
-      ? "Monitor"
-      : "Healthy";
+  const healthLabel = !hasEvidence
+    ? "Not Assessed"
+    : workflowScanner.health_status === "critical"
+    ? "Critical Recovery"
+    : workflowScanner.health_status === "needs_recovery"
+    ? "Recovery Required"
+    : workflowScanner.health_status === "monitor"
+    ? "Monitor"
+    : "Healthy";
 
   return (
     <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
@@ -1929,111 +1997,115 @@ function RecoveryIntelligenceCenter({ workflowScanner = {}, recoveryEngine = {} 
             Converts broken verification signals into executive recovery queues for CAS, visa, payment, portal, timeline, documents, and task execution.
           </p>
         </div>
+        <ZaifanMetricCard
+          level="baby"
+          label="Recovery Status"
+          value={healthLabel}
+          detail={hasEvidence ? "Current recovery engine state" : "Generate Executive scores first"}
+          icon={HeartPulse}
+          tone={hasEvidence ? (totalIssues ? "amber" : "green") : "slate"}
+        />
+      </div>
 
-        <div className="rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-4 text-center">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
-            Recovery Status
-          </p>
-          <p className="mt-2 text-2xl font-black text-[#C2410C]">
-            {healthLabel}
+      {hasEvidence ? (
+        <>
+          <div className="mt-5 grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <RecoveryMetric label="Recovery Actions" value={totalActions} tone="gold" />
+            <RecoveryMetric label="Broken Issues" value={totalIssues} tone={totalIssues ? "warning" : "good"} />
+            <RecoveryMetric label="Critical" value={critical} tone={critical ? "risk" : "good"} />
+            <RecoveryMetric label="High" value={high} tone={high ? "warning" : "good"} />
+            <RecoveryMetric label="CAS Queue" value={casQueue.length} tone={casQueue.length ? "warning" : "good"} />
+            <RecoveryMetric label="Visa Queue" value={visaQueue.length} tone={visaQueue.length ? "risk" : "good"} />
+            <RecoveryMetric label="Payment Queue" value={paymentQueue.length} tone={paymentQueue.length ? "warning" : "good"} />
+            <RecoveryMetric label="Portal Queue" value={portalQueue.length} tone={portalQueue.length ? "warning" : "good"} />
+            <RecoveryMetric label="Broken Stages" value={asNumber(workflowScanner.brokenStages)} tone={workflowScanner.brokenStages ? "warning" : "good"} />
+            <RecoveryMetric label="Auto Actions" value={asNumber(recoveryEngine.totalActions)} tone="gold" />
+            <RecoveryMetric label="Critical Issues" value={asNumber(recoveryEngine.criticalIssues)} tone={recoveryEngine.criticalIssues ? "risk" : "good"} />
+            <RecoveryMetric label="High Issues" value={asNumber(recoveryEngine.highIssues)} tone={recoveryEngine.highIssues ? "warning" : "good"} />
+          </div>
+          <div className="mt-5 grid gap-4 xl:grid-cols-4">
+            <RecoveryQueuePreview title="CAS Recovery" items={casQueue} tone="warning" />
+            <RecoveryQueuePreview title="Visa Recovery" items={visaQueue} tone="risk" />
+            <RecoveryQueuePreview title="Payment Recovery" items={paymentQueue} tone="gold" />
+            <RecoveryQueuePreview title="Portal Recovery" items={portalQueue} tone="good" />
+          </div>
+        </>
+      ) : (
+        <div className="mt-5 rounded-[1.3rem] border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-6 text-center">
+          <p className="text-lg font-black text-[#10233F]">Recovery intelligence is not assessed yet</p>
+          <p className="mx-auto mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#61738D]">
+            No Executive score evidence exists, so recovery queues, issue severity and workflow repair demand cannot be interpreted truthfully.
           </p>
         </div>
-      </div>
-
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-        <RecoveryMetric label="Recovery Actions" value={totalActions} tone="gold" />
-        <RecoveryMetric label="Broken Issues" value={totalIssues} tone={totalIssues ? "warning" : "good"} />
-        <RecoveryMetric label="Critical" value={critical} tone={critical ? "risk" : "good"} />
-        <RecoveryMetric label="High" value={high} tone={high ? "warning" : "good"} />
-        <RecoveryMetric label="CAS Queue" value={casQueue.length} tone={casQueue.length ? "warning" : "good"} />
-        <RecoveryMetric label="Visa Queue" value={visaQueue.length} tone={visaQueue.length ? "risk" : "good"} />
-        <RecoveryMetric label="Payment Queue" value={paymentQueue.length} tone={paymentQueue.length ? "warning" : "good"} />
-        <RecoveryMetric label="Portal Queue" value={portalQueue.length} tone={portalQueue.length ? "warning" : "good"} />
-        <RecoveryMetric label="Broken Stages" value={asNumber(workflowScanner.brokenStages)} tone={workflowScanner.brokenStages ? "warning" : "good"} />
-        <RecoveryMetric label="Auto Actions" value={asNumber(recoveryEngine.totalActions)} tone="gold" />
-        <RecoveryMetric label="Critical Issues" value={asNumber(recoveryEngine.criticalIssues)} tone={recoveryEngine.criticalIssues ? "risk" : "good"} />
-        <RecoveryMetric label="High Issues" value={asNumber(recoveryEngine.highIssues)} tone={recoveryEngine.highIssues ? "warning" : "good"} />
-      </div>
-
-      <div className="mt-5 grid gap-4 xl:grid-cols-4">
-        <RecoveryQueuePreview title="CAS Recovery" items={casQueue} tone="warning" />
-        <RecoveryQueuePreview title="Visa Recovery" items={visaQueue} tone="risk" />
-        <RecoveryQueuePreview title="Payment Recovery" items={paymentQueue} tone="gold" />
-        <RecoveryQueuePreview title="Portal Recovery" items={portalQueue} tone="good" />
-      </div>
+      )}
     </div>
   );
 }
 
-function WorkflowFailureHeatmap({ workflowScanner = {} }) {
+function WorkflowFailureHeatmap({
+  workflowScanner = {},
+  hasEvidence = false,
+}) {
   const byStage = workflowScanner.byStage || {};
   const stages = [
-    "inquiry",
-    "university_planning",
-    "application",
-    "offer",
-    "cas",
-    "visa",
-    "payment",
-    "student_portal",
-    "timeline",
-    "documents",
-    "tasks",
-    "executive",
-    "automation",
+    "inquiry", "university_planning", "application", "offer", "cas", "visa",
+    "payment", "student_portal", "timeline", "documents", "tasks", "executive", "automation",
   ];
-
   const maxValue = Math.max(1, ...stages.map((stage) => asNumber(byStage[stage])));
 
   return (
     <div className="min-w-0 rounded-[1.6rem] border-[3px] border-red-300 bg-red-50 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-red-600">
-            Workflow Failure Heatmap
-          </p>
-          <h3 className="mt-1 text-xl font-black text-[#10233F]">
-            Stage-Level Break Detection
-          </h3>
+          <p className="text-xs uppercase tracking-[0.22em] text-red-600">Workflow Failure Heatmap</p>
+          <h3 className="mt-1 text-xl font-black text-[#10233F]">Stage-Level Break Detection</h3>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
             Shows where student journeys are breaking across Inquiry → University → Application → Offer → CAS → Visa → Payment → Portal → Executive → Automation.
           </p>
         </div>
-        <div className="rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-4 text-center">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">Total Breaks</p>
-          <p className="mt-2 text-3xl font-black text-red-700">{asNumber(workflowScanner.totalIssues)}</p>
-        </div>
+        <ZaifanMetricCard
+          level="baby"
+          label="Total Breaks"
+          value={hasEvidence ? asNumber(workflowScanner.totalIssues) : "N/A"}
+          detail={hasEvidence ? "Detected workflow breaks" : "No scored evidence yet"}
+          icon={Workflow}
+          tone={hasEvidence ? (asNumber(workflowScanner.totalIssues) ? "red" : "green") : "slate"}
+        />
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {stages.map((stage) => {
-          const value = asNumber(byStage[stage]);
-          const width = Math.round((value / maxValue) * 100);
-          return (
-            <div key={stage} className="min-w-0 rounded-xl border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#4d6380]">
-                  {formatLabel(stage)}
-                </p>
-                <p className={`text-xl font-black ${value ? "text-red-700" : "text-emerald-600"}`}>
-                  {value}
-                </p>
+      {hasEvidence ? (
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {stages.map((stage) => {
+            const value = asNumber(byStage[stage]);
+            const width = Math.round((value / maxValue) * 100);
+            return (
+              <div key={stage} className="min-w-0 rounded-xl border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.04)]">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[#4d6380]">{formatLabel(stage)}</p>
+                  <p className={`text-xl font-black ${value ? "text-red-700" : "text-emerald-600"}`}>{value}</p>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dce4ed]">
+                  <div className={`h-full rounded-full ${value ? "bg-red-300" : "bg-emerald-300"}`} style={{ width: `${value ? width : 8}%` }} />
+                </div>
               </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dce4ed]">
-                <div
-                  className={`h-full rounded-full ${value ? "bg-red-300" : "bg-emerald-300"}`}
-                  style={{ width: `${value ? width : 8}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mt-5 rounded-[1.3rem] border-[3px] border-dashed border-red-200 bg-white/70 p-6 text-center">
+          <p className="font-black text-[#10233F]">Stage integrity is not assessed</p>
+          <p className="mt-2 text-sm font-semibold text-[#61738D]">Generate Executive scores before interpreting stage-level break detection.</p>
+        </div>
+      )}
     </div>
   );
 }
 
-function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
+function ExecutiveRecoveryQueue({
+  issues = [],
+  recoveryEngine = {},
+  hasEvidence = false,
+}) {
   const rows = [...(issues || [])]
     .sort((a, b) => asNumber(b.priority_score) - asNumber(a.priority_score))
     .slice(0, 10);
@@ -2042,68 +2114,40 @@ function ExecutiveRecoveryQueue({ issues = [], recoveryEngine = {} }) {
     <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#FF5A0A] bg-[#FFF4E8] p-5 shadow-[0_10px_28px_rgba(18,56,101,0.06)]">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C2410C]">
-            Executive Recovery Queue
-          </p>
-          <h3 className="mt-1 text-xl font-black text-[#10233F]">
-            Highest Priority Workflow Repairs
-          </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
-            Prioritized list of broken workflows and recommended recovery actions generated by the recovery engine.
-          </p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C2410C]">Executive Recovery Queue</p>
+          <h3 className="mt-1 text-xl font-black text-[#10233F]">Highest Priority Workflow Repairs</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">Prioritized list of broken workflows and recommended recovery actions generated by the recovery engine.</p>
         </div>
-        <div className="rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-4 text-center">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">Generated Actions</p>
-          <p className="mt-2 text-3xl font-black text-[#C2410C]">{asNumber(recoveryEngine.totalActions)}</p>
-        </div>
+        <ZaifanMetricCard level="baby" label="Generated Actions" value={hasEvidence ? asNumber(recoveryEngine.totalActions) : "N/A"} detail={hasEvidence ? "Current recovery actions" : "Not assessed"} icon={Zap} tone={hasEvidence ? "orange" : "slate"} />
       </div>
 
       <div className="mt-5 space-y-3">
-        {rows.length ? (
+        {hasEvidence && rows.length ? (
           rows.map((issue, index) => (
-            <div
-              key={issue.id || `${issue.student_id}-${issue.issue_type}-${index}`}
-              className="rounded-2xl border-2 border-[#C9D7E6] bg-white p-4"
-            >
+            <div key={issue.id || `${issue.student_id}-${issue.issue_type}-${index}`} className="rounded-2xl border-2 border-[#C9D7E6] bg-white p-4">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getSeverityBadgeClass(issue.severity)}`}>
-                      {formatLabel(issue.severity)}
-                    </span>
-                    <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4d6380]">
-                      {formatLabel(issue.stage)}
-                    </span>
+                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getSeverityBadgeClass(issue.severity)}`}>{formatLabel(issue.severity)}</span>
+                    <span className="rounded-full border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4d6380]">{formatLabel(issue.stage)}</span>
                   </div>
-                  <p className="mt-3 truncate text-lg font-black text-[#10233F]">
-                    {issue.student_name || "Unknown Student"}
-                  </p>
-                  <p className="mt-1 text-sm font-bold text-[#C2410C]">
-                    {issue.title || formatLabel(issue.issue_type)}
-                  </p>
-                  <p className="mt-1 max-w-4xl text-xs leading-5 text-[#4d6380]">
-                    {issue.recommendation || issue.description || "Review and recover this workflow."}
-                  </p>
+                  <p className="mt-3 truncate text-lg font-black text-[#10233F]">{issue.student_name || "Unknown Student"}</p>
+                  <p className="mt-1 text-sm font-bold text-[#C2410C]">{issue.title || formatLabel(issue.issue_type)}</p>
+                  <p className="mt-1 max-w-4xl text-xs leading-5 text-[#4d6380]">{issue.recommendation || issue.description || "Review and recover this workflow."}</p>
                 </div>
-
                 <div className="min-w-[220px] rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#61738d]">
-                    Recovery Action
-                  </p>
-                  <p className="mt-2 text-sm font-black text-[#10233F]">
-                    {formatLabel(issue.recovery_action || issue.recovery_type)}
-                  </p>
-                  <p className="mt-2 text-xs text-[#61738d]">
-                    Priority {asNumber(issue.priority_score)}
-                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#61738d]">Recovery Action</p>
+                  <p className="mt-2 text-sm font-black text-[#10233F]">{formatLabel(issue.recovery_action || issue.recovery_type)}</p>
+                  <p className="mt-2 text-xs text-[#61738d]">Priority {asNumber(issue.priority_score)}</p>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <p className="rounded-2xl border border-dashed border-[#cbd6e2] bg-[#FFF8EF] p-5 text-sm text-[#61738d]">
-            No recovery issues detected from the current student dataset.
-          </p>
+          <div className="rounded-2xl border-[3px] border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-5 text-center">
+            <p className="font-black text-[#10233F]">{hasEvidence ? "No recovery issues detected." : "Recovery queue is not assessed yet."}</p>
+            <p className="mt-2 text-sm font-semibold text-[#61738D]">{hasEvidence ? "The scored portfolio currently has no generated recovery issues." : "Generate Executive scores before interpreting workflow repair demand."}</p>
+          </div>
         )}
       </div>
     </div>
@@ -2118,56 +2162,42 @@ function ProductionHardeningMonitor({
   automationPressure = {},
 }) {
   const total = asNumber(metrics.total);
+  const hasEvidence = total > 0;
   const platformScore = asNumber(platformHealth.averageScore);
-  const recoveryReadiness = Math.max(0, 100 - Math.min(100, asNumber(workflowScanner.totalIssues) * 8));
+  const recoveryReadiness = hasEvidence ? Math.max(0, 100 - Math.min(100, asNumber(workflowScanner.totalIssues) * 8)) : null;
   const timelineRisk = asNumber((workflowScanner.byStage || {}).timeline);
   const portalRisk = asNumber((workflowScanner.byStage || {}).student_portal);
   const paymentRisk = asNumber((workflowScanner.byStage || {}).payment);
   const automationRisk = Math.min(100, asNumber(automationPressure.pressureScore));
-  const verificationCoverage = total ? Math.max(0, Math.min(100, platformScore || metrics.coverage || 0)) : 0;
+  const verificationCoverage = hasEvidence ? Math.max(0, Math.min(100, platformScore || metrics.coverage || 0)) : null;
+  const workflowHealth = hasEvidence ? Math.max(0, 100 - asNumber(workflowScanner.totalIssues) * 5) : null;
+  const automationIntegrity = hasEvidence ? Math.max(0, 100 - automationRisk) : null;
 
   const rows = [
-    ["Workflow Health", `${Math.max(0, 100 - asNumber(workflowScanner.totalIssues) * 5)}%`, workflowScanner.totalIssues ? "Active breaks detected" : "Stable", workflowScanner.totalIssues ? "warning" : "good"],
-    ["Verification Coverage", `${verificationCoverage}%`, "Platform verification score", verificationCoverage >= 80 ? "good" : "warning"],
-    ["Recovery Readiness", `${recoveryReadiness}%`, `${asNumber(recoveryEngine.totalActions)} actions generated`, recoveryReadiness >= 80 ? "good" : "warning"],
-    ["Timeline Integrity", timelineRisk, "Timeline-specific workflow breaks", timelineRisk ? "risk" : "good"],
-    ["Automation Integrity", `${Math.max(0, 100 - automationRisk)}%`, "Automation pressure inverse score", automationRisk >= 75 ? "risk" : automationRisk >= 40 ? "warning" : "good"],
-    ["Portal Integrity", portalRisk, "Portal account/access breaks", portalRisk ? "warning" : "good"],
-    ["Payment Integrity", paymentRisk, "Payment reconciliation breaks", paymentRisk ? "warning" : "good"],
-    ["Production Gate", workflowScanner.totalIssues ? "Hold" : "Pass", "Move only after full test pass", workflowScanner.totalIssues ? "risk" : "good"],
+    ["Workflow Health", hasEvidence ? `${workflowHealth}%` : "N/A", hasEvidence ? (workflowScanner.totalIssues ? "Active breaks detected" : "No scored workflow breaks detected") : "No scored Executive evidence yet", hasEvidence ? (workflowScanner.totalIssues ? "amber" : "green") : "slate"],
+    ["Verification Coverage", hasEvidence ? `${verificationCoverage}%` : "N/A", hasEvidence ? "Platform verification score" : "No scored Executive evidence yet", hasEvidence ? (verificationCoverage >= 80 ? "green" : "amber") : "slate"],
+    ["Recovery Readiness", hasEvidence ? `${recoveryReadiness}%` : "N/A", hasEvidence ? `${asNumber(recoveryEngine.totalActions)} actions generated` : "No scored Executive evidence yet", hasEvidence ? (recoveryReadiness >= 80 ? "green" : "amber") : "slate"],
+    ["Timeline Integrity", hasEvidence ? timelineRisk : "N/A", hasEvidence ? "Timeline-specific workflow breaks" : "No scored Executive evidence yet", hasEvidence ? (timelineRisk ? "red" : "green") : "slate"],
+    ["Automation Integrity", hasEvidence ? `${automationIntegrity}%` : "N/A", hasEvidence ? "Automation pressure inverse score" : "No scored Executive evidence yet", hasEvidence ? (automationRisk >= 75 ? "red" : automationRisk >= 40 ? "amber" : "green") : "slate"],
+    ["Portal Integrity", hasEvidence ? portalRisk : "N/A", hasEvidence ? "Portal account/access breaks" : "No scored Executive evidence yet", hasEvidence ? (portalRisk ? "amber" : "green") : "slate"],
+    ["Payment Integrity", hasEvidence ? paymentRisk : "N/A", hasEvidence ? "Payment reconciliation breaks" : "No scored Executive evidence yet", hasEvidence ? (paymentRisk ? "amber" : "green") : "slate"],
+    ["Production Gate", hasEvidence ? (workflowScanner.totalIssues ? "Hold" : "Pass") : "Not Assessed", hasEvidence ? "Move only after full test pass" : "Generate Executive scores before evaluating the gate", hasEvidence ? (workflowScanner.totalIssues ? "red" : "green") : "slate"],
   ];
 
   return (
     <div className="min-w-0 rounded-[1.6rem] border-[3px] border-emerald-300 bg-emerald-50 p-5">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-emerald-600">
-            Production Hardening
-          </p>
-          <h3 className="mt-1 text-xl font-black text-[#10233F]">
-            Final Readiness Monitor
-          </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">
-            Final operating layer for deciding whether Zaifan Student OS is ready for full workflow testing, production hardening, and main website handoff.
-          </p>
+          <p className="text-xs uppercase tracking-[0.22em] text-emerald-600">Production Hardening</p>
+          <h3 className="mt-1 text-xl font-black text-[#10233F]">Final Readiness Monitor</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4d6380]">Final operating layer for deciding whether Zaifan Student OS is ready for full workflow testing, production hardening, and main website handoff.</p>
         </div>
-        <div className="rounded-2xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-4 text-center">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#4d6380]">Platform Gate</p>
-          <p className={`mt-2 text-3xl font-black ${workflowScanner.totalIssues ? "text-[#C2410C]" : "text-emerald-600"}`}>
-            {workflowScanner.totalIssues ? "Harden" : "Ready"}
-          </p>
-        </div>
+        <ZaifanMetricCard level="baby" label="Platform Gate" value={!hasEvidence ? "Not Assessed" : workflowScanner.totalIssues ? "Harden" : "Ready"} detail={hasEvidence ? "Current production gate" : "No Executive evidence yet"} icon={ShieldCheck} tone={!hasEvidence ? "slate" : workflowScanner.totalIssues ? "red" : "green"} />
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {rows.map(([label, value, detail, tone]) => (
-          <div key={label} className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#61738d]">
-              {label}
-            </p>
-            <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
-            <p className="mt-2 text-xs leading-5 text-[#4d6380]">{detail}</p>
-          </div>
+          <ZaifanMetricCard key={label} level="coBoss" label={label} value={value} detail={detail} tone={tone} className="h-full" />
         ))}
       </div>
     </div>
@@ -2176,12 +2206,12 @@ function ProductionHardeningMonitor({
 
 function RecoveryMetric({ label, value, tone = "default" }) {
   return (
-    <div className={`rounded-2xl border p-4 ${getHardeningCardClass(tone)}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#61738d]">
-        {label}
-      </p>
-      <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? 0}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -2238,33 +2268,20 @@ function getHardeningCardClass(tone = "default") {
 }
 
 
-function ExecutiveSignal({ label, value, detail, tone = "default" }) {
-  const toneClass =
-    tone === "risk"
-      ? "border-red-200 bg-red-50"
-      : tone === "warning"
-      ? "border-[#FDBA74] bg-[#FFF4E8]"
-      : tone === "good"
-      ? "border-emerald-200 bg-emerald-50"
-      : "border-[#cbd6e2] bg-white/90";
-
-  const valueClass =
-    tone === "risk"
-      ? "text-red-700"
-      : tone === "warning"
-      ? "text-[#C2410C]"
-      : tone === "good"
-      ? "text-emerald-700"
-      : "text-[#10233F]";
-
+function ExecutiveSignal({
+  label,
+  value,
+  detail,
+  tone = "default",
+}) {
   return (
-    <div className={`cursor-default rounded-2xl border-2 p-4 ${toneClass}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#61738d]">
-        {label}
-      </p>
-      <p className={`mt-2 text-2xl font-black ${valueClass}`}>{value}</p>
-      <p className="mt-1 text-xs leading-5 text-[#4d6380]">{detail}</p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -2278,6 +2295,44 @@ function IntelligenceFeedLoader({ label }) {
       </div>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveAIDashboard;

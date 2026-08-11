@@ -38,6 +38,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const READ_STORAGE_KEY = "zaifan_notification_center_read_v4";
 const DISMISSED_STORAGE_KEY = "zaifan_notification_center_dismissed_v4";
@@ -526,13 +527,6 @@ function NotificationCenter({
     resolvedSupportRequests,
     supportRequests.length
   );
-
-  const roleLabel =
-    {
-      staff: "Staff View",
-      admin: "Admin View",
-      super_admin: "Super Admin View",
-    }[role] || "Executive View";
 
   const crmAlerts = [
     {
@@ -1345,20 +1339,6 @@ function NotificationCenter({
               portal access, support, documents, tasks, executive risk, and
               automation health.
             </p>
-
-            <div className="mt-5 flex min-w-0 flex-wrap gap-2">
-              <Badge dark>{roleLabel}</Badge>
-
-              {permissions?.canManageAdmins && (
-                <Badge dark tone="orange">
-                  Full Access
-                </Badge>
-              )}
-
-              <Badge dark tone="green">
-                Live System
-              </Badge>
-            </div>
           </div>
 
           <aside className="min-w-0 border-t-[3px] border-[#123865] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0">
@@ -1402,7 +1382,7 @@ function NotificationCenter({
           </div>
         ) : null}
 
-        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
           {commandSummary.map((item, index) => (
             <CommandSummaryCard
               key={item.title}
@@ -1509,6 +1489,12 @@ function AlertSection({
     (item) => item.active
   ).length;
 
+  const alertGridClass = compact
+    ? "grid-cols-1"
+    : alerts.length <= 4
+    ? "md:grid-cols-2"
+    : "md:grid-cols-2 2xl:grid-cols-3";
+
   return (
     <section className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFFDF8] shadow-[0_12px_28px_rgba(15,35,63,0.08)]">
       <div className="flex flex-col gap-2 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-end sm:justify-between sm:px-6">
@@ -1529,13 +1515,7 @@ function AlertSection({
 
       <div className="p-4 sm:p-5">
         {alerts.length ? (
-          <div
-            className={`grid gap-4 ${
-              compact
-                ? "grid-cols-1"
-                : "md:grid-cols-2 2xl:grid-cols-3"
-            }`}
-          >
+          <div className={`grid auto-rows-fr gap-3 ${alertGridClass}`}>
             {alerts.map((item, index) => (
               <NotificationCard
                 key={item.title}
@@ -1572,11 +1552,7 @@ function CommandSummaryCard({
   index,
   cardClass,
 }) {
-  const Icon = item.icon;
-  const tone = getToneClass(
-    item.tone,
-    item.value > 0
-  );
+  const tone = normalizeCommandMetricTone(item.tone);
 
   return (
     <motion.div
@@ -1586,25 +1562,29 @@ function CommandSummaryCard({
         duration: 0.24,
         delay: index * 0.035,
       }}
-      className={`${cardClass} group min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(18,56,101,0.09)] ${tone.border} ${tone.bg}`}
+      className="h-full min-w-0"
     >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.13em] text-slate-500">
-            {item.title}
-          </p>
-
-          <p className={`mt-2 text-3xl font-black leading-none ${tone.text}`}>
-            {item.value}
-          </p>
-        </div>
-
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 bg-white shadow-[0_4px_10px_rgba(18,56,101,0.06)] transition group-hover:-translate-y-0.5 ${tone.border}`}>
-          <Icon className={`h-4.5 w-4.5 ${tone.text}`} />
-        </div>
-      </div>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={item.title}
+        value={item.value}
+        icon={item.icon}
+        tone={tone}
+        className="h-full"
+      />
     </motion.div>
   );
+}
+
+function normalizeCommandMetricTone(tone) {
+  const value = String(tone || "").toLowerCase();
+  if (["green", "emerald"].includes(value)) return "green";
+  if (["red", "rose"].includes(value)) return "red";
+  if (["amber", "yellow"].includes(value)) return "amber";
+  if (["violet", "purple"].includes(value)) return "violet";
+  if (["orange", "gold"].includes(value)) return "orange";
+  if (["blue", "cyan", "teal"].includes(value)) return "blue";
+  return "navy";
 }
 
 function NotificationCard({
@@ -1618,87 +1598,13 @@ function NotificationCard({
   onDismissAlert,
 }) {
   const Icon = item.icon;
-  const tone = getToneClass(
-    item.tone,
-    item.active
-  );
+  const metricTone = normalizeCommandMetricTone(item.tone);
 
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 22 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.32,
-        delay: index * 0.035,
-      }}
-      className={`${cardClass} ${tone.glow} group relative min-h-[300px] overflow-hidden rounded-[1.65rem] border-[3px] ${tone.bg} p-5 shadow-[0_8px_22px_rgba(15,35,63,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_12px_30px_rgba(15,35,63,0.11)]`}
-      style={{ borderColor: tone.borderColor }}
-    >
-      <div
-        className={`absolute inset-x-0 top-0 h-1.5 ${tone.bar}`}
-      />
-
-      <div className="flex items-start justify-between gap-4">
-        <div
-          className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 ${tone.border} bg-white/80`}
-        >
-          {item.active && !isRead ? (
-            <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.12)]" />
-          ) : null}
-
-          <Icon
-            className={`h-5 w-5 ${item.color}`}
-          />
-        </div>
-
-        <div
-          className={`rounded-full border-2 px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] ${
-            isRead
-              ? "border-[#C9D7E6] bg-slate-100 text-slate-500"
-              : item.active
-              ? "border-[#FF5A0A] bg-[#FFF3E8] text-orange-800"
-              : "border-[#b9c9da] bg-[#edf4fb] text-[#34516f]"
-          }`}
-        >
-          {isRead ? "Read" : item.status}
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.20em] text-[#60728a]">
-          {item.title}
-        </p>
-
-        <div className="mt-2 flex flex-wrap items-end gap-3">
-          <h3
-            className={`text-4xl font-black leading-none ${item.color}`}
-          >
-            {item.value}
-          </h3>
-
-          <p className="pb-1 text-sm font-semibold text-[#425b76]">
-            {item.text}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-2 xl:grid-cols-4 2xl:grid-cols-2">
-        <ActionButton
-          label="Open"
-          Icon={ExternalLink}
-          onClick={() => onOpenAlert(item)}
-          tone="navy"
-        />
-
-        <ActionButton
-          label="Follow-up"
-          Icon={Plus}
-          onClick={() =>
-            onCreateFollowUp(item)
-          }
-          tone="orange"
-        />
-
+  const actions = (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <ActionButton label="Open" Icon={ExternalLink} onClick={() => onOpenAlert(item)} tone="navy" />
+        <ActionButton label="Follow-up" Icon={Plus} onClick={() => onCreateFollowUp(item)} tone="orange" />
         <ActionButton
           label={isRead ? "Read" : "Mark read"}
           Icon={CheckCircle2}
@@ -1706,27 +1612,38 @@ function NotificationCard({
           tone="green"
           disabled={isRead}
         />
-
-        <ActionButton
-          label="Dismiss"
-          Icon={X}
-          onClick={() => onDismissAlert(item)}
-          tone="red"
-        />
+        <ActionButton label="Dismiss" Icon={X} onClick={() => onDismissAlert(item)} tone="red" />
       </div>
 
       {item.active ? (
-        <div className="mt-4 rounded-[1.1rem] border-2 border-[#FF5A0A] bg-[#FFF8EF] p-3">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
-
-            <p className="text-xs font-semibold leading-5 text-[#334d6a]">
-              Active operational attention is required in this category.
-            </p>
-          </div>
+        <div className="flex items-start gap-2 rounded-xl border-2 border-orange-200 bg-white/70 px-3 py-2.5">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
+          <p className="text-[11px] font-semibold leading-4 text-[#425B76]">
+            Active operational attention is required in this category.
+          </p>
         </div>
       ) : null}
-    </motion.article>
+    </div>
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.26, delay: index * 0.03 }}
+      className="h-full min-w-0"
+    >
+      <ZaifanMetricCard
+        level="coBoss"
+        label={item.title}
+        value={item.value}
+        detail={`${isRead ? "Read" : item.status} · ${item.text}`}
+        icon={Icon}
+        tone={metricTone}
+        footer={actions}
+        className="h-full"
+      />
+    </motion.div>
   );
 }
 

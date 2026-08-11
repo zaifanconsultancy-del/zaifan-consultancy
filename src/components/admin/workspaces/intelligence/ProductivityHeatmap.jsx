@@ -32,6 +32,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -863,55 +864,65 @@ function ProductivityHeatmap({
 function MetricCard({
   label,
   value,
-  icon: Icon,
-  helper,
-  tone = "orange",
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
+  badge = "",
+  source = "",
+  className = "",
 }) {
-  const style =
-    tone === "danger"
-      ? "border-[#FB7185] bg-[#FFF4F4]"
-      : tone === "good"
-      ? "border-[#34D399] bg-[#F0FFF8]"
-      : tone === "navy"
-      ? "border-[#315B88] bg-[#EEF5FC]"
-      : "border-[#F97316] bg-[#FFF4E8]";
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.035)] ${style}`}
-      style={{ color: "#10233F" }}
-    >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{ color: "#64748B" }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-3xl font-black"
-            style={{ color: "#10233F" }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={18}
-          style={{ color: tone === "navy" ? "#315B88" : "#C2410C" }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{ color: "#64748B" }}
-      >
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function getHeatCellStyle(level) {

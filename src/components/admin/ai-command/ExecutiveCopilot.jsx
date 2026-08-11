@@ -36,6 +36,7 @@
 
 import React, { useMemo, useState } from "react";
 import AICommandModuleNav from "./AICommandModuleNav";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   ArrowRight,
@@ -1009,14 +1010,7 @@ function HeaderChip({ icon: Icon, label }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function SectionHeader({

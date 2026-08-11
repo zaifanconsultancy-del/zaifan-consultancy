@@ -10,6 +10,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function lower(value) {
   return String(value || "").trim().toLowerCase();
@@ -261,14 +262,45 @@ function EmployeeCard({ person, compact }) {
 }
 
 function MiniMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-[#E1E8F0] bg-[#FFF8EF] p-3 text-center">
-      <p className="text-base font-black text-[#10233F]">{safeNumber(value)}</p>
-      <p className="mt-1 text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
-        {label}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={safeNumber(value)} tone="navy" />;
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function EmployeeWorkspace({ hr = {}, compact = false }) {

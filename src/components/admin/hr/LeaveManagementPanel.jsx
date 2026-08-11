@@ -10,6 +10,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -87,47 +88,65 @@ function calculateDays(start, end) {
 function MetricCard({
   label,
   value,
-  helper,
+  helper = "",
+  detail = "",
   tone = "blue",
-  icon: Icon,
+  toneName = "",
+  icon: Icon = null,
+  badge = "",
+  source = "",
+  className = "",
 }) {
-  const tones = {
-    blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-    amber: "border-[#F59E0B] bg-[#FFF8E8]",
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-    violet: "border-[#60A5FA] bg-[#F2F7FF]",
-  };
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
-        tones[tone] || tones.blue
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.11em] text-slate-500">
-            {label}
-          </p>
-
-          <p className="mt-2 break-words text-2xl font-black text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        {Icon ? (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-white text-[#123865]">
-            <Icon size={16} />
-          </div>
-        ) : null}
-      </div>
-
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function LeaveCard({ leave, compact }) {

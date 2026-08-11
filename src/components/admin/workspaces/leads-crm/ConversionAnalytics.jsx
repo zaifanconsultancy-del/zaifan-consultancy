@@ -24,6 +24,7 @@ import {
   motion,
   useReducedMotion,
 } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   Activity,
   AlertTriangle,
@@ -733,93 +734,11 @@ function ConversionAnalytics({
 
 
 function HeroMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-orange-50">
-        {label}
-      </p>
-      <p className="mt-1 text-lg font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function PartnerConversionMetric({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  tone = "blue",
-  badge = "",
-}) {
-  const tones = {
-    navy: "border-[#123865] bg-[#123865]",
-    blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-    amber: "border-[#F59E0B] bg-[#FFF8E8]",
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-  };
-
-  const dark = tone === "navy";
-
-  return (
-    <article
-      className={`flex min-h-[176px] h-full flex-col justify-between rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
-        tones[tone] || tones.blue
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
-
-        <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
-            dark
-              ? "border-white/20 bg-white/10 text-orange-200"
-              : "border-[#123865]/15 bg-white text-[#123865]"
-          }`}
-        >
-          <Icon size={16} />
-        </div>
-      </div>
-
-      <div>
-        <p
-          className={`mt-4 text-xs font-semibold leading-5 ${
-            dark ? "text-slate-200" : "text-slate-600"
-          }`}
-        >
-          {helper}
-        </p>
-
-        {badge ? (
-          <span
-            className={`mt-3 inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-              dark
-                ? "border-white/20 bg-white/10 text-white"
-                : "border-[#C9D7E6] bg-white text-slate-600"
-            }`}
-          >
-            {badge}
-          </span>
-        ) : null}
-      </div>
-    </article>
-  );
+function PartnerConversionMetric({ label, value, helper, icon: Icon, tone = "blue", badge = "" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={[helper, badge].filter(Boolean).join(" · ")} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function ConversionPortfolioRow({ column, reduceMotion }) {
@@ -955,77 +874,16 @@ function ConversionIntegrityCard({
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  tone = "orange",
-  index,
-  shouldReduceMotion,
-}) {
-  const tones = {
-    orange:
-      "border-[#F97316] bg-[#FFF4E8] text-orange-800",
-    blue:
-      "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
-    green:
-      "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-    amber:
-      "border-[#F59E0B] bg-[#FFF7ED] text-amber-900",
-    red:
-      "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-  };
-
+function MetricCard({ label, value, helper, icon: Icon, tone = "orange", index, shouldReduceMotion }) {
   return (
-    <motion.article
-      initial={
-        shouldReduceMotion
-          ? false
-          : {
-              opacity: 0,
-              y: 8,
-            }
-      }
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
-      transition={{
-        duration:
-          shouldReduceMotion
-            ? 0
-            : 0.22,
-        delay:
-          shouldReduceMotion
-            ? 0
-            : index * 0.035,
-      }}
-      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.055)] ${
-        tones[tone] ||
-        tones.orange
-      }`}
+    <motion.div
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.22, delay: shouldReduceMotion ? 0 : Math.min((index || 0) * 0.025, 0.1) }}
+      className="min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.14em]">
-            {label}
-          </p>
-
-          <p className="mt-2 text-3xl font-black text-[#10233f]">
-            {value}
-          </p>
-        </div>
-
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-current/20 bg-white">
-          <Icon size={17} />
-        </div>
-      </div>
-
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-        {helper}
-      </p>
-    </motion.article>
+      <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} />
+    </motion.div>
   );
 }
 
@@ -1307,50 +1165,12 @@ function PipelineColumn({
   );
 }
 
-function SnapshotCard({
-  label,
-  value,
-  helper,
-  warning = false,
-}) {
-  return (
-    <div
-      className={`rounded-xl border-2 p-3 ${
-        warning
-          ? "border-[#F59E0B] bg-[#FFF7ED]"
-          : "border-[#C9D7E6] bg-[#FFFDF8]"
-      }`}
-    >
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-black text-[#10233f]">
-        {value}
-      </p>
-
-      <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-600">
-        {helper}
-      </p>
-    </div>
-  );
+function SnapshotCard({ label, value, helper, warning = false }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value} detail={helper} tone={warning ? "amber" : "slate"} />;
 }
 
-function HeaderMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-[84px] rounded-xl border-2 border-white/30 bg-white/10 px-3 py-2 text-right text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function HeaderMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function InsightCard({
@@ -1643,21 +1463,65 @@ function filterByRange(
   );
 }
 
-function DarkStat({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
+function DarkStat({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
+}
 
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default ConversionAnalytics;

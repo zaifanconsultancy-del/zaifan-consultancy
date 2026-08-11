@@ -10,7 +10,7 @@ const FILTERS = [
   { key: "pending", label: "Pending" },
   { key: "rejected", label: "Rejected" },
   { key: "approved", label: "Approved" },
-  { key: "visa", label: "Visa/CAS" },
+  { key: "visa", label: "Visa/Pre-enrolment" },
 ];
 
 const SORTS = [
@@ -26,7 +26,7 @@ const FILTER_STORAGE_KEY = "zaifan_counselor_documents_filter";
 const SORT_STORAGE_KEY = "zaifan_counselor_documents_sort";
 
 const INPUT_CLASS =
-  "w-full rounded-2xl border-2 border-[#d8b892] bg-[#fffdf8] px-4 py-3 text-sm font-semibold text-[#102b4c] outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100";
+  "w-full min-w-0 rounded-xl border-2 border-[#AFC0D0] bg-white px-4 py-3 text-sm font-bold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 const VALID_FILTERS = new Set(FILTERS.map((item) => item.key));
 const VALID_SORTS = new Set(SORTS.map((item) => item.key));
@@ -109,7 +109,8 @@ function isVisaCritical(item = {}) {
 
   return (
     text.includes("visa") ||
-    text.includes("cas") ||
+    text.includes("pre-enrol") ||
+    text.includes("universitaly") ||
     text.includes("passport") ||
     text.includes("bank") ||
     text.includes("financial") ||
@@ -122,6 +123,8 @@ function isVisaCritical(item = {}) {
 }
 
 function criticalityRank(item = {}) {
+  if (isApproved(item)) return 0;
+
   const criticality = lower(item.criticality);
 
   if (
@@ -133,12 +136,14 @@ function criticalityRank(item = {}) {
   }
 
   if (isRejected(item)) return 3;
-  if (isVisaCritical(item) && !isApproved(item)) return 2;
+  if (isVisaCritical(item)) return 2;
   if (isPending(item)) return 1;
   return 0;
 }
 
 function criticalityLabel(item = {}) {
+  if (isApproved(item)) return "Cleared";
+
   const explicit = safeString(item.criticality).trim();
   if (explicit) return explicit;
 
@@ -194,7 +199,7 @@ function statusTone(item = {}) {
     return "border-orange-300 bg-orange-50 text-orange-700";
   }
 
-  return "border-[#b7c5d1] bg-[#f3f7fb] text-[#173f69]";
+  return "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]";
 }
 
 function criticalityTone(item = {}) {
@@ -204,12 +209,12 @@ function criticalityTone(item = {}) {
   if (rank === 2) return "border-violet-300 bg-violet-50 text-violet-700";
   if (rank === 1) return "border-amber-300 bg-amber-50 text-amber-700";
 
-  return "border-[#b7c5d1] bg-[#f3f7fb] text-[#173f69]";
+  return "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]";
 }
 
 function DocumentStat({ label, value, helper, tone = "navy", active, onClick }) {
   const tones = {
-    navy: "border-[#173f69] bg-[#f3f7fb]",
+    navy: "border-[#123865] bg-[#F1F6FA]",
     orange: "border-orange-300 bg-orange-50",
     amber: "border-amber-300 bg-amber-50",
     emerald: "border-emerald-300 bg-emerald-50",
@@ -220,7 +225,7 @@ function DocumentStat({ label, value, helper, tone = "navy", active, onClick }) 
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#607487]">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5B6D80]">
           {label}
         </p>
         {active ? (
@@ -230,15 +235,15 @@ function DocumentStat({ label, value, helper, tone = "navy", active, onClick }) 
         ) : null}
       </div>
 
-      <p className="mt-2 text-2xl font-black text-[#102b4c]">{value}</p>
+      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
 
       {helper ? (
-        <p className="mt-1 text-xs font-medium text-[#607487]">{helper}</p>
+        <p className="mt-1 text-xs font-medium text-[#5B6D80]">{helper}</p>
       ) : null}
     </>
   );
 
-  const className = `rounded-2xl border-2 p-4 text-left shadow-sm transition ${
+  const className = `relative overflow-hidden rounded-[1.3rem] border-2 p-4 text-left shadow-[0_9px_22px_rgba(16,35,63,0.08)] transition ${
     tones[tone] || tones.navy
   } ${
     onClick
@@ -273,18 +278,18 @@ function DocumentReadinessBar({ value }) {
     <div>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#607487]">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5B6D80]">
             Portfolio Document Readiness
           </p>
-          <p className="mt-1 text-sm font-black text-[#102b4c]">{label}</p>
+          <p className="mt-1 text-sm font-black text-[#10233F]">{label}</p>
         </div>
 
-        <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-1.5 text-sm font-black text-white">
+        <span className="rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-1.5 text-sm font-black text-white">
           {score}%
         </span>
       </div>
 
-      <div className="h-3 overflow-hidden rounded-full border border-[#c9d5de] bg-[#e7eef4]">
+      <div className="h-3 overflow-hidden rounded-full border border-[#B9C8D8] bg-[#e7eef4]">
         <div
           className={`h-full rounded-full transition-[width] duration-500 ${
             score >= 85
@@ -330,10 +335,10 @@ function DocumentPressurePanel({ stats, onFilter }) {
 
   return (
     <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)]">
-      <div className="rounded-[1.4rem] border-2 border-[#173f69] bg-[#f7fbff] p-4">
+      <div className="rounded-[1.4rem] border-2 border-[#123865] bg-[#f7fbff] p-4">
         <DocumentReadinessBar value={stats.readiness} />
 
-        <p className="mt-3 text-xs leading-5 text-[#607487]">
+        <p className="mt-3 text-xs leading-5 text-[#5B6D80]">
           Readiness combines approved-document coverage with penalties for rejected
           files and unresolved high-pressure documents. It is an operational signal,
           not a visa or admission decision.
@@ -344,7 +349,7 @@ function DocumentPressurePanel({ stats, onFilter }) {
         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
           Counselor Focus
         </p>
-        <p className="mt-2 text-sm font-black leading-6 text-[#102b4c]">{pressure}</p>
+        <p className="mt-2 text-sm font-black leading-6 text-[#10233F]">{pressure}</p>
 
         <div className="mt-3 flex flex-wrap gap-2">
           {stats.critical > 0 ? (
@@ -390,24 +395,24 @@ function DocumentCard({ item }) {
 
   return (
     <article
-      className={`rounded-[1.55rem] border-2 p-4 shadow-[0_8px_26px_rgba(16,43,76,0.055)] transition duration-300 hover:-translate-y-0.5 sm:p-5 ${
+      className={`overflow-hidden rounded-[1.65rem] border-[3px] p-4 shadow-[0_14px_34px_rgba(16,35,63,0.10)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(16,35,63,0.14)] sm:p-5 ${
         rejected
           ? "border-rose-300 bg-rose-50/70 hover:border-rose-400"
           : rank >= 2 && !approved
-          ? "border-orange-300 bg-[#fffaf2] hover:border-orange-400"
-          : "border-[#c9d5de] bg-[#fffdf8] hover:border-orange-300"
+          ? "border-orange-300 bg-[#FFF8EF] hover:border-orange-400"
+          : "border-[#B9C8D8] bg-[#FFFCF7] hover:border-orange-300"
       }`}
     >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_0.58fr_0.58fr_minmax(0,1fr)_auto] xl:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-black text-[#102b4c]">
+            <h3 className="truncate text-lg font-black text-[#10233F]">
               {item.studentName || "Assigned Student"}
             </h3>
 
             {isVisaCritical(item) ? (
               <span className="rounded-full border border-violet-300 bg-violet-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-700">
-                Visa/CAS
+                Visa/Pre-enrolment
               </span>
             ) : null}
 
@@ -429,14 +434,14 @@ function DocumentCard({ item }) {
           </p>
 
           {item.category || item.documentType ? (
-            <p className="mt-1 text-xs font-medium text-[#718292]">
+            <p className="mt-1 text-xs font-medium text-[#6B7D8F]">
               {item.category || item.documentType}
             </p>
           ) : null}
         </div>
 
         <div>
-          <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#8292a0]">
+          <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#73869A]">
             Status
           </p>
           <span
@@ -449,7 +454,7 @@ function DocumentCard({ item }) {
         </div>
 
         <div>
-          <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#8292a0]">
+          <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#73869A]">
             Criticality
           </p>
           <span
@@ -461,14 +466,14 @@ function DocumentCard({ item }) {
           </span>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#d6e0e7] bg-[#f8fbfd] p-3.5">
-          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#8292a0]">
+        <div className="rounded-[1.25rem] border-2 border-[#AFC0D0] bg-[#F7FAFC] p-3.5">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#73869A]">
             Next Action
           </p>
-          <p className="mt-1.5 text-sm font-bold leading-5 text-[#102b4c]">
+          <p className="mt-1.5 text-sm font-bold leading-5 text-[#10233F]">
             {item.nextAction || (approved ? "No immediate action required." : "Review document status.")}
           </p>
-          <p className="mt-2 text-xs font-medium text-[#718292]">
+          <p className="mt-2 text-xs font-medium text-[#6B7D8F]">
             Updated {formatRelativeTime(item.updatedAt)}
           </p>
         </div>
@@ -477,7 +482,7 @@ function DocumentCard({ item }) {
           type="button"
           onClick={() => setExpanded((value) => !value)}
           aria-expanded={expanded}
-          className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2.5 text-xs font-black text-white transition hover:bg-[#102f52]"
+          className="rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2.5 text-xs font-black text-white transition hover:bg-[#0B2A4B]"
         >
           {expanded ? "Less" : "Details"}
         </button>
@@ -485,38 +490,38 @@ function DocumentCard({ item }) {
 
       {expanded ? (
         <div className="mt-4 grid gap-3 border-t-2 border-[#e3d6c5] pt-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-[#d6e0e7] bg-white p-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#8292a0]">
+          <div className="rounded-2xl border border-[#C9D6E2] bg-white p-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#73869A]">
               Student
             </p>
-            <p className="mt-1 break-words text-xs font-bold text-[#102b4c]">
+            <p className="mt-1 break-words text-xs font-bold text-[#10233F]">
               {item.studentName || "Assigned Student"}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[#d6e0e7] bg-white p-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#8292a0]">
+          <div className="rounded-2xl border border-[#C9D6E2] bg-white p-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#73869A]">
               Document
             </p>
-            <p className="mt-1 break-words text-xs font-bold text-[#102b4c]">
+            <p className="mt-1 break-words text-xs font-bold text-[#10233F]">
               {item.documentName || "Document"}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[#d6e0e7] bg-white p-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#8292a0]">
+          <div className="rounded-2xl border border-[#C9D6E2] bg-white p-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#73869A]">
               Updated
             </p>
-            <p className="mt-1 text-xs font-bold text-[#102b4c]">
+            <p className="mt-1 text-xs font-bold text-[#10233F]">
               {item.updatedAt ? new Date(item.updatedAt).toLocaleString() : "Unknown"}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[#d6e0e7] bg-white p-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#8292a0]">
+          <div className="rounded-2xl border border-[#C9D6E2] bg-white p-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#73869A]">
               Queue Pressure
             </p>
-            <p className="mt-1 text-xs font-bold text-[#102b4c]">
+            <p className="mt-1 text-xs font-bold text-[#10233F]">
               {rank >= 3 ? "Immediate" : rank === 2 ? "Important" : rank === 1 ? "Monitor" : "Clear"}
             </p>
           </div>
@@ -657,34 +662,37 @@ export default function CounselorDocumentsWorkspace({ snapshot }) {
     Boolean(query.trim()) || filter !== "all" || sort !== "criticality";
 
   return (
-    <section className="rounded-[1.8rem] border-2 border-[#173f69] bg-[#fffaf2] p-4 shadow-[0_18px_55px_rgba(16,43,76,0.08)] sm:p-5">
-      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">
+    <section className="overflow-hidden rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_28px_80px_rgba(16,35,63,0.16)] sm:p-4">
+      <div className="relative mb-5 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_36px_rgba(16,35,63,0.20)] xl:flex xl:items-start xl:justify-between xl:gap-5 sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full border-[26px] border-white/5" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-20 h-44 w-44 rounded-full border-[22px] border-orange-400/10" />
+
+        <div className="relative z-[1]">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
             Document OS
           </p>
 
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-[#102b4c] sm:text-3xl">
-            Document Readiness Queue
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
+            Document Review Command
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#607487]">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-blue-100">
             Prioritize missing, pending, rejected and visa-critical documents across
             assigned students without losing sight of the overall readiness picture.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-xl border-2 border-orange-300 bg-orange-50 px-4 py-2 text-sm font-black text-orange-700">
+        <div className="relative z-[1] flex flex-wrap gap-2">
+          <span className="rounded-xl border-2 border-orange-300/70 bg-orange-400/15 px-3 py-2 text-xs font-black text-orange-300">
             {filtered.length}/{queue.length} visible
           </span>
 
-          <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-4 py-2 text-sm font-black text-white">
+          <span className="rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2 text-xs font-black text-white">
             {stats.students} students
           </span>
 
           <span
-            className={`rounded-xl border-2 px-4 py-2 text-sm font-black ${
+            className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${
               stats.unresolved
                 ? "border-amber-300 bg-amber-50 text-amber-700"
                 : "border-emerald-300 bg-emerald-50 text-emerald-700"
@@ -695,7 +703,7 @@ export default function CounselorDocumentsWorkspace({ snapshot }) {
         </div>
       </div>
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+      <div className="mb-5 grid gap-3 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFFCF7] p-3 shadow-[0_12px_28px_rgba(16,35,63,0.08)] sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <DocumentStat
           label="Total"
           value={stats.total}
@@ -742,7 +750,7 @@ export default function CounselorDocumentsWorkspace({ snapshot }) {
         />
 
         <DocumentStat
-          label="Visa/CAS"
+          label="Visa/Pre-enrolment"
           value={stats.visa}
           helper="readiness-sensitive"
           tone="violet"
@@ -755,7 +763,7 @@ export default function CounselorDocumentsWorkspace({ snapshot }) {
         <DocumentPressurePanel stats={stats} onFilter={setFilter} />
       </div>
 
-      <div className="mb-5 rounded-[1.4rem] border-2 border-[#d8b892] bg-[#fff8ef] p-3.5">
+      <div className="mb-5 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3.5 shadow-[inset_0_0_0_1px_rgba(255,90,10,0.12)]">
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_200px_220px_auto]">
           <input
             type="search"
@@ -795,35 +803,35 @@ export default function CounselorDocumentsWorkspace({ snapshot }) {
             type="button"
             onClick={reset}
             disabled={!hasActiveControls}
-            className="rounded-2xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-sm font-black text-white transition hover:bg-[#102f52] disabled:cursor-default disabled:opacity-45"
+            className="rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0B2A4B] hover:shadow-md disabled:cursor-default disabled:opacity-45"
           >
             Reset
           </button>
         </div>
       </div>
 
-      <div className="mb-3 flex flex-col gap-2 rounded-2xl border border-[#d8b892] bg-[#fff8ef] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-[#7d684f]">
+      <div className="mb-3 flex flex-col gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-white">
           Counselor document queue · {filtered.length} visible records
         </p>
 
-        <p className="text-xs font-semibold text-[#607487]">
+        <p className="text-xs font-semibold text-blue-100">
           Sort: {SORTS.find((item) => item.key === sort)?.label || "Criticality"}
         </p>
       </div>
 
       <div className="grid gap-3">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-[#c9d5de] bg-[#fffdf8] p-7 text-center">
+          <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#AFC0D0] bg-[#FFFCF7] p-8 text-center shadow-inner">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-orange-200 bg-orange-50 text-lg font-black text-orange-700">
               D
             </div>
 
-            <p className="mt-3 text-sm font-black text-[#102b4c]">
+            <p className="mt-3 text-sm font-black text-[#10233F]">
               No document records found.
             </p>
 
-            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#607487]">
+            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#5B6D80]">
               Assigned student documents will appear when the counselor-scoped
               snapshot contains document records. If records exist but are hidden,
               clear the current search and filters.

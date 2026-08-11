@@ -31,6 +31,7 @@ import {
   TrendingUp,
   UserCheck,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const FUNNEL_STAGES = [
   {
@@ -560,43 +561,25 @@ function MetricCard({
   index = 0,
   reduceMotion,
 }) {
-  const styles = {
-    orange: "border-[#F97316] bg-[#FFF4E8] text-orange-800",
-    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
-    amber: "border-[#F59E0B] bg-[#FFF7ED] text-amber-900",
-    red: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-  };
-
   return (
-    <motion.article
+    <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
         duration: reduceMotion ? 0 : 0.22,
         delay: reduceMotion ? 0 : index * 0.035,
       }}
-      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.055)] ${
-        styles[tone] || styles.orange
-      }`}
+      className="min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.14em]">
-            {label}
-          </p>
-          <p className="mt-2 text-3xl font-black text-[#10233f]">{value}</p>
-        </div>
-
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-current/20 bg-white">
-          <Icon size={17} />
-        </div>
-      </div>
-
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-        {helper}
-      </p>
-    </motion.article>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={label}
+        value={value}
+        detail={helper}
+        icon={Icon}
+        tone={toZaifanMetricTone(tone)}
+      />
+    </motion.div>
   );
 }
 
@@ -667,14 +650,7 @@ function MethodologyNote() {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function getDepthMessage(depth, deepestStage) {
@@ -691,6 +667,44 @@ function getDepthMessage(depth, deepestStage) {
   }
 
   return `Most records remain early in the journey even though the pipeline reaches ${deepestStage.label}. Prioritize first response, qualification and clear next actions.`;
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ConversionFunnelChart;

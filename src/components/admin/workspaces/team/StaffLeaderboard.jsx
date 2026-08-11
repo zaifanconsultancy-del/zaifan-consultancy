@@ -38,6 +38,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const SCORE_WEIGHTS = {
   inquiryOwned: 8,
@@ -543,7 +544,7 @@ function StaffLeaderboard({
             </div>
           </div>
 
-          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          <div className="grid min-w-0 auto-rows-fr gap-4 sm:grid-cols-2">
             <UnifiedInsightCard
               cardClass={cardClass}
               icon={Crown}
@@ -959,62 +960,17 @@ function TeamMetric({
   icon: Icon,
   tone = "orange",
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "danger"
-      ? "border-[#FB7185] bg-[#FFF4F4]"
-      : tone === "good"
-      ? "border-[#34D399] bg-[#F0FFF8]"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-[#FF5A0A] bg-[#FFF4E8]";
-
   return (
-    <div
-      className={`min-w-0 rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{
-              color: dark ? "#FDBA74" : "#64748B",
-            }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-3xl font-black"
-            style={{
-              color: dark ? "#FFFFFF" : "#10233F",
-            }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={18}
-          style={{
-            color: dark ? "#FDBA74" : "#C2410C",
-          }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{
-          color: dark ? "#F8FAFC" : "#64748B",
-        }}
-      >
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      surface="light"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -1026,57 +982,15 @@ function Tag({ value }) {
   );
 }
 
-function MiniMetric({
-  icon: Icon,
-  label,
-  value,
-  tone = "orange",
-}) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "danger"
-      ? "border-[#FB7185] bg-[#FFF4F4]"
-      : tone === "good"
-      ? "border-[#34D399] bg-[#F0FFF8]"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-[#FF5A0A] bg-[#FFF4E8]";
-
+function MiniMetric({ icon: Icon, label, value, tone = "orange" }) {
   return (
-    <div
-      className={`min-w-0 rounded-xl border-2 p-3 ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <p
-          className="text-[8px] font-black uppercase tracking-[0.08em]"
-          style={{
-            color: dark ? "#FDBA74" : "#64748B",
-          }}
-        >
-          {label}
-        </p>
-
-        <Icon
-          size={13}
-          style={{
-            color: dark ? "#FDBA74" : "#C2410C",
-          }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-base font-black"
-        style={{
-          color: dark ? "#FFFFFF" : "#10233F",
-        }}
-      >
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1091,133 +1005,93 @@ function UnifiedInsightCard({
   description,
   footer,
 }) {
-  const themes = {
-    orange: {
-      border: "border-[#FF5A0A]",
-      surface: "bg-[#FFF4E8]",
-      accent: "bg-[#FF5A0A]",
-      iconBorder: "border-[#FF5A0A]/45",
-      iconText: "text-[#D94F08]",
-      badge: "border-[#FF5A0A]/45 bg-white text-[#C2410C]",
-      statBorder: "border-[#FF5A0A]/30",
-      statSurface: "bg-white/75",
-      statValue: "text-[#C2410C]",
-      footerBorder: "border-[#FF5A0A]/25",
-      footerSurface: "bg-white/70",
-      footerText: "text-[#9A3412]",
-    },
-    violet: {
-      border: "border-[#8B5CF6]",
-      surface: "bg-[#F5F0FF]",
-      accent: "bg-[#8B5CF6]",
-      iconBorder: "border-[#8B5CF6]/45",
-      iconText: "text-[#6D28D9]",
-      badge: "border-[#8B5CF6]/45 bg-white text-[#6D28D9]",
-      statBorder: "border-[#8B5CF6]/30",
-      statSurface: "bg-white/75",
-      statValue: "text-[#6D28D9]",
-      footerBorder: "border-[#8B5CF6]/25",
-      footerSurface: "bg-white/70",
-      footerText: "text-[#6D28D9]",
-    },
-    green: {
-      border: "border-[#22C55E]",
-      surface: "bg-[#ECFDF3]",
-      accent: "bg-[#22C55E]",
-      iconBorder: "border-[#22C55E]/45",
-      iconText: "text-[#047857]",
-      badge: "border-[#22C55E]/45 bg-white text-[#047857]",
-      statBorder: "border-[#22C55E]/30",
-      statSurface: "bg-white/75",
-      statValue: "text-[#047857]",
-      footerBorder: "border-[#22C55E]/25",
-      footerSurface: "bg-white/70",
-      footerText: "text-[#047857]",
-    },
-    amber: {
-      border: "border-[#F59E0B]",
-      surface: "bg-[#FFF4E8]",
-      accent: "bg-[#F59E0B]",
-      iconBorder: "border-[#F59E0B]/45",
-      iconText: "text-[#B45309]",
-      badge: "border-[#F59E0B]/45 bg-white text-[#B45309]",
-      statBorder: "border-[#F59E0B]/30",
-      statSurface: "bg-white/75",
-      statValue: "text-[#B45309]",
-      footerBorder: "border-[#F59E0B]/25",
-      footerSurface: "bg-white/70",
-      footerText: "text-[#92400E]",
-    },
-  };
+  const metricTone = toZaifanMetricTone(tone);
 
-  const theme = themes[tone] || themes.orange;
-
-  return (
-    <div
-      className={`${cardClass} relative flex min-w-0 flex-col overflow-hidden rounded-[1.5rem] border-[3px] p-4 shadow-[0_8px_24px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${theme.border} ${theme.surface}`}
-    >
-      <div className={`absolute inset-x-0 top-0 h-1.5 ${theme.accent}`} />
-
-      <div className="flex min-w-0 items-start gap-3 pt-1">
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 bg-white ${theme.iconBorder} ${theme.iconText}`}
-        >
-          <Icon size={18} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-            {eyebrow}
-          </p>
-
-          <h3 className="mt-1 whitespace-normal break-normal text-lg font-black leading-6 text-[#10233F]">
-            {title}
-          </h3>
-        </div>
-      </div>
-
+  const footerContent = (
+    <div className="space-y-3">
       {badge ? (
-        <div className="mt-3">
-          <span
-            className={`inline-flex rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${theme.badge}`}
-          >
-            {badge}
-          </span>
-        </div>
+        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#61738D]">
+          {badge}
+        </p>
       ) : null}
 
-      <p className="mt-4 min-h-[3.75rem] whitespace-normal break-normal text-sm font-semibold leading-6 text-slate-600">
-        {description}
-      </p>
-
-      <div className="mt-4 grid min-w-0 grid-cols-3 gap-2">
+      <div className="grid min-w-0 grid-cols-3 gap-2">
         {stats.slice(0, 3).map(([label, value]) => (
-          <div
+          <InsightStat
             key={label}
-            className={`flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl border-2 px-1 py-3 text-center ${theme.statBorder} ${theme.statSurface}`}
-          >
-            <p className="w-full min-w-0 whitespace-normal text-[7px] font-black uppercase leading-[11px] tracking-normal text-slate-500 [overflow-wrap:anywhere]">
-              {label}
-            </p>
-
-            <p className={`mt-1 text-base font-black leading-5 ${theme.statValue}`}>
-              {value}
-            </p>
-          </div>
+            label={label}
+            value={value}
+            tone={metricTone}
+          />
         ))}
       </div>
 
-      <div
-        className={`mt-auto pt-4`}
-      >
-        <div
-          className={`rounded-xl border-2 px-3 py-2.5 ${theme.footerBorder} ${theme.footerSurface}`}
-        >
-          <p className={`whitespace-normal break-normal text-xs font-bold leading-5 ${theme.footerText}`}>
+      {footer ? (
+        <div className="rounded-xl border-2 border-[#D6E0EB] bg-white/70 px-3 py-2.5">
+          <p className="text-xs font-bold leading-5 text-[#52667F]">
             {footer}
           </p>
         </div>
-      </div>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <ZaifanMetricCard
+      level="coBoss"
+      surface="light"
+      label={eyebrow}
+      value={
+        <span className="block break-words text-[1.35rem] font-black leading-7 tracking-[-0.02em]">
+          {title}
+        </span>
+      }
+      detail={description}
+      icon={Icon}
+      tone={metricTone}
+      className="h-full"
+      footer={footerContent}
+    />
+  );
+}
+
+function InsightStat({
+  label,
+  value,
+  tone = "navy",
+}) {
+  const styles = {
+    orange:
+      "border-[#F7D49D] bg-[#FFF7ED] text-[#C93208]",
+    violet:
+      "border-[#D8C8FF] bg-[#F8F5FF] text-[#6D28D9]",
+    green:
+      "border-[#AFE9D3] bg-[#F0FFF8] text-[#087F5B]",
+    amber:
+      "border-[#F7D49D] bg-[#FFF7ED] text-[#B45309]",
+    blue:
+      "border-[#BDD9F8] bg-[#F2F7FF] text-[#075AA3]",
+    red:
+      "border-[#F8BEC8] bg-[#FFF4F4] text-[#C42145]",
+    navy:
+      "border-[#C7D7E8] bg-[#F1F6FC] text-[#123865]",
+    slate:
+      "border-[#D6DEE8] bg-[#F8FAFC] text-[#334155]",
+  };
+
+  const style = styles[tone] || styles.navy;
+
+  return (
+    <div
+      className={`min-w-0 rounded-xl border-2 px-2 py-3 text-center ${style}`}
+    >
+      <p className="truncate text-[7px] font-black uppercase tracking-[0.07em] text-[#65758B]">
+        {label}
+      </p>
+
+      <p className="mt-1 break-words text-base font-black leading-5">
+        {value}
+      </p>
     </div>
   );
 }
@@ -1289,6 +1163,44 @@ function getTierStyle(tier) {
   }
 
   return "border-amber-300 bg-amber-50 text-amber-800";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default StaffLeaderboard;

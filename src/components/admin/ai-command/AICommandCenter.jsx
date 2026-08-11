@@ -33,6 +33,7 @@
 
 import React, { useMemo, useState } from "react";
 import AICommandModuleNav from "./AICommandModuleNav";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 import {
   Activity,
   AlertTriangle,
@@ -172,6 +173,20 @@ function getRiskTone(severity = "") {
 
 function getSystemState(status = "") {
   const clean = normalize(status);
+
+  if (
+    [
+      "not connected",
+      "disconnected",
+      "not configured",
+      "unavailable",
+      "unknown",
+      "missing",
+      "not supplied",
+    ].some((value) => clean.includes(value))
+  ) {
+    return "unknown";
+  }
 
   if (
     ["live", "healthy", "connected", "operational", "ready", "verified"].some(
@@ -899,7 +914,7 @@ function AICommandCenter({
         </div>
       </section>
 
-      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1.08fr)_minmax(20rem,0.84fr)]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <CommandPanel
           tone="red"
           eyebrow="Executive Risk"
@@ -976,11 +991,12 @@ function AICommandCenter({
           title="Platform Health"
           description="System status from the supplied health payload."
           icon={ShieldCheck}
-          count={filteredSystems.length}
+          count={`${filteredSystems.filter((system) => getSystemState(system.status) === "healthy").length}/${filteredSystems.length}`}
           hidden={!showType("system")}
+          className="xl:col-span-2"
         >
           {filteredSystems.length ? (
-            <div className="space-y-2.5">
+            <div className="grid auto-rows-fr gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filteredSystems.map((system) => (
                 <SystemHealthRow
                   key={system.id}
@@ -1203,28 +1219,12 @@ function HeaderChip({ icon: Icon, label }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2.5">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-lg font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 
 function OrangeMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 
@@ -1257,77 +1257,8 @@ function SectionIntro({ eyebrow, title, description, badge }) {
   );
 }
 
-function CommandMetricCard({
-  label,
-  value,
-  detail,
-  icon: Icon,
-  tone = "navy",
-  connected,
-}) {
-  return (
-    <article
-      className={`relative min-w-0 overflow-hidden rounded-[1.3rem] border-[3px] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
-        connected
-          ? outerBorder(tone)
-          : "border-[#C9D7E6]"
-      }`}
-    >
-      <div
-        className={`absolute inset-x-0 top-0 h-1.5 ${
-          connected ? accentBar(tone) : "bg-slate-300"
-        }`}
-      />
-
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="break-words text-[8px] font-black uppercase tracking-[0.11em] text-[#53657D]">
-            {label}
-          </p>
-
-          <p className="mt-3 break-words text-3xl font-black leading-none text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${
-            connected
-              ? "border-[#123865] bg-[#F2F7FF] text-[#123865]"
-              : "border-[#C9D7E6] bg-[#FFF8EF] text-slate-400"
-          }`}
-        >
-          <Icon size={17} />
-        </span>
-      </div>
-
-      <p className="mt-3 min-h-[40px] break-words text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-
-      <div
-        className={`mt-3 flex items-center gap-2 rounded-xl border-2 px-3 py-2 ${
-          connected
-            ? "border-emerald-300 bg-emerald-50"
-            : "border-[#C9D7E6] bg-[#F7FAFC]"
-        }`}
-      >
-        {connected ? (
-          <CheckCircle2 size={13} className="shrink-0 text-emerald-700" />
-        ) : (
-          <Database size={13} className="shrink-0 text-slate-500" />
-        )}
-
-        <p
-          className={`text-[9px] font-black uppercase tracking-[0.09em] ${
-            connected ? "text-emerald-800" : "text-slate-500"
-          }`}
-        >
-          {connected ? "Connected value" : "Not connected"}
-        </p>
-      </div>
-    </article>
-  );
+function CommandMetricCard({ label, value, detail, icon: Icon, tone = "navy", connected }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={[detail, typeof connected === "boolean" ? (connected ? "Connected" : "Not connected") : ""].filter(Boolean).join(" · ")} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CommandPanel({
@@ -1338,6 +1269,7 @@ function CommandPanel({
   tone = "navy",
   count = 0,
   hidden = false,
+  className = "",
   children,
 }) {
   if (hidden) return null;
@@ -1362,7 +1294,7 @@ function CommandPanel({
 
   return (
     <section
-      className={`min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)] ${accent}`}
+      className={`min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.08)] ${accent} ${className}`}
     >
       <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
@@ -1536,7 +1468,7 @@ function SystemHealthRow({ system, canOpen, onOpen }) {
     </>
   );
 
-  const className = `flex min-w-0 items-start justify-between gap-3 rounded-[1.05rem] border-2 p-3 text-left shadow-[0_4px_12px_rgba(18,56,101,0.03)] transition ${classes}`;
+  const className = `flex h-full min-w-0 items-start justify-between gap-3 rounded-[1.05rem] border-2 p-4 text-left shadow-[0_4px_12px_rgba(18,56,101,0.03)] transition ${classes}`;
 
   if (canOpen) {
     return (
@@ -1699,67 +1631,12 @@ function AlertFeedCard({ item, canInspect, onInspect }) {
   );
 }
 
-function AutomationMetricCard({
-  label,
-  value,
-  detail,
-  tone,
-  icon: Icon,
-  connected,
-}) {
-  return (
-    <article
-      className={`rounded-[1.25rem] border-[3px] p-4 ${toneClass(
-        connected ? tone : "muted"
-      )}`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase leading-4 tracking-[0.1em] text-[#10233F]">
-            {label}
-          </p>
-          <p className="mt-2 break-words text-3xl font-black text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/80">
-          <Icon size={17} />
-        </span>
-      </div>
-
-      <p className="mt-3 text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-
-      <p
-        className={`mt-3 text-[9px] font-black uppercase tracking-[0.08em] ${
-          connected ? "text-emerald-800" : "text-slate-500"
-        }`}
-      >
-        {connected ? "Connected" : "Awaiting source"}
-      </p>
-    </article>
-  );
+function AutomationMetricCard({ label, value, detail, tone, icon: Icon, connected }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={[detail, typeof connected === "boolean" ? (connected ? "Connected" : "Not connected") : ""].filter(Boolean).join(" · ")} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function ReadinessCard({ icon: Icon, label, value, detail }) {
-  return (
-    <div className="rounded-xl border-2 border-[#C9D7E6] bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.09em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-1 text-xl font-black text-[#10233F]">{value}</p>
-        </div>
-        <Icon size={17} className="shrink-0 text-[#123865]" />
-      </div>
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={detail} icon={Icon} tone="green" />;
 }
 
 function SourceBadge({ source }) {
@@ -1905,6 +1782,63 @@ function accentBar(tone = "navy") {
   if (tone === "green") return "bg-emerald-500";
   if (tone === "blue") return "bg-blue-500";
   return "bg-[#123865]";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default AICommandCenter;

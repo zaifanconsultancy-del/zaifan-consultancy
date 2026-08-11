@@ -23,6 +23,7 @@ import {
   getPipelineStage,
 } from "../../../../data/crmPipelineConfig";
 import { enrichLeadWithAi } from "../../../../services/aiLeadEngine";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 
 const MOTION = {
@@ -1330,37 +1331,12 @@ function AssignmentBadge({ assignedAdminName, assignedAdminInitial }) {
 }
 
 function AppointmentOrangeMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 
 function SummaryCard({ label, value, accent = "navy" }) {
-  const accentClass =
-    accent === "orange"
-      ? "border-[#FF5A0A] bg-[#FFF4E8]"
-      : "border-[#123865]/20 bg-[#FFF8EF]";
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.1rem] border p-3.5 shadow-[0_1px_0_rgba(7,31,80,0.03)] transition duration-300 hover:-translate-y-0.5 hover:border-[#FF7A2F] ${accentClass}`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#FF5A0A]">
-        {label}
-      </p>
-      <p className="mt-1.5 break-words text-sm font-bold leading-relaxed text-[#123865]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone={toZaifanMetricTone(accent)} />;
 }
 
 function ContactAction({
@@ -1417,6 +1393,51 @@ function InfoCard({ label, value, onCopy = null, copied = false }) {
       </p>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default AppointmentCard;

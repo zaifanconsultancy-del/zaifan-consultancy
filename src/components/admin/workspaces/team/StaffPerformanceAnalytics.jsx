@@ -33,6 +33,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -435,7 +436,7 @@ function StaffPerformanceAnalytics({
       transition={{
         duration: reduceMotion ? 0 : 0.25,
       }}
-      className={`${cardClass} min-w-0 !space-y-4 rounded-[2.2rem] !border-[4px] !border-[#123865] !bg-[#FFF8EF] !p-4 shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:!p-4`}
+      className={`${cardClass} min-w-0 !space-y-4 !border-0 !bg-transparent !p-0 !shadow-none`}
     >
       <div className="grid min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
         <div
@@ -500,7 +501,7 @@ function StaffPerformanceAnalytics({
       </div>
 
       <div className="min-w-0 rounded-[1.65rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.06)] sm:p-5">
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <div className="grid min-w-0 auto-rows-fr gap-3 sm:grid-cols-2">
           <SummaryCard
             label="Assignment Rate"
             value={`${teamMetrics.assignmentRate}%`}
@@ -544,6 +545,7 @@ function StaffPerformanceAnalytics({
             value={teamMetrics.averageWorkload}
             helper="Assigned records per active staff group"
             icon={BriefcaseBusiness}
+            tone="blue"
           />
 
           <InsightCard
@@ -555,6 +557,7 @@ function StaffPerformanceAnalytics({
                 : "No assigned workload yet"
             }
             icon={Target}
+            tone="orange"
           />
 
           <InsightCard
@@ -566,6 +569,7 @@ function StaffPerformanceAnalytics({
                 : "No priority workload yet"
             }
             icon={ShieldCheck}
+            tone={teamMetrics.highValue > 0 ? "red" : "green"}
           />
         </div>
 
@@ -583,7 +587,7 @@ function StaffPerformanceAnalytics({
                 Team Performance Workspace
               </p>
 
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-200">
+              <p className="mt-1 text-xs font-semibold leading-5 text-[#60728A]">
                 {workspaceExpanded
                   ? "Hide filters, staff portfolio, unassigned pressure and metric definitions."
                   : "Open filters, staff portfolio, unassigned pressure and metric definitions."}
@@ -681,7 +685,7 @@ function StaffPerformanceAnalytics({
               <h3 className="mt-1 text-xl font-black text-white">
                 Ownership & Performance Detail
               </h3>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-200">
                 Each staff member gets a full-width operating card so workload, progression and pressure remain readable.
               </p>
             </div>
@@ -739,62 +743,16 @@ function SummaryCard({
   icon: Icon,
   tone = "orange",
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "danger"
-      ? "border-red-300 bg-red-50"
-      : tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-[#FF5A0A] bg-[#FFF4E8]";
-
   return (
-    <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.08em]"
-            style={{
-              color: dark ? "#FDBA74" : "#64748B",
-            }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-3xl font-black"
-            style={{
-              color: dark ? "#FFFFFF" : "#10233F",
-            }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={18}
-          style={{
-            color: dark ? "#FDBA74" : "#C2410C",
-          }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{
-          color: dark ? "#F8FAFC" : "#64748B",
-        }}
-      >
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -803,27 +761,18 @@ function InsightCard({
   value,
   helper,
   icon: Icon,
+  tone = "blue",
 }) {
   return (
-    <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-            {label}
-          </p>
-
-          <p className="mt-2 break-words text-xl font-black leading-6 text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        <Icon className="h-4 w-4 shrink-0 text-orange-700" />
-      </div>
-
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -903,57 +852,44 @@ function StaffPerformanceRow({
             ))}
           </div>
 
-          <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2 text-[10px] font-bold text-slate-600">
-            <span className="rounded-full border-2 border-[#D1DCE7] bg-[#FFF9F1] px-2.5 py-1">
-              {staff.progressionRate}% progressed
-            </span>
-            <span className="rounded-full border-2 border-[#D1DCE7] bg-[#FFF9F1] px-2.5 py-1">
-              {staff.completionRate}% completed
-            </span>
-            <span className="rounded-full border-2 border-[#D1DCE7] bg-[#FFF9F1] px-2.5 py-1">
-              {staff.priorityPressure}% VIP/high pressure
-            </span>
-          </div>
+          <p className="mt-3 border-t-2 border-[#E1E8EF] pt-3 text-[10px] font-bold leading-5 text-[#60728A]">
+            {staff.progressionRate}% progressed · {staff.completionRate}% completed · {staff.priorityPressure}% VIP/high pressure
+          </p>
         </div>
       </div>
     </motion.article>
   );
 }
 
-function RowHeadlineMetric({ label, value }) {
+function RowHeadlineMetric({
+  label,
+  value,
+}) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-[#C9D7E6] bg-white px-2 py-2.5 text-center">
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-base font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      tone="slate"
+      className="h-full"
+    />
   );
 }
 
-function StaffDetailMetric({ label, value, tone = "orange" }) {
-  const styles = {
-    navy: "border-[#123865] bg-[#123865] text-white",
-    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
-    violet: "border-[#9B6CFF] bg-[#F8F5FF] text-violet-800",
-    danger: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-    good: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-    orange: "border-[#F59E0B] bg-[#FFF7ED] text-orange-800",
-  };
-
-  const dark = tone === "navy";
-
+function StaffDetailMetric({
+  label,
+  value,
+  tone = "orange",
+}) {
   return (
-    <div className={`min-w-0 rounded-xl border-2 p-3 ${styles[tone] || styles.orange}`}>
-      <p className={`break-words text-[8px] font-black uppercase leading-4 tracking-[0.07em] ${dark ? "text-orange-300" : "opacity-70"}`}>
-        {label}
-      </p>
-      <p className={`mt-1 break-words text-lg font-black ${dark ? "text-white" : ""}`}>
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      surface="light"
+      label={label}
+      value={value}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -1081,6 +1017,44 @@ function getPressureStyle(level) {
   }
 
   return "border-emerald-300 bg-emerald-50 text-emerald-700";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default StaffPerformanceAnalytics;

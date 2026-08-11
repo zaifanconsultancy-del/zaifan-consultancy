@@ -11,6 +11,7 @@ const COMPLETED_DOCUMENT_STATUSES = new Set([
   "uploaded",
   "verified",
   "received",
+  "cleared",
 ]);
 
 const COMPLETED_TASK_STATUSES = new Set(["completed", "done", "closed"]);

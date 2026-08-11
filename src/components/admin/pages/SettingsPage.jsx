@@ -9,6 +9,7 @@
 // - keeps all current props and motion behaviour intact
 
 import { motion } from "framer-motion";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 import {
   Bell,
   Bot,
@@ -280,17 +281,7 @@ function SettingsPage({
 }
 
 function SettingsHeroMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 truncate text-sm font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function GovernanceRow({ label }) {

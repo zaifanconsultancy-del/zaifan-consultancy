@@ -1,4 +1,7 @@
-// PaymentCenterPanel PARTNER OS EXTREME — Student Finance Command Center
+// PaymentCenterPanel FINANCE REQUEST LIFECYCLE FINAL V7 — request resolution + closed history
+// PaymentCenterPanel FINANCE OPERATIONS CLARITY V6 — action-first ledgers + latest/done separation
+// PaymentCenterPanel FINANCE LEDGER RECONCILIATION FIX V5 — invoice-linked payments are authoritative
+// PaymentCenterPanel PARTNER OS EXTREME V3 — Locked Admin header parity + Official Collection Setup
 // Full replacement for: src/components/admin/PaymentCenterPanel.jsx
 // Database-aligned with:
 // - student_invoices
@@ -6,6 +9,7 @@
 // - student_receipts
 // - payment_accounts
 // Uses database reconciliation triggers as the source of truth.
+// Official collection presets only prefill the Admin form; payment_accounts remains the live source shown to students/counselors.
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../../lib/supabaseClient";
@@ -17,6 +21,59 @@ import {
   prepareStudentNotification,
   sendPreparedStudentNotification,
 } from "../../../../services/studentNotificationService";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
+
+
+const OFFICIAL_PAYMENT_ACCOUNT_PRESETS = [
+  {
+    key: "meezan",
+    label: "Meezan Bank",
+    account_type: "bank",
+    account_title: "MALIK MUHAMMAD HUZAIFA KHAN",
+    bank_name: "Meezan Bank",
+    account_number: "07060114777258",
+    iban: "PK32MEZN0007060114777258",
+    mobile_wallet_number: "",
+    instructions:
+      "Branch: Hayatabad BR-PESHAWAR. Use only against a Zaifan invoice or payment request. Add the transaction reference and upload payment proof in Student Portal.",
+  },
+  {
+    key: "easypaisa",
+    label: "Easypaisa",
+    account_type: "easypaisa",
+    account_title: "Zaifan Easypaisa Wallet",
+    bank_name: "Easypaisa",
+    account_number: "",
+    iban: "",
+    mobile_wallet_number: "03235718151",
+    instructions:
+      "Use only against a Zaifan invoice or payment request. Confirm the recipient shown in the wallet app, save the transaction ID and upload payment proof in Student Portal.",
+  },
+  {
+    key: "jazzcash",
+    label: "JazzCash",
+    account_type: "jazzcash",
+    account_title: "Zaifan JazzCash Wallet",
+    bank_name: "JazzCash",
+    account_number: "",
+    iban: "",
+    mobile_wallet_number: "03235718151",
+    instructions:
+      "Use only against a Zaifan invoice or payment request. Confirm the recipient shown in the wallet app, save the transaction ID and upload payment proof in Student Portal.",
+  },
+  {
+    key: "upaisa",
+    label: "UPaisa",
+    account_type: "upaisa",
+    account_title: "Zaifan UPaisa Wallet",
+    bank_name: "UPaisa",
+    account_number: "",
+    iban: "",
+    mobile_wallet_number: "03305718131",
+    instructions:
+      "Use only against a Zaifan invoice or payment request. Confirm the recipient shown in the wallet app, save the transaction ID and upload payment proof in Student Portal.",
+  },
+];
 
 function normalize(value = "") {
   return String(value || "")
@@ -61,27 +118,113 @@ function getStudentType(student = {}, fallback = "inquiry") {
   );
 }
 
-function getInvoiceOutstanding(invoice = {}) {
-  const total = Number(invoice.total_amount ?? invoice.amount ?? 0);
-  const paid = Number(invoice.paid_amount ?? 0);
-  return Number(invoice.outstanding_amount ?? Math.max(0, total - paid));
+function getLinkedConfirmedPaymentAmount(invoice = {}, confirmedPayments = []) {
+  const invoiceId = String(invoice?.id || "").trim();
+  if (!invoiceId) return 0;
+
+  return confirmedPayments.reduce((sum, payment) => {
+    if (String(payment?.invoice_id || "").trim() !== invoiceId) return sum;
+    if (normalize(payment?.status) !== "confirmed") return sum;
+
+    const invoiceCurrency = String(invoice?.currency || "PKR").toUpperCase();
+    const paymentCurrency = String(payment?.currency || invoiceCurrency).toUpperCase();
+    if (invoiceCurrency !== paymentCurrency) return sum;
+
+    return sum + Number(payment?.amount || 0);
+  }, 0);
 }
 
-function isCollectibleInvoice(invoice = {}) {
-  const status = normalize(invoice.status);
-  return !["paid", "cancelled", "void"].includes(status) && getInvoiceOutstanding(invoice) > 0;
+function getInvoiceOutstanding(invoice = {}, confirmedPayments = []) {
+  const total = Math.max(0, Number(invoice.total_amount ?? invoice.amount ?? 0));
+  const linkedPaid = Math.max(
+    0,
+    getLinkedConfirmedPaymentAmount(invoice, confirmedPayments)
+  );
+  const storedPaid = Math.max(0, Number(invoice.paid_amount ?? 0));
+  const storedOutstanding = Number(invoice.outstanding_amount);
+
+  if (linkedPaid > 0) return Math.max(0, total - linkedPaid);
+  if (storedPaid > 0) return Math.max(0, total - storedPaid);
+
+  if (Number.isFinite(storedOutstanding) && storedOutstanding > 0) {
+    return Math.min(total || storedOutstanding, storedOutstanding);
+  }
+
+  return total;
 }
 
-function isInvoiceOverdue(invoice = {}) {
-  const status = normalize(invoice.status);
+function getEffectiveInvoiceStatus(invoice = {}, confirmedPayments = []) {
+  const stored = normalize(invoice.status || "unpaid");
+  if (["cancelled", "void", "refunded"].includes(stored)) return stored;
+
+  const total = Math.max(0, Number(invoice.total_amount ?? invoice.amount ?? 0));
+  const linkedPaid = Math.max(
+    0,
+    getLinkedConfirmedPaymentAmount(invoice, confirmedPayments)
+  );
+  const storedPaid = Math.max(0, Number(invoice.paid_amount ?? 0));
+  const effectivePaid = linkedPaid > 0 ? linkedPaid : storedPaid;
+  const outstanding = getInvoiceOutstanding(invoice, confirmedPayments);
+
+  if (total > 0 && outstanding <= 0) return "paid";
+  if (effectivePaid > 0 && outstanding > 0) return "partial";
+  if (stored === "overdue") return "overdue";
+  if (stored === "paid" && outstanding > 0) return "unpaid";
+  return stored || "unpaid";
+}
+
+function isCollectibleInvoice(invoice = {}, confirmedPayments = []) {
+  const status = getEffectiveInvoiceStatus(invoice, confirmedPayments);
+  return !["cancelled", "void", "refunded"].includes(status) &&
+    getInvoiceOutstanding(invoice, confirmedPayments) > 0;
+}
+
+function isInvoiceOverdue(invoice = {}, confirmedPayments = []) {
+  const status = getEffectiveInvoiceStatus(invoice, confirmedPayments);
+  if (!invoice.due_date || !isCollectibleInvoice(invoice, confirmedPayments)) return false;
   if (status === "overdue") return true;
-  if (!invoice.due_date || !isCollectibleInvoice(invoice)) return false;
 
   const due = new Date(invoice.due_date);
   if (Number.isNaN(due.getTime())) return false;
   due.setHours(23, 59, 59, 999);
 
   return due < new Date();
+}
+
+function getFinanceRecordTime(record = {}) {
+  const candidates = [
+    record.updated_at,
+    record.reviewed_at,
+    record.paid_at,
+    record.submitted_at,
+    record.requested_at,
+    record.issued_at,
+    record.created_at,
+    record.due_date,
+  ];
+
+  for (const value of candidates) {
+    if (!value) continue;
+    const time = new Date(value).getTime();
+    if (Number.isFinite(time)) return time;
+  }
+
+  return 0;
+}
+
+function formatFinanceMoment(value) {
+  if (!value) return "No timestamp";
+  try {
+    return new Date(value).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return String(value);
+  }
 }
 
 function statusClass(value = "") {
@@ -101,14 +244,14 @@ function statusClass(value = "") {
   }
 
   if (
-    ["overdue", "rejected", "failed", "cancelled", "void", "inactive"].includes(
+    ["overdue", "rejected", "failed", "cancelled", "canceled", "void", "inactive"].includes(
       clean
     )
   ) {
     return "border-red-300 bg-red-50 text-red-800";
   }
 
-  if (["partial", "pending", "pending_review", "unpaid", "draft"].includes(clean)) {
+  if (["partial", "pending", "sent", "pending_review", "unpaid", "draft"].includes(clean)) {
     return "border-amber-300 bg-amber-50 text-amber-800";
   }
 
@@ -189,8 +332,11 @@ function PaymentCenterPanel({
   );
 
   const collectibleInvoices = useMemo(
-    () => activeInvoices.filter(isCollectibleInvoice),
-    [activeInvoices]
+    () =>
+      activeInvoices.filter((invoice) =>
+        isCollectibleInvoice(invoice, confirmedPayments)
+      ),
+    [activeInvoices, confirmedPayments]
   );
 
   const totalsByCurrency = useMemo(() => {
@@ -213,15 +359,12 @@ function PaymentCenterPanel({
     activeInvoices.forEach((invoice) => {
       const bucket = ensure(invoice.currency);
       const total = Number(invoice.total_amount ?? invoice.amount ?? 0);
-      const paid = Number(invoice.paid_amount ?? 0);
-      const outstanding = Number(
-        invoice.outstanding_amount ?? Math.max(0, total - paid)
-      );
+      const outstanding = getInvoiceOutstanding(invoice, confirmedPayments);
 
       bucket.invoiced += total;
       bucket.outstanding += outstanding;
 
-      if (isInvoiceOverdue(invoice)) {
+      if (isInvoiceOverdue(invoice, confirmedPayments)) {
         bucket.overdue += outstanding;
       }
     });
@@ -236,8 +379,12 @@ function PaymentCenterPanel({
   }, [activeInvoices, confirmedPayments]);
 
   const financeStats = useMemo(() => {
-    const overdueInvoices = activeInvoices.filter(isInvoiceOverdue);
-    const openInvoices = activeInvoices.filter(isCollectibleInvoice);
+    const overdueInvoices = activeInvoices.filter((invoice) =>
+      isInvoiceOverdue(invoice, confirmedPayments)
+    );
+    const openInvoices = activeInvoices.filter((invoice) =>
+      isCollectibleInvoice(invoice, confirmedPayments)
+    );
     const pendingReceipts = receipts.filter(
       (receipt) => normalize(receipt.status) === "pending_review"
     );
@@ -248,15 +395,359 @@ function PaymentCenterPanel({
       overdueInvoices: overdueInvoices.length,
       confirmedPayments: confirmedPayments.length,
       pendingReceipts: pendingReceipts.length,
+      activePaymentAccounts: paymentAccounts.filter((account) => account.is_active).length,
     };
-  }, [activeInvoices, confirmedPayments, receipts]);
+  }, [activeInvoices, confirmedPayments, receipts, paymentAccounts]);
+
+  const openInvoiceRecords = useMemo(
+    () =>
+      activeInvoices
+        .filter((invoice) => isCollectibleInvoice(invoice, confirmedPayments))
+        .sort((a, b) => {
+          const aOverdue = isInvoiceOverdue(a, confirmedPayments) ? 1 : 0;
+          const bOverdue = isInvoiceOverdue(b, confirmedPayments) ? 1 : 0;
+          if (aOverdue !== bOverdue) return bOverdue - aOverdue;
+
+          const aDue = a?.due_date ? new Date(a.due_date).getTime() : Number.MAX_SAFE_INTEGER;
+          const bDue = b?.due_date ? new Date(b.due_date).getTime() : Number.MAX_SAFE_INTEGER;
+          return aDue - bDue;
+        }),
+    [activeInvoices, confirmedPayments]
+  );
+
+  const closedInvoiceRecords = useMemo(
+    () =>
+      invoices
+        .filter((invoice) => !isCollectibleInvoice(invoice, confirmedPayments))
+        .sort((a, b) => getFinanceRecordTime(b) - getFinanceRecordTime(a)),
+    [invoices, confirmedPayments]
+  );
+
+  const sortedPayments = useMemo(
+    () =>
+      [...payments].sort(
+        (a, b) => getFinanceRecordTime(b) - getFinanceRecordTime(a)
+      ),
+    [payments]
+  );
+
+  const pendingReceiptRecords = useMemo(
+    () =>
+      receipts
+        .filter((receipt) => normalize(receipt.status) === "pending_review")
+        .sort((a, b) => getFinanceRecordTime(b) - getFinanceRecordTime(a)),
+    [receipts]
+  );
+
+  const reviewedReceiptRecords = useMemo(
+    () =>
+      receipts
+        .filter((receipt) => normalize(receipt.status) !== "pending_review")
+        .sort((a, b) => getFinanceRecordTime(b) - getFinanceRecordTime(a)),
+    [receipts]
+  );
+
+  const openPaymentRequestRecords = useMemo(
+    () =>
+      paymentRequests
+        .filter((request) =>
+          ["pending", "sent", "open", "requested", "active"].includes(
+            normalize(request.status || "pending")
+          )
+        )
+        .sort((a, b) => getFinanceRecordTime(b) - getFinanceRecordTime(a)),
+    [paymentRequests]
+  );
+
+  const closedPaymentRequestRecords = useMemo(
+    () =>
+      paymentRequests
+        .filter((request) =>
+          ["completed", "cancelled", "canceled"].includes(
+            normalize(request.status || "")
+          )
+        )
+        .sort((a, b) => getFinanceRecordTime(b) - getFinanceRecordTime(a)),
+    [paymentRequests]
+  );
+
+  const latestFinanceActivity = useMemo(() => {
+    const activity = [];
+
+    invoices.forEach((invoice) => {
+      activity.push({
+        id: `invoice-${invoice.id}`,
+        type: "Invoice",
+        title: invoice.title || invoice.invoice_number || "Student invoice",
+        status: getEffectiveInvoiceStatus(invoice, confirmedPayments),
+        amount: Number(invoice.total_amount ?? invoice.amount ?? 0),
+        currency: invoice.currency || "PKR",
+        time:
+          invoice.updated_at ||
+          invoice.issued_at ||
+          invoice.created_at ||
+          invoice.due_date ||
+          null,
+      });
+    });
+
+    payments.forEach((payment) => {
+      activity.push({
+        id: `payment-${payment.id}`,
+        type: "Payment",
+        title: payment.reference || payment.payment_method || "Payment record",
+        status: payment.status || "confirmed",
+        amount: Number(payment.amount || 0),
+        currency: payment.currency || "PKR",
+        time: payment.updated_at || payment.paid_at || payment.created_at || null,
+      });
+    });
+
+    receipts.forEach((receipt) => {
+      activity.push({
+        id: `receipt-${receipt.id}`,
+        type: "Receipt",
+        title: receipt.file_name || "Student receipt",
+        status: receipt.status || "pending_review",
+        amount: Number(receipt.amount || 0),
+        currency: receipt.currency || "PKR",
+        time:
+          receipt.reviewed_at ||
+          receipt.updated_at ||
+          receipt.submitted_at ||
+          receipt.created_at ||
+          null,
+      });
+    });
+
+    paymentRequests.forEach((request) => {
+      activity.push({
+        id: `request-${request.id}`,
+        type: "Payment Request",
+        title: request.title || request.category || "Payment request",
+        status: request.status || "pending",
+        amount: Number(request.amount || 0),
+        currency: request.currency || "PKR",
+        time: request.updated_at || request.requested_at || request.created_at || null,
+      });
+    });
+
+    return activity
+      .sort((a, b) => {
+        const aTime = a.time ? new Date(a.time).getTime() : 0;
+        const bTime = b.time ? new Date(b.time).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, 4);
+  }, [invoices, payments, receipts, paymentRequests, confirmedPayments]);
+
+  const latestPaymentId = sortedPayments[0]?.id || null;
+
+  const completedFinanceCount = useMemo(() => {
+    const settledInvoices = invoices.filter(
+      (invoice) =>
+        ["paid", "cancelled", "void"].includes(
+          getEffectiveInvoiceStatus(invoice, confirmedPayments)
+        )
+    ).length;
+
+    const reviewedReceipts = receipts.filter(
+      (receipt) => normalize(receipt.status) !== "pending_review"
+    ).length;
+
+    return (
+      settledInvoices +
+      confirmedPayments.length +
+      reviewedReceipts +
+      closedPaymentRequestRecords.length
+    );
+  }, [
+    invoices,
+    receipts,
+    confirmedPayments,
+    closedPaymentRequestRecords,
+  ]);
+
+  const financePriority = useMemo(() => {
+    if (pendingReceiptRecords.length) {
+      return {
+        tone: "warning",
+        eyebrow: "Review now",
+        title: `${pendingReceiptRecords.length} receipt${
+          pendingReceiptRecords.length === 1 ? "" : "s"
+        } waiting`,
+        detail:
+          "Verify the newest student proof first. Approve only when the amount, currency and invoice match.",
+      };
+    }
+
+    const overdue = openInvoiceRecords.filter((invoice) =>
+      isInvoiceOverdue(invoice, confirmedPayments)
+    );
+
+    if (overdue.length) {
+      return {
+        tone: "danger",
+        eyebrow: "Recovery",
+        title: `${overdue.length} overdue invoice${overdue.length === 1 ? "" : "s"}`,
+        detail:
+          "Outstanding money is already past due. Confirm the payment plan or contact the student.",
+      };
+    }
+
+    if (openInvoiceRecords.length) {
+      return {
+        tone: "warning",
+        eyebrow: "Collection",
+        title: `${openInvoiceRecords.length} open invoice${
+          openInvoiceRecords.length === 1 ? "" : "s"
+        }`,
+        detail:
+          "No receipt is waiting right now. Keep the invoice open until linked money is confirmed.",
+      };
+    }
+
+    if (openPaymentRequestRecords.length) {
+      return {
+        tone: "warning",
+        eyebrow: "Student request",
+        title: `${openPaymentRequestRecords.length} payment request${
+          openPaymentRequestRecords.length === 1 ? "" : "s"
+        } open`,
+        detail:
+          "The student still has an active payment request. Confirm the next action before closing Finance.",
+      };
+    }
+
+    return {
+      tone: "success",
+      eyebrow: "Reconciled",
+      title: "No finance blocker",
+      detail:
+        "Invoices are settled and no receipt is waiting for review. The ledger is currently clear.",
+    };
+  }, [
+    pendingReceiptRecords,
+    openInvoiceRecords,
+    openPaymentRequestRecords,
+    confirmedPayments,
+  ]);
 
   function showMessage(text, tone = "info") {
     setMessage(text);
     setMessageTone(tone);
   }
 
-  async function refreshAll() {
+  async function reconcileInvoiceFromLedger(invoiceId) {
+    if (!invoiceId) return null;
+
+    const [
+      { data: invoiceRow, error: invoiceError },
+      { data: paymentRows, error: paymentError },
+    ] = await Promise.all([
+      supabase
+        .from("student_invoices")
+        .select("*")
+        .eq("id", invoiceId)
+        .maybeSingle(),
+      supabase
+        .from("student_payments")
+        .select("id, invoice_id, amount, currency, status")
+        .eq("invoice_id", invoiceId)
+        .eq("status", "confirmed"),
+    ]);
+
+    if (invoiceError) throw invoiceError;
+    if (paymentError) throw paymentError;
+    if (!invoiceRow) return null;
+
+    const total = Math.max(
+      0,
+      Number(invoiceRow.total_amount ?? invoiceRow.amount ?? 0)
+    );
+    const currency = String(invoiceRow.currency || "PKR").toUpperCase();
+    const paid = (Array.isArray(paymentRows) ? paymentRows : []).reduce(
+      (sum, payment) => {
+        const paymentCurrency = String(
+          payment?.currency || currency
+        ).toUpperCase();
+        if (paymentCurrency !== currency) return sum;
+        return sum + Math.max(0, Number(payment?.amount || 0));
+      },
+      0
+    );
+    const outstanding = Math.max(0, total - paid);
+    const storedStatus = normalize(invoiceRow.status || "unpaid");
+
+    let status = storedStatus;
+    if (!["cancelled", "void", "refunded"].includes(storedStatus)) {
+      if (total > 0 && outstanding <= 0) {
+        status = "paid";
+      } else if (paid > 0) {
+        status = "partial";
+      } else if (invoiceRow.due_date) {
+        const due = new Date(invoiceRow.due_date);
+        due.setHours(23, 59, 59, 999);
+        status =
+          !Number.isNaN(due.getTime()) && due < new Date()
+            ? "overdue"
+            : "unpaid";
+      } else {
+        status = "unpaid";
+      }
+    }
+
+    const currentPaid = Math.max(0, Number(invoiceRow.paid_amount ?? 0));
+    const currentOutstanding = Number(invoiceRow.outstanding_amount);
+    const needsRepair =
+      currentPaid !== paid ||
+      !Number.isFinite(currentOutstanding) ||
+      Math.max(0, currentOutstanding) !== outstanding ||
+      normalize(invoiceRow.status || "") !== status;
+
+    if (!needsRepair) return invoiceRow;
+
+    const { data: repaired, error: repairError } = await supabase
+      .from("student_invoices")
+      .update({
+        paid_amount: paid,
+        outstanding_amount: outstanding,
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", invoiceId)
+      .select("*")
+      .maybeSingle();
+
+    if (repairError) throw repairError;
+    return repaired || invoiceRow;
+  }
+
+  async function reconcileVisibleInvoices() {
+    const ids = Array.from(
+      new Set(invoices.map((invoice) => invoice?.id).filter(Boolean))
+    );
+
+    if (!ids.length) return;
+
+    const results = await Promise.allSettled(
+      ids.map((invoiceId) => reconcileInvoiceFromLedger(invoiceId))
+    );
+
+    results.forEach((result) => {
+      if (result.status === "rejected") {
+        console.warn(
+          "Finance invoice reconciliation skipped:",
+          result.reason?.message || result.reason
+        );
+      }
+    });
+  }
+
+  async function refreshAll({ reconcile = true } = {}) {
+    if (reconcile) {
+      await reconcileVisibleInvoices();
+    }
     await onSharedDataChange();
   }
 
@@ -296,9 +787,37 @@ function PaymentCenterPanel({
     }
   }
 
+
+  function applyPaymentAccountPreset(preset) {
+    if (!preset) return;
+
+    setAccountForm({
+      account_type: preset.account_type || "bank",
+      account_title: preset.account_title || "",
+      bank_name: preset.bank_name || "",
+      account_number: preset.account_number || "",
+      iban: preset.iban || "",
+      mobile_wallet_number: preset.mobile_wallet_number || "",
+      instructions: preset.instructions || "",
+      is_active: true,
+    });
+
+    showMessage(`${preset.label} details loaded into the payment-account form. Review them, then save the account.`, "info");
+  }
+
   useEffect(() => {
     loadPaymentAccounts();
   }, []);
+
+  useEffect(() => {
+    if (paymentForm.invoice_id || collectibleInvoices.length !== 1) return;
+
+    setPaymentForm((previous) => ({
+      ...previous,
+      invoice_id: String(collectibleInvoices[0].id),
+      amount: "",
+    }));
+  }, [paymentForm.invoice_id, collectibleInvoices]);
 
   useEffect(() => {
     if (!paymentForm.invoice_id) return;
@@ -312,9 +831,9 @@ function PaymentCenterPanel({
     setPaymentForm((previous) => ({
       ...previous,
       currency: invoice.currency || "PKR",
-      amount: String(getInvoiceOutstanding(invoice) || ""),
+      amount: String(getInvoiceOutstanding(invoice, confirmedPayments) || ""),
     }));
-  }, [paymentForm.invoice_id, invoices]);
+  }, [paymentForm.invoice_id, invoices, confirmedPayments]);
 
   async function queueProtectedChange(preview, execute) {
     if (!preview) {
@@ -461,6 +980,17 @@ function PaymentCenterPanel({
 
       if (error) throw error;
 
+      if (data?.id) {
+        try {
+          await reconcileInvoiceFromLedger(data.id);
+        } catch (reconcileError) {
+          console.warn(
+            "New invoice reconciliation skipped:",
+            reconcileError?.message || reconcileError
+          );
+        }
+      }
+
       await createTimeline(
         "Invoice Created",
         `${payload.title} created for ${formatMoney(
@@ -508,9 +1038,9 @@ function PaymentCenterPanel({
       if (invoice) {
         const invoiceCurrency = String(invoice.currency || "PKR").toUpperCase();
         const paymentCurrency = String(paymentForm.currency || "PKR").toUpperCase();
-        const outstanding = getInvoiceOutstanding(invoice);
+        const outstanding = getInvoiceOutstanding(invoice, confirmedPayments);
 
-        if (!isCollectibleInvoice(invoice)) {
+        if (!isCollectibleInvoice(invoice, confirmedPayments)) {
           throw new Error("This invoice is already settled, cancelled, or void.");
         }
 
@@ -574,6 +1104,10 @@ function PaymentCenterPanel({
             .single();
 
           if (error) throw error;
+
+          if (payload.invoice_id) {
+            await reconcileInvoiceFromLedger(payload.invoice_id);
+          }
 
           await createTimeline(
             "Payment Confirmed",
@@ -654,6 +1188,10 @@ function PaymentCenterPanel({
 
         if (error) throw error;
 
+        if (payment.invoice_id) {
+          await reconcileInvoiceFromLedger(payment.invoice_id);
+        }
+
         await createTimeline(
           `Payment ${cleanNext.replaceAll("_", " ")}`,
           `${formatMoney(
@@ -703,6 +1241,112 @@ function PaymentCenterPanel({
       );
     } catch (error) {
       showMessage(error?.message || "Payment status could not be changed.", "error");
+    }
+  }
+
+  async function changePaymentRequestStatus(request, nextStatus) {
+    const current = normalize(request?.status || "pending");
+    const cleanNext = normalize(nextStatus);
+
+    if (
+      !request?.id ||
+      current === cleanNext ||
+      actionSavingId ||
+      notificationBusy
+    ) {
+      return;
+    }
+
+    if (!["pending", "sent", "completed", "cancelled"].includes(cleanNext)) {
+      showMessage("Unsupported payment-request status.", "error");
+      return;
+    }
+
+    const wording =
+      cleanNext === "completed"
+        ? "Resolve this payment request? This closes the request only. It does NOT create a payment, change Paid, or reduce any invoice balance."
+        : cleanNext === "cancelled"
+          ? "Cancel this payment request? It will move to request history and will not affect money totals."
+          : cleanNext === "pending"
+            ? "Reopen this payment request? It will return to the active coordination queue."
+            : "Mark this payment request as sent? It remains open until completed or cancelled.";
+
+    if (!window.confirm(wording)) return;
+
+    const now = new Date().toISOString();
+    const actorId =
+      adminProfile?.id ||
+      adminProfile?.user_id ||
+      adminProfile?.profile_id ||
+      null;
+    const previousMetadata =
+      request?.metadata && typeof request.metadata === "object" && !Array.isArray(request.metadata)
+        ? request.metadata
+        : {};
+
+    setActionSavingId(request.id);
+    setMessage("");
+
+    try {
+      const { error } = await supabase
+        .from("counselor_payment_requests")
+        .update({
+          status: cleanNext,
+          metadata: {
+            ...previousMetadata,
+            lifecycle_status: cleanNext,
+            lifecycle_updated_at: now,
+            lifecycle_updated_by: actorId,
+            resolved_at:
+              cleanNext === "completed" || cleanNext === "cancelled"
+                ? now
+                : null,
+            resolved_by:
+              cleanNext === "completed" || cleanNext === "cancelled"
+                ? actorId
+                : null,
+          },
+          updated_at: now,
+        })
+        .eq("id", request.id);
+
+      if (error) throw error;
+
+      await createTimeline(
+        `Payment Request ${cleanNext.replaceAll("_", " ")}`,
+        `${request.title || "Payment Request"} changed from ${
+          request.status || "pending"
+        } to ${cleanNext}. This request status change did not create or modify a payment.`,
+        {
+          payment_request_id: request.id,
+          invoice_id: request.invoice_id || null,
+          previous_status: request.status || "pending",
+          status: cleanNext,
+          amount: Number(request.amount || 0),
+          currency: request.currency || "PKR",
+          money_effect: "none",
+        }
+      );
+
+      showMessage(
+        cleanNext === "completed"
+          ? "Payment request resolved. No payment or invoice balance was changed."
+          : cleanNext === "cancelled"
+            ? "Payment request cancelled and moved to history."
+            : cleanNext === "pending"
+              ? "Payment request reopened."
+              : "Payment request marked sent.",
+        "success"
+      );
+
+      await refreshAll();
+    } catch (error) {
+      showMessage(
+        error?.message || "Payment request status could not be changed.",
+        "error"
+      );
+    } finally {
+      setActionSavingId(null);
     }
   }
 
@@ -924,7 +1568,7 @@ function PaymentCenterPanel({
       return;
     }
 
-    if (cleanNext === "approved" && invoice && !isCollectibleInvoice(invoice)) {
+    if (cleanNext === "approved" && invoice && !isCollectibleInvoice(invoice, confirmedPayments)) {
       showMessage(
         "The linked invoice is already settled, cancelled, or void. Review the receipt before creating a payment.",
         "error"
@@ -935,11 +1579,11 @@ function PaymentCenterPanel({
     if (
       cleanNext === "approved" &&
       invoice &&
-      Number(receipt.amount || 0) > getInvoiceOutstanding(invoice)
+      Number(receipt.amount || 0) > getInvoiceOutstanding(invoice, confirmedPayments)
     ) {
       showMessage(
         `Receipt amount exceeds the linked invoice balance of ${formatMoney(
-          getInvoiceOutstanding(invoice),
+          getInvoiceOutstanding(invoice, confirmedPayments),
           invoice.currency
         )}.`,
         "error"
@@ -1076,6 +1720,32 @@ function PaymentCenterPanel({
         throw new Error("Account title is required.");
       }
 
+      const duplicateDestination = paymentAccounts.some((account) => {
+        if (normalize(account.account_type) !== normalize(accountForm.account_type)) {
+          return false;
+        }
+
+        const sameAccountNumber =
+          accountForm.account_number.trim() &&
+          String(account.account_number || "").trim() === accountForm.account_number.trim();
+        const sameIban =
+          accountForm.iban.trim() &&
+          String(account.iban || "").trim().toUpperCase() ===
+            accountForm.iban.trim().toUpperCase();
+        const sameWallet =
+          accountForm.mobile_wallet_number.trim() &&
+          String(account.mobile_wallet_number || "").trim() ===
+            accountForm.mobile_wallet_number.trim();
+
+        return Boolean(sameAccountNumber || sameIban || sameWallet);
+      });
+
+      if (duplicateDestination) {
+        throw new Error(
+          "This payment destination is already configured. Activate the existing record instead of creating a duplicate."
+        );
+      }
+
       const confirmed = window.confirm(
         `Save payment account?\n\n${accountForm.account_title}\nType: ${accountForm.account_type}`
       );
@@ -1195,45 +1865,54 @@ function PaymentCenterPanel({
   return (
     <div className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 pb-8 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 sm:pb-8 lg:p-5 lg:pb-8">
       <section className="min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_50px_rgba(18,56,101,0.11)]">
-        <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+        <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.32fr)_minmax(20rem,0.68fr)]">
           <div className="min-w-0 bg-[#123865] p-5 text-white sm:p-6 lg:p-7">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Badge text="FINANCE OS" tone="orange" />
               <Badge text={safeStudentType.toUpperCase()} tone="navy" />
+              <span className="rounded-xl border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                Reconciled Ledger
+              </span>
             </div>
 
             <h2 className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] text-white sm:text-4xl">
-              Student Finance Center
+              Student Finance Command Center
             </h2>
             <p className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100">
-              One financial record for {studentName}: invoices, confirmed money,
-              outstanding balances, receipt verification and payment destinations.
+              One authoritative financial record for {studentName}: invoices, confirmed
+              money, outstanding balances, receipt verification and approved collection
+              destinations.
             </p>
           </div>
 
           <div className="min-w-0 border-t-[3px] border-[#FF5A0A] bg-[#FF5A0A] p-5 text-white sm:p-6 lg:border-l-[3px] lg:border-t-0 lg:p-7">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white">Finance Actions</p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">Send a protected payment update or refresh the live student ledger.</p>
-            <div className="mt-4 flex min-w-0 flex-col gap-2">
-            <StudentNotificationComposer
-              student={student}
-              context="payment"
-              buttonLabel="Send Payment Update"
-              compact
-            />
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white">
+              Finance Command Actions
+            </p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-orange-50">
+              Notify the student or refresh the reconciled invoice, payment and receipt ledger.
+            </p>
 
-            <button
-              type="button"
-              onClick={refreshAll}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border-2 border-white bg-white px-4 py-2.5 text-sm font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 active:translate-y-0"
-            >
-              Refresh Finance Data
-            </button>
+            <div className="mt-4 grid min-w-0 gap-2">
+              <StudentNotificationComposer
+                student={student}
+                context="payment"
+                buttonLabel="Send Payment Update"
+                compact
+              />
+
+              <button
+                type="button"
+                onClick={refreshAll}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border-2 border-white bg-white px-4 py-2.5 text-sm font-black text-[#123865] shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 active:translate-y-0"
+              >
+                Refresh Finance Data
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-5 sm:p-5">
+        <div className="grid min-w-0 gap-3 border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 sm:p-5">
           <Metric label="Active invoices" value={financeStats.activeInvoices} />
           <Metric label="Open invoices" value={financeStats.openInvoices} />
           <Metric
@@ -1250,6 +1929,11 @@ function PaymentCenterPanel({
             label="Receipts to review"
             value={financeStats.pendingReceipts}
             tone={financeStats.pendingReceipts ? "warning" : "default"}
+          />
+          <Metric
+            label="Active destinations"
+            value={financeStats.activePaymentAccounts}
+            tone={financeStats.activePaymentAccounts ? "success" : "warning"}
           />
         </div>
       </section>
@@ -1272,6 +1956,130 @@ function PaymentCenterPanel({
           </button>
         </div>
       ) : null}
+
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.09)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-[3px] border-[#123865] bg-[#123865] px-5 py-4 text-white lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-300">
+              Finance Now
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              What needs action, what just moved and what is already done
+            </h3>
+            <p className="mt-1 max-w-4xl text-sm font-semibold leading-6 text-slate-200">
+              This is the operational layer. Use the detailed ledgers below only when you need the full history.
+            </p>
+          </div>
+
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <span className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white">
+              {openInvoiceRecords.length} open invoice{openInvoiceRecords.length === 1 ? "" : "s"}
+            </span>
+            <span className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white">
+              {pendingReceiptRecords.length} receipt{pendingReceiptRecords.length === 1 ? "" : "s"} to review
+            </span>
+          </div>
+        </div>
+
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 lg:grid-cols-[1.05fr_1.25fr_0.9fr] sm:p-5">
+          <OperationalCard
+            eyebrow={financePriority.eyebrow}
+            title={financePriority.title}
+            detail={financePriority.detail}
+            tone={financePriority.tone}
+          />
+
+          <div className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-violet-700">
+                  Latest Movement
+                </p>
+                <h4 className="mt-1 font-black text-[#10233F]">
+                  Newest finance activity
+                </h4>
+              </div>
+              <Badge text={latestFinanceActivity.length ? "live" : "clear"} tone="navy" />
+            </div>
+
+            <div className="mt-3 space-y-2">
+              {latestFinanceActivity.length ? (
+                latestFinanceActivity.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className={`rounded-xl border-2 p-3 ${
+                      index === 0
+                        ? "border-violet-300 bg-violet-50"
+                        : "border-[#D9E3EC] bg-[#F8FBFD]"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
+                            {index === 0 ? "Latest" : item.type}
+                          </span>
+                          <Badge text={item.status} />
+                        </div>
+                        <p className="mt-1 break-words text-sm font-black text-[#10233F]">
+                          {item.title}
+                        </p>
+                        <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                          {item.type} · {formatFinanceMoment(item.time)}
+                        </p>
+                      </div>
+                      {item.amount > 0 ? (
+                        <span className="shrink-0 text-sm font-black text-[#123865]">
+                          {formatMoney(item.amount, item.currency)}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#F8FBFD] p-4 text-sm font-bold text-slate-500">
+                  No finance movement recorded yet.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="min-w-0 rounded-[1.35rem] border-[3px] border-emerald-300 bg-emerald-50 p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-700">
+              Done / History
+            </p>
+            <h4 className="mt-1 font-black text-[#10233F]">
+              Completed finance records
+            </h4>
+            <p className="mt-2 text-3xl font-black text-emerald-800">
+              {completedFinanceCount}
+            </p>
+
+            <div className="mt-3 space-y-2 text-xs font-bold text-emerald-900/80">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-white/70 px-3 py-2">
+                <span>Confirmed payments</span>
+                <strong>{confirmedPayments.length}</strong>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-white/70 px-3 py-2">
+                <span>Reviewed receipts</span>
+                <strong>{reviewedReceiptRecords.length}</strong>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-white/70 px-3 py-2">
+                <span>Closed invoice history</span>
+                <strong>{closedInvoiceRecords.length}</strong>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-white/70 px-3 py-2">
+                <span>Closed payment requests</span>
+                <strong>{closedPaymentRequestRecords.length}</strong>
+              </div>
+            </div>
+
+            <p className="mt-3 text-[11px] font-semibold leading-5 text-emerald-900/70">
+              Finished records stay available below for audit, but they no longer compete visually with today&apos;s work.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
         <div>
@@ -1429,9 +2237,7 @@ function PaymentCenterPanel({
                   `${
                     invoice.invoice_number || invoice.title || "Invoice"
                   } · ${formatMoney(
-                    invoice.outstanding_amount ??
-                      invoice.total_amount ??
-                      invoice.amount,
+                    getInvoiceOutstanding(invoice, confirmedPayments),
                     invoice.currency
                   )}`,
                 ]),
@@ -1518,72 +2324,122 @@ function PaymentCenterPanel({
         </form>
       </div>
 
-      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
-        <SectionHeading
-          eyebrow="Receivables Ledger"
-          title="Invoices"
-          description="Invoices remain in history. Cancel or void real records instead of deleting them."
-        />
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-2 border-[#E3B98B] bg-[#FFF8EF] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <SectionHeading
+            eyebrow="Receivables Command"
+            title="Invoices — open work first"
+            description="Open balances stay visible. Paid, cancelled and void invoices move into collapsible history."
+          />
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Badge text={`${openInvoiceRecords.length} open`} tone={openInvoiceRecords.length ? "orange" : "navy"} />
+            <Badge text={`${closedInvoiceRecords.length} history`} tone="navy" />
+          </div>
+        </div>
 
-        <div className="mt-4 space-y-3">
-          {invoices.length ? (
-            invoices.map((invoice) => {
-              const status = normalize(invoice.status);
-              const total = Number(invoice.total_amount ?? invoice.amount ?? 0);
-              const paid = Number(invoice.paid_amount ?? 0);
-              const outstanding = Number(
-                invoice.outstanding_amount ?? Math.max(0, total - paid)
-              );
+        <div className="p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                Needs Action
+              </p>
+              <h4 className="mt-1 font-black text-[#10233F]">
+                Collectible invoices
+              </h4>
+            </div>
+            <span className="rounded-xl border-2 border-orange-300 bg-orange-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-orange-800">
+              {openInvoiceRecords.length} active
+            </span>
+          </div>
 
-              return (
-                <article
-                  key={invoice.id}
-                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-white hover:shadow-md"
-                >
-                  <div className="flex min-w-0 flex-col gap-4">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-black text-[#10233F]">
+          <div className="mt-3 space-y-3">
+            {openInvoiceRecords.length ? (
+              openInvoiceRecords.map((invoice, index) => {
+                const status = getEffectiveInvoiceStatus(invoice, confirmedPayments);
+                const total = Number(invoice.total_amount ?? invoice.amount ?? 0);
+                const paid = getLinkedConfirmedPaymentAmount(invoice, confirmedPayments);
+                const outstanding = getInvoiceOutstanding(invoice, confirmedPayments);
+                const overdue = isInvoiceOverdue(invoice, confirmedPayments);
+
+                return (
+                  <article
+                    key={invoice.id}
+                    className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] ${
+                      overdue
+                        ? "border-red-300 bg-red-50"
+                        : "border-orange-300 bg-[#FFF8EF]"
+                    }`}
+                  >
+                    <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {index === 0 ? <Badge text="next collection" tone="orange" /> : null}
+                          {overdue ? <Badge text="overdue" /> : <Badge text="open" />}
+                          <Badge text={status || "unpaid"} />
+                        </div>
+                        <h4 className="mt-2 break-words text-lg font-black text-[#10233F]">
                           {invoice.title || "Student Invoice"}
                         </h4>
-                        <Badge text={invoice.status || "unpaid"} />
-                        {isInvoiceOverdue(invoice) &&
-                        normalize(invoice.status) !== "overdue" ? (
-                          <Badge text="overdue by due date" />
-                        ) : null}
+                        <p className="mt-1 text-xs font-bold text-slate-500">
+                          {invoice.invoice_number || "No invoice number"} · {invoice.category || "general"}
+                        </p>
                       </div>
-                      <p className="mt-1 text-xs font-bold text-slate-500">
-                        {invoice.invoice_number || "No invoice number"} ·{" "}
-                        {invoice.category || "general"}
-                      </p>
+
+                      <div className="shrink-0 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-white">
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-200">
+                          Outstanding
+                        </p>
+                        <p className="mt-1 text-xl font-black text-white">
+                          {formatMoney(outstanding, invoice.currency)}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {!["cancelled", "void"].includes(status) ? (
-                        <>
-                          <ActionButton
-                            onClick={() => changeInvoiceStatus(invoice, "cancelled")}
-                            disabled={Boolean(actionSavingId)}
-                          >
-                            Cancel
-                          </ActionButton>
-                          <ActionButton
-                            danger
-                            onClick={() => changeInvoiceStatus(invoice, "void")}
-                            disabled={Boolean(actionSavingId)}
-                          >
-                            Void
-                          </ActionButton>
-                        </>
-                      ) : (
-                        <ActionButton
-                          onClick={() => changeInvoiceStatus(invoice, "unpaid")}
-                          disabled={Boolean(actionSavingId)}
-                        >
-                          Restore
-                        </ActionButton>
-                      )}
+                    <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                      <Info label="Invoice total" value={formatMoney(total, invoice.currency)} />
+                      <Info label="Applied payment" value={formatMoney(paid, invoice.currency)} />
+                      <Info label="Due date" value={formatDate(invoice.due_date)} />
+                      <Info label="Issued" value={formatDate(invoice.issued_at || invoice.created_at)} />
+                    </div>
 
+                    <div className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
+                      <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+                        <span>Payment progress</span>
+                        <span>
+                          {total > 0
+                            ? Math.min(100, Math.max(0, Math.round((paid / total) * 100)))
+                            : 0}
+                          %
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="h-full rounded-full bg-[#FF5A0A] transition-[width] duration-300"
+                          style={{
+                            width: `${
+                              total > 0
+                                ? Math.min(100, Math.max(0, (paid / total) * 100))
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-[#D9E3EC] pt-3">
+                      <ActionButton
+                        onClick={() => changeInvoiceStatus(invoice, "cancelled")}
+                        disabled={Boolean(actionSavingId)}
+                      >
+                        Cancel
+                      </ActionButton>
+                      <ActionButton
+                        danger
+                        onClick={() => changeInvoiceStatus(invoice, "void")}
+                        disabled={Boolean(actionSavingId)}
+                      >
+                        Void
+                      </ActionButton>
                       <ActionButton
                         danger
                         onClick={() => deleteInvoice(invoice)}
@@ -1592,128 +2448,192 @@ function PaymentCenterPanel({
                         Delete Test/Mistake
                       </ActionButton>
                     </div>
-                  </div>
+                  </article>
+                );
+              })
+            ) : (
+              <div className="rounded-[1.35rem] border-[3px] border-emerald-300 bg-emerald-50 p-5">
+                <p className="text-sm font-black text-emerald-900">
+                  No collectible invoice is left.
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-emerald-800/75">
+                  Paid, cancelled and void records remain below in audit history.
+                </p>
+              </div>
+            )}
+          </div>
 
-                  <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    <Info label="Total" value={formatMoney(total, invoice.currency)} />
-                    <Info label="Paid" value={formatMoney(paid, invoice.currency)} />
-                    <Info
-                      label="Outstanding"
-                      value={formatMoney(outstanding, invoice.currency)}
-                    />
-                    <Info label="Due" value={formatDate(invoice.due_date)} />
-                    <Info label="Issued" value={formatDate(invoice.issued_at)} />
-                  </div>
+          <details className="mt-4 overflow-hidden rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#F8FBFD]">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-black text-[#10233F]">
+              <span>Completed / invoice history</span>
+              <span className="rounded-full border border-[#AFC0D0] bg-white px-3 py-1 text-[10px] font-black text-[#123865]">
+                {closedInvoiceRecords.length} records
+              </span>
+            </summary>
 
-                  <div className="mt-3 rounded-xl border-2 border-[#C9D7E6] bg-white p-3">
-                    <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
-                      <span>Payment progress</span>
-                      <span>
-                        {total > 0
-                          ? Math.min(100, Math.max(0, Math.round((paid / total) * 100)))
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className="h-full rounded-full bg-[#FF5A0A] transition-[width] duration-300"
-                        style={{
-                          width: `${
-                            total > 0
-                              ? Math.min(100, Math.max(0, (paid / total) * 100))
-                              : 0
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </article>
-              );
-            })
-          ) : (
-            <EmptyState text="No invoices created yet." />
-          )}
+            <div className="space-y-3 border-t-2 border-[#D9E3EC] p-4">
+              {closedInvoiceRecords.length ? (
+                closedInvoiceRecords.map((invoice) => {
+                  const status = getEffectiveInvoiceStatus(invoice, confirmedPayments);
+                  const total = Number(invoice.total_amount ?? invoice.amount ?? 0);
+                  const paid = getLinkedConfirmedPaymentAmount(invoice, confirmedPayments);
+                  const outstanding = getInvoiceOutstanding(invoice, confirmedPayments);
+
+                  return (
+                    <article
+                      key={invoice.id}
+                      className="min-w-0 rounded-[1.2rem] border-2 border-[#C9D7E6] bg-white p-4"
+                    >
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge text="history" tone="navy" />
+                            <Badge text={status || invoice.status || "closed"} />
+                          </div>
+                          <p className="mt-2 break-words font-black text-[#10233F]">
+                            {invoice.title || "Student Invoice"}
+                          </p>
+                          <p className="mt-1 text-xs font-semibold text-slate-500">
+                            {invoice.invoice_number || "No invoice number"} · last movement{" "}
+                            {formatFinanceMoment(
+                              invoice.updated_at ||
+                                invoice.issued_at ||
+                                invoice.created_at
+                            )}
+                          </p>
+                        </div>
+                        <div className="grid min-w-[17rem] gap-2 sm:grid-cols-3">
+                          <Info label="Total" value={formatMoney(total, invoice.currency)} />
+                          <Info label="Paid" value={formatMoney(paid, invoice.currency)} />
+                          <Info label="Left" value={formatMoney(outstanding, invoice.currency)} />
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {["cancelled", "void"].includes(status) ? (
+                          <ActionButton
+                            onClick={() => changeInvoiceStatus(invoice, "unpaid")}
+                            disabled={Boolean(actionSavingId)}
+                          >
+                            Restore
+                          </ActionButton>
+                        ) : null}
+
+                        <ActionButton
+                          danger
+                          onClick={() => deleteInvoice(invoice)}
+                          disabled={Boolean(actionSavingId)}
+                        >
+                          Delete Test/Mistake
+                        </ActionButton>
+                      </div>
+                    </article>
+                  );
+                })
+              ) : (
+                <EmptyState text="No completed invoice history yet." />
+              )}
+            </div>
+          </details>
         </div>
       </section>
 
-      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
-        <SectionHeading
-          eyebrow="Cash Ledger"
-          title="Payments"
-          description="Confirmed payments count toward invoices. Refund, cancel or fail a payment to remove it from the balance without destroying history."
-        />
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-2 border-[#D9E3EC] bg-[#F8FBFD] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <SectionHeading
+            eyebrow="Money Movement"
+            title="Payments — newest first"
+            description="The latest payment is pinned visually. Older confirmed, cancelled and refunded records remain as audit history."
+          />
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Badge text={`${confirmedPayments.length} confirmed`} tone="navy" />
+            <Badge text={`${payments.length} total records`} tone="orange" />
+          </div>
+        </div>
 
-        <div className="mt-4 space-y-3">
-          {payments.length ? (
-            payments.map((payment) => {
+        <div className="space-y-3 p-5">
+          {sortedPayments.length ? (
+            sortedPayments.map((payment) => {
               const status = normalize(payment.status);
+              const isLatest = String(payment.id) === String(latestPaymentId);
 
               return (
                 <article
                   key={payment.id}
-                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:bg-white hover:shadow-md"
+                  className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${
+                    isLatest
+                      ? "border-violet-300 bg-violet-50"
+                      : status === "confirmed"
+                        ? "border-emerald-300 bg-emerald-50"
+                        : ["cancelled", "failed"].includes(status)
+                          ? "border-red-300 bg-red-50"
+                          : "border-[#C9D7E6] bg-[#F8FBFD]"
+                  }`}
                 >
-                  <div className="flex min-w-0 flex-col gap-4">
-                    <div>
+                  <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-black">
-                          {formatMoney(payment.amount, payment.currency)}
-                        </h4>
+                        {isLatest ? <Badge text="latest payment" tone="navy" /> : null}
                         <Badge text={payment.status || "confirmed"} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+                          {payment.invoice_id ? "invoice linked" : "general payment"}
+                        </span>
                       </div>
+
+                      <h4 className="mt-2 text-xl font-black text-[#10233F]">
+                        {formatMoney(payment.amount, payment.currency)}
+                      </h4>
                       <p className="mt-1 text-xs font-bold text-slate-500">
                         {payment.payment_method || "payment"} ·{" "}
                         {payment.reference || "No reference"}
                       </p>
+                      <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                        {formatFinanceMoment(
+                          payment.updated_at || payment.paid_at || payment.created_at
+                        )}
+                      </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {status === "confirmed" ? (
-                        <>
-                          <ActionButton
-                            onClick={() => changePaymentStatus(payment, "refunded")}
-                            disabled={Boolean(actionSavingId)}
-                          >
-                            Refund
-                          </ActionButton>
-                          <ActionButton
-                            onClick={() => changePaymentStatus(payment, "cancelled")}
-                            disabled={Boolean(actionSavingId)}
-                          >
-                            Cancel
-                          </ActionButton>
-                        </>
-                      ) : (
-                        <ActionButton
-                          onClick={() => changePaymentStatus(payment, "confirmed")}
-                          disabled={Boolean(actionSavingId)}
-                        >
-                          Restore Confirmed
-                        </ActionButton>
-                      )}
-
-                      <ActionButton
-                        danger
-                        onClick={() => deletePayment(payment)}
-                        disabled={Boolean(actionSavingId)}
-                      >
-                        Delete Test/Mistake
-                      </ActionButton>
+                    <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:min-w-[24rem]">
+                      <Info label="Invoice link" value={payment.invoice_id ? "Linked" : "General payment"} />
+                      <Info label="Received by" value={payment.received_by ? "Admin recorded" : "Not recorded"} />
+                      <Info label="Status" value={String(payment.status || "confirmed").replaceAll("_", " ")} />
+                      <Info label="Notes" value={payment.notes || "None"} />
                     </div>
                   </div>
 
-                  <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
-                    <Info label="Paid at" value={formatDate(payment.paid_at)} />
-                    <Info
-                      label="Invoice link"
-                      value={payment.invoice_id ? "Linked" : "General payment"}
-                    />
-                    <Info
-                      label="Received by"
-                      value={payment.received_by ? "Admin recorded" : "Not recorded"}
-                    />
-                    <Info label="Notes" value={payment.notes || "None"} />
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-black/10 pt-3">
+                    {status === "confirmed" ? (
+                      <>
+                        <ActionButton
+                          onClick={() => changePaymentStatus(payment, "refunded")}
+                          disabled={Boolean(actionSavingId)}
+                        >
+                          Refund
+                        </ActionButton>
+                        <ActionButton
+                          onClick={() => changePaymentStatus(payment, "cancelled")}
+                          disabled={Boolean(actionSavingId)}
+                        >
+                          Cancel
+                        </ActionButton>
+                      </>
+                    ) : (
+                      <ActionButton
+                        onClick={() => changePaymentStatus(payment, "confirmed")}
+                        disabled={Boolean(actionSavingId)}
+                      >
+                        Restore Confirmed
+                      </ActionButton>
+                    )}
+
+                    <ActionButton
+                      danger
+                      onClick={() => deletePayment(payment)}
+                      disabled={Boolean(actionSavingId)}
+                    >
+                      Delete Test/Mistake
+                    </ActionButton>
                   </div>
                 </article>
               );
@@ -1724,56 +2644,87 @@ function PaymentCenterPanel({
         </div>
       </section>
 
-      <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
-        <SectionHeading
-          eyebrow="Evidence Review"
-          title="Student Receipts"
-          description="Approving a receipt creates one confirmed payment and then locks the receipt as converted."
-        />
+      <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <div className="flex min-w-0 flex-col gap-3 border-b-2 border-[#E3B98B] bg-[#FFF8EF] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <SectionHeading
+            eyebrow="Evidence Command"
+            title="Student Receipts — review queue"
+            description="Pending proof stays on top. Reviewed, rejected and converted receipts move into history automatically."
+          />
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Badge text={`${pendingReceiptRecords.length} review now`} tone={pendingReceiptRecords.length ? "orange" : "navy"} />
+            <Badge text={`${reviewedReceiptRecords.length} completed`} tone="navy" />
+          </div>
+        </div>
 
-        <div className="mt-4 space-y-3">
-          {receipts.length ? (
-            receipts.map((receipt) => {
-              const status = normalize(receipt.status);
-              const busy = receiptSavingId === receipt.id;
+        <div className="p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                Needs Admin Decision
+              </p>
+              <h4 className="mt-1 font-black text-[#10233F]">
+                Pending receipt review
+              </h4>
+            </div>
+            <span className={`rounded-xl border-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] ${
+              pendingReceiptRecords.length
+                ? "border-orange-300 bg-orange-50 text-orange-800"
+                : "border-emerald-300 bg-emerald-50 text-emerald-800"
+            }`}>
+              {pendingReceiptRecords.length ? `${pendingReceiptRecords.length} waiting` : "queue clear"}
+            </span>
+          </div>
 
-              return (
-                <article
-                  key={receipt.id}
-                  className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]"
-                >
-                  <div className="flex min-w-0 flex-col gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-black">
+          <div className="mt-3 space-y-3">
+            {pendingReceiptRecords.length ? (
+              pendingReceiptRecords.map((receipt, index) => {
+                const busy = receiptSavingId === receipt.id;
+
+                return (
+                  <article
+                    key={receipt.id}
+                    className="min-w-0 rounded-[1.35rem] border-[3px] border-orange-300 bg-orange-50 p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)]"
+                  >
+                    <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge text={index === 0 ? "review first" : "pending review"} tone="orange" />
+                          <Badge text={receipt.status || "pending_review"} />
+                        </div>
+                        <h4 className="mt-2 break-words text-lg font-black text-[#10233F]">
                           {receipt.file_name || "Payment Receipt"}
                         </h4>
-                        <Badge text={receipt.status || "pending_review"} />
+                        <p className="mt-1 text-sm font-bold text-slate-600">
+                          {formatMoney(receipt.amount, receipt.currency)}
+                        </p>
+                        <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                          Submitted{" "}
+                          {formatFinanceMoment(
+                            receipt.submitted_at || receipt.created_at
+                          )}
+                        </p>
+                        {receipt.reference ? (
+                          <p className="mt-2 text-xs font-semibold text-slate-600">
+                            Reference: {receipt.reference}
+                          </p>
+                        ) : null}
+                        {receipt.notes ? (
+                          <p className="mt-2 text-sm text-slate-600">{receipt.notes}</p>
+                        ) : null}
                       </div>
 
-                      <p className="mt-2 text-sm text-slate-600">
-                        {formatMoney(receipt.amount, receipt.currency)} · submitted{" "}
-                        {formatDate(receipt.submitted_at || receipt.created_at)}
-                      </p>
-
-                      {receipt.notes ? (
-                        <p className="mt-2 text-sm text-slate-600">{receipt.notes}</p>
-                      ) : null}
-
-                      {receipt.receipt_url ? (
-                        <a
-                          href={receipt.receipt_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-3 inline-flex min-h-10 items-center rounded-lg border-2 border-[#FF5A0A] bg-white px-3 py-2 text-xs font-black text-orange-800 transition hover:bg-[#FFF4E8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
-                        >
-                          Open Receipt
-                        </a>
-                      ) : null}
-                    </div>
-
-                    {status === "pending_review" ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        {receipt.receipt_url ? (
+                          <a
+                            href={receipt.receipt_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex min-h-10 items-center rounded-lg border-2 border-[#123865] bg-[#123865] px-3 py-2 text-xs font-black text-white transition hover:bg-[#0d2b50]"
+                          >
+                            Open Proof
+                          </a>
+                        ) : null}
                         <ActionButton
                           success
                           disabled={busy}
@@ -1789,24 +2740,114 @@ function PaymentCenterPanel({
                           Reject
                         </ActionButton>
                       </div>
-                    ) : (
-                      <p className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-600">
+                    </div>
+                  </article>
+                );
+              })
+            ) : (
+              <div className="rounded-[1.35rem] border-[3px] border-emerald-300 bg-emerald-50 p-5">
+                <p className="text-sm font-black text-emerald-900">
+                  Receipt review queue is clear.
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-emerald-800/75">
+                  Reviewed proof stays below in history so completed work does not compete with new decisions.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <details className="mt-4 overflow-hidden rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#F8FBFD]">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-black text-[#10233F]">
+              <span>Reviewed receipt history</span>
+              <span className="rounded-full border border-[#AFC0D0] bg-white px-3 py-1 text-[10px] font-black text-[#123865]">
+                {reviewedReceiptRecords.length} records
+              </span>
+            </summary>
+
+            <div className="space-y-3 border-t-2 border-[#D9E3EC] p-4">
+              {reviewedReceiptRecords.length ? (
+                reviewedReceiptRecords.map((receipt) => {
+                  const status = normalize(receipt.status);
+
+                  return (
+                    <article
+                      key={receipt.id}
+                      className={`min-w-0 rounded-[1.2rem] border-2 p-4 ${
+                        status === "rejected"
+                          ? "border-red-300 bg-red-50"
+                          : "border-emerald-300 bg-emerald-50"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge text={receipt.status || "reviewed"} />
+                            <Badge text="history" tone="navy" />
+                          </div>
+                          <p className="mt-2 break-words font-black text-[#10233F]">
+                            {receipt.file_name || "Payment Receipt"}
+                          </p>
+                          <p className="mt-1 text-xs font-semibold text-slate-500">
+                            {formatMoney(receipt.amount, receipt.currency)} ·{" "}
+                            {formatFinanceMoment(
+                              receipt.reviewed_at ||
+                                receipt.updated_at ||
+                                receipt.submitted_at ||
+                                receipt.created_at
+                            )}
+                          </p>
+                        </div>
+
+                        {receipt.receipt_url ? (
+                          <a
+                            href={receipt.receipt_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex min-h-10 shrink-0 items-center rounded-lg border-2 border-[#123865] bg-white px-3 py-2 text-xs font-black text-[#123865]"
+                          >
+                            Open Proof
+                          </a>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-3 rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-xs font-bold text-slate-600">
                         {status === "converted_to_payment"
-                          ? "Converted — no duplicate payment can be created"
-                          : "Review completed"}
+                          ? "Done — receipt was approved and converted into one confirmed payment."
+                          : status === "rejected"
+                            ? "Done — receipt was rejected and created no payment."
+                            : "Review completed."}
                       </p>
-                    )}
-                  </div>
-                </article>
-              );
-            })
-          ) : (
-            <EmptyState text="No student receipts submitted yet." />
-          )}
+                    </article>
+                  );
+                })
+              ) : (
+                <EmptyState text="No reviewed receipt history yet." />
+              )}
+            </div>
+          </details>
         </div>
       </section>
 
-      <div className="grid min-w-0 gap-5 xl:grid-cols-2">
+      <details className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+        <summary className="flex cursor-pointer list-none flex-col gap-2 bg-[#123865] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
+              Finance Setup
+            </p>
+            <p className="mt-1 text-lg font-black text-white">
+              Collection destinations & payment accounts
+            </p>
+            <p className="mt-1 text-xs font-semibold text-slate-200">
+              Setup is collapsed by default because it is not part of the daily payment/review queue.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white">
+            {financeStats.activePaymentAccounts} active · open setup
+          </span>
+        </summary>
+
+        <div className="bg-[#FFF8EF] p-4 sm:p-5">
+          <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <form
           onSubmit={handleSavePaymentAccount}
           className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]"
@@ -1816,6 +2857,38 @@ function PaymentCenterPanel({
             title="Add Payment Account"
             description="Bank or wallet details students can use when paying Zaifan."
           />
+
+          <div className="mt-4 rounded-[1.35rem] border-2 border-orange-300 bg-orange-50 p-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                  Official Zaifan Destinations
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-orange-900/75">
+                  Load the verified collection details supplied for Zaifan, review them, then save each destination to payment_accounts.
+                </p>
+              </div>
+              <span className="shrink-0 rounded-xl border border-orange-300 bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+                Save once · Student OS reads live
+              </span>
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {OFFICIAL_PAYMENT_ACCOUNT_PRESETS.map((preset) => (
+                <button
+                  key={preset.key}
+                  type="button"
+                  onClick={() => applyPaymentAccountPreset(preset)}
+                  className="rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-left transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-sm"
+                >
+                  <p className="text-xs font-black text-[#10233F]">{preset.label}</p>
+                  <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                    {preset.account_type === "bank" ? "Bank transfer" : "Mobile wallet"} · load preset
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
             <Select
@@ -1831,6 +2904,7 @@ function PaymentCenterPanel({
                 ["bank", "Bank"],
                 ["jazzcash", "JazzCash"],
                 ["easypaisa", "Easypaisa"],
+                ["upaisa", "UPaisa"],
                 ["manual", "Manual / Other"],
               ]}
             />
@@ -1974,38 +3048,198 @@ function PaymentCenterPanel({
           </div>
         </section>
       </div>
+        </div>
+      </details>
 
       {paymentRequests.length ? (
-        <section className="min-w-0 rounded-[1.65rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
-          <SectionHeading
-            eyebrow="Student Portal"
-            title="Payment Requests"
-            description="Requests already supplied to this panel by the Student OS."
-          />
-          <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-2">
-            {paymentRequests.map((request) => (
-              <article
-                key={request.id}
-                className="min-w-0 rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]"
+        <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-white shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
+          <div className="flex min-w-0 flex-col gap-3 border-b-2 border-[#E3B98B] bg-[#FFF8EF] p-5 sm:flex-row sm:items-center sm:justify-between">
+            <SectionHeading
+              eyebrow="Student Portal"
+              title="Payment Requests — coordination lifecycle"
+              description="Open requests stay in the action queue. Resolve or cancel them without touching the real payment ledger."
+            />
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Badge
+                text={`${openPaymentRequestRecords.length} open`}
+                tone={openPaymentRequestRecords.length ? "orange" : "navy"}
+              />
+              <Badge
+                text={`${closedPaymentRequestRecords.length} history`}
+                tone="navy"
+              />
+            </div>
+          </div>
+
+          <div className="p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                  Needs Coordination
+                </p>
+                <h4 className="mt-1 font-black text-[#10233F]">
+                  Open counselor payment requests
+                </h4>
+              </div>
+              <span
+                className={`rounded-xl border-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] ${
+                  openPaymentRequestRecords.length
+                    ? "border-orange-300 bg-orange-50 text-orange-800"
+                    : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="font-black">
-                    {request.title || request.category || "Payment Request"}
+                {openPaymentRequestRecords.length
+                  ? `${openPaymentRequestRecords.length} action`
+                  : "queue clear"}
+              </span>
+            </div>
+
+            <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-2">
+              {openPaymentRequestRecords.length ? (
+                openPaymentRequestRecords.map((request, index) => (
+                  <article
+                    key={request.id}
+                    className="min-w-0 rounded-[1.35rem] border-[3px] border-orange-300 bg-orange-50 p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)]"
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {index === 0 ? (
+                            <Badge text="next action" tone="orange" />
+                          ) : null}
+                          <Badge text={request.status || "pending"} />
+                          {request.priority ? (
+                            <Badge text={request.priority} tone="navy" />
+                          ) : null}
+                        </div>
+                        <p className="mt-2 break-words font-black text-[#10233F]">
+                          {request.title || request.category || "Payment Request"}
+                        </p>
+                        {request.message ? (
+                          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                            {request.message}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <span className="shrink-0 text-lg font-black text-orange-900">
+                        {formatMoney(request.amount, request.currency || "PKR")}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <Info
+                        label="Created"
+                        value={formatDate(request.created_at || request.requested_at)}
+                      />
+                      <Info
+                        label="Invoice link"
+                        value={request.invoice_id ? "Linked request" : "General request"}
+                      />
+                    </div>
+
+                    <div className="mt-3 rounded-xl border-2 border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-bold leading-5 text-violet-900">
+                      Money effect: none. Completing this request closes coordination only;
+                      actual money still requires a confirmed payment or approved receipt.
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2 border-t border-orange-200 pt-3">
+                      <ActionButton
+                        success
+                        onClick={() =>
+                          changePaymentRequestStatus(request, "completed")
+                        }
+                        disabled={Boolean(actionSavingId)}
+                      >
+                        {actionSavingId === request.id
+                          ? "Updating..."
+                          : "Resolve Request"}
+                      </ActionButton>
+                      <ActionButton
+                        danger
+                        onClick={() =>
+                          changePaymentRequestStatus(request, "cancelled")
+                        }
+                        disabled={Boolean(actionSavingId)}
+                      >
+                        Cancel Request
+                      </ActionButton>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div className="lg:col-span-2 rounded-[1.35rem] border-[3px] border-emerald-300 bg-emerald-50 p-5">
+                  <p className="text-sm font-black text-emerald-900">
+                    No payment request is waiting for Admin coordination.
                   </p>
-                  <Badge text={request.status || "pending"} />
+                  <p className="mt-1 text-xs font-semibold leading-5 text-emerald-800/75">
+                    Completed and cancelled requests remain available in history below.
+                  </p>
                 </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <Info
-                    label="Amount"
-                    value={formatMoney(request.amount, request.currency || "PKR")}
-                  />
-                  <Info
-                    label="Created"
-                    value={formatDate(request.created_at || request.requested_at)}
-                  />
-                </div>
-              </article>
-            ))}
+              )}
+            </div>
+
+            <details className="mt-4 overflow-hidden rounded-[1.35rem] border-[3px] border-[#C9D7E6] bg-[#F8FBFD]">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-black text-[#10233F]">
+                <span>Completed / cancelled request history</span>
+                <span className="rounded-full border border-[#AFC0D0] bg-white px-3 py-1 text-[10px] font-black text-[#123865]">
+                  {closedPaymentRequestRecords.length} records
+                </span>
+              </summary>
+
+              <div className="space-y-3 border-t-2 border-[#D9E3EC] p-4">
+                {closedPaymentRequestRecords.length ? (
+                  closedPaymentRequestRecords.map((request) => {
+                    const status = normalize(request.status);
+                    return (
+                      <article
+                        key={request.id}
+                        className={`min-w-0 rounded-[1.2rem] border-2 p-4 ${
+                          status === "completed"
+                            ? "border-emerald-300 bg-emerald-50"
+                            : "border-red-300 bg-red-50"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge text={request.status || "completed"} />
+                              <Badge text="history" tone="navy" />
+                            </div>
+                            <p className="mt-2 break-words font-black text-[#10233F]">
+                              {request.title || "Payment Request"}
+                            </p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500">
+                              {formatMoney(
+                                request.amount,
+                                request.currency || "PKR"
+                              )}{" "}
+                              · last movement{" "}
+                              {formatFinanceMoment(
+                                request.updated_at ||
+                                  request.created_at ||
+                                  request.requested_at
+                              )}
+                            </p>
+                          </div>
+
+                          <ActionButton
+                            onClick={() =>
+                              changePaymentRequestStatus(request, "pending")
+                            }
+                            disabled={Boolean(actionSavingId)}
+                          >
+                            Reopen Request
+                          </ActionButton>
+                        </div>
+                      </article>
+                    );
+                  })
+                ) : (
+                  <EmptyState text="No closed payment-request history yet." />
+                )}
+              </div>
+            </details>
           </div>
         </section>
       ) : null}
@@ -2018,6 +3252,45 @@ function PaymentCenterPanel({
         }}
         onConfirm={confirmProtectedChange}
       />
+    </div>
+  );
+}
+
+function OperationalCard({
+  eyebrow,
+  title,
+  detail,
+  tone = "default",
+}) {
+  const tones = {
+    default: "border-[#C9D7E6] bg-white text-[#10233F]",
+    success: "border-emerald-300 bg-emerald-50 text-emerald-900",
+    warning: "border-orange-300 bg-orange-50 text-orange-950",
+    danger: "border-red-300 bg-red-50 text-red-950",
+  };
+
+  const eyebrowTones = {
+    default: "text-[#123865]",
+    success: "text-emerald-700",
+    warning: "text-orange-700",
+    danger: "text-red-700",
+  };
+
+  return (
+    <div
+      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${
+        tones[tone] || tones.default
+      }`}
+    >
+      <p
+        className={`text-[9px] font-black uppercase tracking-[0.16em] ${
+          eyebrowTones[tone] || eyebrowTones.default
+        }`}
+      >
+        {eyebrow}
+      </p>
+      <h4 className="mt-1 break-words text-xl font-black">{title}</h4>
+      <p className="mt-2 text-sm font-semibold leading-6 opacity-80">{detail}</p>
     </div>
   );
 }
@@ -2035,21 +3308,7 @@ function SectionHeading({ eyebrow, title, description }) {
 }
 
 function Metric({ label, value, tone = "default" }) {
-  const tones = {
-    default: "border-[#C9D7E6] bg-white",
-    success: "border-emerald-300 bg-emerald-50",
-    warning: "border-amber-300 bg-amber-50",
-    danger: "border-red-300 bg-red-50",
-  };
-
-  return (
-    <div className={`min-w-0 rounded-[1.2rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${tones[tone] || tones.default}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-[#10233F]">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function Badge({ text, tone = "" }) {
@@ -2170,6 +3429,51 @@ function Select({
       </select>
     </label>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default PaymentCenterPanel;

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -497,19 +498,7 @@ function ExecutorCard({
 }
 
 function MetricTile({ label, value, icon: Icon }) {
-  return (
-    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFFDF8] p-3">
-      <div className="flex items-center gap-1.5">
-        <Icon size={12} className="text-[#B84F0E]" />
-        <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
-          {label}
-        </p>
-      </div>
-      <p className="mt-1 truncate text-xs font-black text-[#10233F]" title={String(value)}>
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone="blue" />;
 }
 
 function HeaderPill({ icon: Icon, children }) {
@@ -522,14 +511,7 @@ function HeaderPill({ icon: Icon, children }) {
 }
 
 function DarkStat({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function QueueBadge({ icon: Icon, label, tone = "orange" }) {
@@ -600,11 +582,7 @@ function Tag({ text, className = "" }) {
 }
 
 function MiniStat({ label, value }) {
-  return (
-    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#7A8392]">
-      {label}: {value}
-    </span>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function Badge({ label, danger = false, gold = false, success = false }) {

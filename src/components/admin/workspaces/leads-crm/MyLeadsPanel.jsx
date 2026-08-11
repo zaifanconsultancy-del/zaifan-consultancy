@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 8000;
 const REALTIME_DEBOUNCE_MS = 350;
@@ -796,7 +797,7 @@ function MyLeadsPanel({
         </div>
       </section>
 
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total Assigned"
           value={assignments.length}
@@ -1118,53 +1119,15 @@ function MyLeadsPanel({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  tone = "orange",
-}) {
-  const dark = tone === "navy";
-
-  const surface =
-    tone === "danger"
-      ? "border-red-300 bg-red-50"
-      : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-orange-300 bg-orange-50";
-
+function StatCard({ label, value, icon: Icon, tone = "default" }) {
   return (
-    <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(18,56,101,0.05)] ${surface}`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{ color: dark ? "#FDBA74" : "#64748B" }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-3xl font-black"
-            style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={19}
-          style={{ color: dark ? "#FDBA74" : "#C2410C" }}
-        />
-      </div>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1500,31 +1463,15 @@ function MiniSummary({
   text,
   tone = "orange",
 }) {
-  const surface =
-    tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : "border-orange-300 bg-orange-50";
-
   return (
-    <div className={`rounded-[1.5rem] border-[3px] p-5 ${surface}`}>
-      <div className="flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white text-orange-700">
-          <Icon size={18} />
-        </div>
-
-        <div>
-          <h3 className="text-lg font-black text-[#10233f]">
-            {title}
-          </h3>
-
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-            {text}
-          </p>
-        </div>
-      </div>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={title}
+      value=""
+      detail={text}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1648,6 +1595,44 @@ function formatTime(date) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default MyLeadsPanel;

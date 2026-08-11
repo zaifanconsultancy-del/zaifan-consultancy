@@ -20,6 +20,7 @@ import {
 
 import SearchToolbar from "../workspaces/core/SearchToolbar";
 import DashboardContent from "../workspaces/core/DashboardContent";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -41,6 +42,7 @@ function PipelinePage({
   cardClass,
   toggleInquiryStatus,
   updateInquiryPriority,
+  updateInquiryStage,
   updateAppointmentPriority,
   deleteInquiry,
   updateAppointmentStatus,
@@ -280,6 +282,7 @@ function PipelinePage({
             cardClass={cardClass}
             updateInquiryStatus={toggleInquiryStatus}
             updateInquiryPriority={updateInquiryPriority}
+            updateInquiryStage={updateInquiryStage}
             updateAppointmentPriority={updateAppointmentPriority}
             deleteInquiry={deleteInquiry}
             updateAppointmentStatus={updateAppointmentStatus}
@@ -313,14 +316,68 @@ function HeroMetric({ label, value }) {
   return <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 px-4 py-3 text-white shadow-inner"><p className="text-[8px] font-black uppercase tracking-[.12em] text-white">{label}</p><p className="mt-1 text-2xl font-black text-white">{value}</p></div>;
 }
 
-function MetricCard({ icon: Icon, label, value, detail, tone = "navy" }) {
-  const toneClass = tone === "blue" ? "border-blue-400 bg-blue-50 text-blue-700" : tone === "orange" ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-700" : tone === "emerald" ? "border-emerald-400 bg-emerald-50 text-emerald-700" : "border-[#123865] bg-[#F2F7FF] text-[#123865]";
+function MetricCard({
+  label,
+  value,
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
+  badge = "",
+  source = "",
+  className = "",
+}) {
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
+
   return (
-    <div className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${toneClass}`}>
-      <div className="flex items-center justify-between gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-xl border border-current/15 bg-white shadow-sm"><Icon size={17} strokeWidth={2.1} /></div><span className="text-2xl font-black tracking-tight">{value}</span></div>
-      <p className="mt-4 text-[9px] font-black uppercase tracking-[.1em]">{label}</p><p className="mt-1 text-xs font-semibold opacity-75">{detail}</p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 export default PipelinePage;

@@ -41,6 +41,7 @@ import {
   buildExecutiveRecoveryActions,
   generateBrokenWorkflowReport,
 } from "../../../../lib/executiveAutomationEngine";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function normalize(value = "") {
   return String(value || "")
@@ -1350,16 +1351,7 @@ function CommandChip({ icon: Icon, children }) {
 }
 
 function DarkCommandMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function OrangeCommandMetric({ label, value }) {
@@ -1410,24 +1402,14 @@ function CommandSummaryCard({
   );
 }
 
-function SmallMetric({
-  label,
-  value,
-  tone = "default",
-}) {
+function SmallMetric({ label, value, tone = "navy" }) {
   return (
-    <div
-      className={`min-w-0 rounded-[1.15rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(
-        tone
-      )}`}
-    >
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
-        {label}
-      </p>
-      <p className="mt-2 break-words text-2xl font-black leading-tight text-[#10233F]">
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? "—"}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1798,6 +1780,44 @@ function getBadgeStyle(tone = "navy") {
   }
 
   return "border-[#123865] bg-[#F2F7FF] text-[#123865]";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveOperationsCenter;

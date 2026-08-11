@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import {
   deleteInquiryRow,
   updateInquiryPriorityRow,
+  updateInquiryStageRow,
   updateInquiryStatusRow,
 } from "../services/crm/inquiryService";
 
@@ -274,6 +275,98 @@ export default function useAdminLeadActions({
     },
     [
       blockAction,
+      currentPermissions.canUpdateStatus,
+      inquiryById,
+      runExclusive,
+      safeLogActivity,
+      setInquiries,
+    ]
+  );
+
+  const updateInquiryStage = useCallback(
+    async (id, newStage) => {
+      const canUpdateInquiryPipeline =
+        currentPermissions.canUpdateInquiryPipeline ??
+        currentPermissions.canUpdateStatus;
+
+      if (!canUpdateInquiryPipeline) {
+        throw new Error(
+          "You do not have permission to update inquiry pipeline."
+        );
+      }
+
+      const nextStage = String(newStage ?? "").trim();
+
+      if (!nextStage) {
+        throw new Error("Missing inquiry pipeline stage.");
+      }
+
+      const selectedInquiry = inquiryById.get(String(id));
+      const oldStage =
+        selectedInquiry?.pipeline_stage ||
+        selectedInquiry?.stage ||
+        selectedInquiry?.status_stage ||
+        "new";
+
+      if (oldStage === nextStage) return;
+
+      return runExclusive(`inquiry:stage:${id}`, async () => {
+        const restorePreviousStage = () => {
+          setInquiries((current) =>
+            current.map((inquiry) =>
+              sameId(inquiry.id, id)
+                ? {
+                    ...inquiry,
+                    pipeline_stage: oldStage,
+                    stage: oldStage,
+                  }
+                : inquiry
+            )
+          );
+        };
+
+        setInquiries((current) =>
+          current.map((inquiry) =>
+            sameId(inquiry.id, id)
+              ? {
+                  ...inquiry,
+                  pipeline_stage: nextStage,
+                  stage: nextStage,
+                }
+              : inquiry
+          )
+        );
+
+        try {
+          const { error } = await withTimeout(
+            updateInquiryStageRow(id, nextStage),
+            "Update inquiry pipeline"
+          );
+
+          if (error) {
+            restorePreviousStage();
+            throw error;
+          }
+
+          await safeLogActivity({
+            action: "Updated inquiry pipeline stage",
+            targetType: "inquiry",
+            targetId: id,
+            details: `Changed inquiry pipeline from ${oldStage} to ${nextStage}.`,
+          });
+        } catch (error) {
+          restorePreviousStage();
+          console.error("Inquiry pipeline update failed:", error);
+
+          throw new Error(
+            error?.message ||
+              "Inquiry pipeline update timed out or failed."
+          );
+        }
+      });
+    },
+    [
+      currentPermissions.canUpdateInquiryPipeline,
       currentPermissions.canUpdateStatus,
       inquiryById,
       runExclusive,
@@ -838,6 +931,7 @@ export default function useAdminLeadActions({
 
     toggleInquiryStatus,
     updateInquiryPriority,
+    updateInquiryStage,
     updateAppointmentPriority,
     updateAppointmentStatus,
     updateAppointmentStage,

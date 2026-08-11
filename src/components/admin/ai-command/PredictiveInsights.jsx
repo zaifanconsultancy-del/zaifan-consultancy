@@ -32,6 +32,7 @@
 
 import React, { useMemo, useState } from "react";
 import AICommandModuleNav from "./AICommandModuleNav";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   ArrowRight,
@@ -670,7 +671,7 @@ export default function PredictiveInsights({
           badge={scores.length ? `${scores.length} scored records` : "No score baseline"}
         />
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <BaselineCard
             label="Students"
             value={scores.length ? formatCount(currentBaseline.students) : "—"}
@@ -938,14 +939,7 @@ function HeaderChip({ icon: Icon, label }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function StatusMeta({ icon: Icon, label }) {
@@ -1009,24 +1003,7 @@ function SectionHeader({
 }
 
 function BaselineCard({ label, value, icon: Icon }) {
-  return (
-    <article className="rounded-[1.25rem] border-[3px] border-[#234E78] bg-[#F2F7FF] p-4 shadow-[0_9px_20px_rgba(18,56,101,0.06)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(18,56,101,0.10)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.09em] text-[#123865]">
-            {label}
-          </p>
-          <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-        </div>
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#234E78]/20 bg-white text-[#123865]">
-          <Icon size={17} />
-        </span>
-      </div>
-      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.07em] text-slate-500">
-        Current baseline
-      </p>
-    </article>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone="blue" />;
 }
 
 function ForecastCard({ item, canInspect, onInspect }) {
@@ -1245,16 +1222,7 @@ function ForecastUnavailableState({ timeframe }) {
 }
 
 function MiniStat({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-lg border-2 border-[#E1E8F0] bg-[#F7FAFC] p-2.5">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-xs font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function SourceBadge({ source }) {

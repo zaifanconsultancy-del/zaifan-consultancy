@@ -168,36 +168,23 @@ function AnalyticsPage({
 
   const renderActiveAnalyticsSection = () => {
     if (effectiveAnalyticsSection === "ai-executive") {
-  return (
-    <AnalyticsSection
-      eyebrow="Real CRM Intelligence"
-      title="AI Executive Intelligence Center"
-    >
-      <div className="space-y-6">
-  <ExecutiveCommandSystem
-    adminProfile={adminProfile}
-    inquiries={inquiries}
-    appointments={appointments}
-    followUpReminders={followUpReminders}
-    executiveExecutionLogs={executiveExecutionLogs}
-    studentDocuments={studentDocuments}
-
-    /* Finance OS: forward only real finance records already loaded by Admin. */
-    financeInvoices={studentInvoices}
-    financePayments={studentPayments}
-
-    /* HR OS: current signed-in Admin is a real person identity.
-       Existing CRM work records are forwarded as operational evidence.
-       No counselor/staff/leave/recruitment/training rows are fabricated. */
-    hrAdminProfiles={adminProfile ? [adminProfile] : []}
-    hrTasks={studentTasks}
-    hrSupportRequests={supportRequests}
-    hrApplications={studentApplications}
-  />
-</div>
-    </AnalyticsSection>
-  );
-}
+      return (
+        <ExecutiveCommandSystem
+          adminProfile={adminProfile}
+          inquiries={inquiries}
+          appointments={appointments}
+          followUpReminders={followUpReminders}
+          executiveExecutionLogs={executiveExecutionLogs}
+          studentDocuments={studentDocuments}
+          financeInvoices={studentInvoices}
+          financePayments={studentPayments}
+          hrAdminProfiles={adminProfile ? [adminProfile] : []}
+          hrTasks={studentTasks}
+          hrSupportRequests={supportRequests}
+          hrApplications={studentApplications}
+        />
+      );
+    }
 if (effectiveAnalyticsSection === "mission-control") {
   return (
     <AnalyticsSection
@@ -481,7 +468,7 @@ if (effectiveAnalyticsSection === "mission-control") {
         </div>
 
         <div className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-3 sm:p-4">
-          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-5">
+          <div className={`grid min-w-0 gap-2 sm:grid-cols-2 ${workspaceMode === "ai-command" ? "xl:grid-cols-2" : "xl:grid-cols-5"}`}>
             {analyticsNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = effectiveAnalyticsSection === item.id;

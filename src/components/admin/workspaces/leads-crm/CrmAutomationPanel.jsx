@@ -21,6 +21,7 @@ import {
   motion,
   useReducedMotion,
 } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   Bot,
@@ -755,38 +756,8 @@ function AutomationRow({
   );
 }
 
-function AutomationStat({
-  label,
-  value,
-  tone = "orange",
-}) {
-  const styles = {
-    red:
-      "border-red-300 bg-red-50 text-red-800",
-    amber:
-      "border-amber-300 bg-amber-50 text-amber-900",
-    blue:
-      "border-blue-300 bg-blue-50 text-blue-800",
-    orange:
-      "border-[#F97316] bg-[#FFF4EA] text-[#B84F0E]",
-  };
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_5px_14px_rgba(15,35,63,0.04)] ${
-        styles[tone] ||
-        styles.orange
-      }`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.12em]">
-        {label}
-      </p>
-
-      <p className="mt-2 text-3xl font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+function AutomationStat({ label, value, tone = "orange" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function PriorityBadge({
@@ -831,38 +802,12 @@ function getPriorityStyle(priority = "") {
   };
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function LoadingState({
@@ -932,6 +877,63 @@ function FilteredEmptyState({
       </p>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default CrmAutomationPanel;

@@ -1,11 +1,21 @@
 import { lazy, Suspense } from "react";
+import {
+  BrainCircuit,
+  CalendarClock,
+  Headphones,
+  ListTodo,
+  UsersRound,
+} from "lucide-react";
 
 import AdminHeader from "../workspaces/core/AdminHeader";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const AdminStats = lazy(() => import("../workspaces/core/AdminStats"));
 const NotificationCenter = lazy(() => import("../workspaces/communications/NotificationCenter"));
 
-// AdminHomePage PARTNER OS EXTREME V2 — Executive Admin Command Home
+// AdminHomePage PARTNER OS EXTREME V4 — Approved Card-Only Consistency
+// Preserves the existing navy/orange hero and page structure exactly.
+// Only compact metric/KPI blocks use the shared Zaifan card family.
 
 function AdminHomePage({
   cardClass,
@@ -80,14 +90,17 @@ function AdminHomePage({
                 <CommandStat
                   label="Open leads"
                   value={adminCommandMetrics.totalLeads}
+                  icon={UsersRound}
                 />
                 <CommandStat
                   label="Open tasks"
                   value={adminCommandMetrics.pendingTasks}
+                  icon={ListTodo}
                 />
                 <CommandStat
                   label="Support queue"
                   value={adminCommandMetrics.openSupport}
+                  icon={Headphones}
                 />
               </div>
 
@@ -162,41 +175,47 @@ function AdminHomePage({
         </div>
 
         <div className="border-t-[3px] border-[#123865] bg-[#FFF8EF] p-4 sm:p-5">
-          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <Metric
               label="Student leads"
               value={adminCommandMetrics.totalLeads}
               detail="Inquiry + appointment portfolio"
+              icon={UsersRound}
             />
             <Metric
               label="Pending"
               value={adminCommandMetrics.pendingAppointments}
               detail="Consultations awaiting action"
               tone="blue"
+              icon={CalendarClock}
             />
             <Metric
               label="Open tasks"
               value={adminCommandMetrics.pendingTasks}
               detail="Student operations still active"
               tone="orange"
+              icon={ListTodo}
             />
             <Metric
               label="Support"
               value={adminCommandMetrics.openSupport}
               detail="Unresolved student requests"
               tone={adminCommandMetrics.openSupport ? "red" : "green"}
+              icon={Headphones}
             />
             <Metric
               label="Portal accounts"
               value={adminCommandMetrics.activePortalAccounts}
               detail="Active Student OS access"
               tone="green"
+              icon={UsersRound}
             />
             <Metric
               label="GPT coverage"
               value={`${adminCommandMetrics.gptCoverage}%`}
               detail="Stored lead intelligence"
               tone="orange"
+              icon={BrainCircuit}
             />
           </div>
         </div>
@@ -321,55 +340,29 @@ function AdminHomePage({
   );
 }
 
-function Metric({ label, value, detail, tone = "slate" }) {
-  const tones = {
-    slate: {
-      shell: "border-[#123865] bg-[#F2F7FF]",
-      value: "text-[#123865]",
-    },
-    orange: {
-      shell: "border-orange-500 bg-[#FFF4E8]",
-      value: "text-[#c93208]",
-    },
-    blue: {
-      shell: "border-blue-400 bg-[#eef5ff]",
-      value: "text-[#164fa3]",
-    },
-    red: {
-      shell: "border-rose-400 bg-[#fff1f3]",
-      value: "text-[#c42145]",
-    },
-    green: {
-      shell: "border-emerald-400 bg-[#ecfbf4]",
-      value: "text-[#087f5b]",
-    },
-  };
-
-  const selected = tones[tone] || tones.slate;
-
+function Metric({ label, value, detail, tone = "slate", icon }) {
   return (
-    <div
-      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${selected.shell}`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#4f617a]">
-        {label}
-      </p>
-      <p className={`mt-2 text-2xl font-black ${selected.value}`}>{value}</p>
-      <p className="mt-1 text-[10px] font-semibold leading-4 text-[#50627b]">
-        {detail}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      icon={icon}
+      tone={tone === "slate" ? "navy" : tone}
+    />
   );
 }
 
-function CommandStat({ label, value }) {
+function CommandStat({ label, value, icon }) {
   return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3.5 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.11em] text-white/70">
-        {label}
-      </p>
-      <p className="mt-1.5 text-2xl font-black text-white">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      surface="navy"
+      label={label}
+      value={value}
+      icon={icon}
+      tone="navy"
+    />
   );
 }
 

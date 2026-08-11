@@ -316,54 +316,43 @@ export function buildExecutiveRecommendations(score = {}) {
   const targetCount = number(getScoreValue(score, "target_university_count"));
   const safeCount = number(getScoreValue(score, "safe_university_count"));
 
-  const noApplication =
-    journeyStage === "not_started" ||
-    isBlankStatus(applicationStatus) ||
-    hasAny(summary, ["no_application", "application_not_started"]);
+  const terminalJourney = ["visa_approved", "enrolled"].includes(journeyStage);
+
+  // Journey stage is the authoritative current milestone. Historical offer/visa
+  // fields remain useful evidence, but they must not reopen an earlier workflow
+  // after the student has already progressed beyond it.
+  const noApplication = journeyStage === "not_started";
 
   const applicationStartedButNotSubmitted =
     journeyStage === "application_started" && daysSinceUpdated >= 7;
 
   const applicationStalled =
     ["application_submitted", "application_under_review"].includes(journeyStage) &&
-    daysSinceUpdated >= 14 &&
-    !isOfferReceived(offerStatus) &&
-    !isOfferAccepted(offerStatus);
+    daysSinceUpdated >= 14;
 
-  const offerFollowUp =
-    journeyStage === "offer_received" ||
-    isOfferReceived(offerStatus) ||
-    isOfferReceived(applicationStatus);
-
-  const offerAccepted =
-    journeyStage === "offer_accepted" ||
-    isOfferAccepted(offerStatus) ||
-    isOfferAccepted(applicationStatus);
+  const offerFollowUp = journeyStage === "offer_received";
+  const offerAccepted = journeyStage === "offer_accepted";
 
   const casPending = journeyStage === "cas_pending";
   const casIssued = journeyStage === "cas_issued";
 
   const visaDelay =
-    offerAccepted &&
+    journeyStage === "offer_accepted" &&
     !isVisaActive(visaStatus) &&
     !isVisaApproved(visaStatus) &&
     daysSinceUpdated >= 5;
 
-  const visaRejected =
-    journeyStage === "visa_rejected" ||
-    isVisaRejected(visaStatus) ||
-    hasAny(summary, ["visa_rejected", "visa_refused"]);
+  const visaRejected = journeyStage === "visa_rejected";
+  const visaMonitoring = journeyStage === "visa_pending";
 
-  const visaMonitoring =
-    journeyStage === "visa_pending" ||
-    isVisaActive(visaStatus) ||
-    hasAny(summary, ["visa_under_review", "visa_submitted"]);
+  const statusContradiction =
+    journeyStage === "enrolled" &&
+    (isVisaRejected(visaStatus) || isVisaActive(visaStatus));
 
   const successStory =
     journeyStage === "visa_approved" ||
-    isVisaApproved(visaStatus) ||
     executiveCategory === "success_story" ||
-    hasAny(summary, ["visa_approved", "success_story"]);
+    (!terminalJourney && hasAny(summary, ["visa_approved", "success_story"]));
 
   const inactiveStudent = daysSinceUpdated >= 14 && riskScore >= 45;
 
@@ -399,7 +388,21 @@ export function buildExecutiveRecommendations(score = {}) {
     documentReadiness >= 75 &&
     taskCompletion >= 70;
 
-  if (visaRejected || riskScore >= 85) {
+  if (statusContradiction) {
+    addOnce(
+      recommendations,
+      makeRecommendation(score, {
+        type: "case_status_reconciliation",
+        priority: "critical",
+        action: "create_task",
+        title: "Case status contradiction review",
+        description: (studentName) =>
+          `${studentName} is currently marked Enrolled while the latest visa evidence still shows an active/rejected state. Reconcile the Student OS records before taking another journey action.`,
+        taskPriority: "critical",
+        automationGroup: "data_integrity",
+      })
+    );
+  } else if (visaRejected || riskScore >= 85) {
     addOnce(
       recommendations,
       makeRecommendation(score, {
@@ -576,15 +579,31 @@ export function buildExecutiveRecommendations(score = {}) {
   }
 
   if (taskWeakness) {
+    const taskRecoveryTitle =
+      overdueTasks > 0
+        ? "Overdue task recovery"
+        : pendingTasks >= 4
+        ? "Pending task recovery"
+        : "Task completion recovery";
+
+    const taskRecoveryDescription =
+      overdueTasks > 0
+        ? (studentName) =>
+            `${studentName} has overdue task pressure. Clear the overdue work and rebuild counselor execution rhythm.`
+        : pendingTasks >= 4
+        ? (studentName) =>
+            `${studentName} has a heavy pending-task queue. Prioritize the open work and restore execution momentum.`
+        : (studentName) =>
+            `${studentName} has low task completion. Review the open tasks and move the current Student 360 actions forward.`;
+
     addOnce(
       recommendations,
       makeRecommendation(score, {
-        type: "overdue_task_recovery",
+        type: overdueTasks > 0 ? "overdue_task_recovery" : "task_completion_recovery",
         priority: overdueTasks >= 3 ? "critical" : "high",
         action: "create_task",
-        title: "Overdue task recovery",
-        description: (studentName) =>
-          `${studentName} has weak task health. Clear overdue tasks and rebuild counselor execution rhythm.`,
+        title: taskRecoveryTitle,
+        description: taskRecoveryDescription,
         taskPriority: overdueTasks >= 3 ? "critical" : "high",
         automationGroup: "task_health",
       })

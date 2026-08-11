@@ -41,6 +41,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 12000;
 const MAX_PORTFOLIO_ROWS = 500;
@@ -936,7 +937,7 @@ function VisaRiskAnalyzer({
         </div>
       ) : null}
 
-      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,9.5rem),1fr))] gap-3">
+      <div className="grid min-w-0 auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric label="Active Cases" value={stats.total} icon={Stamp} />
         <Metric
           label="Critical"
@@ -1055,7 +1056,7 @@ function VisaRiskAnalyzer({
         </div>
       </div>
 
-      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <div className="grid min-w-0 auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <PressureCard
           label="High / Critical"
           value={stats.highOrCritical}
@@ -1275,57 +1276,39 @@ function VisaCaseRow({ item, onOpenStudent }) {
   );
 }
 
-function Metric({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-[#B9C9D9] bg-[#FFFDF8] text-[#10233F]",
-    orange: "border-[#F59E0B] bg-[#FFF7ED] text-orange-800",
-    red: "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-    green: "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-  };
-
+function Metric({
+  label,
+  value,
+  icon: Icon,
+  tone = "slate",
+}) {
   return (
-    <div
-      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-2xl font-black">{value}</p>
-          <p className="mt-1 break-words text-[9px] font-black uppercase leading-4 tracking-[0.08em] opacity-80">
-            {label}
-          </p>
-        </div>
-
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70">
-          <Icon size={17} />
-        </div>
-      </div>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
-function PressureCard({ label, value, helper, tone = "green" }) {
-  const styles = {
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-    orange: "border-[#F59E0B] bg-[#FFF7ED]",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-  };
-
+function PressureCard({
+  label,
+  value,
+  helper,
+  tone = "green",
+}) {
   return (
-    <div
-      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
-        styles[tone] || styles.green
-      }`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-      <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -1362,6 +1345,51 @@ function DatabaseDot() {
   return (
     <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_0_3px_rgba(110,231,183,0.15)]" />
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default VisaRiskAnalyzer;

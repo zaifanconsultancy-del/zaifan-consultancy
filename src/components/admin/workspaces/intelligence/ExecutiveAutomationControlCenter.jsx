@@ -34,6 +34,7 @@ import {
   buildWorkflowIntegrityScore,
   generateProductionReadinessReport,
 } from "../../../../lib/platformVerificationEngine";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const toLower = (value) => String(value || "").toLowerCase().trim();
 
@@ -583,7 +584,7 @@ function ExecutiveAutomationControlCenter({
           <SmallMetric label="Recovery Queue" value={verificationSnapshot?.recoveryQueue?.length || 0} tone="green" />
         </div>
 
-        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <SmallMetric label="CAS Recovery" value={recoveryEngine?.casQueue?.length || 0} tone="orange" />
           <SmallMetric label="Visa Recovery" value={recoveryEngine?.visaQueue?.length || 0} tone="red" />
           <SmallMetric label="Payment Recovery" value={recoveryEngine?.paymentQueue?.length || 0} tone="navy" />
@@ -794,7 +795,7 @@ function ExecutiveLaunchCenter({
       title="Production readiness, go-live status, and workflow blockers"
       description="V4 verification layer for deciding whether the executive automation system is ready for production launch or needs recovery first."
     >
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         <SmallMetric label="Readiness Score" value={`${readinessScore}%`} />
         <SmallMetric label="Go Live Status" value={formatLabel(goLiveStatus)} />
         <SmallMetric label="Workflow Integrity" value={`${integrityScore}%`} />
@@ -1119,14 +1120,12 @@ function ProgressRow({ label, value, detail, tone = "gold" }) {
 
 function SmallMetric({ label, value, tone = "navy" }) {
   return (
-    <div className={`min-w-0 rounded-[1.15rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)] ${getToneStyle(tone)}`}>
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">
-        {label}
-      </p>
-      <p className="mt-2 break-words text-2xl font-black leading-tight text-[#10233F]">
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? "—"}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1233,18 +1232,14 @@ function OrangeMetric({ label, value }) {
 
 function BoardMetric({ label, value, detail, tone = "navy", icon: Icon }) {
   return (
-    <article className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${getToneStyle(tone)}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-[#53657D]">{label}</p>
-          <p className="mt-2 text-3xl font-black text-[#10233F]">{value}</p>
-        </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-white/80 text-[#123865]">
-          <Icon size={16} />
-        </span>
-      </div>
-      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-600">{detail}</p>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1262,5 +1257,43 @@ function StatusMessage({ tone = "info", icon: Icon = Sparkles, children }) {
   );
 }
 
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
+}
 
 export default ExecutiveAutomationControlCenter;

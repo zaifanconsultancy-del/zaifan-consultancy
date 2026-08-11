@@ -5,6 +5,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   HeartPulse,
@@ -817,38 +818,20 @@ function getJourneyStage(application) {
   return "Lead";
 }
 
-function HealthSignal({ label, value, detail, tone = "default" }) {
-  const styles = {
-    good: "border-[#34D399] bg-[#F0FFF8]",
-    warning: "border-[#F59E0B] bg-[#FFF7ED]",
-    risk: "border-[#FB7185] bg-[#FFF4F4]",
-    navy: "border-[#123865] bg-[#F2F7FF]",
-    default: "border-[#F97316] bg-[#FFF4E8]",
-  };
-
-  const valueTone =
-    tone === "risk"
-      ? "text-red-700"
-      : tone === "warning"
-      ? "text-amber-800"
-      : tone === "good"
-      ? "text-emerald-700"
-      : tone === "navy"
-      ? "text-[#123865]"
-      : "text-orange-700";
-
+function HealthSignal({
+  label,
+  value,
+  detail,
+  tone = "default",
+}) {
   return (
-    <div className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] ${styles[tone] || styles.default}`}>
-      <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.1em] text-slate-500">
-        {label}
-      </p>
-      <p className={`mt-2 text-3xl font-black ${valueTone}`}>
-        {value}
-      </p>
-      <p className="mt-2 break-words text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={detail}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -958,4 +941,45 @@ function MiniFunnel({ label, value }) {
     </div>
   );
 }
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("healthy") ||
+    value.includes("success") ||
+    value.includes("ready") ||
+    value.includes("complete")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("danger") ||
+    value.includes("failed") ||
+    value.includes("blocked") ||
+    value.includes("overdue")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("watch")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple") || value.includes("pink")) return "violet";
+  if (value.includes("orange") || value.includes("gold") || value.includes("action")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("neutral") || value.includes("default") || value.includes("cream")) return "slate";
+
+  return "navy";
+}
+
 export default LeadHealthPanel;

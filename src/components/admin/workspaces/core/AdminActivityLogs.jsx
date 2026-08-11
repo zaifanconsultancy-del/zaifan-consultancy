@@ -38,6 +38,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 15000;
 const FETCH_LIMIT = 500;
@@ -1025,54 +1026,72 @@ function getActionTone(category) {
   return tones[category] || tones.general;
 }
 
-function MetricCard({ label, value, icon: Icon, tone = "navy", detail }) {
-  const styles = {
-    navy: "border-[#123865] bg-[#123865] text-white",
-    red: "border-red-300 bg-red-50 text-red-900",
-    blue: "border-blue-300 bg-blue-50 text-blue-900",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-900",
-  };
-
-  const iconStyle =
-    tone === "navy"
-      ? "border-white/20 bg-white/10 text-white"
-      : "border-current/20 bg-white text-current";
+function MetricCard({
+  label,
+  value,
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
+  badge = "",
+  source = "",
+  className = "",
+}) {
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-4 ${
-        styles[tone] || styles.navy
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.14em]">
-            {label}
-          </p>
-          <p className="mt-2 text-3xl font-black">{value}</p>
-        </div>
-
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${iconStyle}`}
-        >
-          <Icon size={17} />
-        </div>
-      </div>
-
-      <p className="mt-2 text-xs font-semibold leading-5">{detail}</p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
 }
 
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
+}
+
 function OrangeStat({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.13em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function Feedback({ tone = "error", message, onRetry }) {

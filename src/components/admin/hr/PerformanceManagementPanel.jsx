@@ -12,6 +12,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -60,81 +61,65 @@ function tone(score) {
 function MetricCard({
   label,
   value,
-  helper,
-  toneName = "blue",
-  icon: Icon,
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
   badge = "",
+  source = "",
+  className = "",
 }) {
-  const tones = {
-    navy: "border-[#123865] bg-[#123865]",
-    blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-    amber: "border-[#F59E0B] bg-[#FFF8E8]",
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-    violet: "border-[#60A5FA] bg-[#F2F7FF]",
-  };
-
-  const dark = toneName === "navy";
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
-        tones[toneName] || tones.blue
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
-
-        {Icon ? (
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
-              dark
-                ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-[#123865]/15 bg-white text-[#123865]"
-            }`}
-          >
-            <Icon size={16} />
-          </div>
-        ) : null}
-      </div>
-
-      <p
-        className={`mt-2 text-xs font-semibold leading-5 ${
-          dark ? "text-slate-200" : "text-slate-600"
-        }`}
-      >
-        {helper}
-      </p>
-
-      {badge ? (
-        <span
-          className={`mt-3 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-            dark
-              ? "border-white/20 bg-white/10 text-white"
-              : "border-[#C9D7E6] bg-white text-slate-600"
-          }`}
-        >
-          {badge}
-        </span>
-      ) : null}
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function PerformanceRow({ person, rank, compact }) {
@@ -208,13 +193,13 @@ function PerformanceRow({ person, rank, compact }) {
           <div className={compact ? "text-right" : ""}>
             <p className={`${compact ? "mt-0 text-lg" : "mt-2 text-xl"} font-black text-[#10233F]`}>
               {taskCompletionRate === null
-                ? "Not measured"
+                ? "N/A"
                 : `${taskCompletionRate}%`}
             </p>
 
             <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-600">
               {taskCompletionRate === null
-                ? "Awaiting linked task evidence."
+                ? "Not measured · Awaiting linked task evidence."
                 : `${safeNumber(person.completedTasks)} completed of ${safeNumber(
                     person.tasks
                   )} linked tasks.`}
@@ -265,28 +250,8 @@ function PerformanceRow({ person, rank, compact }) {
   );
 }
 
-function MiniMetric({ label, value, danger = false }) {
-  return (
-    <div
-      className={`rounded-xl border-2 p-3 text-center ${
-        danger
-          ? "border-[#FB7185] bg-[#FFF4F4]"
-          : "border-[#E1E8F0] bg-[#FFF8EF]"
-      }`}
-    >
-      <p
-        className={`text-base font-black ${
-          danger ? "text-red-700" : "text-[#10233F]"
-        }`}
-      >
-        {safeNumber(value)}
-      </p>
-
-      <p className="mt-1 text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
-        {label}
-      </p>
-    </div>
-  );
+function MiniMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 export default function PerformanceManagementPanel({
@@ -371,6 +336,8 @@ export default function PerformanceManagementPanel({
   const visible = compact ? rows.slice(0, 5) : rows;
 
   const measurable = people.filter(hasPerformance);
+  const hasPeople = people.length > 0;
+  const hasMeasurableEvidence = measurable.length > 0;
 
   const averageIndex = measurable.length
     ? Math.round(
@@ -449,57 +416,81 @@ export default function PerformanceManagementPanel({
 
       <div className="space-y-5 p-4 sm:p-5">
         {!compact ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid auto-rows-fr gap-3 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               label="Average Index"
-              value={
-                averageIndex === null
-                  ? "Unavailable"
-                  : `${averageIndex}%`
-              }
+              value={hasMeasurableEvidence ? `${averageIndex}%` : "N/A"}
               helper={
-                averageIndex === null
-                  ? "No measurable operational evidence yet."
-                  : `Average across ${measurable.length} measurable team member${
+                hasMeasurableEvidence
+                  ? `Average across ${measurable.length} measurable team member${
                       measurable.length === 1 ? "" : "s"
                     }.`
+                  : "Not assessed · No measurable operational evidence yet."
               }
               toneName={
-                averageIndex === null
-                  ? "blue"
-                  : averageIndex >= 75
+                hasMeasurableEvidence
+                  ? averageIndex >= 75
                     ? "green"
                     : "amber"
+                  : "slate"
               }
               icon={CircleGauge}
-              badge="Operational"
+              className="h-full"
             />
 
             <MetricCard
               label="Strong Evidence"
-              value={strongCount}
-              helper="Measurable team members with an index of 80% or above."
-              toneName="green"
+              value={hasMeasurableEvidence ? strongCount : "N/A"}
+              helper={
+                hasMeasurableEvidence
+                  ? "Measurable team members with an index of 80% or above."
+                  : "Not assessed · No measurable team evidence yet."
+              }
+              toneName={hasMeasurableEvidence ? "green" : "slate"}
               icon={TrendingUp}
-              badge="Signal only"
+              className="h-full"
             />
 
             <MetricCard
               label="Needs Attention"
-              value={riskCount}
-              helper="Low operating index and/or overdue-task pressure."
-              toneName={riskCount > 0 ? "red" : "green"}
-              icon={riskCount > 0 ? AlertTriangle : BadgeCheck}
-              badge="Review"
+              value={hasMeasurableEvidence ? riskCount : "N/A"}
+              helper={
+                hasMeasurableEvidence
+                  ? "Low operating index and/or overdue-task pressure."
+                  : "Not assessed · No measurable team evidence yet."
+              }
+              toneName={
+                hasMeasurableEvidence
+                  ? riskCount > 0
+                    ? "red"
+                    : "green"
+                  : "slate"
+              }
+              icon={
+                hasMeasurableEvidence && riskCount > 0
+                  ? AlertTriangle
+                  : BadgeCheck
+              }
+              className="h-full"
             />
 
             <MetricCard
               label="Overdue Tasks"
-              value={totalOverdue}
-              helper="Total overdue task evidence across the current team."
-              toneName={totalOverdue > 0 ? "amber" : "green"}
+              value={hasPeople ? totalOverdue : "N/A"}
+              helper={
+                hasPeople
+                  ? "Total overdue task evidence across the current team."
+                  : "Not assessed · No team records are available."
+              }
+              toneName={
+                hasPeople
+                  ? totalOverdue > 0
+                    ? "amber"
+                    : "green"
+                  : "slate"
+              }
               icon={BriefcaseBusiness}
-              badge="Recorded"
+              className="h-full"
             />
           </div>
         ) : null}

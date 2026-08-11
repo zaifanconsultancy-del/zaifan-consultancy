@@ -1,3 +1,16 @@
+// CommunicationCenterPanel WHATSAPP MANUAL SEND CONFIRMATION V5
+// - adds explicit manual WhatsApp Sent confirmation without fake delivery claims
+// - promotes an exact recent WhatsApp draft to Sent when possible; otherwise creates one Sent record
+// CommunicationCenterPanel COMMUNICATION LEDGER MAX V4 — Compact expandable history
+// - converts the dense timeline cards into a scan-first expandable ledger
+// - preserves Supabase logic, status transitions, filters, pagination, delete, WhatsApp and email engines
+// - full message/delivery metadata/actions appear only when a record is opened
+// CommunicationCenterPanel COMMUNICATION QA MAX V3 — Cross-Portal Visibility Guard
+// - keeps the full PARTNER OS EXTREME V2 communication engine intact
+// - adds deterministic Student-visible vs Operations-only classification to Admin OS
+// - internal direction and draft / queued / scheduled / failed / cancelled states are clearly operational-only
+// - timeline rows and manual logging show visibility before staff assumes the Student can see a record
+// - no schema changes, no fake delivery state, no email/WhatsApp workflow changes
 // CommunicationCenterPanel PARTNER OS EXTREME V2 — Compact Student Communication Command
 // src/components/admin/workspaces/communications/CommunicationCenterPanel.jsx
 //
@@ -27,6 +40,7 @@
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
   Mail,
   MessageCircle,
   Phone,
@@ -37,6 +51,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   lazy,
   Suspense,
@@ -215,6 +230,85 @@ async function createTimelineEvent({
       error?.message || error
     );
   }
+}
+
+function getCommunicationMetadata(item = {}) {
+  const metadata = item?.metadata;
+
+  if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+    return metadata;
+  }
+
+  if (typeof metadata === "string" && metadata.trim()) {
+    try {
+      const parsed = JSON.parse(metadata);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
+}
+
+function isStudentVisibleCommunicationRecord(item = {}) {
+  const metadata = getCommunicationMetadata(item);
+  const direction = normalize(
+    item?.direction || metadata?.direction || metadata?.message_direction || "outbound"
+  );
+  const status = normalize(item?.status || "draft");
+  const channel = normalize(item?.channel || "manual");
+  const visibility = normalize(
+    item?.visibility || metadata?.visibility || metadata?.audience || metadata?.scope || ""
+  );
+  const explicitStudentVisible =
+    item?.student_visible ?? metadata?.student_visible ?? metadata?.studentVisible;
+
+  const privateByMetadata =
+    explicitStudentVisible === false ||
+    String(explicitStudentVisible || "").toLowerCase() === "false" ||
+    metadata?.is_internal === true ||
+    metadata?.internal === true ||
+    ["internal", "private", "staff", "staff_only", "admin_only", "counselor_only"].includes(
+      visibility
+    );
+
+  const internalDirection = ["internal", "staff", "private"].includes(direction);
+  const internalChannel = [
+    "note",
+    "notes",
+    "internal_note",
+    "staff_note",
+    "admin_note",
+    "counselor_note",
+  ].includes(channel);
+  const operationalStatus = [
+    "draft",
+    "queued",
+    "scheduled",
+    "pending",
+    "failed",
+    "cancelled",
+    "canceled",
+  ].some((value) => status === value || status.startsWith(`${value}_`));
+
+  return !(privateByMetadata || internalDirection || internalChannel || operationalStatus);
+}
+
+function communicationVisibilityLabel(item = {}) {
+  return isStudentVisibleCommunicationRecord(item)
+    ? {
+        label: "Student-visible",
+        helper: "Eligible for Student OS communication history",
+        className: "border-emerald-300 bg-emerald-50 text-emerald-800",
+      }
+    : {
+        label: "Operations-only",
+        helper: "Internal, unsent, failed or otherwise not student-facing",
+        className: "border-amber-300 bg-amber-50 text-amber-800",
+      };
 }
 
 function CommunicationCenterPanel({
@@ -671,7 +765,7 @@ function CommunicationCenterPanel({
         !item?.id ||
         anyMutationBusy
       ) {
-        return;
+        return false;
       }
 
       const currentStatus =
@@ -686,7 +780,7 @@ function CommunicationCenterPanel({
       if (
         currentStatus === cleanNext
       ) {
-        return;
+        return true;
       }
 
       const allowed =
@@ -705,7 +799,7 @@ function CommunicationCenterPanel({
             cleanNext
           )}.`
         );
-        return;
+        return false;
       }
 
       setUpdatingId(item.id);
@@ -823,6 +917,8 @@ function CommunicationCenterPanel({
           )}.`,
           newValue: cleanNext,
         });
+
+        return true;
       } catch (updateError) {
         if (mountedRef.current) {
           setCommunications(
@@ -840,11 +936,141 @@ function CommunicationCenterPanel({
               "Communication status could not be updated."
           );
         }
+
+        return false;
       } finally {
         if (mountedRef.current) {
           setUpdatingId("");
         }
       }
+    };
+
+  const confirmWhatsAppSent =
+    async (message, metadata = {}) => {
+      const cleanMessage =
+        String(message || "").trim();
+
+      if (
+        !cleanMessage ||
+        anyMutationBusy
+      ) {
+        return false;
+      }
+
+      const now =
+        Date.now();
+
+      // If this exact message was already saved as a recent WhatsApp draft,
+      // promote the same row instead of creating a duplicate communication.
+      const matchingDraft =
+        communications
+          .filter((item) => {
+            const createdMs =
+              new Date(
+                item.created_at || 0
+              ).getTime();
+
+            const ageMs =
+              now - createdMs;
+
+            return (
+              normalize(
+                item.channel
+              ) ===
+                "whatsapp" &&
+              normalize(
+                item.direction ||
+                  "outbound"
+              ) ===
+                "outbound" &&
+              normalize(
+                item.status
+              ) ===
+                "draft" &&
+              String(
+                item.message || ""
+              ).trim() ===
+                cleanMessage &&
+              Number.isFinite(
+                ageMs
+              ) &&
+              ageMs >= 0 &&
+              ageMs <=
+                24 *
+                  60 *
+                  60 *
+                  1000
+            );
+          })
+          .sort(
+            (a, b) =>
+              new Date(
+                b.created_at || 0
+              ).getTime() -
+              new Date(
+                a.created_at || 0
+              ).getTime()
+          )[0] || null;
+
+      if (
+        matchingDraft
+      ) {
+        const promoted =
+          await updateCommunicationStatus(
+            matchingDraft,
+            "sent"
+          );
+
+        if (
+          promoted &&
+          mountedRef.current
+        ) {
+          setSuccessMessage(
+            "WhatsApp send manually confirmed. Existing draft promoted to Sent."
+          );
+        }
+
+        return Boolean(
+          promoted
+        );
+      }
+
+      const confirmedAt =
+        metadata?.confirmedAt ||
+        new Date().toISOString();
+
+      const saved =
+        await saveCommunication({
+          channel:
+            "whatsapp",
+          direction:
+            "outbound",
+          message:
+            cleanMessage,
+          status:
+            "sent",
+          source:
+            "whatsapp_manual_confirmation",
+          sent_at:
+            confirmedAt,
+          metadata: {
+            ...metadata,
+            manual_send_confirmed:
+              true,
+            manualSendConfirmed:
+              true,
+            confirmed_at:
+              confirmedAt,
+            delivery_claim:
+              "manual_staff_confirmation",
+            opened_from_zaifan:
+              Boolean(
+                metadata?.openedFromZaifan
+              ),
+          },
+        });
+
+      return Boolean(saved);
     };
 
   const deleteCommunication =
@@ -1143,6 +1369,11 @@ function CommunicationCenterPanel({
           )
       ).length;
 
+    const studentVisible = communications.filter(
+      isStudentVisibleCommunicationRecord
+    ).length;
+    const operationsOnly = Math.max(0, total - studentVisible);
+
     return {
       total,
       drafts,
@@ -1150,6 +1381,8 @@ function CommunicationCenterPanel({
       inbound,
       outbound,
       pending,
+      studentVisible,
+      operationsOnly,
     };
   }, [communications]);
 
@@ -1292,29 +1525,14 @@ function CommunicationCenterPanel({
             </h2>
 
             <p className="mt-2 max-w-3xl break-words text-sm font-semibold leading-5 text-slate-100">
-              Keep WhatsApp, email, calls,
-              manual outreach and future
-              automated communication in one
-              permanent student history.
+              Keep WhatsApp, email, calls, manual outreach and future automation in one permanent history — while clearly separating what the Student can see from internal operations.
             </p>
 
             <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
-              <DarkMetric
-                label="Total"
-                value={stats.total}
-              />
-              <DarkMetric
-                label="Outbound"
-                value={stats.outbound}
-              />
-              <DarkMetric
-                label="Inbound"
-                value={stats.inbound}
-              />
-              <DarkMetric
-                label="Failed"
-                value={stats.failed}
-              />
+              <DarkMetric label="Total" value={stats.total} />
+              <DarkMetric label="Student-visible" value={stats.studentVisible} />
+              <DarkMetric label="Operations-only" value={stats.operationsOnly} />
+              <DarkMetric label="Failed" value={stats.failed} />
             </div>
           </div>
 
@@ -1420,7 +1638,7 @@ function CommunicationCenterPanel({
           creatingChannel ===
           "whatsapp"
         }
-        onSaveDraft={(message) =>
+        onSaveDraft={(message, metadata = {}) =>
           saveCommunication({
             channel:
               "whatsapp",
@@ -1430,7 +1648,14 @@ function CommunicationCenterPanel({
             status: "draft",
             source:
               "whatsapp_workspace",
+            metadata,
           })
+        }
+        onConfirmSent={(message, metadata = {}) =>
+          confirmWhatsAppSent(
+            message,
+            metadata
+          )
         }
       />
       </Suspense>
@@ -1528,7 +1753,18 @@ function CommunicationCenterPanel({
           description="Use this for calls, inbound messages, SMS, portal messages or any interaction that happened outside an automated integration."
         />
 
-        <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className={`mt-4 rounded-xl border-2 p-3 ${communicationVisibilityLabel(manualForm).className}`}>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[10px] font-black uppercase tracking-[0.13em]">
+              Visibility Preview · {communicationVisibilityLabel(manualForm).label}
+            </p>
+            <p className="text-[10px] font-bold opacity-75">
+              {communicationVisibilityLabel(manualForm).helper}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <Select
             label="Channel"
             value={
@@ -1730,9 +1966,9 @@ function CommunicationCenterPanel({
 
       <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_12px_34px_rgba(18,56,101,0.07)] sm:p-5">
         <SectionHeading
-          eyebrow="Student Contact History"
-          title="Communication Timeline"
-          description="Search and filter the student record instead of scrolling through an endless wall of messages."
+          eyebrow="Student Contact Ledger"
+          title="Communication History"
+          description="Scan the compact ledger first. Open any record only when you need the full message, delivery trail, status control or delete action."
         />
 
         <div className="mt-5 grid min-w-0 gap-3 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-3 lg:grid-cols-[minmax(0,1fr)_150px_150px_150px]">
@@ -1944,6 +2180,9 @@ function CommunicationRow({
   onStatus,
   onDelete,
 }) {
+  const [expanded, setExpanded] =
+    useState(false);
+
   const channel = normalize(
     item.channel || "manual"
   );
@@ -1967,162 +2206,316 @@ function CommunicationRow({
   const allowedNext =
     STATUS_FLOW[status] || [];
 
+  const visibility =
+    communicationVisibilityLabel(
+      item
+    );
+
+  const primaryTitle =
+    item.subject ||
+    `${pretty(channel)} communication`;
+
+  const messagePreview =
+    String(
+      item.message ||
+        "No message saved."
+    ).trim();
+
   return (
-    <article className="min-w-0 rounded-[1.3rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-md">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="flex min-w-0 gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-[#FFF8EF] text-[#123865]">
-            <Icon size={17} />
-          </span>
+    <article
+      className={`min-w-0 overflow-hidden rounded-[1.15rem] border-[2px] bg-white shadow-[0_5px_14px_rgba(18,56,101,0.045)] transition ${
+        expanded
+          ? "border-[#123865] shadow-[0_12px_28px_rgba(18,56,101,0.09)]"
+          : "border-[#D5E0EA] hover:border-[#AFC3D8] hover:shadow-[0_8px_20px_rgba(18,56,101,0.07)]"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={() =>
+          setExpanded(
+            (previous) =>
+              !previous
+          )
+        }
+        aria-expanded={
+          expanded
+        }
+        className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3.5 py-3 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-orange-100 sm:px-4"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-[#FFF8EF] text-[#123865]">
+          <Icon size={17} />
+        </span>
 
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-black text-[#10233F]">
-                {pretty(channel)}
-              </p>
-
-              <DirectionBadge
-                value={
-                  direction
-                }
-              />
-
-              <StatusBadge
-                value={status}
-              />
-            </div>
-
-            {item.subject ? (
-              <p className="mt-2 text-sm font-black text-[#10233F]">
-                {item.subject}
-              </p>
-            ) : null}
-
-            <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-slate-700">
-              {item.message ||
-                "No message saved."}
-            </p>
-
-            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-slate-500">
-              <span>
-                {formatDateTime(
-                  item.created_at
-                )}
-              </span>
-
-              {item.source ? (
-                <span>
-                  •{" "}
-                  {pretty(
-                    item.source
-                  )}
-                </span>
-              ) : null}
-
-              {item.related_type ? (
-                <span>
-                  •{" "}
-                  {pretty(
-                    item.related_type
-                  )}
-                  {item.related_id
-                    ? ` · ${item.related_id}`
-                    : ""}
-                </span>
-              ) : null}
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-slate-500">
-              {item.sent_at ? (
-                <span>
-                  Sent:{" "}
-                  {formatDateTime(
-                    item.sent_at
-                  )}
-                </span>
-              ) : null}
-
-              {item.delivered_at ? (
-                <span>
-                  Delivered:{" "}
-                  {formatDateTime(
-                    item.delivered_at
-                  )}
-                </span>
-              ) : null}
-
-              {item.read_at ? (
-                <span>
-                  Read:{" "}
-                  {formatDateTime(
-                    item.read_at
-                  )}
-                </span>
-              ) : null}
-            </div>
-
-            {item.failure_reason ? (
-              <p className="mt-3 rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-xs font-bold text-red-800">
-                Failure:{" "}
-                {
-                  item.failure_reason
-                }
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="grid min-w-0 gap-2 xl:w-[200px]">
-          <label>
-            <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-              Communication Status
+        <div className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+            <span className="text-[10px] font-black uppercase tracking-[0.11em] text-slate-500">
+              {pretty(
+                channel
+              )}
             </span>
 
-            <select
-              disabled={busy}
-              value={status}
-              onChange={(event) =>
-                onStatus(
-                  event.target.value
-                )
+            <DirectionBadge
+              value={
+                direction
               }
-              className="h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
+            />
+
+            <StatusBadge
+              value={status}
+            />
+
+            <span
+              className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${visibility.className}`}
             >
-              <option
-                value={status}
-              >
-                {pretty(status)}
-              </option>
+              {
+                visibility.label
+              }
+            </span>
+          </div>
 
-              {STATUS_OPTIONS.filter(
-                (option) =>
-                  option !== status &&
-                  allowedNext.includes(
-                    option
-                  )
-              ).map((option) => (
-                <option
-                  key={option}
-                  value={option}
-                >
-                  {pretty(option)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <p className="mt-1.5 truncate text-sm font-black text-[#10233F]">
+            {
+              primaryTitle
+            }
+          </p>
 
-          <button
-            type="button"
-            onClick={onDelete}
-            disabled={busy}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-3 text-xs font-black text-red-700 transition hover:-translate-y-0.5 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 disabled:opacity-50"
-          >
-            <Trash2 size={13} />
-            Delete
-          </button>
+          <p className="mt-0.5 truncate text-xs font-semibold text-slate-500">
+            {
+              messagePreview
+            }
+          </p>
         </div>
-      </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden text-right md:block">
+            <p className="text-[10px] font-black text-[#10233F]">
+              {formatDateTime(
+                item.created_at
+              )}
+            </p>
+
+            <p className="mt-0.5 text-[9px] font-bold text-slate-400">
+              {item.source
+                ? pretty(
+                    item.source
+                  )
+                : "Communication"}
+            </p>
+          </div>
+
+          <span
+            className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 border-[#D5E0EA] bg-[#FFF8EF] text-[#123865] transition ${
+              expanded
+                ? "rotate-180 border-[#FF5A0A] bg-[#FFF4E8] text-orange-700"
+                : ""
+            }`}
+          >
+            <ChevronDown
+              size={16}
+            />
+          </span>
+        </div>
+      </button>
+
+      {expanded ? (
+        <div className="border-t-2 border-[#E1E8F0] bg-[#FFFDF9] px-3.5 py-4 sm:px-4">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_205px]">
+            <div className="min-w-0">
+              <div className="rounded-[1rem] border-2 border-[#E1E8F0] bg-white p-3.5">
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+                  Full Communication
+                </p>
+
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-slate-700">
+                  {
+                    messagePreview
+                  }
+                </p>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span
+                  className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-bold ${visibility.className}`}
+                >
+                  {
+                    visibility.helper
+                  }
+                </span>
+
+                <span className="rounded-lg border border-[#D5E0EA] bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-500 md:hidden">
+                  {formatDateTime(
+                    item.created_at
+                  )}
+                </span>
+
+                {item.source ? (
+                  <span className="rounded-lg border border-[#D5E0EA] bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-500">
+                    Source:{" "}
+                    {pretty(
+                      item.source
+                    )}
+                  </span>
+                ) : null}
+
+                {item.related_type ? (
+                  <span className="rounded-lg border border-[#D5E0EA] bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-500">
+                    Linked:{" "}
+                    {pretty(
+                      item.related_type
+                    )}
+                    {item.related_id
+                      ? ` · ${item.related_id}`
+                      : ""}
+                  </span>
+                ) : null}
+              </div>
+
+              {item.sent_at ||
+              item.delivered_at ||
+              item.read_at ? (
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {item.sent_at ? (
+                    <LedgerMeta
+                      label="Sent"
+                      value={formatDateTime(
+                        item.sent_at
+                      )}
+                    />
+                  ) : null}
+
+                  {item.delivered_at ? (
+                    <LedgerMeta
+                      label="Delivered"
+                      value={formatDateTime(
+                        item.delivered_at
+                      )}
+                    />
+                  ) : null}
+
+                  {item.read_at ? (
+                    <LedgerMeta
+                      label="Read"
+                      value={formatDateTime(
+                        item.read_at
+                      )}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+
+              {item.failure_reason ? (
+                <p className="mt-3 rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-xs font-bold text-red-800">
+                  Failure:{" "}
+                  {
+                    item.failure_reason
+                  }
+                </p>
+              ) : null}
+            </div>
+
+            <div className="grid min-w-0 content-start gap-2 rounded-[1rem] border-2 border-[#E1E8F0] bg-white p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
+                Record Controls
+              </p>
+
+              <label>
+                <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
+                  Communication Status
+                </span>
+
+                <select
+                  disabled={
+                    busy
+                  }
+                  value={
+                    status
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    onStatus(
+                      event
+                        .target
+                        .value
+                    )
+                  }
+                  className="h-10 min-w-0 w-full rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 text-xs font-black text-[#10233F] outline-none transition hover:border-[#FF5A0A] focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
+                >
+                  <option
+                    value={
+                      status
+                    }
+                  >
+                    {pretty(
+                      status
+                    )}
+                  </option>
+
+                  {STATUS_OPTIONS.filter(
+                    (option) =>
+                      option !==
+                        status &&
+                      allowedNext.includes(
+                        option
+                      )
+                  ).map(
+                    (
+                      option
+                    ) => (
+                      <option
+                        key={
+                          option
+                        }
+                        value={
+                          option
+                        }
+                      >
+                        {pretty(
+                          option
+                        )}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
+
+              <button
+                type="button"
+                onClick={
+                  onDelete
+                }
+                disabled={
+                  busy
+                }
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-[#FB7185] bg-[#FFF4F4] px-3 text-xs font-black text-red-700 transition hover:-translate-y-0.5 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 disabled:opacity-50"
+              >
+                <Trash2
+                  size={13}
+                />
+                Delete Record
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </article>
+  );
+}
+
+function LedgerMeta({
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-xl border-2 border-[#E1E8F0] bg-white px-3 py-2.5">
+      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-1 text-[10px] font-black text-[#10233F]">
+        {value}
+      </p>
+    </div>
   );
 }
 
@@ -2454,36 +2847,12 @@ function FilterSelect({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function DeleteConfirmation({

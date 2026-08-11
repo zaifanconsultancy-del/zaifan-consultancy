@@ -19,6 +19,7 @@
 // - no fake AI claims, no invented outcomes
 
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   Brain,
@@ -143,6 +144,7 @@ function getOpportunityBand(score) {
 
 function StudentExecutiveRiskCard({
   student = {},
+  adminProfile = null,
   onSharedDataChange = null,
 }) {
   const [saving, setSaving] = useState(false);
@@ -422,7 +424,7 @@ function StudentExecutiveRiskCard({
   };
 
   return (
-    <section className="min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_22px_60px_rgba(18,56,101,0.14)] sm:p-4">
+    <section className="min-w-0 space-y-4 text-[#10233F]">
       <div className="min-w-0 overflow-hidden rounded-[1.7rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_18px_48px_rgba(18,56,101,0.10)]">
         <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div
@@ -439,7 +441,7 @@ function StudentExecutiveRiskCard({
                 className="text-[9px] font-black uppercase tracking-[0.1em]"
                 style={{ color: "#FFFFFF" }}
               >
-                Executive Student Intelligence
+                Student Executive Intelligence
               </p>
             </div>
 
@@ -447,17 +449,17 @@ function StudentExecutiveRiskCard({
               className="mt-4 max-w-4xl break-words text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl"
               style={{ color: "#FFFFFF" }}
             >
-              Student Risk & Opportunity Score
+              Executive Risk & Opportunity — Current Student
             </h3>
 
             <p
               className="mt-3 max-w-3xl break-words text-sm font-semibold leading-6 text-slate-100"
               style={{ color: "#F8FAFC" }}
             >
-              Local executive scoring based on CRM fields, application
-              movement, visa status, priority, and available risk/opportunity
-              signals. GPT-derived fields can contribute only when they already
-              exist on the student record.
+              Single-student executive scoring built from the live Student 360
+              case: application movement, document evidence, university planning,
+              task pressure, visa state and CRM priority. This view never mixes
+              other students into the opened case.
             </p>
           </div>
 
@@ -485,6 +487,10 @@ function StudentExecutiveRiskCard({
               Opportunity {executiveScore.opportunity_score}/100 ·{" "}
               {opportunityBand}
             </p>
+
+            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-white/90">
+              Scope: {studentName} only
+            </p>
           </div>
         </div>
 
@@ -510,7 +516,7 @@ function StudentExecutiveRiskCard({
             </Feedback>
           ) : null}
 
-          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+          <div className="grid min-w-0 auto-rows-fr gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
             <ScoreCard
               label="Risk Score"
               value={executiveScore.risk_score}
@@ -672,6 +678,8 @@ function StudentExecutiveRiskCard({
 
       <ExecutiveRecommendationPanel
         score={executiveScore}
+        adminProfile={adminProfile}
+        onActionExecuted={() => notifyParent()}
       />
     </section>
   );
@@ -684,65 +692,95 @@ function ScoreCard({
   tone = "orange",
   icon: Icon,
 }) {
-  const dark = tone === "navy";
-
-  const style = getToneStyle(tone);
+  const visual = getExecutiveScoreCardVisual(tone);
 
   return (
     <div
-      className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
+      className={`h-full min-w-0 rounded-[1rem] border-2 px-3 py-2.5 shadow-[0_4px_12px_rgba(18,56,101,0.045)] ${visual.card}`}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center justify-between gap-2.5">
         <div className="min-w-0">
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{
-              color: dark
-                ? "#FDBA74"
-                : "#64748B",
-            }}
-          >
+          <p className="whitespace-nowrap text-[8px] font-black uppercase leading-3 tracking-[0.12em] text-[#61738D]">
             {label}
           </p>
 
-          <p
-            className="mt-2 break-words text-3xl font-black"
-            style={{
-              color: dark
-                ? "#FFFFFF"
-                : "#10233F",
-            }}
-          >
+          <p className={`mt-1 truncate text-[1.65rem] font-black leading-none tracking-[-0.03em] ${visual.value}`}>
             {value}
           </p>
+
+          {badge ? (
+            <p className="mt-1 truncate text-[10px] font-semibold leading-4 text-[#596B82]">
+              {badge}
+            </p>
+          ) : null}
         </div>
 
-        {Icon ? (
-          <Icon
-            size={18}
-            style={{
-              color: dark
-                ? "#FDBA74"
-                : "#C2410C",
-            }}
-          />
-        ) : null}
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.7rem] border-2 bg-white shadow-[0_3px_8px_rgba(18,56,101,0.05)] ${visual.icon}`}
+          aria-hidden="true"
+        >
+          <Icon size={14} strokeWidth={2.25} />
+        </span>
       </div>
-
-      <span
-        className={`mt-3 inline-flex rounded-full border-2 px-3 py-1 text-[10px] font-black ${
-          dark
-            ? "border-white/25 bg-white/10 text-white"
-            : "border-white bg-white text-slate-700"
-        }`}
-      >
-        {badge}
-      </span>
     </div>
   );
+}
+
+function getExecutiveScoreCardVisual(tone = "orange") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("red") ||
+    value.includes("risk") ||
+    value.includes("critical")
+  ) {
+    return {
+      card: "border-rose-300 bg-[#FFF5F6]",
+      value: "text-[#C8103E]",
+      icon: "border-rose-200 text-rose-700",
+    };
+  }
+
+  if (
+    value.includes("green") ||
+    value.includes("good") ||
+    value.includes("healthy") ||
+    value.includes("success")
+  ) {
+    return {
+      card: "border-emerald-300 bg-[#F1FCF7]",
+      value: "text-[#0F7B5C]",
+      icon: "border-emerald-200 text-emerald-700",
+    };
+  }
+
+  if (
+    value.includes("warning") ||
+    value.includes("amber") ||
+    value.includes("orange")
+  ) {
+    return {
+      card: "border-orange-300 bg-[#FFF7ED]",
+      value: "text-[#C93208]",
+      icon: "border-orange-200 text-orange-700",
+    };
+  }
+
+  if (value.includes("blue")) {
+    return {
+      card: "border-blue-300 bg-[#F3F8FF]",
+      value: "text-[#0B5EAA]",
+      icon: "border-blue-200 text-blue-700",
+    };
+  }
+
+  // Navy is semantic here, NOT a physical navy card.
+  // Keeping the physical surface light prevents the invisible Priority card bug.
+  return {
+    card: "border-[#B9CCE0] bg-[#F3F7FC]",
+    value: "text-[#123865]",
+    icon: "border-[#C7D7E8] text-[#123865]",
+  };
 }
 
 function ReasonList({
@@ -881,6 +919,47 @@ function getBandStyle(tone = "") {
   }
 
   return "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("healthy") ||
+    value.includes("success") ||
+    value.includes("ready") ||
+    value.includes("complete")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("danger") ||
+    value.includes("failed") ||
+    value.includes("blocked") ||
+    value.includes("overdue")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("watch")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple") || value.includes("pink")) return "violet";
+  if (value.includes("orange") || value.includes("gold") || value.includes("action")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("neutral") || value.includes("default") || value.includes("cream")) return "slate";
+
+  return "navy";
 }
 
 export default StudentExecutiveRiskCard;

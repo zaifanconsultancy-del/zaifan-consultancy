@@ -12,6 +12,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -105,85 +106,8 @@ function typeTone(type = "") {
   return "border-[#C9D7E6] bg-[#FFF8EF] text-slate-600";
 }
 
-function LedgerMetric({
-  label,
-  value,
-  helper,
-  tone = "orange",
-  icon: Icon,
-  badge = "",
-}) {
-  const tones = {
-    navy: "border-[#123865] bg-[#123865]",
-    orange: "border-[#C9D7E6] bg-[#FFFDF8]",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-    amber: "border-[#F59E0B] bg-[#FFF8E8]",
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-    blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    violet: "border-[#60A5FA] bg-[#F2F7FF]",
-  };
-
-  const dark = tone === "navy";
-
-  return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
-        tones[tone] || tones.orange
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
-
-        {Icon ? (
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
-              dark
-                ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-[#123865]/15 bg-white text-[#123865]"
-            }`}
-          >
-            <Icon size={16} />
-          </div>
-        ) : null}
-      </div>
-
-      <p
-        className={`mt-2 text-xs font-semibold leading-5 ${
-          dark ? "text-slate-200" : "text-slate-600"
-        }`}
-      >
-        {helper}
-      </p>
-
-      {badge ? (
-        <span
-          className={`mt-3 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-            dark
-              ? "border-white/20 bg-white/10 text-white"
-              : "border-[#C9D7E6] bg-white text-slate-600"
-          }`}
-        >
-          {badge}
-        </span>
-      ) : null}
-    </div>
-  );
+function LedgerMetric({ label, value, helper, tone = "orange", icon: Icon, badge = "" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={[helper, badge].filter(Boolean).join(" · ")} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CommissionRow({ row, currency }) {
@@ -272,6 +196,51 @@ function EmptyCommissionState({ filtered }) {
       </p>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function CommissionAccountingPanel({ finance = {} }) {

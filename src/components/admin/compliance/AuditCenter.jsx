@@ -11,6 +11,7 @@
 // - unified Zaifan Compliance OS visual language
 
 import React, { useMemo, useState } from "react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 import {
   Activity,
   AlertTriangle,
@@ -109,6 +110,66 @@ function statusTone(value = "") {
   }
 
   return "border-[#C9D7E6] bg-[#F7FAFC] text-slate-700";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good") ||
+    value.includes("complete")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("overdue") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple") || value.includes("pink")) return "violet";
+  if (value.includes("orange") || value.includes("gold") || value.includes("action")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default") ||
+    value.includes("cream")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default function AuditCenter({ compliance = {} }) {
@@ -402,16 +463,7 @@ function HeaderChip({ icon: Icon, label }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {Number(value || 0).toLocaleString("en-GB")}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={Number(value || 0).toLocaleString("en-GB")} tone="navy" />;
 }
 
 function SectionHeader({
@@ -447,26 +499,14 @@ function SectionHeader({
 
 function EvidenceMetric({ icon: Icon, label, value, detail, tone }) {
   return (
-    <article className={`rounded-[1.3rem] border-[3px] p-4 ${toneClass(tone)}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-2 text-2xl font-black text-[#10233F]">
-            {Number(value || 0).toLocaleString("en-GB")}
-          </p>
-        </div>
-
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70 text-[#123865]">
-          <Icon size={17} />
-        </span>
-      </div>
-
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {detail}
-      </p>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={Number(value || 0).toLocaleString("en-GB")}
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 

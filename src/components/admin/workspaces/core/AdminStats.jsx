@@ -53,6 +53,7 @@ import {
   WalletCards,
   XCircle,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const NAVY = "#123865";
 
@@ -1113,60 +1114,42 @@ function PerformanceCard({
   reduceMotion,
 }) {
   const Icon = stat.icon;
-  const tone = getTone(stat.tone);
   const progress = clamp(stat.progress);
 
+  const footer = (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between text-[9px] font-black text-[#65758B]">
+        <span>{stat.progressLabel}</span>
+        <span>{progress}%</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full border border-[#D6E0EB] bg-white">
+        <motion.div
+          initial={reduceMotion ? false : { width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: reduceMotion ? 0 : 0.55, delay: reduceMotion ? 0 : 0.05 }}
+          className={`h-full rounded-full ${getTone(stat.tone).bar}`}
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <motion.article
+    <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.24,
-        delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.1),
-      }}
-      className="min-w-0 rounded-[1.4rem] border-2 border-[#C9D7E6] bg-white p-4 text-[#10233F] shadow-[0_8px_20px_rgba(15,35,63,0.05)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] hover:shadow-[0_12px_26px_rgba(15,35,63,0.09)]"
+      transition={{ duration: reduceMotion ? 0 : 0.22, delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.1) }}
+      className="min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
-            {stat.label}
-          </p>
-
-          <p className="mt-2 text-4xl font-black leading-none text-[#10233F]">
-            <AnimatedNumber value={stat.value} />
-          </p>
-        </div>
-
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${tone.icon}`}
-        >
-          <Icon size={18} />
-        </div>
-      </div>
-
-      <p className="mt-3 min-h-[40px] text-xs font-semibold leading-5 text-slate-600">
-        {stat.detail}
-      </p>
-
-      <div className="mt-4">
-        <div className="mb-1.5 flex items-center justify-between text-[9px] font-black text-slate-500">
-          <span>{stat.progressLabel}</span>
-          <span>{progress}%</span>
-        </div>
-
-        <div className="h-2 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-          <motion.div
-            initial={reduceMotion ? false : { width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{
-              duration: reduceMotion ? 0 : 0.6,
-              delay: reduceMotion ? 0 : 0.06,
-            }}
-            className={`h-full rounded-full ${tone.bar}`}
-          />
-        </div>
-      </div>
-    </motion.article>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={stat.label}
+        value={<AnimatedNumber value={stat.value} />}
+        detail={stat.detail}
+        icon={Icon}
+        tone={toZaifanMetricTone(stat.tone)}
+        footer={footer}
+      />
+    </motion.div>
   );
 }
 
@@ -1176,39 +1159,23 @@ function OperationalCard({
   reduceMotion,
 }) {
   const Icon = stat.icon;
-  const tone = getTone(stat.tone);
 
   return (
-    <motion.article
+    <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.22,
-        delay: reduceMotion ? 0 : Math.min(index * 0.02, 0.08),
-      }}
-      className={`min-w-0 rounded-[1.35rem] border-2 border-[#C9D7E6] bg-white p-4 text-[#10233F] shadow-[0_7px_18px_rgba(15,35,63,0.045)] transition hover:-translate-y-0.5 hover:border-[#FF5A0A] ${tone.card}`}
+      transition={{ duration: reduceMotion ? 0 : 0.2, delay: reduceMotion ? 0 : Math.min(index * 0.02, 0.08) }}
+      className="min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
-            {stat.label}
-          </p>
-          <p className="mt-1.5 text-3xl font-black text-[#10233F]">
-            <AnimatedNumber value={stat.value} />
-          </p>
-        </div>
-
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 ${tone.icon}`}
-        >
-          <Icon size={16} />
-        </div>
-      </div>
-
-      <p className="mt-3 text-xs font-semibold leading-5 text-slate-600">
-        {stat.detail}
-      </p>
-    </motion.article>
+      <ZaifanMetricCard
+        level="coBoss"
+        label={stat.label}
+        value={<AnimatedNumber value={stat.value} />}
+        detail={stat.detail}
+        icon={Icon}
+        tone={toZaifanMetricTone(stat.tone)}
+      />
+    </motion.div>
   );
 }
 
@@ -1218,25 +1185,7 @@ function CompactHealth({
   detail,
   tone = "blue",
 }) {
-  const toneConfig = getTone(tone);
-
-  return (
-    <div className="min-w-0 rounded-[1.2rem] border-2 border-[#C9D7E6] bg-white p-4 text-[#10233F] shadow-[0_7px_18px_rgba(15,35,63,0.045)]">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
-          {label}
-        </p>
-        <span
-          className={`h-2.5 w-2.5 rounded-full ${toneConfig.dot}`}
-        />
-      </div>
-
-      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-      <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} detail={detail} tone={toZaifanMetricTone(tone)} />;
 }
 
 function AttentionCenter({
@@ -1364,41 +1313,11 @@ function HealthStrip({
   value,
   tone,
 }) {
-  const toneConfig = getTone(tone);
-
-  return (
-    <div className="rounded-[1.25rem] border-2 border-white/25 bg-white/[0.12] p-3 text-white shadow-inner">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-          {label}
-        </p>
-        <span className={`h-2 w-2 rounded-full ${toneConfig.dot}`} />
-      </div>
-      <p className="mt-1 text-xl font-black text-white">
-        {clamp(value)}%
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={`${clamp(value)}%`} tone={toZaifanMetricTone(tone)} />;
 }
 
-function OrangeHeroMetric({
-  label,
-  value,
-  Icon,
-}) {
-  return (
-    <div className="rounded-[1.25rem] border-2 border-white/30 bg-white/[0.12] p-3 text-white shadow-inner">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-          {label}
-        </p>
-        <Icon size={14} />
-      </div>
-      <p className="mt-1 text-2xl font-black text-white">
-        <AnimatedNumber value={value} />
-      </p>
-    </div>
-  );
+function OrangeHeroMetric({ label, value, Icon }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} icon={Icon} tone="orange" />;
 }
 
 function getTone(tone = "slate") {
@@ -1474,6 +1393,51 @@ function getLightTone(tone = "slate") {
   };
 
   return tones[tone] || tones.slate;
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default AdminStats;

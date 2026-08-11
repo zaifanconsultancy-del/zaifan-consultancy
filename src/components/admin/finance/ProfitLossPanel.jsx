@@ -12,6 +12,7 @@ import {
   TrendingUp,
   WalletCards,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -132,34 +133,53 @@ function PnLRow({
   );
 }
 
-function EvidenceCard({
-  label,
-  value,
-  helper,
-  tone = "blue",
-  icon: Icon = Database,
-}) {
-  return (
-    <div className={`rounded-[1.35rem] border-[3px] p-4 ${toneClass(tone)}`}>
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-white text-[#123865]">
-          <Icon size={16} />
-        </div>
+function EvidenceCard({ label, value, helper, tone = "blue", icon: Icon = Database }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} />;
+}
 
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.11em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-1 break-words text-lg font-black text-[#10233F]">
-            {value}
-          </p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-            {helper}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function ProfitLossPanel({

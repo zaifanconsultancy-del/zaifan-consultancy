@@ -9,6 +9,7 @@ import {
   UserRoundCheck,
   UsersRound,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -61,52 +62,54 @@ function stateBadge(state = "unknown") {
   };
 }
 
-function ModuleCard({
-  label,
-  value,
-  helper,
-  state,
-  icon: Icon,
-  compact = false,
-}) {
+function ModuleCard({ label, value, helper, state, icon: Icon, compact = false }) {
   const badge = stateBadge(state);
+  return <ZaifanMetricCard level={compact ? "baby" : "coBoss"} label={label} value={value} detail={[helper, badge.label].filter(Boolean).join(" · ")} icon={Icon} tone={toZaifanMetricTone(state)} />;
+}
 
-  return (
-    <article
-      className={`rounded-[1.3rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(15,35,63,0.05)] transition hover:-translate-y-0.5 ${cardTone(
-        state
-      )}`}
-    >
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#123865]/15 bg-white text-[#123865]">
-          {Icon ? <Icon size={16} /> : null}
-        </div>
 
-        <div className="min-w-0 flex-1">
-          <p className="font-black text-[#10233F]">{label}</p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-            {helper}
-          </p>
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p
-              className={`font-black text-[#10233F] ${
-                compact ? "text-base" : "text-lg"
-              }`}
-            >
-              {value}
-            </p>
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
 
-            <span
-              className={`inline-flex rounded-full border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.07em] ${badge.className}`}
-            >
-              {badge.label}
-            </span>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function CounselorAppControlPanel({

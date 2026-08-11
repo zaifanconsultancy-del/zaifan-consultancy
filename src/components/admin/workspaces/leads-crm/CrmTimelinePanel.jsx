@@ -51,6 +51,7 @@ import {
   UserRoundCog,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   motion,
   useReducedMotion,
@@ -1190,7 +1191,7 @@ function CrmTimelinePanel({
         </div>
       </section>
 
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MiniStat
           label="Total"
           value={stats.total}
@@ -2025,54 +2026,8 @@ function ChangeBox({
   );
 }
 
-function MiniStat({
-  label,
-  value,
-  tone,
-}) {
-  const styles = {
-    navy:
-      "border-[#123865] bg-[#123865] text-white",
-    blue:
-      "border-blue-300 bg-blue-50 text-blue-800",
-    orange:
-      "border-orange-400 bg-orange-500 text-white",
-    green:
-      "border-emerald-300 bg-emerald-50 text-emerald-800",
-    violet:
-      "border-violet-300 bg-violet-50 text-violet-800",
-  };
-
-  return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-4 ${
-        styles[tone] ||
-        styles.navy
-      }`}
-    >
-      <p
-        className={`text-[8px] font-black uppercase tracking-[0.12em] ${
-          tone === "navy" ||
-          tone === "orange"
-            ? "text-white"
-            : ""
-        }`}
-      >
-        {label}
-      </p>
-
-      <p
-        className={`mt-2 text-2xl font-black ${
-          tone === "navy" ||
-          tone === "orange"
-            ? "text-white"
-            : ""
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  );
+function MiniStat({ label, value, tone }) {
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CompactBadge({
@@ -2092,21 +2047,8 @@ function CompactBadge({
   );
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function Feedback({
@@ -2274,6 +2216,63 @@ function SelectControl({
       />
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default CrmTimelinePanel;

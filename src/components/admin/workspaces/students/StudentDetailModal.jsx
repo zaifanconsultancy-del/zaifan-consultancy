@@ -1,4 +1,6 @@
-﻿// StudentDetailModal PARTNER OS EXTREME V4 — Compact Command Strip
+﻿// StudentDetailModal AI CASE BRAIN BRIDGE V5
+// - passes the already-loaded Student 360 operating data into every student AI surface
+// StudentDetailModal PARTNER OS EXTREME V4 — Compact Command Strip
 // Responsibilities intentionally retained here:
 // - source-record identity and modal lifecycle
 // - Student 360 derived context / readiness
@@ -199,8 +201,15 @@ function StudentDetailModal({
     osError,
     osSourceHealth,
     studentDocuments,
+    studentDocumentRequirements,
     studentApplication,
+    studentApplications,
+    studentApplicationRequirements,
+    studentApplicationEvents,
+    studentApplicationTimeline,
     studentUniversities,
+    studentUniversityRequirements,
+    studentUniversityEvents,
     studentTasks,
     studentCommunications,
     studentInvoices,
@@ -208,6 +217,12 @@ function StudentDetailModal({
     studentReceipts,
     studentPaymentRequests,
     studentSupportRequests,
+    studentSupportMessages,
+    studentVisaCases,
+    studentVisaRequirements,
+    studentVisaEvents,
+    studentFollowUps,
+    studentCrmTimeline,
     setStudentSupportRequests,
     loadStudentOsData,
   } = useStudentOsData({
@@ -249,14 +264,6 @@ function StudentDetailModal({
     await loadStudentOsData();
     setPanelMountKey((prev) => prev + 1);
   };
-
-
-  const executiveStudents =
-    allLeads.length > 0
-      ? allLeads
-      : workingStudent
-      ? [{ ...workingStudent, __leadType: type }]
-      : [];
 
   const isAppointment = studentType === "appointment";
   const isInquiry = studentType === "inquiry";
@@ -319,6 +326,9 @@ function StudentDetailModal({
     toggleInquiryStatus,
   });
 
+  // Sync only when the actual parent student record changes.
+  // Saving-state transitions must not re-apply the stale modal-opening snapshot,
+  // otherwise successful priority/status/stage mutations visibly snap back.
   useEffect(() => {
     if (!student) return;
 
@@ -333,19 +343,12 @@ function StudentDetailModal({
     const incomingIdentity = `${String(student?.id || "")}:${incomingType}`;
 
     if (incomingIdentity !== studentIdentityRef.current) return;
-    if (savingStage || savingPriority || savingStatus) return;
 
     setLocalStudent((prev) => ({
       ...(prev || {}),
       ...student,
     }));
-  }, [
-    student,
-    type,
-    savingStage,
-    savingPriority,
-    savingStatus,
-  ]);
+  }, [student, type]);
 
   if (!workingStudent) return null;
 
@@ -667,7 +670,7 @@ function StudentDetailModal({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={shouldReduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.99 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
-          className={`zaifan-student-os-v24 flex h-[97dvh] max-h-[97dvh] w-full max-w-[1680px] min-w-0 flex-col overflow-hidden overscroll-contain touch-pan-y rounded-[1.45rem] border-[4px] border-[#123865] bg-[#FFF8EF] text-[#10233F] shadow-[0_40px_150px_rgba(15,23,42,0.48)] sm:rounded-[1.9rem] ${cardClass}`}
+          className={`zaifan-student-detail-scope zaifan-student-os-v24 flex h-[97dvh] max-h-[97dvh] w-full max-w-[1680px] min-w-0 flex-col overflow-hidden overscroll-contain touch-pan-y rounded-[1.45rem] border-[4px] border-[#123865] bg-[#FFF8EF] text-[#10233F] shadow-[0_40px_150px_rgba(15,23,42,0.48)] sm:rounded-[1.9rem] ${cardClass}`}
         >
           <div className="relative shrink-0 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-3 py-2.5 text-white sm:px-4">
             <div className="absolute inset-x-8 top-0 h-[3px] rounded-b-full bg-[#FF5A0A]" />
@@ -820,17 +823,15 @@ function StudentDetailModal({
             ) : null}
           </div>
 
-          <div className="shrink-0 border-b-2 border-[#123865] bg-[#FFF8EF] px-3 py-1.5 sm:px-4">
-            <div className="overflow-hidden rounded-xl border-2 border-[#C9D7E6] bg-white shadow-[0_4px_12px_rgba(18,56,101,0.04)]">
-              <div className="grid min-w-0 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
-                <Student360Metric label="Profile readiness" value={`${profileReadiness}%`} icon={BadgeCheck} tone="orange" />
-                <Student360Metric label="Pipeline" value={`${pipelineProgress || 0}%`} icon={Target} tone="blue" />
-                <Student360Metric label="Documents" value={`${verifiedDocuments}/${studentDocuments.length}`} icon={FolderOpen} tone="emerald" />
-                <Student360Metric label="Tasks done" value={`${completedTasks}/${studentTasks.length}`} icon={ClipboardCheck} tone="blue" />
-                <Student360Metric label="Universities" value={studentUniversities.length} icon={Building2} tone="blue" />
-                <Student360Metric label="Open support" value={openSupportRequests} icon={LifeBuoy} tone="red" />
-                <Student360Metric label="Portal" value={portalAccount?.is_active ? "Active" : portalAccount ? "Paused" : "Not set"} icon={LockKeyhole} tone={portalAccount?.is_active ? "emerald" : "slate"} />
-              </div>
+          <div className="shrink-0 border-b-2 border-[#123865] bg-[#FFF8EF] px-2.5 py-1 sm:px-3">
+            <div className="zaifan-student-summary-rail grid min-w-0 grid-cols-2 gap-1.5 md:grid-cols-4 xl:grid-cols-7">
+              <Student360Metric label="Profile readiness" value={`${profileReadiness}%`} icon={BadgeCheck} tone="orange" />
+              <Student360Metric label="Pipeline" value={`${pipelineProgress || 0}%`} icon={Target} tone="blue" />
+              <Student360Metric label="Documents" value={`${verifiedDocuments}/${studentDocuments.length}`} icon={FolderOpen} tone="emerald" />
+              <Student360Metric label="Tasks done" value={`${completedTasks}/${studentTasks.length}`} icon={ClipboardCheck} tone="blue" />
+              <Student360Metric label="Universities" value={studentUniversities.length} icon={Building2} tone="blue" />
+              <Student360Metric label="Open support" value={openSupportRequests} icon={LifeBuoy} tone="red" />
+              <Student360Metric label="Portal" value={portalAccount?.is_active ? "Active" : portalAccount ? "Paused" : "Not set"} icon={LockKeyhole} tone={portalAccount?.is_active ? "emerald" : "slate"} />
             </div>
           </div>
 
@@ -910,11 +911,32 @@ function StudentDetailModal({
                 allLeads={allLeads}
                 setActivePanel={setActivePanel}
                 studentApplication={studentApplication}
+                studentApplications={studentApplications}
                 studentDocuments={studentDocuments}
+                studentDocumentRequirements={studentDocumentRequirements}
                 studentUniversities={studentUniversities}
+                studentUniversityRequirements={studentUniversityRequirements}
+                studentUniversityEvents={studentUniversityEvents}
+                studentApplicationRequirements={studentApplicationRequirements}
+                studentApplicationEvents={studentApplicationEvents}
+                studentApplicationTimeline={studentApplicationTimeline}
                 studentTasks={studentTasks}
                 studentCommunications={studentCommunications}
-                executiveStudents={executiveStudents}
+                studentInvoices={studentInvoices}
+                studentPayments={studentPayments}
+                studentReceipts={studentReceipts}
+                studentPaymentRequests={studentPaymentRequests}
+                studentSupportRequests={studentSupportRequests}
+                studentSupportMessages={studentSupportMessages}
+                studentVisaCases={studentVisaCases}
+                studentVisaRequirements={studentVisaRequirements}
+                studentVisaEvents={studentVisaEvents}
+                studentFollowUps={studentFollowUps}
+                studentCrmTimeline={studentCrmTimeline}
+                portalAccount={portalAccount}
+                personId={personId}
+                osSourceHealth={osSourceHealth}
+                onSharedDataChange={loadStudentOsData}
               />
 
               {activePanel === "portal-account" ? (
@@ -995,6 +1017,113 @@ function StudentDetailModal({
             .zaifan-panel-surface {
               min-height: 100%;
               width: 100%;
+            }
+
+            /*
+             * STUDENT DETAIL VISUAL RECOVERY
+             * Compact shared Admin metric cards only while they are rendered
+             * inside the Student 360 workspace.
+             */
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"] {
+              min-height: 108px !important;
+              border-width: 2px !important;
+              border-radius: 1.05rem !important;
+              padding: 0.9rem !important;
+              box-shadow: 0 5px 14px rgba(18, 56, 101, 0.05) !important;
+              transform: none !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"]:hover {
+              transform: none !important;
+              box-shadow: 0 6px 16px rgba(18, 56, 101, 0.07) !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"] > div:first-child {
+              gap: 0.75rem !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"] > div:first-child > div:first-child {
+              padding-right: 0 !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"] > div:first-child > div:first-child > p:first-child {
+              font-size: 8px !important;
+              line-height: 0.8rem !important;
+              letter-spacing: 0.12em !important;
+              overflow-wrap: normal !important;
+              word-break: normal !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"] > div:first-child > div:first-child > p:nth-child(2) {
+              margin-top: 0.4rem !important;
+              font-size: 1.65rem !important;
+              line-height: 1 !important;
+              letter-spacing: -0.02em !important;
+              overflow-wrap: normal !important;
+              word-break: normal !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"] > div:first-child > div:first-child > p:nth-child(3) {
+              margin-top: 0.45rem !important;
+              font-size: 10px !important;
+              line-height: 1rem !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="min-h-[150px]"] div[class*="h-12"][class*="w-12"] {
+              width: 2.5rem !important;
+              height: 2.5rem !important;
+              border-radius: 0.75rem !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="p-3.5"][class*="border-2"] {
+              border-radius: 0.9rem !important;
+              padding: 0.65rem 0.75rem !important;
+              box-shadow: 0 3px 10px rgba(18, 56, 101, 0.04) !important;
+              transform: none !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="p-3.5"][class*="border-2"] > div:first-child {
+              gap: 0.6rem !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="p-3.5"][class*="border-2"] > div:first-child > div:first-child > p:first-child {
+              font-size: 7px !important;
+              line-height: 0.7rem !important;
+              letter-spacing: 0.1em !important;
+              overflow-wrap: normal !important;
+              word-break: normal !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="p-3.5"][class*="border-2"] > div:first-child > div:first-child > p:nth-child(2) {
+              margin-top: 0.3rem !important;
+              font-size: 1.25rem !important;
+              line-height: 1 !important;
+              overflow-wrap: normal !important;
+              word-break: normal !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="p-3.5"][class*="border-2"] div[class*="h-9"][class*="w-9"] {
+              width: 2rem !important;
+              height: 2rem !important;
+              border-radius: 0.65rem !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article[class*="p-3.5"][class*="border-2"] p[class*="mt-2"] {
+              margin-top: 0.4rem !important;
+              font-size: 9px !important;
+              line-height: 0.9rem !important;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article {
+              max-width: 100%;
+            }
+
+            .zaifan-student-detail-scope .zaifan-student-main article p {
+              hyphens: none;
+            }
+
+            .zaifan-student-summary-rail > * {
+              min-height: 54px;
             }
 
             .zaifan-ai-panel-surface {
@@ -1126,48 +1255,114 @@ function normalize(value = "") {
     .replace(/\s+/g, "_");
 }
 
-function Student360Metric({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    orange: "text-orange-700",
-    blue: "text-blue-700",
-    emerald: "text-emerald-700",
-    red: "text-red-700",
-    slate: "text-slate-700",
-  };
+function Student360Metric({
+  label,
+  value,
+  icon: Icon,
+  tone = "slate",
+}) {
+  const visual = getStudent360MetricVisual(tone);
 
   return (
     <div
-      className={`flex min-w-0 items-center gap-2 border-b border-r border-[#E1E8F0] px-2.5 py-2 transition hover:bg-[#FFF8EF] md:[&:nth-child(4n)]:border-r-0 xl:border-b-0 xl:[&:nth-child(4n)]:border-r xl:[&:last-child]:border-r-0 ${tones[tone] || tones.slate}`}
+      className={`min-w-0 rounded-[0.85rem] border-2 px-2.5 py-1.5 shadow-[0_3px_9px_rgba(18,56,101,0.04)] ${visual.card}`}
     >
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-current/20 bg-[#FFF8EF]">
-        <Icon size={11} />
-      </div>
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="whitespace-nowrap text-[7px] font-black uppercase leading-2.5 tracking-[0.11em] text-[#61738D]">
+            {label}
+          </p>
 
-      <div className="min-w-0">
-        <p className="truncate text-[6px] font-black uppercase leading-3 tracking-[0.08em] text-slate-500">
-          {label}
-        </p>
-        <p className="truncate text-[10px] font-black leading-3 text-[#10233F]">
-          {value}
-        </p>
+          <p className={`mt-0.5 whitespace-nowrap text-[1.22rem] font-black leading-none tracking-[-0.025em] ${visual.value}`}>
+            {value}
+          </p>
+        </div>
+
+        <span
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.6rem] border-2 bg-white shadow-[0_2px_6px_rgba(18,56,101,0.045)] ${visual.icon}`}
+          aria-hidden="true"
+        >
+          <Icon size={12} strokeWidth={2.25} />
+        </span>
       </div>
     </div>
   );
+}
+
+function getStudent360MetricVisual(tone = "slate") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (value.includes("orange") || value.includes("amber")) {
+    return {
+      card: "border-orange-300 bg-[#FFF7ED]",
+      value: "text-[#C93208]",
+      icon: "border-orange-200 text-orange-700",
+    };
+  }
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("active")
+  ) {
+    return {
+      card: "border-emerald-300 bg-[#F1FCF7]",
+      value: "text-[#0F7B5C]",
+      icon: "border-emerald-200 text-emerald-700",
+    };
+  }
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("risk")
+  ) {
+    return {
+      card: "border-rose-300 bg-[#FFF5F6]",
+      value: "text-[#C8103E]",
+      icon: "border-rose-200 text-rose-700",
+    };
+  }
+
+  if (value.includes("blue") || value.includes("navy")) {
+    return {
+      card: "border-blue-300 bg-[#F3F8FF]",
+      value: "text-[#0B5EAA]",
+      icon: "border-blue-200 text-blue-700",
+    };
+  }
+
+  return {
+    card: "border-slate-300 bg-[#F8FAFC]",
+    value: "text-[#334155]",
+    icon: "border-slate-200 text-slate-600",
+  };
 }
 
 function StudentPanelLoader() {
   return (
-    <div className="flex min-h-[420px] items-center justify-center rounded-[1.6rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-inner">
-      <div className="text-center">
-        <LoaderCircle className="mx-auto h-10 w-10 animate-spin text-[#FF5A0A]" />
-        <p className="mt-4 text-sm font-black text-slate-900">Opening student module</p>
-        <p className="mt-1 text-xs font-semibold text-slate-500">
-          Loading only this part of the student operating system.
-        </p>
+    <div className="flex min-h-[170px] items-center justify-center rounded-[1.15rem] border-2 border-[#C9D7E6] bg-[#FFFDF8] px-5 py-8 shadow-[0_5px_16px_rgba(18,56,101,0.045)]">
+      <div className="flex max-w-xl items-center gap-3 text-left">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-orange-200 bg-orange-50 text-[#C2410C]">
+          <LoaderCircle className="h-5 w-5 animate-spin" />
+        </span>
+
+        <div className="min-w-0">
+          <p className="text-sm font-black text-[#10233F]">
+            Opening student module
+          </p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-[#60728A]">
+            Loading only this workspace. The Student 360 case remains open.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+
+
+
 
 
 export default StudentDetailModal;

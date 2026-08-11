@@ -21,8 +21,11 @@
 // - deterministic shortlist health / portfolio pressure intelligence
 // - affordability, deadline, ownership and requirement pressure surfaced
 // - no fake AI; scoring remains transparent deterministic rules
+// - application reconciliation detects Application OS records missing a university shortlist row
+// - one-click create/link repair preserves exact application identity and prevents duplicates
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   Archive,
@@ -30,6 +33,7 @@ import {
   CalendarClock,
   Check,
   ChevronDown,
+  ChevronRight,
   CircleAlert,
   Clock3,
   Columns3,
@@ -55,6 +59,15 @@ import {
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
 import ProgramTracker from "./ProgramTracker";
+import {
+  UNIVERSITY_REQUIREMENT_CATEGORIES,
+  UNIVERSITY_REQUIREMENT_LIBRARY,
+  getRecommendedUniversityRequirements,
+  getUniversityRequirementCategory,
+  getUniversityRequirementLibraryStats,
+  getUniversityRequirementMeta,
+  groupUniversityRequirements,
+} from "../../../../data/universityRequirementLibrary";
 
 const REQUEST_TIMEOUT_MS = 20000;
 
@@ -203,11 +216,172 @@ const deadlineMeta = (value) => {
   return { label: formatDate(value), tone: "slate", days };
 };
 
+const applicationUniversityName = (application = {}) =>
+  String(
+    application.university ||
+      application.university_name ||
+      application.source_university_name ||
+      application.institution_name ||
+      ""
+  ).trim();
+
+const applicationProgramName = (application = {}) =>
+  String(
+    application.program ||
+      application.course_name ||
+      application.course ||
+      application.program_name ||
+      ""
+  ).trim();
+
+const applicationCountryName = (application = {}) =>
+  String(
+    application.country ||
+      application.destination_country ||
+      application.country_interest ||
+      "Italy"
+  ).trim();
+
+const applicationIntakeName = (application = {}) =>
+  String(
+    application.intake ||
+      application.target_intake ||
+      application.preferred_intake ||
+      ""
+  ).trim();
+
+const applicationDegreeLevel = (application = {}) =>
+  String(
+    application.degree_level ||
+      application.study_level ||
+      application.qualification_level ||
+      ""
+  ).trim();
+
+const universityStatusFromApplication = (application = {}) => {
+  const status = normalize(
+    application.application_status || application.status || "not started"
+  );
+  const offer = normalize(application.offer_status || "pending");
+
+  if (status === "enrolled" || status.includes("enrollment complete")) {
+    return "enrolled";
+  }
+
+  if (
+    status.includes("offer accepted") ||
+    status === "accepted" ||
+    offer.includes("offer accepted") ||
+    offer === "accepted"
+  ) {
+    return "accepted";
+  }
+
+  if (
+    status.includes("offer received") ||
+    status.includes("admitted") ||
+    status.includes("conditional admission") ||
+    offer.includes("offer received") ||
+    offer.includes("admitted") ||
+    offer.includes("conditional")
+  ) {
+    return "offer_received";
+  }
+
+  if (
+    status.includes("submitted") ||
+    status.includes("applied") ||
+    status.includes("under review") ||
+    status.includes("interview") ||
+    status.includes("admission test")
+  ) {
+    return "applied";
+  }
+
+  if (
+    status.includes("ready to submit") ||
+    status.includes("documents received") ||
+    status.includes("preparing") ||
+    status.includes("pre enrollment")
+  ) {
+    return "application_ready";
+  }
+
+  if (status.includes("reject") || offer.includes("reject")) {
+    return "rejected";
+  }
+
+  return "shortlisted";
+};
+
+const universityNextActionFromApplication = (application = {}) => {
+  const status = universityStatusFromApplication(application);
+
+  if (status === "enrolled") {
+    return "Confirm enrollment evidence, arrival planning and final student registration.";
+  }
+
+  if (status === "accepted") {
+    return "Confirm Universitaly pre-enrolment, deposit obligations and visa preparation.";
+  }
+
+  if (status === "offer_received") {
+    return "Review the admission decision, conditions, acceptance deadline and funding plan.";
+  }
+
+  if (status === "applied") {
+    return "Track university review, acknowledgement, interview and additional-document requests.";
+  }
+
+  if (status === "application_ready") {
+    return "Complete the final application checklist and confirm submission readiness.";
+  }
+
+  if (status === "rejected") {
+    return "Record the decision reason and move the student to the next suitable university option.";
+  }
+
+  return "Verify course fit, intake, costs, deadline and entry requirements before application movement.";
+};
+
+const universityMatchesApplication = (university = {}, application = {}) => {
+  const universityName = normalize(university.university);
+  const applicationName = normalize(applicationUniversityName(application));
+
+  if (!universityName || !applicationName || universityName !== applicationName) {
+    return false;
+  }
+
+  const universityProgram = normalize(university.program);
+  const applicationProgram = normalize(applicationProgramName(application));
+  const universityIntake = normalize(university.intake);
+  const applicationIntake = normalize(applicationIntakeName(application));
+
+  if (
+    universityProgram &&
+    applicationProgram &&
+    universityProgram !== applicationProgram
+  ) {
+    return false;
+  }
+
+  if (
+    universityIntake &&
+    applicationIntake &&
+    universityIntake !== applicationIntake
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
 function UniversityManagementPanel({
   student = {},
   sharedUniversities = null,
   sharedApplication = null,
   onSharedDataChange = null,
+  onOpenApplication = null,
 }) {
   const [universities, setUniversities] = useState(
     Array.isArray(sharedUniversities) ? sharedUniversities : []
@@ -236,6 +410,12 @@ function UniversityManagementPanel({
     due_date: "",
     notes: "",
   });
+  const [showRequirementLibrary, setShowRequirementLibrary] = useState(false);
+  const [requirementLibraryQuery, setRequirementLibraryQuery] = useState("");
+  const [requirementLibraryCategory, setRequirementLibraryCategory] = useState("all");
+  const [expandedRequirementGroups, setExpandedRequirementGroups] = useState(
+    () => new Set()
+  );
 
   const [loading, setLoading] = useState(false);
   const [supportLoading, setSupportLoading] = useState(false);
@@ -257,6 +437,18 @@ function UniversityManagementPanel({
     student?.student_type || student?.__leadType || student?.type || "inquiry"
   );
   const studentIdentity = `${String(student?.id || "")}:${studentType}`;
+
+  const sharedApplicationRows = useMemo(() => {
+    if (Array.isArray(sharedApplication)) {
+      return sharedApplication.filter(Boolean);
+    }
+
+    if (sharedApplication && typeof sharedApplication === "object") {
+      return sharedApplication.id ? [sharedApplication] : [];
+    }
+
+    return [];
+  }, [sharedApplication]);
 
   const preferredCountry =
     student?.country ||
@@ -466,6 +658,48 @@ function UniversityManagementPanel({
       });
 
       if (preferred?.id) void loadSupportData(preferred.id);
+
+      if (sharedApplicationRows.length) {
+        safeSet(() => setApplications(sharedApplicationRows));
+      }
+
+      if (Array.isArray(sharedApplication)) {
+        return;
+      }
+
+      safeSet(() => {
+        setLoading(true);
+        setError("");
+      });
+
+      try {
+        const { data: applicationRows, error: applicationsError } =
+          await supabase
+            .from("student_applications")
+            .select("*")
+            .eq("student_id", studentId)
+            .eq("student_type", studentType)
+            .order("created_at", { ascending: false });
+
+        if (applicationsError) throw applicationsError;
+
+        if (requestId !== coreRequestRef.current) return;
+
+        safeSet(() => {
+          setApplications(applicationRows || []);
+          setLastSyncedAt(new Date());
+        });
+      } catch (applicationLoadError) {
+        safeSet(() =>
+          setError(
+            applicationLoadError.message ||
+              "University options loaded, but Application OS records could not be checked."
+          )
+        );
+      } finally {
+        safeSet(() => setLoading(false));
+      }
+
       return;
     }
 
@@ -610,6 +844,10 @@ function UniversityManagementPanel({
   }, [studentIdentity]);
 
   useEffect(() => {
+    setExpandedRequirementGroups(new Set());
+  }, [activeId]);
+
+  useEffect(() => {
     if (!Array.isArray(sharedUniversities)) return;
 
     setUniversities(sharedUniversities);
@@ -640,6 +878,28 @@ function UniversityManagementPanel({
       setSavedSnapshot(nextForm);
     }
   }, [sharedUniversities]);
+
+  useEffect(() => {
+    if (Array.isArray(sharedApplication)) {
+      setApplications(sharedApplicationRows);
+      setLastSyncedAt(new Date());
+      return;
+    }
+
+    if (!sharedApplicationRows.length) return;
+
+    setApplications((previous) => {
+      const incomingIds = new Set(
+        sharedApplicationRows.map((item) => String(item.id))
+      );
+
+      return [
+        ...sharedApplicationRows,
+        ...previous.filter((item) => !incomingIds.has(String(item.id))),
+      ];
+    });
+    setLastSyncedAt(new Date());
+  }, [sharedApplication, sharedApplicationRows]);
 
   const requirementStats = useMemo(() => {
     let verified = 0;
@@ -673,6 +933,65 @@ function UniversityManagementPanel({
       readiness,
     };
   }, [requirements]);
+
+  const groupedRequirementSections = useMemo(
+    () => groupUniversityRequirements(requirements),
+    [requirements]
+  );
+
+  const toggleRequirementGroup = (groupId) => {
+    setExpandedRequirementGroups((previous) => {
+      const next = new Set(previous);
+
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+
+      return next;
+    });
+  };
+
+  const expandAllRequirementGroups = () => {
+    setExpandedRequirementGroups(
+      new Set(groupedRequirementSections.map((group) => group.id))
+    );
+  };
+
+  const collapseAllRequirementGroups = () => {
+    setExpandedRequirementGroups(new Set());
+  };
+
+  const requirementLibraryStats = useMemo(() => getUniversityRequirementLibraryStats(), []);
+
+  const recommendedRequirementTemplates = useMemo(
+    () =>
+      getRecommendedUniversityRequirements({
+        university: { ...(activeUniversity || {}), ...form },
+        student,
+        application: activeUniversity
+          ? exactLinkedApplication(activeUniversity)
+          : sharedApplicationRows[0] || null,
+      }),
+    [activeUniversity, form, sharedApplicationRows, student]
+  );
+
+  const existingRequirementNameSet = useMemo(
+    () => new Set(requirements.map((item) => normalize(item?.requirement_name)).filter(Boolean)),
+    [requirements]
+  );
+
+  const missingRecommendedRequirementTemplates = useMemo(
+    () => recommendedRequirementTemplates.filter((item) => !existingRequirementNameSet.has(normalize(item.name))),
+    [existingRequirementNameSet, recommendedRequirementTemplates]
+  );
+
+  const filteredRequirementLibrary = useMemo(() => {
+    const query = normalize(requirementLibraryQuery);
+    return UNIVERSITY_REQUIREMENT_LIBRARY.filter((item) => {
+      if (requirementLibraryCategory !== "all" && item.category !== requirementLibraryCategory) return false;
+      if (!query) return true;
+      return normalize([item.name,item.category,item.studentDescription,...(item.tags || []),...(item.programKeywords || [])].join(" ")).includes(query);
+    });
+  }, [requirementLibraryCategory, requirementLibraryQuery]);
 
   const calculatedIntelligence = useMemo(() => {
     const scoreParts = [];
@@ -923,40 +1242,105 @@ function UniversityManagementPanel({
     }
   };
 
+  const insertRequirementTemplates = async (university, templates = [], { successMessage = "University requirements added.", requirementType = "library" } = {}) => {
+    if (!university?.id || !Array.isArray(templates) || !templates.length) return [];
+    const existingNames = new Set(requirements.map((item) => normalize(item?.requirement_name)).filter(Boolean));
+    const rows = templates
+      .filter((template) => !existingNames.has(normalize(template.name)))
+      .map((template) => ({
+        student_university_id: university.id,
+        requirement_name: template.name,
+        requirement_category: template.category,
+        requirement_type: requirementType,
+        required: true,
+        status: "missing",
+        target_value: template.defaultTarget || null,
+        notes: template.studentDescription || null,
+      }));
+    if (!rows.length) {
+      safeSet(() => setSuccessMessage("All selected university requirements already exist."));
+      return [];
+    }
+    const { data, error: insertError } = await withTimeout(
+      supabase.from("student_university_requirements").insert(rows).select(),
+      "University requirement library insert timed out."
+    );
+    if (insertError) throw insertError;
+    const inserted = Array.isArray(data) ? data : [];
+    safeSet(() => {
+      setRequirements((previous) => [...previous, ...inserted]);
+      setSuccessMessage(`${successMessage} ${inserted.length} requirement${inserted.length === 1 ? "" : "s"} added.`);
+    });
+    void createUniversityEvent({
+      studentUniversityId: university.id,
+      eventType: "university_requirement_library_applied",
+      eventLabel: "Requirement library applied",
+      newValue: `${inserted.length} requirements`,
+      metadata: { template_names: inserted.map((item) => item.requirement_name) },
+    });
+    return inserted;
+  };
+
   const seedDefaultRequirements = async (university) => {
     if (!university?.id) return;
-
-    const defaults = [
-      ["Academic Transcript", "academic"],
-      ["Degree / Current Qualification", "academic"],
-      ["Language Requirement", "language"],
-      ["CV", "application"],
-      ["Statement of Purpose", "application"],
-    ];
-
-    const rows = defaults.map(([name, category]) => ({
-      student_university_id: university.id,
-      requirement_name: name,
-      requirement_category: category,
-      requirement_type: "default",
-      required: true,
-      status: "missing",
-    }));
-
-    const { data, error: seedError } = await withTimeout(
-      supabase
-        .from("student_university_requirements")
-        .insert(rows)
-        .select(),
-      "Default university requirements timed out."
-    );
-
-    if (seedError) {
+    const templates = getRecommendedUniversityRequirements({
+      university,
+      student,
+      application: exactLinkedApplication(university) || sharedApplicationRows[0] || null,
+    });
+    try {
+      await insertRequirementTemplates(university, templates, {
+        successMessage: "Recommended university requirement set created.",
+        requirementType: "recommended_library",
+      });
+    } catch (seedError) {
       console.warn("University requirement seed failed:", seedError);
+    }
+  };
+
+  const loadRecommendedRequirements = async () => {
+    if (!activeUniversity?.id || !missingRecommendedRequirementTemplates.length) {
+      if (activeUniversity?.id) setSuccessMessage("All recommended requirements are already loaded.");
       return;
     }
+    const operationKey = "load-recommended-requirements";
+    startSaving(operationKey); setError("");
+    try {
+      await insertRequirementTemplates(activeUniversity, missingRecommendedRequirementTemplates, {
+        successMessage: "Recommended requirement set expanded.",
+        requirementType: "recommended_library",
+      });
+    } catch (libraryError) {
+      safeSet(() => setError(libraryError.message || "Recommended requirement load failed."));
+    } finally { stopSaving(operationKey); }
+  };
 
-    safeSet(() => setRequirements(data || []));
+  const addLibraryRequirement = async (template) => {
+    if (!activeUniversity?.id || !template) return;
+    const operationKey = `library-requirement-${template.id}`;
+    startSaving(operationKey); setError("");
+    try {
+      await insertRequirementTemplates(activeUniversity, [template], {
+        successMessage: "Requirement added from master library.",
+        requirementType: "library",
+      });
+    } catch (libraryError) {
+      safeSet(() => setError(libraryError.message || "Requirement library add failed."));
+    } finally { stopSaving(operationKey); }
+  };
+
+  const addVisibleLibraryRequirements = async () => {
+    if (!activeUniversity?.id || !filteredRequirementLibrary.length) return;
+    const operationKey = "library-requirements-visible";
+    startSaving(operationKey); setError("");
+    try {
+      await insertRequirementTemplates(activeUniversity, filteredRequirementLibrary, {
+        successMessage: "Visible requirement library selection applied.",
+        requirementType: "library",
+      });
+    } catch (libraryError) {
+      safeSet(() => setError(libraryError.message || "Requirement library batch add failed."));
+    } finally { stopSaving(operationKey); }
   };
 
   const beginNewUniversity = () => {
@@ -1001,16 +1385,335 @@ function UniversityManagementPanel({
     setForm(nextForm);
     setSavedSnapshot(nextForm);
     setShowEditor(false);
-    setActiveTab("shortlist");
+    setActiveTab("details");
     void loadSupportData(university.id);
   };
 
-  const exactLinkedApplication = (university) =>
-    applications.find(
-      (application) =>
-        application.source_university_id &&
-        String(application.source_university_id) === String(university.id)
-    ) || null;
+  function exactLinkedApplication(university) {
+    return (
+      applications.find(
+        (application) =>
+          application.source_university_id &&
+          String(application.source_university_id) === String(university.id)
+      ) || null
+    );
+  }
+
+  const applicationReconciliationItems = useMemo(() => {
+    return applications
+      .filter((application) => {
+        if (!application?.id || !applicationUniversityName(application)) {
+          return false;
+        }
+
+        if (
+          application.source_university_id &&
+          universities.some(
+            (university) =>
+              String(university.id) ===
+              String(application.source_university_id)
+          )
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .map((application) => ({
+        application,
+        matchingUniversity:
+          universities.find((university) =>
+            universityMatchesApplication(university, application)
+          ) || null,
+      }));
+  }, [applications, universities]);
+
+  const reconcileApplicationUniversity = async ({
+    application,
+    matchingUniversity = null,
+  }) => {
+    if (!application?.id || !hasValidStudentId) return;
+
+    const universityName = applicationUniversityName(application);
+
+    if (!universityName) {
+      setError(
+        "This Application OS record has no university name, so it cannot be reconciled safely."
+      );
+      return;
+    }
+
+    const operationKey = `reconcile-application-${application.id}`;
+    if (savingKeys.has(operationKey)) return;
+
+    startSaving(operationKey);
+    setError("");
+    setSuccessMessage("");
+    setAuditWarning("");
+
+    const previousApplicationLink = {
+      source_university_id: application.source_university_id || null,
+      source_university_name: application.source_university_name || null,
+    };
+
+    let universityRecord = matchingUniversity;
+    let createdUniversity = false;
+    let linkedApplication = null;
+
+    try {
+      if (matchingUniversity?.id) {
+        const conflictingApplication = applications.find(
+          (item) =>
+            String(item.id) !== String(application.id) &&
+            item.source_university_id &&
+            String(item.source_university_id) ===
+              String(matchingUniversity.id)
+        );
+
+        if (conflictingApplication?.id) {
+          throw new Error(
+            `${matchingUniversity.university} is already linked to another Application OS record. Open both records and verify the duplicate before changing the link.`
+          );
+        }
+
+        const { data: linkedRow, error: applicationLinkError } =
+          await withTimeout(
+            supabase
+              .from("student_applications")
+              .update({
+                source_university_id: matchingUniversity.id,
+                source_university_name: matchingUniversity.university,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", application.id)
+              .eq("student_id", studentId)
+              .eq("student_type", studentType)
+              .select()
+              .single(),
+            "Application-to-university link timed out."
+          );
+
+        if (applicationLinkError) throw applicationLinkError;
+        linkedApplication = linkedRow;
+
+        const { data: updatedUniversity, error: universityUpdateError } =
+          await withTimeout(
+            supabase
+              .from("student_universities")
+              .update({
+                country:
+                  matchingUniversity.country ||
+                  applicationCountryName(application) ||
+                  "Italy",
+                program:
+                  matchingUniversity.program ||
+                  applicationProgramName(application) ||
+                  null,
+                degree_level:
+                  matchingUniversity.degree_level ||
+                  applicationDegreeLevel(application) ||
+                  null,
+                intake:
+                  matchingUniversity.intake ||
+                  applicationIntakeName(application) ||
+                  null,
+                category: matchingUniversity.category || "target",
+                status: universityStatusFromApplication(application),
+                is_archived: false,
+                archived_at: null,
+                next_action:
+                  matchingUniversity.next_action ||
+                  universityNextActionFromApplication(application),
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", matchingUniversity.id)
+              .eq("student_id", studentId)
+              .eq("student_type", studentType)
+              .select()
+              .single(),
+            "University reconciliation update timed out."
+          );
+
+        if (universityUpdateError) {
+          await supabase
+            .from("student_applications")
+            .update({
+              ...previousApplicationLink,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", application.id)
+            .eq("student_id", studentId)
+            .eq("student_type", studentType);
+
+          throw universityUpdateError;
+        }
+
+        universityRecord = updatedUniversity;
+      } else {
+        const universityPayload = {
+          student_id: studentId,
+          student_type: studentType,
+          university: universityName,
+          country: applicationCountryName(application) || "Italy",
+          program: applicationProgramName(application) || null,
+          degree_level: applicationDegreeLevel(application) || null,
+          intake: applicationIntakeName(application) || null,
+          category: "target",
+          status: universityStatusFromApplication(application),
+          scholarship_status: "not_checked",
+          dsu_eligible: false,
+          risk_level: "low",
+          next_action: universityNextActionFromApplication(application),
+          counselor_recommendation:
+            "Application OS record detected. Complete university fit, cost, deadline, scholarship and requirement review.",
+          updated_at: new Date().toISOString(),
+        };
+
+        const { data: createdRow, error: universityCreateError } =
+          await withTimeout(
+            supabase
+              .from("student_universities")
+              .insert(universityPayload)
+              .select()
+              .single(),
+            "University reconciliation creation timed out."
+          );
+
+        if (universityCreateError) throw universityCreateError;
+
+        universityRecord = createdRow;
+        createdUniversity = true;
+
+        const { data: linkedRow, error: applicationLinkError } =
+          await withTimeout(
+            supabase
+              .from("student_applications")
+              .update({
+                source_university_id: createdRow.id,
+                source_university_name: createdRow.university,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", application.id)
+              .eq("student_id", studentId)
+              .eq("student_type", studentType)
+              .select()
+              .single(),
+            "Application reconciliation link timed out."
+          );
+
+        if (applicationLinkError) {
+          await supabase
+            .from("student_universities")
+            .delete()
+            .eq("id", createdRow.id)
+            .eq("student_id", studentId)
+            .eq("student_type", studentType);
+
+          throw applicationLinkError;
+        }
+
+        linkedApplication = linkedRow;
+      }
+
+      const nextForm = normalizeUniversity(universityRecord);
+
+      safeSet(() => {
+        setApplications((previous) =>
+          previous.map((item) =>
+            String(item.id) === String(linkedApplication.id)
+              ? linkedApplication
+              : item
+          )
+        );
+
+        setUniversities((previous) => {
+          const exists = previous.some(
+            (item) => String(item.id) === String(universityRecord.id)
+          );
+
+          if (!exists) return [universityRecord, ...previous];
+
+          return previous.map((item) =>
+            String(item.id) === String(universityRecord.id)
+              ? universityRecord
+              : item
+          );
+        });
+
+        setActiveId(universityRecord.id);
+        setForm(nextForm);
+        setSavedSnapshot(nextForm);
+        setShowArchived(false);
+        setShowEditor(false);
+        setSuccessMessage(
+          createdUniversity
+            ? `${universityRecord.university} was created in University OS and linked to its existing application.`
+            : `${universityRecord.university} was linked to the existing shortlist option.`
+        );
+      });
+
+      if (createdUniversity) {
+        await seedDefaultRequirements(universityRecord);
+      } else {
+        void loadSupportData(universityRecord.id);
+      }
+
+      const [eventResult, timelineResult, syncResult] = await Promise.all([
+        createUniversityEvent({
+          studentUniversityId: universityRecord.id,
+          applicationId: linkedApplication.id,
+          eventType: createdUniversity
+            ? "application_reconciled_to_new_university"
+            : "application_linked_to_existing_university",
+          eventLabel: createdUniversity
+            ? "University created from application"
+            : "Application linked to university",
+          newValue: universityRecord.university,
+          metadata: {
+            application_status:
+              linkedApplication.application_status ||
+              linkedApplication.status ||
+              null,
+            reconciliation_source: "UniversityManagementPanel",
+          },
+        }),
+        createTimelineEvent({
+          applicationId: linkedApplication.id,
+          eventType: "university_application_reconciled",
+          title: "University Planning Linked To Application",
+          description: `${universityRecord.university} is now connected across University OS and Application OS.`,
+          oldValue: previousApplicationLink.source_university_id || "unlinked",
+          newValue: universityRecord.id,
+        }),
+        notifyParent({
+          source: "university_application_reconciliation",
+          university: universityRecord,
+          application: linkedApplication,
+        }),
+      ]);
+
+      if (!eventResult?.ok || !timelineResult?.ok || !syncResult?.ok) {
+        safeSet(() =>
+          setAuditWarning(
+            "University and application were linked, but one or more background audit/sync steps did not confirm."
+          )
+        );
+      }
+    } catch (reconciliationError) {
+      const message = String(reconciliationError?.message || "");
+
+      safeSet(() =>
+        setError(
+          message.includes("uq_student_universities_active_option") ||
+            message.toLowerCase().includes("duplicate")
+            ? "A matching university option already exists. Refresh the workspace and use Link Existing instead of creating another row."
+            : message || "University/application reconciliation failed."
+        )
+      );
+    } finally {
+      stopSaving(operationKey);
+    }
+  };
 
   const createOrOpenApplication = async (university) => {
     if (!university?.id || !hasValidStudentId) return;
@@ -1033,6 +1736,10 @@ function UniversityManagementPanel({
           source: "university_open_application",
           application: existing,
         });
+
+        if (typeof onOpenApplication === "function") {
+          onOpenApplication(existing);
+        }
 
         return;
       }
@@ -1801,6 +2508,14 @@ function UniversityManagementPanel({
         </Feedback>
       ) : null}
 
+      <ApplicationReconciliationCenter
+        items={applicationReconciliationItems}
+        savingKeys={savingKeys}
+        onReconcile={reconcileApplicationUniversity}
+        onRefresh={() => loadCoreData({ force: true })}
+        loading={loading}
+      />
+
       <section className="min-w-0 rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-5 shadow-[0_12px_34px_rgba(18,56,101,0.07)]">
         <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -1996,6 +2711,15 @@ function UniversityManagementPanel({
             activeUniversity && unlinkApplication(activeUniversity)
           }
           onAddRequirement={() => setShowRequirementModal(true)}
+          onOpenRequirementLibrary={() => setShowRequirementLibrary(true)}
+          onLoadRecommended={loadRecommendedRequirements}
+          recommendedMissingCount={missingRecommendedRequirementTemplates.length}
+          requirementLibraryTotal={requirementLibraryStats.total}
+          groupedRequirementSections={groupedRequirementSections}
+          expandedRequirementGroups={expandedRequirementGroups}
+          onToggleRequirementGroup={toggleRequirementGroup}
+          onExpandAllRequirementGroups={expandAllRequirementGroups}
+          onCollapseAllRequirementGroups={collapseAllRequirementGroups}
           onRequirementStatus={updateRequirementStatus}
           onArchive={() => activeUniversity && archiveUniversity(activeUniversity)}
           onRestore={() => activeUniversity && restoreUniversity(activeUniversity)}
@@ -2041,7 +2765,156 @@ function UniversityManagementPanel({
           }
         />
       ) : null}
+
+      {showRequirementLibrary ? (
+        <RequirementLibraryModal
+          requirements={filteredRequirementLibrary}
+          existingNameSet={existingRequirementNameSet}
+          query={requirementLibraryQuery}
+          setQuery={setRequirementLibraryQuery}
+          category={requirementLibraryCategory}
+          setCategory={setRequirementLibraryCategory}
+          total={requirementLibraryStats.total}
+          recommendedIds={new Set(recommendedRequirementTemplates.map((item) => item.id))}
+          savingKeys={savingKeys}
+          onAdd={addLibraryRequirement}
+          onAddVisible={addVisibleLibraryRequirements}
+          onClose={() => setShowRequirementLibrary(false)}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function ApplicationReconciliationCenter({
+  items = [],
+  savingKeys,
+  onReconcile,
+  onRefresh,
+  loading = false,
+}) {
+  if (!items.length) return null;
+
+  return (
+    <section className="min-w-0 overflow-hidden rounded-[1.65rem] border-[3px] border-[#FF5A0A] bg-white shadow-[0_14px_38px_rgba(18,56,101,0.09)]">
+      <div className="flex min-w-0 flex-col gap-4 border-b-[3px] border-[#123865] bg-[#123865] p-5 text-white lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-orange-300/50 bg-orange-400/15 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
+              Application Reconciliation
+            </span>
+            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+              {items.length} unlinked
+            </span>
+          </div>
+
+          <h3 className="mt-3 text-xl font-black text-white sm:text-2xl">
+            Application OS has university data missing from the shortlist
+          </h3>
+
+          <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-200">
+            These are real application records. Create or connect the matching
+            University OS row so Admin, Student and Counselor read one permanent
+            university source of truth.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={loading}
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-4 py-2.5 text-xs font-black text-[#123865] transition hover:-translate-y-0.5 hover:bg-[#FFF4E8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+          Recheck Records
+        </button>
+      </div>
+
+      <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 lg:grid-cols-2">
+        {items.map(({ application, matchingUniversity }) => {
+          const operationKey = `reconcile-application-${application.id}`;
+          const busy = savingKeys?.has(operationKey);
+          const universityName = applicationUniversityName(application);
+          const program = applicationProgramName(application);
+          const intake = applicationIntakeName(application);
+          const status =
+            application.application_status ||
+            application.status ||
+            "not_started";
+
+          return (
+            <article
+              key={application.id}
+              className="min-w-0 rounded-[1.35rem] border-2 border-orange-300 bg-white p-4 shadow-[0_9px_24px_rgba(16,35,63,0.07)]"
+            >
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-700">
+                    Application #{application.id}
+                  </p>
+                  <h4 className="mt-1 break-words text-lg font-black text-[#10233F]">
+                    {universityName}
+                  </h4>
+                  <p className="mt-1 break-words text-xs font-semibold text-slate-600">
+                    {program || "Programme not recorded"}
+                    {intake ? ` · ${intake}` : ""}
+                  </p>
+                </div>
+
+                <span className="w-fit rounded-full border border-[#AFC0D0] bg-[#F1F6FA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#123865]">
+                  {pretty(status)}
+                </span>
+              </div>
+
+              <div
+                className={`mt-4 rounded-xl border-2 p-3 ${
+                  matchingUniversity
+                    ? "border-emerald-300 bg-emerald-50"
+                    : "border-amber-300 bg-amber-50"
+                }`}
+              >
+                <p
+                  className={`text-[9px] font-black uppercase tracking-[0.14em] ${
+                    matchingUniversity ? "text-emerald-700" : "text-amber-700"
+                  }`}
+                >
+                  {matchingUniversity
+                    ? "Existing shortlist match found"
+                    : "University row missing"}
+                </p>
+                <p className="mt-1 text-xs font-bold leading-5 text-[#10233F]">
+                  {matchingUniversity
+                    ? `${matchingUniversity.university} will be linked without creating a duplicate.`
+                    : "A permanent University OS row will be created from this application and linked back safely."}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  onReconcile({ application, matchingUniversity })
+                }
+                disabled={busy}
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#FF5A0A] bg-[#FF5A0A] px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                {busy ? (
+                  <LoaderCircle size={15} className="animate-spin" />
+                ) : matchingUniversity ? (
+                  <FileCheck2 size={15} />
+                ) : (
+                  <Plus size={15} />
+                )}
+                {busy
+                  ? "Reconciling..."
+                  : matchingUniversity
+                    ? "Link Existing University"
+                    : "Create & Link University"}
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -2186,7 +3059,7 @@ function UniversityCard({
 
             <div className="mt-2 flex flex-wrap gap-1.5">
               <StatusBadge value={university.status} />
-              <RiskBadge value={university.risk_level || "low"} />
+              <RiskBadge value={university.risk_level || "low"} label="Manual" />
               {linkedApplication ? (
                 <span className="rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[8px] font-black uppercase text-blue-800">
                   Application Linked
@@ -2358,6 +3231,15 @@ function UniversityWorkspace({
   onCreateApplication,
   onUnlinkApplication,
   onAddRequirement,
+  onOpenRequirementLibrary,
+  onLoadRecommended,
+  recommendedMissingCount,
+  requirementLibraryTotal,
+  groupedRequirementSections,
+  expandedRequirementGroups,
+  onToggleRequirementGroup,
+  onExpandAllRequirementGroups,
+  onCollapseAllRequirementGroups,
   onRequirementStatus,
   onArchive,
   onRestore,
@@ -2371,7 +3253,7 @@ function UniversityWorkspace({
             <div className="flex flex-wrap gap-2">
               <CategoryBadge value={form.category} />
               <StatusBadge value={form.status} />
-              <RiskBadge value={calculatedIntelligence.riskLevel} />
+              <RiskBadge value={calculatedIntelligence.riskLevel} label="Calculated" />
               {activeUniversity?.is_archived ? (
                 <span className="rounded-full border border-slate-400 bg-slate-100 px-2.5 py-1 text-[9px] font-black uppercase text-slate-700">
                   Archived
@@ -2476,7 +3358,7 @@ function UniversityWorkspace({
             icon={BadgeCheck}
           />
           <CompactStat
-            label="Risk"
+            label="Calculated Risk"
             value={`${calculatedIntelligence.risk}/100 · ${calculatedIntelligence.riskLevel}`}
             icon={ShieldAlert}
             tone={
@@ -2776,14 +3658,17 @@ function UniversityWorkspace({
         subtitle="Structured requirements for this university/program, not one large text field."
         action={
           activeUniversity?.id ? (
-            <button
-              type="button"
-              onClick={onAddRequirement}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-[#FF5A0A] px-3 py-2 text-xs font-black text-white"
-            >
-              <Plus size={14} />
-              Add Requirement
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={onLoadRecommended} disabled={!recommendedMissingCount} className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-black text-white disabled:cursor-default disabled:opacity-45">
+                <Sparkles size={14} /> Recommended +{recommendedMissingCount || 0}
+              </button>
+              <button type="button" onClick={onOpenRequirementLibrary} className="inline-flex items-center gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2 text-xs font-black text-white">
+                <Search size={14} /> Library {requirementLibraryTotal}
+              </button>
+              <button type="button" onClick={onAddRequirement} className="inline-flex items-center gap-2 rounded-xl border-2 border-orange-600 bg-[#FF5A0A] px-3 py-2 text-xs font-black text-white">
+                <Plus size={14} /> Custom
+              </button>
+            </div>
           ) : null
         }
       >
@@ -2798,17 +3683,173 @@ function UniversityWorkspace({
             <LoaderCircle size={22} className="mx-auto animate-spin text-orange-500" />
           </div>
         ) : requirements.length ? (
-          <div className="space-y-2">
-            {requirements.map((requirement) => (
-              <RequirementRow
-                key={requirement.id}
-                requirement={requirement}
-                busy={savingKeys.has(`requirement-${requirement.id}`)}
-                onStatusChange={(status) =>
-                  onRequirementStatus(requirement, status)
-                }
-              />
-            ))}
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <RequirementSummaryTile label="Total Applied" value={requirementStats.total} helper={`from ${requirementLibraryTotal} master templates`} tone="navy" />
+              <RequirementSummaryTile label="Verified" value={requirementStats.verified} helper="confirmed / not required" tone="green" />
+              <RequirementSummaryTile label="Needs Attention" value={requirementStats.missing} helper="missing / rejected" tone="rose" />
+              <RequirementSummaryTile label="In Review" value={requirementStats.review} helper="requested / received / review" tone="amber" />
+            </div>
+            <div className="flex flex-col gap-3 rounded-[1.3rem] border-2 border-[#D8B07B] bg-[#FFF4E8] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                  Requirement Navigator
+                </p>
+                <p className="mt-1 text-[11px] font-semibold leading-5 text-[#5B6D80]">
+                  Categories stay collapsed until you need them, so the 96-template system never becomes a wall of requirements.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={onExpandAllRequirementGroups}
+                  disabled={!groupedRequirementSections.length}
+                  className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-white transition hover:bg-[#0B2A4B] disabled:cursor-default disabled:opacity-45"
+                >
+                  <ChevronDown size={14} />
+                  Expand All
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onCollapseAllRequirementGroups}
+                  disabled={!expandedRequirementGroups.size}
+                  className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#AFC0D0] bg-[#FFFCF7] px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-[#123865] transition hover:border-orange-400 hover:text-orange-700 disabled:cursor-default disabled:opacity-45"
+                >
+                  <ChevronRight size={14} />
+                  Collapse All
+                </button>
+              </div>
+            </div>
+
+            {groupedRequirementSections.map((group) => {
+              const total = group.requirements.length;
+              const verified = group.requirements.filter((requirement) =>
+                ["verified", "not_required"].includes(
+                  normalize(requirement.status)
+                )
+              ).length;
+              const attention = group.requirements.filter((requirement) =>
+                ["missing", "rejected"].includes(
+                  normalize(requirement.status)
+                )
+              ).length;
+              const review = group.requirements.filter((requirement) =>
+                ["requested", "received", "under_review"].includes(
+                  normalize(requirement.status)
+                )
+              ).length;
+              const completionRate = total
+                ? Math.round((verified / total) * 100)
+                : 0;
+              const isExpanded = expandedRequirementGroups.has(group.id);
+
+              return (
+                <section
+                  key={group.id}
+                  className="min-w-0 overflow-hidden rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_12px_32px_rgba(18,56,101,0.09)]"
+                >
+                  <button
+                    type="button"
+                    onClick={() => onToggleRequirementGroup(group.id)}
+                    aria-expanded={isExpanded}
+                    className="flex min-w-0 w-full flex-col gap-3 bg-[#123865] p-4 text-left text-white transition hover:bg-[#163F70] sm:p-5 lg:flex-row lg:items-center lg:justify-between"
+                  >
+                    <span className="flex min-w-0 flex-1 items-start gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#FF5A0A] bg-[#FFF8EF] text-[#123865] shadow-sm">
+                        <GraduationCap size={19} />
+                      </span>
+
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="break-words text-base font-black text-white sm:text-lg">
+                            {group.label}
+                          </span>
+                          <span className="rounded-full border border-white/30 bg-white/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+                            {total} item{total === 1 ? "" : "s"}
+                          </span>
+                        </span>
+
+                        <span className="mt-1 block max-w-3xl text-[10px] font-semibold leading-4 text-white/65">
+                          {group.description}
+                        </span>
+
+                        <span className="mt-2 flex flex-wrap gap-1.5">
+                          {verified ? (
+                            <span className="rounded-full border border-emerald-200/40 bg-emerald-300/15 px-2 py-0.5 text-[9px] font-black uppercase text-white">
+                              {verified} verified
+                            </span>
+                          ) : null}
+
+                          {attention ? (
+                            <span className="rounded-full border border-orange-200/60 bg-orange-300/20 px-2 py-0.5 text-[9px] font-black uppercase text-white">
+                              {attention} attention
+                            </span>
+                          ) : null}
+
+                          {review ? (
+                            <span className="rounded-full border border-blue-200/40 bg-blue-300/15 px-2 py-0.5 text-[9px] font-black uppercase text-white">
+                              {review} review
+                            </span>
+                          ) : null}
+
+                          {!verified && !attention && !review ? (
+                            <span className="rounded-full border border-white/25 bg-white/10 px-2 py-0.5 text-[9px] font-black uppercase text-white/80">
+                              Ready for assessment
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                    </span>
+
+                    <span className="flex min-w-0 w-full items-center gap-3 lg:w-auto lg:min-w-[15rem]">
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2 text-[9px] font-black uppercase tracking-[0.1em] text-white/70">
+                          <span>Verified progress</span>
+                          <span>{completionRate}%</span>
+                        </span>
+                        <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-white/15">
+                          <span
+                            className="block h-full rounded-full bg-[#FF5A0A] transition-all"
+                            style={{ width: `${completionRate}%` }}
+                          />
+                        </span>
+                      </span>
+
+                      {isExpanded ? (
+                        <ChevronDown
+                          size={19}
+                          className="shrink-0 text-white"
+                        />
+                      ) : (
+                        <ChevronRight
+                          size={19}
+                          className="shrink-0 text-white"
+                        />
+                      )}
+                    </span>
+                  </button>
+
+                  {isExpanded ? (
+                    <div className="space-y-2.5 border-t-[3px] border-[#FF5A0A] bg-[#FFF8EF] p-3 sm:p-4">
+                      {group.requirements.map((requirement) => (
+                        <RequirementRow
+                          key={requirement.id}
+                          requirement={requirement}
+                          busy={savingKeys.has(
+                            `requirement-${requirement.id}`
+                          )}
+                          onStatusChange={(status) =>
+                            onRequirementStatus(requirement, status)
+                          }
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-2xl border-2 border-dashed border-[#FF5A0A] bg-[#FFF8EF] p-5 text-center">
@@ -3020,7 +4061,7 @@ function ComparisonView({ items, onRemove, onSelect }) {
           />
         ))}
 
-        <CompareLabel label="Risk" />
+        <CompareLabel label="Manual Risk" />
         {items.map((item) => (
           <CompareCell
             key={`${item.id}-risk`}
@@ -3110,6 +4151,39 @@ function HistoryView({ events, loading, activeUniversity, onRefresh }) {
         </div>
       )}
     </Section>
+  );
+}
+
+function RequirementSummaryTile({ label, value, helper, tone = "navy" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} tone={toZaifanMetricTone(tone)} />;
+}
+
+function RequirementLibraryModal({ requirements = [], existingNameSet, query, setQuery, category, setCategory, total, recommendedIds, savingKeys, onAdd, onAddVisible, onClose }) {
+  const categoryOptions = Object.entries(UNIVERSITY_REQUIREMENT_CATEGORIES);
+  const visibleMissing = requirements.filter((item) => !existingNameSet.has(normalize(item.name)));
+  return (
+    <div className="fixed inset-0 z-[1320] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-5">
+      <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[1.8rem] border-[4px] border-[#123865] bg-[#FFF8EF] shadow-2xl">
+        <div className="flex flex-col gap-4 border-b-[3px] border-[#FF5A0A] bg-[#123865] p-5 text-white lg:flex-row lg:items-start lg:justify-between">
+          <div><p className="text-[10px] font-black uppercase tracking-[0.19em] text-orange-300">University Requirement Library</p><h3 className="mt-1 text-2xl font-black">{total} reusable admission requirement templates</h3><p className="mt-2 max-w-3xl text-xs leading-5 text-blue-100">Apply only the requirements relevant to this exact university, programme and applicant. The library is intentionally larger than any single student checklist.</p></div>
+          <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white/30 bg-white/10 text-white"><X size={18} /></button>
+        </div>
+        <div className="grid gap-3 border-b border-[#DCC8AD] bg-[#FFF4E8] p-4 lg:grid-cols-[minmax(0,1fr)_260px_auto]">
+          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search GPA, CIMEA, IELTS, syllabus, TOLC, portfolio..." className={inputClass} />
+          <select value={category} onChange={(event) => setCategory(event.target.value)} className={inputClass}><option value="all">All categories</option>{categoryOptions.map(([key, meta]) => <option key={key} value={key}>{meta.label}</option>)}</select>
+          <button type="button" onClick={onAddVisible} disabled={!visibleMissing.length || savingKeys.has("library-requirements-visible")} className="rounded-xl border-2 border-orange-600 bg-[#FF5A0A] px-4 py-3 text-xs font-black text-white disabled:cursor-default disabled:opacity-45">Add Visible Missing ({visibleMissing.length})</button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5"><div className="grid gap-3 md:grid-cols-2">
+          {requirements.map((template) => {
+            const exists = existingNameSet.has(normalize(template.name)); const recommended = recommendedIds.has(template.id); const categoryMeta = getUniversityRequirementCategory(template.category); const busy = savingKeys.has(`library-requirement-${template.id}`);
+            return <article key={template.id} className={`rounded-[1.35rem] border-2 p-4 ${exists ? "border-emerald-300 bg-emerald-50/60" : recommended ? "border-orange-400 bg-[#FFF1DF]" : "border-[#AFC0D0] bg-[#FFFCF7]"}`}>
+              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap gap-1.5"><span className="rounded-full border border-[#AFC0D0] bg-white px-2 py-0.5 text-[8px] font-black uppercase text-[#123865]">{categoryMeta.label}</span>{recommended ? <span className="rounded-full border border-orange-300 bg-orange-50 px-2 py-0.5 text-[8px] font-black uppercase text-orange-800">Recommended</span> : null}<span className="rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase text-slate-600">{pretty(template.priority)}</span></div><h4 className="mt-2 text-sm font-black text-[#10233F]">{template.name}</h4><p className="mt-2 text-[11px] leading-5 text-slate-600">{template.studentDescription}</p></div>
+              <button type="button" onClick={() => onAdd(template)} disabled={exists || busy} className={`shrink-0 rounded-xl border-2 px-3 py-2 text-[9px] font-black uppercase ${exists ? "border-emerald-300 bg-emerald-100 text-emerald-800" : "border-[#123865] bg-[#123865] text-white"} disabled:cursor-default disabled:opacity-65`}>{exists ? "Added" : busy ? "Adding..." : "Add"}</button></div>
+            </article>;
+          })}
+        </div></div>
+      </div>
+    </div>
   );
 }
 
@@ -3251,25 +4325,30 @@ function RequirementModal({ draft, setDraft, onClose, onSave, disabled }) {
 }
 
 const inputClass =
-  "h-11 w-full rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
+  "h-11 w-full rounded-xl border-2 border-[#9FB2C5] bg-[#FFFCF7] px-3 text-sm font-semibold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 const textareaClass =
-  "w-full resize-y rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
+  "w-full resize-y rounded-xl border-2 border-[#9FB2C5] bg-[#FFFCF7] px-3 py-3 text-sm font-semibold leading-6 text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 function Section({ title, subtitle, action = null, children }) {
   return (
-    <section className="rounded-[1.55rem] border-[3px] border-[#123865] bg-white p-4 sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-lg font-black text-[#10233F]">{title}</h3>
+    <section className="overflow-hidden rounded-[1.65rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_14px_34px_rgba(16,35,63,0.08)]">
+      <div className="flex flex-col gap-3 border-b-[3px] border-[#FF5A0A] bg-[#123865] px-4 py-4 text-white sm:flex-row sm:items-start sm:justify-between sm:px-5">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
+            University Strategy Workspace
+          </p>
+          <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
           {subtitle ? (
-            <p className="mt-1 text-sm text-slate-100">{subtitle}</p>
+            <p className="mt-1 max-w-4xl text-xs font-semibold leading-5 text-white/75">
+              {subtitle}
+            </p>
           ) : null}
         </div>
-        {action}
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
 
-      <div className="mt-4">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   );
 }
@@ -3351,7 +4430,7 @@ function MoneyCard({
 
 function ToggleCard({ label, checked, onChange }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 py-2.5">
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 border-[#9FB2C5] bg-[#FFFCF7] px-3 py-2.5 shadow-sm">
       <span className="text-sm font-black text-[#10233F]">{label}</span>
       <input
         type="checkbox"
@@ -3363,44 +4442,54 @@ function ToggleCard({ label, checked, onChange }) {
   );
 }
 
-function RequirementRow({
-  requirement,
-  busy,
-  onStatusChange,
-}) {
+function RequirementRow({ requirement, busy, onStatusChange }) {
+  const meta = getUniversityRequirementMeta(requirement);
+
   return (
-    <div className="rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-white p-4">
+    <div className="rounded-[1.25rem] border-2 border-[#D8B07B] border-l-[5px] border-l-[#FF5A0A] bg-[#FFFCF7] p-4 shadow-[0_6px_16px_rgba(16,35,63,0.05)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h4 className="font-black text-[#10233F]">
               {requirement.requirement_name}
             </h4>
-
             <RequirementStatus value={requirement.status} />
-
-            <span className="rounded-full border border-[#C9D7E6] bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-100">
-              {requirement.requirement_category}
+            <span className="rounded-full border-2 border-[#AFC0D0] bg-[#EDF4F8] px-2 py-0.5 text-[9px] font-black uppercase text-[#123865]">
+              {meta.categoryLabel}
             </span>
+            {meta.priority === "core" ? (
+              <span className="rounded-full border-2 border-orange-300 bg-[#FFF1DF] px-2 py-0.5 text-[9px] font-black uppercase text-orange-800">
+                Core
+              </span>
+            ) : null}
           </div>
 
-          <p className="mt-2 text-xs font-semibold text-slate-600">
-            Target: {requirement.target_value || "Not set"} · Current:{" "}
-            {requirement.current_value || "Not set"}
-          </p>
-
-          {requirement.due_date ? (
-            <p className="mt-1 text-xs font-semibold text-slate-600">
-              Due: {formatDate(requirement.due_date)}
+          {meta.description ? (
+            <p className="mt-2 max-w-4xl text-[11px] font-semibold leading-5 text-[#5B6D80]">
+              {meta.description}
             </p>
           ) : null}
+
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-[#5B6D80]">
+            <span>
+              Target: <strong className="text-[#10233F]">{requirement.target_value || "Not set"}</strong>
+            </span>
+            <span>
+              Current: <strong className="text-[#10233F]">{requirement.current_value || "Not set"}</strong>
+            </span>
+            {requirement.due_date ? (
+              <span>
+                Due: <strong className="text-[#10233F]">{formatDate(requirement.due_date)}</strong>
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <select
           value={requirement.status || "missing"}
           disabled={busy}
           onChange={(event) => onStatusChange(event.target.value)}
-          className="h-10 rounded-xl border-2 border-[#C9D7E6] bg-white px-3 text-xs font-black capitalize text-[#10233F]"
+          className="h-10 min-w-[132px] rounded-xl border-2 border-[#123865] bg-[#FFF8EF] px-3 text-xs font-black capitalize text-[#10233F] outline-none transition focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100 disabled:opacity-50"
         >
           {REQUIREMENT_STATUS_OPTIONS.map((option) => (
             <option key={option} value={option}>
@@ -3413,87 +4502,16 @@ function RequirementRow({
   );
 }
 
-function PressureTile({
-  label,
-  value,
-  helper = "",
-  tone = "slate",
-}) {
-  const styles = {
-    red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-slate-700",
-  };
-
-  return (
-    <div
-      className={`rounded-xl border-2 p-3 ${
-        styles[tone] || styles.slate
-      }`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] opacity-75">
-        {label}
-      </p>
-      <p className="mt-2 break-words text-sm font-black">{value}</p>
-      {helper ? (
-        <p className="mt-1 text-[10px] font-semibold leading-4 opacity-80">
-          {helper}
-        </p>
-      ) : null}
-    </div>
-  );
+function PressureTile({ label, value, helper = "", tone = "slate" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} tone={toZaifanMetricTone(tone)} />;
 }
 
 function Metric({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-[#C9D7E6] bg-white text-[#10233F]",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
-    blue: "border-blue-300 bg-blue-50 text-blue-800",
-    red: "border-red-300 bg-red-50 text-red-800",
-  };
-
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <Icon size={15} />
-      <div className="min-w-0">
-        <p className="truncate text-sm font-black">{value}</p>
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CompactStat({ label, value, icon: Icon, tone = "slate" }) {
-  const tones = {
-    slate: "border-[#C9D7E6] bg-[#FFF8EF] text-[#10233F]",
-    red: "border-red-300 bg-red-50 text-red-800",
-    orange: "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800",
-  };
-
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 ${
-        tones[tone] || tones.slate
-      }`}
-    >
-      <Icon size={15} />
-      <div className="min-w-0">
-        <p className="truncate text-xs font-black">{value}</p>
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CompactInfo({ label, value }) {
@@ -3539,7 +4557,7 @@ function StatusBadge({ value }) {
   );
 }
 
-function RiskBadge({ value }) {
+function RiskBadge({ value, label = "" }) {
   const normalized = normalize(value);
 
   const style =
@@ -3553,7 +4571,7 @@ function RiskBadge({ value }) {
     <span
       className={`rounded-full border px-2 py-0.5 text-[8px] font-black uppercase ${style}`}
     >
-      {pretty(value || "low")} Risk
+      {label ? `${label} ` : ""}{pretty(value || "low")} Risk
     </span>
   );
 }
@@ -3658,6 +4676,63 @@ function CompareCell({ value }) {
       {value}
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default UniversityManagementPanel;

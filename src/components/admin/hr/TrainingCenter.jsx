@@ -10,6 +10,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -88,81 +89,65 @@ function statusTone(status = "") {
 function MetricCard({
   label,
   value,
-  helper,
+  helper = "",
+  detail = "",
   tone = "blue",
-  icon: Icon,
+  toneName = "",
+  icon: Icon = null,
   badge = "",
+  source = "",
+  className = "",
 }) {
-  const tones = {
-    blue: "border-[#60A5FA] bg-[#F2F7FF]",
-    green: "border-[#34D399] bg-[#F0FFF8]",
-    amber: "border-[#F59E0B] bg-[#FFF8E8]",
-    red: "border-[#FB7185] bg-[#FFF4F4]",
-    violet: "border-[#60A5FA] bg-[#F2F7FF]",
-    navy: "border-[#123865] bg-[#123865]",
-  };
-
-  const dark = tone === "navy";
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${
-        tones[tone] || tones.blue
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
-
-        {Icon ? (
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
-              dark
-                ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-[#123865]/15 bg-white text-[#123865]"
-            }`}
-          >
-            <Icon size={16} />
-          </div>
-        ) : null}
-      </div>
-
-      <p
-        className={`mt-2 text-xs font-semibold leading-5 ${
-          dark ? "text-slate-200" : "text-slate-600"
-        }`}
-      >
-        {helper}
-      </p>
-
-      {badge ? (
-        <span
-          className={`mt-3 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-            dark
-              ? "border-white/20 bg-white/10 text-white"
-              : "border-[#C9D7E6] bg-white text-slate-600"
-          }`}
-        >
-          {badge}
-        </span>
-      ) : null}
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function TrainingRow({ item }) {
@@ -330,6 +315,8 @@ export default function TrainingCenter({ hr = {} }) {
   }, [rows, query, progressFilter, categoryFilter]);
 
   const measurableRows = rows.filter(hasProgress);
+  const hasTrainingRows = rows.length > 0;
+  const hasMeasurableProgress = measurableRows.length > 0;
 
   const completed = measurableRows.filter(
     (item) => Number(item.progress) >= 100
@@ -402,52 +389,79 @@ export default function TrainingCenter({ hr = {} }) {
       </div>
 
       <div className="space-y-5 p-4 sm:p-5">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid auto-rows-fr gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             label="Average Progress"
-            value={average === null ? "Unavailable" : `${average}%`}
+            value={hasMeasurableProgress ? `${average}%` : "N/A"}
             helper={
-              average === null
-                ? "No training records currently have measurable progress."
-                : `Average across ${measurableRows.length} measurable learning record${
+              hasMeasurableProgress
+                ? `Average across ${measurableRows.length} measurable learning record${
                     measurableRows.length === 1 ? "" : "s"
                   }.`
+                : "Not assessed · No training records currently have measurable progress."
             }
             tone={
-              average === null
-                ? "blue"
-                : average >= 80
+              hasMeasurableProgress
+                ? average >= 80
                   ? "green"
                   : average >= 50
                     ? "amber"
                     : "red"
+                : "slate"
             }
             icon={BookOpenCheck}
-            badge="Measured only"
+            className="h-full"
           />
 
           <MetricCard
             label="Complete"
-            value={completed}
-            helper="Training records at 100% measured completion."
-            tone="green"
+            value={hasMeasurableProgress ? completed : "N/A"}
+            helper={
+              hasMeasurableProgress
+                ? "Training records at 100% measured completion."
+                : "Not assessed · No measurable progress evidence yet."
+            }
+            tone={hasMeasurableProgress ? "green" : "slate"}
             icon={BadgeCheck}
+            className="h-full"
           />
 
           <MetricCard
             label="Due"
-            value={due}
-            helper="Measurable training records below 100% completion."
-            tone={due > 0 ? "amber" : "green"}
+            value={hasMeasurableProgress ? due : "N/A"}
+            helper={
+              hasMeasurableProgress
+                ? "Measurable training records below 100% completion."
+                : "Not assessed · No measurable progress evidence yet."
+            }
+            tone={
+              hasMeasurableProgress
+                ? due > 0
+                  ? "amber"
+                  : "green"
+                : "slate"
+            }
             icon={AlertTriangle}
+            className="h-full"
           />
 
           <MetricCard
             label="Progress Unavailable"
-            value={unavailable}
-            helper={`${identityLinked}/${rows.length} records have a direct employee identity link.`}
-            tone={unavailable > 0 ? "blue" : "green"}
+            value={hasTrainingRows ? unavailable : "N/A"}
+            helper={
+              hasTrainingRows
+                ? `${identityLinked}/${rows.length} records have a direct employee identity link.`
+                : "Not assessed · No training records exist yet."
+            }
+            tone={
+              hasTrainingRows
+                ? unavailable > 0
+                  ? "blue"
+                  : "green"
+                : "slate"
+            }
             icon={Database}
+            className="h-full"
           />
         </div>
 

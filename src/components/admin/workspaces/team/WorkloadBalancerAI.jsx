@@ -29,6 +29,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const normalize = (value) =>
   String(value || "")
@@ -749,40 +750,11 @@ function WorkloadBalancerAI({
 }
 
 function OrangeCapacityMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/30 bg-white/10 p-3 text-white shadow-inner">
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.09em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
-function HeaderMetric({
-  label,
-  value,
-  warning = false,
-}) {
-  return (
-    <div
-      className={`min-w-0 rounded-[1.15rem] border-[2px] p-4 shadow-inner ${
-        warning
-          ? "border-[#C84F08] bg-[#E96512]"
-          : "border-white/25 bg-white/10"
-      }`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function HeaderMetric({ label, value, warning = false }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone={warning ? "red" : "navy"} />;
 }
 
 function Metric({
@@ -829,36 +801,15 @@ function Metric({
   );
 }
 
-function MiniMetric({
-  label,
-  value,
-  tone = "slate",
-}) {
-  const styles = {
-    slate:
-      "border-[#C9D7E6] bg-[#FFF9F1] text-slate-700",
-    orange:
-      "border-[#F59E0B] bg-[#FFF7ED] text-orange-800",
-    red:
-      "border-[#FB7185] bg-[#FFF4F4] text-red-800",
-    green:
-      "border-[#34D399] bg-[#F0FFF8] text-emerald-800",
-  };
-
+function MiniMetric({ label, value, tone = "slate", icon: Icon = null }) {
   return (
-    <div
-      className={`min-w-0 rounded-xl border-2 p-3 shadow-[0_4px_12px_rgba(18,56,101,0.03)] ${
-        styles[tone] || styles.slate
-      }`}
-    >
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] opacity-70">
-        {label}
-      </p>
-
-      <p className="mt-1 text-lg font-black">
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value ?? "—"}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -936,6 +887,44 @@ function getLevelTone(level) {
   }
 
   return "green";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default WorkloadBalancerAI;

@@ -34,6 +34,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -800,79 +801,16 @@ Zaifan Consultancy`,
   );
 }
 
-function StatusCard({
-  label,
-  value,
-  helper,
-  tone = "orange",
-  icon: Icon,
-}) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "danger"
-      ? "border-red-300 bg-red-50"
-      : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-[#FF5A0A] bg-[#FFF4E8]";
-
+function StatusCard({ label, value, helper, tone = "orange", icon: Icon }) {
   return (
-    <div
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.04)] ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{
-              color: dark
-                ? "#FDBA74"
-                : "#64748B",
-            }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-xl font-black"
-            style={{
-              color: dark
-                ? "#FFFFFF"
-                : "#10233F",
-            }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={17}
-          style={{
-            color: dark
-              ? "#FDBA74"
-              : "#C2410C",
-          }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{
-          color: dark
-            ? "#F8FAFC"
-            : "#64748B",
-        }}
-      >
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -925,6 +863,44 @@ function getIconStyle(priority = "") {
   }
 
   return "border-slate-300 text-[#10233f]";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default SmartActionsPanel;

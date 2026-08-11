@@ -1,3 +1,4 @@
+// AIWorkspacePanel STUDENT CASE BRAIN V6 — full Student 360 GPT context
 // AIWorkspacePanel PARTNER OS COMPACT V5 — Counselor Intelligence Command Workspace
 // Maximum production pass: local CRM intelligence + intentional GPT generation,
 // counselor qualification, explainable signals, safe copy actions, responsive Admin OS UI.
@@ -7,6 +8,7 @@
 
 import { motion } from "framer-motion";
 import { lazy, Suspense, useMemo, useRef, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertCircle,
   AlertTriangle,
@@ -32,7 +34,12 @@ const AICounselorAssistant = lazy(() => import("../team/AICounselorAssistant"));
 import { enrichLeadWithAi } from "../../../../services/aiLeadEngine";
 const GPTCopilotPanel = lazy(() => import("./GPTCopilotPanel"));
 
-function AIWorkspacePanel({ student, studentType = "inquiry", adminProfile }) {
+function AIWorkspacePanel({
+  student,
+  studentType = "inquiry",
+  adminProfile,
+  caseContext = {},
+}) {
   const [copyStatus, setCopyStatus] = useState("");
   const [copyTone, setCopyTone] = useState("success");
   const copyTimerRef = useRef(null);
@@ -182,7 +189,39 @@ To guide you properly, please share your pending documents, academic details, pr
 Best regards,
 ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
 
+  const caseSections = caseContext?.sections || {};
+
   const crmContext = {
+    caseBrain: caseContext,
+    timeline: [
+      ...(caseSections.crmTimeline || []),
+      ...(caseSections.applicationTimeline || []),
+    ],
+    followUps: caseSections.followUps || [],
+    documents: caseSections.documents || [],
+    documentRequirements: caseSections.documentRequirements || [],
+    applications: caseSections.applications || [],
+    applicationRequirements: caseSections.applicationRequirements || [],
+    applicationEvents: caseSections.applicationEvents || [],
+    universities: caseSections.universities || [],
+    universityRequirements: caseSections.universityRequirements || [],
+    universityEvents: caseSections.universityEvents || [],
+    tasks: caseSections.tasks || [],
+    communications: caseSections.communications || [],
+    invoices: caseSections.invoices || [],
+    payments: caseSections.payments || [],
+    receipts: caseSections.receipts || [],
+    paymentRequests: caseSections.paymentRequests || [],
+    supportRequests: caseSections.supportRequests || [],
+    supportMessages: caseSections.supportMessages || [],
+    visaCases: caseSections.visaCases || [],
+    visaRequirements: caseSections.visaRequirements || [],
+    visaEvents: caseSections.visaEvents || [],
+    portal: caseContext?.caseSnapshot?.portal || null,
+    dataSummary: caseContext?.dataSummary || {},
+    dataGaps: caseContext?.dataGaps || [],
+    sourceHealth: caseContext?.sourceHealth || {},
+
     leadScore: aiLead.ai_score,
     leadHealth: aiLead.ai_tier.label,
     overdueStatus: aiLead.ai_urgency.label,
@@ -198,6 +237,9 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
       qualification_percent: qualificationPercent,
       best_channel: bestChannel,
       opportunity_stars: opportunityStars,
+      case_brain_version: caseContext?.version || null,
+      case_data_summary: caseContext?.dataSummary || {},
+      case_data_gaps: caseContext?.dataGaps || [],
     },
   };
 
@@ -240,10 +282,10 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
   };
 
   return (
-    <section className="min-w-0 space-y-5 rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-3 text-[#10233F] shadow-[0_24px_65px_rgba(18,56,101,0.15)] sm:p-4 lg:p-5">
+    <section className="min-w-0 space-y-4 text-[#10233F]">
       <div className="relative min-w-0 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] shadow-[0_18px_50px_rgba(18,56,101,0.11)]" style={{ color: "#ffffff" }}>
 
-        <div className="relative grid min-w-0 items-center border-b-[3px] border-[#FF5A0A] gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="relative grid min-w-0 items-center border-b-[3px] border-[#FF5A0A] gap-3 lg:grid-cols-[minmax(0,1fr)_350px]">
           <div className="min-w-0 max-w-3xl px-5 py-4 sm:px-6 sm:py-5">
             <div className="mb-3 flex min-w-0 flex-wrap gap-2">
               <span className="rounded-full border border-[#FFB38A]/45 bg-[#FF5A0A]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-[#FFB38A]">
@@ -263,7 +305,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
             </p>
           </div>
 
-          <div className="grid w-full min-w-0 gap-2 px-3 pb-3 sm:grid-cols-2 lg:w-[300px] lg:self-center lg:px-0 lg:pb-0 lg:pr-3">
+          <div className="grid w-full min-w-0 gap-2 px-3 pb-3 sm:grid-cols-2 lg:w-[350px] lg:self-center lg:px-0 lg:pb-0 lg:pr-3">
             <HeroScoreCard
               label="AI Score"
               value={aiLead.ai_score}
@@ -282,7 +324,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid auto-rows-fr gap-3 sm:grid-cols-3">
         <WorkspaceModeCard
           label="Local AI"
           value="Always On"
@@ -297,13 +339,15 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         />
         <WorkspaceModeCard
           label="CRM Context"
-          value="Connected"
-          detail="Student profile and local AI signals are passed into the workspace."
+          value={caseContext?.version ? "Student 360" : "Connected"}
+          detail={caseContext?.version
+            ? `${caseContext?.dataSummary?.documents || 0} docs · ${caseContext?.dataSummary?.applications || 0} apps · ${caseContext?.dataSummary?.communications || 0} communications · Finance/Support/Visa linked.`
+            : "Student profile and local AI signals are passed into the workspace."}
           tone="cream"
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <OperationalSignal
           icon={CheckCircle2}
           label="Qualification"
@@ -451,7 +495,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         </div>
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid auto-rows-fr gap-3 md:grid-cols-3">
         <QuickAction
           icon={FileText}
           title="Copy Summary"
@@ -472,7 +516,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
         />
       </div>
 
-      <div className="rounded-[1.8rem] border-2 border-[#b8c5d3] bg-white p-5 shadow-[0_10px_26px_rgba(15,35,63,0.05)]">
+      <div className="rounded-[1.45rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_7px_18px_rgba(15,35,63,0.045)]">
         <div className="mb-5 flex items-center gap-3">
           <div className="rounded-2xl border border-[#FFD0B5] bg-[#FFF4EA] p-3">
             <Sparkles className="h-5 w-5 text-[#B84F0E]" />
@@ -492,6 +536,7 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
           student={student}
           studentType={studentType}
           adminProfile={adminProfile}
+          caseContext={caseContext}
         />
 </Suspense>
       </div>
@@ -499,34 +544,43 @@ ${adminProfile?.full_name || "Zaifan Consultancy Team"}`;
   );
 }
 
-function HeroScoreCard({ icon: Icon, label, value, suffix, detail }) {
+function HeroScoreCard({
+  icon: Icon,
+  label,
+  value,
+  suffix = "",
+  detail,
+}) {
   return (
-    <div className="min-w-0 rounded-[1.15rem] border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm" style={{ color: "#ffffff" }}>
+    <div className="min-w-0 rounded-[1rem] border-2 border-orange-300 bg-[#FFF7ED] px-3 py-2.5 shadow-[0_4px_12px_rgba(18,56,101,0.045)]">
       <div className="flex min-w-0 items-center justify-between gap-2">
-        <p className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-white">
-          {label}
-        </p>
-        <Icon className="h-4 w-4 shrink-0 text-[#FFB38A]" />
+        <div className="min-w-0">
+          <p className="whitespace-nowrap text-[8px] font-black uppercase leading-3 tracking-[0.12em] text-[#61738D]">
+            {label}
+          </p>
+
+          <p className="mt-1 whitespace-nowrap text-[1.65rem] font-black leading-none tracking-[-0.035em] text-[#C93208]">
+            {value}
+            {suffix}
+          </p>
+
+          {detail ? (
+            <p className="mt-1 truncate text-[10px] font-semibold leading-4 text-[#596B82]">
+              {detail}
+            </p>
+          ) : null}
+        </div>
+
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.7rem] border-2 border-orange-200 bg-white text-[#C95A13] shadow-[0_3px_8px_rgba(18,56,101,0.05)]">
+          <Icon size={14} strokeWidth={2.25} />
+        </span>
       </div>
-      <h3 className="mt-2 text-3xl font-black leading-none text-white">
-        {value}
-        <span className="ml-0.5 text-sm text-white">{suffix}</span>
-      </h3>
-      <p className="mt-1 text-[11px] font-semibold leading-4 text-white/90">{detail}</p>
     </div>
   );
 }
 
 function Metric({ icon: Icon, label, value }) {
-  return (
-    <div className="rounded-[1.4rem] border-2 border-[#b8c5d3] bg-white p-5 text-[#10233F] shadow-[0_8px_20px_rgba(15,35,63,0.04)]">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#4d6380]">{label}</p>
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FFF4EA] text-[#B84F0E]"><Icon size={18} /></span>
-      </div>
-      <h3 className="mt-3 text-2xl font-black">{value}</h3>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} icon={Icon} tone="navy" />;
 }
 
 function StudentIntelligenceSnapshot({
@@ -705,27 +759,34 @@ function InsightCard({
   );
 }
 
-function QuickAction({ icon: Icon, title, text, onClick }) {
+function QuickAction({
+  icon: Icon,
+  title,
+  text,
+  onClick,
+}) {
   return (
     <motion.button
       type="button"
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className="rounded-[1.5rem] border-2 border-[#b8c5d3] bg-white p-5 text-left shadow-[0_8px_20px_rgba(15,35,63,0.04)] transition hover:-translate-y-0.5 hover:border-[#FFB38A] hover:bg-[#FFF8EF]"
+      className="group flex h-full min-w-0 items-start gap-3 rounded-[1.25rem] border-2 border-[#C9D7E6] bg-white p-4 text-left shadow-[0_6px_16px_rgba(15,35,63,0.04)] transition hover:border-[#FFB38A] hover:bg-[#FFF8EF]"
     >
-      <div className="flex items-start gap-3">
-        <div className="rounded-2xl border border-[#FFD0B5] bg-[#FFF4EA] p-3">
-          <Icon className="h-5 w-5 text-[#B84F0E]" />
-        </div>
-        <div>
-          <h3 className="font-black text-[#10233F]">{title}</h3>
-          <p className="mt-1 text-sm text-[#36506f]">{text}</p>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-[#FFB38A] bg-[#FFF4EA] px-3 py-1 text-xs font-black text-[#B84F0E]">
-            <Copy size={13} />
-            Copy
-          </div>
-        </div>
-      </div>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#FFD0B5] bg-[#FFF4EA] text-[#B84F0E]">
+        <Icon size={17} />
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="block font-black text-[#10233F]">{title}</span>
+        <span className="mt-1 block text-xs font-semibold leading-5 text-[#52677F]">
+          {text}
+        </span>
+      </span>
+
+      <Copy
+        size={15}
+        className="mt-1 shrink-0 text-[#9A6B50] transition group-hover:text-[#C2410C]"
+      />
     </motion.button>
   );
 }
@@ -759,40 +820,7 @@ function OperationalSignal({ icon: Icon, label, value, detail, tone = "blue" }) 
 
 
 function WorkspaceModeCard({ label, value, detail, tone = "cream" }) {
-  const isDark = tone === "navy" || tone === "orange";
-
-  const style =
-    tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : tone === "orange"
-        ? "border-orange-500 bg-[#FF5A0A]"
-        : "border-[#FFB38A] bg-white";
-
-  return (
-    <div
-      className={`rounded-[1.35rem] border-[3px] p-4 ${style}`}
-      style={{ color: isDark ? "#ffffff" : "#10233f" }}
-    >
-      <p
-        className="text-[9px] font-black uppercase tracking-[0.14em]"
-        style={{ color: isDark ? "#ffffff" : "#4d6380" }}
-      >
-        {label}
-      </p>
-      <p
-        className="mt-1 text-xl font-black"
-        style={{ color: isDark ? "#ffffff" : "#10233f" }}
-      >
-        {value}
-      </p>
-      <p
-        className="mt-1 text-xs font-semibold leading-5"
-        style={{ color: isDark ? "#ffffff" : "#4d6380" }}
-      >
-        {detail}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={detail} tone={toZaifanMetricTone(tone)} />;
 }
 
 function getOpportunityStars(score = 0) {
@@ -801,6 +829,63 @@ function getOpportunityStars(score = 0) {
   if (score >= 55) return 3;
   if (score >= 40) return 2;
   return 1;
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default AIWorkspacePanel;

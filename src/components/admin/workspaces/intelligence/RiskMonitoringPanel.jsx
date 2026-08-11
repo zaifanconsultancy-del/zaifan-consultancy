@@ -36,6 +36,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function normalize(value = "") {
   return String(value || "")
@@ -696,6 +697,7 @@ function RiskMonitoringPanel({
   students = [],
 }) {
   const reduceMotion = useReducedMotion();
+  const hasEvidence = students.length > 0;
 
   const [query, setQuery] = useState("");
   const [severityFilter, setSeverityFilter] =
@@ -988,7 +990,7 @@ function RiskMonitoringPanel({
       transition={{
         duration: reduceMotion ? 0 : 0.28,
       }}
-      className="min-w-0 overflow-hidden rounded-[1.75rem] border-[3px] border-[#123865] bg-[#FFF8EF] shadow-[0_16px_42px_rgba(18,56,101,0.10)]"
+      className="min-w-0 bg-[#FFF8EF]"
     >
       <div className="min-w-0 bg-[#FFF8EF] p-5 sm:p-6">
         <section className="min-w-0 rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-4 shadow-[0_8px_22px_rgba(18,56,101,0.05)] sm:p-5">
@@ -1006,55 +1008,60 @@ function RiskMonitoringPanel({
               </p>
             </div>
 
-            <div className="shrink-0 rounded-[1.15rem] border-2 border-[#C9D7E6] bg-[#FFF8EF] px-5 py-3 text-center sm:min-w-[140px]">
-              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
-                Risk Portfolio
-              </p>
-              <p className="mt-1 text-3xl font-black text-[#C2410C]">
-                {riskyStudents.length}
-              </p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#53657D]">
-                Cases to review
-              </p>
+            <div className="shrink-0 sm:min-w-[170px]">
+              <ZaifanMetricCard
+                level="baby"
+                label="Risk Portfolio"
+                value={hasEvidence ? riskyStudents.length : "N/A"}
+                detail={hasEvidence ? "Cases to review" : "No scored evidence yet"}
+                icon={ShieldAlert}
+                tone={hasEvidence ? (riskyStudents.length ? "red" : "green") : "slate"}
+              />
             </div>
           </div>
 
           <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <ReadinessMetric
               label="Critical Cases"
-              value={metrics.critical}
+              value={hasEvidence ? metrics.critical : "N/A"}
               helper="Severity 90+ requiring immediate attention."
               icon={Flame}
+              tone="red"
             />
             <ReadinessMetric
               label="Rescue Cases"
-              value={riskCommand.rescue.length}
+              value={hasEvidence ? riskCommand.rescue.length : "N/A"}
               helper="High risk plus high opportunity."
               icon={TrendingUp}
+              tone="orange"
             />
             <ReadinessMetric
               label="Visa / CAS Watch"
-              value={riskCommand.visaCases.length}
+              value={hasEvidence ? riskCommand.visaCases.length : "N/A"}
               helper="Late-stage movement requiring monitoring."
               icon={Plane}
+              tone="amber"
             />
             <ReadinessMetric
               label="Task Pressure"
-              value={riskCommand.taskCases.length}
+              value={hasEvidence ? riskCommand.taskCases.length : "N/A"}
               helper="Overdue, overloaded or weak task execution."
               icon={TimerReset}
+              tone="red"
             />
             <ReadinessMetric
               label="Document Pressure"
-              value={riskCommand.documentCases.length}
+              value={hasEvidence ? riskCommand.documentCases.length : "N/A"}
               helper="Missing, weak or unknown readiness."
               icon={FileWarning}
+              tone="amber"
             />
             <ReadinessMetric
               label="Planning Gaps"
-              value={riskCommand.planningCases.length}
+              value={hasEvidence ? riskCommand.planningCases.length : "N/A"}
               helper="No plan or no safer university option."
               icon={GraduationCap}
+              tone="blue"
             />
           </div>
         </section>
@@ -1062,24 +1069,28 @@ function RiskMonitoringPanel({
         <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-4">
           <RiskMiniBoard
             title="Rescue Board"
+            hasEvidence={hasEvidence}
             items={riskCommand.rescue.slice(0, 4)}
             tone="orange"
           />
 
           <RiskMiniBoard
             title="Document Board"
+            hasEvidence={hasEvidence}
             items={riskCommand.documentCases.slice(0, 4)}
             tone="warning"
           />
 
           <RiskMiniBoard
             title="Task Board"
+            hasEvidence={hasEvidence}
             items={riskCommand.taskCases.slice(0, 4)}
             tone="red"
           />
 
           <RiskMiniBoard
             title="Planning Board"
+            hasEvidence={hasEvidence}
             items={riskCommand.planningCases.slice(0, 4)}
             tone="navy"
           />
@@ -1352,7 +1363,7 @@ function RiskMonitoringPanel({
                           </div>
                         ) : null}
 
-                        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                           <MiniMetric
                             label="Documents"
                             value={
@@ -1455,28 +1466,17 @@ function ReadinessMetric({
   value,
   helper,
   icon: Icon,
+  tone = "blue",
 }) {
   return (
-    <article className="min-w-0 rounded-[1.05rem] border-2 border-[#C9D7E6] bg-white p-4 shadow-[0_5px_14px_rgba(18,56,101,0.035)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#53657D]">
-            {label}
-          </p>
-          <p className="mt-2 text-2xl font-black text-[#10233F]">
-            {value ?? 0}
-          </p>
-        </div>
-
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]">
-          <Icon size={14} />
-        </span>
-      </div>
-
-      <p className="mt-2 text-[10px] font-semibold leading-4 text-slate-600">
-        {helper}
-      </p>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail={helper}
+      icon={Icon}
+      tone={tone}
+    />
   );
 }
 
@@ -1488,72 +1488,15 @@ function RiskCommandCard({
   tone = "red",
   icon: Icon,
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "orange"
-      ? "border-[#FFB38A] bg-[#FFF4E8]"
-      : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-red-300 bg-red-50";
-
   return (
-    <div
-      className={`rounded-[1.35rem] border-[3px] p-4 ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{
-              color: dark
-                ? "#FDBA74"
-                : "#64748B",
-            }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-3xl font-black"
-            style={{
-              color: dark
-                ? "#FFFFFF"
-                : "#10233F",
-            }}
-          >
-            {value || 0}
-          </p>
-        </div>
-
-        {Icon ? (
-          <Icon
-            size={18}
-            style={{
-              color: dark
-                ? "#FDBA74"
-                : "#C2410C",
-            }}
-          />
-        ) : null}
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{
-          color: dark
-            ? "#F8FAFC"
-            : "#64748B",
-        }}
-      >
-        {detail}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1564,70 +1507,16 @@ function PortfolioMetric({
   icon: Icon,
   tone = "orange",
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "danger"
-      ? "border-red-300 bg-red-50"
-      : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-[#FFB38A] bg-[#FFF4E8]";
-
   return (
-    <div
-      className={`rounded-[1.3rem] border-[3px] p-4 ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{
-              color: dark
-                ? "#FDBA74"
-                : "#64748B",
-            }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-2xl font-black"
-            style={{
-              color: dark
-                ? "#FFFFFF"
-                : "#10233F",
-            }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={18}
-          style={{
-            color: dark
-              ? "#FDBA74"
-              : "#C2410C",
-          }}
-        />
-      </div>
-
-      <p
-        className="mt-2 text-xs font-semibold leading-5"
-        style={{
-          color: dark
-            ? "#F8FAFC"
-            : "#64748B",
-        }}
-      >
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      surface="light"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1635,6 +1524,7 @@ function RiskMiniBoard({
   title,
   items = [],
   tone = "red",
+  hasEvidence = true,
 }) {
   const dark = tone === "navy";
 
@@ -1707,7 +1597,7 @@ function RiskMiniBoard({
           )
         ) : (
           <p className="rounded-xl border-2 border-dashed border-[#C9D7E6] bg-[#FFF8EF] p-4 text-sm font-semibold text-[#65748B]">
-            No records.
+            {hasEvidence ? "No records." : "No scored Executive evidence yet."}
           </p>
         )}
       </div>
@@ -1715,20 +1605,9 @@ function RiskMiniBoard({
   );
 }
 
-function MiniMetric({
-  label,
-  value,
-}) {
+function MiniMetric({ label, value }) {
   return (
-    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-3 py-2">
-      <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#65748B]">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard level="baby" label={label} value={value} tone="navy" />
   );
 }
 
@@ -1737,44 +1616,13 @@ function ScoreCard({
   value,
   tone = "orange",
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "danger"
-      ? "border-red-400 bg-[#fff0f0]"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : "border-[#FF5A0A] bg-[#fff3e5]";
-
   return (
-    <div
-      className={`rounded-xl border-2 p-3 text-center ${style}`}
-      style={{
-        color: dark ? "#FFFFFF" : "#10233F",
-      }}
-    >
-      <p
-        className="text-[8px] font-black uppercase tracking-[0.08em]"
-        style={{
-          color: dark
-            ? "#FDBA74"
-            : "#64748B",
-        }}
-      >
-        {label}
-      </p>
-
-      <p
-        className="mt-1 text-xl font-black"
-        style={{
-          color: dark
-            ? "#FFFFFF"
-            : "#10233F",
-        }}
-      >
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      label={label}
+      value={value}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1797,6 +1645,44 @@ function SeverityBadge({ severity }) {
       Severity {severity}
     </span>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default RiskMonitoringPanel;

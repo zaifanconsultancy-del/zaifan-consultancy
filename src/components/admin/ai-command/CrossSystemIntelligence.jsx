@@ -112,6 +112,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 const VIEW_OPTIONS = [
   { id: "signals", label: "Signals", icon: Brain },
@@ -319,6 +320,44 @@ function getDirectionState(value = "") {
   }
 
   return "neutral";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function CrossSystemIntelligence({
@@ -1679,58 +1718,21 @@ function MetricCard({
   connected,
   derived,
 }) {
+  const helper = [
+    detail,
+    connected === false ? "Source unavailable" : "",
+    derived ? "Derived signal" : "",
+  ].filter(Boolean).join(" · ");
+
   return (
-    <article
-      className={`relative overflow-hidden rounded-[1.4rem] border-[3px] p-4 shadow-[0_10px_28px_rgba(23,36,61,0.055)] sm:p-5 ${toneClass(
-        connected ? tone : "muted"
-      )}`}
-    >
-      <div
-        className={`absolute inset-x-0 top-0 h-1.5 ${
-          connected ? accentBar(tone) : "bg-slate-300"
-        }`}
-      />
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase leading-4 tracking-[0.1em] text-[#10233F]">
-            {label}
-          </p>
-
-          <p className="mt-3 break-words text-3xl font-black leading-none text-[#10233F]">
-            {value}
-          </p>
-        </div>
-
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/80">
-          <Icon size={17} />
-        </span>
-      </div>
-
-      <p className="mt-3 text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span
-          className={`text-[9px] font-black uppercase tracking-[0.08em] ${
-            connected ? "text-emerald-800" : "text-slate-500"
-          }`}
-        >
-          {connected
-            ? derived
-              ? "Derived from supplied data"
-              : "Connected"
-            : "Awaiting source"}
-        </span>
-
-        {derived ? (
-          <span className="rounded-md border border-[#F97316] bg-white px-2 py-0.5 text-[8px] font-black uppercase text-[#B84F0E]">
-            Calculated
-          </span>
-        ) : null}
-      </div>
-    </article>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      icon={Icon}
+      tone={connected === false ? "slate" : toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1825,14 +1827,7 @@ function HeaderChip({ icon: Icon, label }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.08em] text-white/85">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function StatusMeta({ icon: Icon, label }) {
@@ -1845,17 +1840,7 @@ function StatusMeta({ icon: Icon, label }) {
 }
 
 function MiniStat({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-lg border-2 border-[#E1E8F0] bg-[#F7FAFC] p-2.5">
-      <p className="truncate text-[8px] font-black uppercase tracking-[0.07em] text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-xs font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function SystemStateBadge({ state, status }) {

@@ -1,3 +1,4 @@
+// GPTIntelligencePanel STUDENT CASE BRAIN V5 — deep analyses share live Student 360 context
 // GPTIntelligencePanel V4 — Maximum Stored GPT Intelligence OS
 import { useEffect, useMemo, useRef, useState } from "react";
 import AIActionPanel from "./AIActionPanel";
@@ -22,6 +23,7 @@ import {
   getStudentAIAnalysisHistory,
   runStudentAIAnalysis,
 } from "../../../../utils/studentAIService";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 
 const REQUEST_TIMEOUT_MS = 30000;
@@ -98,6 +100,7 @@ function GPTIntelligencePanel({
   student = {},
   onOpenWorkspace = () => {},
   adminProfile = null,
+  caseContext = {},
 }) {
   const [activeModule, setActiveModule] = useState(
     AI_ANALYSIS_TYPES.STUDENT_ANALYSIS
@@ -259,6 +262,7 @@ function GPTIntelligencePanel({
         runStudentAIAnalysis({
           student,
           analysisType: moduleType,
+          caseContext,
         }),
         `${selectedModule.label} generation timed out.`
       );
@@ -319,9 +323,7 @@ function GPTIntelligencePanel({
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6" style={{ color: "#F8FAFC" }}>
-              Run separate OpenAI modules for analysis, risk, university
-              recommendations, counselor copilot, email drafts, and WhatsApp
-              drafts. Each module saves its own history.
+              Run separate OpenAI modules against the same live Student 360 Case Brain for analysis, risk, university recommendations, counselor copilot, email drafts and WhatsApp drafts. Each module saves its own history.
             </p>
           </div>
 
@@ -966,17 +968,8 @@ function MetaCard({ label, value }) {
 
 function StatCard({ label, value }) {
   return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      className="min-w-0 rounded-[1.2rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)]"
-    >
-      <p className="text-xs uppercase tracking-[0.18em] text-[#4D6380]">
-        {label}
-      </p>
-
-      <p className="mt-3 break-words text-2xl font-black text-[#10233F]">
-        {value}
-      </p>
+    <motion.div whileHover={{ y: -2 }} className="min-w-0">
+      <ZaifanMetricCard level="coBoss" label={label} value={value} tone="navy" />
     </motion.div>
   );
 }
@@ -1001,6 +994,44 @@ function getRiskStyle(value = "") {
   }
 
   return "text-[#243b5a] border-[#C9D7E6] bg-[#F2F7FC]";
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default GPTIntelligencePanel;

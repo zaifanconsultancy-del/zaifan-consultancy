@@ -15,6 +15,7 @@
 // - no backend mutations or fake AI claims
 
 import React, { useMemo } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -183,68 +184,65 @@ function FunnelInsight({
   );
 }
 
-function SummaryMetric({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  tone = "orange",
-}) {
-  const isNavy = tone === "navy";
+function SummaryMetric({ label, value, helper, icon: Icon, tone = "orange" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} />;
+}
 
-  const surface =
-    tone === "orange"
-      ? "border-[#FFB38A] bg-[#FFF4EA]"
-      : tone === "rose"
-      ? "border-rose-300 bg-rose-50"
-      : tone === "emerald"
-      ? "border-emerald-300 bg-emerald-50"
-      : "border-[#123865] bg-[#123865]";
 
-  return (
-    <div
-      className={`min-w-0 rounded-[1.25rem] border-[3px] p-4 shadow-[0_6px_18px_rgba(15,35,63,0.04)] ${surface}`}
-      style={{ color: isNavy ? "#FFFFFF" : "#10233F" }}
-    >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p
-            className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.08em]"
-            style={{ color: isNavy ? "#F8FAFC" : "#64748B" }}
-          >
-            {label}
-          </p>
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
 
-          <p
-            className="mt-2 break-words text-2xl font-black leading-none"
-            style={{ color: isNavy ? "#FFFFFF" : "#10233F" }}
-          >
-            {value}
-          </p>
-        </div>
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
 
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 ${
-            isNavy
-              ? "border-white/30 bg-white/10"
-              : "border-[#FFB38A] bg-white"
-          }`}
-        >
-          <Icon
-            size={17}
-            style={{ color: isNavy ? "#FDBA74" : "#C2410C" }}
-          />
-        </div>
-      </div>
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
 
-      <p
-        className="mt-2 break-words text-xs font-semibold leading-5"
-        style={{ color: isNavy ? "#F8FAFC" : "#64748B" }}
-      >
-        {helper}
-      </p>
-    </div>
-  );
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default function GrowthFunnelPanel({

@@ -55,6 +55,7 @@ import {
 } from "framer-motion";
 import { useMemo } from "react";
 import { buildAiLeadInsights } from "../../../../services/aiLeadEngine";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -808,30 +809,7 @@ function AIExecutiveBriefing({
 }
 
 function AIStatCard({ stat }) {
-  const Icon = stat.icon;
-  const style = getToneStyle(stat.tone);
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.3rem] border-[3px] p-4 shadow-[0_6px_16px_rgba(15,35,63,0.04)] ${style.card}`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[9px] font-black uppercase tracking-[0.1em]">
-          {stat.label}
-        </p>
-
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 bg-white ${style.icon}`}
-        >
-          <Icon size={17} />
-        </div>
-      </div>
-
-      <p className="mt-3 text-3xl font-black text-[#10233F]">
-        {stat.value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={stat.label} value={stat.value} icon={stat.icon} tone={toZaifanMetricTone(stat.tone)} />;
 }
 
 function LatestLeadCard({
@@ -1194,21 +1172,8 @@ function HeaderBadge({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function getToneStyle(tone) {
@@ -1316,6 +1281,51 @@ function getHealthConfig(
     message:
       "Current CRM operations need attention. Resolve urgency, improve ownership coverage, and work the highest-value records first.",
   };
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default DashboardOverview;

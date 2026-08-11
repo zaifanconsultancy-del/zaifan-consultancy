@@ -1,3 +1,4 @@
+// studentAIService STUDENT CASE BRAIN V2 — live Student 360 package with legacy fallback
 import { supabase } from "../lib/supabaseClient";
 
 const AI_ANALYSIS_TABLE = "student_ai_analysis";
@@ -151,7 +152,114 @@ export function normalizeAnalysisType(
     : AI_ANALYSIS_TYPES.STUDENT_ANALYSIS;
 }
 
-export async function buildStudentAIDataPackage(student = {}) {
+function hasLiveCaseBrain(caseContext) {
+  return Boolean(
+    caseContext &&
+      typeof caseContext === "object" &&
+      !Array.isArray(caseContext) &&
+      caseContext.version &&
+      caseContext.sections
+  );
+}
+
+function buildPackageFromLiveCaseBrain(student, caseContext) {
+  const sections = caseContext?.sections || {};
+  const numericStudentId = getNumericStudentId(
+    student?.id ?? caseContext?.identity?.studentId
+  );
+
+  if (!numericStudentId) {
+    throw createServiceError(
+      "A valid student ID is required to build the AI data package.",
+      null,
+      "INVALID_STUDENT_ID"
+    );
+  }
+
+  const studentType = normalizeStudentType(
+    caseContext?.identity?.studentType ||
+      student?.student_type ||
+      student?.type ||
+      "inquiry"
+  );
+
+  const crmTimeline = Array.isArray(sections.crmTimeline)
+    ? sections.crmTimeline
+    : [];
+  const applicationTimeline = Array.isArray(sections.applicationTimeline)
+    ? sections.applicationTimeline
+    : [];
+  const timeline = buildTimeline(crmTimeline, applicationTimeline);
+
+  const sourceHealth =
+    caseContext?.sourceHealth && typeof caseContext.sourceHealth === "object"
+      ? caseContext.sourceHealth
+      : {};
+
+  const packageWarnings = Object.entries(sourceHealth)
+    .filter(([, status]) => status === "error")
+    .map(([key]) => `${key}: source did not load successfully in Student 360.`);
+
+  return {
+    studentId: numericStudentId,
+    studentType,
+    studentName:
+      caseContext?.identity?.name ||
+      student.full_name ||
+      student.name ||
+      student.student_name ||
+      "Unknown Student",
+    country:
+      caseContext?.caseSnapshot?.country ||
+      student.country ||
+      student.preferred_country ||
+      student.destination_country ||
+      "Not specified",
+    status:
+      caseContext?.caseSnapshot?.status ||
+      student.status ||
+      student.stage ||
+      "Not specified",
+    student,
+    caseBrain: caseContext,
+    documents: sections.documents || [],
+    documentRequirements: sections.documentRequirements || [],
+    tasks: sections.tasks || [],
+    communications: sections.communications || [],
+    universities: sections.universities || [],
+    universityRequirements: sections.universityRequirements || [],
+    universityEvents: sections.universityEvents || [],
+    applications: sections.applications || [],
+    applicationRequirements: sections.applicationRequirements || [],
+    applicationEvents: sections.applicationEvents || [],
+    invoices: sections.invoices || [],
+    payments: sections.payments || [],
+    receipts: sections.receipts || [],
+    paymentRequests: sections.paymentRequests || [],
+    supportRequests: sections.supportRequests || [],
+    supportMessages: sections.supportMessages || [],
+    visaCases: sections.visaCases || [],
+    visaRequirements: sections.visaRequirements || [],
+    visaEvents: sections.visaEvents || [],
+    followUps: sections.followUps || [],
+    portal: caseContext?.caseSnapshot?.portal || null,
+    timeline,
+    packageWarnings,
+    dataGaps: caseContext?.dataGaps || [],
+    sourceHealth,
+    dataSummary: {
+      ...(caseContext?.dataSummary || {}),
+      timeline: timeline.length,
+      warnings: packageWarnings.length,
+    },
+  };
+}
+
+export async function buildStudentAIDataPackage(student = {}, caseContext = null) {
+  if (hasLiveCaseBrain(caseContext)) {
+    return buildPackageFromLiveCaseBrain(student, caseContext);
+  }
+
   const numericStudentId = getNumericStudentId(student?.id);
 
   if (!numericStudentId) {
@@ -309,6 +417,7 @@ export async function buildStudentAIDataPackage(student = {}) {
 export async function runStudentAIAnalysis({
   student,
   analysisType = AI_ANALYSIS_TYPES.STUDENT_ANALYSIS,
+  caseContext = null,
 } = {}) {
   if (!getNumericStudentId(student?.id)) {
     throw createServiceError(
@@ -319,7 +428,7 @@ export async function runStudentAIAnalysis({
   }
 
   const normalizedType = normalizeAnalysisType(analysisType);
-  const studentPackage = await buildStudentAIDataPackage(student);
+  const studentPackage = await buildStudentAIDataPackage(student, caseContext);
 
   let functionResponse;
 

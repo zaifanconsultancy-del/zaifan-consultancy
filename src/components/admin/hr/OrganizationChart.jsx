@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
+import ZaifanMetricCard from "../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -52,66 +53,16 @@ function OrgMetric({
   icon: Icon,
   badge = "",
 }) {
-  const dark = tone === "navy";
-
   return (
-    <div
-      className={`rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${toneClass(
-        tone
-      )}`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-[9px] font-black uppercase tracking-[0.11em] ${
-              dark ? "text-orange-300" : "text-slate-500"
-            }`}
-          >
-            {label}
-          </p>
-
-          <p
-            className={`mt-2 break-words text-2xl font-black ${
-              dark ? "text-white" : "text-[#10233F]"
-            }`}
-          >
-            {value}
-          </p>
-        </div>
-
-        {Icon ? (
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 ${
-              dark
-                ? "border-white/20 bg-white/10 text-orange-200"
-                : "border-[#123865]/15 bg-white text-[#123865]"
-            }`}
-          >
-            <Icon size={16} />
-          </div>
-        ) : null}
-      </div>
-
-      <p
-        className={`mt-2 text-xs font-semibold leading-5 ${
-          dark ? "text-slate-200" : "text-slate-600"
-        }`}
-      >
-        {helper}
-      </p>
-
-      {badge ? (
-        <span
-          className={`mt-3 inline-flex rounded-lg border-2 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-            dark
-              ? "border-white/20 bg-white/10 text-white"
-              : "border-[#C9D7E6] bg-white text-slate-600"
-          }`}
-        >
-          {badge}
-        </span>
-      ) : null}
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      surface="light"
+      label={label}
+      value={value}
+      detail={[helper, badge].filter(Boolean).join(" · ")}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -197,7 +148,7 @@ function DepartmentCard({ department, compact = false }) {
           </p>
 
           <p className="mt-2 text-xl font-black text-[#10233F]">
-            {performanceAvailable ? `${performance}%` : "Not measured"}
+            {performanceAvailable ? `${performance}%` : "N/A"}
           </p>
 
           <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-600">
@@ -246,17 +197,45 @@ function DepartmentCard({ department, compact = false }) {
 }
 
 function MiniMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-[#E1E8F0] bg-[#FFF8EF] p-3 text-center">
-      <p className="text-base font-black text-[#10233F]">
-        {value}
-      </p>
+  return <ZaifanMetricCard level="baby" label={label} value={value ?? "—"} tone="navy" />;
+}
 
-      <p className="mt-1 text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">
-        {label}
-      </p>
-    </div>
-  );
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default function OrganizationChart({
@@ -348,14 +327,13 @@ export default function OrganizationChart({
 
       <div className="space-y-5 p-4 sm:p-5">
         {!compact ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid auto-rows-fr gap-3 md:grid-cols-2 xl:grid-cols-4">
             <OrgMetric
               label="Departments"
               value={departments.length}
               helper="Operating units inferred from current people records."
               tone="navy"
               icon={Building2}
-              badge="Real structure"
             />
 
             <OrgMetric
@@ -371,7 +349,7 @@ export default function OrganizationChart({
               value={
                 largestDepartment
                   ? largestDepartment.name
-                  : "Unavailable"
+                  : "N/A"
               }
               helper={
                 largestDepartment
@@ -388,7 +366,7 @@ export default function OrganizationChart({
               label="Avg Operating Index"
               value={
                 avgDepartmentIndex === null
-                  ? "Unavailable"
+                  ? "N/A"
                   : `${avgDepartmentIndex}%`
               }
               helper={
@@ -402,14 +380,13 @@ export default function OrganizationChart({
               }
               tone={
                 avgDepartmentIndex === null
-                  ? "blue"
+                  ? "slate"
                   : avgDepartmentIndex >= 75
                     ? "green"
                     : "amber"
               }
               icon={ShieldCheck}
-              badge="Operational only"
-            />
+                          />
           </div>
         ) : null}
 

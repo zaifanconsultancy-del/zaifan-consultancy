@@ -35,6 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function safeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -627,61 +628,65 @@ function DarkMetric({ label, value }) {
 function MetricCard({
   label,
   value,
-  icon: Icon,
-  tone = "orange",
-  helper,
+  helper = "",
+  detail = "",
+  tone = "blue",
+  toneName = "",
+  icon: Icon = null,
+  badge = "",
+  source = "",
+  className = "",
 }) {
-  const dark = tone === "navy";
-
-  const style =
-    tone === "danger"
-      ? "border-red-300 bg-red-50"
-      : tone === "warning"
-      ? "border-amber-300 bg-amber-50"
-      : tone === "good"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "navy"
-      ? "border-[#123865] bg-[#123865]"
-      : tone === "blue"
-      ? "border-[#60A5FA] bg-[#F2F7FF]"
-      : "border-[#FF5A0A] bg-[#FFF4EA]";
+  const resolvedTone = normalizeZaifanMetricTone(toneName || tone);
+  const resolvedDetail = [helper || detail, badge, source]
+    .filter((item) => typeof item === "string" && item.trim())
+    .join(" · ");
 
   return (
-    <div
-      className={`flex min-h-[176px] h-full flex-col justify-between rounded-[1.4rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${style}`}
-      style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p
-            className="text-[9px] font-black uppercase tracking-[0.1em]"
-            style={{ color: dark ? "#FDBA74" : "#64748B" }}
-          >
-            {label}
-          </p>
-
-          <p
-            className="mt-2 text-3xl font-black"
-            style={{ color: dark ? "#FFFFFF" : "#10233F" }}
-          >
-            {value}
-          </p>
-        </div>
-
-        <Icon
-          size={18}
-          style={{ color: dark ? "#FDBA74" : "#C2410C" }}
-        />
-      </div>
-
-      <p
-        className="mt-4 text-xs font-semibold leading-5"
-        style={{ color: dark ? "#F8FAFC" : "#64748B" }}
-      >
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={resolvedDetail}
+      icon={Icon}
+      tone={resolvedTone}
+      className={className}
+    />
   );
+}
+
+function normalizeZaifanMetricTone(tone) {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (["green", "emerald", "good", "success", "healthy", "connected"].includes(value)) {
+    return "green";
+  }
+
+  if (["red", "rose", "danger", "risk", "critical", "failed", "error"].includes(value)) {
+    return "red";
+  }
+
+  if (["amber", "yellow", "warning", "warn"].includes(value)) {
+    return "amber";
+  }
+
+  if (["violet", "purple"].includes(value)) {
+    return "violet";
+  }
+
+  if (["orange", "gold"].includes(value)) {
+    return "orange";
+  }
+
+  if (["blue", "cyan", "teal", "info"].includes(value)) {
+    return "blue";
+  }
+
+  if (["slate", "gray", "grey", "muted"].includes(value)) {
+    return "slate";
+  }
+
+  return "navy";
 }
 
 function buildNotificationActions({

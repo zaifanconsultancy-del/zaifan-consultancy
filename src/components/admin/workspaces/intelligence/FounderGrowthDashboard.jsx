@@ -23,6 +23,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   BarChart3,
@@ -827,69 +828,8 @@ function getBusinessHealthConfig(score) {
   };
 }
 
-function FounderMetricCard({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  tone = "orange",
-}) {
-  const tones = {
-    orange:
-      "border-[#FF5A0A] bg-[#FFF4EA] text-[#9B3E08]",
-    amber:
-      "border-amber-400 bg-amber-50 text-amber-900",
-    red:
-      "border-red-400 bg-red-50 text-red-800",
-    navy:
-      "border-[#123865] bg-[#EEF4FA] text-[#123865]",
-    green:
-      "border-emerald-400 bg-emerald-50 text-emerald-800",
-    blue:
-      "border-blue-400 bg-blue-50 text-blue-800",
-    default:
-      "border-slate-300 bg-[#F8FAFC] text-[#123865]",
-  };
-
-  const style =
-    tones[tone] ||
-    tones.orange;
-
-  return (
-    <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${style}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-80" />
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233F]">
-            {label}
-          </p>
-
-          <p className="mt-3 break-words text-2xl font-black leading-none tracking-[-0.025em] text-[#10233F] sm:text-3xl">
-            {value}
-          </p>
-        </div>
-
-        {Icon ? (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-current/25 bg-white/75">
-            <Icon size={17} />
-          </span>
-        ) : null}
-      </div>
-
-      {helper ? (
-        <p className="mt-3 min-h-[40px] text-xs font-semibold leading-5 text-slate-600">
-          {helper}
-        </p>
-      ) : null}
-
-      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-        Read-only business signal
-      </p>
-    </div>
-  );
+function FounderMetricCard({ label, value, helper, icon: Icon, tone = "orange" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={helper} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function FounderRecommendationCard({
@@ -944,6 +884,63 @@ function FounderRecommendationCard({
       </div>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default function FounderGrowthDashboard({
@@ -1388,7 +1385,7 @@ export default function FounderGrowthDashboard({
             />
           </div>
 
-          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             <FounderMetricCard
               label="Students"
               value={
@@ -1502,7 +1499,7 @@ export default function FounderGrowthDashboard({
             </div>
           </FounderDisclosure>
 
-          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+          <div className="grid min-w-0 gap-5">
             <CounselorLeaderboardPanel
               growth={growth}
               compact
@@ -1688,21 +1685,8 @@ function HeaderChip({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function StalledStudentPanel({

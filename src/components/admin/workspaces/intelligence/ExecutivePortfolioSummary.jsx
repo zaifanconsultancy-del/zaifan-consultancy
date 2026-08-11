@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { calculatePortfolioHealth } from "../../../../lib/executiveAI";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function normalize(value = "") {
   return String(value || "")
@@ -627,7 +628,7 @@ function ExecutivePortfolioSummary({ students = [] }) {
               </span>
             </div>
 
-            <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3 xl:grid-cols-3">
             <BoardCard
               label="Expected Offers"
               value={
@@ -741,7 +742,7 @@ function ExecutivePortfolioSummary({ students = [] }) {
             onToggle={() => setShowHealthMatrix((current) => !current)}
             icon={Workflow}
           >
-          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <HealthBlock
               icon={ClipboardCheck}
               title="Application Health"
@@ -1054,21 +1055,8 @@ function HeaderChip({
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value ?? 0}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function ExecutiveDisclosure({
@@ -1153,32 +1141,15 @@ function MetricCard({
   tone = "default",
   icon: Icon = Activity,
 }) {
-  const style = getToneStyle(tone);
-
   return (
-    <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.25rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-80" />
-
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233F]">
-          {label}
-        </p>
-
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70">
-          <Icon size={16} />
-        </span>
-      </div>
-
-      <p className="mt-3 break-words text-2xl font-black leading-none tracking-[-0.025em] text-[#10233F] sm:text-3xl">
-        {value ?? 0}
-      </p>
-
-      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-        Read-only portfolio signal
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail="Read-only portfolio signal"
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1189,32 +1160,15 @@ function BoardCard({
   tone = "default",
   icon: Icon = Sparkles,
 }) {
-  const style = getToneStyle(tone);
-
   return (
-    <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_20px_rgba(15,35,63,0.05)] ${style}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-1 bg-current opacity-80" />
-
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.11em] text-[#10233F]">
-          {label}
-        </p>
-
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70">
-          <Icon size={16} />
-        </span>
-      </div>
-
-      <p className="mt-3 break-words text-2xl font-black leading-none tracking-[-0.025em] text-[#10233F] sm:text-3xl">
-        {value ?? 0}
-      </p>
-
-      <p className="mt-2 min-h-[40px] text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value ?? 0}
+      detail={detail}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1570,6 +1524,44 @@ function formatLabel(
         part.slice(1)
     )
     .join(" ");
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default ExecutivePortfolioSummary;

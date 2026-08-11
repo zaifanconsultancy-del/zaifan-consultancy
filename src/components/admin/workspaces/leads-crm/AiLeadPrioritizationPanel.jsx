@@ -16,6 +16,7 @@
 // - responsive high-contrast Zaifan Admin OS design
 
 import { motion, useReducedMotion } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   CalendarCheck2,
@@ -377,7 +378,7 @@ function AiLeadPrioritizationPanel({
           allRanked.reduce((sum, lead) => sum + lead.score, 0) /
             allRanked.length
         )
-      : 0;
+      : null;
 
     return {
       allRanked,
@@ -396,9 +397,9 @@ function AiLeadPrioritizationPanel({
       initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.28 }}
-      className="min-w-0 space-y-4 rounded-[2.15rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_20px_55px_rgba(18,56,101,0.12)] sm:p-3"
+      className="min-w-0 space-y-4"
     >
-      <div className="grid min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
+      <div className="grid min-w-0 overflow-hidden rounded-[1.6rem] border-[3px] border-[#FF5A0A] bg-white lg:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.55fr)]">
         <div className="min-w-0 bg-[#123865] p-4 text-white sm:p-5 lg:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
@@ -424,7 +425,10 @@ function AiLeadPrioritizationPanel({
 
           <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
             <DarkMetric label="Leads Ranked" value={data.allRanked.length} />
-            <DarkMetric label="Average Score" value={`${data.average}/100`} />
+            <DarkMetric
+              label="Average Score"
+              value={data.average === null ? "N/A" : `${data.average}/100`}
+            />
             <DarkMetric label="VIP" value={data.vip} />
             <DarkMetric label="Open Pool" value={data.unassigned} />
           </div>
@@ -448,35 +452,33 @@ function AiLeadPrioritizationPanel({
         </div>
       </div>
 
-      <section className="rounded-[1.45rem] border-[3px] border-[#123865] bg-white p-3">
-        <button
-          type="button"
-          onClick={() =>
-            setWorkspaceExpanded((current) => !current)
-          }
-          aria-expanded={workspaceExpanded}
-          className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] px-4 py-3 text-left transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
-        >
-          <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
-              Counselor Priority Workspace
-            </p>
+      <button
+        type="button"
+        onClick={() =>
+          setWorkspaceExpanded((current) => !current)
+        }
+        aria-expanded={workspaceExpanded}
+        className="flex min-h-14 w-full min-w-0 items-center justify-between gap-3 rounded-[1.35rem] border-[3px] border-[#123865] bg-[#FFF8EF] px-5 py-4 text-left shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:border-[#FF5A0A] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
+      >
+        <div className="min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-orange-700">
+            Counselor Priority Workspace
+          </p>
 
-            <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-              {workspaceExpanded
-                ? "Hide ranked leads, scoring reasons and next actions."
-                : "Open ranked leads, scoring reasons and next actions."}
-            </p>
-          </div>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+            {workspaceExpanded
+              ? "Hide ranked leads, scoring reasons and next actions."
+              : "Open ranked leads, scoring reasons and next actions."}
+          </p>
+        </div>
 
-          <TrendingUp
-            size={17}
-            className={`shrink-0 text-[#123865] transition ${
-              workspaceExpanded ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-      </section>
+        <TrendingUp
+          size={17}
+          className={`shrink-0 text-[#123865] transition ${
+            workspaceExpanded ? "rotate-180" : ""
+          }`}
+        />
+      </button>
 
       {workspaceExpanded ? (
         <div className="min-w-0 rounded-[1.55rem] border-[3px] border-[#C9D7E6] bg-white p-4 shadow-[0_10px_26px_rgba(18,56,101,0.05)] sm:p-5">
@@ -728,24 +730,28 @@ function Badge({ icon: Icon, text, tone = "blue" }) {
 
 function DarkMetric({ label, value }) {
   return (
-    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/20 bg-white/10 p-3 text-white shadow-inner">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      surface="navy"
+      label={label}
+      value={value}
+      tone="navy"
+      className="h-full"
+    />
   );
 }
 
 function OrangeMetric({ label, value, icon: Icon }) {
   return (
-    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <Icon size={15} className="text-white" />
-      <p className="mt-2 text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
+    <ZaifanMetricCard
+      level="baby"
+      surface="navy"
+      label={label}
+      value={value}
+      icon={Icon}
+      tone="orange"
+      className="h-full"
+    />
   );
 }
 

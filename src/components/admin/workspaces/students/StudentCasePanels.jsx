@@ -125,7 +125,9 @@ function StudentCasePanels({
           universities: studentUniversities,
         }}
         sharedUniversities={studentUniversities}
+        sharedApplication={studentApplication}
         onSharedDataChange={loadStudentOsData}
+        onOpenApplication={() => setActivePanel("applications")}
       />
     );
   }

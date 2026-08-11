@@ -16,6 +16,7 @@
 // - no backend writes, no fake collections, no currency mixing
 
 import { useMemo } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   Banknote,
@@ -964,17 +965,7 @@ function SignalCard({
 }
 
 function MiniStat({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-[#C9D7E6] bg-[#FFF8EF] p-3">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-[#65748B]">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xs font-black leading-5 text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 export default RevenueIntelligencePanel;

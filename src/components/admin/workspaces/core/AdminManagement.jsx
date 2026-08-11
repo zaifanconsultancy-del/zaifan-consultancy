@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 12000;
 
@@ -942,53 +943,11 @@ function AdminManagement({
 }
 
 function OrangeAuthorityMetric({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-[1.1rem] border-2 border-white/30 bg-white/10 p-3 text-white shadow-inner">
-      <p className="break-words text-[8px] font-black uppercase tracking-[0.09em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-sm font-black leading-5 text-white">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
-function AccessSummaryStat({
-  icon: Icon,
-  label,
-  value,
-  tone = "slate",
-}) {
-  const styles = {
-    slate: "border-[#C9D7E6] bg-[#FFFDF8] text-[#10233F]",
-    blue: "border-[#60A5FA] bg-[#F2F7FF] text-blue-800",
-    orange: "border-[#FF5A0A] bg-[#FFF4EA] text-orange-900",
-    navy: "border-[#123865] bg-[#123865] text-white",
-  };
-
-  return (
-    <div
-      className={`min-w-0 rounded-[1.45rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(18,56,101,0.06)] ${
-        styles[tone] || styles.slate
-      }`}
-    >
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="break-words text-[9px] font-black uppercase tracking-[0.12em] opacity-75">
-            {label}
-          </p>
-          <p className="mt-2 text-3xl font-black">
-            {value}
-          </p>
-        </div>
-
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/10 shadow-sm">
-          <Icon size={19} />
-        </div>
-      </div>
-    </div>
-  );
+function AccessSummaryStat({ icon: Icon, label, value, tone = "slate" }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function inputClass(invalid) {
@@ -1164,14 +1123,7 @@ function RoleBadge({ role }) {
 }
 
 function DarkStat({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/30 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function Feedback({
@@ -1363,6 +1315,51 @@ function prettyRole(value = "") {
   return String(value || "staff")
     .replaceAll("_", " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default AdminManagement;

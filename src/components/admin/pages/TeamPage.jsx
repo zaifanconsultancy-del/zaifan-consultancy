@@ -142,9 +142,6 @@ function PerformanceViewSwitcher({
               Team Performance OS
             </span>
 
-            <span className="inline-flex items-center rounded-full border-2 border-orange-300/40 bg-orange-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-orange-100">
-              One workspace at a time
-            </span>
           </div>
 
           <h3 className="mt-3 break-words text-2xl font-black leading-tight tracking-[-0.03em] text-white sm:text-3xl">
@@ -196,49 +193,40 @@ function PerformanceViewSwitcher({
               type="button"
               onClick={() => setActiveView(view.id)}
               aria-pressed={active}
-              className={`group min-w-0 rounded-[1.25rem] border-[3px] p-4 text-left shadow-[0_6px_16px_rgba(18,56,101,0.04)] transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
+              className={`group min-w-0 rounded-[1.35rem] border-[3px] p-4 text-left shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_11px_24px_rgba(18,56,101,0.09)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
                 active
-                  ? "border-[#FF5A0A] bg-white"
-                  : "border-[#C9D7E6] bg-white hover:border-[#123865] hover:bg-[#F2F7FF]"
+                  ? "border-[#FF5A0A] bg-[#FFF7ED]"
+                  : "border-[#C9D7E6] bg-[#F7FAFE] hover:border-[#123865]"
               }`}
             >
               <div className="flex min-w-0 items-start gap-3">
                 <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 text-xs font-black ${
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 text-xs font-black shadow-[0_3px_8px_rgba(18,56,101,0.06)] ${
                     active
                       ? "border-[#FF5A0A] bg-[#FF5A0A] text-white"
-                      : "border-[#C9D7E6] bg-[#FFF8EF] text-[#123865]"
+                      : "border-[#C9D7E6] bg-white text-[#123865]"
                   }`}
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>
 
                 <span className="min-w-0 flex-1">
-                  <span className="block break-words text-[10px] font-black uppercase tracking-[0.1em] text-[#10233F]">
-                    {view.label}
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="block min-w-0 break-words text-[10px] font-black uppercase tracking-[0.1em] text-[#10233F]">
+                      {view.label}
+                    </span>
+                    {active ? (
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#FF5A0A]" aria-label="Active view" />
+                    ) : null}
                   </span>
 
-                  <span className="mt-1 block break-words text-[10px] font-semibold leading-4 text-slate-500">
+                  <span className="mt-1 block break-words text-[10px] font-semibold leading-4 text-[#60728A]">
                     {view.description}
                   </span>
                 </span>
-
-                <span
-                  className={`shrink-0 rounded-full border-2 px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] ${
-                    active
-                      ? "border-[#FF5A0A] bg-[#FFF4E8] text-orange-800"
-                      : "border-[#C9D7E6] bg-[#FFF8EF] text-slate-500"
-                  }`}
-                >
-                  {active ? "Open" : "View"}
-                </span>
               </div>
 
-              <div
-                className={`mt-3 h-1.5 overflow-hidden rounded-full ${
-                  active ? "bg-orange-100" : "bg-slate-100"
-                }`}
-              >
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#E8EEF5]">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
                     active ? "w-full bg-[#FF5A0A]" : "w-0 bg-[#123865]"

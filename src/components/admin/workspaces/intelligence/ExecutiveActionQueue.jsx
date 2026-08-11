@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   Activity,
   AlertTriangle,
@@ -802,7 +803,7 @@ function ExecutiveActionQueue({ scores = [], adminProfile = null, onActionExecut
               student actions without bypassing the human control layer.
             </p>
 
-            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+            <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
               <DarkMetric label="Actions" value={analytics.total} />
               <DarkMetric label="Critical" value={analytics.critical + analytics.urgent} />
               <DarkMetric label="Approval" value={analytics.approvalRequired} />
@@ -1406,23 +1407,7 @@ function ActionQueueCard({
 }
 
 function ReadOnlyMetric({ label, value, tone = "default" }) {
-  const style =
-    tone === "risk"
-      ? "border-red-300 bg-red-50"
-      : tone === "opportunity"
-      ? "border-emerald-300 bg-emerald-50"
-      : tone === "action"
-      ? "border-[#FF5A0A] bg-[#FFF4E8]"
-      : "border-[#C9D7E6] bg-[#F8FAFC]";
-
-  return (
-    <div className={`min-w-0 rounded-xl border-2 p-3 ${style}`}>
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-slate-600">
-        {label}
-      </p>
-      <p className="mt-1 break-words text-sm font-black text-[#10233F]">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function BatchHistoryPanel({ batchHistory = [] }) {
@@ -1503,21 +1488,7 @@ function BatchHistoryPanel({ batchHistory = [] }) {
 }
 
 function HistoryMetric({ label, value, tone = "neutral" }) {
-  const style =
-    tone === "green"
-      ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-      : tone === "red"
-      ? "border-red-300 bg-red-50 text-red-800"
-      : tone === "orange"
-      ? "border-[#FF5A0A] bg-[#FFF4E8] text-[#9B3E08]"
-      : "border-[#C9D7E6] bg-slate-50 text-[#10233F]";
-
-  return (
-    <div className={`min-w-[92px] rounded-xl border-2 px-3 py-2 ${style}`}>
-      <p className="text-[8px] font-black uppercase tracking-[0.08em]">{label}</p>
-      <p className="mt-1 text-base font-black">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone={toZaifanMetricTone(tone)} />;
 }
 
 function PayloadSummary({ payload = {} }) {
@@ -1548,44 +1519,15 @@ function DarkPill({ icon: Icon, children }) {
 }
 
 function DarkMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.09em] text-white">{label}</p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
 function OrangeMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">{label}</p>
-      <p className="mt-1 text-lg font-black text-white">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function QueueMetric({ label, value, tone = "default", icon: Icon = Activity }) {
-  const toneClass =
-    tone === "red"
-      ? "border-red-300 bg-red-50"
-      : tone === "gold"
-      ? "border-[#FF5A0A] bg-[#FFF4E8]"
-      : tone === "green"
-      ? "border-emerald-300 bg-emerald-50"
-      : "border-[#C9D7E6] bg-white";
-
-  return (
-    <div className={`rounded-xl border-[3px] p-4 ${toneClass}`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-          {label}
-        </p>
-        <Icon size={14} className="text-[#B84F0E]" />
-      </div>
-      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
-    </div>
-  );
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function CommandGroup({ eyebrow, title, description, children }) {
@@ -1675,11 +1617,7 @@ function FilterButton({ active = false, onClick, children }) {
 }
 
 function MiniStat({ label, value }) {
-  return (
-    <span className="rounded-full border border-[#243A60]/18 bg-white px-3 py-1 text-[#8992A1]">
-      {label}: {value}
-    </span>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function Badge({ label, danger = false, gold = false, success = false }) {
@@ -1760,6 +1698,63 @@ export function buildExecutiveQueueAnalytics(scores = []) {
       : 0,
     aging: buildQueueAgingAnalytics(items),
   };
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveActionQueue;

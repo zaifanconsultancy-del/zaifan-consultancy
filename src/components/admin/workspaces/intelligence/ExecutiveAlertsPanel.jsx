@@ -20,6 +20,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   BellRing,
@@ -712,7 +713,7 @@ function ExecutiveAlertsPanel({
           </span>
         </div>
 
-        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 bg-[#FFF8EF] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
           <CommandAlertCard
             icon={ShieldAlert}
             label="Immediate Escalations"
@@ -918,38 +919,12 @@ function HeaderChip({
   );
 }
 
-function NavyAlertMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function NavyAlertMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeAlertMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.08em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeAlertMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function AlertList({
@@ -1191,45 +1166,8 @@ function Badge({
   );
 }
 
-function CommandAlertCard({
-  label,
-  value,
-  detail,
-  tone = "orange",
-  icon: Icon = Sparkles,
-}) {
-  const style =
-    getToneClass(tone);
-
-  return (
-    <div
-      className={`relative min-w-0 overflow-hidden rounded-[1.45rem] border-[3px] p-4 shadow-[0_8px_22px_rgba(23,36,61,0.055)] ${style}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-current opacity-70" />
-
-      <div className="flex items-center justify-between gap-3">
-        <p className="min-w-0 break-words text-[9px] font-black uppercase leading-4 tracking-[0.1em] text-[#17243D]">
-          {label}
-        </p>
-
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-current/20 bg-white/70">
-          <Icon size={16} />
-        </span>
-      </div>
-
-      <p className="mt-3 text-3xl font-black leading-none tracking-[-0.025em] text-[#17243D]">
-        {value || 0}
-      </p>
-
-      <p className="mt-2 min-h-[40px] text-xs font-semibold leading-5 text-slate-600">
-        {detail}
-      </p>
-
-      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.1em] opacity-70">
-        Read-only command signal
-      </p>
-    </div>
-  );
+function CommandAlertCard({ label, value, detail, tone = "orange", icon: Icon = Sparkles }) {
+  return <ZaifanMetricCard level="coBoss" label={label} value={value} detail={detail} icon={Icon} tone={toZaifanMetricTone(tone)} />;
 }
 
 function ExecutiveMiniQueue({
@@ -1416,6 +1354,63 @@ function formatLabel(
         part.slice(1)
     )
     .join(" ");
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (
+    value.includes("blue") ||
+    value.includes("cyan") ||
+    value.includes("teal") ||
+    value.includes("info")
+  ) return "blue";
+  if (
+    value.includes("slate") ||
+    value.includes("gray") ||
+    value.includes("grey") ||
+    value.includes("muted") ||
+    value.includes("neutral") ||
+    value.includes("default")
+  ) return "slate";
+
+  return "navy";
 }
 
 export default ExecutiveAlertsPanel;

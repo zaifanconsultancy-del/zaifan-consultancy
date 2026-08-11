@@ -43,6 +43,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "../../../../lib/supabaseClient";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 const REQUEST_TIMEOUT_MS = 20000;
 
@@ -1623,7 +1624,7 @@ function StudentAnalyticsPanel({
           </div>
         </div>
 
-        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SourceTile
             label="Application"
             value={sharedApplication ? "Shared live data" : "Supabase / fallback"}
@@ -1875,30 +1876,14 @@ function MetricCard({
   tone = "navy",
   small = false,
 }) {
-  const styles = {
-    navy: "border-[#123865] bg-[#123865] text-white",
-    orange: "border-[#FF5A0A] bg-[#FF5A0A] text-white",
-    red: "border-red-300 bg-red-50 text-red-800",
-    green: "border-emerald-300 bg-emerald-50 text-emerald-800",
-  };
-
   return (
-    <div
-      className={`min-w-0 rounded-[1.45rem] border-[3px] p-5 shadow-[0_9px_24px_rgba(18,56,101,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${
-        styles[tone] || styles.navy
-      }`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.15em] opacity-80">
-          {label}
-        </p>
-        {Icon ? <Icon size={17} /> : null}
-      </div>
-
-      <p className={`mt-3 font-black ${small ? "text-xl" : "text-3xl"}`}>
-        {value}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level={small ? "baby" : "coBoss"}
+      label={label}
+      value={value}
+      icon={Icon}
+      tone={toZaifanMetricTone(tone)}
+    />
   );
 }
 
@@ -1977,20 +1962,7 @@ function RiskRow({ risk }) {
 }
 
 function InfoTile({ label, value, icon: Icon = FileCheck2 }) {
-  return (
-    <div className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
-      <div className="flex items-center gap-2">
-        <Icon size={14} className="text-orange-600" />
-        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
-          {label}
-        </p>
-      </div>
-
-      <p className="mt-2 break-words text-sm font-black text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} icon={Icon} tone="orange" />;
 }
 
 function StatusPill({ text, tone = "slate" }) {
@@ -2021,16 +1993,7 @@ function PositiveEmpty({ text }) {
 }
 
 function SourceTile({ label, value }) {
-  return (
-    <div className="min-w-0 rounded-[1.25rem] border-[3px] border-[#C9D7E6] bg-[#FFF8EF] p-4 shadow-[0_6px_16px_rgba(18,56,101,0.04)]">
-      <p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-2 text-xs font-black leading-5 text-[#10233F]">
-        {value}
-      </p>
-    </div>
-  );
+  return <ZaifanMetricCard level="baby" label={label} value={value} tone="slate" />;
 }
 
 function Feedback({ tone, onClose, children }) {
@@ -2066,6 +2029,44 @@ function Feedback({ tone, onClose, children }) {
       </button>
     </div>
   );
+}
+
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("good") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
 }
 
 export default StudentAnalyticsPanel;

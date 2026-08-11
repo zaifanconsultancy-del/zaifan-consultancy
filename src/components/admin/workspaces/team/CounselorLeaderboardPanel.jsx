@@ -40,6 +40,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useMemo } from "react";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 
 function safeNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -256,6 +257,51 @@ function buildCounselorModel(source = []) {
   }));
 }
 
+
+function toZaifanMetricTone(tone = "") {
+  const value = String(tone || "").trim().toLowerCase();
+
+  if (
+    value.includes("green") ||
+    value.includes("emerald") ||
+    value.includes("success") ||
+    value.includes("healthy") ||
+    value.includes("ready") ||
+    value.includes("connected") ||
+    value.includes("active") ||
+    value.includes("live") ||
+    value.includes("good")
+  ) return "green";
+
+  if (
+    value.includes("red") ||
+    value.includes("rose") ||
+    value.includes("danger") ||
+    value.includes("risk") ||
+    value.includes("critical") ||
+    value.includes("failed") ||
+    value.includes("error") ||
+    value.includes("blocked") ||
+    value.includes("disconnected")
+  ) return "red";
+
+  if (
+    value.includes("amber") ||
+    value.includes("yellow") ||
+    value.includes("warning") ||
+    value.includes("warn") ||
+    value.includes("attention") ||
+    value.includes("paused")
+  ) return "amber";
+
+  if (value.includes("violet") || value.includes("purple")) return "violet";
+  if (value.includes("orange") || value.includes("gold")) return "orange";
+  if (value.includes("blue") || value.includes("cyan") || value.includes("teal") || value.includes("info")) return "blue";
+  if (value.includes("slate") || value.includes("gray") || value.includes("grey") || value.includes("muted") || value.includes("neutral")) return "slate";
+
+  return "navy";
+}
+
 export default function CounselorLeaderboardPanel({
   growth = {},
   compact = false,
@@ -301,23 +347,28 @@ export default function CounselorLeaderboardPanel({
       0
     );
 
-    const averageQuality = fullRows.length
+    const hasTeamEvidence = fullRows.length > 0;
+
+    const averageQuality = hasTeamEvidence
       ? Math.round(
           fullRows.reduce(
             (sum, item) => sum + item.outcome.qualityScore,
             0
           ) / fullRows.length
         )
-      : 0;
+      : null;
 
     const topRevenueShare =
-      fullRows.length && totalRevenue > 0
+      hasTeamEvidence && totalRevenue > 0
         ? percent(fullRows[0]?.revenue, totalRevenue)
-        : 0;
+        : null;
 
-    const teamOfferRate = percent(totalOffers, totalApplications);
-    const teamCasRate = percent(totalCas, totalOffers);
-    const teamVisaRate = percent(totalVisas, totalCas);
+    const teamOfferRate =
+      totalApplications > 0 ? percent(totalOffers, totalApplications) : null;
+    const teamCasRate =
+      totalOffers > 0 ? percent(totalCas, totalOffers) : null;
+    const teamVisaRate =
+      totalCas > 0 ? percent(totalVisas, totalCas) : null;
 
     return {
       rows,
@@ -333,6 +384,7 @@ export default function CounselorLeaderboardPanel({
       teamOfferRate,
       teamCasRate,
       teamVisaRate,
+      hasTeamEvidence,
     };
   }, [growth.counselorLeaderboard, compact]);
 
@@ -393,7 +445,7 @@ export default function CounselorLeaderboardPanel({
           </p>
 
           <p className="mt-3 text-5xl font-black text-white">
-            {model.averageQuality}%
+            {model.averageQuality === null ? "N/A" : `${model.averageQuality}%`}
           </p>
 
           <p className="mt-1 text-xs font-black uppercase tracking-[0.1em] text-white">
@@ -407,7 +459,7 @@ export default function CounselorLeaderboardPanel({
             />
             <OrangeMetric
               label="Top Revenue Share"
-              value={`${model.topRevenueShare}%`}
+              value={model.topRevenueShare === null ? "N/A" : `${model.topRevenueShare}%`}
             />
           </div>
         </div>
@@ -418,23 +470,53 @@ export default function CounselorLeaderboardPanel({
           <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <HealthMetric
               label="Offer Rate"
-              value={`${model.teamOfferRate}%`}
-              helper={`${model.totalOffers} offers from ${model.totalApplications} applications`}
-              tone={model.teamOfferRate >= 50 ? "green" : "orange"}
+              value={model.teamOfferRate === null ? "N/A" : `${model.teamOfferRate}%`}
+              helper={
+                model.teamOfferRate === null
+                  ? "Not assessed · No application baseline exists yet."
+                  : `${model.totalOffers} offers from ${model.totalApplications} applications`
+              }
+              tone={
+                model.teamOfferRate === null
+                  ? "slate"
+                  : model.teamOfferRate >= 50
+                  ? "green"
+                  : "orange"
+              }
             />
 
             <HealthMetric
               label="CAS Rate"
-              value={`${model.teamCasRate}%`}
-              helper={`${model.totalCas} CAS from ${model.totalOffers} offers`}
-              tone={model.teamCasRate >= 50 ? "green" : "orange"}
+              value={model.teamCasRate === null ? "N/A" : `${model.teamCasRate}%`}
+              helper={
+                model.teamCasRate === null
+                  ? "Not assessed · No offer baseline exists yet."
+                  : `${model.totalCas} CAS from ${model.totalOffers} offers`
+              }
+              tone={
+                model.teamCasRate === null
+                  ? "slate"
+                  : model.teamCasRate >= 50
+                  ? "green"
+                  : "orange"
+              }
             />
 
             <HealthMetric
               label="Visa Rate"
-              value={`${model.teamVisaRate}%`}
-              helper={`${model.totalVisas} visas from ${model.totalCas} CAS records`}
-              tone={model.teamVisaRate >= 50 ? "green" : "orange"}
+              value={model.teamVisaRate === null ? "N/A" : `${model.teamVisaRate}%`}
+              helper={
+                model.teamVisaRate === null
+                  ? "Not assessed · No CAS baseline exists yet."
+                  : `${model.totalVisas} visas from ${model.totalCas} CAS records`
+              }
+              tone={
+                model.teamVisaRate === null
+                  ? "slate"
+                  : model.teamVisaRate >= 50
+                  ? "green"
+                  : "orange"
+              }
             />
           </div>
         ) : null}
@@ -657,31 +739,16 @@ function LeaderboardRow({
   );
 }
 
-function HealthMetric({
-  label,
-  value,
-  helper,
-  tone = "orange",
-}) {
-  const style =
-    tone === "green"
-      ? "border-emerald-300 bg-emerald-50"
-      : "border-[#FF5A0A] bg-[#FFF4E8]";
-
+function HealthMetric({ label, value, helper, tone = "orange" }) {
   return (
-    <div className={`min-w-0 rounded-[1.35rem] border-[3px] p-4 shadow-[0_7px_18px_rgba(18,56,101,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${style}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
-        {label}
-      </p>
-
-      <p className="mt-2 text-3xl font-black text-[#10233F]">
-        {value}
-      </p>
-
-      <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600">
-        {helper}
-      </p>
-    </div>
+    <ZaifanMetricCard
+      level="coBoss"
+      label={label}
+      value={value}
+      detail={helper}
+      tone={toZaifanMetricTone(tone)}
+      className="h-full"
+    />
   );
 }
 
@@ -770,38 +837,12 @@ function FounderNote() {
   );
 }
 
-function DarkMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/20 bg-white/10 p-3 text-white shadow-inner">
-      <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.07em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeMetric({
-  label,
-  value,
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border-2 border-white/25 bg-white/10 p-3 text-white shadow-inner">
-      <p className="break-words text-[8px] font-black uppercase leading-4 tracking-[0.07em] text-white">
-        {label}
-      </p>
-
-      <p className="mt-1 break-words text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeMetric({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="orange" />;
 }
 
 function EmptyState() {

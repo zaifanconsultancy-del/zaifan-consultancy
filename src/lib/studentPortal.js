@@ -1,3 +1,4 @@
+// studentPortal ACCOUNT LOGIN + FINANCE IDENTITY STORM FIX V1
 import { supabase } from "./supabaseClient";
 
 const SEARCH_TIMEOUT_MS = 12000;
@@ -7,6 +8,11 @@ const PAYMENT_TIMEOUT_MS = 12000;
 const PAYMENT_ACCOUNT_TIMEOUT_MS = 9000;
 const LOGIN_TIMEOUT_MS = 25000;
 const ACCOUNT_TIMEOUT_MS = 18000;
+const IDENTITY_TIMEOUT_MS = 4500;
+const IDENTITY_CACHE_TTL_MS = 5 * 60 * 1000;
+
+const identitySourceCache = new Map();
+const identitySourcePending = new Map();
 
 const TABLES = {
   inquiries: "inquiries",
@@ -383,16 +389,36 @@ export function getStudentPersonId(student = {}) {
 }
 
 function normalizeIdentitySource(row = {}, sourceType = "inquiry") {
+  const resolvedId = row?.student_id ?? row?.id ?? "";
   return {
-    id: row?.id,
-    student_id: row?.id,
-    student_type: sourceType,
+    id: resolvedId,
+    student_id: resolvedId,
+    student_type: row?.student_type || row?.__leadType || sourceType,
     person_id: row?.person_id || null,
-    full_name: row?.full_name || row?.name || "",
-    email: row?.email || "",
-    phone: row?.phone || "",
+    full_name: row?.full_name || row?.student_name || row?.name || "",
+    email: row?.email || row?.student_email || "",
+    phone: row?.phone || row?.phone_number || row?.whatsapp || "",
     created_at: row?.created_at || null,
   };
+}
+
+function uniqueIdentitySources(rows = []) {
+  return Array.from(
+    new Map(
+      rows
+        .filter((row) => row?.student_id ?? row?.id)
+        .map((row) => {
+          const normalized = normalizeIdentitySource(
+            row,
+            row?.student_type || row?.__leadType || "inquiry"
+          );
+          return [
+            `${normalize(normalized.student_type)}:${String(normalized.student_id)}`,
+            normalized,
+          ];
+        })
+    ).values()
+  );
 }
 
 export async function getStudentIdentitySources(student = {}) {
@@ -406,6 +432,7 @@ export async function getStudentIdentitySources(student = {}) {
           {
             ...student,
             id: currentId,
+            student_id: currentId,
             person_id: personId || student?.person_id || null,
           },
           currentType
@@ -413,56 +440,87 @@ export async function getStudentIdentitySources(student = {}) {
       ]
     : [];
 
-  if (!personId) return fallback;
+  const embedded = uniqueIdentitySources([
+    ...(Array.isArray(student?.identity_sources) ? student.identity_sources : []),
+    ...(Array.isArray(student?.identitySources) ? student.identitySources : []),
+    ...fallback,
+  ]);
 
-  const queries = [
-    safeQuery(
-      supabase
-        .from(TABLES.inquiries)
-        .select("id, person_id, full_name, email, phone, created_at")
-        .eq("person_id", personId)
-        .order("created_at", { ascending: true }),
-      [],
-      DATA_TIMEOUT_MS,
-      "identity inquiry sources"
-    ),
-    safeQuery(
-      supabase
-        .from(TABLES.appointments)
-        .select("id, person_id, full_name, email, phone, created_at")
-        .eq("person_id", personId)
-        .order("created_at", { ascending: true }),
-      [],
-      DATA_TIMEOUT_MS,
-      "identity appointment sources"
-    ),
-  ];
+  // Search/login flows already attach every known inquiry/appointment identity.
+  // Reuse those aliases instead of issuing the same two Supabase queries for
+  // every table, count, dashboard section and Finance refresh.
+  if (embedded.length > 1 || !personId) {
+    return embedded.length ? embedded : fallback;
+  }
 
-  const results = await Promise.allSettled(queries);
+  const cacheKey = `person:${personId}`;
+  const now = Date.now();
+  const cached = identitySourceCache.get(cacheKey);
 
-  const sources = [
-    ...(results[0]?.status === "fulfilled"
-      ? (results[0].value || []).map((row) =>
-          normalizeIdentitySource(row, "inquiry")
-        )
-      : []),
-    ...(results[1]?.status === "fulfilled"
-      ? (results[1].value || []).map((row) =>
-          normalizeIdentitySource(row, "appointment")
-        )
-      : []),
-  ];
+  if (cached && now - cached.cachedAt < IDENTITY_CACHE_TTL_MS) {
+    return uniqueIdentitySources([...(cached.sources || []), ...embedded]);
+  }
 
-  const uniqueSources = Array.from(
-    new Map(
-      sources.map((source) => [
-        `${source.student_type}:${String(source.student_id)}`,
-        source,
-      ])
-    ).values()
-  );
+  if (identitySourcePending.has(cacheKey)) {
+    const pendingSources = await identitySourcePending.get(cacheKey);
+    return uniqueIdentitySources([...(pendingSources || []), ...embedded]);
+  }
 
-  return uniqueSources.length ? uniqueSources : fallback;
+  const pending = (async () => {
+    const queries = [
+      safeQuery(
+        supabase
+          .from(TABLES.inquiries)
+          .select("id, person_id, full_name, email, phone, created_at")
+          .eq("person_id", personId)
+          .order("created_at", { ascending: true }),
+        [],
+        IDENTITY_TIMEOUT_MS,
+        "identity inquiry sources"
+      ),
+      safeQuery(
+        supabase
+          .from(TABLES.appointments)
+          .select("id, person_id, full_name, email, phone, created_at")
+          .eq("person_id", personId)
+          .order("created_at", { ascending: true }),
+        [],
+        IDENTITY_TIMEOUT_MS,
+        "identity appointment sources"
+      ),
+    ];
+
+    const results = await Promise.allSettled(queries);
+
+    const resolved = uniqueIdentitySources([
+      ...embedded,
+      ...(results[0]?.status === "fulfilled"
+        ? (results[0].value || []).map((row) =>
+            normalizeIdentitySource(row, "inquiry")
+          )
+        : []),
+      ...(results[1]?.status === "fulfilled"
+        ? (results[1].value || []).map((row) =>
+            normalizeIdentitySource(row, "appointment")
+          )
+        : []),
+    ]);
+
+    identitySourceCache.set(cacheKey, {
+      cachedAt: Date.now(),
+      sources: resolved.length ? resolved : fallback,
+    });
+
+    return resolved.length ? resolved : fallback;
+  })();
+
+  identitySourcePending.set(cacheKey, pending);
+
+  try {
+    return await pending;
+  } finally {
+    identitySourcePending.delete(cacheKey);
+  }
 }
 
 async function getStudentReferencePairs(student = {}) {
@@ -1599,10 +1657,18 @@ async function fetchMappedStudentForAccount(account = {}) {
 
   const normalizedStudent = normalizePortalStudent(studentData, sourceType);
 
+  // Resolve cross-source aliases once. Do not block account login on a full
+  // 11-table count sweep; the portal data loader populates real counts after
+  // authentication. This keeps a slow Finance/backend query from blacking out
+  // the whole Student Portal.
+  const identitySources = await getStudentIdentitySources(normalizedStudent);
+
   return {
     student: {
       ...normalizedStudent,
-      portalCounts: await getPortalDataCountsForStudent(normalizedStudent),
+      identity_sources: identitySources,
+      identity_source_count: identitySources.length,
+      portalCounts: EMPTY_COUNTS,
     },
     error: null,
   };
@@ -1738,8 +1804,8 @@ export async function createStudentPortalAccount({
       isActive,
     });
 
-    if (!temporaryPassword || String(temporaryPassword).length < 6) {
-      throw new Error("Temporary password must be at least 6 characters.");
+    if (!temporaryPassword || String(temporaryPassword).length < 10) {
+      throw new Error("Temporary password must be at least 10 characters.");
     }
 
     const rpcResult = await callAccountRpc(
@@ -1800,8 +1866,8 @@ export async function resetStudentPortalAccountPassword({
       throw new Error("Portal account is missing.");
     }
 
-    if (!newPassword || String(newPassword).length < 6) {
-      throw new Error("New password must be at least 6 characters.");
+    if (!newPassword || String(newPassword).length < 10) {
+      throw new Error("New password must be at least 10 characters.");
     }
 
     const rpcResult = await callAccountRpc(
@@ -1908,24 +1974,60 @@ export async function updateStudentPortalAccountStatus({
   }
 }
 
-export async function activateStudentPortalAccount(accountId) {
+function resolvePortalAccountActionInput(
+  input,
+  fallbackMustChangePassword = true
+) {
+  if (input && typeof input === "object" && !Array.isArray(input)) {
+    return {
+      accountId:
+        input.accountId ||
+        input.account_id ||
+        input.id ||
+        null,
+      mustChangePassword:
+        input.mustChangePassword ??
+        input.must_change_password ??
+        fallbackMustChangePassword,
+    };
+  }
+
+  return {
+    accountId: input || null,
+    mustChangePassword: fallbackMustChangePassword,
+  };
+}
+
+export async function activateStudentPortalAccount(input) {
+  const { accountId } = resolvePortalAccountActionInput(input);
+
   return updateStudentPortalAccountStatus({
     accountId,
     isActive: true,
   });
 }
 
-export async function deactivateStudentPortalAccount(accountId) {
+export async function deactivateStudentPortalAccount(input) {
+  const { accountId } = resolvePortalAccountActionInput(input);
+
   return updateStudentPortalAccountStatus({
     accountId,
     isActive: false,
   });
 }
 
-export async function forceStudentPortalPasswordChange(accountId, mustChangePassword = true) {
+export async function forceStudentPortalPasswordChange(
+  input,
+  mustChangePassword = true
+) {
+  const resolved = resolvePortalAccountActionInput(
+    input,
+    mustChangePassword
+  );
+
   return updateStudentPortalAccountStatus({
-    accountId,
-    mustChangePassword,
+    accountId: resolved.accountId,
+    mustChangePassword: resolved.mustChangePassword,
   });
 }
 
@@ -2059,6 +2161,32 @@ export async function changeStudentPortalPassword({
   };
 }
 
+
+export async function sendPortalCredentials(payload = {}) {
+  const { data, error } = await supabase.functions.invoke(
+    "send-portal-credentials",
+    {
+      body: payload,
+    }
+  );
+
+  if (error) {
+    throw new Error(
+      error?.message || "Portal credentials email request failed."
+    );
+  }
+
+  if (!data?.success) {
+    throw new Error(
+      data?.error ||
+        data?.message ||
+        "Portal credentials email failed."
+    );
+  }
+
+  return data;
+}
+
 export default {
   findStudentsForPortal,
   findStudentForPortal,
@@ -2088,4 +2216,6 @@ export default {
 
   loginStudentPortalAccount,
   changeStudentPortalPassword,
+
+  sendPortalCredentials,
 };

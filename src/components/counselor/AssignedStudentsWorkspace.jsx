@@ -36,7 +36,7 @@ const VALID_FILTER_KEYS = new Set(FILTERS.map((item) => item.key));
 const VALID_SORT_KEYS = new Set(SORTS.map((item) => item.key));
 
 const INPUT_CLASS =
-  "w-full rounded-2xl border-2 border-[#d8b892] bg-[#fffdf8] px-4 py-3 text-sm font-semibold text-[#102b4c] outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100";
+  "w-full min-w-0 rounded-xl border-2 border-[#AFC0D0] bg-white px-4 py-3 text-sm font-bold text-[#10233F] outline-none transition placeholder:text-slate-400 focus:border-[#FF5A0A] focus:ring-4 focus:ring-orange-100";
 
 function safeString(value, fallback = "") {
   if (value === null || value === undefined) return fallback;
@@ -107,8 +107,66 @@ function getStudentUpdatedAt(student = {}) {
   );
 }
 
+function portalAccessTone(status = "") {
+  const value = safeString(status).toLowerCase();
+
+  if (value.includes("active")) {
+    return "border-emerald-300 bg-emerald-50 text-emerald-700";
+  }
+
+  if (value.includes("locked")) {
+    return "border-rose-300 bg-rose-50 text-rose-700";
+  }
+
+  if (value.includes("inactive") || value.includes("disabled")) {
+    return "border-amber-300 bg-amber-50 text-amber-700";
+  }
+
+  return "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]";
+}
+
+function portalAccessGuidance(student = {}) {
+  const portal = student.portalAccess || {};
+  const status = safeString(student.portalStatus || portal.status || "Not Created");
+  const value = status.toLowerCase();
+
+  if (value.includes("active") && !portal.isLocked && !portal.mustChangePassword) {
+    return "Student login is active, unlocked and ready for portal updates.";
+  }
+
+  if (portal.mustChangePassword) {
+    return "Student must complete the mandatory password change before normal portal use.";
+  }
+
+  if (value.includes("locked") || portal.isLocked) {
+    return "Portal account is locked. Admin Portal Access must unlock or reset it.";
+  }
+
+  if (value.includes("inactive")) {
+    return "Portal account is inactive. Admin Portal Access controls activation.";
+  }
+
+  return "No portal account is visible yet. Account creation remains an Admin Portal Access action.";
+}
+
+function getOperationalPriorityRank(student = {}) {
+  const value = safeString(
+    student.operationalPriority || student.priority
+  )
+    .trim()
+    .toLowerCase();
+
+  if (value === "vip") return 4;
+  if (["critical", "urgent", "high"].includes(value)) return 3;
+  if (value === "medium") return 2;
+  if (value === "low") return 1;
+
+  return 0;
+}
+
 function getPriorityScore(student = {}) {
   return (
+    getOperationalPriorityRank(student) * 45 +
     safeNumber(student.riskScore) * 1.4 +
     safeNumber(student.opportunityScore) +
     safeNumber(student.openSupport) * 8 +
@@ -161,6 +219,9 @@ function buildStudentActionContext(student = {}, counselor = {}) {
       appointmentId: student.appointment_id || null,
       counselorEmail: normalizedCounselor.email,
       stage: student.stage,
+      crmStage: student.crmStage || "",
+      operationalPriority:
+        student.operationalPriority || student.priority || "",
       riskScore: safeNumber(student.riskScore),
       opportunityScore: safeNumber(student.opportunityScore),
       velocityScore: safeNumber(student.velocityScore),
@@ -181,13 +242,53 @@ function riskTone(score) {
 function stageTone(stage = "") {
   const value = safeString(stage).toLowerCase();
 
-  if (value.includes("visa")) return "border-[#173f69] bg-[#173f69] text-white";
+  if (value.includes("visa")) return "border-[#123865] bg-[#123865] text-white";
   if (value.includes("cas")) return "border-[#234e78] bg-[#234e78] text-white";
   if (value.includes("offer")) return "border-emerald-300 bg-emerald-50 text-emerald-700";
   if (value.includes("application")) return "border-orange-300 bg-orange-50 text-orange-700";
   if (value.includes("shortlist")) return "border-amber-300 bg-amber-50 text-amber-700";
 
-  return "border-[#b7c5d1] bg-[#f1f6fa] text-[#173f69]";
+  return "border-[#AFC0D0] bg-[#f1f6fa] text-[#123865]";
+}
+
+function operationalPriorityTone(priority = "") {
+  const value = safeString(priority).trim().toLowerCase();
+
+  if (value === "vip") {
+    return "border-violet-300 bg-violet-50 text-violet-700";
+  }
+
+  if (["critical", "urgent", "high"].includes(value)) {
+    return "border-rose-300 bg-rose-50 text-rose-700";
+  }
+
+  if (value === "medium") {
+    return "border-amber-300 bg-amber-50 text-amber-700";
+  }
+
+  return "border-emerald-300 bg-emerald-50 text-emerald-700";
+}
+
+function crmStageTone(stage = "") {
+  const value = safeString(stage).trim().toLowerCase();
+
+  if (value.includes("approved") || value.includes("offer")) {
+    return "border-emerald-300 bg-emerald-50 text-emerald-700";
+  }
+
+  if (value.includes("visa")) {
+    return "border-[#123865] bg-[#123865] text-white";
+  }
+
+  if (value.includes("applied") || value.includes("document")) {
+    return "border-orange-300 bg-orange-50 text-orange-700";
+  }
+
+  if (value.includes("contact")) {
+    return "border-blue-300 bg-blue-50 text-blue-700";
+  }
+
+  return "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]";
 }
 
 function StatusToast({ status, onClear }) {
@@ -217,7 +318,7 @@ function StatusToast({ status, onClear }) {
 
 function QueueStat({ label, value, helper, tone = "navy" }) {
   const tones = {
-    navy: "border-[#173f69] bg-[#f3f7fb]",
+    navy: "border-[#123865] bg-[#F1F6FA]",
     orange: "border-orange-300 bg-orange-50",
     rose: "border-rose-300 bg-rose-50",
     amber: "border-amber-300 bg-amber-50",
@@ -226,12 +327,12 @@ function QueueStat({ label, value, helper, tone = "navy" }) {
   };
 
   return (
-    <div className={`rounded-2xl border-2 p-4 shadow-sm ${tones[tone] || tones.navy}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#607487]">
+    <div className={`relative overflow-hidden rounded-[1.3rem] border-2 p-4 shadow-[0_9px_22px_rgba(16,35,63,0.08)] ${tones[tone] || tones.navy}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5B6D80]">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-black text-[#102b4c]">{value}</p>
-      {helper ? <p className="mt-1 text-xs font-medium text-[#607487]">{helper}</p> : null}
+      <p className="mt-2 text-2xl font-black text-[#10233F]">{value}</p>
+      {helper ? <p className="mt-1 text-xs font-medium text-[#5B6D80]">{helper}</p> : null}
     </div>
   );
 }
@@ -355,7 +456,7 @@ function StudentActionPanel({ student, counselor, onRefresh, setStatus }) {
         type="button"
         onClick={logCall}
         disabled={Boolean(saving)}
-        className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2.5 text-xs font-black text-white transition hover:bg-[#102f52] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-xl border-2 border-[#123865] bg-[#123865] px-3 py-2.5 text-xs font-black text-white transition hover:bg-[#0B2A4B] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {saving === "call" ? "Logging..." : "Log Call"}
       </button>
@@ -364,7 +465,7 @@ function StudentActionPanel({ student, counselor, onRefresh, setStatus }) {
         type="button"
         onClick={logReview}
         disabled={Boolean(saving)}
-        className="rounded-xl border-2 border-[#b7c5d1] bg-[#f3f7fb] px-3 py-2.5 text-xs font-black text-[#173f69] transition hover:border-[#173f69] hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-xl border-2 border-[#AFC0D0] bg-[#F1F6FA] px-3 py-2.5 text-xs font-black text-[#123865] transition hover:border-[#123865] hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {saving === "review" ? "Saving..." : "Log Review"}
       </button>
@@ -379,17 +480,17 @@ function StudentScoreBar({ label, value, tone = "orange" }) {
     orange: "bg-orange-500",
     rose: "bg-rose-500",
     emerald: "bg-emerald-500",
-    navy: "bg-[#173f69]",
+    navy: "bg-[#123865]",
     amber: "bg-amber-500",
   };
 
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between text-xs">
-        <span className="font-bold text-[#607487]">{label}</span>
-        <span className="font-black text-[#102b4c]">{width}</span>
+        <span className="font-bold text-[#5B6D80]">{label}</span>
+        <span className="font-black text-[#10233F]">{width}</span>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-[#e5edf3]">
+      <div className="h-2.5 overflow-hidden rounded-full bg-[#E4EBF2]">
         <div
           className={`h-full rounded-full transition-[width] duration-500 ${
             tones[tone] || tones.orange
@@ -420,11 +521,11 @@ function StudentCard({
     ? "border-rose-300"
     : student.isConversionReady
       ? "border-emerald-300"
-      : "border-[#c9d5de]";
+      : "border-[#B9C8D8]";
 
   return (
     <article
-      className={`rounded-[1.6rem] border-2 ${operationalTone} bg-[#fffdf8] p-4 shadow-[0_10px_30px_rgba(16,43,76,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-[0_16px_40px_rgba(16,43,76,0.09)] sm:p-5`}
+      className={`overflow-hidden rounded-[1.7rem] border-[3px] ${operationalTone} bg-[#FFFCF7] p-4 shadow-[0_14px_34px_rgba(16,35,63,0.10)] transition duration-300 hover:-translate-y-0.5 hover:border-[#123865] hover:shadow-[0_20px_44px_rgba(16,35,63,0.14)] sm:p-5`}
     >
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr_0.58fr] xl:items-start">
         <button
@@ -433,7 +534,7 @@ function StudentCard({
           className="rounded-2xl text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"
         >
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-black text-[#102b4c] transition hover:text-orange-700">
+            <h3 className="text-lg font-black text-[#10233F] transition hover:text-orange-700">
               {student.name}
             </h3>
             {student.isAtRisk ? (
@@ -446,9 +547,18 @@ function StudentCard({
                 Conversion Ready
               </span>
             ) : null}
+            {student.operationalPriority || student.priority ? (
+              <span
+                className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.15em] ${operationalPriorityTone(
+                  student.operationalPriority || student.priority
+                )}`}
+              >
+                Priority {student.operationalPriority || student.priority}
+              </span>
+            ) : null}
           </div>
 
-          <p className="mt-1.5 break-words text-sm font-medium text-[#607487]">
+          <p className="mt-1.5 break-words text-sm font-medium text-[#5B6D80]">
             {student.email || "No email"} · {student.phone || "No phone"}
           </p>
 
@@ -467,16 +577,33 @@ function StudentCard({
               className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
                 blockers > 0
                   ? "border-amber-200 bg-amber-50 text-amber-700"
-                  : "border-[#b7c5d1] bg-[#f3f7fb] text-[#173f69]"
+                  : "border-[#AFC0D0] bg-[#F1F6FA] text-[#123865]"
               }`}
             >
               {blockers > 0 ? `${blockers} blocker signal${blockers === 1 ? "" : "s"}` : "No active blockers"}
             </span>
+
+            <span
+              className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${portalAccessTone(
+                student.portalStatus || student.portalAccess?.status
+              )}`}
+            >
+              Portal {student.portalStatus || student.portalAccess?.status || "Not Created"}
+            </span>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
+            {student.crmStage ? (
+              <span
+                className={`rounded-full border px-3 py-1 text-xs font-black ${crmStageTone(
+                  student.crmStage
+                )}`}
+              >
+                CRM {student.crmStage}
+              </span>
+            ) : null}
             <span className={`rounded-full border px-3 py-1 text-xs font-black ${stageTone(student.stage)}`}>
-              {student.stage}
+              Journey {student.stage}
             </span>
             <span className={`rounded-full border px-3 py-1 text-xs font-black ${riskTone(student.riskScore)}`}>
               Risk {student.riskScore}
@@ -484,7 +611,7 @@ function StudentCard({
             <span className="rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-xs font-black text-orange-700">
               Opportunity {student.opportunityScore}
             </span>
-            <span className="rounded-full border border-[#b7c5d1] bg-[#f3f7fb] px-3 py-1 text-xs font-black text-[#173f69]">
+            <span className="rounded-full border border-[#AFC0D0] bg-[#F1F6FA] px-3 py-1 text-xs font-black text-[#123865]">
               Velocity {student.velocityScore || 0}
             </span>
             {student.stalledDays >= 14 ? (
@@ -499,17 +626,18 @@ function StudentCard({
             ) : null}
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
             {[
               ["Apps", student.applicationsCount || 0],
               ["Docs", student.documentsCount || 0],
               ["Tasks", student.openTasks || 0],
+              ["Portal", student.portalStatus || student.portalAccess?.status || "Not Created"],
             ].map(([label, value]) => (
               <div
                 key={label}
-                className="rounded-2xl border border-[#d6e0e7] bg-[#f8fbfd] p-2.5"
+                className="rounded-2xl border border-[#C9D6E2] bg-[#F7FAFC] p-2.5"
               >
-                <p className="text-sm font-black text-[#102b4c]">{value}</p>
+                <p className="break-words text-sm font-black text-[#10233F]">{value}</p>
                 <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#7b8d9d]">
                   {label}
                 </p>
@@ -518,22 +646,22 @@ function StudentCard({
           </div>
         </button>
 
-        <div className="rounded-2xl border-2 border-orange-200 bg-[#fff8ef] p-4">
+        <div className="rounded-2xl border-2 border-orange-200 bg-[#FFF8EF] p-4">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">
             Next Best Action
           </p>
-          <p className="mt-2 text-sm font-bold leading-6 text-[#102b4c]">
+          <p className="mt-2 text-sm font-bold leading-6 text-[#10233F]">
             {student.nextBestAction}
           </p>
-          <div className="mt-3 rounded-xl border border-[#d8b892] bg-[#fffdf8] px-3 py-2">
+          <div className="mt-3 rounded-xl border border-[#D8B07B] bg-[#FFFCF7] px-3 py-2">
             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7d684f]">
               Next milestone
             </p>
-            <p className="mt-1 text-xs font-bold text-[#102b4c]">
+            <p className="mt-1 text-xs font-bold text-[#10233F]">
               {student.nextMilestone || "Counselor Review"}
             </p>
           </div>
-          <p className="mt-2 text-xs text-[#718292]">
+          <p className="mt-2 text-xs text-[#6B7D8F]">
             Updated{" "}
             {formatRelativeTime(getStudentUpdatedAt(student))}
           </p>
@@ -557,6 +685,35 @@ function StudentCard({
 
         {!compact ? (
           <div className="space-y-3">
+            <div className="rounded-[1.25rem] border-2 border-[#AFC0D0] bg-[#F7FAFC] p-3.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#5B6D80]">
+                  Portal Access
+                </p>
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${portalAccessTone(
+                    student.portalStatus || student.portalAccess?.status
+                  )}`}
+                >
+                  {student.portalStatus || student.portalAccess?.status || "Not Created"}
+                </span>
+              </div>
+
+              <p className="mt-2 text-xs leading-5 text-[#5B6D80]">
+                {portalAccessGuidance(student)}
+              </p>
+
+              {student.portalEmail || student.portalAccess?.email ? (
+                <p className="mt-2 break-all text-[10px] font-bold text-[#123865]">
+                  {student.portalEmail || student.portalAccess?.email}
+                </p>
+              ) : null}
+
+              <p className="mt-2 text-[10px] font-semibold text-[#6B7D8F]">
+                Counselor view is read-only. Passwords, activation, reset and unlock remain in Admin Portal Access.
+              </p>
+            </div>
+
             <StudentActionPanel
               student={student}
               counselor={counselor}
@@ -632,7 +789,9 @@ export default function AssignedStudentsWorkspace({
       (student) => !student.email && !student.phone
     ).length;
     const highPriority = queue.filter(
-      (student) => getPriorityScore(student) >= 120
+      (student) =>
+        getOperationalPriorityRank(student) >= 3 ||
+        getPriorityScore(student) >= 120
     ).length;
 
     return {
@@ -669,6 +828,8 @@ export default function AssignedStudentsWorkspace({
           student.email,
           student.phone,
           student.stage,
+          student.crmStage,
+          student.operationalPriority || student.priority,
           student.nextMilestone,
           student.nextBestAction,
         ]
@@ -695,6 +856,11 @@ export default function AssignedStudentsWorkspace({
       if (sort === "name")
         return safeString(a.name).localeCompare(safeString(b.name));
 
+      const operationalDifference =
+        getOperationalPriorityRank(b) - getOperationalPriorityRank(a);
+
+      if (operationalDifference !== 0) return operationalDifference;
+
       return getPriorityScore(b) - getPriorityScore(a);
     });
   }, [queue, filter, query, sort]);
@@ -711,23 +877,25 @@ export default function AssignedStudentsWorkspace({
   };
 
   return (
-    <section className="rounded-[1.8rem] border-2 border-[#173f69] bg-[#fffaf2] p-4 shadow-[0_18px_55px_rgba(16,43,76,0.08)] sm:p-5">
-      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="max-w-3xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">
+    <section className="overflow-hidden rounded-[2.25rem] border-[4px] border-[#123865] bg-[#FFF8EF] p-2.5 shadow-[0_28px_80px_rgba(16,35,63,0.16)] sm:p-4">
+      <div className="relative mb-5 overflow-hidden rounded-[1.8rem] border-[3px] border-[#FF5A0A] bg-[#123865] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_36px_rgba(16,35,63,0.20)] xl:flex xl:items-start xl:justify-between xl:gap-5 sm:p-5">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full border-[26px] border-white/5" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-20 h-44 w-44 rounded-full border-[22px] border-orange-400/10" />
+
+        <div className="relative z-[1] max-w-3xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">
             Assigned Students
           </p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-[#102b4c] sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
             Priority Student Queue
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[#607487]">
-            Counselor-scoped students ranked by risk, opportunity, stalled time,
-            support pressure, document blockers and the next operational action.
+          <p className="mt-2 text-sm leading-6 text-blue-100">
+            Counselor-scoped students ranked by operational pressure, with read-only Portal Access visibility and direct links into tested application, document and support work.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-xl border-2 border-[#173f69] bg-[#173f69] px-3 py-2 text-xs font-black text-white">
+        <div className="relative z-[1] flex flex-wrap gap-2">
+          <span className="rounded-xl border-2 border-white/20 bg-white/10 px-3 py-2 text-xs font-black text-white">
             High Priority {queueStats.highPriority}
           </span>
           <span className="rounded-xl border-2 border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700">
@@ -739,7 +907,7 @@ export default function AssignedStudentsWorkspace({
         </div>
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="mb-5 flex flex-wrap gap-2 rounded-[1.4rem] border-[3px] border-[#123865] bg-[#FFFCF7] p-3 shadow-sm">
           {FILTERS.map((item) => {
             const count =
               item.key === "all"
@@ -763,7 +931,7 @@ export default function AssignedStudentsWorkspace({
                 className={`rounded-xl border-2 px-3 py-2 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${
                   filter === item.key
                     ? "border-orange-500 bg-orange-500 text-white"
-                    : "border-[#c9d5de] bg-[#fffdf8] text-[#173f69] hover:border-orange-300 hover:bg-orange-50"
+                    : "border-[#B9C8D8] bg-[#FFFCF7] text-[#123865] hover:border-orange-300 hover:bg-orange-50"
                 }`}
               >
                 {item.label}
@@ -774,7 +942,7 @@ export default function AssignedStudentsWorkspace({
       </div>
 
       {!compact ? (
-        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        <div className="mb-5 grid gap-3 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFFCF7] p-3 shadow-[0_12px_28px_rgba(16,35,63,0.08)] sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
           <QueueStat label="Assigned" value={queueStats.total} helper="active students" tone="orange" />
           <QueueStat label="At Risk" value={queueStats.risk} helper="recovery queue" tone="rose" />
           <QueueStat label="Convert" value={queueStats.conversion} helper="ready to move" tone="emerald" />
@@ -785,7 +953,7 @@ export default function AssignedStudentsWorkspace({
       ) : null}
 
       {!compact ? (
-        <div className="mb-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px_auto_auto]">
+        <div className="mb-5 grid gap-3 rounded-[1.55rem] border-[3px] border-[#123865] bg-[#FFF8EF] p-3 shadow-[inset_0_0_0_1px_rgba(255,90,10,0.12)] xl:grid-cols-[minmax(0,1fr)_220px_auto_auto]">
           <input
             type="search"
             value={query}
@@ -808,7 +976,7 @@ export default function AssignedStudentsWorkspace({
             ))}
           </select>
 
-          <div className="flex rounded-2xl border-2 border-[#d8b892] bg-[#fffdf8] p-1">
+          <div className="flex rounded-2xl border-2 border-[#D8B07B] bg-[#FFFCF7] p-1">
             {[
               ["detailed", "Detailed"],
               ["compact", "Compact"],
@@ -821,7 +989,7 @@ export default function AssignedStudentsWorkspace({
                 className={`flex-1 rounded-xl px-3 py-2 text-xs font-black transition ${
                   view === value
                     ? "bg-orange-500 text-white"
-                    : "text-[#173f69] hover:bg-orange-50"
+                    : "text-[#123865] hover:bg-orange-50"
                 }`}
               >
                 {label}
@@ -832,7 +1000,7 @@ export default function AssignedStudentsWorkspace({
           <button
             type="button"
             onClick={resetControls}
-            className="rounded-2xl border-2 border-[#173f69] bg-[#173f69] px-4 py-3 text-sm font-black text-white transition hover:bg-[#102f52] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+            className="rounded-2xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0B2A4B] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
           >
             Reset
           </button>
@@ -842,11 +1010,11 @@ export default function AssignedStudentsWorkspace({
       <StatusToast status={status} onClear={() => setStatus(null)} />
 
       {!compact ? (
-        <div className="mb-3 flex flex-col gap-2 rounded-2xl border border-[#d8b892] bg-[#fff8ef] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#7d684f]">
+        <div className="mb-3 flex flex-col gap-2 rounded-xl border-2 border-[#123865] bg-[#123865] px-4 py-3 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-white">
             Showing {filteredQueue.length} of {queue.length} assigned students
           </p>
-          <p className="text-xs font-semibold text-[#607487]">
+          <p className="text-xs font-semibold text-blue-100">
             Sort: {SORTS.find((item) => item.key === sort)?.label || "Priority"} · View:{" "}
             {view === "compact" ? "Compact" : "Detailed"}
           </p>
@@ -855,9 +1023,9 @@ export default function AssignedStudentsWorkspace({
 
       <div className="space-y-3">
         {visibleQueue.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-[#c9d5de] bg-[#fffdf8] p-7 text-center">
-            <p className="text-sm font-black text-[#102b4c]">No assigned students found.</p>
-            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#607487]">
+          <div className="rounded-[1.5rem] border-[3px] border-dashed border-[#AFC0D0] bg-[#FFFCF7] p-8 text-center shadow-inner">
+            <p className="text-sm font-black text-[#10233F]">No assigned students found.</p>
+            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#5B6D80]">
               This portal now uses strict counselor assignment scope. Assign students to
               this counselor in Supabase, then refresh the Counselor OS.
             </p>
@@ -887,7 +1055,7 @@ export default function AssignedStudentsWorkspace({
       </div>
 
       {compact && filteredQueue.length > visibleQueue.length ? (
-        <p className="mt-4 text-center text-xs font-semibold text-[#718292]">
+        <p className="mt-4 text-center text-xs font-semibold text-[#6B7D8F]">
           Showing {visibleQueue.length} of {filteredQueue.length} priority students.
           Open Assigned Students for the complete queue.
         </p>

@@ -21,6 +21,7 @@ import {
   motion,
   useReducedMotion,
 } from "framer-motion";
+import ZaifanMetricCard from "../../ui/ZaifanMetricCard";
 import {
   AlertTriangle,
   ArrowRight,
@@ -993,41 +994,12 @@ function Feedback({
   );
 }
 
-function DarkStat({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-[1.05rem] border-2 border-white/20 bg-white/10 p-3 text-white">
-      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function DarkStat({ label, value }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} tone="navy" />;
 }
 
-function OrangeStat({
-  label,
-  value,
-  icon: Icon,
-}) {
-  return (
-    <div className="rounded-[1.05rem] border-2 border-white/25 bg-white/10 p-3 text-white">
-      <Icon
-        size={14}
-        className="text-white"
-      />
-      <p className="mt-2 text-[8px] font-black uppercase tracking-[0.1em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
+function OrangeStat({ label, value, icon: Icon }) {
+  return <ZaifanMetricCard level="baby" surface="navy" label={label} value={value} icon={Icon} tone="orange" />;
 }
 
 function StableState({

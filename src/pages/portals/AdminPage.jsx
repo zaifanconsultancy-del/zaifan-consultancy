@@ -252,6 +252,7 @@ function AdminPage() {
 
     toggleInquiryStatus,
     updateInquiryPriority,
+    updateInquiryStage,
     updateAppointmentPriority,
     updateAppointmentStatus,
     updateAppointmentStage,
@@ -820,6 +821,7 @@ function AdminPage() {
                   adminProfile={adminProfile}
                   permissions={currentPermissions}
                   updateInquiryPriority={updateInquiryPriority}
+                  updateInquiryStage={updateInquiryStage}
                   updateAppointmentPriority={updateAppointmentPriority}
                   updateAppointmentStatus={updateAppointmentStatus}
                   updateAppointmentStage={updateAppointmentStage}
@@ -995,6 +997,7 @@ function AdminPage() {
                   cardClass={cardClass}
                   toggleInquiryStatus={toggleInquiryStatus}
                   updateInquiryPriority={updateInquiryPriority}
+                  updateInquiryStage={updateInquiryStage}
                   updateAppointmentPriority={updateAppointmentPriority}
                   deleteInquiry={deleteInquiry}
                   updateAppointmentStatus={updateAppointmentStatus}
