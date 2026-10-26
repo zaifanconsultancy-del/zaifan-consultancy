@@ -32,15 +32,32 @@ import {
   HonestyNote,
   SectionHeader,
 } from "../../components/public/destinations/DestinationUI";
-import { fadeUp, iconFor } from "../../components/public/destinations/destinationUtils";
+import { fadeUp, getUniversityPath, iconFor } from "../../components/public/destinations/destinationUtils";
+import {
+  ApplicationTimeline,
+  BudgetPlanner,
+  CityComparison,
+  FitCheck,
+  PathwaysBlock,
+  RealityCheck,
+  RequirementsBlock,
+  StudentLifeBlock,
+} from "../../components/public/destinations/GuideSections";
 import NotFoundPage from "./NotFoundPage";
 
+// `needs` hides a jump link when the country has no data for that section.
 const SECTIONS = [
   { id: "why", label: "Why study here" },
+  { id: "fit", label: "Fit check", needs: "decision" },
   { id: "costs", label: "Costs" },
+  { id: "budget", label: "Budget planner", needs: "tuitionOptions" },
+  { id: "timeline", label: "Timeline", needs: "timeline" },
+  { id: "requirements", label: "Requirements", needs: "requirements" },
   { id: "universities", label: "Universities" },
   { id: "scholarships", label: "Scholarships" },
   { id: "cities", label: "Cities" },
+  { id: "life", label: "Student life", needs: "studentLife" },
+  { id: "reality", label: "Reality check", needs: "realityChecks" },
   { id: "apply", label: "Admission & visa" },
   { id: "faqs", label: "FAQs" },
 ];
@@ -71,10 +88,6 @@ function QuickFact({ icon: Icon, label, value }) {
 }
 
 function UniversityCard({ university, country }) {
-  const askPath = `/appointment?country=${encodeURIComponent(country.name)}&service=${encodeURIComponent(
-    `University Selection – ${university.name}`
-  )}`;
-
   return (
     <motion.article
       layout
@@ -98,7 +111,11 @@ function UniversityCard({ university, country }) {
         </div>
       </div>
 
-      <h3 className="mt-4 text-lg font-black leading-6 tracking-[-0.03em] text-[#071f50]">{university.name}</h3>
+      <h3 className="mt-4 text-lg font-black leading-6 tracking-[-0.03em] text-[#071f50]">
+        <Link to={getUniversityPath(country, university)} className="hover:text-[#ff4b12]">
+          {university.name}
+        </Link>
+      </h3>
       <p className="mt-1 flex items-center gap-1.5 text-xs font-bold text-[#7a879c]">
         <MapPin size={13} className="text-[#ff4b12]" />
         {university.city}
@@ -120,10 +137,10 @@ function UniversityCard({ university, country }) {
 
       <div className="mt-auto flex gap-2 pt-5">
         <Link
-          to={askPath}
+          to={getUniversityPath(country, university)}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#071f50] px-4 py-3 text-xs font-black text-white transition hover:bg-[#ff4b12]"
         >
-          Ask about this
+          View details
           <ArrowRight size={14} strokeWidth={3} />
         </Link>
         {university.website && (
@@ -274,7 +291,7 @@ function CountryGuidePage() {
             <p className="truncate text-sm font-black">Jump to any part of the {country.name} guide</p>
           </div>
           <div className="flex gap-2 overflow-x-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {SECTIONS.map((section) => (
+            {SECTIONS.filter((section) => !section.needs || country[section.needs]).map((section) => (
               <button
                 key={section.id}
                 type="button"
@@ -331,6 +348,8 @@ function CountryGuidePage() {
         </div>
       </section>
 
+      <FitCheck country={country} />
+
       {/* Costs */}
       <section id="costs" className="bg-[linear-gradient(180deg,#fff7ed_0%,#fff1ea_100%)] px-4 py-10 sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1350px]">
@@ -368,6 +387,10 @@ function CountryGuidePage() {
         </div>
       </section>
 
+      <BudgetPlanner country={country} />
+      <ApplicationTimeline country={country} />
+      <RequirementsBlock country={country} />
+
       {/* Universities */}
       <section id="universities" className="relative px-4 py-10 sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1350px]">
@@ -401,6 +424,8 @@ function CountryGuidePage() {
               ))}
             </AnimatePresence>
           </motion.div>
+
+          <PathwaysBlock country={country} />
         </div>
       </section>
 
@@ -481,8 +506,13 @@ function CountryGuidePage() {
               </Link>
             ))}
           </div>
+
+          <CityComparison country={country} />
         </div>
       </section>
+
+      <StudentLifeBlock country={country} />
+      <RealityCheck country={country} />
 
       {/* Admission + visa */}
       <section id="apply" className="bg-[#fff1ea] px-4 py-10 sm:px-5 md:py-20">

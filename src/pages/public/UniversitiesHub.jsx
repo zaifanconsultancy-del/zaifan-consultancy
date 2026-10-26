@@ -67,6 +67,7 @@ const ALL_UNIVERSITIES = interleaveByCountry([
         programs: university.programs || [],
         popularFor: university.popularFor,
         website: university.website,
+        detailPath: `/countries/${country.slug}/universities/${university.slug}`,
       }))
     ),
 ]);

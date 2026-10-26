@@ -8,11 +8,32 @@ import { turkeyData } from "./turkey";
 import { chinaData } from "./china";
 import { vietnamData } from "./vietnam";
 import { euHubData } from "./eu";
+import { germanyDeep } from "./deep/germany";
+
+// Combine a country's base data with its "deep" file: extra cities and
+// universities are appended, and per-city / per-university extras are merged
+// onto matching slugs.
+function withDeep(base, deep) {
+  if (!deep) return base;
+
+  const { extraCities = [], cityExtras = {}, extraUniversities = [], universityExtras = {}, moreFaqs = [], ...rest } = deep;
+
+  return {
+    ...base,
+    ...rest,
+    cities: [...base.cities, ...extraCities].map((city) => ({ ...city, ...cityExtras[city.slug] })),
+    universities: [...base.universities, ...extraUniversities].map((university) => ({
+      ...university,
+      ...universityExtras[university.slug],
+    })),
+    faqs: [...base.faqs, ...moreFaqs],
+  };
+}
 
 // Every destination Zaifan covers, in display order.
 export const countryRegistry = {
   italy: italyData,
-  germany: germanyData,
+  germany: withDeep(germanyData, germanyDeep),
   france: franceData,
   belgium: belgiumData,
   romania: romaniaData,

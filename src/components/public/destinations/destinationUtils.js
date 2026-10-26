@@ -2,7 +2,11 @@ import {
   Award,
   BriefcaseBusiness,
   Building2,
+  CloudSun,
   Cpu,
+  TrainFront,
+  Users,
+  Utensils,
   Globe2,
   GraduationCap,
   Handshake,
@@ -30,7 +34,11 @@ const ICONS = {
   award: Award,
   briefcase: BriefcaseBusiness,
   building: Building2,
+  cloud: CloudSun,
   cpu: Cpu,
+  train: TrainFront,
+  users: Users,
+  utensils: Utensils,
   globe: Globe2,
   graduation: GraduationCap,
   handshake: Handshake,
@@ -49,4 +57,8 @@ const ICONS = {
 
 export function iconFor(key) {
   return ICONS[key] || Sparkles;
+}
+
+export function getUniversityPath(country, university) {
+  return `/countries/${country.slug}/universities/${university.slug}`;
 }

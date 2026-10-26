@@ -3,6 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
+  Award,
+  CircleAlert,
+  CircleCheck,
   ArrowRight,
   ArrowUpRight,
   ExternalLink,
@@ -24,8 +27,15 @@ import {
   HonestyNote,
   SectionHeader,
 } from "../../components/public/destinations/DestinationUI";
-import { fadeUp } from "../../components/public/destinations/destinationUtils";
+import { fadeUp, getUniversityPath } from "../../components/public/destinations/destinationUtils";
 import NotFoundPage from "./NotFoundPage";
+
+const BUDGET_LABELS = {
+  rent: "Rent",
+  food: "Food & groceries",
+  transport: "Transport",
+  other: "Insurance, phone & personal",
+};
 
 function CountryCityPage() {
   const { countrySlug, citySlug } = useParams();
@@ -42,6 +52,13 @@ function CountryCityPage() {
   const universities = getUniversitiesForCity(country, city.slug);
   const otherCities = country.cities.filter((item) => item.slug !== city.slug);
   const appointmentPath = getCountryAppointmentPath(country);
+  const symbol = country.currencySymbol || "";
+  const budgetTotals = city.budget
+    ? Object.values(city.budget).reduce(
+        (totals, [low, high]) => ({ low: totals.low + low, high: totals.high + high }),
+        { low: 0, high: 0 }
+      )
+    : null;
 
   return (
     <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
@@ -178,10 +195,10 @@ function CountryCityPage() {
                 </p>
                 <div className="mt-auto flex gap-2 pt-5">
                   <Link
-                    to={`/appointment?country=${encodeURIComponent(country.name)}&service=${encodeURIComponent(`University Selection – ${university.name}`)}`}
+                    to={getUniversityPath(country, university)}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#071f50] px-4 py-3 text-xs font-black text-white transition hover:bg-[#ff4b12]"
                   >
-                    Ask about this
+                    View details
                     <ArrowRight size={14} strokeWidth={3} />
                   </Link>
                   {university.website && (
@@ -201,6 +218,106 @@ function CountryCityPage() {
           </div>
         </div>
       </section>
+
+      {/* Monthly budget breakdown */}
+      {city.budget && (
+        <section className="px-4 pb-6 sm:px-5">
+          <div className="mx-auto max-w-[1350px] rounded-[30px] bg-white p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 md:p-8">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ff4b12]">Monthly budget</p>
+                <h2 className="mt-1 text-3xl font-black tracking-[-0.05em]">
+                  {symbol}
+                  {budgetTotals.low.toLocaleString("en-US")} – {symbol}
+                  {budgetTotals.high.toLocaleString("en-US")} per month
+                </h2>
+              </div>
+              <Link to={`/countries/${country.slug}#budget`} className="text-xs font-black text-[#ff4b12] hover:underline">
+                Plan your full year →
+              </Link>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {Object.entries(city.budget).map(([key, [low, high]]) => (
+                <div key={key} className="rounded-[20px] bg-[#fff7ed] p-4 ring-1 ring-orange-100">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7a879c]">{BUDGET_LABELS[key] || key}</p>
+                  <p className="mt-1 text-lg font-black">
+                    {symbol}
+                    {low.toLocaleString("en-US")} – {symbol}
+                    {high.toLocaleString("en-US")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Fit check + scholarships */}
+      {(city.fit || city.scholarshipNote) && (
+        <section className="px-4 py-10 sm:px-5 md:py-14">
+          <div className="mx-auto grid max-w-[1350px] gap-5 lg:grid-cols-3">
+            {city.fit && (
+              <>
+                <div className="rounded-[30px] bg-white p-6 shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-emerald-100">
+                  <p className="text-lg font-black">{city.name} suits you if…</p>
+                  <ul className="mt-4 space-y-2.5">
+                    {city.fit.good.map((item) => (
+                      <li key={item} className="flex gap-2.5 text-sm font-semibold leading-6 text-[#526178]">
+                        <CircleCheck size={18} className="mt-0.5 shrink-0 text-emerald-500" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-[30px] bg-[#071f50] p-6 text-white shadow-[0_18px_50px_rgba(7,31,80,0.18)]">
+                  <p className="text-lg font-black">Consider carefully</p>
+                  <ul className="mt-4 space-y-2.5">
+                    {city.fit.consider.map((item) => (
+                      <li key={item} className="flex gap-2.5 text-sm font-semibold leading-6 text-white/80">
+                        <CircleAlert size={18} className="mt-0.5 shrink-0 text-[#ff7b1c]" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
+            <div className="rounded-[30px] bg-gradient-to-br from-[#ff7b1c] to-[#ff4b12] p-6 text-white shadow-[0_22px_55px_rgba(255,75,18,0.25)]">
+              <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/80">
+                <Award size={14} /> Funding in {city.name}
+              </p>
+              <p className="mt-3 text-sm font-bold leading-6">
+                {city.scholarshipNote || `Students in ${city.name} can apply for ${country.name}'s national scholarships below.`}
+              </p>
+              <ul className="mt-4 space-y-1.5">
+                {country.scholarships.slice(0, 3).map((scholarship) => (
+                  <li key={scholarship.name} className="text-xs font-black text-white/90">
+                    • {scholarship.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Roadmap */}
+      {country.timeline && (
+        <section className="bg-[#fff1ea] px-4 py-10 sm:px-5 md:py-14">
+          <div className="mx-auto max-w-[1350px]">
+            <SectionHeader eyebrow={`${city.name} roadmap`} title="Your path to arriving here." />
+            <div className="mt-8 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+              {country.timeline.map((step, index) => (
+                <div key={step.phase} className="rounded-[22px] bg-white p-4 ring-1 ring-orange-100">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-[#ff4b12] text-xs font-black text-white">{index + 1}</span>
+                  <p className="mt-3 text-sm font-black leading-5">{step.phase}</p>
+                  <p className="mt-1 text-[11px] font-bold text-[#7a879c]">{step.timing}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Other cities */}
       {otherCities.length > 0 && (

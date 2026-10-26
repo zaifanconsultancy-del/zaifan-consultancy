@@ -28,6 +28,7 @@ const CityDetailPage = lazy(() => import("../pages/public/CityDetailPage"));
 const CountryGuidePage = lazy(() => import("../pages/public/CountryGuidePage"));
 const CountryCityPage = lazy(() => import("../pages/public/CountryCityPage"));
 const EuHubPage = lazy(() => import("../pages/public/EuHubPage"));
+const UniversityProfilePage = lazy(() => import("../pages/public/UniversityProfilePage"));
 const UniversitiesHub = lazy(() =>
   import("../pages/public/UniversitiesHub")
 );
@@ -243,6 +244,15 @@ function App() {
                   element={
                     <PageTransition>
                       <CountryGuidePage />
+                    </PageTransition>
+                  }
+                />
+
+                <Route
+                  path="/countries/:countrySlug/universities/:universitySlug"
+                  element={
+                    <PageTransition>
+                      <UniversityProfilePage />
                     </PageTransition>
                   }
                 />
