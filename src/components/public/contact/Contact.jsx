@@ -15,6 +15,7 @@ import { supabase } from "../../../lib/supabaseClient";
 
 import consultationMascot from "../../../assets/images/contact/contact-mascot-pointing.webp";
 import contactWindow from "../../../assets/images/contact/contact-window-italy.webp";
+import { countryList } from "../../../data/countries";
 
 const MOTION = {
   duration: 0.55,
@@ -52,7 +53,7 @@ const intakes = [
 ];
 
 const bottomStrip = [
-  { icon: Landmark, label: "Italy Focused" },
+  { icon: Landmark, label: "9 Destinations" },
   { icon: GraduationCap, label: "University Match" },
   { icon: Award, label: "Scholarships" },
   { icon: FileText, label: "Visa Guidance" },
@@ -63,15 +64,22 @@ const defaultFormState = {
   name: "",
   email: "",
   phone: "",
-  country: "Italy",
+  country: "Not sure yet",
   studyLevel: "",
   intake: "",
   fieldOfInterest: "",
   message: "",
 };
 
-function normalizeCountryValue() {
-  return "Italy";
+const destinationOptions = [...countryList.map((country) => country.name), "European Union", "Not sure yet"];
+
+function normalizeCountryValue(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return destinationOptions.find((option) => option.toLowerCase() === normalized) || "Not sure yet";
+}
+
+function isSpecificCountry(country) {
+  return Boolean(country) && country !== "Not sure yet" && country !== "European Union";
 }
 
 function getInitialFormState() {
@@ -87,7 +95,7 @@ function getInitialFormState() {
     country: normalizeCountryValue(countryParam),
     fieldOfInterest: fields.includes(fieldParam) ? fieldParam : "",
     message: serviceParam
-      ? `I want Italy-focused guidance about ${serviceParam.replaceAll("-", " ")}.`
+      ? `I want guidance about ${serviceParam.replaceAll("-", " ")}.`
       : "",
   };
 }
@@ -100,9 +108,9 @@ function Contact() {
   const [lastInquiryName, setLastInquiryName] = useState("");
 
   const sourceLabel = useMemo(() => {
-    if (typeof window === "undefined") return "website_contact_italy";
+    if (typeof window === "undefined") return "website_contact";
     const params = new URLSearchParams(window.location.search);
-    return params.get("source") || params.get("utm_source") || "website_contact_italy";
+    return params.get("source") || params.get("utm_source") || "website_contact";
   }, []);
 
   const completedFields = useMemo(() => {
@@ -142,7 +150,7 @@ function Contact() {
   const buildWhatsAppMessage = (formData) => `
 Hello Zaifan Consultancy,
 
-I submitted an Italy-focused inquiry from the website.
+I submitted a study abroad inquiry from the website.
 
 Name: ${formData.full_name}
 Email: ${formData.email}
@@ -162,14 +170,14 @@ ${formData.message}
       full_name: formValues.name || "Not provided yet",
       email: formValues.email || "Not provided yet",
       phone: formValues.phone || "Not provided yet",
-      country: formValues.country || "Italy",
+      country: formValues.country || "Not sure yet",
       study_level: formValues.studyLevel || "Not sure yet",
       field_of_interest: formValues.fieldOfInterest || "Not sure yet",
       counseling_mode: formValues.intake || "Not sure yet",
       lead_source: sourceLabel,
       message:
         formValues.message ||
-        "I want help planning my Italy study journey, university options, scholarships, tuition and visa steps.",
+        "I want help planning my study abroad journey, university options, scholarships, tuition and visa steps.",
     };
 
     return `https://wa.me/923305718131?text=${encodeURIComponent(
@@ -344,12 +352,12 @@ ${formData.message}
               </div>
 
               <h3 className="mt-6 text-3xl font-black text-[#071f50]">
-                Italy Plan Request Sent
+                Study Plan Request Sent
               </h3>
 
               <p className="mt-4 leading-relaxed text-slate-600">
                 {lastInquiryName ? `${lastInquiryName}, your` : "Your"} inquiry has
-                been added. Our team will review your Italy study profile and contact
+                been added. Our team will review your study profile and contact
                 you soon.
               </p>
 
@@ -375,16 +383,16 @@ ${formData.message}
         >
           <div className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-black text-white shadow-[0_12px_26px_rgba(249,115,22,0.22)]">
             <Plane className="h-4 w-4" />
-            Let&apos;s Plan Your Italy Journey
+            Let&apos;s Plan Your Study Abroad Journey
           </div>
 
           <h2 className="mt-5 text-5xl font-black leading-[0.95] tracking-[-0.05em] text-[#071f50] sm:text-6xl lg:text-7xl">
-            Get Your <span className="text-orange-600">Italy Study Plan</span>
+            Get Your <span className="text-orange-600">Study Abroad Plan</span>
           </h2>
 
           <p className="mx-auto mt-5 max-w-3xl text-lg font-semibold leading-8 text-slate-600">
             Personalized university matches, scholarships, visa roadmap and clear
-            next-step guidance for studying in Italy.
+            next-step guidance for studying in Europe or Asia.
           </p>
 
           <div className="mt-7 flex flex-wrap justify-center gap-3">
@@ -430,7 +438,7 @@ ${formData.message}
 
               <div className="relative z-20 max-w-[540px]">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-[0.15em] text-orange-600 shadow-sm ring-1 ring-orange-100">
-                  🇮🇹 Italy-Focused Guidance
+                  {countryList.length} Destinations · One Plan
                 </div>
 
                 <h3 className="mt-5 text-5xl font-black leading-[0.92] tracking-[-0.055em] text-[#071f50] sm:text-6xl">
@@ -440,7 +448,7 @@ ${formData.message}
                 </h3>
 
                 <p className="mt-5 max-w-md text-base font-semibold leading-7 text-slate-600">
-                  Tell us your goals and we&apos;ll help shape your personalized Italy study roadmap.
+                  Tell us your goals and we&apos;ll help shape your personalized study roadmap.
                 </p>
               </div>
 
@@ -468,7 +476,7 @@ ${formData.message}
 
               <img
                 src={consultationMascot}
-                alt="Zaifan consultation mascot pointing toward the Italy study plan form"
+                alt="Zaifan consultation mascot pointing toward the study plan form"
                 loading="lazy"
                 decoding="async"
                 className="
@@ -498,7 +506,7 @@ ${formData.message}
                   <div>
                     <p className="text-sm font-black">Not sure where to start?</p>
                     <p className="mt-1 text-xs font-semibold leading-5 text-white/65">
-                      Share your profile and goals — we&apos;ll help you identify the smartest next step for studying in Italy.
+                      Share your profile and goals — we&apos;ll help you identify the smartest next step for studying abroad.
                     </p>
                   </div>
                 </div>
@@ -519,7 +527,7 @@ ${formData.message}
 
                 <div>
                   <h3 className="text-3xl font-black leading-tight text-[#071f50]">
-                    Get Your Italy Study Plan
+                    {isSpecificCountry(formValues.country) ? `Get Your ${formValues.country} Study Plan` : "Get Your Study Abroad Plan"}
                   </h3>
                   <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
                     Fill in the details below and we&apos;ll understand your next useful step.
@@ -598,13 +606,19 @@ ${formData.message}
 
                   <label>
                     <span className={labelClass}>Destination Focus *</span>
-                    <div
-                      aria-label="Destination Focus"
-                      aria-disabled="true"
-                      className="mt-2 flex h-12 w-full cursor-not-allowed items-center rounded-2xl border border-orange-200 bg-[#fff8f1] px-4 text-sm font-black text-orange-600"
+                    <select
+                      name="country"
+                      required
+                      value={formValues.country}
+                      onChange={(event) => updateField("country", event.target.value)}
+                      className={selectClass}
                     >
-                      Italy
-                    </div>
+                      {destinationOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 </div>
 
@@ -661,10 +675,10 @@ ${formData.message}
                 </label>
 
                 <label>
-                  <span className={labelClass}>Tell us about your Italy study goals</span>
+                  <span className={labelClass}>Tell us about your study goals</span>
                   <textarea
                     name="message"
-                    placeholder="Example: I want to study Computer Science in Italy, need scholarship options, and want to understand tuition and visa steps..."
+                    placeholder="Example: I want to study Computer Science in Germany or Italy, need scholarship options, and want to understand tuition and visa steps..."
                     required
                     value={formValues.message}
                     onChange={(event) => updateField("message", event.target.value)}
@@ -678,11 +692,11 @@ ${formData.message}
                   className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-orange-600 text-lg font-black text-white shadow-xl shadow-orange-600/20 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Send className="h-5 w-5" />
-                  {isSubmitting ? "Submitting..." : "Get My Italy Study Plan"}
+                  {isSubmitting ? "Submitting..." : "Get My Study Plan"}
                 </button>
 
                 <a
-                  href="/appointment?country=Italy"
+                  href={`/appointment?country=${encodeURIComponent(formValues.country)}`}
                   className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-orange-300 bg-white text-lg font-black text-orange-600 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-50 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
                 >
                   <CalendarCheck className="h-5 w-5" />
@@ -708,7 +722,7 @@ ${formData.message}
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="flex items-start gap-2 text-xs font-bold leading-5 text-slate-600">
                     <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#0a4aa6]" />
-                    Your details will be saved as an Italy-focused inquiry for advisor follow-up.
+                    Your details will be saved as an inquiry for advisor follow-up.
                   </p>
                 </div>
               </form>

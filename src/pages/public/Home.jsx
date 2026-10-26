@@ -1,6 +1,6 @@
 import Hero from "../../components/public/home/Hero";
 import Services from "../../components/public/home/DreamSupportSection";
-import Countries from "../../components/public/home/Countries";
+import DestinationsShowcase from "../../components/public/home/DestinationsShowcase";
 import PublicUniversityExplorer from "../../components/public/home/PublicUniversityExplorer";
 import MoreWaysWeHelp from "../../components/public/home/MoreWaysWeHelp";
 import Contact from "../../components/public/contact/Contact";
@@ -13,7 +13,7 @@ function Home() {
 
       <main className="relative">
         <Services />
-        <Countries />
+        <DestinationsShowcase />
         <PublicUniversityExplorer />
         <MoreWaysWeHelp />
         <Contact />

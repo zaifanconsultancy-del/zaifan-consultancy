@@ -96,7 +96,7 @@ function ServiceDetailPage() {
   if (!service) return <NotFoundPage />;
 
   const ServiceIcon = service.icon;
-  const appointmentHref = `/appointment?country=Italy&service=${encodeURIComponent(
+  const appointmentHref = `/appointment?service=${encodeURIComponent(
     service.title
   )}`;
 
@@ -475,7 +475,7 @@ function ServiceDetailPage() {
                 <Route className="text-orange-300" />
                 <h3 className="mt-3 text-xl font-black">Connected ecosystem</h3>
                 <p className="mt-2 text-sm font-semibold leading-6 text-white/70">
-                  This service connects naturally with the Italy guide, universities, scholarships and appointment journey.
+                  This service connects naturally with every destination guide, the university finder, scholarships and the appointment journey.
                 </p>
               </div>
             </div>

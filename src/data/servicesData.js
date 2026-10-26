@@ -23,10 +23,10 @@ export const serviceCatalog = [
     secondaryHref: "/universities",
     theme: "orange",
     audience: [
-      "Students comparing several Italian universities",
+      "Students comparing several universities or countries",
       "Students unsure which city fits their budget and lifestyle",
       "Students who know their field but not the right institution",
-      "Students who want university choice linked with DSU and regional funding",
+      "Students who want university choice linked with scholarships and funding",
     ],
     outcomes: [
       "Profile-based university shortlist",
@@ -64,7 +64,7 @@ export const serviceCatalog = [
     faqs: [
       ["How many universities should I shortlist?", "A balanced shortlist matters more than a large list. The right number depends on your profile, course and risk tolerance."],
       ["Do you only recommend public universities?", "The service focuses on fit. Public universities are often important for affordability, but the right option depends on the student and programme."],
-      ["Can university selection include scholarship planning?", "Yes. In Italy, university, city and regional scholarship route should be checked together."],
+      ["Can university selection include scholarship planning?", "Yes. University, city and scholarship route should be checked together, for example DSU in Italy or DAAD in Germany."],
     ],
   },
   {
@@ -72,9 +72,9 @@ export const serviceCatalog = [
     title: "Scholarship Guidance",
     shortTitle: "Scholarships",
     icon: BadgeDollarSign,
-    eyebrow: "DSU + regional funding",
+    eyebrow: "Government, university & EU funding",
     hero:
-      "Understand the funding routes around your Italy plan before you build your budget around assumptions.",
+      "Understand the funding routes around your study plan before you build your budget around assumptions.",
     summary:
       "Scholarship planning should connect eligibility, region, university, deadlines, documents and backup affordability—not just promise a number.",
     primaryCta: "Start Scholarship Guidance",
@@ -83,13 +83,13 @@ export const serviceCatalog = [
     theme: "emerald",
     audience: [
       "Students depending heavily on financial support",
-      "Students confused by DSU and regional scholarship systems",
+      "Students confused by scholarship systems like DSU, DAAD, CSC or Türkiye Bursları",
       "Students comparing universities across different regions",
       "Students who need a realistic backup budget",
     ],
     outcomes: [
       "Funding-route map",
-      "DSU and regional direction",
+      "Scholarship route direction",
       "Document planning checklist",
       "Deadline awareness",
       "University and region alignment",
@@ -121,9 +121,9 @@ export const serviceCatalog = [
       ["University Link", "Choose institutions with funding reality in mind, not in isolation."],
     ],
     faqs: [
-      ["Is DSU guaranteed?", "No. Eligibility, ranking, documents, deadlines and current regional rules all matter."],
+      ["Is any scholarship guaranteed?", "No. Eligibility, ranking, documents, deadlines and current rules all matter."],
       ["Should I choose a university only because of a scholarship?", "No. Funding is important, but course fit, admission reality and backup affordability should still be checked."],
-      ["Can I explore the full scholarship ecosystem?", "Yes. The dedicated Scholarship Hub goes deeper into DSU, regional routes, planning and documents."],
+      ["Can I explore the full scholarship ecosystem?", "Yes. The Scholarship Hub covers government, university and EU scholarships across every destination."],
     ],
   },
   {
@@ -133,7 +133,7 @@ export const serviceCatalog = [
     icon: FileCheck2,
     eyebrow: "Apply with structure",
     hero:
-      "Turn requirements, deadlines and application steps into one organized Italy admission roadmap.",
+      "Turn requirements, deadlines and application steps into one organized admission roadmap.",
     summary:
       "Strong applications are built through timing, requirement clarity and document readiness—not last-minute uploading.",
     primaryCta: "Plan My Admission",
@@ -156,7 +156,7 @@ export const serviceCatalog = [
     ],
     process: [
       ["Requirement Review", "We identify programme-specific academic and language requirements."],
-      ["Deadline Map", "We separate each university timeline so nothing is treated as one generic Italy deadline."],
+      ["Deadline Map", "We separate each university timeline so nothing is treated as one generic deadline."],
       ["File Preparation", "We organize the documents and information needed before submission."],
       ["Application Direction", "You get a clearer order for applying and tracking outcomes."],
     ],
@@ -180,7 +180,7 @@ export const serviceCatalog = [
       ["Next Stage", "Connect admission results with scholarship, pre-enrolment and visa planning."],
     ],
     faqs: [
-      ["Do all Italian universities have the same deadline?", "No. Deadlines can vary by university, programme and applicant category."],
+      ["Do all universities have the same deadline?", "No. Deadlines can vary by university, programme and applicant category."],
       ["Can I apply before all scholarship documents are ready?", "Admission and scholarship planning often overlap, but the exact order depends on the university and region."],
       ["Do you guarantee admission?", "No. Zaifan helps with planning and preparation, not fake admission guarantees."],
     ],
@@ -203,7 +203,7 @@ export const serviceCatalog = [
       "Students unsure which documents belong in which stage",
       "Students preparing SOPs, CVs or motivation material",
       "Students handling translations or legalization",
-      "Students preparing admission, DSU and visa files together",
+      "Students preparing admission, scholarship and visa files together",
     ],
     outcomes: [
       "Document master checklist",
@@ -241,7 +241,7 @@ export const serviceCatalog = [
     faqs: [
       ["Can Zaifan write my SOP for me?", "The focus should be on helping you structure an authentic and accurate statement rather than inventing a false personal story."],
       ["When should I start translations?", "As early as practical once you know which documents are actually required."],
-      ["Are DSU documents the same as visa documents?", "Not necessarily. Some information may overlap, but each process can have different requirements."],
+      ["Are scholarship documents the same as visa documents?", "Not necessarily. Some information may overlap, but each process can have different requirements."],
     ],
   },
   {
@@ -251,12 +251,12 @@ export const serviceCatalog = [
     icon: ShieldCheck,
     eyebrow: "Prepare the next stage",
     hero:
-      "Understand the Italy student visa direction, financial proof, appointment preparation and file readiness after your study route becomes clear.",
+      "Understand the student visa route for your destination, financial proof, appointment preparation and file readiness after your study route becomes clear.",
     summary:
       "Visa preparation works best when admission, finances, accommodation and documents are already connected.",
     primaryCta: "Start Visa Guidance",
-    secondaryCta: "Explore Italy Guide",
-    secondaryHref: "/countries/italy",
+    secondaryCta: "Compare Destinations",
+    secondaryHref: "/countries",
     theme: "blue",
     audience: [
       "Students who already have or expect an admission outcome",
@@ -310,7 +310,7 @@ export const serviceCatalog = [
     icon: MessageCircle,
     eyebrow: "Start with clarity",
     hero:
-      "A first Italy study planning call for students who need help choosing the right next step before committing to a deeper service.",
+      "A first study abroad planning call for students who need help choosing the right next step before committing to a deeper service.",
     summary:
       "You do not need to know everything before asking for help. The first call should identify where you are, what matters most and which route deserves attention next.",
     primaryCta: "Book Free Consultation",
@@ -318,7 +318,7 @@ export const serviceCatalog = [
     secondaryHref: "/services",
     theme: "orange",
     audience: [
-      "Students at the beginning of the Italy journey",
+      "Students at the beginning of their study abroad journey",
       "Students unsure which Zaifan service they need",
       "Students comparing university, scholarship or visa priorities",
       "Parents who want to understand budget and planning together",
@@ -357,7 +357,7 @@ export const serviceCatalog = [
       ["Action", "What can you do immediately after the consultation?"],
     ],
     faqs: [
-      ["Is the first consultation free?", "Yes. The first Italy consultation request is free."],
+      ["Is the first consultation free?", "Yes. The first consultation request is free."],
       ["Do I need documents before booking?", "Not always. You can start with your profile and goals."],
       ["Can parents join?", "Yes, especially when budget, scholarship and long-term planning need to be discussed."],
     ],

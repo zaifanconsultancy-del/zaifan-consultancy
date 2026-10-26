@@ -35,8 +35,8 @@ const supportCards = [
     accent: "#ff4b12",
     glow: "bg-orange-300/35",
     stats: [
-      { value: "50+", label: "Universities" },
-      { value: "Italy", label: "Live Hub" },
+      { value: "130+", label: "Universities" },
+      { value: "9", label: "Countries" },
     ],
     chips: ["Business", "Computer Science", "Medicine", "Engineering"],
     checklist: ["Profile review", "Career fit", "Course shortlist"],
@@ -56,8 +56,8 @@ const supportCards = [
     accent: "#10b981",
     glow: "bg-emerald-300/30",
     stats: [
-      { value: "DSU", label: "Funding" },
-      { value: "Regional", label: "Routes" },
+      { value: "Gov + EU", label: "Funding" },
+      { value: "30+", label: "Routes" },
     ],
     chips: ["Merit", "Need-based", "Country funds", "University awards"],
     checklist: ["Eligibility scan", "Funding plan", "Deadline tracker"],
@@ -117,7 +117,7 @@ const supportRoutes = [
   "/universities",
   "/scholarships",
   "/services",
-  "/appointment?country=Italy&service=Italy Admission Guidance",
+  "/appointment?service=Admission Guidance",
 ];
 
 const INTERACTIVE_TRANSITION =
@@ -200,7 +200,7 @@ export default function DreamSupportSection() {
               </h2>
 
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-[#526178] sm:mt-4 sm:text-lg sm:leading-8 xl:text-[19px] xl:leading-8">
-                We’re with you at every step, turning your Italy study plan into
+                We’re with you at every step, turning your study abroad plan into
                 a clear, practical journey.
               </p>
 

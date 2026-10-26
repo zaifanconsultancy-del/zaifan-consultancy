@@ -172,10 +172,10 @@ export default function ServicesPage() {
                 </Link>
 
                 <Link
-                  to="/countries/italy"
+                  to="/countries"
                   className={`inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-5 font-black text-[#071b3a] ring-1 ring-orange-100 hover:-translate-y-1 hover:bg-orange-50 hover:text-orange-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
                 >
-                  Explore Italy Guide
+                  Explore Destinations
                 </Link>
               </div>
             </motion.div>
@@ -225,7 +225,7 @@ export default function ServicesPage() {
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {[
                   ["6", "Service paths"],
-                  ["1", "Italy ecosystem"],
+                  ["9", "Destinations"],
                   ["0", "Fake promises"],
                 ].map(([value, label]) => (
                   <div
@@ -381,7 +381,7 @@ export default function ServicesPage() {
                 {[
                   "Explain the student’s current stage",
                   "Show what the service actually includes",
-                  "Connect to the right Italy ecosystem pages",
+                  "Connect to the right destination guides",
                   "Move naturally toward consultation",
                   "Avoid fake guarantees",
                   "Give useful information before booking",

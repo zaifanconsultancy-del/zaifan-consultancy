@@ -23,53 +23,17 @@ import {
   Zap,
 } from "lucide-react";
 
-import australiaUniversity from "../../../assets/images/universities/australia-university.webp";
-import canadaUniversity from "../../../assets/images/universities/canada-university.webp";
-import germanyUniversity from "../../../assets/images/universities/germany-university.webp";
 import italyUniversity from "../../../assets/images/universities/politecnico-di-milano.webp";
-import turkeyUniversity from "../../../assets/images/universities/turkey-university.webp";
-import ukUniversity from "../../../assets/images/universities/uk-university.webp";
 import mascotExplorer from "../../../assets/images/universities/mascot-explorer.webp";
 import mascotThumbsup from "../../../assets/images/universities/mascot-thumbsup.webp";
+import { countryList } from "../../../data/countries";
+import { FlagMark } from "../destinations/DestinationUI";
 
 import {
   getScholarshipBadge,
   getTopItalianUniversities,
   getTuitionBadge,
 } from "../../../data/italianUniversities";
-
-const comingSoonCountries = [
-  {
-    flag: "🇩🇪",
-    name: "Germany",
-    image: germanyUniversity,
-    copy: "Public universities, engineering routes and low-tuition pathways will be added after Italy is complete.",
-  },
-  {
-    flag: "🇬🇧",
-    name: "United Kingdom",
-    image: ukUniversity,
-    copy: "UK universities, scholarships and fast-track degrees are planned for the next expansion phase.",
-  },
-  {
-    flag: "🇨🇦",
-    name: "Canada",
-    image: canadaUniversity,
-    copy: "Canada pathways, colleges and post-study options will be built when real data is ready.",
-  },
-  {
-    flag: "🇦🇺",
-    name: "Australia",
-    image: australiaUniversity,
-    copy: "Australian universities and lifestyle-focused study routes are coming in a future rollout.",
-  },
-  {
-    flag: "🇹🇷",
-    name: "Turkey",
-    image: turkeyUniversity,
-    copy: "Turkey stays on the roadmap for affordable education and future partner routes.",
-  },
-];
 
 const journeySteps = [
   {
@@ -185,7 +149,7 @@ export default function PublicUniversityExplorer() {
           <div className="pt-2 text-center lg:pt-4 lg:text-left">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/90 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-orange-600 shadow-[0_12px_30px_rgba(255,91,18,0.08)] backdrop-blur sm:mb-5 sm:px-5 sm:text-xs sm:tracking-[0.18em]">
               <Sparkles className="h-4 w-4 fill-orange-500" />
-              Italy university hub — available now
+              Featured · Italy university spotlight
             </div>
 
             <h2 className="mx-auto max-w-4xl text-[2.55rem] font-black leading-[1] tracking-[-0.05em] text-[#071b3a] sm:text-6xl lg:mx-0 lg:text-7xl lg:leading-[0.98]">
@@ -464,58 +428,47 @@ export default function PublicUniversityExplorer() {
           ))}
         </div>
 
-        <div className="mt-6 hidden overflow-hidden rounded-[2rem] border border-orange-100 bg-white/88 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:block">
+        <div className="mt-6 overflow-hidden rounded-[2rem] border border-orange-100 bg-white/88 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="inline-flex rounded-full bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-orange-600 ring-1 ring-orange-100">
-                Country expansion roadmap
+                Beyond Italy
               </div>
               <h3 className="mt-3 text-2xl font-black tracking-tight text-[#071b3a] md:text-3xl">
-                More countries are visible — but honestly marked coming soon
+                Universities in every destination we cover
               </h3>
               <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-                Germany, UK, Canada, Australia and Turkey stay on the website roadmap.
-                They should not act like finished university databases until real information is added.
+                Germany, France, Belgium, Romania, Lithuania, Turkey, China and Vietnam each have a shortlist of well-known universities with fees, programmes and official links.
               </p>
             </div>
 
-            <a
-              href="/appointment?country=Italy"
+            <Link
+              to="/universities"
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus-visible:ring-4 focus:ring-orange-100"
             >
-              Start With Italy
+              Search all universities
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {comingSoonCountries.map((item) => (
-              <article
-                key={item.name}
-                className="group overflow-hidden rounded-[1.5rem] border border-orange-100 bg-white shadow-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:border-orange-200 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
-              >
-                <div className="relative h-36 overflow-hidden bg-orange-50">
-                  <img
-                    src={item.image}
-                    alt={`${item.name} coming soon university image`}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover opacity-65 grayscale transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 group-hover:grayscale-0"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#071b3a]/55 via-[#071b3a]/10 to-transparent" />
-                  <div className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-black text-[#071b3a] shadow-md">
-                    {item.flag} {item.name}
-                  </div>
-                  <div className="absolute bottom-3 left-3 rounded-full bg-orange-600 px-3 py-1 text-xs font-black text-white shadow-md">
-                    Coming Soon
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <p className="text-xs font-semibold leading-5 text-slate-600">{item.copy}</p>
-                </div>
-              </article>
-            ))}
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {countryList
+              .filter((country) => country.slug !== "italy")
+              .map((country) => (
+                <Link
+                  key={country.slug}
+                  to={`/universities?country=${country.slug}`}
+                  className="group flex items-center gap-3 rounded-[1.25rem] border border-orange-100 bg-white px-4 py-3 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_18px_40px_rgba(255,91,18,0.12)]"
+                >
+                  <FlagMark country={country} className="h-7 w-[42px]" />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-black text-[#071b3a] group-hover:text-orange-600">{country.name}</span>
+                    <span className="block text-[11px] font-bold text-slate-500">
+                      {country.universities?.length || 0} universities
+                    </span>
+                  </span>
+                </Link>
+              ))}
           </div>
         </div>
       </div>

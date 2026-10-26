@@ -16,7 +16,10 @@ import { useNavigate } from "react-router-dom";
 import heroStudent from "../../../assets/images/zaifan/hero-student-globe.webp";
 import walkingStudent from "../../../assets/images/zaifan/student-walking.webp";
 import guideStudent from "../../../assets/images/zaifan/student-guide.webp";
-import italyImage from "../../../assets/images/country-explorer/italy.webp";
+import { countryList } from "../../../data/countries";
+import { FlagMark } from "../destinations/DestinationUI";
+
+const EU_FLAG = { slug: "european-union", code: "EU", name: "European Union" };
 
 const supportCards = [
   {
@@ -55,63 +58,36 @@ const explorers = [
     title: "Country Explorer",
     action: "scroll",
     target: "countries",
-    text: "Explore Italy now and see which destinations are coming next.",
+    text: "Compare 9 destinations across Europe and Asia side by side.",
   },
   {
     icon: "🏛️",
     title: "University Explorer",
     action: "route",
     target: "/universities",
-    text: "Compare 50+ Italian university profiles, cities and study routes.",
+    text: "Shortlist universities by country, city and programme.",
   },
   {
     icon: "🏆",
     title: "Scholarship Explorer",
     action: "route",
     target: "/scholarships",
-    text: "Explore DSU, regional funding and university scholarship routes.",
+    text: "Find government, university and EU scholarship routes.",
   },
   {
-    icon: "🇮🇹",
-    title: "Italy Study Guide",
+    icon: "🇪🇺",
+    title: "Study in the EU",
     action: "route",
-    target: "/countries/italy",
-    text: "Open the complete Italy guide for costs, cities, universities and planning.",
+    target: "/countries/european-union",
+    text: "Schengen travel, Erasmus+ and post-study permits explained.",
   },
 ];
 
 const trustStats = [
-  { icon: Globe2, value: "Italy", label: "Live Now" },
-  { icon: University, value: "50+", label: "University Profiles" },
-  { icon: WalletCards, value: "DSU", label: "Funding Hub" },
+  { icon: Globe2, value: String(countryList.length), label: "Destinations" },
+  { icon: University, value: "130+", label: "University Profiles" },
+  { icon: WalletCards, value: "Gov + EU", label: "Scholarship Routes" },
   { icon: GraduationCap, value: "Visa", label: "Planning Route" },
-];
-
-const ITALY_FEATURES = [
-  ["🎓", "DSU Scholarships", "Regional need-based funding routes"],
-  ["💶", "Low Tuition Universities", "From €500–€4,000/year"],
-  ["🌍", "English-Taught Programs", "Bachelor & master options"],
-  ["💼", "Student Planning", "Work rules + budget planning"],
-  ["🏙️", "City Guides", "Compare lifestyle, costs and universities"],
-  ["✈️", "Visa Planning", "Documents and preparation roadmap"],
-];
-
-const ITALY_STATS = [
-  ["Universities", "50+ Profiles"],
-  ["Scholarships", "DSU + Regional"],
-  ["City Guides", "Live"],
-  ["Planning", "Admission → Visa"],
-];
-
-const ITALY_CITIES = [
-  "Milan",
-  "Rome",
-  "Bologna",
-  "Padua",
-  "Florence",
-  "Turin",
-  "Pisa",
-  "Venice",
 ];
 
 const INTERACTIVE_TRANSITION =
@@ -381,127 +357,78 @@ export default function Hero() {
           <div className="order-3 hidden lg:col-auto lg:block">
             <div className="mb-3 flex items-center gap-3 text-[19px] font-black tracking-[-0.02em] text-[#071f50]">
               <span className="sparkle-blink text-[#ffb000]">✦</span>
-              Why Italy?
-              <span>🇮🇹</span>
+              Where will you study?
             </div>
 
             <div
               className={`group hero-motion-safe relative overflow-hidden rounded-[32px] border border-orange-100/80 bg-gradient-to-br from-[#fff0da] via-[#fffaf3] to-[#ffe1bf] p-5 shadow-[0_25px_70px_rgba(255,91,24,0.14)] ring-1 ring-white/90 hover:-translate-y-2 hover:border-orange-200 hover:shadow-[0_35px_90px_rgba(255,91,24,0.22)] ${INTERACTIVE_TRANSITION}`}
             >
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(255,255,255,0.95),transparent_30%),radial-gradient(circle_at_88%_12%,rgba(255,107,26,0.22),transparent_25%),linear-gradient(135deg,rgba(255,255,255,0.60),rgba(255,255,255,0.14))]" />
-              <div className={`absolute right-[-60px] top-[-60px] h-[180px] w-[180px] rounded-full bg-orange-300/30 opacity-0 blur-3xl group-hover:opacity-100 ${INTERACTIVE_TRANSITION}`} />
-              <div className={`absolute bottom-[-40px] left-[-40px] h-[120px] w-[120px] rounded-full bg-orange-200/40 opacity-0 blur-2xl group-hover:opacity-100 ${INTERACTIVE_TRANSITION}`} />
               <div className="card-shine pointer-events-none absolute -left-24 top-[-20%] h-[150%] w-16 bg-white/60 blur-xl" />
               <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-60" />
 
-              <div className={`pointer-events-none absolute right-4 top-4 z-20 h-[78px] w-[78px] overflow-hidden rounded-full bg-white p-1.5 shadow-[0_14px_34px_rgba(9,31,80,0.16)] ring-1 ring-orange-100 group-hover:scale-105 ${INTERACTIVE_TRANSITION}`}>
-                <img
-                  src={italyImage}
-                  alt=""
-                  width="1088"
-                  height="976"
-                  loading="lazy"
-                  decoding="async"
-                  className="h-full w-full rounded-full object-cover"
-                />
-              </div>
-
               <div className="relative z-10">
-                <div className="flex items-start justify-between gap-3 pr-20">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-lg font-black text-[#071f50] shadow-[0_14px_30px_rgba(9,31,80,0.10)] ring-1 ring-orange-100 group-hover:-translate-y-1 group-hover:rotate-[-3deg] ${INTERACTIVE_TRANSITION}`}
-                      >
-                        IT
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-600">
-                          Italy Focus
-                        </p>
-                        <h3 className="mt-0.5 text-[22px] font-black leading-tight tracking-[-0.03em] text-[#071f50]">
-                          Study In Italy
-                        </h3>
-                      </div>
-                    </div>
-
-                    <p className="mt-2 max-w-[390px] text-[11px] font-bold leading-5 text-[#264161]">
-                      Affordable public universities, scholarship routes and a
-                      clear roadmap from application to visa.
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-600">
+                      {countryList.length} destinations live
+                    </p>
+                    <h3 className="mt-0.5 text-[22px] font-black leading-tight tracking-[-0.03em] text-[#071f50]">
+                      Europe & Asia, one plan
+                    </h3>
+                    <p className="mt-1 max-w-[390px] text-[11px] font-bold leading-5 text-[#264161]">
+                      Full guides with cities, universities, scholarships and a visa roadmap for every country.
                     </p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={goToAppointment}
+                    onClick={() => goToRoute("/countries")}
                     className={`hero-motion-safe grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-orange-500 shadow-[0_12px_26px_rgba(255,107,26,0.22)] ring-1 ring-white/80 hover:scale-110 hover:bg-[#ff4b12] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
-                    aria-label="Start Italy plan"
+                    aria-label="Compare all destinations"
                   >
-                    <ArrowRight
-                      size={22}
-                      strokeWidth={3}
-                      className="arrow-nudge"
-                    />
+                    <ArrowRight size={22} strokeWidth={3} className="arrow-nudge" />
                   </button>
                 </div>
 
-                <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:gap-2.5">
-                  {ITALY_FEATURES.map(([icon, title, text]) => (
-                    <div
-                      key={title}
-                      className={`group/item hero-motion-safe flex items-start gap-2.5 rounded-2xl border border-white/80 bg-white/66 px-3 py-2.5 shadow-sm hover:-translate-y-1 hover:border-orange-100 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {countryList.map((country) => (
+                    <button
+                      key={country.slug}
+                      type="button"
+                      onClick={() => goToRoute(`/countries/${country.slug}`)}
+                      className={`group/item hero-motion-safe flex flex-col items-start gap-2 rounded-2xl border border-white/80 bg-white/70 p-2.5 text-left shadow-sm hover:-translate-y-1 hover:border-orange-100 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
                     >
-                      <div
-                        className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-orange-50 text-base shadow-inner group-hover/item:scale-110 ${INTERACTIVE_TRANSITION}`}
-                      >
-                        {icon}
-                      </div>
-                      <div>
-                        <p className="text-xs font-black leading-tight text-[#071f50]">
-                          {title}
-                        </p>
-                        <p className="mt-1 text-[10px] font-bold leading-4 text-[#405672]">
-                          {text}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-2.5">
-                  {ITALY_STATS.map(([label, value]) => (
-                    <div
-                      key={label}
-                      className={`hero-motion-safe rounded-2xl border border-white/80 bg-white/78 p-2.5 shadow-sm hover:-translate-y-1 hover:border-orange-100 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
-                    >
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
-                        {label}
-                      </p>
-                      <p className="mt-1 text-sm font-black text-[#071f50]">
-                        {value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {ITALY_CITIES.map((city) => (
-                    <span
-                      key={city}
-                      className={`hero-motion-safe rounded-full border border-white/80 bg-white/82 px-3 py-1.5 text-[11px] font-black text-[#071f50] shadow-sm hover:-translate-y-1 hover:border-orange-100 hover:bg-white hover:shadow-md ${INTERACTIVE_TRANSITION}`}
-                    >
-                      📍 {city}
-                    </span>
+                      <FlagMark country={country} className="h-5 w-[30px] rounded-[4px]" />
+                      <span className="text-xs font-black leading-tight text-[#071f50] group-hover/item:text-[#ff4b12]">
+                        {country.name}
+                      </span>
+                      <span className="text-[9px] font-bold leading-3 text-[#405672]">
+                        {country.quickFacts.tuition}
+                      </span>
+                    </button>
                   ))}
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => goToRoute("/countries/italy")}
-                  className={`hero-motion-safe mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-[#ff4b12] px-5 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.25)] hover:-translate-y-1 hover:bg-[#ff642f] hover:shadow-[0_24px_50px_rgba(255,75,18,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
+                  onClick={() => goToRoute("/countries/european-union")}
+                  className={`hero-motion-safe mt-3 flex w-full items-center justify-between gap-3 rounded-2xl bg-[#003399] px-4 py-2.5 text-left text-white hover:-translate-y-0.5 ${INTERACTIVE_TRANSITION}`}
                 >
-                  Start Your Italy Plan
+                  <span className="flex items-center gap-2.5">
+                    <FlagMark country={EU_FLAG} className="h-5 w-[30px] rounded-[4px]" />
+                    <span className="text-xs font-black">Study in the EU</span>
+                    <span className="text-[10px] font-bold text-white/70">Schengen · Erasmus+</span>
+                  </span>
+                  <ChevronRight size={16} strokeWidth={3} className="text-[#ffcc00]" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => goToRoute("/countries")}
+                  className={`hero-motion-safe mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#ff4b12] px-5 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,75,18,0.25)] hover:-translate-y-1 hover:bg-[#ff642f] hover:shadow-[0_24px_50px_rgba(255,75,18,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
+                >
+                  Compare All Destinations
                   <ArrowRight size={18} className="arrow-nudge" />
                 </button>
               </div>
@@ -651,7 +578,7 @@ export default function Hero() {
                 Let’s turn your dreams into reality!
               </h2>
               <p className="mt-1 text-xs font-semibold text-white/95">
-                Book a focused 1-on-1 planning session for your Italy study journey.
+                Book a focused 1-on-1 planning session for your study abroad journey.
               </p>
             </div>
 

@@ -15,13 +15,18 @@ import {
 import { FaTiktok } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 
+import { countryList } from "../../../data/countries";
+import { FlagMark } from "../destinations/DestinationUI";
+
+const euFlag = { slug: "european-union", code: "EU", name: "European Union" };
+
 const whatsappNumber = "923305718131";
 const whatsappMessage = encodeURIComponent(
   "Hello Zaifan Consultancy, I want to book a free study abroad consultation."
 );
 
 function buildAppointmentServiceLink(serviceTitle) {
-  return `/appointment?country=Italy&service=${encodeURIComponent(serviceTitle)}`;
+  return `/appointment?service=${encodeURIComponent(serviceTitle)}`;
 }
 
 function Footer() {
@@ -29,37 +34,17 @@ function Footer() {
     { name: "Home", href: "/" },
     { name: "Countries", href: "/countries" },
     { name: "Universities", href: "/universities" },
-    { name: "Study in Italy", href: "/countries/italy" },
+    { name: "Study in the EU", href: "/countries/european-union" },
     { name: "Contact", href: "/contact" },
   ];
 
   const services = [
     { name: "All Services", href: "/services" },
-    { name: "University Selection", href: "/appointment?country=Italy&service=Italy%20University%20Selection" },
+    { name: "University Selection", href: buildAppointmentServiceLink("University Selection") },
     { name: "Scholarship Guidance", href: "/scholarships" },
-    { name: "Admission Guidance", href: "/appointment?country=Italy&service=Italy%20Admission%20Guidance" },
-    { name: "SOP & Documentation", href: "/appointment?country=Italy&service=SOP%20%26%20Documentation" },
-    { name: "Visa Guidance", href: "/appointment?country=Italy&service=Italy%20Visa%20Guidance" },
-  ];
-
-  const destinations = [
-    { name: "Italy", live: true, href: "/countries/italy" },
-    { name: "United Kingdom", live: false },
-    { name: "Canada", live: false },
-    { name: "Australia", live: false },
-    { name: "Germany", live: false },
-    { name: "Turkey", live: false },
-  ];
-
-  const italyCities = [
-    { name: "Milan", href: "/countries/italy/milan" },
-    { name: "Rome", href: "/countries/italy/rome" },
-    { name: "Bologna", href: "/countries/italy/bologna" },
-    { name: "Padua", href: "/countries/italy/padua" },
-    { name: "Florence", href: "/countries/italy/florence" },
-    { name: "Turin", href: "/countries/italy/turin" },
-    { name: "Pisa", href: "/countries/italy/pisa" },
-    { name: "Venice", href: "/countries/italy/venice" },
+    { name: "Admission Guidance", href: buildAppointmentServiceLink("Admission Guidance") },
+    { name: "SOP & Documentation", href: buildAppointmentServiceLink("SOP & Documentation") },
+    { name: "Visa Guidance", href: buildAppointmentServiceLink("Visa Guidance") },
   ];
 
   const highlights = [
@@ -218,14 +203,14 @@ function Footer() {
               </button>
 
               <p className="mt-6 max-w-xl text-base font-semibold leading-8 text-slate-600">
-                Helping students build a clear Italy study plan across
-                universities, scholarships, documents and visa preparation —
-                with more destinations added only when the guidance is ready.
+                Helping students build a clear study abroad plan across
+                universities, scholarships, documents and visa preparation in
+                Europe and Asia — with honest guidance at every step.
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  to="/appointment?country=Italy&service=Free%20Italy%20Study%20Plan"
+                  to="/appointment?service=Free%20Consultation"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-7 py-4 font-black text-white shadow-xl shadow-orange-600/20 transition duration-300 hover:-translate-y-1 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200"
                 >
                   Book Consultation
@@ -268,11 +253,11 @@ function Footer() {
               </div>
             </div>
 
-            <FooterColumn title="Quick Links" items={quickLinks} links />
+            <FooterColumn title="Quick Links" items={quickLinks} />
 
             <FooterColumn title="Services" items={services} />
 
-            <FooterColumn title="Destinations" items={destinations} destinations italyCities={italyCities} />
+            <DestinationsColumn />
           </div>
         </div>
 
@@ -321,7 +306,7 @@ function Footer() {
   );
 }
 
-function FooterColumn({ title, items, links = false, destinations = false, italyCities = [] }) {
+function FooterColumn({ title, items }) {
   return (
     <div>
       <h3 className="text-sm font-black uppercase tracking-[0.24em] text-orange-600">
@@ -329,85 +314,51 @@ function FooterColumn({ title, items, links = false, destinations = false, italy
       </h3>
 
       <ul className="mt-6 space-y-3">
-        {items.map((item) => {
-          if (destinations) {
-            if (!item.live) {
-              return (
-                <li key={item.name}>
-                  <div className="inline-flex items-center gap-2 rounded-lg font-bold text-slate-500">
-                    <span className="h-1.5 w-1.5 rounded-full bg-orange-200" />
-                    <span>{item.name}</span>
-                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-orange-700">
-                      Soon
-                    </span>
-                  </div>
-                </li>
-              );
-            }
+        {items.map((item) => (
+          <li key={item.name}>
+            <Link
+              to={item.href}
+              className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-600 transition duration-300 hover:translate-x-1 hover:text-orange-600"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition duration-300 group-hover:bg-orange-600" />
+              {item.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-            return (
-              <li key={item.name}>
-                <Link
-                  to={item.href}
-                  className="group inline-flex items-center gap-2 rounded-lg font-black text-[#ff4b12] transition hover:translate-x-1"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#ff4b12]" />
-                  🇮🇹 Italy
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-black uppercase text-green-700">
-                    Live
-                  </span>
-                </Link>
-              </li>
-            );
-          }
+function DestinationsColumn() {
+  return (
+    <div>
+      <h3 className="text-sm font-black uppercase tracking-[0.24em] text-orange-600">
+        Destinations
+      </h3>
 
-          const name = typeof item === "string" ? item : item.name;
-          const href =
-            typeof item === "string"
-              ? buildAppointmentServiceLink(item)
-              : item.href;
-
-          return (
-            <li key={name}>
-              <Link
-                to={href}
-                className="group inline-flex items-center gap-2 rounded-lg font-bold text-slate-600 transition duration-300 hover:translate-x-1 hover:text-orange-600"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition duration-300 group-hover:bg-orange-600" />
-                {name}
-              </Link>
-            </li>
-          );
-        })}
+      <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-3">
+        {countryList.map((country) => (
+          <li key={country.slug}>
+            <Link
+              to={`/countries/${country.slug}`}
+              className="group inline-flex items-center gap-2 rounded-lg text-sm font-bold text-slate-600 transition duration-300 hover:translate-x-1 hover:text-orange-600"
+            >
+              <FlagMark country={country} className="h-3.5 w-[21px] rounded-[3px]" />
+              {country.name}
+            </Link>
+          </li>
+        ))}
       </ul>
 
-      {destinations && italyCities.length > 0 && (
-        <div className="mt-5">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-orange-200" />
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">
-              Italy City Guides
-            </p>
-            <span className="rounded-full bg-green-100 px-2 py-0.5 text-[9px] font-black uppercase text-green-700">
-              8 Live
-            </span>
-          </div>
-
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {italyCities.map((city) => (
-              <li key={city.name}>
-                <Link
-                  to={city.href}
-                  className="group inline-flex items-center gap-2 rounded-lg text-xs font-bold text-slate-600 transition duration-300 hover:translate-x-1 hover:text-orange-600"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-orange-200 transition duration-300 group-hover:bg-orange-600" />
-                  {city.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <Link
+        to="/countries/european-union"
+        className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#003399] px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5"
+      >
+        <FlagMark country={euFlag} className="h-3.5 w-[21px] rounded-[3px]" />
+        Study in the EU
+        <FaArrowRight className="text-[10px]" />
+      </Link>
     </div>
   );
 }

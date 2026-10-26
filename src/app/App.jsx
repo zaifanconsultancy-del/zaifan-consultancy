@@ -1,9 +1,11 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import ScrollToTop from "../components/public/shared/ScrollToTop";
-import loadingLogo from "../assets/images/brand/loading-logo.webp";
+import OpeningAnimation from "../components/public/shared/OpeningAnimation";
+import MoltenDripIntro from "../components/public/shared/MoltenDripIntro";
+import GyroPortalIntro from "../components/public/shared/GyroPortalIntro";
 
 // Public shell is lazy as well, so portal-only visits do not eagerly pull
 // Navbar / floating CTA code into the initial route workload.
@@ -23,14 +25,17 @@ const ServiceDetailPage = lazy(() =>
 const CountriesPage = lazy(() => import("../pages/public/CountriesPage"));
 const ItalyGuide = lazy(() => import("../pages/public/ItalyGuide"));
 const CityDetailPage = lazy(() => import("../pages/public/CityDetailPage"));
-const UniversitiesPage = lazy(() =>
-  import("../pages/public/UniversitiesPage")
+const CountryGuidePage = lazy(() => import("../pages/public/CountryGuidePage"));
+const CountryCityPage = lazy(() => import("../pages/public/CountryCityPage"));
+const EuHubPage = lazy(() => import("../pages/public/EuHubPage"));
+const UniversitiesHub = lazy(() =>
+  import("../pages/public/UniversitiesHub")
 );
 const UniversityDetailPage = lazy(() =>
   import("../pages/public/UniversityDetailPage")
 );
-const ScholarshipExplorer = lazy(() =>
-  import("../components/public/scholarships/ScholarshipExplorer")
+const ScholarshipsHub = lazy(() =>
+  import("../pages/public/ScholarshipsHub")
 );
 const ContactPage = lazy(() => import("../pages/public/ContactPage.jsx"));
 const AppointmentPage = lazy(() =>
@@ -59,50 +64,48 @@ function isPortalPath(pathname) {
   return PORTAL_PREFIXES.some((route) => pathname.startsWith(route));
 }
 
-function LoadingScreen() {
-  return (
-    <motion.div
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-[#fff4e8] text-[#071d43]"
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: MOTION.duration, ease: MOTION.ease }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: MOTION.duration, ease: MOTION.ease }}
-        className="relative flex flex-col items-center text-center"
-      >
-        <img
-          src={loadingLogo}
-          alt="Zaifan Consultancy"
-          className="h-36 w-36 object-contain drop-shadow-[0_18px_35px_rgba(234,88,12,0.18)] md:h-44 md:w-44"
-          decoding="async"
-        />
+const INTRO_SESSION_KEY = "zaifan-intro-seen";
 
-        <h1 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
-          Zaifan <span className="text-orange-600">Consultancy</span>
-        </h1>
+// Switch the default intro here. Preview any of them with ?intro=portal,
+// ?intro=melt or ?intro=takeoff (the query param always replays, ignoring the session flag).
+const DEFAULT_INTRO = "melt";
+const INTROS = {
+  takeoff: OpeningAnimation,
+  melt: MoltenDripIntro,
+  portal: GyroPortalIntro,
+};
 
-        <p className="mt-4 text-sm font-black uppercase tracking-[0.32em] text-slate-500">
-          Loading your study abroad adventure
-        </p>
+function getRequestedIntro() {
+  const requested = new URLSearchParams(window.location.search).get("intro");
+  return INTROS[requested] ? requested : null;
+}
 
-        <div className="mt-7 h-2 w-56 overflow-hidden rounded-full bg-orange-100">
-          <motion.div
-            className="h-full rounded-full bg-orange-500"
-            initial={{ x: "-100%", width: "45%" }}
-            animate={{ x: "230%" }}
-            transition={{
-              duration: 1.1,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        </div>
-      </motion.div>
-    </motion.div>
-  );
+// The intro plays once per browser session, on public pages only.
+function shouldPlayIntro(pathname) {
+  if (isPortalPath(pathname)) return false;
+
+  if (!getRequestedIntro()) {
+    try {
+      if (window.sessionStorage.getItem(INTRO_SESSION_KEY)) return false;
+    } catch {
+      // Storage blocked: still play the intro.
+    }
+  }
+
+  // Warm the first-paint chunks while the intro runs.
+  import("../components/public/layout/Navbar");
+  import("../components/public/layout/FloatingConsultationCTA");
+  if (pathname === "/") import("../pages/public/Home");
+
+  return true;
+}
+
+function markIntroSeen() {
+  try {
+    window.sessionStorage.setItem(INTRO_SESSION_KEY, "1");
+  } catch {
+    // Ignore storage failures.
+  }
 }
 
 function PageTransition({ children }) {
@@ -137,16 +140,20 @@ function shouldRenderGlobalFooter(pathname) {
 
 function App() {
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
-
   const isPortalRoute = isPortalPath(location.pathname);
+  // playing -> revealing (site mounts under the intro) -> done
+  const [introPhase, setIntroPhase] = useState(() =>
+    shouldPlayIntro(location.pathname) ? "playing" : "done"
+  );
+  const [Intro] = useState(() => INTROS[getRequestedIntro() || DEFAULT_INTRO]);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setLoading(false);
-    }, 350);
+  const revealSite = useCallback(() => {
+    setIntroPhase((phase) => (phase === "playing" ? "revealing" : phase));
+  }, []);
 
-    return () => window.clearTimeout(timer);
+  const finishIntro = useCallback(() => {
+    markIntroSeen();
+    setIntroPhase("done");
   }, []);
 
   const routeKey = `${location.pathname}${location.search}`;
@@ -154,10 +161,12 @@ function App() {
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#fff4e8] text-[#071d43] selection:bg-orange-600 selection:text-white">
       <AnimatePresence>
-        {loading && <LoadingScreen />}
+        {introPhase !== "done" && (
+          <Intro onReveal={revealSite} onComplete={finishIntro} />
+        )}
       </AnimatePresence>
 
-      {!loading && (
+      {introPhase !== "playing" && (
         <>
           <ScrollToTop />
 
@@ -221,10 +230,37 @@ function App() {
                 />
 
                 <Route
+                  path="/countries/european-union"
+                  element={
+                    <PageTransition>
+                      <EuHubPage />
+                    </PageTransition>
+                  }
+                />
+
+                <Route
+                  path="/countries/:countrySlug"
+                  element={
+                    <PageTransition>
+                      <CountryGuidePage />
+                    </PageTransition>
+                  }
+                />
+
+                <Route
+                  path="/countries/:countrySlug/:citySlug"
+                  element={
+                    <PageTransition>
+                      <CountryCityPage />
+                    </PageTransition>
+                  }
+                />
+
+                <Route
                   path="/universities"
                   element={
                     <PageTransition>
-                      <UniversitiesPage />
+                      <UniversitiesHub />
                     </PageTransition>
                   }
                 />
@@ -242,7 +278,7 @@ function App() {
                   path="/scholarships"
                   element={
                     <PageTransition>
-                      <ScholarshipExplorer />
+                      <ScholarshipsHub />
                     </PageTransition>
                   }
                 />

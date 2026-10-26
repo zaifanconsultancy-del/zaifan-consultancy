@@ -3,6 +3,8 @@ import { FaBars, FaTimes, FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import logo from "../../../assets/images/brand/logo.webp";
+import { countryList } from "../../../data/countries";
+import { FlagMark } from "../destinations/DestinationUI";
 
 const NAV_MOTION = {
   duration: 0.28,
@@ -15,7 +17,7 @@ const ACCORDION_MOTION = {
 };
 
 const italyLinks = [
-  { name: "Italy Guide", path: "/countries/italy", badge: "Live" },
+  { name: "Italy Guide", path: "/countries/italy", badge: "Guide" },
   { name: "Italian Universities", path: "/universities", badge: "Finder" },
   { name: "Scholarships", path: "/scholarships", badge: "DSU" },
   {
@@ -81,11 +83,13 @@ const serviceLinks = [
   },
 ];
 
+const euFlag = { slug: "european-union", code: "EU", name: "European Union" };
+
 const navLinks = [
   { name: "Home", path: "/", type: "route" },
   { name: "Countries", path: "/countries", type: "route" },
   { name: "Universities", path: "/universities", type: "route" },
-  { name: "Study in Italy", type: "italyDropdown" },
+  { name: "Destinations", type: "destinationsDropdown" },
   { name: "Services", type: "servicesDropdown" },
   { name: "Contact", path: "/contact", type: "route" },
 ];
@@ -93,9 +97,9 @@ const navLinks = [
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
-  const [italyOpen, setItalyOpen] = useState(false);
+  const [destinationsOpen, setDestinationsOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
-  const [mobileItalyOpen, setMobileItalyOpen] = useState(false);
+  const [mobileDestinationsOpen, setMobileDestinationsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const navigate = useNavigate();
@@ -105,10 +109,7 @@ function Navbar() {
     const path = location.pathname;
 
     return {
-      isItaly:
-        path.startsWith("/countries/italy") ||
-        path.startsWith("/universities") ||
-        path.startsWith("/scholarships"),
+      isDestinations: path.startsWith("/countries/") || path.startsWith("/scholarships"),
       isServices: path.startsWith("/services"),
     };
   }, [location.pathname]);
@@ -123,9 +124,9 @@ function Navbar() {
   useEffect(() => {
     setMenuOpen(false);
     setServicesOpen(false);
-    setItalyOpen(false);
+    setDestinationsOpen(false);
     setMobileServicesOpen(false);
-    setMobileItalyOpen(false);
+    setMobileDestinationsOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -143,9 +144,9 @@ function Navbar() {
   const goToRoute = (path) => {
     setMenuOpen(false);
     setServicesOpen(false);
-    setItalyOpen(false);
+    setDestinationsOpen(false);
     setMobileServicesOpen(false);
-    setMobileItalyOpen(false);
+    setMobileDestinationsOpen(false);
 
     navigate(path);
     setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 120);
@@ -161,7 +162,8 @@ function Navbar() {
   };
 
   const isLinkActive = (link) => {
-    if (link.type === "italyDropdown") return routeGroup.isItaly;
+    if (link.type === "destinationsDropdown") return routeGroup.isDestinations;
+    if (link.path === "/countries") return location.pathname === "/countries";
     if (link.type === "servicesDropdown") return routeGroup.isServices;
     if (link.path === "/") return location.pathname === "/";
     return location.pathname === link.path || location.pathname.startsWith(`${link.path}/`);
@@ -193,17 +195,17 @@ function Navbar() {
           {navLinks.map((link) => {
             const isActive = isLinkActive(link);
 
-            if (link.type === "italyDropdown") {
+            if (link.type === "destinationsDropdown") {
               return (
                 <div
                   key={link.name}
                   className="relative"
-                  onMouseEnter={() => setItalyOpen(true)}
-                  onMouseLeave={() => setItalyOpen(false)}
+                  onMouseEnter={() => setDestinationsOpen(true)}
+                  onMouseLeave={() => setDestinationsOpen(false)}
                 >
                   <button
                     type="button"
-                    onClick={() => goToRoute("/countries/italy")}
+                    onClick={() => goToRoute("/countries")}
                     aria-current={isActive ? "page" : undefined}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-3 transition duration-300 focus:outline-none focus:ring-4 focus:ring-orange-100 ${
                       isActive
@@ -213,74 +215,100 @@ function Navbar() {
                   >
                     {link.name}
                     <FaChevronDown
-                      className={`text-[10px] transition-transform duration-300 ${italyOpen ? "rotate-180" : ""}`}
+                      className={`text-[10px] transition-transform duration-300 ${destinationsOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
                   <AnimatePresence>
-                    {italyOpen && (
+                    {destinationsOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: 10, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.98 }}
                         transition={NAV_MOTION}
-                        className="absolute left-1/2 top-[calc(100%+12px)] w-[430px] -translate-x-1/2 rounded-[28px] bg-white p-3 shadow-[0_24px_70px_rgba(120,70,20,0.16)] ring-1 ring-orange-100"
+                        className="absolute left-1/2 top-[calc(100%+12px)] grid w-[760px] -translate-x-1/2 grid-cols-[1.35fr_1fr] gap-3 rounded-[28px] bg-white p-3 shadow-[0_24px_70px_rgba(120,70,20,0.16)] ring-1 ring-orange-100"
                       >
-                        <div className="mb-2 rounded-[22px] bg-[#fff8ec] px-4 py-3 ring-1 ring-orange-100">
-                          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-600">
-                            Italy Ecosystem
-                          </p>
-                          <p className="mt-1 text-xs font-bold leading-5 text-slate-600">
-                            Country guide, university finder, DSU scholarship hub and direct access to all 8 live city guides.
-                          </p>
-                        </div>
-
-                        <div className="grid gap-1">
-                          {italyLinks.map((item) => (
-                            <button
-                              key={item.name}
-                              type="button"
-                              onClick={() => goToRoute(item.path)}
-                              className="flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left text-sm font-black text-[#2d145f] transition hover:bg-orange-50 hover:text-orange-600"
-                            >
-                              <span>{item.name}</span>
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
-                                  item.badge === "Free"
-                                    ? "bg-green-100 text-green-700"
-                                    : item.badge === "DSU"
-                                      ? "bg-blue-100 text-blue-700"
-                                      : "bg-orange-100 text-orange-700"
-                                }`}
-                              >
-                                {item.badge}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-
-                        <div className="mt-2 rounded-[22px] bg-[#fff8ec] p-3 ring-1 ring-orange-100">
-                          <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-orange-600">
-                              Student Cities
-                            </p>
-                            <span className="rounded-full bg-orange-100 px-2 py-1 text-[9px] font-black uppercase text-orange-700">
-                              8 Live
-                            </span>
+                        <div>
+                          <div className="mb-2 flex items-center justify-between rounded-[22px] bg-[#fff8ec] px-4 py-3 ring-1 ring-orange-100">
+                            <div>
+                              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-600">
+                                Study Destinations
+                              </p>
+                              <p className="mt-1 text-xs font-bold leading-5 text-slate-600">
+                                {countryList.length} country guides with cities, universities, scholarships and visas.
+                              </p>
+                            </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2">
-                            {italyCityLinks.map((city) => (
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {countryList.map((country) => (
                               <button
-                                key={city.name}
+                                key={country.slug}
                                 type="button"
-                                onClick={() => goToRoute(city.path)}
-                                className="flex items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-left text-xs font-black text-[#2d145f] shadow-sm ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-50 hover:text-orange-600"
+                                onClick={() => goToRoute(`/countries/${country.slug}`)}
+                                className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition hover:bg-orange-50"
                               >
-                                <span aria-hidden="true">{city.emoji}</span>
-                                <span>{city.name}</span>
+                                <FlagMark country={country} className="h-6 w-9" />
+                                <span className="min-w-0">
+                                  <span className="block text-sm font-black text-[#2d145f] group-hover:text-orange-600">
+                                    {country.name}
+                                  </span>
+                                  <span className="block truncate text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
+                                    {country.inEU ? "EU · " : ""}
+                                    {country.region}
+                                  </span>
+                                </span>
                               </button>
                             ))}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => goToRoute("/countries/european-union")}
+                            className="group relative overflow-hidden rounded-[22px] bg-[#003399] p-4 text-left text-white transition hover:-translate-y-0.5"
+                          >
+                            <div className="flex items-center gap-3">
+                              <FlagMark country={euFlag} className="h-7 w-[42px]" />
+                              <div>
+                                <p className="text-sm font-black">Study in the EU</p>
+                                <p className="text-[11px] font-bold text-white/70">Schengen, Erasmus+ & EU options compared</p>
+                              </div>
+                            </div>
+                          </button>
+
+                          <div className="rounded-[22px] bg-[#fff8ec] p-3 ring-1 ring-orange-100">
+                            <p className="px-1 text-[11px] font-black uppercase tracking-[0.16em] text-orange-600">
+                              Italy flagship
+                            </p>
+                            <div className="mt-2 grid gap-1">
+                              {italyLinks.map((item) => (
+                                <button
+                                  key={item.name}
+                                  type="button"
+                                  onClick={() => goToRoute(item.path)}
+                                  className="flex w-full items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 text-left text-xs font-black text-[#2d145f] ring-1 ring-orange-100 transition hover:text-orange-600"
+                                >
+                                  <span>{item.name}</span>
+                                  <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black uppercase text-orange-700">
+                                    {item.badge}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {italyCityLinks.map((city) => (
+                                <button
+                                  key={city.name}
+                                  type="button"
+                                  onClick={() => goToRoute(city.path)}
+                                  className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-[#2d145f] ring-1 ring-orange-100 transition hover:text-orange-600"
+                                >
+                                  {city.name}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </motion.div>
@@ -328,7 +356,7 @@ function Navbar() {
                             Services
                           </p>
                           <p className="mt-1 text-xs font-bold leading-5 text-slate-600">
-                            Live guidance routes connected to Italy planning. No fake services, no dead promises.
+                            Live guidance for every destination we cover. No fake services, no dead promises.
                           </p>
                         </div>
 
@@ -403,7 +431,7 @@ function Navbar() {
 
           <button
             type="button"
-            onClick={() => goToRoute("/appointment?country=Italy&service=Free Italy Study Plan")}
+            onClick={() => goToRoute("/appointment?service=Free%20Consultation")}
             className="rounded-full bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-[0_12px_26px_rgba(234,88,12,0.26)] transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200"
           >
             Book Free Consultation
@@ -444,17 +472,17 @@ function Navbar() {
               <div className="space-y-2 rounded-[2rem] bg-white/75 p-4 shadow-2xl ring-1 ring-orange-100/80">
                 <div className="rounded-[1.5rem] bg-orange-50 px-4 py-3 ring-1 ring-orange-100">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
-                    Italy live now
+                    {countryList.length} destinations live
                   </p>
                   <p className="mt-1 text-sm font-bold leading-6 text-[#7a4a20]">
-                    Explore Italy, cities, universities, scholarships and consultation from one connected menu.
+                    Italy, Germany, France, Belgium, Romania, Lithuania, Turkey, China and Vietnam, plus an EU guide.
                   </p>
                 </div>
 
                 {navLinks.map((link, index) => {
                   const isActive = isLinkActive(link);
 
-                  if (link.type === "italyDropdown") {
+                  if (link.type === "destinationsDropdown") {
                     return (
                       <motion.div
                         key={link.name}
@@ -465,8 +493,8 @@ function Navbar() {
                       >
                         <button
                           type="button"
-                          onClick={() => setMobileItalyOpen((prev) => !prev)}
-                          aria-expanded={mobileItalyOpen}
+                          onClick={() => setMobileDestinationsOpen((prev) => !prev)}
+                          aria-expanded={mobileDestinationsOpen}
                           className={`flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left text-base font-semibold transition focus:outline-none focus:ring-4 focus:ring-orange-100 ${
                             isActive
                               ? "bg-orange-500 text-white shadow-[0_10px_24px_rgba(234,88,12,0.22)]"
@@ -475,12 +503,12 @@ function Navbar() {
                         >
                           <span>{link.name}</span>
                           <FaChevronDown
-                            className={`text-xs transition-transform duration-300 ${mobileItalyOpen ? "rotate-180" : ""}`}
+                            className={`text-xs transition-transform duration-300 ${mobileDestinationsOpen ? "rotate-180" : ""}`}
                           />
                         </button>
 
                         <AnimatePresence>
-                          {mobileItalyOpen && (
+                          {mobileDestinationsOpen && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
@@ -489,40 +517,45 @@ function Navbar() {
                               className="overflow-hidden"
                             >
                               <div className="space-y-2 px-3 pb-3 pt-2">
-                                {italyLinks.map((item) => (
-                                  <button
-                                    key={item.name}
-                                    type="button"
-                                    onClick={() => goToRoute(item.path)}
-                                    className="flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-sm font-black text-[#2d145f]"
-                                  >
-                                    <span>{item.name}</span>
-                                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase text-orange-700">
-                                      {item.badge}
-                                    </span>
-                                  </button>
-                                ))}
+                                <div className="grid grid-cols-2 gap-2">
+                                  {countryList.map((country) => (
+                                    <button
+                                      key={country.slug}
+                                      type="button"
+                                      onClick={() => goToRoute(`/countries/${country.slug}`)}
+                                      className="flex items-center gap-2 rounded-xl bg-white px-3 py-3 text-left text-xs font-black text-[#2d145f] ring-1 ring-orange-100"
+                                    >
+                                      <FlagMark country={country} className="h-4 w-6" />
+                                      <span>{country.name}</span>
+                                    </button>
+                                  ))}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => goToRoute("/countries/european-union")}
+                                  className="flex w-full items-center gap-3 rounded-xl bg-[#003399] px-4 py-3 text-left text-sm font-black text-white"
+                                >
+                                  <FlagMark country={euFlag} className="h-5 w-[30px]" />
+                                  Study in the EU
+                                </button>
 
                                 <div className="rounded-2xl bg-orange-50 p-3 ring-1 ring-orange-100">
-                                  <div className="mb-2 flex items-center justify-between gap-3">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-600">
-                                      Student Cities
-                                    </p>
-                                    <span className="rounded-full bg-white px-2 py-1 text-[9px] font-black uppercase text-orange-700 ring-1 ring-orange-100">
-                                      8 Live
-                                    </span>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 gap-2">
-                                    {italyCityLinks.map((city) => (
+                                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.15em] text-orange-600">
+                                    Italy flagship
+                                  </p>
+                                  <div className="grid gap-2">
+                                    {italyLinks.map((item) => (
                                       <button
-                                        key={city.name}
+                                        key={item.name}
                                         type="button"
-                                        onClick={() => goToRoute(city.path)}
-                                        className="flex items-center gap-2 rounded-xl bg-white px-3 py-3 text-left text-xs font-black text-[#2d145f] ring-1 ring-orange-100"
+                                        onClick={() => goToRoute(item.path)}
+                                        className="flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-sm font-black text-[#2d145f]"
                                       >
-                                        <span aria-hidden="true">{city.emoji}</span>
-                                        <span>{city.name}</span>
+                                        <span>{item.name}</span>
+                                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase text-orange-700">
+                                          {item.badge}
+                                        </span>
                                       </button>
                                     ))}
                                   </div>
@@ -646,7 +679,7 @@ function Navbar() {
 
                 <button
                   type="button"
-                  onClick={() => goToRoute("/appointment?country=Italy&service=Free Italy Study Plan")}
+                  onClick={() => goToRoute("/appointment?service=Free%20Consultation")}
                   className="block w-full rounded-2xl bg-orange-500 py-4 text-center font-semibold text-white shadow-[0_12px_26px_rgba(234,88,12,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200"
                 >
                   Book Free Consultation

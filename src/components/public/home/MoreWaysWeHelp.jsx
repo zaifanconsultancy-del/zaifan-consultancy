@@ -32,7 +32,7 @@ const MOTION = {
 const services = [
   {
     title: "University Selection",
-    desc: "Compare Italian universities by course fit, city, tuition, scholarship route and application readiness.",
+    desc: "Compare universities across 9 countries by course fit, city, tuition, scholarship route and application readiness.",
     image: accommodationImage,
     link: "/services/university-selection",
     accent: "#ff4b12",
@@ -42,13 +42,13 @@ const services = [
   },
   {
     title: "Scholarship Guidance",
-    desc: "Explore DSU, regional funding, merit routes and scholarship-document planning through the dedicated hub.",
+    desc: "Explore government, university and EU scholarships, plus document planning, through the dedicated hub.",
     image: scholarshipsImage,
     link: "/scholarships",
     accent: "#10b981",
     soft: "bg-emerald-50",
     icon: BadgeDollarSign,
-    wins: ["DSU routes", "Regional funding", "Cost planning"],
+    wins: ["Government awards", "University funding", "Cost planning"],
   },
   {
     title: "Admission Guidance",
@@ -72,7 +72,7 @@ const services = [
   },
   {
     title: "Visa Guidance",
-    desc: "Understand the Italy student visa direction, financial proof, appointment preparation and file readiness.",
+    desc: "Understand the student visa route, financial proof, appointment preparation and file readiness for your destination.",
     image: visaImage,
     link: "/services/visa-guidance",
     accent: "#0ea5e9",
@@ -100,8 +100,8 @@ const trustItems = [
     color: "text-orange-600 bg-orange-50",
   },
   {
-    title: "Italy-First Guidance",
-    desc: "Every service connects back to the live Italy ecosystem.",
+    title: "Destination-Led Guidance",
+    desc: "Every service connects back to a full country guide.",
     icon: GraduationCap,
     color: "text-[#071f50] bg-blue-50",
   },

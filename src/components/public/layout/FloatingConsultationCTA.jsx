@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, MessageCircle, Sparkles, X } from "lucide-react";
 
+import { getCountryBySlug } from "../../../data/countries";
+
 const WHATSAPP_NUMBER = "923305718131";
 
 const MOTION = {
@@ -42,13 +44,27 @@ function FloatingConsultationCTA() {
     [location.pathname]
   );
 
-  const whatsappMessage = useMemo(
-    () =>
-      encodeURIComponent(
-        "Hi Zaifan Consultancy, I want Italy study guidance for universities, scholarships and visa planning."
-      ),
-    []
-  );
+  // On a country page the prompt talks about that country; elsewhere it stays general.
+  const country = useMemo(() => {
+    const match = location.pathname.match(/^\/countries\/([^/]+)/);
+    return match ? getCountryBySlug(match[1]) : null;
+  }, [location.pathname]);
+
+  const copy = country
+    ? {
+        title: `Need help choosing ${country.name}?`,
+        text: `Get university, scholarship and visa roadmap guidance for ${country.name}.`,
+        bookPath: `/appointment?country=${encodeURIComponent(country.name)}&service=${encodeURIComponent("Free Consultation")}`,
+        whatsapp: `Hi Zaifan Consultancy, I want ${country.name} study guidance for universities, scholarships and visa planning.`,
+      }
+    : {
+        title: "Need help choosing a country?",
+        text: "Compare universities, scholarships and visas across 9 destinations with free guidance.",
+        bookPath: "/appointment?service=Free%20Consultation",
+        whatsapp: "Hi Zaifan Consultancy, I want study abroad guidance for universities, scholarships and visa planning.",
+      };
+
+  const whatsappMessage = encodeURIComponent(copy.whatsapp);
 
   useEffect(() => {
     try {
@@ -105,18 +121,18 @@ function FloatingConsultationCTA() {
                 </p>
 
                 <h3 className="mt-1 text-base font-black leading-tight text-[#071f50]">
-                  Need help choosing Italy?
+                  {copy.title}
                 </h3>
 
                 <p className="mt-1 text-xs font-bold leading-5 text-slate-600">
-                  Get university, DSU scholarship and visa roadmap guidance.
+                  {copy.text}
                 </p>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Link
-                to="/appointment?country=Italy&service=Free%20Italy%20Study%20Plan"
+                to={copy.bookPath}
                 className={`inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-4 py-3 text-xs font-black text-white hover:-translate-y-1 hover:bg-orange-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 ${INTERACTIVE_TRANSITION}`}
               >
                 Book Free

@@ -33,6 +33,7 @@ import {
 import consultantMascot from "../../assets/images/appointment/consultant-mascot.webp";
 import globeBooks from "../../assets/images/appointment/globe-books.webp";
 import { supabase } from "../../lib/supabaseClient";
+import { countryList, getCountryByName } from "../../data/countries";
 
 const MOTION = {
   duration: 0.55,
@@ -67,8 +68,8 @@ const initialFormData = {
   full_name: "",
   email: "",
   phone: "",
-  country_interest: "Italy",
-  consultation_type: "Free Italy Study Plan",
+  country_interest: "Not sure yet",
+  consultation_type: "Free Consultation",
   appointment_date: "",
   appointment_time: "",
   message: "",
@@ -84,28 +85,48 @@ const timeSlots = [
   "05:00 PM",
 ];
 
-const consultationTypes = [
+// Italy keeps its established service names (links across the Italy guide
+// still use them); every destination shares the general services.
+const italyConsultationTypes = [
   "Free Italy Study Plan",
   "Italy University Selection",
   "Italy Admission Guidance",
   "Italy Scholarship Guidance",
   "Italy Visa Guidance",
+];
+
+const generalConsultationTypes = [
+  "Free Consultation",
+  "Study Planning",
+  "Country Comparison",
+  "University Selection",
+  "Admission Guidance",
+  "Scholarship Guidance",
+  "Visa Guidance",
   "SOP & Documentation",
 ];
 
-const countries = ["Italy"];
+function getConsultationTypes(country) {
+  return country === "Italy"
+    ? [...italyConsultationTypes, ...generalConsultationTypes]
+    : generalConsultationTypes;
+}
+
+const countries = [...countryList.map((country) => country.name), "European Union", "Not sure yet"];
+
+const cityGuideCount = 8 + countryList.reduce((total, country) => total + (country.cities?.length || 0), 0);
 
 const journeySteps = [
   { title: "Profile", body: "Share your goals", color: "bg-[#071d43]" },
-  { title: "Match", body: "We shortlist Italy options", color: "bg-orange-500" },
-  { title: "Scholarship", body: "We map DSU and merit routes", color: "bg-sky-500" },
+  { title: "Match", body: "We shortlist the right options", color: "bg-orange-500" },
+  { title: "Scholarship", body: "We map scholarship routes", color: "bg-sky-500" },
   { title: "Visa", body: "We plan your documents", color: "bg-emerald-500" },
 ];
 
 const stats = [
-  { icon: GraduationCap, value: "Italy", label: "Focused Guidance", color: "text-orange-500", bg: "bg-orange-50" },
-  { icon: UsersRound, value: "8", label: "City Guides", color: "text-[#071d43]", bg: "bg-blue-50" },
-  { icon: FileCheck2, value: "DSU", label: "Scholarship Guidance", color: "text-blue-500", bg: "bg-blue-50" },
+  { icon: GraduationCap, value: String(countryList.length), label: "Destinations", color: "text-orange-500", bg: "bg-orange-50" },
+  { icon: UsersRound, value: `${Math.floor(cityGuideCount / 10) * 10}+`, label: "City Guides", color: "text-[#071d43]", bg: "bg-blue-50" },
+  { icon: FileCheck2, value: "Gov + EU", label: "Scholarship Guidance", color: "text-blue-500", bg: "bg-blue-50" },
   { icon: BadgeDollarSign, value: "Visa", label: "Planning Support", color: "text-emerald-500", bg: "bg-emerald-50" },
   { icon: Trophy, value: "Free", label: "First Consultation", color: "text-rose-500", bg: "bg-rose-50" },
 ];
@@ -117,19 +138,19 @@ const trustCards = [
   { icon: MessagesSquare, title: "Expert Guidance", body: "From experienced counselors", color: "text-sky-500", bg: "bg-sky-50", ring: "ring-sky-100" },
 ];
 
-const italyRoutes = [
-  { icon: BookOpenCheck, title: "Computer Science", body: "English-taught programs, DSU routes and tech-city options." },
-  { icon: Building2, title: "Business", body: "Milan, Rome, Bologna and strong public university pathways." },
-  { icon: GraduationCap, title: "Engineering", body: "Technical universities, public options and practical intake planning." },
-  { icon: Award, title: "Medicine & Health", body: "Admission timelines, document planning and realistic fit checks." },
+const studyRoutes = [
+  { icon: BookOpenCheck, title: "Computer Science", body: "English-taught programmes in Germany, Italy, Lithuania, China and more." },
+  { icon: Building2, title: "Business", body: "France, Belgium and Italy, plus international campuses in Asia." },
+  { icon: GraduationCap, title: "Engineering", body: "Germany's technical universities, Italy's politecnicos and top Chinese universities." },
+  { icon: Award, title: "Medicine & Health", body: "Romania, Lithuania, Turkey and China, with PMDC recognition checks." },
 ];
 
-const italyBenefits = [
-  "Low public university tuition",
-  "DSU and regional scholarships",
-  "English-taught study options",
-  "Strong student cities",
-  "Clear visa document roadmap",
+const zaifanBenefits = [
+  `${countryList.length} full destination guides`,
+  "Honest, no-guarantee advice",
+  "Scholarship and visa roadmap",
+  "Free first consultation",
+  "WhatsApp support",
 ];
 
 const popularCities = ["Milan", "Rome", "Bologna", "Padua", "Florence", "Turin", "Pisa", "Venice"];
@@ -149,12 +170,12 @@ const afterBookingSteps = [
   {
     icon: MessagesSquare,
     title: "Consultation Call",
-    body: "A counselor discusses realistic Italy options, risks and next actions with you.",
+    body: "A counselor discusses realistic options, risks and next actions with you.",
   },
   {
     icon: Route,
     title: "Study Roadmap",
-    body: "You get a clear direction for universities, DSU, documents and visa preparation.",
+    body: "You get a clear direction for universities, scholarships, documents and visa preparation.",
   },
 ];
 
@@ -162,17 +183,17 @@ const whoShouldBook = [
   {
     icon: MapPin,
     title: "Still Researching",
-    body: "You like Italy but do not know which city, university or course direction fits yet.",
+    body: "You want to study abroad but do not know which country, city or course fits yet.",
   },
   {
     icon: BadgeDollarSign,
     title: "Need Scholarship Help",
-    body: "You want to understand DSU, regional support, merit awards and realistic affordability.",
+    body: "You want to understand scholarships, funding options and realistic affordability.",
   },
   {
     icon: GraduationCap,
     title: "Choosing Universities",
-    body: "You are comparing Milan, Rome, Bologna, Padua, Turin or other Italian study routes.",
+    body: "You are comparing universities, cities or countries and need a smart shortlist.",
   },
   {
     icon: Plane,
@@ -184,31 +205,31 @@ const whoShouldBook = [
 const consultationCards = [
   {
     icon: Sparkles,
-    type: "Free Italy Study Plan",
-    title: "Italy Starter Call",
+    type: "Free Consultation",
+    title: "Starter Call",
     body: "Best if you are new and want a complete first direction.",
   },
   {
     icon: BadgeDollarSign,
-    type: "Italy Scholarship Guidance",
+    type: "Scholarship Guidance",
     title: "Scholarship Strategy",
-    body: "DSU, regional support, affordability and document planning.",
+    body: "Government, university and regional funding routes, plus affordability.",
   },
   {
     icon: GraduationCap,
-    type: "Italy University Selection",
+    type: "University Selection",
     title: "University Selection",
     body: "Compare universities by program, city, tuition and student fit.",
   },
   {
     icon: FileCheck2,
-    type: "Italy Admission Guidance",
+    type: "Admission Guidance",
     title: "Application Roadmap",
     body: "Plan requirements, deadlines and file preparation clearly.",
   },
   {
     icon: ShieldCheck,
-    type: "Italy Visa Guidance",
+    type: "Visa Guidance",
     title: "Visa Preparation",
     body: "Understand the visa file, financial proof and appointment direction.",
   },
@@ -224,25 +245,25 @@ const readinessCards = [
   {
     icon: CircleHelp,
     title: "Just Researching",
-    message: "I am just researching Italy and need help understanding universities, cities, scholarships and cost.",
+    message: "I am just researching study abroad options and need help understanding countries, universities, scholarships and cost.",
     body: "You need a simple first roadmap before making decisions.",
   },
   {
     icon: GraduationCap,
     title: "Shortlisting Universities",
-    message: "I am shortlisting Italian universities and need help comparing course fit, city, tuition and scholarship route.",
+    message: "I am shortlisting universities and need help comparing course fit, city, tuition and scholarship route.",
     body: "You have a direction but need help choosing smartly.",
   },
   {
     icon: FileCheck2,
     title: "Preparing Documents",
-    message: "I want to prepare my Italy admission, DSU scholarship and visa documents correctly.",
+    message: "I want to prepare my admission, scholarship and visa documents correctly.",
     body: "You need document clarity before deadlines become stressful.",
   },
   {
     icon: Plane,
     title: "Ready To Apply",
-    message: "I am ready to apply for Italy and need a complete application, scholarship and visa roadmap.",
+    message: "I am ready to apply and need a complete application, scholarship and visa roadmap.",
     body: "You need a focused execution plan, not random browsing.",
   },
 ];
@@ -253,7 +274,7 @@ const promiseCards = [
     tone: "green",
     items: [
       "University matching",
-      "Scholarship and DSU guidance",
+      "Scholarship guidance",
       "Application strategy",
       "Visa roadmap direction",
       "Document planning",
@@ -265,7 +286,7 @@ const promiseCards = [
     tone: "orange",
     items: [
       "Fake admission guarantees",
-      "Guaranteed DSU claims",
+      "Guaranteed scholarship claims",
       "Guaranteed visa promises",
       "One-size-fits-all advice",
       "Pressure without clarity",
@@ -276,8 +297,8 @@ const promiseCards = [
 
 const consultationFaqs = [
   {
-    q: "Is the Italy consultation free?",
-    a: "Yes. The first Italy consultation request is free. The goal is to understand your profile and guide you toward a realistic study direction.",
+    q: "Is the consultation free?",
+    a: "Yes. The first consultation request is free. The goal is to understand your profile and guide you toward a realistic study direction.",
   },
   {
     q: "How long does the consultation take?",
@@ -288,8 +309,8 @@ const consultationFaqs = [
     a: "Yes. Parents can join, especially when budget, scholarship, documents and long-term planning need to be discussed together.",
   },
   {
-    q: "Is DSU scholarship guaranteed?",
-    a: "No. DSU and regional support depend on eligibility, ranking, deadlines, documents and current regional rules. We help you plan, not fake guarantees.",
+    q: "Is a scholarship guaranteed?",
+    a: "No. Scholarships depend on eligibility, ranking, deadlines, documents and current rules. We help you plan, not fake guarantees.",
   },
   {
     q: "Do I need documents before booking?",
@@ -297,7 +318,7 @@ const consultationFaqs = [
   },
   {
     q: "Can you help me choose universities?",
-    a: "Yes. The consultation can focus on matching your course, budget, city preference, scholarship potential and application readiness with Italian universities.",
+    a: "Yes. The consultation can focus on matching your course, budget, city preference, scholarship potential and application readiness with universities in your target country.",
   },
   {
     q: "What happens after the consultation?",
@@ -310,6 +331,12 @@ const consultationFaqs = [
 ];
 
 const normalizeValue = (value) => value?.trim().toLowerCase();
+
+const NOT_SURE = "Not sure yet";
+
+function isSpecificCountry(country) {
+  return Boolean(country) && country !== NOT_SURE && country !== "European Union";
+}
 
 const findMatchingOption = (options, value) => {
   const normalized = normalizeValue(value);
@@ -333,7 +360,7 @@ function AppointmentPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    const countryParam = params.get("country") || "Italy";
+    const countryParam = params.get("country");
     const serviceParam = params.get("service") || params.get("consultation");
     const universityParam = params.get("university");
     const cityParam = params.get("city");
@@ -344,12 +371,14 @@ function AppointmentPage() {
     const phoneParam = params.get("phone");
     const messageParam = params.get("message");
 
-    const matchedService = findMatchingOption(consultationTypes, serviceParam);
+    const matchedCountry = findMatchingOption(countries, countryParam);
+    const country = matchedCountry || NOT_SURE;
+    const matchedService = findMatchingOption(getConsultationTypes(country), serviceParam);
     const matchedTime = findMatchingOption(timeSlots, timeParam);
 
     const nextData = {
-      country_interest: "Italy",
-      consultation_type: matchedService || "Free Italy Study Plan",
+      country_interest: country,
+      consultation_type: matchedService || (country === "Italy" ? "Free Italy Study Plan" : "Free Consultation"),
     };
 
     if (nameParam) nextData.full_name = nameParam;
@@ -362,9 +391,13 @@ function AppointmentPage() {
 
     if (messageParam) messageParts.push(messageParam);
 
+    if (countryParam && !matchedCountry) {
+      messageParts.push(`Interested in: ${countryParam}.`);
+    }
+
     if (cityParam) {
       setSelectedCity(cityParam);
-      messageParts.push(`Preferred Italy city: ${cityParam}.`);
+      messageParts.push(`Preferred city: ${cityParam}.`);
     }
 
     if (universityParam) {
@@ -372,7 +405,7 @@ function AppointmentPage() {
       messageParts.push(
         `I would like guidance for ${universityParam}${
           cityParam ? ` in ${cityParam}` : ""
-        } in ${countryParam || "Italy"}.`
+        } in ${matchedCountry || countryParam || "my target country"}.`
       );
     }
 
@@ -423,8 +456,19 @@ function AppointmentPage() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+      const allowedTypes = getConsultationTypes(next.country_interest);
+      if (name === "country_interest" && !allowedTypes.includes(prev.consultation_type)) {
+        next.consultation_type = allowedTypes[0];
+      }
+      return next;
+    });
   };
+
+  const selectedCountry = formData.country_interest;
+  const selectedCountryData = getCountryByName(selectedCountry);
+  const specificCountry = isSpecificCountry(selectedCountry);
 
 
   const selectConsultationType = (type) => {
@@ -440,9 +484,9 @@ function AppointmentPage() {
 
   const openWhatsApp = () => {
     const text = encodeURIComponent(
-      `Hi Zaifan Consultancy, I want to book an Italy study consultation.\n\nName: ${
+      `Hi Zaifan Consultancy, I want to book a study abroad consultation.\n\nName: ${
         formData.full_name || "-"
-      }\nCountry: Italy\nCity: ${selectedCity || "-"}\nUniversity: ${
+      }\nCountry: ${formData.country_interest || "-"}\nCity: ${selectedCity || "-"}\nUniversity: ${
         selectedUniversity || "-"
       }\nService: ${formData.consultation_type || "-"}\nPreferred Date: ${
         formData.appointment_date || "-"
@@ -478,8 +522,8 @@ function AppointmentPage() {
         full_name: formData.full_name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        country_interest: "Italy",
-        consultation_type: formData.consultation_type || "Free Italy Study Plan",
+        country_interest: formData.country_interest || NOT_SURE,
+        consultation_type: formData.consultation_type || "Free Consultation",
         appointment_date: formData.appointment_date,
         appointment_time: formData.appointment_time,
         message: finalMessage,
@@ -524,7 +568,11 @@ function AppointmentPage() {
         return;
       }
 
-      setSuccess("Your Italy consultation request is confirmed. Our team will contact you soon.");
+      setSuccess(
+        isSpecificCountry(appointmentData.country_interest)
+          ? `Your ${appointmentData.country_interest} consultation request is confirmed. Our team will contact you soon.`
+          : "Your consultation request is confirmed. Our team will contact you soon."
+      );
       setFormData(initialFormData);
       setSelectedCity("");
       setSelectedUniversity("");
@@ -572,15 +620,15 @@ function AppointmentPage() {
               <div className="relative z-10">
                 <p className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-orange-600 shadow-sm ring-1 ring-orange-100">
                   <Sparkles size={15} />
-                  Free Italy Consultation
+                  Free Consultation
                 </p>
 
                 <h1 className="mt-5 max-w-[520px] text-4xl font-black leading-[1.04] tracking-tight text-[#071d43] md:text-5xl">
-                  Book your Italy study appointment
+                  {specificCountry ? `Book your ${selectedCountry} study appointment` : "Book your study abroad appointment"}
                 </h1>
 
                 <p className="mt-3 max-w-[430px] text-base font-bold leading-relaxed text-[#17335d]">
-                  Let&apos;s map your Italian university, scholarship and visa roadmap together.
+                  Let&apos;s map your university, scholarship and visa roadmap together.
                 </p>
               </div>
 
@@ -624,7 +672,7 @@ function AppointmentPage() {
 
                   <div className="absolute right-0 -top-20 z-20 max-w-[240px] rounded-[1.35rem] bg-white p-4 shadow-[0_20px_45px_rgba(60,35,15,0.14)] ring-1 ring-orange-100 sm:right-2 sm:-top-16">
                     <p className="text-sm font-extrabold leading-relaxed text-[#54321c]">
-                      We help you choose the right Italian university, scholarship path and visa steps.
+                      We help you choose the right country, university, scholarship path and visa steps.
                     </p>
                     <div className="absolute -bottom-2 right-5 grid h-5 w-5 place-items-center rounded-full bg-orange-500 text-white">
                       <Check size={12} strokeWidth={4} />
@@ -655,7 +703,7 @@ function AppointmentPage() {
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">
-                      Popular Italy Routes
+                      Popular Study Routes
                     </p>
                     <h3 className="mt-2 text-2xl font-black text-[#071d43]">
                       Pick your study direction
@@ -667,7 +715,7 @@ function AppointmentPage() {
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {italyRoutes.map((route) => {
+                  {studyRoutes.map((route) => {
                     const Icon = route.icon;
 
                     return (
@@ -695,7 +743,7 @@ function AppointmentPage() {
                 <span className="text-orange-400">•</span>
                 <span>No Hidden Charges</span>
                 <span className="text-orange-400">•</span>
-                <span>Italy Roadmap</span>
+                <span>Visa Roadmap</span>
               </div>
             </div>
           </motion.div>
@@ -714,13 +762,13 @@ function AppointmentPage() {
 
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-600">
-                    Italy Appointment Form
+                    Appointment Form
                   </p>
                   <h2 className="mt-1 text-2xl font-black leading-tight text-[#071d43]">
-                    Get Your Italy Study Plan
+                    {specificCountry ? `Get Your ${selectedCountry} Study Plan` : "Get Your Study Abroad Plan"}
                   </h2>
                   <p className="mt-2 text-sm font-bold leading-6 text-[#244263]">
-                    Italy is selected by default for now. Pick your university focus, date and time — our counselor will build the roadmap.
+                    Pick your destination, service, date and time — our counselor will build the roadmap. Not sure yet? That's fine, we'll compare options with you.
                   </p>
                 </div>
               </div>
@@ -828,7 +876,7 @@ function AppointmentPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label>
                   <span className="mb-2 block text-xs font-black text-[#071d43]">Destination Focus *</span>
-                  <select name="country_interest" value="Italy" disabled className="w-full cursor-not-allowed rounded-2xl border border-orange-100 bg-orange-50 px-5 py-4 font-black text-orange-700 outline-none">
+                  <select name="country_interest" value={formData.country_interest} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100">
                     {countries.map((country) => (
                       <option key={country} value={country}>{country}</option>
                     ))}
@@ -838,7 +886,7 @@ function AppointmentPage() {
                 <label>
                   <span className="mb-2 block text-xs font-black text-[#071d43]">Consultation Type *</span>
                   <select name="consultation_type" value={formData.consultation_type} onChange={handleChange} required className="w-full rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100">
-                    {consultationTypes.map((type) => (
+                    {getConsultationTypes(formData.country_interest).map((type) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -863,8 +911,8 @@ function AppointmentPage() {
               </div>
 
               <label>
-                <span className="mb-2 block text-xs font-black text-[#071d43]">Your Italy Study Goals</span>
-                <textarea name="message" placeholder="Example: I want to study in Italy, need university matching, scholarship options and visa roadmap..." value={formData.message} onChange={handleChange} rows="5" className="w-full resize-none rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100" />
+                <span className="mb-2 block text-xs font-black text-[#071d43]">Your Study Goals</span>
+                <textarea name="message" placeholder="Example: I want to study computer science in Germany or Italy and need university matching, scholarship options and a visa roadmap..." value={formData.message} onChange={handleChange} rows="5" className="w-full resize-none rounded-2xl border border-orange-100 bg-white px-5 py-4 font-semibold text-[#071d43] outline-none transition duration-300 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100" />
               </label>
 
               {appointmentSummary.length > 0 && (
@@ -901,7 +949,7 @@ function AppointmentPage() {
 
               <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-full bg-orange-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(234,88,12,0.24)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-orange-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60">
                 <Send size={18} />
-                {loading ? "Submitting..." : "Request Italy Appointment"}
+                {loading ? "Submitting..." : "Request Appointment"}
               </button>
 
               <button type="button" onClick={openWhatsApp} className="flex w-full items-center justify-center gap-3 rounded-full bg-green-500 px-8 py-4 font-black text-white shadow-[0_16px_34px_rgba(34,197,94,0.2)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-green-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-200">
@@ -947,13 +995,26 @@ function AppointmentPage() {
                     <Wallet size={22} />
                   </div>
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">Why Italy</p>
-                    <h3 className="mt-1 text-lg font-black text-[#071d43]">A smarter first destination</h3>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">
+                      {selectedCountryData ? `${selectedCountryData.name} at a glance` : "Why Zaifan"}
+                    </p>
+                    <h3 className="mt-1 text-lg font-black text-[#071d43]">
+                      {selectedCountryData ? selectedCountryData.tagline : "Honest guidance, 9 destinations"}
+                    </h3>
                   </div>
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  {italyBenefits.map((benefit) => (
+                  {(selectedCountryData
+                    ? [
+                        `Tuition: ${selectedCountryData.quickFacts.tuition}`,
+                        `Living: ${selectedCountryData.quickFacts.living}`,
+                        `Work: ${selectedCountryData.quickFacts.work}`,
+                        `After study: ${selectedCountryData.quickFacts.postStudy}`,
+                        `Visa: ${selectedCountryData.quickFacts.visa}`,
+                      ]
+                    : zaifanBenefits
+                  ).map((benefit) => (
                     <div key={benefit} className="flex items-start gap-2 rounded-2xl bg-[#fff8ef] px-3 py-2 text-xs font-black leading-5 text-[#244263] ring-1 ring-orange-100">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
                       {benefit}
@@ -981,7 +1042,7 @@ function AppointmentPage() {
                   </div>
 
                   <p className="text-sm font-black leading-relaxed text-[#7c3f16]">
-                    Italy-first guidance now. More countries come after real data is ready.
+                    9 destinations, one honest team. We only recommend what fits your profile.
                   </p>
                 </div>
               </div>
@@ -1004,7 +1065,7 @@ function AppointmentPage() {
                   What happens after booking
                 </p>
                 <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-[#071d43] md:text-4xl">
-                  Your request turns into a clear Italy study roadmap.
+                  Your request turns into a clear study roadmap.
                 </h2>
               </div>
               <p className="max-w-xl text-sm font-bold leading-7 text-[#244263]">

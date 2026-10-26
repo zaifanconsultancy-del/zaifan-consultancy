@@ -106,7 +106,8 @@ function normalizeSearch(value) {
   return queryMap[clean] || clean;
 }
 
-function UniversitiesPage() {
+// `embedded` is set when UniversitiesHub renders this finder under its tabs.
+function UniversitiesPage({ embedded = false }) {
   const prefersReducedMotion = useReducedMotion();
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("All");
@@ -351,7 +352,7 @@ function UniversitiesPage() {
     <>
       <main
         id="universities-page"
-        className="relative overflow-hidden bg-[#fff7ed] pt-24 text-[#071b3a] sm:pt-28"
+        className={`relative overflow-hidden bg-[#fff7ed] text-[#071b3a] ${embedded ? "pt-2" : "pt-24 sm:pt-28"}`}
       >
         <style>{`
           @media (prefers-reduced-motion: reduce) {
