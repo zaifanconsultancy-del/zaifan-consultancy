@@ -15,7 +15,7 @@ import {
 import { FaTiktok } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 
-import { countryList } from "../../../data/countries";
+import { countryIndex as countryList } from "../../../data/countries/countryIndex";
 import { FlagMark } from "../destinations/DestinationUI";
 
 const euFlag = { slug: "european-union", code: "EU", name: "European Union" };

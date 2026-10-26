@@ -12,7 +12,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import heroStudent from "../../../assets/images/zaifan/hero-student-globe.webp";
-import { countryList } from "../../../data/countries";
+import heroStudentSmall from "../../../assets/images/zaifan/hero-student-globe-760.webp";
+import { countryIndex as countryList } from "../../../data/countries/countryIndex";
 import { FlagMark } from "../destinations/DestinationUI";
 
 const EU_FLAG = { slug: "european-union", code: "EU", name: "European Union" };
@@ -274,6 +275,8 @@ export default function Hero() {
 
             <img
               src={heroStudent}
+              srcSet={`${heroStudentSmall} 760w, ${heroStudent} 1400w`}
+              sizes="(max-width: 1023px) 100vw, 46vw"
               alt="Zaifan student with globe"
               width="1536"
               height="1024"

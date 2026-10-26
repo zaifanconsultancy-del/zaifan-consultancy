@@ -1,33 +1,7 @@
-export const turkeyData = {
-  slug: "turkey",
-  name: "Turkey",
-  code: "TR",
-  flag: "🇹🇷",
-  flagColors: ["#e30a17", "#ffffff", "#e30a17"],
-  status: "live",
-  region: "Europe & Asia",
-  inEU: false,
-  schengen: false,
-  currency: "Turkish Lira (₺)",
-  headline: "Study in Turkey",
-  tagline: "Affordable degrees, a fully funded government scholarship and a familiar culture.",
-  intro:
-    "Turkey sits between Europe and Asia and offers low public tuition, many English-taught programmes and one of the most generous government scholarships in the world: Türkiye Bursları. For Pakistani students it also feels culturally close, with halal food everywhere and a warm welcome.",
-  shortDescription:
-    "Low public tuition, the fully funded Türkiye Bursları scholarship and many English-taught programmes in Istanbul and Ankara.",
+import { turkeyMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "≈ $300 – $3k / year (public)",
-    tuitionNote:
-      "State universities are low cost; fees vary by programme and are often set in lira. Foundation (private) universities typically charge ≈ $3,000–$20,000+ per year, with large merit discounts.",
-    living: "≈ $400 – $700 / month",
-    livingNote: "Istanbul is the most expensive city. Prices change quickly with inflation, so we re-check before every application.",
-    intakes: "Fall (Sep) · Spring (Feb, some)",
-    language: "Turkish · English-taught programmes",
-    work: "Part-time with a work permit",
-    postStudy: "Switch to a work permit with a job offer",
-    visa: "Student visa + residence permit (ikamet)",
-  },
+export const turkeyData = {
+  ...turkeyMeta,
 
   whyStudy: [
     { icon: "award", title: "Türkiye Bursları", text: "A fully funded government scholarship covering tuition, stipend, housing, insurance, a Turkish course and flights." },

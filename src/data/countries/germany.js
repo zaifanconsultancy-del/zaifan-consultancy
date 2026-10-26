@@ -1,33 +1,7 @@
-export const germanyData = {
-  slug: "germany",
-  name: "Germany",
-  code: "DE",
-  flag: "🇩🇪",
-  flagColors: ["#111111", "#dd0000", "#ffce00"],
-  status: "live",
-  region: "Western Europe",
-  inEU: true,
-  schengen: true,
-  currency: "EUR (€)",
-  headline: "Study in Germany",
-  tagline: "World-class engineering, near-zero tuition at most public universities.",
-  intro:
-    "Germany is one of the strongest value destinations in the world. Most public universities charge little or no tuition, the post-study job search window is generous, and engineering, IT and research routes are globally respected. The trade-off is planning: a blocked account, long embassy queues and strict academic eligibility checks.",
-  shortDescription:
-    "Low or no tuition at most public universities, top engineering and research, and an 18-month post-study job search permit.",
+import { germanyMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "€0 – €3k / semester",
-    tuitionNote:
-      "Most public universities charge only a semester contribution (≈ €150–€400). Baden-Württemberg charges non-EU students €1,500 per semester; TUM charges new non-EU students €2,000–€6,000 per semester.",
-    living: "≈ €992 / month",
-    livingNote: "This is the official blocked-account amount for the student visa (€11,904 per year). Munich and Frankfurt usually cost more.",
-    intakes: "Winter (Oct) · Summer (Apr)",
-    language: "German · many English-taught master's",
-    work: "140 full / 280 half days per year",
-    postStudy: "18-month job search permit",
-    visa: "National (D) student visa",
-  },
+export const germanyData = {
+  ...germanyMeta,
 
   whyStudy: [
     {

@@ -1,33 +1,7 @@
-export const lithuaniaData = {
-  slug: "lithuania",
-  name: "Lithuania",
-  code: "LT",
-  flag: "🇱🇹",
-  flagColors: ["#fdb913", "#006a44", "#c1272d"],
-  status: "live",
-  region: "Baltic / Northern Europe",
-  inEU: true,
-  schengen: true,
-  currency: "EUR (€)",
-  headline: "Study in Lithuania",
-  tagline: "Affordable, English-taught EU degrees in a safe, digital Baltic country.",
-  intro:
-    "Lithuania is a small, safe and highly digital EU country with many English-taught programmes, moderate tuition and a 12-month post-study job search permit. Vilnius and Kaunas have growing tech, fintech and life-science sectors.",
-  shortDescription:
-    "Moderate tuition, many English-taught programmes, generous work rights and a 12-month post-study permit in the EU.",
+import { lithuaniaMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "≈ €2.5k – €6k / year",
-    tuitionNote:
-      "Typical bachelor's and master's fees. Medicine and dentistry usually cost ≈ €10,000–€15,000+ per year.",
-    living: "≈ €500 – €800 / month",
-    livingNote: "Vilnius is the most expensive; Kaunas and Klaipėda are cheaper. Proof of funds is required for the residence permit.",
-    intakes: "September (main) · February (some)",
-    language: "Many English-taught programmes",
-    work: "20 h/week (bachelor's); master's can work more",
-    postStudy: "12-month job search permit",
-    visa: "Temporary residence permit (TRP)",
-  },
+export const lithuaniaData = {
+  ...lithuaniaMeta,
 
   whyStudy: [
     { icon: "languages", title: "English-taught", text: "A wide choice of programmes fully in English." },

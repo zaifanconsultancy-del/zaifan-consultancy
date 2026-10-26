@@ -3,7 +3,7 @@ import { FaBars, FaTimes, FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import logo from "../../../assets/images/brand/logo.webp";
-import { countryList } from "../../../data/countries";
+import { countryIndex as countryList } from "../../../data/countries/countryIndex";
 import { FlagMark } from "../destinations/DestinationUI";
 
 const NAV_MOTION = {

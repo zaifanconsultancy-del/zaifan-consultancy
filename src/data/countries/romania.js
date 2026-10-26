@@ -1,33 +1,7 @@
-export const romaniaData = {
-  slug: "romania",
-  name: "Romania",
-  code: "RO",
-  flag: "🇷🇴",
-  flagColors: ["#002b7f", "#fcd116", "#ce1126"],
-  status: "live",
-  region: "South-Eastern Europe",
-  inEU: true,
-  schengen: true,
-  currency: "Romanian Leu (RON)",
-  headline: "Study in Romania",
-  tagline: "An EU degree at some of the lowest fees in Europe, famous for medicine in English.",
-  intro:
-    "Romania offers EU-recognised degrees with low tuition and low living costs. It is especially known for English-taught medicine, dentistry and pharmacy at its universities of medicine and pharmacy (UMF). Non-EU students need a Letter of Acceptance from the Ministry of Education before the visa, so starting early is essential.",
-  shortDescription:
-    "Low-cost EU degrees, English-taught medicine at UMF universities and a full Schengen member since 2025.",
+import { romaniaMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "≈ €2k – €3.5k / year",
-    tuitionNote:
-      "Typical non-EU fees for bachelor's/master's at state universities (often quoted per month). English-taught medicine usually costs ≈ €5,000–€7,500 per year.",
-    living: "≈ €400 – €700 / month",
-    livingNote: "Bucharest and Cluj are the priciest. University dorms are very cheap where available.",
-    intakes: "October",
-    language: "Romanian (prep year) · English · French",
-    work: "Part-time allowed (limited hours)",
-    postStudy: "Change status with a job offer",
-    visa: "Long-stay student visa (D/SD)",
-  },
+export const romaniaData = {
+  ...romaniaMeta,
 
   whyStudy: [
     { icon: "wallet", title: "Very low costs", text: "Among the cheapest tuition and living costs in the EU." },

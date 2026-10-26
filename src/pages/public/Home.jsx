@@ -14,7 +14,7 @@ function Home() {
     <>
       <Hero />
 
-      <main className="relative">
+      <main className="cv-sections relative">
         <DestinationsShowcase />
         <DripDivider color="#fff7ed" background="#071f50" />
         <BudgetMatcher />

@@ -457,7 +457,7 @@ function UniversityDetailPage() {
   )}&city=${encodeURIComponent(university.city)}&service=University Guidance`;
 
   return (
-      <main className={`relative overflow-hidden bg-gradient-to-br ${universityTheme.soft} pt-28 text-[#071b3a]`}>
+      <main className={`cv-sections relative overflow-hidden bg-gradient-to-br ${universityTheme.soft} pt-28 text-[#071b3a]`}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_8%,rgba(255,110,28,0.16),transparent_30%),radial-gradient(circle_at_12%_80%,rgba(255,172,92,0.16),transparent_28%)]" />
         <div className="pointer-events-none absolute left-[-140px] top-20 h-96 w-96 rounded-full bg-orange-300/20 blur-3xl" />
         <div className="pointer-events-none absolute right-[-140px] bottom-28 h-96 w-96 rounded-full bg-[#ff4b12]/10 blur-3xl" />

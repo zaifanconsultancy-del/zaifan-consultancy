@@ -23,7 +23,7 @@ function EuHubPage() {
   }, []);
 
   return (
-    <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
+    <main className="cv-sections overflow-hidden bg-[#fff7ed] text-[#071f50]">
       {/* Hero */}
       <section className="relative isolate overflow-hidden px-4 pb-14 pt-28 sm:px-5 md:pb-20 md:pt-36">
         <div className="pointer-events-none absolute left-[-8%] top-[8%] -z-10 h-[460px] w-[460px] rounded-full bg-[#003399]/12 blur-[100px]" />

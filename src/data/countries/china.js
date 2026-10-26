@@ -1,33 +1,7 @@
-export const chinaData = {
-  slug: "china",
-  name: "China",
-  code: "CN",
-  flag: "🇨🇳",
-  flagColors: ["#de2910", "#ffde00", "#de2910"],
-  status: "live",
-  region: "East Asia",
-  inEU: false,
-  schengen: false,
-  currency: "Chinese Yuan (CNY ¥)",
-  headline: "Study in China",
-  tagline: "Top-ranked universities, the CSC scholarship and a close Pakistan connection.",
-  intro:
-    "China has some of Asia's highest ranked universities, a huge range of English-taught programmes and the fully funded Chinese Government (CSC) Scholarship. It is a popular route for Pakistani students in engineering, computer science, business and MBBS, provided degree recognition is checked carefully.",
-  shortDescription:
-    "Highly ranked universities, the fully funded CSC scholarship, English-taught engineering, business and MBBS routes.",
+import { chinaMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "≈ ¥18k – ¥35k / year",
-    tuitionNote:
-      "Typical English-taught bachelor's fees. English-taught MBBS usually costs ≈ ¥30,000–¥75,000 per year depending on the university.",
-    living: "≈ ¥2,500 – ¥5,000 / month",
-    livingNote: "Beijing and Shanghai are the most expensive. Many universities offer affordable on-campus housing.",
-    intakes: "September (main) · March (some)",
-    language: "Chinese (HSK) · English-taught programmes",
-    work: "Only with university & immigration approval",
-    postStudy: "Some graduates move to work permits",
-    visa: "X1 student visa + residence permit",
-  },
+export const chinaData = {
+  ...chinaMeta,
 
   whyStudy: [
     { icon: "award", title: "CSC Scholarship", text: "Fully funded: tuition, accommodation, insurance and a monthly stipend." },

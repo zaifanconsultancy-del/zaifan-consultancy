@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, MessageCircle, Sparkles, X } from "lucide-react";
 
-import { getCountryBySlug } from "../../../data/countries";
+import { getCountryMetaBySlug as getCountryBySlug } from "../../../data/countries/countryIndex";
 
 const WHATSAPP_NUMBER = "923305718131";
 

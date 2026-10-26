@@ -33,7 +33,7 @@ import {
 import consultantMascot from "../../assets/images/appointment/consultant-mascot.webp";
 import globeBooks from "../../assets/images/appointment/globe-books.webp";
 import { supabase } from "../../lib/supabaseClient";
-import { countryList, getCountryByName } from "../../data/countries";
+import { countryIndex as countryList, getCountryMetaByName as getCountryByName } from "../../data/countries/countryIndex";
 
 const MOTION = {
   duration: 0.55,
@@ -114,7 +114,6 @@ function getConsultationTypes(country) {
 
 const countries = [...countryList.map((country) => country.name), "European Union", "Not sure yet"];
 
-const cityGuideCount = 8 + countryList.reduce((total, country) => total + (country.cities?.length || 0), 0);
 
 const journeySteps = [
   { title: "Profile", body: "Share your goals", color: "bg-[#071d43]" },
@@ -125,7 +124,7 @@ const journeySteps = [
 
 const stats = [
   { icon: GraduationCap, value: String(countryList.length), label: "Destinations", color: "text-orange-500", bg: "bg-orange-50" },
-  { icon: UsersRound, value: `${Math.floor(cityGuideCount / 10) * 10}+`, label: "City Guides", color: "text-[#071d43]", bg: "bg-blue-50" },
+  { icon: UsersRound, value: "60+", label: "City Guides", color: "text-[#071d43]", bg: "bg-blue-50" },
   { icon: FileCheck2, value: "Gov + EU", label: "Scholarship Guidance", color: "text-blue-500", bg: "bg-blue-50" },
   { icon: BadgeDollarSign, value: "Visa", label: "Planning Support", color: "text-emerald-500", bg: "bg-emerald-50" },
   { icon: Trophy, value: "Free", label: "First Consultation", color: "text-rose-500", bg: "bg-rose-50" },

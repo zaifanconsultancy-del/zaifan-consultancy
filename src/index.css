@@ -1,24 +1,22 @@
 @import "tailwindcss";
 
 html {
-  scroll-behavior: smooth;
-  background: #050505;
+  background: #fff7ed;
 }
 
 body {
-  background: #050505;
-  color: #ffffff;
+  background: #fff7ed;
+  color: #071f50;
   overflow-x: hidden;
 }
 
 #root {
-  background: #050505;
   min-height: 100vh;
 }
 
 ::selection {
-  background: #d4af37;
-  color: #111111;
+  background: #ff4b12;
+  color: #ffffff;
 }
 
 .section-glow {
@@ -29,4 +27,49 @@ body {
   filter: blur(120px);
   opacity: 0.12;
   pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Performance                                                                */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Long public pages opt in with `cv-sections`: the browser skips layout and
+ * paint for sections far off-screen, and `auto` remembers each section's real
+ * size once rendered. Opt-in only, because it also clips overflow and traps
+ * fixed-position children (e.g. portal modals) inside each section.
+ */
+.cv-sections > section ~ section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+/*
+ * Phones and tablets: frosted-glass blur and huge blurred glow blobs are very
+ * expensive for mobile GPUs and are purely decorative, so drop them there.
+ * Cards already have near-opaque backgrounds, so the look barely changes.
+ */
+@media (max-width: 1023px) {
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .pointer-events-none[class*="blur-["],
+  .pointer-events-none[class*="blur-2xl"],
+  .pointer-events-none[class*="blur-3xl"] {
+    display: none !important;
+  }
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }

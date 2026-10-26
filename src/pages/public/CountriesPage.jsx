@@ -156,7 +156,7 @@ function CountriesPage() {
   }, [filter]);
 
   return (
-    <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
+    <main className="cv-sections overflow-hidden bg-[#fff7ed] text-[#071f50]">
       {/* Hero */}
       <section className="relative isolate overflow-hidden px-4 pb-10 pt-28 sm:px-5 md:pb-14 md:pt-36">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_12%,rgba(255,75,18,0.13),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(255,190,92,0.18),transparent_28%)]" />

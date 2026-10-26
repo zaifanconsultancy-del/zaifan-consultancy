@@ -1,33 +1,7 @@
-export const franceData = {
-  slug: "france",
-  name: "France",
-  code: "FR",
-  flag: "🇫🇷",
-  flagColors: ["#0055a4", "#ffffff", "#ef4135"],
-  status: "live",
-  region: "Western Europe",
-  inEU: true,
-  schengen: true,
-  currency: "EUR (€)",
-  headline: "Study in France",
-  tagline: "State-set tuition, prestigious grandes écoles and a post-study job search year.",
-  intro:
-    "France combines affordable public universities with famous grandes écoles, business schools and research centres. Tuition at public universities is set by the state, many master's programmes are taught in English, and students can work part-time and get housing aid. Pakistani students apply through the Campus France 'Études en France' procedure.",
-  shortDescription:
-    "State-set public tuition, top grandes écoles and business schools, housing aid and a one-year job search permit after a master's.",
+import { franceMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "≈ €2,900 – €3,950 / year",
-    tuitionNote:
-      "State-set fees for non-EU students at public universities: about €2,900 for a licence (bachelor's) and €3,950 for a master's (2026–27, set by decree). Grandes écoles and business schools charge more.",
-    living: "≈ €700 – €1,200 / month",
-    livingNote: "Paris is the most expensive. Visa applicants must show at least about €615 per month in resources.",
-    intakes: "September (main) · January (some)",
-    language: "French · many English-taught master's",
-    work: "964 hours per year",
-    postStudy: "1-year job search permit (master's)",
-    visa: "VLS-TS long-stay student visa",
-  },
+export const franceData = {
+  ...franceMeta,
 
   whyStudy: [
     { icon: "wallet", title: "State-set public tuition", text: "Public university fees are fixed nationally, far below UK or US prices." },

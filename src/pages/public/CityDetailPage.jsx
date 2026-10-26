@@ -342,7 +342,7 @@ function CityDetailPage() {
   return (
     <main
       id="city-detail-page"
-        className="overflow-hidden bg-[#fff7ed] text-[#071f50]"
+        className="cv-sections overflow-hidden bg-[#fff7ed] text-[#071f50]"
       >
         <style>{`
           @media (prefers-reduced-motion: reduce) {

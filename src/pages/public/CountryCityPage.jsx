@@ -61,7 +61,7 @@ function CountryCityPage() {
     : null;
 
   return (
-    <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
+    <main className="cv-sections overflow-hidden bg-[#fff7ed] text-[#071f50]">
       {/* Hero */}
       <section className="relative isolate overflow-hidden px-4 pb-12 pt-28 sm:px-5 md:pb-16 md:pt-36">
         <div className="pointer-events-none absolute left-[-8%] top-[10%] -z-10 h-[420px] w-[420px] rounded-full bg-orange-300/28 blur-[95px]" />

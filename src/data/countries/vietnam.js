@@ -1,33 +1,7 @@
-export const vietnamData = {
-  slug: "vietnam",
-  name: "Vietnam",
-  code: "VN",
-  flag: "🇻🇳",
-  flagColors: ["#da251d", "#ffcd00", "#da251d"],
-  status: "live",
-  region: "South-East Asia",
-  inEU: false,
-  schengen: false,
-  currency: "Vietnamese Dong (₫)",
-  headline: "Study in Vietnam",
-  tagline: "A fast-growing Asian economy with low living costs and international campuses.",
-  intro:
-    "Vietnam is one of Asia's fastest-growing economies. Students can choose low-cost public universities or international campuses like RMIT Vietnam, VinUniversity and Fulbright University Vietnam, which offer strong financial aid. Living costs are among the lowest of any destination we cover.",
-  shortDescription:
-    "Low living costs, international campuses with generous aid, and a booming South-East Asian economy.",
+import { vietnamMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "≈ $1k – $4k / year (public)",
-    tuitionNote:
-      "Public universities are low cost. International universities (RMIT Vietnam, VinUni, Fulbright) charge much more but offer substantial financial aid.",
-    living: "≈ $400 – $700 / month",
-    livingNote: "Ho Chi Minh City and Hanoi are the most expensive; Da Nang is cheaper.",
-    intakes: "September (main) · February/March (some)",
-    language: "Vietnamese · English-taught programmes",
-    work: "DH visa is for study only",
-    postStudy: "Employer-sponsored work permit",
-    visa: "DH student visa + temporary residence card",
-  },
+export const vietnamData = {
+  ...vietnamMeta,
 
   whyStudy: [
     { icon: "wallet", title: "Very low living costs", text: "Rent, food and transport cost far less than in Europe." },

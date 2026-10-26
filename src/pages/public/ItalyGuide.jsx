@@ -760,8 +760,15 @@ function ItalyGuide() {
   const scrollToId = (id) => {
     const target = document.getElementById(id);
     if (!target) return;
-    const y = target.getBoundingClientRect().top + window.scrollY - 95;
-    window.scrollTo({ top: y, behavior: "smooth" });
+    const aim = () => target.getBoundingClientRect().top + window.scrollY - 95;
+    window.scrollTo({ top: aim(), behavior: "smooth" });
+    // Off-screen sections render with an estimated height (content-visibility),
+    // so re-aim once they've been laid out on the way down.
+    window.setTimeout(() => {
+      if (Math.abs(target.getBoundingClientRect().top - 95) > 40) {
+        window.scrollTo({ top: aim(), behavior: "smooth" });
+      }
+    }, 700);
   };
 
   useEffect(() => {
@@ -778,7 +785,7 @@ function ItalyGuide() {
   }, [location.hash]);
 
   return (
-    <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
+    <main className="cv-sections overflow-hidden bg-[#fff7ed] text-[#071f50]">
       <section className="relative isolate overflow-hidden px-4 pb-10 pt-24 sm:px-5 sm:pb-12 md:min-h-[820px] md:pb-16 md:pt-32">
         <div className="pointer-events-none absolute inset-0 -z-20 bg-[#fff7ed]" />
         <div className="pointer-events-none absolute left-[-8%] top-[10%] -z-10 h-[460px] w-[460px] rounded-full bg-orange-300/28 blur-[95px]" />

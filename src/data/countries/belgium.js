@@ -1,33 +1,7 @@
-export const belgiumData = {
-  slug: "belgium",
-  name: "Belgium",
-  code: "BE",
-  flag: "🇧🇪",
-  flagColors: ["#000000", "#fdda24", "#ef3340"],
-  status: "live",
-  region: "Western Europe",
-  inEU: true,
-  schengen: true,
-  currency: "EUR (€)",
-  headline: "Study in Belgium",
-  tagline: "Top research universities at the heart of the EU, with a post-study search year.",
-  intro:
-    "Belgium is home to the EU institutions and to highly ranked universities like KU Leuven and Ghent University. Many master's programmes are taught in English, tuition is moderate by Western European standards, and graduates get a 12-month search year to find work.",
-  shortDescription:
-    "KU Leuven, Ghent and other top universities, English-taught master's, moderate tuition and a 12-month search year.",
+import { belgiumMeta } from "./meta";
 
-  quickFacts: {
-    tuition: "≈ €4k – €12k / year",
-    tuitionNote:
-      "Non-EU fees vary by university and programme. At French-speaking universities, non-exempt non-EU students pay about €5,010 (e.g. UCLouvain: €835 + €4,175 contribution); Flemish universities set their own fees.",
-    living: "≈ €1,062 / month (proof)",
-    livingNote: "Minimum proof of means for 2026–27 is about €1,062 net per month (≈ €12,700 per year), up from €835 in 2025–26.",
-    intakes: "September (main) · February (some)",
-    language: "Dutch · French · many English-taught master's",
-    work: "Up to 20 h/week in term",
-    postStudy: "12-month search year",
-    visa: "Type D long-stay student visa",
-  },
+export const belgiumData = {
+  ...belgiumMeta,
 
   whyStudy: [
     { icon: "trophy", title: "Top-ranked universities", text: "KU Leuven and Ghent are among Europe's best research universities." },

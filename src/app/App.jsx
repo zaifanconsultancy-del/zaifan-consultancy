@@ -109,13 +109,14 @@ function markIntroSeen() {
   }
 }
 
+// Kept short on purpose: AnimatePresence waits for the exit before showing the
+// next page, so long transitions make every click feel laggy.
 function PageTransition({ children }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -14 }}
-      transition={{ duration: MOTION.duration, ease: MOTION.ease }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: 0.25, ease: MOTION.ease } }}
+      exit={{ opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }}
       className="min-h-screen"
     >
       {children}

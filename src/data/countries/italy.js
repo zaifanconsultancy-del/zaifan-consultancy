@@ -1,32 +1,7 @@
-export const italyData = {
-  slug: "italy",
-  name: "Italy",
-  code: "IT",
-  flag: "🇮🇹",
-  flagColors: ["#009246", "#ffffff", "#ce2b37"],
-  status: "live",
-  badge: "Live Now",
-  region: "Southern Europe",
-  inEU: true,
-  schengen: true,
-  currency: "EUR (€)",
-  headline: "Study in Italy",
-  tagline: "Income-based tuition, DSU regional scholarships and historic student cities.",
-  shortDescription:
-    "Affordable public universities, DSU scholarship routes, rich student cities and strong Europe exposure.",
+import { italyMeta } from "./meta";
 
-  // Shared shape used by the Countries comparison and Destinations menu.
-  quickFacts: {
-    tuition: "≈ €900 – €4k / year",
-    tuitionNote: "Public universities set fees by family income (ISEE); many students pay near the minimum.",
-    living: "≈ €700 – €1,100 / month",
-    livingNote: "Milan is the most expensive; southern cities are cheaper.",
-    intakes: "September (main) · February (some)",
-    language: "Italian · many English-taught programmes",
-    work: "20 h/week (1,040 h/year)",
-    postStudy: "Up to 12-month job search permit",
-    visa: "Type D study visa via Universitaly",
-  },
+export const italyData = {
+  ...italyMeta,
 
   routes: {
     countryGuide: "/countries/italy",

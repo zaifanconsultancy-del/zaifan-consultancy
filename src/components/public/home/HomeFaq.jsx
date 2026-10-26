@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
-import { countryList } from "../../../data/countries";
+import { countryIndex as countryList } from "../../../data/countries/countryIndex";
 import { ConsultationBand, SectionHeader } from "../destinations/DestinationUI";
 
 const FAQS = [

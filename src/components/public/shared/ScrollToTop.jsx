@@ -5,10 +5,9 @@ function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    // Jump instantly: smooth-scrolling up from deep in a long page made every
+    // navigation feel slow.
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname]);
 
   return null;

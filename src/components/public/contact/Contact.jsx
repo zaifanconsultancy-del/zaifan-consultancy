@@ -11,11 +11,10 @@ import {
   Plane,
   Send,
 } from "lucide-react";
-import { supabase } from "../../../lib/supabaseClient";
 
 import consultationMascot from "../../../assets/images/contact/contact-mascot-pointing.webp";
 import contactWindow from "../../../assets/images/contact/contact-window-italy.webp";
-import { countryList } from "../../../data/countries";
+import { countryIndex as countryList } from "../../../data/countries/countryIndex";
 
 const MOTION = {
   duration: 0.55,
@@ -226,6 +225,8 @@ ${formData.message}
       lead_source: sourceLabel,
     };
 
+    // Load the database client only when someone submits, keeping it off the home page bundle.
+    const { supabase } = await import("../../../lib/supabaseClient");
     const { error } = await supabase.from("inquiries").insert([formData]);
 
     if (error) {
