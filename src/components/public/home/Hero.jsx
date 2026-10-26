@@ -1,12 +1,10 @@
-import React from "react";
 import {
   ArrowRight,
   CalendarDays,
   ChevronRight,
-  CirclePlay,
+  GraduationCap as UniversityIcon,
   Globe2,
   GraduationCap,
-  Search,
   Sparkles,
   University,
   WalletCards,
@@ -14,74 +12,10 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import heroStudent from "../../../assets/images/zaifan/hero-student-globe.webp";
-import walkingStudent from "../../../assets/images/zaifan/student-walking.webp";
-import guideStudent from "../../../assets/images/zaifan/student-guide.webp";
 import { countryList } from "../../../data/countries";
 import { FlagMark } from "../destinations/DestinationUI";
 
 const EU_FLAG = { slug: "european-union", code: "EU", name: "European Union" };
-
-const supportCards = [
-  {
-    icon: "🎓",
-    title: "Find Your Perfect Course",
-    text: "Discover courses that match your goals.",
-  },
-  {
-    icon: "🏆",
-    title: "Unlock Scholarships",
-    text: "Find the best scholarships.",
-  },
-  {
-    icon: "🌍",
-    title: "Plan Your Move",
-    text: "From visa to stay, we’ve got you covered.",
-  },
-  {
-    icon: "📄",
-    title: "Get Accepted",
-    text: "Expert guidance to secure admission.",
-  },
-];
-
-const adventureSteps = [
-  { icon: "💭", title: "Dream", text: "You dream it, we listen." },
-  { icon: "🧭", title: "Choose", text: "Pick the right course and university." },
-  { icon: "📝", title: "Apply", text: "We help you apply smartly." },
-  { icon: "✈️", title: "Fly", text: "Get your visa and fly with confidence." },
-  { icon: "🏆", title: "Graduate", text: "Achieve your goals and shine!" },
-];
-
-const explorers = [
-  {
-    icon: "🌎",
-    title: "Country Explorer",
-    action: "scroll",
-    target: "countries",
-    text: "Compare 9 destinations across Europe and Asia side by side.",
-  },
-  {
-    icon: "🏛️",
-    title: "University Explorer",
-    action: "route",
-    target: "/universities",
-    text: "Shortlist universities by country, city and programme.",
-  },
-  {
-    icon: "🏆",
-    title: "Scholarship Explorer",
-    action: "route",
-    target: "/scholarships",
-    text: "Find government, university and EU scholarship routes.",
-  },
-  {
-    icon: "🇪🇺",
-    title: "Study in the EU",
-    action: "route",
-    target: "/countries/european-union",
-    text: "Schengen travel, Erasmus+ and post-study permits explained.",
-  },
-];
 
 const trustStats = [
   { icon: Globe2, value: String(countryList.length), label: "Destinations" },
@@ -92,16 +26,6 @@ const trustStats = [
 
 const INTERACTIVE_TRANSITION =
   "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
-
-function SoftCard({ children, className = "" }) {
-  return (
-    <div
-      className={`rounded-[22px] border border-orange-100/80 bg-white/76 shadow-[0_16px_42px_rgba(9,31,80,0.08)] backdrop-blur ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -129,17 +53,8 @@ export default function Hero() {
     });
   };
 
-  const handleExplorerAction = (card) => {
-    if (card.action === "route") {
-      goToRoute(card.target);
-      return;
-    }
-
-    scrollToSection(card.target);
-  };
-
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[#fff5e9] text-[#071f50] lg:min-h-[820px]">
+    <section className="relative overflow-hidden bg-[#fff5e9] pb-6 text-[#071f50] lg:pb-8">
       <style>{`
         @keyframes floatSoft {
           0%, 100% { transform: translateY(0px); }
@@ -257,7 +172,7 @@ export default function Hero() {
               <Sparkles size={17} fill="currentColor" /> Your future, our guidance
             </div>
 
-            <h1 className="max-w-[430px] text-[39px] font-black leading-[0.92] tracking-[-0.047em] text-[#071f50] sm:text-[46px] lg:text-[44px] xl:text-[50px]">
+            <h1 className="max-w-[520px] text-[44px] font-black leading-[0.92] tracking-[-0.05em] text-[#071f50] sm:text-[58px] lg:text-[54px] xl:text-[66px]">
               Explore your <br /> study abroad <br />
               <span className="relative inline-block text-[#ff4b12]">
                 future
@@ -268,34 +183,35 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="mt-4 max-w-[400px] text-[13px] font-semibold leading-5.5 text-[#274465] sm:leading-6">
-              Dream big, we&apos;ll help you get there. Find the right course,
-              win scholarships and start your journey with confidence.
+            <p className="mt-5 max-w-[440px] text-[15px] font-semibold leading-7 text-[#274465] sm:text-base">
+              Honest guidance for Pakistani students heading to Europe and Asia:
+              the right country, the right university, real scholarships and a
+              visa plan that holds up.
             </p>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:gap-3 xl:flex-nowrap">
+            <div className="mt-4 relative z-20 flex flex-wrap items-center gap-2.5 sm:gap-3">
               <button
                 type="button"
-                onClick={() => goToRoute("/universities")}
-                className={`hero-motion-safe flex items-center gap-2.5 rounded-full bg-[#ff4b12] px-5 py-3 text-xs font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] hover:-translate-y-1 hover:bg-[#ff642f] hover:shadow-[0_24px_48px_rgba(255,75,18,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
+                onClick={goToAppointment}
+                className={`hero-motion-safe flex items-center gap-2.5 whitespace-nowrap rounded-full bg-[#ff4b12] px-6 py-3.5 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,75,18,0.32)] hover:-translate-y-1 hover:bg-[#ff642f] hover:shadow-[0_24px_48px_rgba(255,75,18,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${INTERACTIVE_TRANSITION}`}
               >
-                Find My Course <Search size={18} />
+                Book Free Consultation <CalendarDays size={18} />
               </button>
 
               <button
                 type="button"
                 onClick={() => scrollToSection("countries")}
-                className={`hero-motion-safe flex items-center gap-2.5 rounded-full border border-orange-100/80 bg-white/90 px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:text-[#ff4b12] hover:shadow-[0_20px_44px_rgba(255,91,24,0.13)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+                className={`hero-motion-safe flex items-center gap-2.5 whitespace-nowrap rounded-full border border-orange-100/80 bg-white/90 px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:text-[#ff4b12] hover:shadow-[0_20px_44px_rgba(255,91,24,0.13)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
               >
                 Explore Countries <Globe2 size={18} />
               </button>
 
               <button
                 type="button"
-                onClick={() => goToRoute("/services")}
-                className={`hero-motion-safe flex items-center gap-2.5 rounded-full border border-orange-100/80 bg-white/90 px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:text-[#ff4b12] hover:shadow-[0_20px_44px_rgba(255,91,24,0.13)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
+                onClick={() => goToRoute("/universities")}
+                className={`hero-motion-safe flex items-center gap-2.5 whitespace-nowrap rounded-full border border-orange-100/80 bg-white/90 px-5 py-3 text-xs font-black text-[#071f50] shadow-[0_16px_36px_rgba(9,31,80,0.10)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:text-[#ff4b12] hover:shadow-[0_20px_44px_rgba(255,91,24,0.13)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
               >
-                <CirclePlay size={18} /> How It Works
+                <UniversityIcon size={18} /> Find a University
               </button>
             </div>
 
@@ -323,6 +239,20 @@ export default function Hero() {
                 );
               })}
             </div>
+          </div>
+
+          <div className="order-3 flex flex-wrap gap-2 lg:hidden">
+            {countryList.map((country) => (
+              <button
+                key={country.slug}
+                type="button"
+                onClick={() => goToRoute(`/countries/${country.slug}`)}
+                className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/85 px-3 py-2 text-xs font-black text-[#071f50] shadow-sm"
+              >
+                <FlagMark country={country} className="h-4 w-6 rounded-[3px]" />
+                {country.name}
+              </button>
+            ))}
           </div>
 
           <div className="relative order-2 min-h-[315px] sm:min-h-[390px] lg:col-auto lg:min-h-[425px]">
@@ -436,165 +366,6 @@ export default function Hero() {
           </div>
         </main>
 
-        <section className="mt-4 grid grid-cols-12 gap-3 lg:mt-1">
-          <SoftCard className="col-span-12 p-4 lg:col-span-5">
-            <h2 className="mb-2 text-base font-black tracking-[-0.02em]">
-              Your dream, our support{" "}
-              <span className="text-[#ffb000]">✦</span>
-            </h2>
-
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-0">
-              {supportCards.map((card, index) => (
-                <div
-                  key={card.title}
-                  className={`px-3 ${
-                    index !== supportCards.length - 1
-                      ? "md:border-r md:border-orange-100"
-                      : ""
-                  }`}
-                >
-                  <div
-                    className={`hero-motion-safe mb-2 grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-orange-50 to-blue-50 text-4xl shadow-inner hover:scale-105 ${INTERACTIVE_TRANSITION}`}
-                  >
-                    {card.icon}
-                  </div>
-                  <h3 className="text-xs font-black leading-tight">
-                    {card.title}
-                  </h3>
-                  <p className="mt-1 text-[8px] font-semibold leading-[1.3] text-[#17335f] sm:text-[10px] sm:leading-4">
-                    {card.text}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </SoftCard>
-
-          <SoftCard className="col-span-12 p-4 lg:col-span-7">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h2 className="min-w-0 text-[14px] font-black tracking-[-0.02em] sm:text-base">
-                Choose your adventure 🗺️
-              </h2>
-              <button
-                type="button"
-                onClick={() => goToRoute("/services")}
-                className={`hero-motion-safe shrink-0 rounded-full bg-orange-50 px-2.5 py-1.5 text-[9px] font-black text-[#ff4b12] sm:px-4 sm:text-[11px] hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
-              >
-                See Full Process
-              </button>
-            </div>
-
-            <div className="relative grid grid-cols-5 items-start gap-1 sm:gap-4">
-              {adventureSteps.map((step, index) => (
-                <div key={step.title} className="relative z-10 text-center">
-                  <div className="relative mx-auto h-[52px] w-[52px] sm:h-[82px] sm:w-[82px]">
-                    <div
-                      className={`hero-motion-safe grid h-full w-full place-items-center rounded-full bg-orange-50 text-xl shadow-inner sm:text-3xl hover:scale-105 ${INTERACTIVE_TRANSITION}`}
-                    >
-                      {index === 0 ? (
-                        <img
-                          src={walkingStudent}
-                          alt="Student walking"
-                          width="1024"
-                          height="1536"
-                          loading="lazy"
-                          decoding="async"
-                          className="h-[58px] w-[58px] object-contain drop-shadow-xl sm:h-[90px] sm:w-[90px]"
-                        />
-                      ) : (
-                        <span>{step.icon}</span>
-                      )}
-                    </div>
-
-                    <div className="absolute -bottom-1 left-1/2 z-30 grid h-5 w-5 -translate-x-1/2 place-items-center rounded-full bg-[#ff4b12] text-[11px] font-black text-white shadow-[0_7px_16px_rgba(255,75,18,0.35)] ring-2 ring-white">
-                      {index + 1}
-                    </div>
-                  </div>
-
-                  <h3 className="mt-2 text-[11px] font-black">
-                    {step.title}
-                  </h3>
-                  <p className="mx-auto mt-1 max-w-[110px] text-[9px] font-semibold leading-4 text-[#17335f]">
-                    {step.text}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </SoftCard>
-        </section>
-
-        <section className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {explorers.map((card) => (
-            <article
-              key={card.title}
-              className={`group hero-motion-safe relative min-h-[78px] overflow-hidden rounded-[20px] border border-orange-100/80 bg-white/76 p-3 pl-24 shadow-[0_18px_45px_rgba(9,31,80,0.07)] backdrop-blur hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_24px_55px_rgba(255,91,24,0.14)] ${INTERACTIVE_TRANSITION}`}
-            >
-              <div
-                className={`absolute left-4 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-gradient-to-br from-orange-50 to-blue-50 text-4xl shadow-inner group-hover:scale-105 ${INTERACTIVE_TRANSITION}`}
-              >
-                {card.icon}
-              </div>
-
-              <h3 className="text-sm font-black">{card.title}</h3>
-              <p className="mt-1 text-[11px] font-semibold leading-4 text-[#17335f]">
-                {card.text}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => handleExplorerAction(card)}
-                className={`hero-motion-safe mt-1.5 grid h-6 w-6 place-items-center rounded-full bg-[#ff4b12] text-white group-hover:translate-x-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 ${INTERACTIVE_TRANSITION}`}
-                aria-label={`Open ${card.title}`}
-              >
-                <ChevronRight size={17} strokeWidth={4} />
-              </button>
-            </article>
-          ))}
-        </section>
-
-        <section className="relative mt-4 h-[108px] overflow-visible rounded-[22px] border border-white/10 bg-gradient-to-r from-[#071f50] via-[#0b3478] to-[#071f50] px-5 shadow-[0_22px_52px_rgba(7,31,80,0.28)] sm:h-[96px] sm:px-8">
-          <div className="absolute inset-0 overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_20%_50%,rgba(255,122,59,0.22),transparent_22%),radial-gradient(circle_at_82%_40%,rgba(255,255,255,0.16),transparent_20%)]" />
-
-          <div className="relative z-10 flex h-[108px] flex-col items-start justify-center gap-2.5 py-4 sm:h-[96px] md:flex-row md:items-center md:justify-between md:gap-6 md:py-0">
-            <div className="relative hidden h-[96px] w-[390px] shrink-0 overflow-visible lg:block">
-              <div className="absolute bottom-0 left-[78px] z-20 h-[152px] w-[158px] overflow-hidden">
-                <img
-                  src={guideStudent}
-                  alt="Zaifan guide"
-                  width="1024"
-                  height="1536"
-                  loading="lazy"
-                  decoding="async"
-                  className="h-[210px] w-full translate-y-[2px] object-contain object-top drop-shadow-[0_18px_18px_rgba(9,31,80,0.24)]"
-                />
-              </div>
-
-              <div className="absolute left-[215px] top-[26px] z-30 min-w-[168px] rounded-[22px] bg-orange-100 px-5 py-3 text-center text-[10px] font-black leading-4 text-[#071f50] shadow-xl ring-1 ring-white/60 before:absolute before:left-[-9px] before:top-1/2 before:h-5 before:w-5 before:-translate-y-1/2 before:rotate-45 before:bg-orange-100">
-                Not sure where <br /> to start?
-              </div>
-            </div>
-
-            <div className="min-w-0 flex-1 pl-0 lg:ml-4 xl:ml-6">
-              <h2 className="text-[20px] font-black leading-tight tracking-[-0.03em] text-white xl:text-[27px]">
-                Let’s turn your dreams into reality!
-              </h2>
-              <p className="mt-1 text-xs font-semibold text-white/95">
-                Book a focused 1-on-1 planning session for your study abroad journey.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={goToAppointment}
-              className={`hero-motion-safe hidden shrink-0 items-center gap-3 rounded-full bg-[#ff4b12] px-7 py-3.5 text-xs font-black text-white shadow-[0_18px_35px_rgba(255,75,18,0.28)] hover:-translate-y-1 hover:bg-[#ff642f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 md:flex ${INTERACTIVE_TRANSITION}`}
-            >
-              <CalendarDays size={20} /> Book Free Consultation
-            </button>
-
-            <div className="cta-plane hidden text-4xl text-white lg:block">
-              ✈︎
-            </div>
-          </div>
-        </section>
       </div>
     </section>
   );
