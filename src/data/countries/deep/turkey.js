@@ -1,0 +1,247 @@
+// Italy-level depth for Turkey. Merged into turkeyData by the registry.
+// Budgets are in US dollars because lira prices change quickly with inflation.
+export const turkeyDeep = {
+  currencySymbol: "$",
+
+  tuitionOptions: [
+    { id: "state", label: "State university", min: 300, max: 3000, note: "Engineering and medicine higher" },
+    { id: "foundation", label: "Foundation (private) university", min: 3000, max: 20000, note: "Merit discounts of 25–100% are common" },
+    { id: "medicine", label: "Medicine (foundation)", min: 10000, max: 30000, note: "Varies widely by university" },
+    { id: "scholarship", label: "Türkiye Bursları", min: 0, max: 0, note: "Tuition fully covered" },
+  ],
+
+  timeline: [
+    { phase: "Research & shortlist", timing: "9–12 months before", text: "Choose English- or Turkish-taught programmes and decide between state and foundation universities." },
+    { phase: "Türkiye Bursları", timing: "January – February", text: "If you want the government scholarship, apply on turkiyeburslari.gov.tr during the annual window." },
+    { phase: "Exams", timing: "Winter – spring", text: "Register for SAT or university entrance exams if your chosen universities require them." },
+    { phase: "University applications", timing: "March – July", text: "Apply through each university's international portal. Deadlines vary a lot." },
+    { phase: "Student visa", timing: "After acceptance", text: "Apply at the Turkish Embassy in Islamabad or a Consulate (Karachi/Lahore) with your acceptance letter." },
+    { phase: "Arrival & residence permit", timing: "September", text: "Enrol and apply online for your student residence permit (ikamet), usually within a month of arrival." },
+  ],
+
+  requirements: {
+    bachelor: [
+      "HSSC/FSc or A-levels; many universities also accept or require SAT or their own exam",
+      "English-taught programmes need IELTS/TOEFL or the university's English proficiency exam",
+      "Turkish-taught programmes require a Turkish preparatory year (TÖMER) if you don't have C1",
+      "Medicine and engineering at top universities are very competitive",
+    ],
+    master: [
+      "A recognised bachelor's in a related field",
+      "ALES (or GRE/GMAT) for some programmes",
+      "English or Turkish proficiency depending on programme language",
+      "Statement of purpose and recommendation letters",
+    ],
+    language: [
+      { test: "IELTS / TOEFL", note: "For English-taught programmes" },
+      { test: "University English exam", note: "Many universities test you on arrival; failing means a prep year" },
+      { test: "TÖMER Turkish", note: "C1 needed for Turkish-taught degrees" },
+    ],
+    documents: [
+      "HSSC/A-level certificates attested by IBCC",
+      "Degree and transcripts attested by HEC (for master's)",
+      "Passport copy",
+      "SAT or exam results (if required)",
+      "Language certificate",
+      "Statement of purpose and recommendation letters",
+    ],
+  },
+
+  studentLife: [
+    { icon: "home", title: "Housing", text: "State dorms (KYK) and university dorms are the cheapest. Private dorms and shared flats are common in big cities." },
+    { icon: "utensils", title: "Food & halal", text: "Halal food is the norm. Campus canteens serve very cheap meals, and street food is everywhere." },
+    { icon: "train", title: "Transport", text: "Student transport cards give big discounts; high-speed trains link Istanbul, Ankara, Eskişehir and Konya." },
+    { icon: "briefcase", title: "Part-time work", text: "Possible with a work permit. Bachelor's students usually only after year one, so check the current rules." },
+    { icon: "cloud", title: "Weather", text: "Mediterranean coasts are warm; Ankara and the east have cold, snowy winters." },
+    { icon: "users", title: "Community", text: "A large Pakistani student community, plenty of mosques and a very familiar culture for most students." },
+  ],
+
+  decision: {
+    choose: [
+      "You want an affordable degree close to home",
+      "You'd love a fully funded Türkiye Bursları scholarship",
+      "You want a culturally comfortable, halal-friendly country",
+      "You're interested in engineering, medicine, business or IR",
+      "You're happy with English or a year of Turkish prep",
+      "You want direct flights home",
+    ],
+    avoid: [
+      "You need an EU / Schengen residence permit",
+      "You want an automatic post-study work visa",
+      "You can't handle price changes from inflation",
+      "You need guaranteed part-time work",
+      "You're unwilling to take entrance or English exams",
+      "You want everything outside campus in English",
+    ],
+  },
+
+  realityChecks: [
+    { expectation: "Turkey is part of Europe's Schengen area", reality: "It isn't. A Turkish residence permit doesn't give Schengen travel." },
+    { expectation: "Prices stay stable", reality: "High inflation means lira prices change quickly, so budget in dollars." },
+    { expectation: "English programmes need no English test", reality: "Many universities test you on arrival; failing means an extra prep year." },
+    { expectation: "Türkiye Bursları is easy", reality: "It's very competitive, with tens of thousands of applicants each year." },
+    { expectation: "I can work from day one", reality: "Students need a work permit, and bachelor's students usually wait until year two." },
+    { expectation: "Private means low quality", reality: "Foundation universities like Koç, Sabancı and Bilkent are among Turkey's best." },
+  ],
+
+  cityGoals: [
+    { goal: "Engineering", citySlug: "ankara", reason: "METU and Bilkent, two of Turkey's strongest English-medium universities." },
+    { goal: "Business & careers", citySlug: "istanbul", reason: "Turkey's economic capital with the most universities." },
+    { goal: "Medicine", citySlug: "izmir", reason: "Ege and Dokuz Eylül, two big medical faculties." },
+    { goal: "Lowest cost", citySlug: "eskisehir", reason: "Classic student town with very low costs." },
+    { goal: "Automotive industry", citySlug: "bursa", reason: "Turkey's car-manufacturing hub." },
+    { goal: "Coastal lifestyle", citySlug: "antalya", reason: "Akdeniz University on the Mediterranean." },
+    { goal: "Islamic studies & culture", citySlug: "konya", reason: "A conservative, affordable city with Selçuk University." },
+    { goal: "Black Sea & engineering", citySlug: "trabzon", reason: "Karadeniz Technical University." },
+  ],
+
+  pathways: [
+    { title: "Engineering route", icon: "cpu", slugs: ["metu", "istanbul-technical-university", "bogazici-university"] },
+    { title: "Medicine route", icon: "stethoscope", slugs: ["hacettepe-university", "istanbul-university", "ege-university"] },
+    { title: "Business route", icon: "briefcase", slugs: ["koc-university", "bilkent-university", "sabanci-university"] },
+    { title: "International relations route", icon: "landmark", slugs: ["bogazici-university", "ankara-university", "marmara-university"] },
+    { title: "Affordable route", icon: "wallet", slugs: ["anadolu-university", "selcuk-university", "karadeniz-technical-university"] },
+    { title: "Private English-medium route", icon: "languages", slugs: ["bahcesehir-university", "ozyegin-university", "bilkent-university"] },
+  ],
+
+  extraCities: [
+    {
+      slug: "bursa",
+      name: "Bursa",
+      emoji: "🚙",
+      region: "Marmara",
+      headline: "Turkey's automotive capital",
+      intro: "Bursa is a large industrial city near Istanbul, home to Turkey's car industry and Bursa Uludağ University. It's cheaper than Istanbul with plenty of green space.",
+      livingCost: "Low–Medium",
+      bestFor: ["Automotive Engineering", "Medicine", "Agriculture"],
+      highlights: [
+        { title: "Car industry", text: "Major automotive factories." },
+        { title: "Near Istanbul", text: "Short trip by ferry and bus." },
+        { title: "Green city", text: "Uludağ mountain for skiing." },
+      ],
+      costCards: [
+        { label: "Rent", value: "≈ $150 – $300", text: "Cheaper than Istanbul." },
+        { label: "Food", value: "≈ $140", text: "Affordable." },
+        { label: "Transport", value: "Metro + bus", text: "Student cards." },
+      ],
+      studentLife: ["Historic Ottoman capital", "Industrial jobs", "Mountains nearby"],
+    },
+    {
+      slug: "antalya",
+      name: "Antalya",
+      emoji: "🏖️",
+      region: "Mediterranean",
+      headline: "Study on the Turkish Riviera",
+      intro: "Antalya is a large Mediterranean city famous for tourism, home to Akdeniz University. It offers sunny weather and a relaxed lifestyle.",
+      livingCost: "Medium",
+      bestFor: ["Tourism", "Medicine", "Agriculture"],
+      highlights: [
+        { title: "Mediterranean coast", text: "Beaches and warm weather." },
+        { title: "Tourism industry", text: "Hospitality careers." },
+        { title: "Akdeniz University", text: "Large public university." },
+      ],
+      costCards: [
+        { label: "Rent", value: "≈ $200 – $400", text: "Higher in tourist areas." },
+        { label: "Food", value: "≈ $150", text: "Affordable." },
+        { label: "Transport", value: "Tram + bus", text: "Student discounts." },
+      ],
+      studentLife: ["Beach lifestyle", "Very hot summers", "Tourist crowds"],
+    },
+    {
+      slug: "konya",
+      name: "Konya",
+      emoji: "🕌",
+      region: "Central Anatolia",
+      headline: "Calm, conservative and affordable",
+      intro: "Konya is a large, conservative city in central Turkey, famous as Rumi's home. It's very affordable and home to Selçuk University, one of Turkey's largest.",
+      livingCost: "Low",
+      bestFor: ["Engineering", "Theology", "Agriculture"],
+      highlights: [
+        { title: "Very affordable", text: "Among the cheapest big cities." },
+        { title: "Cultural heritage", text: "Mevlana (Rumi) museum." },
+        { title: "Large university", text: "Selçuk University." },
+      ],
+      costCards: [
+        { label: "Rent", value: "≈ $120 – $250", text: "Cheap rooms and dorms." },
+        { label: "Food", value: "≈ $120", text: "Low prices." },
+        { label: "Transport", value: "Tram", text: "Student cards." },
+      ],
+      studentLife: ["Conservative, family city", "Low costs", "High-speed train to Ankara and Istanbul"],
+    },
+    {
+      slug: "trabzon",
+      name: "Trabzon",
+      emoji: "⛰️",
+      region: "Black Sea",
+      headline: "Green mountains and the Black Sea",
+      intro: "Trabzon is the main city on Turkey's eastern Black Sea coast, home to Karadeniz Technical University. It's green, rainy and affordable.",
+      livingCost: "Low",
+      bestFor: ["Engineering", "Forestry", "Medicine"],
+      highlights: [
+        { title: "Technical university", text: "Karadeniz Technical University." },
+        { title: "Nature", text: "Green valleys and plateaus." },
+        { title: "Affordable", text: "Low living costs." },
+      ],
+      costCards: [
+        { label: "Rent", value: "≈ $120 – $250", text: "Affordable." },
+        { label: "Food", value: "≈ $120", text: "Black Sea food." },
+        { label: "Transport", value: "Bus + dolmuş", text: "Cheap." },
+      ],
+      studentLife: ["Rainy and green", "Football-mad city", "Quiet student life"],
+    },
+  ],
+
+  cityExtras: {
+    istanbul: { budget: { rent: [250, 500], food: [150, 250], transport: [15, 30], other: [40, 80] }, fit: { good: ["Business, engineering and medicine", "Most universities", "Global connections"], consider: ["Highest costs in Turkey", "Long commutes", "Very crowded"] }, scholarshipNote: "Foundation universities in Istanbul offer generous merit discounts; Türkiye Bursları places students here too." },
+    ankara: { budget: { rent: [150, 350], food: [130, 200], transport: [10, 20], other: [30, 60] }, fit: { good: ["Engineering and English-medium study", "Lower costs", "Campus life"], consider: ["Cold winters", "Quieter than Istanbul", "Government-city feel"] }, scholarshipNote: "METU, Bilkent and Hacettepe are popular Türkiye Bursları placements; Bilkent offers merit scholarships." },
+    izmir: { budget: { rent: [180, 350], food: [130, 200], transport: [10, 20], other: [30, 60] }, fit: { good: ["Medicine and agriculture", "Coastal lifestyle", "Liberal atmosphere"], consider: ["Fewer English programmes", "Hot summers", "Smaller job market"] }, scholarshipNote: "Mainly state universities with low fees; Türkiye Bursları can apply." },
+    eskisehir: { budget: { rent: [120, 250], food: [110, 170], transport: [8, 15], other: [30, 50] }, fit: { good: ["Tight budgets", "Student-town life", "Communication and arts"], consider: ["Small city", "Mostly Turkish-taught", "Fewer jobs"] }, scholarshipNote: "Very low costs make self-funding realistic." },
+    bursa: { budget: { rent: [150, 300], food: [130, 190], transport: [10, 20], other: [30, 60] }, fit: { good: ["Automotive engineering", "Lower costs than Istanbul", "Industry jobs"], consider: ["Industrial city", "Turkish-heavy programmes", "Air quality"] }, scholarshipNote: "Mainly state university fees; Türkiye Bursları can apply." },
+    antalya: { budget: { rent: [200, 400], food: [140, 210], transport: [10, 20], other: [30, 60] }, fit: { good: ["Tourism and hospitality", "Warm weather", "Coastal lifestyle"], consider: ["Tourist-season prices", "Very hot summers", "Fewer English programmes"] }, scholarshipNote: "Mainly state university fees; Türkiye Bursları can apply." },
+    konya: { budget: { rent: [120, 250], food: [110, 170], transport: [8, 15], other: [30, 50] }, fit: { good: ["Low budgets", "Conservative environment", "Engineering and theology"], consider: ["Conservative social life", "Mostly Turkish-taught", "Cold winters"] }, scholarshipNote: "Among the cheapest big cities; Türkiye Bursları can apply." },
+    trabzon: { budget: { rent: [120, 250], food: [110, 170], transport: [8, 15], other: [30, 50] }, fit: { good: ["Engineering", "Nature lovers", "Low costs"], consider: ["Rainy weather", "Remote location", "Mostly Turkish-taught"] }, scholarshipNote: "Low costs; Türkiye Bursları can apply." },
+  },
+
+  extraUniversities: [
+    { slug: "marmara-university", name: "Marmara University", citySlug: "istanbul", city: "Istanbul", type: "Public", tuitionBand: "Low", tuitionNote: "Low state tuition", programs: ["Business", "Engineering", "Medicine", "International Relations"], popularFor: "Large public university with English programmes", website: "https://www.marmara.edu.tr/en" },
+    { slug: "ozyegin-university", name: "Özyeğin University", citySlug: "istanbul", city: "Istanbul", type: "Private", tuitionBand: "High", tuitionNote: "Foundation university, merit scholarships available", programs: ["Engineering", "Business", "Aviation"], popularFor: "English-medium private university", website: "https://www.ozyegin.edu.tr/en" },
+    { slug: "bahcesehir-university", name: "Bahçeşehir University", citySlug: "istanbul", city: "Istanbul", type: "Private", tuitionBand: "High", tuitionNote: "Foundation university, scholarships available", programs: ["Business", "Engineering", "Medicine", "Media"], popularFor: "Popular private university with many international students", website: "https://bau.edu.tr/en" },
+    { slug: "gazi-university", name: "Gazi University", citySlug: "ankara", city: "Ankara", type: "Public", tuitionBand: "Low", tuitionNote: "Low state tuition", programs: ["Engineering", "Medicine", "Education"], popularFor: "Large state university in the capital", website: "https://gazi.edu.tr/en" },
+    { slug: "bursa-uludag-university", name: "Bursa Uludağ University", citySlug: "bursa", city: "Bursa", type: "Public", tuitionBand: "Low", tuitionNote: "Low state tuition", programs: ["Medicine", "Engineering", "Agriculture"], popularFor: "Large public university in the automotive city", website: "https://uludag.edu.tr/en" },
+    { slug: "akdeniz-university", name: "Akdeniz University", citySlug: "antalya", city: "Antalya", type: "Public", tuitionBand: "Low", tuitionNote: "Low state tuition", programs: ["Tourism", "Medicine", "Agriculture"], popularFor: "Mediterranean university strong in tourism", website: "https://www.akdeniz.edu.tr/en" },
+    { slug: "selcuk-university", name: "Selçuk University", citySlug: "konya", city: "Konya", type: "Public", tuitionBand: "Low", tuitionNote: "Low state tuition", programs: ["Engineering", "Theology", "Medicine"], popularFor: "One of Turkey's largest universities", website: "https://www.selcuk.edu.tr/" },
+    { slug: "karadeniz-technical-university", name: "Karadeniz Technical University", citySlug: "trabzon", city: "Trabzon", type: "Technical", tuitionBand: "Low", tuitionNote: "Low state tuition", programs: ["Engineering", "Forestry", "Medicine"], popularFor: "Engineering on the Black Sea coast", website: "https://www.ktu.edu.tr/en" },
+  ],
+
+  universityExtras: {
+    "bogazici-university": { about: "Boğaziçi University is a highly selective English-medium state university on the Bosphorus, known for engineering and economics.", highlights: ["English-medium state university", "Bosphorus campus", "Very selective"], english: "All programmes in English" },
+    "istanbul-technical-university": { about: "ITU is Turkey's oldest technical university, famous for engineering and architecture.", highlights: ["Turkey's historic engineering school", "Strong architecture", "Many alumni in industry"], english: "Many programmes in English (some 30% or 100% English)" },
+    "istanbul-university": { about: "Istanbul University is one of Turkey's oldest and largest universities, with strong medicine and law faculties.", highlights: ["Historic central campus", "Large medical faculty", "Wide subject range"], english: "Mostly Turkish-taught, some English programmes" },
+    "yildiz-technical-university": { about: "Yıldız Technical University is a major engineering university in central Istanbul.", highlights: ["Engineering focus", "Central Istanbul", "Low state tuition"], english: "Some programmes in English" },
+    "koc-university": { about: "Koç University is one of Turkey's top private universities, with generous scholarships and English-medium teaching.", highlights: ["Top private university", "Generous scholarships", "English-medium"], english: "All programmes in English" },
+    "sabanci-university": { about: "Sabancı University is a research-focused private university known for its interdisciplinary programmes.", highlights: ["Interdisciplinary programmes", "Strong research", "English-medium"], english: "All programmes in English" },
+    metu: { about: "Middle East Technical University is an English-medium state university in Ankara and one of Turkey's best for engineering.", highlights: ["English-medium state university", "Top engineering school", "Huge green campus"], english: "All programmes in English" },
+    "bilkent-university": { about: "Bilkent was Turkey's first private (foundation) university and is known for engineering, business and research.", highlights: ["Turkey's first private university", "Merit scholarships", "English-medium"], english: "All programmes in English" },
+    "hacettepe-university": { about: "Hacettepe University is one of Turkey's leading universities for medicine and health sciences.", highlights: ["Leading medical faculty", "Large teaching hospitals", "Ankara campus"], english: "Some programmes in English, including medicine" },
+    "ankara-university": { about: "Ankara University is a large state university known for law, political science and medicine.", highlights: ["Historic faculties", "Law and political science", "Capital city"], english: "Mostly Turkish-taught, some English programmes" },
+    "ege-university": { about: "Ege University is a large state university in Izmir with strong medicine and agriculture faculties.", highlights: ["Large medical faculty", "Coastal city", "Low state tuition"], english: "Mostly Turkish-taught, some English programmes" },
+    "dokuz-eylul-university": { about: "Dokuz Eylül University is a major state university in Izmir with medicine, engineering and business.", highlights: ["Medicine and engineering", "Coastal city", "Low state tuition"], english: "Some programmes in English" },
+    "anadolu-university": { about: "Anadolu University in Eskişehir is known for communication, fine arts and aviation.", highlights: ["Communication and aviation", "Student-town life", "Very low costs"], english: "Mostly Turkish-taught" },
+    "marmara-university": { about: "Marmara University is a large state university in Istanbul with English-taught business and engineering programmes.", highlights: ["Large state university", "English programmes", "Istanbul campuses"], english: "Several programmes in English" },
+    "ozyegin-university": { about: "Özyeğin University is a private English-medium university known for engineering, business and aviation.", highlights: ["English-medium", "Aviation school", "Modern campus"], english: "All programmes in English" },
+    "bahcesehir-university": { about: "Bahçeşehir University (BAU) is a private university popular with international students, with campuses in Istanbul.", highlights: ["Many international students", "Business, media and medicine", "Scholarships available"], english: "Many programmes in English" },
+    "gazi-university": { about: "Gazi University is one of Ankara's largest state universities, strong in engineering and education.", highlights: ["Large state university", "Engineering and education", "Low tuition"], english: "Mostly Turkish-taught" },
+    "bursa-uludag-university": { about: "Bursa Uludağ University is a large public university with medicine, engineering and agriculture.", highlights: ["Automotive city", "Medicine and engineering", "Low costs"], english: "Mostly Turkish-taught" },
+    "akdeniz-university": { about: "Akdeniz University is a large public university in Antalya, strong in tourism and agriculture.", highlights: ["Tourism faculty", "Mediterranean city", "Low tuition"], english: "Mostly Turkish-taught" },
+    "selcuk-university": { about: "Selçuk University in Konya is one of Turkey's largest universities by student numbers.", highlights: ["Very large university", "Affordable city", "Wide subject range"], english: "Mostly Turkish-taught" },
+    "karadeniz-technical-university": { about: "Karadeniz Technical University is the leading engineering university on Turkey's Black Sea coast.", highlights: ["Engineering focus", "Forestry faculty", "Low costs"], english: "Some programmes in English" },
+  },
+
+  moreFaqs: [
+    { q: "What is the Turkish preparatory year?", a: "A one-year Turkish (or English) language course before your degree, required if you don't meet the programme's language level." },
+    { q: "Which Turkish universities teach fully in English?", a: "METU, Boğaziçi, Bilkent, Koç, Sabancı and Özyeğin are fully English-medium, and many others have English programmes." },
+    { q: "Do I need SAT for Turkey?", a: "Many universities accept or require SAT or their own exam; others admit on HSSC/A-level grades. Check each university." },
+    { q: "Why budget in dollars?", a: "Turkish lira prices change quickly with inflation, so dollar estimates are more stable for planning." },
+    { q: "Can I apply to Türkiye Bursları and universities at the same time?", a: "Yes. Many students apply for the scholarship and directly to universities as a backup." },
+  ],
+};

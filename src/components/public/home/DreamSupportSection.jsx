@@ -35,7 +35,7 @@ const supportCards = [
     accent: "#ff4b12",
     glow: "bg-orange-300/35",
     stats: [
-      { value: "130+", label: "Universities" },
+      { value: "190+", label: "Universities" },
       { value: "9", label: "Countries" },
     ],
     chips: ["Business", "Computer Science", "Medicine", "Engineering"],

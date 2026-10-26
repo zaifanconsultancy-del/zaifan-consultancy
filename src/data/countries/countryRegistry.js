@@ -9,6 +9,39 @@ import { chinaData } from "./china";
 import { vietnamData } from "./vietnam";
 import { euHubData } from "./eu";
 import { germanyDeep } from "./deep/germany";
+import { franceDeep } from "./deep/france";
+import { belgiumDeep } from "./deep/belgium";
+import { romaniaDeep } from "./deep/romania";
+import { lithuaniaDeep } from "./deep/lithuania";
+import { turkeyDeep } from "./deep/turkey";
+import { chinaDeep } from "./deep/china";
+import { vietnamDeep } from "./deep/vietnam";
+
+// Practical questions every student asks, phrased for each country.
+function sharedFaqs(country) {
+  return [
+    {
+      q: `When should I start planning for ${country.name}?`,
+      a: `Ideally 9–12 months before your intake. Documents, tests, applications and visa appointments all take longer than students expect.`,
+    },
+    {
+      q: `Do I need to show a bank statement for ${country.name}?`,
+      a: `Yes. Every student visa needs proof that you can cover tuition and living costs. The amount and format differ by country; for ${country.name} we prepare it with you step by step.`,
+    },
+    {
+      q: `Can I change university after arriving in ${country.name}?`,
+      a: `Sometimes, but it's never guaranteed and can affect your visa. Choose carefully before applying.`,
+    },
+    {
+      q: `Can my family visit me in ${country.name}?`,
+      a: `Family can usually apply for visitor visas, but bringing dependants to live with you needs much more money and paperwork. Ask us about your case.`,
+    },
+    {
+      q: `How can Zaifan help with ${country.name}?`,
+      a: `We connect the whole plan: country fit, city, university shortlist, scholarships, documents and visa timeline, with honest advice and no fake guarantees.`,
+    },
+  ];
+}
 
 // Combine a country's base data with its "deep" file: extra cities and
 // universities are appended, and per-city / per-university extras are merged
@@ -26,7 +59,7 @@ function withDeep(base, deep) {
       ...university,
       ...universityExtras[university.slug],
     })),
-    faqs: [...base.faqs, ...moreFaqs],
+    faqs: [...base.faqs, ...moreFaqs, ...sharedFaqs(base)],
   };
 }
 
@@ -34,13 +67,13 @@ function withDeep(base, deep) {
 export const countryRegistry = {
   italy: italyData,
   germany: withDeep(germanyData, germanyDeep),
-  france: franceData,
-  belgium: belgiumData,
-  romania: romaniaData,
-  lithuania: lithuaniaData,
-  turkey: turkeyData,
-  china: chinaData,
-  vietnam: vietnamData,
+  france: withDeep(franceData, franceDeep),
+  belgium: withDeep(belgiumData, belgiumDeep),
+  romania: withDeep(romaniaData, romaniaDeep),
+  lithuania: withDeep(lithuaniaData, lithuaniaDeep),
+  turkey: withDeep(turkeyData, turkeyDeep),
+  china: withDeep(chinaData, chinaDeep),
+  vietnam: withDeep(vietnamData, vietnamDeep),
 };
 
 export const countryList = Object.values(countryRegistry);

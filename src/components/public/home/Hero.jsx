@@ -85,7 +85,7 @@ const explorers = [
 
 const trustStats = [
   { icon: Globe2, value: String(countryList.length), label: "Destinations" },
-  { icon: University, value: "130+", label: "University Profiles" },
+  { icon: University, value: "190+", label: "University Profiles" },
   { icon: WalletCards, value: "Gov + EU", label: "Scholarship Routes" },
   { icon: GraduationCap, value: "Visa", label: "Planning Route" },
 ];
