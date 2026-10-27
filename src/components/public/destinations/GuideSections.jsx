@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { SectionHeader } from "./DestinationUI";
-import { fadeUp, getUniversityPath, iconFor } from "./destinationUtils";
+import { BUDGET_LABELS, LIFESTYLES, fadeUp, getUniversityPath, iconFor } from "./destinationUtils";
 
 // Italy-depth sections for the shared country guide. Each renders nothing if
 // the country has no data for it, so countries can be deepened one by one.
@@ -76,18 +76,6 @@ export function FitCheck({ country }) {
 /* Budget planner                                                             */
 /* -------------------------------------------------------------------------- */
 
-const LIFESTYLES = [
-  { id: "saver", label: "Saver", factor: 0 },
-  { id: "balanced", label: "Balanced", factor: 0.5 },
-  { id: "comfort", label: "Comfort", factor: 1 },
-];
-
-const BUDGET_LABELS = {
-  rent: "Rent",
-  food: "Food & groceries",
-  transport: "Transport",
-  other: "Insurance, phone & personal",
-};
 
 export function BudgetPlanner({ country }) {
   const cities = useMemo(() => country.cities.filter((city) => city.budget), [country]);

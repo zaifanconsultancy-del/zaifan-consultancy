@@ -47,6 +47,8 @@ import {
 } from "lucide-react";
 
 import { italianUniversities } from "../../data/italianUniversities";
+import { DripDivider, DripPhoto } from "../../components/public/destinations/DestinationUI";
+import colosseum from "../../assets/images/country-explorer/italy.webp";
 import { italianCities } from "../../data/italianCities";
 
 const italyHighlights = [
@@ -807,7 +809,6 @@ function ItalyGuide() {
                 <span className="ml-3 inline-block text-[#ff4b12]">
                   Italy
                 </span>
-                <span className="ml-3 inline-block text-[#071f50]">IT</span>
                 <br />
                 study game plan.
               </h1>
@@ -859,6 +860,15 @@ function ItalyGuide() {
               <div className="relative overflow-hidden rounded-[26px] bg-white/96 p-4 shadow-[0_24px_65px_rgba(9,31,80,0.10)] ring-1 ring-orange-100 sm:rounded-[34px] sm:p-6 md:p-8">
                 <div className="pointer-events-none absolute -right-14 -top-12 h-44 w-44 rounded-full border-[28px] border-[#ff4b12]/7" />
                 <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-orange-100/50 blur-2xl" />
+                <DripPhoto
+                  src={colosseum}
+                  alt="The Colosseum in Rome at sunrise"
+                  className="hidden h-44 sm:-mx-6 sm:-mt-6 sm:mb-3 sm:block md:-mx-8 md:-mt-8 lg:h-48"
+                >
+                  <span className="absolute bottom-14 left-6 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#071f50] md:left-8">
+                    Rome · Colosseum
+                  </span>
+                </DripPhoto>
                 <div className="relative">
                   <div className="pointer-events-none absolute right-[-70px] top-[-70px] h-52 w-52 rounded-full border-[34px] border-[#ff4b12]/8" />
                   <div className="pointer-events-none absolute bottom-[-90px] left-[-70px] h-64 w-64 rounded-full border-[44px] border-[#071f50]/5" />
@@ -1059,6 +1069,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#ff4b12" background="#071f50" className="hidden md:block" />
       <section id="italy-study-pathway" className="hidden overflow-hidden bg-[#071f50] px-5 py-20 text-white md:block">
         <div className="mx-auto max-w-[1350px]">
           <div className="mx-auto max-w-4xl text-center">
@@ -1090,6 +1101,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#071f50" background="#fff7ed" className="hidden md:block" />
       <section id="italy-costs" className="relative bg-[linear-gradient(180deg,#fff7ed_0%,#fff1ea_100%)] px-4 py-8 sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1250px]">
           <SectionHeader eyebrow="Costs" title="Understand costs before you fall in love with the destination." text="Italy can be affordable compared with many popular routes, but students still need realistic budgeting by city, university and scholarship status." />
@@ -1261,6 +1273,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#ff4b12" background="#071f50" />
       <section id="italy-dsu-scholarship" className="bg-[#071f50] px-4 py-9 text-white sm:px-5 md:py-16">
         <div className="mx-auto grid max-w-[1350px] gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
           <div>
@@ -1337,6 +1350,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#071f50" background="#fff7ed" />
       <section id="italy-universities" className="relative overflow-hidden bg-[radial-gradient(circle_at_80%_10%,rgba(255,75,18,0.10),transparent_28%),#fff7ed] px-4 py-9 sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1250px]">
           <SectionHeader
@@ -1429,6 +1443,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#ff4b12" background="#071f50" className="hidden md:block" />
       <section id="italy-scholarship-map" className="hidden bg-[#071f50] px-5 py-16 text-white md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
@@ -1482,6 +1497,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#071f50" background="#fff1ea" className="hidden md:block" />
       <section id="italy-scholarships" className="hidden bg-[#fff1ea] px-5 py-16 md:block">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
@@ -1695,6 +1711,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#ff4b12" background="#071f50" className="hidden md:block" />
       <section id="italy-reality-check" className="hidden bg-[#071f50] px-5 py-16 text-white md:block">
         <div className="mx-auto max-w-[1350px]">
           <div className="mx-auto max-w-4xl text-center">
@@ -1724,6 +1741,7 @@ function ItalyGuide() {
         </div>
       </section>
 
+      <DripDivider color="#071f50" background="#fffbf6" className="hidden md:block" />
       <section id="italy-university-pathways" className="hidden bg-white/52 px-5 py-16 md:block">
         <div className="mx-auto max-w-[1450px]">
           <SectionHeader

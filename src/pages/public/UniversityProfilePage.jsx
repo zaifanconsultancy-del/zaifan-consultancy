@@ -1,23 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  Award,
   BadgeCheck,
   BookOpen,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
-  ChevronDown,
+  CircleAlert,
+  CircleCheck,
   Clock3,
   Coins,
+  Compass,
   ExternalLink,
   FileCheck2,
   GraduationCap,
   Languages,
   MapPin,
+  MessageCircle,
+  Search,
   Sparkles,
   Users,
   Wallet,
@@ -31,7 +36,14 @@ import {
   HonestyNote,
   SectionHeader,
 } from "../../components/public/destinations/DestinationUI";
-import { fadeUp, getUniversityPath } from "../../components/public/destinations/destinationUtils";
+import {
+  CareerPaths,
+  DocumentChecklist,
+  FaqList,
+  JumpNav,
+  YearlyLivingEstimate,
+} from "../../components/public/destinations/DetailSections";
+import { fadeUp, getUniversityPath, iconFor } from "../../components/public/destinations/destinationUtils";
 import NotFoundPage from "./NotFoundPage";
 
 const BAND_STYLES = {
@@ -39,6 +51,22 @@ const BAND_STYLES = {
   Moderate: "bg-amber-50 text-amber-700 ring-amber-100",
   High: "bg-rose-50 text-rose-700 ring-rose-100",
 };
+
+// Position on a 1–5 scale, used only to draw the snapshot meters.
+const TUITION_LEVEL = { Low: 1, Moderate: 3, High: 5 };
+const LIVING_LEVEL = { Low: 1, "Low–Medium": 2, Medium: 3, "Medium–High": 4, High: 5 };
+
+const NAV_ITEMS = [
+  { id: "overview", label: "Overview" },
+  { id: "fit", label: "Fit check" },
+  { id: "careers", label: "Careers" },
+  { id: "costs", label: "Costs & funding" },
+  { id: "requirements", label: "Requirements" },
+  { id: "documents", label: "Document checklist" },
+  { id: "city", label: "City & roadmap" },
+  { id: "next", label: "Next steps" },
+  { id: "faqs", label: "FAQs" },
+];
 
 function monthlyRange(symbol, budget) {
   if (!budget) return null;
@@ -49,36 +77,84 @@ function monthlyRange(symbol, budget) {
 }
 
 function buildFaqs(university, country, city) {
-  const faqs = [
+  const symbol = country.currencySymbol || "";
+  const facts = country.quickFacts;
+  const applyStep = country.timeline?.find((step) => /appl/i.test(step.phase));
+  const housing = country.studentLife?.find((item) => item.icon === "home");
+  const scholarshipNames = country.scholarships.slice(0, 3).map((item) => item.name).join(", ");
+
+  return [
     {
       q: `Is ${university.name} public or private?`,
-      a: `${university.name} is listed as a ${university.type.toLowerCase()} institution. ${university.tuitionNote}.`,
+      a: `${university.name} is listed as a ${university.type.toLowerCase()} institution. Fees: ${university.tuitionNote}.`,
     },
     {
       q: `How much does it cost to study at ${university.name}?`,
-      a: `Fees: ${university.tuitionNote}. Living costs in ${university.city} are ${city?.budget ? monthlyRange(country.currencySymbol || "", city.budget) : `in line with ${country.name}'s typical ${country.quickFacts.living}`}. Always confirm the current fee table for your programme.`,
+      a: `Fees: ${university.tuitionNote}. Living costs in ${university.city} are ${
+        city?.budget ? `around ${monthlyRange(symbol, city.budget)}` : `in line with ${country.name}'s typical ${facts.living}`
+      }. Always confirm the current fee table for your programme.`,
     },
     {
       q: `Does ${university.name} teach in English?`,
-      a: university.english || `Many universities in ${country.name} offer English-taught programmes, especially at master's level. Check the language of your specific programme.`,
+      a:
+        university.english ||
+        `Many universities in ${country.name} offer English-taught programmes, especially at master's level. Check the language of your specific programme.`,
     },
     {
       q: `Can Pakistani students apply to ${university.name}?`,
-      a: `Yes, international students can apply if they meet the programme's academic and language requirements. Pakistani documents usually need IBCC/HEC attestation. We check your eligibility before you apply.`,
+      a: "Yes, international students can apply if they meet the programme's academic and language requirements. Pakistani documents usually need IBCC/HEC attestation. We check your eligibility before you apply.",
     },
     {
-      q: `Which visa do I need?`,
+      q: `When should I apply to ${university.name}?`,
+      a: `Intakes in ${country.name}: ${facts.intakes}. ${
+        applyStep ? `Applications usually run ${applyStep.timing.toLowerCase()}. ${applyStep.text}` : "Deadlines differ by programme, so start 9–12 months ahead."
+      }`,
+    },
+    {
+      q: `Are there scholarships for ${university.name}?`,
+      a: `Students here can usually apply for ${scholarshipNames}.${city?.scholarshipNote ? ` ${city.scholarshipNote}` : ""} Eligibility and deadlines change every year.`,
+    },
+    {
+      q: `Can I work while studying at ${university.name}?`,
+      a: `Student work rules in ${country.name}: ${facts.work}. Part-time income helps, but it should not be your plan for paying tuition or rent at the start.`,
+    },
+    {
+      q: `Where will I live in ${university.city}?`,
+      a: housing
+        ? housing.text
+        : `Most international students share flats or use university residences. Start looking as soon as you are admitted.`,
+    },
+    {
+      q: "Which visa do I need?",
       a: `${country.visa.name}. ${country.visa.summary}`,
     },
+    {
+      q: `What can I do after graduating from ${university.name}?`,
+      a: `After study: ${facts.postStudy}. Your options depend on your degree, language skills and the job market in ${country.name}.`,
+    },
   ];
-  return faqs;
+}
+
+function Meter({ value, max = 5, label, text }) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7a879c]">{label}</p>
+        <p className="text-xs font-black">{text}</p>
+      </div>
+      <div className="mt-2 flex gap-1">
+        {Array.from({ length: max }, (_, index) => (
+          <span key={index} className={`h-2 flex-1 rounded-full ${index < value ? "bg-[#ff4b12]" : "bg-[#fff1ea]"}`} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function UniversityProfilePage() {
   const { countrySlug, universitySlug } = useParams();
   const country = getCountryBySlug(countrySlug);
   const university = country?.universities?.find((item) => item.slug === universitySlug);
-  const [openFaq, setOpenFaq] = useState(0);
 
   useEffect(() => {
     if (!country || !university) return;
@@ -107,11 +183,43 @@ function UniversityProfilePage() {
     .slice(0, 3)
     .map(({ item }) => item);
 
+  const routes = (country.pathways || []).filter((pathway) => pathway.slugs.includes(university.slug));
+
   const suits = [
     `Students targeting ${university.programs.slice(0, 3).join(", ")}`,
     university.popularFor,
-    city ? `Students who'd enjoy ${city.name}: ${city.headline.toLowerCase()}` : `Students happy to live in ${university.city}`,
+    city ? `Students who'd enjoy ${city.name}: ${city.headline.charAt(0).toLowerCase()}${city.headline.slice(1)}` : `Students happy to live in ${university.city}`,
     university.english || "Students ready to check programme language requirements",
+  ];
+
+  // Real caveats only: the city's own trade-offs first, then the country's.
+  const thinkTwice = [...(city?.fit?.consider || []), ...(country.decision?.avoid || [])].slice(0, 5);
+
+  const nextSteps = [
+    {
+      icon: Search,
+      title: "Check your eligibility",
+      text: `Compare your grades and documents with ${country.name}'s entry rules.`,
+      to: `/countries/${country.slug}#requirements`,
+    },
+    {
+      icon: Wallet,
+      title: "Plan the full budget",
+      text: "Tuition, rent and visa funds for your first year in one planner.",
+      to: `/countries/${country.slug}#budget`,
+    },
+    {
+      icon: Award,
+      title: "Find funding",
+      text: `Every scholarship route we track for ${country.name}.`,
+      to: `/scholarships?country=${country.slug}`,
+    },
+    {
+      icon: MessageCircle,
+      title: "Talk it through",
+      text: "A free consultation to check your fit and build the timeline.",
+      to: appointmentPath,
+    },
   ];
 
   const faqs = buildFaqs(university, country, city);
@@ -119,7 +227,7 @@ function UniversityProfilePage() {
   return (
     <main className="cv-sections overflow-hidden bg-[#fff7ed] text-[#071f50]">
       {/* Hero */}
-      <section className="relative isolate overflow-hidden px-4 pb-12 pt-28 sm:px-5 md:pb-16 md:pt-36">
+      <section className="relative isolate overflow-hidden px-4 pb-10 pt-28 sm:px-5 md:pb-14 md:pt-36">
         <div className="pointer-events-none absolute left-[-8%] top-[10%] -z-10 h-[420px] w-[420px] rounded-full bg-orange-300/28 blur-[95px]" />
         <div className="pointer-events-none absolute right-[-6%] top-[0%] -z-10 h-[480px] w-[480px] rounded-full bg-[#ff4b12]/14 blur-[110px]" />
 
@@ -136,9 +244,18 @@ function UniversityProfilePage() {
             <div className="mt-6 flex flex-wrap items-center gap-2">
               <FlagMark country={country} className="h-8 w-12" />
               <span className="rounded-full bg-[#071f50] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white">{university.type}</span>
-              <span className={`rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ring-1 ${BAND_STYLES[university.tuitionBand] || BAND_STYLES.Moderate}`}>
+              <span
+                className={`rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ring-1 ${
+                  BAND_STYLES[university.tuitionBand] || BAND_STYLES.Moderate
+                }`}
+              >
                 {university.tuitionBand} cost
               </span>
+              {routes.map((route) => (
+                <span key={route.title} className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#ff4b12] ring-1 ring-orange-100">
+                  {route.title}
+                </span>
+              ))}
             </div>
 
             <h1 className="mt-5 max-w-4xl text-[2.4rem] font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl md:text-7xl">
@@ -151,7 +268,9 @@ function UniversityProfilePage() {
                   {university.city}, {country.name}
                 </Link>
               ) : (
-                <span>{university.city}, {country.name}</span>
+                <span>
+                  {university.city}, {country.name}
+                </span>
               )}
             </p>
             <p className="mt-5 max-w-2xl text-[15px] font-semibold leading-7 text-[#526178] sm:text-lg sm:leading-8">
@@ -208,8 +327,10 @@ function UniversityProfilePage() {
         </div>
       </section>
 
+      <JumpNav title={`Jump to any part of the ${university.name} profile`} items={NAV_ITEMS} />
+
       {/* Overview + programmes */}
-      <section className="px-4 py-10 sm:px-5 md:py-16">
+      <section id="overview" className="px-4 py-10 sm:px-5 md:py-16">
         <div className="mx-auto grid max-w-[1350px] gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-[30px] bg-white p-6 shadow-[0_20px_55px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 md:p-8">
             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ff4b12]">Why students choose it</p>
@@ -236,10 +357,15 @@ function UniversityProfilePage() {
               ))}
             </div>
             <p className="mt-7 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">
-              <Users size={14} /> Who it suits
+              <Compass size={14} /> Before you pick a programme, check
             </p>
-            <ul className="mt-3 space-y-2.5">
-              {suits.map((item) => (
+            <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
+              {[
+                "Teaching language and test score needed",
+                "Application deadline for your intake",
+                "Exact fee for non-EU students",
+                "Subject match with your previous degree",
+              ].map((item) => (
                 <li key={item} className="flex gap-2.5 text-sm font-semibold leading-6 text-white/85">
                   <BadgeCheck size={17} className="mt-0.5 shrink-0 text-[#ff7b1c]" />
                   {item}
@@ -250,35 +376,111 @@ function UniversityProfilePage() {
         </div>
       </section>
 
+      {/* Fit check */}
+      <section id="fit" className="bg-[linear-gradient(180deg,#fff7ed_0%,#fff1ea_100%)] px-4 py-10 sm:px-5 md:py-16">
+        <div className="mx-auto max-w-[1350px]">
+          <SectionHeader
+            eyebrow="Fit check"
+            title={`Is ${university.name} right for you?`}
+            text="An honest read on who usually does well here and what to weigh up before you apply."
+          />
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            <div className="rounded-[30px] bg-white p-6 shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-emerald-100">
+              <p className="flex items-center gap-2 text-lg font-black">
+                <Users size={19} className="text-emerald-500" /> Great fit if you are…
+              </p>
+              <ul className="mt-4 space-y-2.5">
+                {suits.map((item) => (
+                  <li key={item} className="flex gap-2.5 text-sm font-semibold leading-6 text-[#526178]">
+                    <CircleCheck size={18} className="mt-0.5 shrink-0 text-emerald-500" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-[30px] bg-[#071f50] p-6 text-white shadow-[0_18px_50px_rgba(7,31,80,0.18)]">
+              <p className="text-lg font-black">Think twice if…</p>
+              <ul className="mt-4 space-y-2.5">
+                {thinkTwice.map((item) => (
+                  <li key={item} className="flex gap-2.5 text-sm font-semibold leading-6 text-white/80">
+                    <CircleAlert size={18} className="mt-0.5 shrink-0 text-[#ff7b1c]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-[30px] bg-white p-6 shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-orange-100">
+              <p className="text-lg font-black">Snapshot</p>
+              <div className="mt-5 space-y-5">
+                <Meter label="Tuition level" value={TUITION_LEVEL[university.tuitionBand] || 3} text={university.tuitionBand} />
+                {city?.livingCost && (
+                  <Meter label={`Cost of living in ${city.name}`} value={LIVING_LEVEL[city.livingCost] || 3} text={city.livingCost} />
+                )}
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-2.5">
+                {[
+                  ["Type", university.type],
+                  ["City", university.city],
+                  ["Intakes", facts.intakes],
+                  ["Visa", country.visa.name],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl bg-[#fff7ed] p-3 ring-1 ring-orange-100">
+                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#7a879c]">{label}</p>
+                    <p className="mt-0.5 text-xs font-black leading-5">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <CareerPaths country={country} programs={university.programs} title={`Where ${university.programs[0]} at ${university.name} can lead.`} />
+
       {/* Costs + scholarships */}
-      <DripDivider color="#fff7ed" background="#071f50" />
-      <section className="bg-[#071f50] px-4 py-12 text-white sm:px-5 md:py-16">
+      <DripDivider color="#ff4b12" background="#071f50" />
+      <section id="costs" className="bg-[#071f50] px-4 py-12 text-white sm:px-5 md:py-16">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader tone="dark" eyebrow="Money" title="Costs and funding." text={facts.tuitionNote} />
-          <div className="mt-10 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-[28px] bg-white/[0.06] p-6 ring-1 ring-white/10">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">Tuition at {university.name}</p>
-              <p className="mt-2 text-2xl font-black tracking-[-0.03em]">{university.tuitionNote}</p>
-              {city?.budget && (
-                <>
-                  <p className="mt-6 text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">Living in {city.name}</p>
-                  <p className="mt-2 text-2xl font-black tracking-[-0.03em]">{monthlyRange(symbol, city.budget)}</p>
-                </>
-              )}
-              <Link
-                to={`/countries/${country.slug}#budget`}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#ff4b12] px-5 py-3 text-xs font-black transition hover:bg-[#ff642f]"
-              >
-                Plan your full budget
-                <ArrowRight size={14} strokeWidth={3} />
-              </Link>
+          <div className="mt-10 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="grid gap-5">
+              <div className="rounded-[28px] bg-white/[0.06] p-6 ring-1 ring-white/10">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb36d]">Tuition at {university.name}</p>
+                <p className="mt-2 text-2xl font-black tracking-[-0.03em]">{university.tuitionNote}</p>
+                <p className="mt-3 text-xs font-semibold leading-5 text-white/60">
+                  Living costs: {facts.living}. {facts.livingNote}
+                </p>
+                <Link
+                  to={`/countries/${country.slug}#budget`}
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#ff4b12] px-5 py-3 text-xs font-black transition hover:bg-[#ff642f]"
+                >
+                  Plan your full first year
+                  <ArrowRight size={14} strokeWidth={3} />
+                </Link>
+              </div>
+              <YearlyLivingEstimate country={country} city={city} />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {country.scholarships.slice(0, 4).map((scholarship) => (
-                <div key={scholarship.name} className="rounded-[24px] bg-white/[0.06] p-5 ring-1 ring-white/10">
-                  <span className="rounded-full bg-[#ff4b12] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em]">{scholarship.level}</span>
+            <div className="grid content-start gap-3 sm:grid-cols-2">
+              {country.scholarships.map((scholarship) => (
+                <div key={scholarship.name} className="flex flex-col rounded-[24px] bg-white/[0.06] p-5 ring-1 ring-white/10">
+                  <span className="self-start rounded-full bg-[#ff4b12] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em]">
+                    {scholarship.level}
+                  </span>
                   <p className="mt-3 text-lg font-black leading-6">{scholarship.name}</p>
-                  <p className="mt-2 text-xs font-semibold leading-5 text-white/70">{scholarship.covers}</p>
+                  <p className="mt-1 text-[11px] font-bold text-white/50">{scholarship.provider}</p>
+                  <p className="mt-2 text-xs font-semibold leading-5 text-white/75">{scholarship.covers}</p>
+                  {scholarship.link && (
+                    <a
+                      href={scholarship.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-auto inline-flex items-center gap-1.5 pt-3 text-xs font-black text-[#ffb36d] hover:text-white"
+                    >
+                      Official page <ArrowUpRight size={13} strokeWidth={3} />
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
@@ -289,14 +491,17 @@ function UniversityProfilePage() {
 
       {/* Requirements */}
       {country.requirements && (
-        <section className="px-4 py-10 sm:px-5 md:py-16">
+        <section id="requirements" className="px-4 py-10 sm:px-5 md:py-16">
           <div className="mx-auto max-w-[1350px]">
-            <SectionHeader eyebrow="Requirements" title="What you'll need." text="General entry rules for Pakistani applicants in this country. Your programme page has the final requirements." />
+            <SectionHeader
+              eyebrow="Requirements"
+              title="What you'll need."
+              text="General entry rules for Pakistani applicants in this country. Your programme page has the final requirements."
+            />
             <div className="mt-10 grid gap-5 lg:grid-cols-3">
               {[
                 ["Bachelor's", country.requirements.bachelor],
                 ["Master's", country.requirements.master],
-                ["Documents", country.requirements.documents],
               ].map(([title, items]) => (
                 <div key={title} className="rounded-[28px] bg-white p-6 shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-orange-100">
                   <p className="flex items-center gap-2 text-lg font-black">
@@ -313,13 +518,35 @@ function UniversityProfilePage() {
                   </ul>
                 </div>
               ))}
+              <div className="rounded-[28px] bg-[#fff1ea] p-6 ring-1 ring-orange-100">
+                <p className="flex items-center gap-2 text-lg font-black">
+                  <Languages size={18} className="text-[#ff4b12]" />
+                  Language tests
+                </p>
+                <div className="mt-4 space-y-3">
+                  {(country.requirements.language || []).map((item) => (
+                    <div key={item.test} className="rounded-2xl bg-white p-4 ring-1 ring-orange-100">
+                      <p className="text-sm font-black">{item.test}</p>
+                      <p className="mt-1 text-xs font-semibold leading-5 text-[#61708a]">{item.note}</p>
+                    </div>
+                  ))}
+                </div>
+                {university.english && (
+                  <p className="mt-4 text-xs font-bold leading-5 text-[#526178]">
+                    <span className="font-black text-[#ff4b12]">At {university.name}: </span>
+                    {university.english}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </section>
       )}
 
+      <DocumentChecklist country={country} />
+
       {/* City + roadmap */}
-      <section className="bg-[#fff1ea] px-4 py-10 sm:px-5 md:py-16">
+      <section id="city" className="bg-[#fff1ea] px-4 py-10 sm:px-5 md:py-16">
         <div className="mx-auto grid max-w-[1350px] gap-6 lg:grid-cols-[0.85fr_1.15fr]">
           <div className="rounded-[30px] bg-white p-6 shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 md:p-7">
             <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#ff4b12]">
@@ -349,17 +576,38 @@ function UniversityProfilePage() {
                 Ask us about housing, costs and student life in {university.city}. We'll compare it with other {country.name} cities for you.
               </p>
             )}
+
+            {country.studentLife && (
+              <div className="mt-6 grid gap-2.5 border-t border-orange-100 pt-5">
+                {country.studentLife.slice(0, 3).map((item) => {
+                  const Icon = iconFor(item.icon);
+                  return (
+                    <div key={item.title} className="flex gap-3">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#fff1ea] text-[#ff4b12]">
+                        <Icon size={16} strokeWidth={2.6} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black">{item.title}</p>
+                        <p className="text-xs font-semibold leading-5 text-[#61708a]">{item.text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {country.timeline && (
             <div className="rounded-[30px] bg-white p-6 shadow-[0_18px_50px_rgba(9,31,80,0.07)] ring-1 ring-orange-100 md:p-7">
               <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#ff4b12]">
-                <Clock3 size={14} /> Your roadmap
+                <Clock3 size={14} /> Your roadmap to {university.name}
               </p>
-              <ol className="mt-4 space-y-3">
+              <ol className="relative mt-5 space-y-4 before:absolute before:bottom-4 before:left-4 before:top-4 before:w-0.5 before:bg-orange-100">
                 {country.timeline.map((step, index) => (
-                  <li key={step.phase} className="flex gap-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ff4b12] text-xs font-black text-white">{index + 1}</span>
+                  <li key={step.phase} className="relative flex gap-3">
+                    <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ff4b12] text-xs font-black text-white ring-4 ring-white">
+                      {index + 1}
+                    </span>
                     <div>
                       <p className="text-sm font-black">
                         {step.phase} <span className="font-bold text-[#7a879c]">· {step.timing}</span>
@@ -374,11 +622,49 @@ function UniversityProfilePage() {
         </div>
       </section>
 
+      {/* Next steps */}
+      <section id="next" className="px-4 py-10 sm:px-5 md:py-16">
+        <div className="mx-auto max-w-[1350px]">
+          <SectionHeader eyebrow="Next steps" title={`What to do after reading about ${university.name}.`} />
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {nextSteps.map((step, index) => (
+              <Link
+                key={step.title}
+                to={step.to}
+                className={`group flex flex-col rounded-[28px] p-6 ring-1 transition hover:-translate-y-1 ${
+                  index === nextSteps.length - 1
+                    ? "bg-[#ff4b12] text-white ring-[#ff4b12] shadow-[0_22px_55px_rgba(255,75,18,0.25)]"
+                    : "bg-white ring-orange-100 shadow-[0_18px_50px_rgba(9,31,80,0.07)] hover:shadow-[0_24px_60px_rgba(255,75,18,0.12)]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div
+                    className={`grid h-12 w-12 place-items-center rounded-2xl ${
+                      index === nextSteps.length - 1 ? "bg-white/15" : "bg-[#fff1ea] text-[#ff4b12]"
+                    }`}
+                  >
+                    <step.icon size={22} strokeWidth={2.6} />
+                  </div>
+                  <span className={`text-xs font-black ${index === nextSteps.length - 1 ? "text-white/70" : "text-orange-300"}`}>0{index + 1}</span>
+                </div>
+                <h3 className="mt-5 text-lg font-black tracking-[-0.03em]">{step.title}</h3>
+                <p className={`mt-2 text-sm font-semibold leading-6 ${index === nextSteps.length - 1 ? "text-white/85" : "text-[#61708a]"}`}>{step.text}</p>
+                <ArrowUpRight size={18} strokeWidth={3} className="mt-auto pt-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Similar universities */}
       {similar.length > 0 && (
-        <section className="px-4 py-10 sm:px-5 md:py-16">
+        <section className="px-4 py-10 sm:px-5 md:py-14">
           <div className="mx-auto max-w-[1350px]">
-            <SectionHeader eyebrow="Compare" title="Similar universities." text={`Other ${country.name} universities students usually compare with ${university.name}.`} />
+            <SectionHeader
+              eyebrow="Compare"
+              title="Similar universities."
+              text={`Other ${country.name} universities students usually compare with ${university.name}.`}
+            />
             <div className="mt-10 grid gap-5 md:grid-cols-3">
               {similar.map((item) => (
                 <Link
@@ -393,6 +679,10 @@ function UniversityProfilePage() {
                   <h3 className="mt-4 text-lg font-black leading-6 tracking-[-0.03em] group-hover:text-[#ff4b12]">{item.name}</h3>
                   <p className="mt-1 text-xs font-bold text-[#7a879c]">{item.city}</p>
                   <p className="mt-3 text-sm font-semibold leading-6 text-[#61708a]">{item.popularFor}</p>
+                  <p className="mt-3 text-xs font-bold text-[#526178]">
+                    <span className="font-black text-[#ff4b12]">Fees: </span>
+                    {item.tuitionNote}
+                  </p>
                 </Link>
               ))}
             </div>
@@ -401,36 +691,15 @@ function UniversityProfilePage() {
       )}
 
       {/* FAQs */}
-      <section className="px-4 pb-14 sm:px-5">
+      <section id="faqs" className="px-4 pb-14 pt-6 sm:px-5">
         <div className="mx-auto max-w-[1000px]">
           <SectionHeader eyebrow="FAQs" title={`About ${university.name}.`} />
-          <div className="mt-10 space-y-3">
-            {faqs.map((faq, index) => {
-              const open = openFaq === index;
-              return (
-                <div key={faq.q} className="overflow-hidden rounded-[24px] bg-white shadow-[0_14px_40px_rgba(9,31,80,0.06)] ring-1 ring-orange-100">
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(open ? -1 : index)}
-                    className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left md:px-6"
-                    aria-expanded={open}
-                  >
-                    <span className="text-base font-black tracking-[-0.02em]">{faq.q}</span>
-                    <ChevronDown size={20} className={`shrink-0 text-[#ff4b12] transition ${open ? "rotate-180" : ""}`} />
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {open && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                        <p className="px-5 pb-5 text-sm font-semibold leading-7 text-[#61708a] md:px-6">{faq.a}</p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </div>
+          <FaqList faqs={faqs} />
         </div>
-        <HonestyNote lastReviewed={country.lastReviewed} sources={[...(university.website ? [{ label: `${university.name} (official)`, url: university.website }] : []), ...(country.sources || [])]} />
+        <HonestyNote
+          lastReviewed={country.lastReviewed}
+          sources={[...(university.website ? [{ label: `${university.name} (official)`, url: university.website }] : []), ...(country.sources || [])]}
+        />
       </section>
 
       <ConsultationBand

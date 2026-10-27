@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { serviceCatalog } from "../../data/servicesData";
+import { HangingDrips } from "../../components/public/destinations/DestinationUI";
 
 const MOTION = {
   duration: 0.55,
@@ -460,7 +461,8 @@ export default function ServicesPage() {
             </div>
           </section>
 
-          <section className="mt-14 rounded-[2.6rem] bg-[#071b3a] p-7 text-white">
+          <div className="relative mt-14">
+          <section className="relative rounded-[2.6rem] bg-[#071b3a] p-7 text-white">
             <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
                 <div className="flex items-center gap-3">
@@ -484,6 +486,8 @@ export default function ServicesPage() {
               </Link>
             </div>
           </section>
+          <HangingDrips color="#071b3a" />
+          </div>
         </div>
       </section>
     </main>

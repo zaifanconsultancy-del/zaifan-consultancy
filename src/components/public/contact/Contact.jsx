@@ -12,8 +12,6 @@ import {
   Send,
 } from "lucide-react";
 
-import consultationMascot from "../../../assets/images/contact/contact-mascot-pointing.webp";
-import contactWindow from "../../../assets/images/contact/contact-window-italy.webp";
 import { countryIndex as countryList } from "../../../data/countries/countryIndex";
 
 const MOTION = {
@@ -424,18 +422,7 @@ ${formData.message}
               viewport={{ once: true }}
               className="group relative hidden min-h-[890px] overflow-hidden border-b border-orange-100 p-7 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(7,31,80,0.10)] sm:p-9 lg:block lg:border-b-0 lg:border-r"
             >
-              <img
-                src={contactWindow}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 h-full w-full object-cover object-left opacity-95"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-white/96 via-white/58 to-white/5" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#071f50]/8 via-transparent to-white/10" />
-
-              {/* Covers the blue/orange decorative arc baked into the background image */}
-              <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-[12%] bg-white" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_40%,rgba(255,75,18,0.14),transparent_45%),linear-gradient(180deg,#fff8f1,#fff1e6)]" />
 
               <div className="relative z-20 max-w-[540px]">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-[0.15em] text-orange-600 shadow-sm ring-1 ring-orange-100">
@@ -456,7 +443,7 @@ ${formData.message}
               <div className="absolute left-7 top-[330px] z-30 hidden w-[240px] space-y-3 xl:block">
                 {[
                   ["🎯", "Personalized University Match", "Shortlist universities that fit your profile."],
-                  ["🏆", "Scholarships & Funding", "Understand DSU and regional funding routes."],
+                  ["🏆", "Scholarships & Funding", "Understand DAAD, DSU, CSC, Türkiye Bursları and more."],
                   ["🛂", "Visa & Documentation", "Build a clearer document and visa preparation path."],
                   ["🎧", "End-to-End Support", "Keep the journey connected from shortlist to next steps."],
                 ].map(([icon, title, text]) => (
@@ -474,29 +461,6 @@ ${formData.message}
                   </div>
                 ))}
               </div>
-
-              <img
-                src={consultationMascot}
-                alt="Zaifan consultation mascot pointing toward the study plan form"
-                loading="lazy"
-                decoding="async"
-                className="
-                  absolute
-                  bottom-[72px]
-                  left-[57%]
-                  z-20
-                  w-[62%]
-                  max-w-[500px]
-                  -translate-x-1/2
-                  object-contain
-                  object-bottom
-                  drop-shadow-[0_28px_38px_rgba(7,31,80,0.16)]
-                  lg:left-[58%]
-                  lg:w-[64%]
-                  xl:left-[60%]
-                  xl:w-[66%]
-                "
-              />
 
               <div className="absolute bottom-6 left-7 right-7 z-30 rounded-[1.8rem] bg-[#071f50] p-5 text-white shadow-[0_18px_45px_rgba(7,31,80,0.24)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_24px_60px_rgba(7,31,80,0.32)]">
                 <div className="flex items-center gap-4">

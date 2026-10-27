@@ -30,6 +30,145 @@ body {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Liquid drips (DripDivider / HangingDrips)                                  */
+/* -------------------------------------------------------------------------- */
+
+.zaifan-drip-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: zaifanDripSway 5.5s ease-in-out infinite;
+}
+
+.zaifan-drip-fall {
+  transform-box: fill-box;
+  opacity: 0;
+  animation: zaifanDripFall 5.2s cubic-bezier(0.55, 0, 0.9, 0.4) infinite;
+}
+
+@keyframes zaifanDripSway {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.16);
+  }
+}
+
+@keyframes zaifanDripFall {
+  0%,
+  58% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  64% {
+    transform: translateY(4px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(70px) scale(0.85);
+    opacity: 0;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Home: split-flap board, marquee, boarding pass                             */
+/* -------------------------------------------------------------------------- */
+
+.zaifan-flap-tile {
+  perspective: 300px;
+}
+
+/* The hinge line across the middle of every tile. */
+.zaifan-flap-tile::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.zaifan-flap-char {
+  display: inline-block;
+  transform-origin: 50% 50%;
+  animation: zaifanFlap 0.16s ease-out;
+}
+
+@keyframes zaifanFlap {
+  from {
+    transform: rotateX(-88deg);
+    filter: brightness(0.7);
+  }
+  to {
+    transform: rotateX(0);
+    filter: none;
+  }
+}
+
+.zaifan-marquee {
+  display: flex;
+  width: max-content;
+  animation: zaifanMarquee var(--marquee-duration, 60s) linear infinite;
+}
+
+.zaifan-marquee-reverse {
+  animation-direction: reverse;
+}
+
+.zaifan-marquee-track:hover .zaifan-marquee {
+  animation-play-state: paused;
+}
+
+@keyframes zaifanMarquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* "How it works" story progress: fills, then advances to the next step. */
+.zaifan-story-bar {
+  width: 0;
+  animation-name: zaifanStory;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes zaifanStory {
+  to {
+    width: 100%;
+  }
+}
+
+/* Perforation between a boarding pass and its stub. */
+.zaifan-perforation {
+  background-image: radial-gradient(circle, #fff7ed 3px, transparent 3.5px);
+  background-size: 14px 14px;
+  background-repeat: repeat;
+  background-position: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zaifan-flap-char,
+  .zaifan-marquee {
+    animation: none;
+  }
+}
+
+/* Continuous drip motion is a desktop-only flourish. */
+@media (max-width: 1023px), (prefers-reduced-motion: reduce) {
+  .zaifan-drip-sway {
+    animation: none;
+  }
+
+  .zaifan-drip-fall {
+    display: none;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* Performance                                                                */
 /* -------------------------------------------------------------------------- */
 

@@ -28,6 +28,7 @@ import {
 import {
   ConsultationBand,
   DripDivider,
+  DripPhoto,
   FlagMark,
   HonestyNote,
   SectionHeader,
@@ -44,6 +45,23 @@ import {
   StudentLifeBlock,
 } from "../../components/public/destinations/GuideSections";
 import NotFoundPage from "./NotFoundPage";
+import germanyLandmark from "../../assets/images/country-explorer/germany.webp";
+import germanyCampus from "../../assets/images/universities/germany-university.webp";
+import turkeyLandmark from "../../assets/images/country-explorer/turkey.webp";
+import turkeyCampus from "../../assets/images/universities/turkey-university.webp";
+
+// Photography we have rights to, used once each: a landmark for the hero card
+// and a campus shot above the university list.
+const PHOTOS = {
+  germany: {
+    landmark: { src: germanyLandmark, alt: "Brandenburg Gate in Berlin at sunrise", caption: "Berlin · Brandenburg Gate" },
+    campus: { src: germanyCampus, alt: "Main building of Ludwig-Maximilians-Universität in Munich", caption: "LMU Munich" },
+  },
+  turkey: {
+    landmark: { src: turkeyLandmark, alt: "Istanbul mosque skyline reflected in the water", caption: "Istanbul" },
+    campus: { src: turkeyCampus, alt: "University building above the Bosphorus in Istanbul", caption: "Studying by the Bosphorus" },
+  },
+};
 
 // `needs` hides a jump link when the country has no data for that section.
 const SECTIONS = [
@@ -201,6 +219,7 @@ function CountryGuidePage() {
 
   const facts = country.quickFacts;
   const appointmentPath = getCountryAppointmentPath(country);
+  const photos = PHOTOS[country.slug];
 
   return (
     <main className="cv-sections overflow-hidden bg-[#fff7ed] text-[#071f50]">
@@ -265,6 +284,17 @@ function CountryGuidePage() {
             className="relative overflow-hidden rounded-[30px] bg-white/96 p-5 shadow-[0_24px_65px_rgba(9,31,80,0.10)] ring-1 ring-orange-100 sm:rounded-[34px] sm:p-7"
           >
             <div className="pointer-events-none absolute -right-14 -top-12 h-44 w-44 rounded-full border-[28px] border-[#ff4b12]/7" />
+            {photos?.landmark && (
+              <DripPhoto
+                src={photos.landmark.src}
+                alt={photos.landmark.alt}
+                className="-mx-5 -mt-5 mb-3 h-40 sm:-mx-7 sm:-mt-7 sm:h-52"
+              >
+                <span className="absolute bottom-14 left-5 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#071f50] sm:left-7">
+                  {photos.landmark.caption}
+                </span>
+              </DripPhoto>
+            )}
             <div className="relative flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff4b12]">{country.name} at a glance</p>
@@ -407,6 +437,22 @@ function CountryGuidePage() {
             text="A shortlist of well-known universities we guide students towards. Filter by city, then ask us to check your fit."
           />
 
+          {photos?.campus && (
+            <DripPhoto
+              src={photos.campus.src}
+              alt={photos.campus.alt}
+              className="mt-10 h-56 overflow-hidden rounded-t-[30px] md:h-80"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#071f50]/70 via-[#071f50]/20 to-transparent" />
+              <div className="absolute left-6 top-6 max-w-sm text-white md:left-10 md:top-10">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#ffb36d]">{photos.campus.caption}</p>
+                <p className="mt-2 text-2xl font-black leading-tight tracking-[-0.04em] md:text-4xl">
+                  {country.universities.length} universities, each with a full profile.
+                </p>
+              </div>
+            </DripPhoto>
+          )}
+
           <div className="mt-8 flex flex-wrap justify-center gap-2">
             {["all", ...universityCities].map((city) => (
               <button
@@ -437,7 +483,7 @@ function CountryGuidePage() {
       </section>
 
       {/* Scholarships */}
-      <DripDivider color="#fff7ed" background="#071f50" />
+      <DripDivider color="#ff4b12" background="#071f50" />
       <section id="scholarships" className="bg-[#071f50] px-4 py-12 text-white sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader
@@ -519,7 +565,9 @@ function CountryGuidePage() {
       </section>
 
       <StudentLifeBlock country={country} />
+      {country.realityChecks && <DripDivider color="#ff4b12" background="#071f50" />}
       <RealityCheck country={country} />
+      {country.realityChecks && <DripDivider color="#071f50" background="#fff1ea" />}
 
       {/* Admission + visa */}
       <section id="apply" className="bg-[#fff1ea] px-4 py-10 sm:px-5 md:py-20">

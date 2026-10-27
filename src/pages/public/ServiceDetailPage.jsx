@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import NotFoundPage from "./NotFoundPage.jsx";
+import { DripDivider } from "../../components/public/destinations/DestinationUI";
 import { findServiceBySlug } from "../../data/servicesData.js";
 
 const MOTION = {
@@ -425,6 +426,7 @@ function ServiceDetailPage() {
           </div>
         </section>
 
+        <DripDivider color="#071b3a" background="transparent" />
         <section id="service-prepare" className="px-5 py-16">
           <div className="mx-auto grid max-w-[1350px] gap-6 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="rounded-[2.4rem] bg-orange-50 p-7 ring-1 ring-orange-100">

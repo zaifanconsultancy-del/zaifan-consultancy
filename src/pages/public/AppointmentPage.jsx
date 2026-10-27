@@ -30,7 +30,6 @@ import {
   X,
 } from "lucide-react";
 
-import consultantMascot from "../../assets/images/appointment/consultant-mascot.webp";
 import globeBooks from "../../assets/images/appointment/globe-books.webp";
 import { supabase } from "../../lib/supabaseClient";
 import { countryIndex as countryList, getCountryMetaByName as getCountryByName } from "../../data/countries/countryIndex";
@@ -85,15 +84,18 @@ const timeSlots = [
   "05:00 PM",
 ];
 
-// Italy keeps its established service names (links across the Italy guide
-// still use them); every destination shares the general services.
-const italyConsultationTypes = [
-  "Free Italy Study Plan",
-  "Italy University Selection",
-  "Italy Admission Guidance",
-  "Italy Scholarship Guidance",
-  "Italy Visa Guidance",
-];
+// Every destination gets the same country-specific services (e.g. "Free
+// Germany Study Plan"), followed by the general ones. Italy's guide links
+// already use these names, so they keep pre-selecting correctly.
+function countryConsultationTypes(country) {
+  return [
+    `Free ${country} Study Plan`,
+    `${country} University Selection`,
+    `${country} Admission Guidance`,
+    `${country} Scholarship Guidance`,
+    `${country} Visa Guidance`,
+  ];
+}
 
 const generalConsultationTypes = [
   "Free Consultation",
@@ -106,9 +108,11 @@ const generalConsultationTypes = [
   "SOP & Documentation",
 ];
 
+const destinationNames = new Set(countryList.map((item) => item.name));
+
 function getConsultationTypes(country) {
-  return country === "Italy"
-    ? [...italyConsultationTypes, ...generalConsultationTypes]
+  return destinationNames.has(country)
+    ? [...countryConsultationTypes(country), ...generalConsultationTypes]
     : generalConsultationTypes;
 }
 
@@ -377,7 +381,7 @@ function AppointmentPage() {
 
     const nextData = {
       country_interest: country,
-      consultation_type: matchedService || (country === "Italy" ? "Free Italy Study Plan" : "Free Consultation"),
+      consultation_type: matchedService || (destinationNames.has(country) ? `Free ${country} Study Plan` : "Free Consultation"),
     };
 
     if (nameParam) nextData.full_name = nameParam;
@@ -655,27 +659,24 @@ function AppointmentPage() {
                   </div>
                 </div>
 
-                <div className="relative order-1 min-h-[380px] lg:order-2">
-                  <div className="absolute inset-x-0 bottom-0 mx-auto h-[270px] max-w-[520px] rounded-[3rem] bg-orange-200/20 blur-2xl" />
-
-                  <img
-                    src={consultantMascot}
-                    alt="Study abroad consultant"
-                    width="1024"
-                    height="1024"
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    className="relative z-10 mx-auto mt-8 w-full max-w-[490px] object-contain drop-shadow-[0_24px_35px_rgba(120,70,20,0.18)]"
-                  />
-
-                  <div className="absolute right-0 -top-20 z-20 max-w-[240px] rounded-[1.35rem] bg-white p-4 shadow-[0_20px_45px_rgba(60,35,15,0.14)] ring-1 ring-orange-100 sm:right-2 sm:-top-16">
-                    <p className="text-sm font-extrabold leading-relaxed text-[#54321c]">
-                      We help you choose the right country, university, scholarship path and visa steps.
-                    </p>
-                    <div className="absolute -bottom-2 right-5 grid h-5 w-5 place-items-center rounded-full bg-orange-500 text-white">
-                      <Check size={12} strokeWidth={4} />
-                    </div>
+                <div className="relative order-1 lg:order-2">
+                  <div className="rounded-[2rem] bg-[#071f50] p-7 text-white shadow-[0_24px_60px_rgba(7,31,80,0.22)]">
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#ffb36d]">In your free consultation</p>
+                    <ul className="mt-5 space-y-3">
+                      {[
+                        "Which countries fit your grades and budget",
+                        "A realistic university shortlist",
+                        "Scholarship routes you can actually apply for",
+                        "Your document and visa timeline",
+                      ].map((item) => (
+                        <li key={item} className="flex items-start gap-3 text-sm font-bold leading-6 text-white/85">
+                          <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-orange-500 text-white">
+                            <Check size={12} strokeWidth={4} />
+                          </span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </div>

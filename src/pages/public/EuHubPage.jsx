@@ -76,7 +76,7 @@ function EuHubPage() {
       </section>
 
       {/* Compare EU destinations */}
-      <DripDivider color="#fff7ed" background="#071f50" />
+      <DripDivider color="#ff4b12" background="#071f50" />
       <section className="bg-[#071f50] px-4 py-12 text-white sm:px-5 md:py-20">
         <div className="mx-auto max-w-[1350px]">
           <SectionHeader

@@ -55,6 +55,20 @@ const ICONS = {
   wallet: Wallet,
 };
 
+// Budget planners interpolate between each city's low and high monthly figures.
+export const LIFESTYLES = [
+  { id: "saver", label: "Saver", factor: 0 },
+  { id: "balanced", label: "Balanced", factor: 0.5 },
+  { id: "comfort", label: "Comfort", factor: 1 },
+];
+
+export const BUDGET_LABELS = {
+  rent: "Rent",
+  food: "Food & groceries",
+  transport: "Transport",
+  other: "Insurance, phone & personal",
+};
+
 export function iconFor(key) {
   return ICONS[key] || Sparkles;
 }

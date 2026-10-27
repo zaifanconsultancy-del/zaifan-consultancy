@@ -64,24 +64,45 @@ const DRIPS = [
   { x: 1360, w: 40, l: 48 },
 ];
 
+// Drips that keep slowly stretching, and the ones that let a droplet fall.
+const SWAYING = new Set([150, 390, 660, 880, 1140]);
+const FALLING = new Set([390, 880]);
+
+export const ZAIFAN_ORANGE = "#ff4b12";
+export const ZAIFAN_NAVY = "#071f50";
+
+const DARK_BACKGROUNDS = new Set([ZAIFAN_NAVY, ZAIFAN_ORANGE, "#071b3a"]);
+
 /**
- * Liquid edge that "drips" from the section above into the next one.
- * `color` is the colour of the section above; `background` the one below.
+ * The edge between two sections: the section above pours into the one below,
+ * with a few drips stretching and shedding droplets on desktop.
+ *
+ * `color` is the liquid and `background` the section it lands on. Going into a
+ * navy or orange section, the liquid is always the light `above` colour (cream
+ * dripping into navy), whatever `color` says; that is the look the site is
+ * built around.
  */
-export function DripDivider({ color = "#071f50", background = "#fff7ed", className = "" }) {
+export function DripDivider({ color: requestedColor = ZAIFAN_ORANGE, background = ZAIFAN_NAVY, above = "#fff7ed", className = "" }) {
   const filterId = `drip-goo-${useId().replace(/:/g, "")}`;
+  const color = DARK_BACKGROUNDS.has(background.toLowerCase()) ? above : requestedColor;
 
   return (
-    <div aria-hidden="true" className={`relative h-14 w-full overflow-hidden sm:h-20 ${className}`} style={{ background }}>
-      <svg viewBox="0 0 1440 96" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+    <div
+      aria-hidden="true"
+      className={`relative -mt-px h-16 w-full overflow-hidden sm:h-24 ${className}`}
+      // The solid top rows guarantee no hairline between the band and the section above.
+      style={{ background: `linear-gradient(to bottom, ${color} 0 6px, ${background} 6px)` }}
+    >
+      <svg viewBox="0 0 1440 112" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
         <defs>
-          <filter id={filterId}>
+          {/* A generous filter region stops the blur from fading the band's top edge. */}
+          <filter id={filterId} x="-5%" y="-50%" width="110%" height="200%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
             <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
           </filter>
         </defs>
         <g filter={`url(#${filterId})`} fill={color}>
-          <rect x="-20" y="-20" width="1480" height="34" />
+          <rect x="-20" y="-40" width="1480" height="56" />
           {DRIPS.map((drip) => (
             <motion.g
               key={drip.x}
@@ -91,8 +112,19 @@ export function DripDivider({ color = "#071f50", background = "#fff7ed", classNa
               viewport={{ once: true, amount: 0.6 }}
               transition={{ duration: 1.1, ease: [0.6, 0, 0.3, 1], delay: (drip.x % 7) * 0.04 }}
             >
-              <rect x={drip.x} y="0" width={drip.w} height={drip.l} rx={drip.w / 2} />
-              <circle cx={drip.x + drip.w / 2} cy={drip.l} r={drip.w * 0.62} />
+              <g className={SWAYING.has(drip.x) ? "zaifan-drip-sway" : undefined} style={{ animationDelay: `${(drip.x % 5) * -0.9}s` }}>
+                <rect x={drip.x} y="0" width={drip.w} height={drip.l} rx={drip.w / 2} />
+                <circle cx={drip.x + drip.w / 2} cy={drip.l} r={drip.w * 0.62} />
+              </g>
+              {FALLING.has(drip.x) && (
+                <circle
+                  className="zaifan-drip-fall"
+                  cx={drip.x + drip.w / 2}
+                  cy={drip.l + drip.w * 0.3}
+                  r={drip.w * 0.26}
+                  style={{ animationDelay: `${(drip.x % 3) * 1.7}s` }}
+                />
+              )}
             </motion.g>
           ))}
         </g>
@@ -184,24 +216,135 @@ export function FlagMark({ country, className = "h-8 w-12" }) {
   );
 }
 
+// Drips along DripPhoto's bottom edge, in pixels from the left. Generated once
+// with a fixed pattern so they look hand-poured but never shift; enough to
+// cover very wide screens (anything past the photo's width is simply unused).
+const PHOTO_DRIPS = Array.from({ length: 40 }, (_, index) => ({
+  x: index * 74 + ((index * 37) % 23),
+  w: 18 + ((index * 13) % 16),
+  l: 14 + ((index * 29) % 22),
+}));
+
+/**
+ * A photo whose bottom edge melts into liquid drips, matching DripDivider.
+ * Drawn as SVG so the mask can use the same "goo" filter as the dividers.
+ */
+export function DripPhoto({ src, alt, className = "", children }) {
+  const id = useId().replace(/:/g, "");
+
+  return (
+    <div className={`relative ${className}`}>
+      <svg className="absolute inset-0 h-full w-full" role="img" aria-label={alt}>
+        <defs>
+          <filter id={`photo-goo-${id}`}>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
+          </filter>
+          <mask id={`photo-mask-${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+            <rect width="100%" height="100%" fill="white" />
+            {/* Nested at the bottom edge: everything below uses negative y. */}
+            <svg y="100%" overflow="visible">
+              <rect x="-20" y="-60" width="4000" height="60" fill="black" />
+              <g filter={`url(#photo-goo-${id})`} fill="white">
+                <rect x="-20" y="-80" width="4000" height="24" />
+                {PHOTO_DRIPS.map((drip) => (
+                  <g key={drip.x}>
+                    <rect x={drip.x} y="-64" width={drip.w} height={drip.l + 8} rx={drip.w / 2} />
+                    <circle cx={drip.x + drip.w / 2} cy={-56 + drip.l} r={drip.w * 0.62} />
+                  </g>
+                ))}
+              </g>
+            </svg>
+          </mask>
+        </defs>
+        <image href={src} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" mask={`url(#photo-mask-${id})`} />
+      </svg>
+      {children}
+    </div>
+  );
+}
+
+// Hand-placed drips for the 1200 x 60 HangingDrips canvas.
+const HANGING = [
+  { x: 110, w: 34, l: 22 },
+  { x: 270, w: 22, l: 32 },
+  { x: 490, w: 40, l: 16 },
+  { x: 700, w: 26, l: 34 },
+  { x: 880, w: 32, l: 24 },
+  { x: 1050, w: 22, l: 30 },
+];
+
+/**
+ * Drips hanging off the bottom edge of a card. Place it inside a `relative`
+ * wrapper together with the card. It spans 6%–94% of the card width, and the
+ * default fill matches ConsultationBand's orange gradient at every point.
+ */
+export function HangingDrips({ color, className = "" }) {
+  const id = useId().replace(/:/g, "");
+  const filterId = `hang-goo-${id}`;
+  const gradientId = `hang-fill-${id}`;
+
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 1200 60"
+      preserveAspectRatio="none"
+      className={`pointer-events-none absolute inset-x-[6%] top-full h-10 -translate-y-px sm:h-[60px] ${className}`}
+    >
+      <defs>
+        <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="-82" y1="0" x2="1282" y2="0">
+          <stop offset="0" stopColor="#ff7b1c" />
+          <stop offset="0.5" stopColor={ZAIFAN_ORANGE} />
+          <stop offset="1" stopColor="#ff7b1c" />
+        </linearGradient>
+        <filter id={filterId} x="-5%" y="-20%" width="110%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
+        </filter>
+      </defs>
+      <g filter={`url(#${filterId})`} fill={color || `url(#${gradientId})`}>
+        <rect x="-20" y="-20" width="1240" height="24" />
+        {HANGING.map((drip) => (
+          <motion.g
+            key={drip.x}
+            style={{ originY: "0px" }}
+            initial={{ scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true, amount: 0.8 }}
+            transition={{ duration: 1.3, ease: [0.6, 0, 0.3, 1], delay: 0.25 + (drip.x % 5) * 0.08 }}
+          >
+            <g className="zaifan-drip-sway" style={{ animationDelay: `${(drip.x % 7) * -0.8}s` }}>
+              <rect x={drip.x} y="0" width={drip.w} height={drip.l} rx={drip.w / 2} />
+              <circle cx={drip.x + drip.w / 2} cy={drip.l} r={drip.w * 0.62} />
+            </g>
+          </motion.g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
 export function ConsultationBand({ title, text, to, label = "Book a free consultation" }) {
   return (
-    <section className="px-4 pb-20 sm:px-5 md:pb-24">
-      <div className="relative mx-auto max-w-[1350px] overflow-hidden rounded-[34px] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-7 text-white shadow-[0_30px_90px_rgba(255,75,18,0.28)] sm:rounded-[42px] md:p-12">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border-[36px] border-white/10" />
-        <div className="pointer-events-none absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-amber-300/30 blur-3xl" />
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-black leading-[1] tracking-[-0.05em] md:text-5xl">{title}</h2>
-            <p className="mt-3 text-sm font-semibold leading-7 text-white/85 md:text-base">{text}</p>
+    <section className="px-4 pb-24 sm:px-5 md:pb-28">
+      <div className="relative mx-auto max-w-[1350px]">
+        <HangingDrips />
+        <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-7 text-white shadow-[0_30px_90px_rgba(255,75,18,0.28)] sm:rounded-[42px] md:p-12">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border-[36px] border-white/10" />
+          <div className="pointer-events-none absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-amber-300/30 blur-3xl" />
+          <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl font-black leading-[1] tracking-[-0.05em] md:text-5xl">{title}</h2>
+              <p className="mt-3 text-sm font-semibold leading-7 text-white/85 md:text-base">{text}</p>
+            </div>
+            <Link
+              to={to}
+              className="inline-flex shrink-0 items-center justify-center gap-3 rounded-full bg-[#071f50] px-7 py-4 text-sm font-black text-white shadow-[0_18px_40px_rgba(7,31,80,0.35)] transition hover:-translate-y-1 hover:bg-[#0b2a6b] md:px-9 md:py-5 md:text-base"
+            >
+              {label}
+              <ArrowRight size={20} strokeWidth={3} />
+            </Link>
           </div>
-          <Link
-            to={to}
-            className="inline-flex shrink-0 items-center justify-center gap-3 rounded-full bg-[#071f50] px-7 py-4 text-sm font-black text-white shadow-[0_18px_40px_rgba(7,31,80,0.35)] transition hover:-translate-y-1 hover:bg-[#0b2a6b] md:px-9 md:py-5 md:text-base"
-          >
-            {label}
-            <ArrowRight size={20} strokeWidth={3} />
-          </Link>
         </div>
       </div>
     </section>

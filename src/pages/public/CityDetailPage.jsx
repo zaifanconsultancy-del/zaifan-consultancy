@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 
 import NotFoundPage from "./NotFoundPage.jsx";
+import { DripDivider } from "../../components/public/destinations/DestinationUI";
 import { findItalianCityBySlug } from "../../data/italianCities";
 import { italianUniversities } from "../../data/italianUniversities";
 
@@ -721,6 +722,7 @@ function CityDetailPage() {
           </div>
         </section>
 
+        <DripDivider color="#ff4b12" background="#071f50" />
         <section id="city-scholarships" className="relative overflow-hidden bg-[#071f50] px-5 py-20 text-white">
           <div className="mx-auto grid max-w-[1350px] gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div>
@@ -767,6 +769,7 @@ function CityDetailPage() {
           </div>
         </section>
 
+        <DripDivider color="#071f50" background="#fff7ed" />
         <section id="city-life" className="px-5 py-20">
           <div className="mx-auto max-w-[1350px]">
             <SectionHeader

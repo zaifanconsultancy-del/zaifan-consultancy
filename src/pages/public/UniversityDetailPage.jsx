@@ -34,6 +34,7 @@ import {
   italianUniversities,
 } from "../../data/italianUniversities";
 import NotFoundPage from "./NotFoundPage.jsx";
+import { DripDivider } from "../../components/public/destinations/DestinationUI";
 
 const MOTION = {
   duration: 0.55,
@@ -849,6 +850,7 @@ function UniversityDetailPage() {
           </div>
         </section>
 
+        <DripDivider color="#071f50" background="transparent" />
         <section id="university-requirements" className="relative px-4 py-16 sm:px-6 lg:px-10">
           <div className="mx-auto grid max-w-[1500px] gap-5 lg:grid-cols-2">
             <ContentCard title="General admission requirements" icon={GraduationCap}>
