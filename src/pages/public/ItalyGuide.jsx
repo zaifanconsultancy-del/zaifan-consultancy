@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 
 import { italianUniversities } from "../../data/italianUniversities";
+import { italyData } from "../../data/countries/italy";
 import { DripDivider, DripPhoto } from "../../components/public/destinations/DestinationUI";
 import colosseum from "../../assets/images/country-explorer/italy.webp";
 import { italianCities } from "../../data/italianCities";
@@ -513,14 +514,7 @@ const cityGoals = [
   { goal: "Languages & Tourism", city: "Venice", slug: "venice", icon: Globe2, emoji: "🌍", reason: "Languages, tourism, business and international study in a uniquely global setting." },
 ];
 
-const realityChecks = [
-  { expectation: "Italy is cheap everywhere", reality: "Milan, Rome and Venice can create real budget pressure. City choice matters." },
-  { expectation: "DSU is automatic", reality: "DSU depends on eligibility, ranking, documents, regional portals and deadlines." },
-  { expectation: "All Italian cities feel the same", reality: "Milan, Bologna, Padua, Rome, Turin and Pisa give very different student lives." },
-  { expectation: "Part-time work solves everything", reality: "Work can help, but the core plan needs tuition, rent, food, documents and backup budget." },
-  { expectation: "University ranking is enough", reality: "Course fit, language, deadlines, scholarship route and city comfort matter just as much." },
-  { expectation: "Documents can wait", reality: "Late income, property, family, translation or visa documents can damage the whole route." },
-];
+const realityChecks = italyData.realityChecks;
 
 const pathwayUniversityGoals = [
   { title: "Engineering Route", icon: Building2, slugs: ["politecnico-di-milano", "politecnico-di-torino", "university-of-pisa"] },

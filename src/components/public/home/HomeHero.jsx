@@ -106,12 +106,12 @@ function HomeHero({ stats }) {
               Book a free consultation
               <ArrowRight size={19} strokeWidth={3} />
             </Link>
-            <a
-              href="#match"
+            <Link
+              to="/countries"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-black ring-1 ring-orange-100 transition hover:-translate-y-1 hover:text-[#ff4b12] sm:text-base"
             >
               Find my country
-            </a>
+            </Link>
           </div>
 
           <dl className="mx-auto mt-10 grid max-w-xl grid-cols-4 gap-2 lg:mx-0">

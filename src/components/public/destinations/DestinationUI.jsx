@@ -276,8 +276,10 @@ const HANGING = [
 
 /**
  * Drips hanging off the bottom edge of a card. Place it inside a `relative`
- * wrapper together with the card. It spans 6%–94% of the card width, and the
- * default fill matches ConsultationBand's orange gradient at every point.
+ * wrapper together with the card, rendered before it: the strip the drips hang
+ * from tucks up behind the card's bottom edge so they pour straight out of it.
+ * It spans 6%–94% of the card width (10%–90% on phones, clear of the rounded
+ * corners), and the default fill matches ConsultationBand's orange gradient.
  */
 export function HangingDrips({ color, className = "" }) {
   const id = useId().replace(/:/g, "");
@@ -289,7 +291,7 @@ export function HangingDrips({ color, className = "" }) {
       aria-hidden="true"
       viewBox="0 0 1200 60"
       preserveAspectRatio="none"
-      className={`pointer-events-none absolute inset-x-[6%] top-full h-10 -translate-y-px sm:h-[60px] ${className}`}
+      className={`pointer-events-none absolute inset-x-[10%] top-full h-10 -translate-y-2 sm:inset-x-[6%] sm:h-[60px] sm:-translate-y-2.5 ${className}`}
     >
       <defs>
         <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="-82" y1="0" x2="1282" y2="0">
@@ -328,7 +330,6 @@ export function ConsultationBand({ title, text, to, label = "Book a free consult
   return (
     <section className="px-4 pb-24 sm:px-5 md:pb-28">
       <div className="relative mx-auto max-w-[1350px]">
-        <HangingDrips />
         <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-[#ff7b1c] via-[#ff4b12] to-[#ff7b1c] p-7 text-white shadow-[0_30px_90px_rgba(255,75,18,0.28)] sm:rounded-[42px] md:p-12">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border-[36px] border-white/10" />
           <div className="pointer-events-none absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-amber-300/30 blur-3xl" />

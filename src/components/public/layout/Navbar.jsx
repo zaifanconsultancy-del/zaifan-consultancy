@@ -126,7 +126,7 @@ function Navbar() {
     const path = location.pathname;
     if (path === "/") return "Home";
     if (path === "/countries") return "Countries";
-    if (path.startsWith("/universities")) return "Universities";
+    if (path.startsWith("/universities") || path.includes("/universities/")) return "Universities";
     if (path.startsWith("/countries/") || path.startsWith("/scholarships")) return "Destinations";
     if (path.startsWith("/services")) return "Services";
     if (path.startsWith("/contact")) return "Contact";

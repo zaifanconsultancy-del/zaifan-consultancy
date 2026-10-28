@@ -5,7 +5,7 @@ export const USD_PER_UNIT = { "€": 1.1, $: 1, "¥": 0.14 };
 
 // Italy's city budgets live in its own hand-built guide, so these monthly
 // ranges (EUR, saver → comfort) are kept consistent with that guide.
-const ITALY_CITY_BUDGETS = [
+export const ITALY_CITY_BUDGETS = [
   { slug: "milan", name: "Milan", low: 1000, high: 1600 },
   { slug: "rome", name: "Rome", low: 950, high: 1500 },
   { slug: "florence", name: "Florence", low: 900, high: 1400 },

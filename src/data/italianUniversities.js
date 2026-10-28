@@ -1,16 +1,11 @@
-const universityImageModules = import.meta.glob(
-  "../assets/images/universities/*.{jpg,jpeg,webp}",
-  { eager: true, import: "default" }
-);
+// Campus photos are shared with the university finder (see data/universities).
+const campusPhotos = import.meta.glob("../assets/images/campus/*.webp", {
+  eager: true,
+  import: "default",
+});
 
 function getUniversityImage(slug) {
-  const match = Object.entries(universityImageModules).find(([path]) => {
-    const filename = path.split("/").pop() || "";
-    const basename = filename.replace(/\.(jpg|jpeg|png|webp)$/i, "");
-    return basename === slug;
-  });
-
-  return match?.[1] || "";
+  return campusPhotos[`../assets/images/campus/${slug}.webp`] || "";
 }
 
 export const italianUniversities = [

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
-import { ArrowRight, ArrowUp, Globe2, Mail, MapPin, Phone, Plane } from "lucide-react";
+import { ArrowRight, ArrowUp, Mail, MapPin, Phone, Plane } from "lucide-react";
 
 // The logo with its navy lettering turned white, for dark backgrounds.
 import logo from "../../../assets/images/brand/logo-light.webp";
@@ -39,7 +39,6 @@ const CONTACTS = [
   { icon: FaWhatsapp, label: "WhatsApp", value: "+92 330 5718131", href: WHATSAPP_LINK, external: true },
   { icon: Mail, label: "Email", value: "zaifanconsultancy@gmail.com", href: "mailto:zaifanconsultancy@gmail.com" },
   { icon: MapPin, label: "Office", value: "Peshawar, Pakistan" },
-  { icon: Globe2, label: "Website", value: "zaifanconsultancy.com", href: "https://zaifanconsultancy.com", external: true },
 ];
 
 const WORDMARK = "ZAIFAN".split("");

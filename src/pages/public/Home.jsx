@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
 import HomeHero from "../../components/public/home/HomeHero";
-import DestinationCards from "../../components/public/home/DestinationCards";
-import MatchQuiz from "../../components/public/home/MatchQuiz";
+import DestinationStrip from "../../components/public/home/DestinationStrip";
+import ServicesBento from "../../components/public/home/ServicesBento";
 import ScholarshipFlip from "../../components/public/home/ScholarshipFlip";
-import ReadyChecklist from "../../components/public/home/ReadyChecklist";
+import RealityCheck from "../../components/public/home/RealityCheck";
 import HowItWorks from "../../components/public/home/HowItWorks";
 import PassForm from "../../components/public/home/PassForm";
 import Footer from "../../components/public/layout/Footer";
@@ -46,10 +46,11 @@ const STATS = [
   { label: "First consultation", value: "Free" },
 ];
 
-// Each section answers one question a student has: where can I go, which
-// country suits me, can I get funding, what should I prepare, how does it work
+// Each section answers one question a student has: where can I go, what will
+// you do for me, can I get funding, what is it really like, how does it work
 // and how do I start.
-// Light sections get liquid drips; dark sections rise in with a rounded top.
+// Backgrounds alternate cream with a dark colour, and the dark ones take turns
+// (navy, orange, navy) so no colour repeats; a drip marks every change.
 function Home() {
   useEffect(() => {
     document.title = "Zaifan Consultancy | Study Abroad Guidance in Pakistan";
@@ -61,16 +62,16 @@ function Home() {
 
       <main className="cv-sections relative">
         <DripDivider background={ZAIFAN_NAVY} />
-        <DestinationCards universityNames={UNIVERSITY_NAMES} />
+        <DestinationStrip universityNames={UNIVERSITY_NAMES} />
         <DripDivider color={ZAIFAN_NAVY} background="#fff7ed" />
-        <MatchQuiz />
-        <DripDivider background={ZAIFAN_NAVY} />
-        <ScholarshipFlip scholarships={SCHOLARSHIPS} />
-        <DripDivider color={ZAIFAN_NAVY} background="#fff7ed" />
-        <ReadyChecklist />
+        <ServicesBento />
         <DripDivider background={ZAIFAN_ORANGE} />
-        <HowItWorks />
+        <ScholarshipFlip scholarships={SCHOLARSHIPS} />
         <DripDivider color={ZAIFAN_ORANGE} background="#fff7ed" />
+        <RealityCheck />
+        <DripDivider background={ZAIFAN_NAVY} />
+        <HowItWorks />
+        <DripDivider color={ZAIFAN_NAVY} background="#fff7ed" />
         <PassForm />
       </main>
 

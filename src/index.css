@@ -128,20 +128,6 @@ body {
   }
 }
 
-/* "How it works" story progress: fills, then advances to the next step. */
-.zaifan-story-bar {
-  width: 0;
-  animation-name: zaifanStory;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-
-@keyframes zaifanStory {
-  to {
-    width: 100%;
-  }
-}
-
 /* Perforation between a boarding pass and its stub. */
 .zaifan-perforation {
   background-image: radial-gradient(circle, #fff7ed 3px, transparent 3.5px);
@@ -150,9 +136,100 @@ body {
   background-position: center;
 }
 
+.zaifan-spin-slow {
+  animation: zaifanSpin 40s linear infinite;
+}
+
+/* Countries radar: the sweep goes round every 6s, and each country's ping is
+   delayed by its angle so it fires just as the sweep passes over it. */
+.zaifan-radar-sweep {
+  animation: zaifanSpin 6s linear infinite;
+}
+
+.zaifan-radar-ping {
+  animation: zaifanPing 6s ease-out infinite;
+}
+
+@keyframes zaifanPing {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  18%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Baggage claim: each suitcase bobs a little as it rides the belt. */
+.zaifan-bag-bob {
+  animation: zaifanBob 1.8s ease-in-out infinite;
+}
+
+@keyframes zaifanBob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes zaifanSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Document checklist: only the letterhead pages print, one file per page. */
+#zaifan-print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body > *:not(#zaifan-print-root) {
+    display: none !important;
+  }
+
+  #zaifan-print-root {
+    display: block;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  #zaifan-print-root .zaifan-sheet + .zaifan-sheet {
+    break-before: page;
+  }
+
+  #zaifan-print-root .zaifan-sheet-group h4 {
+    break-after: avoid;
+  }
+
+  #zaifan-print-root li {
+    break-inside: avoid;
+  }
+}
+
+/* Price ladder: a city dot lights up when it fits the budget. */
+.zaifan-ladder-dot {
+  transition: background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .zaifan-flap-char,
-  .zaifan-marquee {
+  .zaifan-marquee,
+  .zaifan-spin-slow,
+  .zaifan-radar-sweep,
+  .zaifan-radar-ping,
+  .zaifan-bag-bob {
     animation: none;
   }
 }
