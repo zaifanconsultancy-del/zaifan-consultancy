@@ -86,9 +86,17 @@ function useHoverMenu() {
     setOpen(false);
   }, []);
 
+  // Clicking (or tapping) the label opens the menu; it never toggles shut, since
+  // the mouse may already have opened it on the way in.
+  const show = useCallback(() => {
+    window.clearTimeout(timer.current);
+    setOpen(true);
+  }, []);
+
   return {
     open,
     close,
+    show,
     hoverProps: {
       onMouseEnter: () => schedule(true, 120),
       onMouseLeave: () => schedule(false, 200),
@@ -149,6 +157,13 @@ function Navbar() {
     setMenuOpen(false);
     setMobileSection(null);
   }, [location.pathname, closeMenus]);
+
+  // Menus opened by a click (keyboard or touch) close with Escape.
+  useEffect(() => {
+    const onKey = (event) => event.key === "Escape" && closeMenus();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [closeMenus]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -283,7 +298,9 @@ function Navbar() {
                         type="button"
                         className={className}
                         aria-expanded={menu.open}
-                        onClick={() => goToRoute(link.menu === "destinations" ? "/countries" : "/services")}
+                        aria-haspopup="true"
+                        // Destinations is a menu of country guides; it must not land on /countries like "Countries" does.
+                        onClick={() => (link.menu === "destinations" ? menu.show() : goToRoute("/services"))}
                       >
                         {content}
                       </button>

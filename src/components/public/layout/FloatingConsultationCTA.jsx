@@ -40,9 +40,10 @@ function FloatingConsultationCTA() {
 
   const routeHidden = useMemo(
     () =>
-      // Home and Countries have their own enquiry form / compare bar at the bottom.
+      // Home, Countries and the country guides have their own enquiry form or step dock at the bottom.
       location.pathname === "/" ||
       location.pathname === "/countries" ||
+      /^\/countries\/(?!european-union$)[^/]+\/?$/.test(location.pathname) ||
       hiddenRoutes.some((route) => location.pathname.startsWith(route)),
     [location.pathname]
   );

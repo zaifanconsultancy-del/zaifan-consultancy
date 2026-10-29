@@ -3,7 +3,7 @@
 // figures live on each country guide.
 export const USD_PER_UNIT = { "€": 1.1, $: 1, "¥": 0.14 };
 
-// Italy's city budgets live in its own hand-built guide, so these monthly
+// Italy's city budgets are split by item in deep/italyGuide.js; these monthly
 // ranges (EUR, saver → comfort) are kept consistent with that guide.
 export const ITALY_CITY_BUDGETS = [
   { slug: "milan", name: "Milan", low: 1000, high: 1600 },

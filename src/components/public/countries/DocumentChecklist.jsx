@@ -226,8 +226,14 @@ function ChecklistSheet({ country, stage, level, ticked, studentName, onToggle, 
   );
 }
 
+// Country guides link here with ?checklist=germany to open that country's list.
+function linkedCountry() {
+  const slug = new URLSearchParams(window.location.search).get("checklist");
+  return DOCUMENT_CHECKLISTS[slug] ? slug : null;
+}
+
 function DocumentChecklist({ picks }) {
-  const [chosen, setChosen] = useState(null);
+  const [chosen, setChosen] = useState(linkedCountry);
   const [level, setLevel] = useState("masters");
   const [stageId, setStageId] = useState(null);
   const [ticks, setTicks] = useState(loadTicks);

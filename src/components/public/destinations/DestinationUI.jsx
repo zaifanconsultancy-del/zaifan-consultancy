@@ -216,54 +216,6 @@ export function FlagMark({ country, className = "h-8 w-12" }) {
   );
 }
 
-// Drips along DripPhoto's bottom edge, in pixels from the left. Generated once
-// with a fixed pattern so they look hand-poured but never shift; enough to
-// cover very wide screens (anything past the photo's width is simply unused).
-const PHOTO_DRIPS = Array.from({ length: 40 }, (_, index) => ({
-  x: index * 74 + ((index * 37) % 23),
-  w: 18 + ((index * 13) % 16),
-  l: 14 + ((index * 29) % 22),
-}));
-
-/**
- * A photo whose bottom edge melts into liquid drips, matching DripDivider.
- * Drawn as SVG so the mask can use the same "goo" filter as the dividers.
- */
-export function DripPhoto({ src, alt, className = "", children }) {
-  const id = useId().replace(/:/g, "");
-
-  return (
-    <div className={`relative ${className}`}>
-      <svg className="absolute inset-0 h-full w-full" role="img" aria-label={alt}>
-        <defs>
-          <filter id={`photo-goo-${id}`}>
-            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
-          </filter>
-          <mask id={`photo-mask-${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
-            <rect width="100%" height="100%" fill="white" />
-            {/* Nested at the bottom edge: everything below uses negative y. */}
-            <svg y="100%" overflow="visible">
-              <rect x="-20" y="-60" width="4000" height="60" fill="black" />
-              <g filter={`url(#photo-goo-${id})`} fill="white">
-                <rect x="-20" y="-80" width="4000" height="24" />
-                {PHOTO_DRIPS.map((drip) => (
-                  <g key={drip.x}>
-                    <rect x={drip.x} y="-64" width={drip.w} height={drip.l + 8} rx={drip.w / 2} />
-                    <circle cx={drip.x + drip.w / 2} cy={-56 + drip.l} r={drip.w * 0.62} />
-                  </g>
-                ))}
-              </g>
-            </svg>
-          </mask>
-        </defs>
-        <image href={src} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" mask={`url(#photo-mask-${id})`} />
-      </svg>
-      {children}
-    </div>
-  );
-}
-
 // Hand-placed drips for the 1200 x 60 HangingDrips canvas.
 const HANGING = [
   { x: 110, w: 34, l: 22 },
