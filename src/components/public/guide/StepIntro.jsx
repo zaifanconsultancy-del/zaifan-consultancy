@@ -36,20 +36,20 @@ const TONES = {
  * headline and one line on how to use the section, so visitors always know
  * where they are and what to do.
  */
-function StepIntro({ step, title, accent, text, howTo, tone = "light" }) {
+function StepIntro({ step, title, accent, text, howTo, tone = "light", steps = GUIDE_STEPS }) {
   const colors = TONES[tone] || TONES.light;
-  const current = GUIDE_STEPS[step - 1];
+  const current = steps[step - 1];
 
   return (
     <div>
       <div className={`inline-flex flex-wrap items-center gap-3 rounded-full px-4 py-2 font-mono text-[11px] font-black uppercase tracking-[0.16em] ${colors.pill}`}>
         <span className="flex gap-1" aria-hidden="true">
-          {GUIDE_STEPS.map((item, index) => (
+          {steps.map((item, index) => (
             <span key={item.id} className={`h-1.5 rounded-full ${index < step ? `w-4 ${colors.dot}` : "w-1.5 bg-white/30"}`} />
           ))}
         </span>
         <span>
-          Step {step} of {GUIDE_STEPS.length} · <span className={colors.label}>{current.label}</span>
+          Step {step} of {steps.length} · <span className={colors.label}>{current.label}</span>
         </span>
       </div>
       <h2 className="mt-5 max-w-4xl text-[2.4rem] font-black leading-[0.95] tracking-[-0.055em] sm:text-5xl md:text-6xl">
