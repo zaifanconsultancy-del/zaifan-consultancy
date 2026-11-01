@@ -157,7 +157,7 @@ function App() {
   const routeKey = `${location.pathname}${location.search}`;
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#fff4e8] text-[#071d43] selection:bg-orange-600 selection:text-white">
+    <main className="relative min-h-screen overflow-x-clip bg-[#fff4e8] text-[#071d43] selection:bg-orange-600 selection:text-white">
       <AnimatePresence>
         {introPhase !== "done" && (
           <Intro onReveal={revealSite} onComplete={finishIntro} />
