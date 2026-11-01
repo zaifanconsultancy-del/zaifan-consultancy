@@ -4,8 +4,8 @@ import { Check, GitCompareArrows, X } from "lucide-react";
 
 import { countryList } from "../../data/countries";
 import { DripDivider, FlagMark, ZAIFAN_NAVY, ZAIFAN_ORANGE } from "../../components/public/destinations/DestinationUI";
-import RadarHero from "../../components/public/countries/RadarHero";
-import BaggageClaim from "../../components/public/countries/BaggageClaim";
+import FlightTrackerHero from "../../components/public/countries/FlightTrackerHero";
+import BannerPlane from "../../components/public/countries/BannerPlane";
 import Lineup from "../../components/public/countries/Lineup";
 import PriceLadder from "../../components/public/countries/PriceLadder";
 import DocumentChecklist from "../../components/public/countries/DocumentChecklist";
@@ -144,9 +144,9 @@ function CountriesPage() {
   return (
     <main className="overflow-hidden bg-[#fff7ed] text-[#071f50]">
       <div ref={heroRef}>
-        <RadarHero picks={picks} onAdd={add} onRemove={remove} onCompare={openSheet} />
+        <FlightTrackerHero picks={picks} onAdd={add} onRemove={remove} onCompare={openSheet} />
       </div>
-      <BaggageClaim />
+      <BannerPlane />
       <DripDivider background={ZAIFAN_NAVY} />
       <Lineup picks={picks} onToggle={toggle} />
       <DripDivider color={ZAIFAN_NAVY} background="#fff7ed" />

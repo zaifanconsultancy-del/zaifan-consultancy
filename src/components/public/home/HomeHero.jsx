@@ -6,6 +6,7 @@ import { ArrowRight, CalendarDays, CheckCircle2, Coins, Plane, Wallet } from "lu
 import { countryIndex as countryList } from "../../../data/countries/countryIndex";
 import { GATEWAYS } from "../../../data/countries/destinationProfiles";
 import { FlagMark } from "../destinations/DestinationUI";
+import { HOME_POINT, LAND_PATH, ROUTES } from "../countries/worldMap";
 import { SplitFlapRow } from "./SplitFlap";
 
 const CYCLE_MS = 4000;
@@ -16,6 +17,42 @@ const PROMISES = ["Free first consultation", "Honest advice, no fake guarantees"
 
 function firstPart(text) {
   return String(text).split("·")[0].trim();
+}
+
+/**
+ * A faint dotted map behind the whole hero, with the route from Pakistan to
+ * whichever country is on the board, so wide screens never look empty.
+ */
+function BackdropMap({ slug }) {
+  const route = ROUTES.find((item) => item.country.slug === slug);
+
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="1 0 114 44"
+      preserveAspectRatio="xMidYMid slice"
+      className="pointer-events-none absolute inset-0 -z-10 h-full w-full [mask-image:radial-gradient(ellipse_80%_75%_at_55%_50%,black_35%,transparent_100%)]"
+    >
+      <path d={LAND_PATH} stroke="rgba(7,31,80,0.13)" strokeWidth="0.3" strokeLinecap="round" />
+      {route && (
+        <g key={slug}>
+          <motion.path
+            d={route.path}
+            fill="none"
+            stroke="#ff4b12"
+            strokeOpacity="0.45"
+            strokeWidth="0.22"
+            strokeDasharray="0.9 0.7"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          />
+          <circle cx={route.point[0]} cy={route.point[1]} r="0.6" fill="#ff4b12" fillOpacity="0.6" />
+        </g>
+      )}
+      <circle cx={HOME_POINT[0]} cy={HOME_POINT[1]} r="0.7" fill="#10b981" fillOpacity="0.7" />
+    </svg>
+  );
 }
 
 function HomeHero({ stats }) {
@@ -43,6 +80,12 @@ function HomeHero({ stats }) {
     setPicks((count) => count + 1);
   };
 
+  // The three countries after the one on the board.
+  const upcoming = [1, 2, 3].map((offset) => {
+    const itemIndex = (index + offset) % countryList.length;
+    return { item: countryList[itemIndex], itemIndex };
+  });
+
   const facts = [
     { icon: Wallet, label: "Tuition", value: country.quickFacts.tuition },
     { icon: Coins, label: "Living", value: country.quickFacts.living },
@@ -51,7 +94,8 @@ function HomeHero({ stats }) {
 
   return (
     <section className="relative isolate overflow-hidden bg-[#fff7ed] px-4 pb-14 pt-28 text-[#071f50] sm:px-5 md:pt-32 lg:pb-16">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_8%_20%,rgba(255,75,18,0.12),transparent_30%),radial-gradient(circle_at_92%_70%,rgba(7,31,80,0.08),transparent_35%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-20 bg-[radial-gradient(circle_at_8%_20%,rgba(255,75,18,0.12),transparent_30%),radial-gradient(circle_at_92%_70%,rgba(7,31,80,0.08),transparent_35%)]" />
+      <BackdropMap slug={country.slug} />
 
       <div className="mx-auto grid max-w-[1350px] items-center gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-12">
         {/* Words */}
@@ -124,12 +168,31 @@ function HomeHero({ stats }) {
           </dl>
         </div>
 
-        {/* The board */}
+        {/* The board, with a boarding pass tucked behind it */}
+        <div className="relative mx-auto w-full max-w-[640px]">
+        <motion.div
+          aria-hidden="true"
+          initial={{ opacity: 0, rotate: 0, x: 0 }}
+          animate={{ opacity: 1, rotate: 7, x: 0 }}
+          transition={{ duration: 0.9, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute -right-16 top-24 hidden w-[260px] origin-bottom-left rounded-[22px] bg-white p-4 pb-20 text-right text-[#071f50] shadow-[0_24px_50px_rgba(7,31,80,0.16)] ring-1 ring-orange-100 xl:block"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff4b12]">Boarding pass</p>
+            <Plane size={14} className="text-[#ff4b12]" fill="currentColor" />
+          </div>
+          <div className="mt-2 flex items-end justify-between font-mono font-black">
+            <span className="text-lg">PAK</span>
+            <span className="text-lg text-[#ff4b12]">{gateway.airport}</span>
+          </div>
+          <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#7a879c]">Passenger · You</p>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 26, rotate: 1.5 }}
           animate={{ opacity: 1, y: 0, rotate: 0 }}
           transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mx-auto w-full max-w-[640px] rounded-[30px] bg-[#071f50] p-5 text-white shadow-[0_40px_90px_rgba(7,31,80,0.32)] sm:p-7"
+          className="relative w-full rounded-[30px] bg-[#071f50] p-5 text-white shadow-[0_40px_90px_rgba(7,31,80,0.32)] sm:p-7"
         >
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full border-[26px] border-white/[0.04]" />
 
@@ -189,6 +252,35 @@ function HomeHero({ stats }) {
             ))}
           </div>
 
+          {/* The next few departures; tap one to put it on the board */}
+          <div className="relative mt-6 hidden sm:block">
+            <div className="grid grid-cols-[1.4fr_0.6fr_1fr_0.8fr] px-3 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-white/40">
+              <span>Then departing</span>
+              <span>To</span>
+              <span>Starts</span>
+              <span className="text-right">Status</span>
+            </div>
+            <div className="mt-1.5 grid gap-1">
+              {upcoming.map(({ item, itemIndex }, row) => (
+                <button
+                  key={item.slug}
+                  type="button"
+                  onClick={() => pick(itemIndex)}
+                  className="grid grid-cols-[1.4fr_0.6fr_1fr_0.8fr] items-center rounded-xl bg-white/[0.04] px-3 py-2 text-left text-sm font-black transition hover:bg-white/[0.1]"
+                >
+                  <span className="flex items-center gap-2">
+                    <FlagMark country={item} className="h-3.5 w-5 rounded-[2px] shadow-none" /> {item.name}
+                  </span>
+                  <span className="font-mono text-[#ffb36d]">{GATEWAYS[item.slug].airport}</span>
+                  <span className="text-xs text-white/70">{firstPart(item.quickFacts.intakes)}</span>
+                  <span className={`text-right font-mono text-[10px] uppercase tracking-[0.12em] ${row === 0 ? "text-emerald-300" : "text-white/45"}`}>
+                    {row === 0 ? "Boarding" : "On time"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="relative mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Choose a destination">
               {countryList.map((item, itemIndex) => (
@@ -210,6 +302,7 @@ function HomeHero({ stats }) {
             </Link>
           </div>
         </motion.div>
+        </div>
       </div>
     </section>
   );
