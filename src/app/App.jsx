@@ -154,7 +154,12 @@ function App() {
     setIntroPhase("done");
   }, []);
 
-  const routeKey = `${location.pathname}${location.search}`;
+  // Public pages remount on every navigation (page transitions). Inside a
+  // portal that would throw away the login check and reload all the data on
+  // every click, so a whole portal shares one key.
+  const routeKey = isPortalRoute
+    ? PORTAL_PREFIXES.find((prefix) => location.pathname.startsWith(prefix)) || "portal"
+    : `${location.pathname}${location.search}`;
 
   return (
     <main className="relative min-h-screen overflow-x-clip bg-[#fff4e8] text-[#071d43] selection:bg-orange-600 selection:text-white">
@@ -309,7 +314,7 @@ function App() {
                 />
 
                 <Route
-                  path="/admin"
+                  path="/admin/*"
                   element={<AdminPage />}
                 />
 
@@ -319,7 +324,7 @@ function App() {
                 />
 
                 <Route
-                  path="/counselor"
+                  path="/counselor/*"
                   element={<CounselorPortalGate />}
                 />
 

@@ -79,7 +79,7 @@ function ChecklistSheet({ country, stage, level, ticked, studentName, onToggle, 
     <article className="zaifan-sheet bg-white text-[#071f50]">
       {/* Letterhead */}
       <header className="flex items-start justify-between gap-4 border-b-[3px] border-[#ff4b12] pb-4">
-        <img src={logo} alt="Zaifan Consultancy" width="340" height="115" className="h-11 w-auto sm:h-14" />
+        <img src={logo} alt="Zaifan Consultancy" width="356" height="100" className="h-11 w-auto sm:h-14" />
         <div className="text-right text-[10px] font-bold leading-4 text-[#5f6f89] sm:text-[11px]">
           {CONTACT_LINES.map((line) => (
             <p key={line}>{line}</p>

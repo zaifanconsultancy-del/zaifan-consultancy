@@ -1,10 +1,11 @@
+import { codeBox, details, firstName, layout, paragraph, small, steps } from "../_shared/email.ts";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 
 const FROM_EMAIL =
   "Zaifan Consultancy <updates@notifications.zaifanconsultancy.com>";
-const WEBSITE_URL = "https://zaifanconsultancy.com";
+const WEBSITE_URL = "https://www.zaifanconsultancy.com";
 const STUDENT_PORTAL_URL = `${WEBSITE_URL}/student`;
 const WHATSAPP_URL = "https://wa.me/923305718131";
 
@@ -273,198 +274,27 @@ async function sendPortalCredentialsEmail(
     throw new Error("Missing RESEND_API_KEY.");
   }
 
-  const actionTitle =
-    payload.action === "reset"
-      ? "Your Portal Password Was Reset"
-      : payload.action === "resend"
-      ? "Your Portal Login Details"
-      : "Your Student Portal Is Ready";
-
-  const actionCopy =
-    payload.action === "reset"
-      ? "Your Zaifan Student Portal password has been reset by the Zaifan team."
-      : payload.action === "resend"
-      ? "Your Zaifan Student Portal login details are shown below."
-      : "Your Zaifan Student Portal account has been created and is ready to use.";
-
-  const passwordNotice = payload.mustChangePassword
-    ? "For your security, you will be asked to create a new private password after signing in."
-    : "You can update your password anytime from the Password & Access section inside your portal.";
-
-  const html = `
-<!doctype html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light" />
-  <meta name="supported-color-schemes" content="light" />
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-
-    body, table, td, a, p, h1, h2, div, span {
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-    }
-
-    table { border-collapse: separate; }
-
-    a[x-apple-data-detectors] {
-      color: inherit !important;
-      text-decoration: none !important;
-    }
-
-    @media only screen and (max-width: 620px) {
-      .outer { padding: 10px 6px !important; }
-      .card { width: 100% !important; border-radius: 20px !important; }
-      .header { padding: 28px 18px 20px !important; }
-      .section { padding-left: 14px !important; padding-right: 14px !important; }
-      .footer { padding: 18px !important; }
-      .title { font-size: 25px !important; line-height: 1.2 !important; }
-      .copy { font-size: 14px !important; line-height: 1.75 !important; }
-      .button {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-    }
-  </style>
-</head>
-
-<body style="margin:0;padding:0;background:#f5eee5;font-family:Arial,Helvetica,sans-serif;color:#10233f;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
-    Your Zaifan Student Portal login details are ready.
-  </div>
-
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f5eee5;">
-    <tr>
-      <td align="center" class="outer" style="padding:30px 14px;">
-        <table
-          role="presentation"
-          width="100%"
-          cellspacing="0"
-          cellpadding="0"
-          border="0"
-          class="card"
-          style="max-width:700px;background:#fffdf9;border:1px solid #efc79e;border-radius:30px;overflow:hidden;box-shadow:0 20px 54px rgba(16,35,63,0.10);"
-        >
-          <tr>
-            <td style="height:7px;background:#ff5a0a;font-size:0;line-height:0;">
-              &nbsp;
-            </td>
-          </tr>
-
-          <tr>
-            <td class="header" style="padding:36px 30px 24px;text-align:center;">
-              <div style="display:inline-block;padding:7px 11px;border-radius:999px;background:#fff4e8;border:1px solid #fdba74;color:#ff5a0a;font-size:9px;font-weight:900;letter-spacing:1.7px;text-transform:uppercase;">
-                Zaifan Consultancy · Secure Student Access
-              </div>
-
-              <h1 class="title" style="margin:16px auto 0;max-width:580px;color:#10233f;font-size:30px;line-height:1.22;">
-                ${escapeHtml(actionTitle)}
-              </h1>
-
-              <p style="margin:12px auto 0;max-width:560px;color:#667085;font-size:14px;line-height:1.75;">
-                Hello ${escapeHtml(payload.studentName)},
-              </p>
-
-              <p class="copy" style="margin:10px auto 0;max-width:560px;color:#475467;font-size:14px;line-height:1.75;font-weight:600;">
-                ${escapeHtml(actionCopy)}
-              </p>
-            </td>
-          </tr>
-
-          <tr>
-            <td class="section" style="padding:0 30px 16px;">
-              <div style="border:1px solid #d5dce6;border-radius:20px;padding:20px;background:#ffffff;">
-                <div style="font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#667085;">
-                  Portal Email
-                </div>
-
-                <div style="margin-top:8px;color:#10233f;font-size:15px;font-weight:900;line-height:1.6;word-break:break-word;">
-                  ${escapeHtml(payload.recipientEmail)}
-                </div>
-              </div>
-            </td>
-          </tr>
-
-          <tr>
-            <td class="section" style="padding:0 30px 16px;">
-              <div style="border:2px solid #ff5a0a;border-radius:20px;padding:20px;background:#fff4e8;">
-                <div style="font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#ff5a0a;">
-                  Temporary Password
-                </div>
-
-                <div style="margin-top:10px;color:#10233f;font-family:Consolas,Monaco,monospace;font-size:19px;font-weight:900;line-height:1.5;letter-spacing:0.4px;word-break:break-all;">
-                  ${escapeHtml(payload.temporaryPassword)}
-                </div>
-              </div>
-            </td>
-          </tr>
-
-          <tr>
-            <td class="section" style="padding:0 30px 16px;">
-              <div style="border:1px solid #bfd1e3;border-radius:18px;padding:17px;background:#f8fbff;">
-                <div style="font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#123865;">
-                  Security Notice
-                </div>
-
-                <p style="margin:8px 0 0;color:#475467;font-size:13px;line-height:1.75;font-weight:600;">
-                  ${escapeHtml(passwordNotice)}
-                  Do not share this password with anyone other than an authorised Zaifan team member assisting with your account.
-                </p>
-              </div>
-            </td>
-          </tr>
-
-          <tr>
-            <td class="section" style="padding:0 30px 24px;">
-              <a
-                href="${STUDENT_PORTAL_URL}"
-                class="button"
-                style="display:block;background:#ff5a0a;color:#ffffff;text-decoration:none;text-align:center;padding:15px 16px;border-radius:14px;font-size:13px;font-weight:900;"
-              >
-                Open Student Portal
-              </a>
-
-              <p style="margin:13px 0 0;text-align:center;color:#667085;font-size:11px;line-height:1.65;">
-                Portal address:
-                <span style="color:#123865;font-weight:900;">
-                  ${STUDENT_PORTAL_URL}
-                </span>
-              </p>
-            </td>
-          </tr>
-
-          <tr>
-            <td class="section" style="padding:0 30px 30px;">
-              <div style="border-top:1px solid #e4e7ec;padding-top:18px;text-align:center;">
-                <p style="margin:0;color:#667085;font-size:11px;line-height:1.7;">
-                  Having trouble signing in?
-                  <a href="${WHATSAPP_URL}" style="color:#ff5a0a;font-weight:900;text-decoration:none;">
-                    Contact Zaifan on WhatsApp
-                  </a>
-                </p>
-              </div>
-            </td>
-          </tr>
-
-          <tr>
-            <td class="footer" style="background:#123865;padding:19px 30px;color:#ffffff;">
-              <div style="font-size:12px;font-weight:900;">
-                Zaifan Consultancy
-              </div>
-
-              <div style="margin-top:4px;font-size:11px;line-height:1.55;color:#dbeafe;">
-                Secure Student Portal Access · zaifanconsultancy.com
-              </div>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+  const isNew = payload.action === "create";
+  const html = layout({
+    preheader: isNew ? "Your Zaifan student portal is ready." : "Your new Zaifan portal password.",
+    kicker: "Student portal",
+    title: isNew ? `Your student portal is ready, ${firstName(payload.studentName)}` : `Your new portal password, ${firstName(payload.studentName)}`,
+    body:
+      paragraph(
+        isNew
+          ? "Your Zaifan student portal is where you follow your journey: your to-do list, documents, university applications, visa steps and payments, all in one place."
+          : "The Zaifan team has set a new password for your student portal."
+      ) +
+      details([["Login email", payload.recipientEmail]]) +
+      codeBox(payload.temporaryPassword, "Temporary password · you choose your own after signing in") +
+      (isNew
+        ? paragraph("<strong>In your portal you can</strong>") +
+          steps(["See exactly what you need to do next.", "Upload your documents from your phone.", "Send payment receipts and ask your counselor questions."])
+        : "") +
+      small("Forgot it later? Use “Forgot your password?” on the portal login page to get a code by email."),
+    button: { label: "Open my portal", url: STUDENT_PORTAL_URL },
+    secondary: { label: "WhatsApp us", url: WHATSAPP_URL },
+  });
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -475,7 +305,7 @@ async function sendPortalCredentialsEmail(
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: [payload.recipientEmail],
-      subject: "Your Zaifan Student Portal Access",
+      subject: payload.action === "create" ? "Your Zaifan student portal is ready" : "Your new Zaifan portal password",
       html,
     }),
   });

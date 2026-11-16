@@ -360,44 +360,53 @@ export default function useAdminAuth({ onLogoutCleanup } = {}) {
 
       const normalizedEmail = email.trim();
 
+      // Errors are thrown (not alert()-ed) so AdminLogin can show them inline.
       if (!normalizedEmail || !password) {
-        alert("Enter your admin email and password.");
-        return;
+        throw new Error("Enter your admin email and password.");
       }
 
+      let result;
+
       try {
-        const { data, error } = await withTimeout(
+        result = await withTimeout(
           supabase.auth.signInWithPassword({
             email: normalizedEmail,
             password,
           }),
           "Login"
         );
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        if (data.user) {
-          safeSetState(() => {
-            setAdminUser(data.user);
-            setIsLoggedIn(true);
-            setSessionChecked(true);
-          });
-
-          // The SIGNED_IN listener schedules the profile load.
-          // Do not perform the same Supabase profile request twice.
-        }
-
-        safeSetState(() => {
-          setEmail("");
-          setPassword("");
-        });
       } catch (error) {
         console.error("Login failed:", error);
-        alert("Login request timed out or failed. Check internet and try again.");
+        throw new Error("Sign-in timed out or failed. Check your internet and try again.", {
+          cause: error,
+        });
       }
+
+      const { data, error } = result;
+
+      if (error) {
+        throw new Error(
+          /invalid login credentials/i.test(error.message || "")
+            ? "That email and password don't match. Check both and try again."
+            : error.message
+        );
+      }
+
+      if (data?.user) {
+        safeSetState(() => {
+          setAdminUser(data.user);
+          setIsLoggedIn(true);
+          setSessionChecked(true);
+        });
+
+        // The SIGNED_IN listener schedules the profile load.
+        // Do not perform the same Supabase profile request twice.
+      }
+
+      safeSetState(() => {
+        setEmail("");
+        setPassword("");
+      });
     },
     [email, password, safeSetState]
   );

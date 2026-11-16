@@ -123,7 +123,7 @@ function Footer() {
           <div className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.35fr_0.7fr_1fr_1.1fr]">
             <div>
               <Link to="/" className="inline-block transition hover:opacity-90" aria-label="Zaifan Consultancy home">
-                <img src={logo} alt="Zaifan Consultancy" width="340" height="115" className="h-auto w-[210px]" loading="lazy" decoding="async" />
+                <img src={logo} alt="Zaifan Consultancy" width="356" height="100" className="h-auto w-[210px]" loading="lazy" decoding="async" />
               </Link>
               <p className="mt-5 text-2xl font-black tracking-[-0.04em]">
                 Your dream, <span className="text-[#ff7b1c]">our support.</span>

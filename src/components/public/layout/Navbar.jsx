@@ -241,20 +241,20 @@ function Navbar() {
             }`}
             aria-label="Main"
           >
-            <Link to="/" onClick={linkClick("/")} className="relative block h-9 w-[106px] shrink-0" aria-label="Zaifan Consultancy home">
+            <Link to="/" onClick={linkClick("/")} className="relative block h-10 w-[142px] shrink-0" aria-label="Zaifan Consultancy home">
               <img
                 src={logo}
                 alt="Zaifan Consultancy"
-                width="340"
-                height="115"
+                width="356"
+                height="100"
                 className={`absolute inset-0 h-full w-full object-contain object-left transition-opacity duration-500 ${scrolled ? "opacity-0" : "opacity-100"}`}
               />
               <img
                 src={logoLight}
                 alt=""
                 aria-hidden="true"
-                width="340"
-                height="115"
+                width="356"
+                height="100"
                 className={`absolute inset-0 h-full w-full object-contain object-left transition-opacity duration-500 ${scrolled ? "opacity-100" : "opacity-0"}`}
               />
             </Link>
@@ -491,7 +491,7 @@ function Navbar() {
             className="fixed inset-0 z-[10002] flex flex-col overflow-y-auto bg-[#071f50] px-5 pb-8 pt-5 text-white lg:hidden"
           >
             <div className="flex items-center justify-between">
-              <img src={logoLight} alt="Zaifan Consultancy" width="340" height="115" className="h-9 w-auto" />
+              <img src={logoLight} alt="Zaifan Consultancy" width="356" height="100" className="h-9 w-auto" />
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
