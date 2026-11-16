@@ -23,9 +23,8 @@ const ServiceDetailPage = lazy(() =>
   import("../pages/public/ServiceDetailPage.jsx")
 );
 const CountriesPage = lazy(() => import("../pages/public/CountriesPage"));
-const CityDetailPage = lazy(() => import("../pages/public/CityDetailPage"));
+const CityPage = lazy(() => import("../pages/public/CityPage"));
 const DestinationPage = lazy(() => import("../pages/public/DestinationPage"));
-const CountryCityPage = lazy(() => import("../pages/public/CountryCityPage"));
 const EuHubPage = lazy(() => import("../pages/public/EuHubPage"));
 const UniversitiesHub = lazy(() =>
   import("../pages/public/UniversitiesHub")
@@ -218,7 +217,7 @@ function App() {
                   path="/countries/italy/:citySlug"
                   element={
                     <PageTransition>
-                      <CityDetailPage />
+                      <CityPage />
                     </PageTransition>
                   }
                 />
@@ -254,7 +253,7 @@ function App() {
                   path="/countries/:countrySlug/:citySlug"
                   element={
                     <PageTransition>
-                      <CountryCityPage />
+                      <CityPage />
                     </PageTransition>
                   }
                 />

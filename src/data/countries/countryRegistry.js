@@ -80,7 +80,7 @@ export const countryList = Object.values(countryRegistry);
 export const euHub = euHubData;
 
 // Every country, Italy included, uses the shared DestinationPage guide (see
-// guides.js). Italy keeps its own hand-built city pages.
+// guides.js). City pages use the shared CityPage (see cityGuides.js).
 export function getCountryGuidePath(slug) {
   return `/countries/${slug}`;
 }
